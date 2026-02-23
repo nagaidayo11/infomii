@@ -1,0 +1,184 @@
+import Stripe from "stripe";
+import { NextRequest, NextResponse } from "next/server";
+import { getStripeServerClient, getStripeWebhookSecret } from "@/lib/server/stripe-server";
+import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { sendOpsAlert } from "@/lib/server/ops-alert";
+
+export const runtime = "nodejs";
+
+function mapStripeStatus(status: Stripe.Subscription.Status): "trialing" | "active" | "past_due" | "canceled" {
+  if (status === "trialing") {
+    return "trialing";
+  }
+  if (status === "active") {
+    return "active";
+  }
+  if (status === "past_due" || status === "unpaid") {
+    return "past_due";
+  }
+  return "canceled";
+}
+
+function mapPlanByStatus(status: Stripe.Subscription.Status): "free" | "pro" {
+  if (status === "active" || status === "trialing" || status === "past_due" || status === "unpaid") {
+    return "pro";
+  }
+  return "free";
+}
+
+async function findHotelIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
+  const admin = getSupabaseAdminServerClient();
+  const { data } = await admin
+    .from("subscriptions")
+    .select("hotel_id")
+    .eq("stripe_subscription_id", subscriptionId)
+    .maybeSingle();
+
+  return data?.hotel_id ?? null;
+}
+
+async function upsertStripeSubscription(params: {
+  hotelId: string;
+  plan: "free" | "pro";
+  status: "trialing" | "active" | "past_due" | "canceled";
+  maxPublishedPages: number;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripePriceId?: string | null;
+  currentPeriodEnd?: string | null;
+}) {
+  const admin = getSupabaseAdminServerClient();
+
+  await admin.rpc("ensure_hotel_subscription", {
+    target_hotel_id: params.hotelId,
+  });
+
+  const { error } = await admin
+    .from("subscriptions")
+    .update({
+      plan: params.plan,
+      status: params.status,
+      max_published_pages: params.maxPublishedPages,
+      stripe_customer_id: params.stripeCustomerId ?? null,
+      stripe_subscription_id: params.stripeSubscriptionId ?? null,
+      stripe_price_id: params.stripePriceId ?? null,
+      current_period_end: params.currentPeriodEnd ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("hotel_id", params.hotelId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function appendBillingLog(params: {
+  hotelId: string;
+  action: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const admin = getSupabaseAdminServerClient();
+  await admin.from("audit_logs").insert({
+    hotel_id: params.hotelId,
+    actor_user_id: null,
+    action: params.action,
+    target_type: "subscription",
+    message: params.message,
+    metadata: params.metadata ?? {},
+  });
+}
+
+export async function POST(request: NextRequest) {
+  let eventType = "unknown";
+  let eventId = "unknown";
+  try {
+    const signature = request.headers.get("stripe-signature");
+    if (!signature) {
+      await sendOpsAlert("Billing Alert", "Stripe webhook rejected: missing stripe-signature header");
+      return NextResponse.json({ message: "署名がありません" }, { status: 400 });
+    }
+
+    const stripe = getStripeServerClient();
+    const webhookSecret = getStripeWebhookSecret();
+    const body = await request.text();
+
+    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    eventType = event.type;
+    eventId = event.id;
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.mode === "subscription") {
+        const hotelId = session.metadata?.hotel_id;
+        if (hotelId) {
+          await upsertStripeSubscription({
+            hotelId,
+            plan: "pro",
+            status: "active",
+            maxPublishedPages: 1000,
+            stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
+            stripeSubscriptionId:
+              typeof session.subscription === "string" ? session.subscription : null,
+          });
+          await appendBillingLog({
+            hotelId,
+            action: "billing.checkout_completed",
+            message: "Checkout完了イベントを処理しました（Proへ更新）",
+            metadata: { eventId, eventType },
+          });
+        }
+      }
+    }
+
+    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      let hotelId: string | null = subscription.metadata?.hotel_id ?? null;
+      if (!hotelId) {
+        hotelId = await findHotelIdBySubscriptionId(subscription.id);
+      }
+
+      if (hotelId) {
+        const mappedStatus = mapStripeStatus(subscription.status);
+        const mappedPlan = mapPlanByStatus(subscription.status);
+        const firstItem = subscription.items.data[0];
+        const currentPeriodEnd = (
+          subscription as Stripe.Subscription & { current_period_end?: number }
+        ).current_period_end;
+
+        await upsertStripeSubscription({
+          hotelId,
+          plan: mappedPlan,
+          status: mappedStatus,
+          maxPublishedPages: mappedPlan === "pro" ? 1000 : 3,
+          stripeCustomerId:
+            typeof subscription.customer === "string" ? subscription.customer : null,
+          stripeSubscriptionId: subscription.id,
+          stripePriceId: firstItem?.price?.id ?? null,
+          currentPeriodEnd: currentPeriodEnd
+            ? new Date(currentPeriodEnd * 1000).toISOString()
+            : null,
+        });
+        await appendBillingLog({
+          hotelId,
+          action: "billing.subscription_synced",
+          message: `サブスクリプション同期を実行しました（status=${mappedStatus}, plan=${mappedPlan}）`,
+          metadata: { eventId, eventType, stripeSubscriptionId: subscription.id },
+        });
+      }
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Webhook処理に失敗しました";
+    await sendOpsAlert(
+      "Billing Alert",
+      `Stripe webhook failed\nEvent: ${eventType}\nEvent ID: ${eventId}\nError: ${message}`,
+    );
+    return NextResponse.json(
+      { message },
+      { status: 400 },
+    );
+  }
+}

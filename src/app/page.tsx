@@ -1,65 +1,98 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
+      <div className="mx-auto w-full max-w-6xl space-y-8">
+        <header className="lux-card rounded-3xl p-6 sm:p-10">
+          <p className="lux-kicker text-xs font-semibold">Store Information SaaS</p>
+          <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">インフォーミー</h1>
+          <p className="mt-4 max-w-2xl text-sm text-slate-700 sm:text-base">
+            店舗向けインフォメーションを、誰でもかんたん作成・公開。
+            <br />
+            QRから1ページ案内、Proならノードで複数ページ連携まで。
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="lux-btn-primary rounded-xl px-5 py-3 text-sm font-semibold"
+            >
+              無料で始める
+            </Link>
+            <Link
+              href="/dashboard"
+              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
+            >
+              ダッシュボードへ
+            </Link>
+          </div>
+        </header>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="lux-card lux-section-card rounded-2xl p-5">
+            <h2 className="text-lg font-semibold text-slate-900">ページ作成</h2>
+            <p className="mt-2 text-sm text-slate-700">
+              ブロック追加で直感的に作成。店舗向け情報をすばやく更新できます。
+            </p>
+          </article>
+          <article className="lux-card lux-section-card rounded-2xl p-5">
+            <h2 className="text-lg font-semibold text-slate-900">QR公開</h2>
+            <p className="mt-2 text-sm text-slate-700">
+              1ページにつき1つのQRを発行。印刷してそのまま案内に使えます。
+            </p>
+          </article>
+          <article className="lux-card lux-section-card rounded-2xl p-5">
+            <h2 className="text-lg font-semibold text-slate-900">複数ページ連携（Pro）</h2>
+            <p className="mt-2 text-sm text-slate-700">
+              ノードでページをつなぎ、1つの入口ページから複数案内へ遷移できます。
+            </p>
+          </article>
+        </section>
+
+        <section className="lux-card rounded-3xl p-6 sm:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">料金プラン</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <article className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-xs font-semibold text-slate-500">Free</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">¥0</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                <li>公開ページ上限あり</li>
+                <li>基本ブロックエディタ</li>
+                <li>QR公開</li>
+              </ul>
+            </article>
+            <article className="rounded-2xl border border-emerald-300 bg-emerald-50/70 p-5">
+              <p className="text-xs font-semibold text-emerald-700">Pro</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">月額課金</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                <li>公開ページ上限を拡張</li>
+                <li>ノードマップで複数ページ連携</li>
+                <li>運用管理機能</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section className="lux-card rounded-2xl p-6">
+          <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
+          <p className="mt-2 text-sm text-slate-700">
+            導入・プラン・不具合のご相談は以下までご連絡ください。
+          </p>
+          <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
+        </section>
+
+        <footer className="lux-card rounded-2xl p-5 text-sm text-slate-700">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link className="hover:underline" href="/terms">利用規約</Link>
+            <Link className="hover:underline" href="/privacy">プライバシーポリシー</Link>
+            <Link className="hover:underline" href="/commerce">特定商取引法に基づく表記</Link>
+            <Link className="hover:underline" href="/refund">返金・キャンセルポリシー</Link>
+            <Link className="hover:underline" href="/login">ログイン</Link>
+          </div>
+        </footer>
+      </div>
+    </main>
   );
 }
