@@ -1117,7 +1117,7 @@ export default function EditorPage() {
                     {entry.link ? (
                       <button
                         type="button"
-                        onClick={() => void openPreviewOverlay(entry.link, entry.label || "リンク先プレビュー")}
+                        onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
                         className="flex w-full flex-col items-center gap-1"
                       >
                         {renderIconVisual(entry.icon)}
