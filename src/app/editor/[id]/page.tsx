@@ -3604,7 +3604,7 @@ function onUpdateIconRowItem(
                                 </p>
                                 <button
                                   type="button"
-                                  onClick={() => onAddKeyValueItem(block.id, block.type)}
+                                  onClick={() => onAddKeyValueItem(block.id, block.type as "hours" | "pricing")}
                                   className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
                                 >
                                   + 項目を追加
@@ -3616,7 +3616,7 @@ function onUpdateIconRowItem(
                                     <input
                                       value={entry.label}
                                       onChange={(e) =>
-                                        onUpdateKeyValueItem(block.id, block.type, entry.id, {
+                                        onUpdateKeyValueItem(block.id, block.type as "hours" | "pricing", entry.id, {
                                           label: e.target.value,
                                         })}
                                       onBlur={onBlurBlockSave}
@@ -3626,7 +3626,7 @@ function onUpdateIconRowItem(
                                     <input
                                       value={entry.value}
                                       onChange={(e) =>
-                                        onUpdateKeyValueItem(block.id, block.type, entry.id, {
+                                        onUpdateKeyValueItem(block.id, block.type as "hours" | "pricing", entry.id, {
                                           value: e.target.value,
                                         })}
                                       onBlur={onBlurBlockSave}
@@ -3635,7 +3635,7 @@ function onUpdateIconRowItem(
                                     />
                                     <button
                                       type="button"
-                                      onClick={() => onDeleteKeyValueItem(block.id, block.type, entry.id)}
+                                      onClick={() => onDeleteKeyValueItem(block.id, block.type as "hours" | "pricing", entry.id)}
                                       className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
                                     >
                                       削除
