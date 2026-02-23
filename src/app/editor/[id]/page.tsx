@@ -2388,7 +2388,7 @@ function onUpdateIconRowItem(
   const publishCheckErrors = publishCheckIssues.filter((issue) => issue.level === "error");
   const publishCheckWarnings = publishCheckIssues.filter((issue) => issue.level === "warning");
 
-  function getNodeTargetStatus(node: { id: string; targetSlug: string }): "published" | "draft" | null {
+  function getNodeTargetStatus(node: { id: string; targetSlug?: string }): "published" | "draft" | null {
     const slug = (node.targetSlug ?? "").trim();
     if (!slug) {
       return null;
