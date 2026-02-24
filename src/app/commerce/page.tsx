@@ -12,7 +12,7 @@ export default function CommercePage() {
               <tbody>
                 <tr className="border-b border-slate-200">
                   <th className="w-44 bg-slate-50 px-4 py-3 font-semibold text-slate-900">販売事業者名</th>
-                  <td className="px-4 py-3">インフォーミー運営</td>
+                  <td className="px-4 py-3">Infomii運営</td>
                 </tr>
                 <tr className="border-b border-slate-200">
                   <th className="bg-slate-50 px-4 py-3 font-semibold text-slate-900">運営責任者</th>
@@ -65,4 +65,3 @@ export default function CommercePage() {
     </main>
   );
 }
-

@@ -69,7 +69,7 @@ export default function LoginPage() {
   return (
     <main className="lux-main mx-auto min-h-screen w-full max-w-lg pl-4 pr-6 py-14 sm:pl-6 sm:pr-8">
       <header className="mb-6">
-        <p className="lux-kicker text-xs font-medium">Store Suite Access</p>
+        <p className="lux-kicker text-xs font-medium">Infomii 管理画面</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-900">ログイン</h1>
         <p className="mt-2 text-sm text-slate-600">
           店舗運営スタッフ向けの管理画面です。

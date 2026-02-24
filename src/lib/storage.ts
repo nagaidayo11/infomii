@@ -792,7 +792,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     return {
-      hotelName: "店舗インフォメーション",
+      hotelName: "Infomii",
       subscription: null,
       informations: [],
     };
@@ -801,7 +801,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
     return {
-      hotelName: "店舗インフォメーション",
+      hotelName: "Infomii",
       subscription: null,
       informations: [],
     };
@@ -843,7 +843,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     : null;
 
   return {
-    hotelName: hotelRes.data?.name ?? "店舗インフォメーション",
+    hotelName: hotelRes.data?.name ?? "Infomii",
     subscription,
     informations: (infoRes.data ?? []).map((row) => mapRow(row as SupabaseInformationRow)),
   };

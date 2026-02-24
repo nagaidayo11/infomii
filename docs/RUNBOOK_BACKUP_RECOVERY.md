@@ -1,7 +1,7 @@
 # Backup & Recovery Runbook
 
 最終更新: 2026-02-20
-対象: `Store Information`（Next.js + Supabase + Stripe）
+対象: `Infomii`（Next.js + Supabase + Stripe）
 
 ## 0. 目的
 - 障害時に「迷わず復旧」できること

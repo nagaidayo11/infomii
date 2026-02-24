@@ -3,7 +3,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "インフォーミー",
+  title: "Infomii",
   description: "店舗向けインフォメーションを、誰でもかんたん作成・公開できるWebサービス",
 };
 

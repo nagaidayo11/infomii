@@ -817,7 +817,7 @@ export default function DashboardPage() {
                     </>
                   ) : (
                     <>
-                      <h1 className="text-2xl font-semibold text-slate-900">{hotelName || "店舗インフォメーション"}</h1>
+                      <h1 className="text-2xl font-semibold text-slate-900">{hotelName || "Infomii"}</h1>
                       <button
                         type="button"
                         onClick={() => setEditingHotelName(true)}

@@ -7,8 +7,8 @@ export default function Home() {
     <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
       <div className="mx-auto w-full max-w-6xl space-y-8">
         <header className="lux-card rounded-3xl p-6 sm:p-10">
-          <p className="lux-kicker text-xs font-semibold">Store Information SaaS</p>
-          <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">インフォーミー</h1>
+          <p className="lux-kicker text-xs font-semibold">Infomii</p>
+          <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">Infomii（インフォーミー）</h1>
           <p className="mt-4 max-w-2xl text-sm text-slate-700 sm:text-base">
             店舗向けインフォメーションを、誰でもかんたん作成・公開。
             <br />

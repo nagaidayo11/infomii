@@ -11,7 +11,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-semibold text-slate-900">第1条（適用）</h2>
               <p>
-                本規約は、インフォーミー（以下「当サービス」）の利用条件を定めるものです。利用者は本規約に同意のうえ当サービスを利用するものとします。
+                本規約は、Infomii（インフォーミー、以下「当サービス」）の利用条件を定めるものです。利用者は本規約に同意のうえ当サービスを利用するものとします。
               </p>
             </section>
             <section>
@@ -55,4 +55,3 @@ export default function TermsPage() {
     </main>
   );
 }
-

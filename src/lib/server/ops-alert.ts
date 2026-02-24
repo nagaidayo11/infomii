@@ -2,7 +2,8 @@ import { sendSlackAlert } from "@/lib/server/slack-alert";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const ALERT_EMAIL_TO = process.env.ALERT_EMAIL_TO;
-const ALERT_EMAIL_FROM = process.env.ALERT_EMAIL_FROM ?? "Store Ops <onboarding@resend.dev>";
+const ALERT_EMAIL_FROM = process.env.ALERT_EMAIL_FROM ?? "Infomii Ops <onboarding@resend.dev>";
+const BRAND_PREFIX = "Infomii";
 
 type AlertChannelResult = {
   ok: boolean;
@@ -42,14 +43,15 @@ export async function sendOpsAlert(subject: string, message: string): Promise<{
   slack: AlertChannelResult;
   email: AlertChannelResult;
 }> {
+  const brandedSubject = `[${BRAND_PREFIX}] ${subject}`;
   let slackResult: AlertChannelResult = { ok: true, detail: "Slack送信成功" };
   try {
-    await sendSlackAlert(`[${subject}] ${message}`);
+    await sendSlackAlert(`${brandedSubject} ${message}`);
   } catch {
     slackResult = { ok: false, detail: "Slack送信に失敗しました" };
   }
 
-  const emailResult = await sendEmailAlert(subject, message);
+  const emailResult = await sendEmailAlert(brandedSubject, message);
   return {
     slack: slackResult,
     email: emailResult,

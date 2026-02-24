@@ -570,7 +570,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
         >
           {!isEmbed ? (
             <div className="border-b border-slate-100 px-6 py-5">
-              <p className="lux-kicker text-[11px]">Store Information</p>
+              <p className="lux-kicker text-[11px]">Infomii</p>
               <p className="mt-2 text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
             </div>
           ) : null}
