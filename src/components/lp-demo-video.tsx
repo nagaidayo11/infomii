@@ -74,6 +74,12 @@ export default function LpDemoVideo({ src }: LpDemoVideoProps) {
         onError={() => setLoadError(true)}
       />
 
+      {isPlaying ? (
+        <div className="pointer-events-none absolute right-3 top-3 rounded-full border border-rose-300/60 bg-rose-500/90 px-3 py-1 text-[10px] font-bold tracking-[0.16em] text-white shadow-[0_10px_24px_-12px_rgba(244,63,94,0.75)] animate-pulse">
+          LIVE DEMO
+        </div>
+      ) : null}
+
       {!isPlaying ? (
         <button
           type="button"
