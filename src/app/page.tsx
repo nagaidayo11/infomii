@@ -374,7 +374,7 @@ export default function Home() {
           <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
         </section>
 
-        <section className="lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
+        <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
           <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
           <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料で1ページ公開してみましょう</h2>
           <p className="mt-2 text-sm text-emerald-50">
@@ -383,7 +383,7 @@ export default function Home() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/login"
-              className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
+              className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
               無料で始める
             </Link>
