@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LpRevealObserver from "@/components/lp-reveal-observer";
 
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
@@ -91,11 +92,14 @@ export default function Home() {
 
   return (
     <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
+      <LpRevealObserver />
       <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8">
-        <header className="lux-card overflow-hidden rounded-3xl p-5 sm:p-8">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-r from-emerald-200/40 via-cyan-100/20 to-transparent" />
+        <header className="lux-card lp-hero-shell lp-reveal overflow-hidden rounded-3xl p-5 sm:p-8">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-r from-emerald-200/40 via-cyan-100/20 to-transparent lp-glow-pulse" />
+          <div className="lp-float pointer-events-none absolute -left-12 top-8 h-36 w-36 rounded-full bg-emerald-300/20 blur-2xl" />
+          <div className="lp-float-slow pointer-events-none absolute right-0 top-20 h-40 w-40 rounded-full bg-cyan-200/20 blur-2xl" />
 
-          <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="relative lp-reveal lp-delay-1 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
                 I
@@ -123,19 +127,23 @@ export default function Home() {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
-              <p className="lux-kicker text-xs font-semibold">Infomii</p>
-              <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
+              <p className="lux-kicker lp-reveal lp-delay-2 text-xs font-semibold">Infomii</p>
+              <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 現場で使える案内ページを
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
               </h1>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
+              <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 店舗向けインフォメーションを、ブロック編集で直感的に作成。QRから1ページ案内、
                 Proならノードで複数ページ連携まで。現場で必要な更新を、その場で反映できます。
               </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {metrics.map((metric) => (
-                  <div key={metric.label} className="rounded-xl border border-emerald-100 bg-white/95 p-3">
+                {metrics.map((metric, index) => (
+                  <div
+                    key={metric.label}
+                    className="lp-reveal lp-metric rounded-xl border border-emerald-100 bg-white/95 p-3"
+                    style={{ transitionDelay: `${260 + index * 70}ms` }}
+                  >
                     <p className="text-[11px] text-slate-500">{metric.label}</p>
                     <p className="mt-1 text-xl font-bold text-slate-900">{metric.value}</p>
                     <p className="text-[11px] text-slate-500">{metric.sub}</p>
@@ -143,8 +151,8 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/login" className="lux-btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+              <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
+                <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
                   無料で始める
                 </Link>
                 <Link
@@ -156,7 +164,7 @@ export default function Home() {
               </div>
             </div>
 
-            <aside className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
+            <aside className="lp-reveal lp-delay-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
               <p className="text-xs font-semibold tracking-wide text-emerald-700">運用イメージ</p>
               <div className="mt-3 space-y-2">
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
@@ -182,9 +190,13 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          {useCases.map((item) => (
-            <article key={item.title} className="lux-card lux-section-card rounded-2xl p-5">
+        <section className="lp-reveal lp-delay-2 grid gap-4 md:grid-cols-3">
+          {useCases.map((item, index) => (
+            <article
+              key={item.title}
+              className="lux-card lux-section-card lp-reveal rounded-2xl p-5"
+              style={{ transitionDelay: `${220 + index * 90}ms` }}
+            >
               <p className="text-xs font-semibold text-emerald-700">導入業種</p>
               <h2 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h2>
               <ul className="mt-3 space-y-1 text-sm text-slate-700">
@@ -196,14 +208,18 @@ export default function Home() {
           ))}
         </section>
 
-        <section id="features" className="lux-card rounded-3xl p-6 sm:p-8">
+        <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">機能</h2>
             <p className="text-sm text-slate-600">作成から運用まで、1つの画面群で完結</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <article key={feature.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+            {features.map((feature, index) => (
+              <article
+                key={feature.title}
+                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
+                style={{ transitionDelay: `${180 + index * 60}ms` }}
+              >
                 <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
                 <p className="mt-2 text-sm text-slate-700">{feature.desc}</p>
               </article>
@@ -211,11 +227,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="flow" className="lux-card rounded-3xl p-6 sm:p-8">
+        <section id="flow" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">導入フロー</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {flow.map((item) => (
-              <article key={item.step} className="rounded-2xl border border-slate-200 bg-white p-5">
+            {flow.map((item, index) => (
+              <article
+                key={item.step}
+                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-5"
+                style={{ transitionDelay: `${180 + index * 80}ms` }}
+              >
                 <p className="text-xs font-bold tracking-widest text-emerald-600">STEP {item.step}</p>
                 <h3 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h3>
                 <p className="mt-2 text-sm text-slate-700">{item.desc}</p>
@@ -224,7 +244,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="lux-card rounded-3xl p-6 sm:p-8">
+        <section id="pricing" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">料金プラン</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr]">
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -254,11 +274,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="faq" className="lux-card rounded-3xl p-6 sm:p-8">
+        <section id="faq" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">FAQ</h2>
           <div className="mt-4 space-y-2">
-            {faqItems.map((item) => (
-              <details key={item.q} className="rounded-xl border border-slate-200 bg-white p-4">
+            {faqItems.map((item, index) => (
+              <details
+                key={item.q}
+                className="lp-reveal rounded-xl border border-slate-200 bg-white p-4"
+                style={{ transitionDelay: `${150 + index * 60}ms` }}
+              >
                 <summary className="cursor-pointer text-sm font-semibold text-slate-900">{item.q}</summary>
                 <p className="mt-2 text-sm leading-7 text-slate-700">{item.a}</p>
               </details>
@@ -266,13 +290,13 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="contact" className="lux-card rounded-2xl p-6">
+        <section id="contact" className="lux-card lp-reveal lp-delay-4 rounded-2xl p-6">
           <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
           <p className="mt-2 text-sm text-slate-700">導入・プラン・不具合のご相談は以下までご連絡ください。</p>
           <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
         </section>
 
-        <footer className="lux-card rounded-2xl p-5 text-sm text-slate-700">
+        <footer className="lux-card lp-reveal lp-delay-4 rounded-2xl p-5 text-sm text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-slate-500">© {new Date().getFullYear()} Infomii</p>
             <div className="flex flex-wrap gap-x-4 gap-y-2">
