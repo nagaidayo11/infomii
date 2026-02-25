@@ -92,6 +92,19 @@ export default function Home() {
     },
   ];
 
+  const impactStats = [
+    { label: "更新時間の削減", value: "最大70%", sub: "紙・PDF運用から移行した場合の目安" },
+    { label: "案内差し替え時間", value: "最短1分", sub: "テキスト更新のみの場合" },
+    { label: "公開ミス検知", value: "自動", sub: "公開前チェックで不足項目を警告" },
+  ];
+
+  const compareRows = [
+    { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能" },
+    { item: "複数ページ連携", free: "-", pro: "ノードマップ対応" },
+    { item: "運用監視", free: "基本", pro: "Webhook/同期監視" },
+    { item: "更新体験", free: "1ページ運用", pro: "ハブ導線で運用集約" },
+  ];
+
   return (
     <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
       <LpRevealObserver />
@@ -232,6 +245,26 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">導入実感（目安）</h2>
+            <p className="text-sm text-slate-600">現場運用で体感しやすい改善ポイント</p>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {impactStats.map((stat, index) => (
+              <article
+                key={stat.label}
+                className="lp-reveal rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-5"
+                style={{ transitionDelay: `${140 + index * 80}ms` }}
+              >
+                <p className="text-xs font-semibold text-emerald-700">{stat.label}</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>
+                <p className="mt-1 text-xs text-slate-600">{stat.sub}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">機能</h2>
@@ -296,6 +329,27 @@ export default function Home() {
               </Link>
             </article>
           </div>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">項目</th>
+                  <th className="px-4 py-3 font-semibold">Free</th>
+                  <th className="px-4 py-3 font-semibold text-emerald-700">Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {compareRows.map((row, index) => (
+                  <tr key={row.item} className={index < compareRows.length - 1 ? "border-b border-slate-200" : ""}>
+                    <td className="px-4 py-3 font-medium text-slate-900">{row.item}</td>
+                    <td className="px-4 py-3 text-slate-700">{row.free}</td>
+                    <td className="px-4 py-3 text-slate-900">{row.pro}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section id="faq" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
@@ -318,6 +372,28 @@ export default function Home() {
           <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
           <p className="mt-2 text-sm text-slate-700">導入・プラン・不具合のご相談は以下までご連絡ください。</p>
           <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
+        </section>
+
+        <section className="lux-card lp-reveal lp-delay-4 rounded-3xl border border-emerald-300 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white sm:p-8">
+          <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料で1ページ公開してみましょう</h2>
+          <p className="mt-2 text-sm text-emerald-50">
+            編集から公開までの流れを、実際の管理画面でそのまま体験できます。必要になった時点でProへ拡張可能です。
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
+            >
+              無料で始める
+            </Link>
+            <a
+              href="#pricing"
+              className="rounded-xl border border-emerald-100/70 bg-emerald-500/30 px-5 py-3 text-sm font-semibold text-white"
+            >
+              プラン比較を見る
+            </a>
+          </div>
         </section>
 
         <footer className="lux-card lp-reveal lp-delay-4 rounded-2xl p-5 text-sm text-slate-700">
