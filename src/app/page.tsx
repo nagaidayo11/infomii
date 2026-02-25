@@ -389,7 +389,7 @@ export default function Home() {
             </Link>
             <a
               href="#pricing"
-              className="rounded-xl border border-emerald-100/70 bg-emerald-500/30 px-5 py-3 text-sm font-semibold text-white"
+              className="rounded-xl border border-white/80 bg-white/90 px-5 py-3 text-sm font-semibold text-emerald-800 shadow-[0_10px_20px_-14px_rgba(2,6,23,0.45)] backdrop-blur"
             >
               プラン比較を見る
             </a>
