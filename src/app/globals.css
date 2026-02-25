@@ -331,6 +331,28 @@ a {
   pointer-events: none;
 }
 
+.lp-cta-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.lp-cta-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-cta-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.34) 46%, transparent 72%);
+  transform: translateX(-120%);
+  animation: lp-shimmer 6.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .lp-metric {
   animation: lp-card-breathe 5.2s ease-in-out infinite;
 }
@@ -412,7 +434,8 @@ a {
   .lp-metric,
   .lp-cta-attention,
   .lux-main::before,
-  .lp-hero-shell::after {
+  .lp-hero-shell::after,
+  .lp-cta-shell::after {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
