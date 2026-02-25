@@ -2,6 +2,74 @@ import Link from "next/link";
 
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
+
+  const metrics = [
+    { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
+    { label: "更新反映", value: "即時", sub: "現場変更をそのまま反映" },
+    { label: "導入業種", value: "5+", sub: "ホテル・飲食店・サロンなど" },
+    { label: "運用導線", value: "1QR", sub: "入口ページから案内を集約" },
+  ];
+
+  const useCases = [
+    {
+      title: "ホテル",
+      items: ["館内案内", "Wi-Fi / 設備案内", "チェックイン情報"],
+    },
+    {
+      title: "飲食店",
+      items: ["メニュー", "営業時間", "注文・注意事項"],
+    },
+    {
+      title: "サロン・クリニック",
+      items: ["予約導線", "施術前後の案内", "アクセス・連絡先"],
+    },
+  ];
+
+  const features = [
+    {
+      title: "ブロックエディタ",
+      desc: "テキスト・画像・アイコン・料金表をドラッグ追加して編集。",
+    },
+    {
+      title: "スマホプレビュー",
+      desc: "編集と同時に表示を確認。公開前チェックで事故を予防。",
+    },
+    {
+      title: "公開URL / QR発行",
+      desc: "保存後にすぐ配布。紙運用にもそのまま利用可能。",
+    },
+    {
+      title: "ノード連携（Pro）",
+      desc: "1つの入口ページから複数ページへ自然遷移。",
+    },
+    {
+      title: "運用センター",
+      desc: "Webhook同期や障害復旧導線を一画面で管理。",
+    },
+    {
+      title: "監査ログ",
+      desc: "公開・削除・設定変更の履歴を時系列で追跡。",
+    },
+  ];
+
+  const flow = [
+    {
+      step: "01",
+      title: "テンプレを選ぶ",
+      desc: "業種に合わせた構成を選択。白紙からでも開始できます。",
+    },
+    {
+      step: "02",
+      title: "必要情報を入力",
+      desc: "見出し・画像・アイコン・料金などをその場で編集。",
+    },
+    {
+      step: "03",
+      title: "公開とQR発行",
+      desc: "公開後すぐにURL/QRを配布して運用開始。",
+    },
+  ];
+
   const faqItems = [
     {
       q: "どんな業種で使えますか？",
@@ -24,8 +92,10 @@ export default function Home() {
   return (
     <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
       <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8">
-        <header className="lux-card rounded-3xl p-5 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <header className="lux-card overflow-hidden rounded-3xl p-5 sm:p-8">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-r from-emerald-200/40 via-cyan-100/20 to-transparent" />
+
+          <div className="relative flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
                 I
@@ -36,25 +106,43 @@ export default function Home() {
               </div>
             </div>
             <nav className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-              <a href="#features" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">機能</a>
-              <a href="#pricing" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">料金</a>
-              <a href="#faq" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">FAQ</a>
-              <a href="#contact" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">お問い合わせ</a>
+              <a href="#features" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                機能
+              </a>
+              <a href="#flow" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                導入フロー
+              </a>
+              <a href="#pricing" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                料金
+              </a>
+              <a href="#faq" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                FAQ
+              </a>
             </nav>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
               <p className="lux-kicker text-xs font-semibold">Infomii</p>
               <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
-                Infomii
-                <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-xl">誰でも、3分で、案内ページを公開</span>
+                現場で使える案内ページを
+                <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
-                店舗向けインフォメーションを、ブロック編集で直感的に作成。
-                QRから1ページ案内、Proならノードで複数ページ連携まで。
-                現場で必要な更新を、その場で反映できます。
+                店舗向けインフォメーションを、ブロック編集で直感的に作成。QRから1ページ案内、
+                Proならノードで複数ページ連携まで。現場で必要な更新を、その場で反映できます。
               </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {metrics.map((metric) => (
+                  <div key={metric.label} className="rounded-xl border border-emerald-100 bg-white/95 p-3">
+                    <p className="text-[11px] text-slate-500">{metric.label}</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">{metric.value}</p>
+                    <p className="text-[11px] text-slate-500">{metric.sub}</p>
+                  </div>
+                ))}
+              </div>
+
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href="/login" className="lux-btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
                   無料で始める
@@ -66,79 +154,73 @@ export default function Home() {
                   ダッシュボードへ
                 </Link>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">ホテル</span>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">飲食店</span>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">サロン</span>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">観光施設</span>
-              </div>
             </div>
 
             <aside className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
-              <p className="text-xs font-semibold tracking-wide text-emerald-700">運用メリット</p>
+              <p className="text-xs font-semibold tracking-wide text-emerald-700">運用イメージ</p>
               <div className="mt-3 space-y-2">
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">初回公開まで</p>
-                  <p className="text-2xl font-bold text-slate-900">約3分</p>
+                  <p className="text-[11px] text-slate-500">1. 作成</p>
+                  <p className="text-sm font-semibold text-slate-900">ブロックを追加して情報入力</p>
                 </div>
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">QR導線</p>
-                  <p className="text-2xl font-bold text-slate-900">1ページ1QR</p>
+                  <p className="text-[11px] text-slate-500">2. 公開</p>
+                  <p className="text-sm font-semibold text-slate-900">URL / QRを即発行</p>
                 </div>
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">Pro機能</p>
-                  <p className="text-xl font-bold text-slate-900">複数ページ連携</p>
+                  <p className="text-[11px] text-slate-500">3. 拡張（Pro）</p>
+                  <p className="text-sm font-semibold text-slate-900">ノードで複数ページ連携</p>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-600 p-3 text-white">
+                <p className="text-xs text-emerald-100">現場向け</p>
+                <p className="text-lg font-bold">更新作業の属人化を減らす</p>
+                <p className="mt-1 text-xs text-emerald-50">&quot;更新できる人が限られる&quot; 状態を、運用画面で解消します。</p>
               </div>
             </aside>
           </div>
         </header>
 
         <section className="grid gap-4 md:grid-cols-3">
-          <article className="lux-card lux-section-card rounded-2xl p-5">
-            <p className="text-xs font-semibold text-emerald-700">Before</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900">資料がバラバラ</h2>
-            <p className="mt-2 text-sm text-slate-700">PDF・紙・チャットに分散して更新漏れが発生。</p>
-          </article>
-          <article className="lux-card lux-section-card rounded-2xl p-5">
-            <p className="text-xs font-semibold text-emerald-700">After</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900">1か所で一元管理</h2>
-            <p className="mt-2 text-sm text-slate-700">編集・公開・QRまで同じ画面で完結。</p>
-          </article>
-          <article className="lux-card lux-section-card rounded-2xl p-5">
-            <p className="text-xs font-semibold text-emerald-700">Outcome</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900">現場運用が速い</h2>
-            <p className="mt-2 text-sm text-slate-700">営業時間変更や臨時案内を即時反映できます。</p>
-          </article>
+          {useCases.map((item) => (
+            <article key={item.title} className="lux-card lux-section-card rounded-2xl p-5">
+              <p className="text-xs font-semibold text-emerald-700">導入業種</p>
+              <h2 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h2>
+              <ul className="mt-3 space-y-1 text-sm text-slate-700">
+                {item.items.map((line) => (
+                  <li key={line}>・{line}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </section>
 
         <section id="features" className="lux-card rounded-3xl p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-slate-900">機能</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">機能</h2>
+            <p className="text-sm text-slate-600">作成から運用まで、1つの画面群で完結</p>
+          </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">ブロックエディタ</p>
-              <p className="mt-2 text-sm text-slate-700">テキスト・画像・アイコン・料金表などを自由に構成。</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">スマホプレビュー</p>
-              <p className="mt-2 text-sm text-slate-700">編集しながら表示確認。公開前チェックも自動で実行。</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">公開URL / QR発行</p>
-              <p className="mt-2 text-sm text-slate-700">保存後すぐに案内用URLとQRコードを発行。</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">ノード連携（Pro）</p>
-              <p className="mt-2 text-sm text-slate-700">1つの入口ページから複数ページへ自然に遷移。</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">運用センター</p>
-              <p className="mt-2 text-sm text-slate-700">Webhook状態や同期状況をまとめて監視。</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-sm font-semibold text-slate-900">監査ログ</p>
-              <p className="mt-2 text-sm text-slate-700">更新・公開・課金関連の操作履歴を確認可能。</p>
-            </article>
+            {features.map((feature) => (
+              <article key={feature.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
+                <p className="mt-2 text-sm text-slate-700">{feature.desc}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="flow" className="lux-card rounded-3xl p-6 sm:p-8">
+          <h2 className="text-2xl font-bold text-slate-900">導入フロー</h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {flow.map((item) => (
+              <article key={item.step} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <p className="text-xs font-bold tracking-widest text-emerald-600">STEP {item.step}</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-700">{item.desc}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -162,7 +244,10 @@ export default function Home() {
                 <li>・ノードマップで複数ページ連携</li>
                 <li>・運用管理機能</li>
               </ul>
-              <Link href="/login" className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
+              <Link
+                href="/login"
+                className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+              >
                 Proを試す
               </Link>
             </article>
@@ -191,11 +276,21 @@ export default function Home() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-slate-500">© {new Date().getFullYear()} Infomii</p>
             <div className="flex flex-wrap gap-x-4 gap-y-2">
-              <Link className="hover:underline" href="/terms">利用規約</Link>
-              <Link className="hover:underline" href="/privacy">プライバシーポリシー</Link>
-              <Link className="hover:underline" href="/commerce">特定商取引法に基づく表記</Link>
-              <Link className="hover:underline" href="/refund">返金・キャンセルポリシー</Link>
-              <Link className="hover:underline" href="/login">ログイン</Link>
+              <Link className="hover:underline" href="/terms">
+                利用規約
+              </Link>
+              <Link className="hover:underline" href="/privacy">
+                プライバシーポリシー
+              </Link>
+              <Link className="hover:underline" href="/commerce">
+                特定商取引法に基づく表記
+              </Link>
+              <Link className="hover:underline" href="/refund">
+                返金・キャンセルポリシー
+              </Link>
+              <Link className="hover:underline" href="/login">
+                ログイン
+              </Link>
             </div>
           </div>
         </footer>
