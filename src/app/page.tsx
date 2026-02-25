@@ -1,8 +1,10 @@
 import Link from "next/link";
 import LpRevealObserver from "@/components/lp-reveal-observer";
+import LpDemoVideo from "@/components/lp-demo-video";
 
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
+  const demoVideoUrl = process.env.NEXT_PUBLIC_LP_DEMO_VIDEO_URL ?? "/demo/editor-demo.mp4";
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -206,6 +208,28 @@ export default function Home() {
               </ul>
             </article>
           ))}
+        </section>
+
+        <section id="demo" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="lux-kicker text-xs font-semibold">Product Demo</p>
+              <h2 className="mt-1 text-2xl font-bold text-slate-900">編集画面を30秒で確認</h2>
+              <p className="mt-2 text-sm text-slate-700">
+                実際の編集操作を短時間で確認できます。導入前のイメージ共有に使えます。
+              </p>
+            </div>
+            <Link
+              href="/login"
+              className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800"
+            >
+              管理画面を試す
+            </Link>
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-emerald-200 bg-slate-950/95 shadow-[0_18px_36px_-22px_rgba(2,6,23,0.8)]">
+            <LpDemoVideo src={demoVideoUrl} />
+          </div>
         </section>
 
         <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
