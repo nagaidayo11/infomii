@@ -26,6 +26,61 @@ function mapPlanByStatus(status: Stripe.Subscription.Status): "free" | "pro" {
   return "free";
 }
 
+function toIsoOrNull(unixSeconds: number | null | undefined): string | null {
+  if (!unixSeconds || Number.isNaN(unixSeconds)) {
+    return null;
+  }
+  return new Date(unixSeconds * 1000).toISOString();
+}
+
+function resolvePeriodEndFromSubscription(subscription: Stripe.Subscription): number | null {
+  const subscriptionAny = subscription as Stripe.Subscription & {
+    current_period_end?: number;
+    current_period_end_at?: number;
+    current_period?: { end?: number };
+  };
+  return (
+    subscriptionAny.current_period_end ??
+    subscriptionAny.current_period_end_at ??
+    subscriptionAny.current_period?.end ??
+    null
+  );
+}
+
+async function resolveCurrentPeriodEndIso(
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+): Promise<string | null> {
+  const direct = resolvePeriodEndFromSubscription(subscription);
+  if (direct) {
+    return toIsoOrNull(direct);
+  }
+
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id ?? null;
+  if (!customerId) {
+    return null;
+  }
+
+  try {
+    const upcomingInvoice = await stripe.invoices.createPreview({
+      customer: customerId,
+      subscription: subscription.id,
+    });
+    const upcomingAny = upcomingInvoice as Stripe.Invoice & {
+      period_end?: number;
+      lines?: { data?: Array<{ period?: { end?: number } }> };
+    };
+    const invoicePeriodEnd =
+      upcomingAny.period_end ?? upcomingAny.lines?.data?.[0]?.period?.end ?? null;
+    return toIsoOrNull(invoicePeriodEnd);
+  } catch {
+    return null;
+  }
+}
+
 async function findHotelIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
   const admin = getSupabaseAdminServerClient();
   const { data } = await admin
@@ -123,12 +178,7 @@ export async function POST(request: NextRequest) {
             mappedStatus = mapStripeStatus(stripeSubscription.status);
             mappedPlan = mapPlanByStatus(stripeSubscription.status);
             stripePriceId = stripeSubscription.items.data[0]?.price?.id ?? null;
-            const currentPeriodEnd = (
-              stripeSubscription as Stripe.Subscription & { current_period_end?: number }
-            ).current_period_end;
-            currentPeriodEndIso = currentPeriodEnd
-              ? new Date(currentPeriodEnd * 1000).toISOString()
-              : null;
+            currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, stripeSubscription);
           }
 
           await upsertStripeSubscription({
@@ -163,9 +213,7 @@ export async function POST(request: NextRequest) {
         const mappedStatus = mapStripeStatus(subscription.status);
         const mappedPlan = mapPlanByStatus(subscription.status);
         const firstItem = subscription.items.data[0];
-        const currentPeriodEnd = (
-          subscription as Stripe.Subscription & { current_period_end?: number }
-        ).current_period_end;
+        const currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, subscription);
 
         await upsertStripeSubscription({
           hotelId,
@@ -176,9 +224,7 @@ export async function POST(request: NextRequest) {
             typeof subscription.customer === "string" ? subscription.customer : null,
           stripeSubscriptionId: subscription.id,
           stripePriceId: firstItem?.price?.id ?? null,
-          currentPeriodEnd: currentPeriodEnd
-            ? new Date(currentPeriodEnd * 1000).toISOString()
-            : null,
+          currentPeriodEnd: currentPeriodEndIso,
         });
         await appendBillingLog({
           hotelId,
