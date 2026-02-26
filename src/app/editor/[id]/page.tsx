@@ -18,7 +18,7 @@ import { useAuth } from "@/components/auth-provider";
 import {
   buildPublicQrUrl,
   buildPublicUrl,
-  createInformationFromTemplate,
+  createBlankInformation,
   createStripeCheckoutSession,
   deleteInformation,
   ensureUserHotelScope,
@@ -2285,14 +2285,16 @@ function onUpdateIconRowItem(
     setCreatingNodeProjectId(nodeId);
     try {
       await ensureUserHotelScope();
-      const createdId = await createInformationFromTemplate(0);
+      const map = getCurrentNodeMap();
+      const targetNode = map.nodes.find((node) => node.id === nodeId);
+      const nextTitle = targetNode?.title?.trim() || "新規インフォメーション";
+      const createdId = await createBlankInformation(nextTitle);
       const created = await getInformation(createdId);
       if (!created) {
         throw new Error("新規ページ作成後の情報取得に失敗しました");
       }
       const links = await listCurrentHotelPageLinks();
       setPageLinks(links.filter((row) => row.id !== item.id));
-      const map = getCurrentNodeMap();
       updateNodeMap(
         {
           ...map,

@@ -7,6 +7,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/components/auth-provider";
 import {
   buildPublicUrl,
+  createBlankInformation,
   createStripePortalSession,
   createStripeCheckoutSession,
   createInformationFromTemplate,
@@ -567,10 +568,20 @@ export default function DashboardPage() {
   const normalizedProjectName = useMemo(() => normalizeProjectName(newProjectName), [newProjectName]);
   const canCreateProject = normalizedProjectName.length >= 2;
 
-  async function onCreate(templateIndex = 0) {
+  async function onCreateFromTemplate(templateIndex: number) {
     try {
       await ensureUserHotelScope();
       const id = await createInformationFromTemplate(templateIndex);
+      router.push(`/editor/${id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "新規作成に失敗しました");
+    }
+  }
+
+  async function onCreateBlank() {
+    try {
+      await ensureUserHotelScope();
+      const id = await createBlankInformation();
       router.push(`/editor/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
@@ -797,7 +808,7 @@ export default function DashboardPage() {
     setSuccess(null);
     try {
       await ensureUserHotelScope();
-      const id = await createInformationFromTemplate(0);
+      const id = await createBlankInformation(title);
       const created = await getInformation(id);
       if (!created) {
         throw new Error("新規プロジェクトの取得に失敗しました");
@@ -810,10 +821,7 @@ export default function DashboardPage() {
           edges: [],
         },
       };
-      await updateInformation(id, {
-        title,
-        theme: nextTheme,
-      });
+      await updateInformation(id, { title, theme: nextTheme });
       const nextItem: Information = {
         ...created,
         title,
@@ -899,7 +907,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => void onCreate(0)}
+                  onClick={() => void onCreateBlank()}
                   className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
                 >
                   + 新規インフォメーションを作成
@@ -1051,7 +1059,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => void onCreate(0)}
+                    onClick={() => void onCreateBlank()}
                     className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-500"
                   >
                     + 新規インフォメーションを作成
@@ -1222,7 +1230,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-slate-800">最短1クリックで新規作成</p>
                   <button
                     type="button"
-                    onClick={() => void onCreate(0)}
+                    onClick={() => void onCreateBlank()}
                     className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
                   >
                     + 新規インフォメーションを作成
@@ -1240,11 +1248,11 @@ export default function DashboardPage() {
                       key={`${template.title}-${index}`}
                       role="button"
                       tabIndex={0}
-                      onClick={() => void onCreate(originalIndex)}
+                      onClick={() => void onCreateFromTemplate(originalIndex)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
-                          void onCreate(originalIndex);
+                          void onCreateFromTemplate(originalIndex);
                         }
                       }}
                       aria-label={`${template.title} で作成`}
@@ -1661,7 +1669,7 @@ export default function DashboardPage() {
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
                     <button
                       type="button"
-                      onClick={() => void onCreate(0)}
+                      onClick={() => void onCreateBlank()}
                       className="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-left text-xs hover:bg-emerald-50"
                     >
                       1. テンプレから作成

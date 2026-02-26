@@ -1037,6 +1037,73 @@ export async function createInformationFromTemplate(
   return next.id;
 }
 
+export async function createBlankInformation(
+  title = "新規インフォメーション",
+): Promise<string> {
+  const nextTitle = title.trim() || "新規インフォメーション";
+  const supabase = getBrowserSupabaseClient();
+  const blocks = normalizeBlocks([], "");
+
+  if (supabase) {
+    const hotelId = await ensureUserHotelScope();
+    if (!hotelId) {
+      throw new Error("ログインユーザーの所属施設を取得できませんでした");
+    }
+
+    const { data, error } = await supabase
+      .from("informations")
+      .insert({
+        hotel_id: hotelId,
+        title: nextTitle,
+        body: blocksToBody(blocks),
+        images: blocksToImages(blocks),
+        content_blocks: blocks,
+        theme: {},
+        status: "draft",
+        publish_at: null,
+        unpublish_at: null,
+        slug: createSlug(nextTitle),
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      throw toError(error, "新規作成に失敗しました");
+    }
+
+    await appendAuditLog({
+      hotelId,
+      action: "information.created",
+      message: "インフォメーションを白紙で新規作成しました",
+      targetType: "information",
+      targetId: data.id,
+      metadata: { source: "blank" },
+    });
+
+    return data.id;
+  }
+
+  const items = getLocalData();
+  const now = new Date().toISOString();
+  const next = {
+    id: `local-${crypto.randomUUID()}`,
+    title: nextTitle,
+    body: blocksToBody(blocks),
+    images: blocksToImages(blocks),
+    contentBlocks: blocks,
+    theme: {},
+    status: "draft" as InformationStatus,
+    publishAt: null,
+    unpublishAt: null,
+    slug: createSlug(nextTitle),
+    updatedAt: now,
+  };
+
+  items.unshift(next);
+  setLocalData(items);
+  return next.id;
+}
+
 export async function updateInformation(
   id: string,
   patch: Partial<
