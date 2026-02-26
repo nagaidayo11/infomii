@@ -51,11 +51,20 @@ function resolvePeriodEndFromSubscription(subscription: Stripe.Subscription): nu
     current_period_end?: number;
     current_period_end_at?: number;
     current_period?: { end?: number };
+    items?: {
+      data?: Array<{
+        current_period_end?: number;
+        current_period?: { end?: number };
+      }>;
+    };
   };
+  const firstItem = subscriptionAny.items?.data?.[0];
   return (
     subscriptionAny.current_period_end ??
     subscriptionAny.current_period_end_at ??
     subscriptionAny.current_period?.end ??
+    firstItem?.current_period_end ??
+    firstItem?.current_period?.end ??
     null
   );
 }
@@ -89,6 +98,28 @@ async function resolveCurrentPeriodEndIso(
     const invoicePeriodEnd =
       upcomingAny.period_end ?? upcomingAny.lines?.data?.[0]?.period?.end ?? null;
     return toIsoOrNull(invoicePeriodEnd);
+  } catch {
+    // Fallback to latest invoice history when upcoming preview is unavailable.
+  }
+
+  try {
+    const invoices = await stripe.invoices.list({
+      customer: customerId,
+      subscription: subscription.id,
+      limit: 10,
+    });
+    const nowUnix = Math.floor(Date.now() / 1000);
+    const candidateEnds = invoices.data
+      .flatMap((inv) => inv.lines.data.map((line) => line.period?.end ?? null))
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+      .sort((a, b) => b - a);
+
+    const future = candidateEnds.find((value) => value >= nowUnix) ?? null;
+    if (future) {
+      return toIsoOrNull(future);
+    }
+
+    return toIsoOrNull(candidateEnds[0] ?? null);
   } catch {
     return null;
   }
