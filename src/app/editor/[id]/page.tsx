@@ -359,6 +359,17 @@ function formatSchedule(value: string | null): string {
   }).format(new Date(value));
 }
 
+function formatSavedAt(value: string | null): string {
+  if (!value) {
+    return "--:--";
+  }
+  return new Intl.DateTimeFormat("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(value));
+}
+
 function isProActivated(sub: HotelSubscription | null): boolean {
   if (!sub) {
     return false;
@@ -725,6 +736,8 @@ export default function EditorPage() {
 
   const [item, setItem] = useState<Information | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autosaveState, setAutosaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [notice, setNotice] = useState<string>("");
   const [noticeKind, setNoticeKind] = useState<"success" | "error">("success");
   const [creatingCheckout, setCreatingCheckout] = useState(false);
@@ -1101,38 +1114,40 @@ export default function EditorPage() {
         );
       }
       if (block.type === "iconRow") {
+        const iconItems = block.iconItems ?? [];
+        const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
         return (
           <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
             <div
               className="rounded-lg border border-slate-200 p-3"
               style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
             >
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {(block.iconItems ?? []).map((entry) => (
+              <div className={`grid gap-2 ${iconColumnsClass}`}>
+                {iconItems.map((entry) => (
                   <div
                     key={entry.id}
-                    className="rounded-md border border-slate-200 px-2 py-2 text-center"
+                    className="rounded-md border border-slate-200 text-center shadow-sm"
                     style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                   >
                     {entry.link ? (
                       <button
                         type="button"
                         onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
-                        className="flex w-full flex-col items-center gap-1"
+                        className="flex min-h-[76px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99]"
                       >
                         {renderIconVisual(entry.icon)}
                         <p
-                          className={`text-xs ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                          className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
                         </p>
                       </button>
                     ) : (
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex min-h-[76px] w-full flex-col items-center justify-center gap-1 px-2 py-2.5">
                         {renderIconVisual(entry.icon)}
                         <p
-                          className={`text-xs ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                          className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
@@ -1317,7 +1332,7 @@ export default function EditorPage() {
     }
 
     setSaving(true);
-    setNotice("");
+    setAutosaveState("saving");
     try {
       await updateInformation(id, {
         title: patch.title,
@@ -1348,14 +1363,25 @@ export default function EditorPage() {
 
         return next;
       });
-      setNoticeKind("success");
-      setNotice("保存しました");
+      setAutosaveState("saved");
+      setLastSavedAt(new Date().toISOString());
     } catch (e) {
+      setAutosaveState("error");
       setNoticeKind("error");
       setNotice(e instanceof Error ? e.message : "保存に失敗しました");
     } finally {
       setSaving(false);
     }
+  }
+
+  function showInlineFeedback(message: string, point?: { x: number; y: number } | null) {
+    const id = crypto.randomUUID();
+    const x = point?.x ?? (typeof window !== "undefined" ? Math.round(window.innerWidth / 2) : 320);
+    const y = point?.y ?? (typeof window !== "undefined" ? Math.round(window.innerHeight / 2) : 240);
+    setInlineAddToast({ id, x, y, message });
+    window.setTimeout(() => {
+      setInlineAddToast((prev) => (prev?.id === id ? null : prev));
+    }, 850);
   }
 
   async function saveBlocks(nextBlocks: InformationBlock[]) {
@@ -1430,16 +1456,10 @@ export default function EditorPage() {
     });
     void saveBlocks(nextBlocks);
     if (clickEvent) {
-      const id = crypto.randomUUID();
-      setInlineAddToast({
-        id,
+      showInlineFeedback(`「${getBlockTypeLabel(type)}」を行末に追加しました`, {
         x: clickEvent.clientX,
         y: clickEvent.clientY - 8,
-        message: `「${getBlockTypeLabel(type)}」を行末に追加しました`,
       });
-      window.setTimeout(() => {
-        setInlineAddToast((prev) => (prev?.id === id ? null : prev));
-      }, 900);
     }
   }
 
@@ -1550,6 +1570,7 @@ export default function EditorPage() {
       images: blocksToImages(nextBlocks),
     });
     void saveBlocks(nextBlocks);
+    showInlineFeedback("ブロックを並び替えました");
   }
 
 function onUpdateIconRowItem(
@@ -1817,6 +1838,7 @@ function onUpdateIconRowItem(
       images: blocksToImages(nextBlocks),
     });
     void saveBlocks(nextBlocks);
+    showInlineFeedback("コピーしたブロックを貼り付けました");
     setNoticeKind("success");
     setNotice("コピーしたブロックを貼り付けました");
   }
@@ -1862,6 +1884,10 @@ function onUpdateIconRowItem(
       setDraggingBlockId(null);
       setDraggingNewBlockType(null);
       void saveBlocks(nextBlocks);
+      showInlineFeedback(`「${getBlockTypeLabel(newBlockType)}」を挿入しました`, {
+        x: event.clientX,
+        y: event.clientY - 8,
+      });
       return;
     }
 
@@ -1894,6 +1920,10 @@ function onUpdateIconRowItem(
     setDragOverBlockId(null);
     setDraggingBlockId(null);
     void saveBlocks(nextBlocks);
+    showInlineFeedback("ブロックを並び替えました", {
+      x: event.clientX,
+      y: event.clientY - 8,
+    });
   }
 
   function onBlockDragEnd() {
@@ -2639,7 +2669,25 @@ function onUpdateIconRowItem(
                     >
                       {item.status === "published" ? "公開中" : "下書き"}
                     </span>
-                    <span className="text-xs text-slate-500">{saving ? "保存中..." : "待機中"}</span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        autosaveState === "saving"
+                          ? "bg-blue-100 text-blue-700"
+                          : autosaveState === "saved"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : autosaveState === "error"
+                              ? "bg-rose-100 text-rose-700"
+                              : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {autosaveState === "saving"
+                        ? "自動保存中..."
+                        : autosaveState === "saved"
+                          ? `保存済み ${formatSavedAt(lastSavedAt)}`
+                          : autosaveState === "error"
+                            ? "保存失敗"
+                            : "待機中"}
+                    </span>
                     <button
                       type="button"
                       onClick={() => void onDeleteInformation()}
