@@ -89,7 +89,7 @@ function clampPercent(value: number): number {
 
 function StatCard({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <article className="lux-card rounded-2xl p-4 backdrop-blur">
+    <article className="lux-card rounded-2xl p-4 backdrop-blur shadow-[0_8px_20px_-20px_rgba(15,23,42,0.28)]">
       <p className="text-xs uppercase tracking-[0.12em] text-emerald-700">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
       <p className="mt-1 text-xs text-slate-500">{note}</p>
