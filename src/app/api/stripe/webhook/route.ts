@@ -112,20 +112,40 @@ export async function POST(request: NextRequest) {
       if (session.mode === "subscription") {
         const hotelId = session.metadata?.hotel_id;
         if (hotelId) {
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : null;
+          let currentPeriodEndIso: string | null = null;
+          let mappedStatus: "trialing" | "active" | "past_due" | "canceled" = "active";
+          let mappedPlan: "free" | "pro" = "pro";
+          let stripePriceId: string | null = null;
+
+          if (subscriptionId) {
+            const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+            mappedStatus = mapStripeStatus(stripeSubscription.status);
+            mappedPlan = mapPlanByStatus(stripeSubscription.status);
+            stripePriceId = stripeSubscription.items.data[0]?.price?.id ?? null;
+            const currentPeriodEnd = (
+              stripeSubscription as Stripe.Subscription & { current_period_end?: number }
+            ).current_period_end;
+            currentPeriodEndIso = currentPeriodEnd
+              ? new Date(currentPeriodEnd * 1000).toISOString()
+              : null;
+          }
+
           await upsertStripeSubscription({
             hotelId,
-            plan: "pro",
-            status: "active",
-            maxPublishedPages: 1000,
+            plan: mappedPlan,
+            status: mappedStatus,
+            maxPublishedPages: mappedPlan === "pro" ? 1000 : 3,
             stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
-            stripeSubscriptionId:
-              typeof session.subscription === "string" ? session.subscription : null,
+            stripeSubscriptionId: subscriptionId,
+            stripePriceId,
+            currentPeriodEnd: currentPeriodEndIso,
           });
           await appendBillingLog({
             hotelId,
             action: "billing.checkout_completed",
-            message: "Checkout完了イベントを処理しました（Proへ更新）",
-            metadata: { eventId, eventType },
+            message: "Checkout完了イベントを処理しました（契約情報を同期）",
+            metadata: { eventId, eventType, stripeSubscriptionId: subscriptionId },
           });
         }
       }
