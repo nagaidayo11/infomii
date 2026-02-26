@@ -576,6 +576,83 @@ function renderLineIcon(token: string, size: InformationBlock["iconSize"] | unde
       </svg>
     );
   }
+  if (token === "svg:phone") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M6 3h4l1 4-2 1.5a14 14 0 0 0 6 6L16.5 12l4 1v4l-2 2a3 3 0 0 1-3 .7A18 18 0 0 1 4.3 8.5 3 3 0 0 1 5 5.5L6 3Z" />
+      </svg>
+    );
+  }
+  if (token === "svg:train") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="6" y="3.5" width="12" height="14" rx="2" />
+        <path d="M9 7h2M13 7h2M8 12h8M10 17l-2 3M14 17l2 3" />
+      </svg>
+    );
+  }
+  if (token === "svg:bus") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="5" y="4" width="14" height="13" rx="2" />
+        <path d="M5 10h14M8 17v3M16 17v3" />
+        <circle cx="9" cy="18" r="1.2" />
+        <circle cx="15" cy="18" r="1.2" />
+      </svg>
+    );
+  }
+  if (token === "svg:credit-card") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="M3 10h18M7 14h4" />
+      </svg>
+    );
+  }
+  if (token === "svg:baby") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="9" r="3.2" />
+        <path d="M7 20a5 5 0 0 1 10 0" />
+      </svg>
+    );
+  }
+  if (token === "svg:wheelchair") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="9" cy="18" r="3" />
+        <circle cx="13" cy="5" r="1.2" />
+        <path d="M13 7v5h3l2 4h-5" />
+        <path d="M9 15h6" />
+      </svg>
+    );
+  }
+  if (token === "svg:paw") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="7" cy="8" r="1.5" />
+        <circle cx="11" cy="6.5" r="1.5" />
+        <circle cx="15" cy="6.5" r="1.5" />
+        <circle cx="17" cy="9" r="1.5" />
+        <path d="M9 17c0-2.2 1.8-4 4-4s4 1.8 4 4c0 1.4-1 2-2.3 2H11c-1.2 0-2-.7-2-2Z" />
+      </svg>
+    );
+  }
+  if (token === "svg:plug") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M9 3v6M15 3v6M7 9h10v2a5 5 0 0 1-5 5v5" />
+      </svg>
+    );
+  }
+  if (token === "svg:ticket") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4 8a2 2 0 0 0 2-2h12v4a2 2 0 1 1 0 4v4H6a2 2 0 0 0-2-2V8Z" />
+        <path d="M12 7v10" />
+      </svg>
+    );
+  }
   return null;
 }
 
