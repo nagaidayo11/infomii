@@ -88,6 +88,7 @@ export type InformationBlock = {
   spacing?: "sm" | "md" | "lg";
   dividerThickness?: "thin" | "medium" | "thick";
   dividerColor?: string;
+  cardRadius?: "sm" | "md" | "lg" | "xl" | "full";
   sectionTitle?: string;
   sectionBody?: string;
   sectionBackgroundColor?: string;

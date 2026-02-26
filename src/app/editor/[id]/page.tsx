@@ -579,6 +579,7 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       rightTitle: "右カラム",
       rightText: "右側の説明を入力",
       columnsBackgroundColor: "#f8fafc",
+      cardRadius: "lg",
       spacing: "md",
     };
   }
@@ -679,6 +680,7 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
         { id: crypto.randomUUID(), title: "カラム 1", body: "内容を入力してください" },
         { id: crypto.randomUUID(), title: "カラム 2", body: "内容を入力してください" },
       ],
+      cardRadius: "lg",
       spacing: "md",
     };
   }
@@ -869,6 +871,22 @@ function getSpaceHeightClass(spacing: InformationBlock["spacing"] | undefined): 
     return "h-12";
   }
   return "h-8";
+}
+
+function getCardRadiusClass(radius: InformationBlock["cardRadius"] | undefined): string {
+  if (radius === "sm") {
+    return "rounded-md";
+  }
+  if (radius === "md") {
+    return "rounded-lg";
+  }
+  if (radius === "xl") {
+    return "rounded-2xl";
+  }
+  if (radius === "full") {
+    return "rounded-3xl";
+  }
+  return "rounded-xl";
 }
 
 function getBlockTypeLabel(type: InformationBlock["type"]): string {
@@ -1433,7 +1451,7 @@ export default function EditorPage() {
           <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
             <div className="grid gap-2 sm:grid-cols-2">
               <div
-                className="rounded-lg border border-slate-200 p-3"
+                className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                 style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
               >
                 <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
@@ -1444,7 +1462,7 @@ export default function EditorPage() {
                 </p>
               </div>
               <div
-                className="rounded-lg border border-slate-200 p-3"
+                className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                 style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
               >
                 <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
@@ -1619,7 +1637,7 @@ export default function EditorPage() {
           <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
             <div className={`grid gap-2 ${columnsClass}`}>
               {items.map((entry) => (
-                <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
                   <p
                     className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                     style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -4113,6 +4131,24 @@ function onUpdateIconRowItem(
                                   <option value="lg">大</option>
                                   </select>
                               </div>
+                              <div>
+                                <label className="mb-1 block text-xs text-slate-600">角丸</label>
+                                <select
+                                  value={block.cardRadius ?? "lg"}
+                                  onChange={(e) =>
+                                    onUpdateBlock(block.id, {
+                                      cardRadius: e.target.value as InformationBlock["cardRadius"],
+                                    })}
+                                  onBlur={onBlurBlockSave}
+                                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm sm:max-w-[160px]"
+                                >
+                                  <option value="sm">小</option>
+                                  <option value="md">中</option>
+                                  <option value="lg">大</option>
+                                  <option value="xl">特大</option>
+                                  <option value="full">ピル</option>
+                                </select>
+                              </div>
                               <div className="sm:max-w-[160px]">
                                 <label className="mb-1 block text-xs text-slate-600">背景色</label>
                                 <input
@@ -4380,6 +4416,24 @@ function onUpdateIconRowItem(
 
                           {!collapsedBlocks[block.id] && block.type === "columnGroup" && (
                             <div className="space-y-2">
+                              <div className="sm:max-w-[160px]">
+                                <label className="mb-1 block text-xs text-slate-600">角丸</label>
+                                <select
+                                  value={block.cardRadius ?? "lg"}
+                                  onChange={(e) =>
+                                    onUpdateBlock(block.id, {
+                                      cardRadius: e.target.value as InformationBlock["cardRadius"],
+                                    })}
+                                  onBlur={onBlurBlockSave}
+                                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                >
+                                  <option value="sm">小</option>
+                                  <option value="md">中</option>
+                                  <option value="lg">大</option>
+                                  <option value="xl">特大</option>
+                                  <option value="full">ピル</option>
+                                </select>
+                              </div>
                               <div className="flex items-center justify-between">
                                 <p className="text-xs text-slate-600">カラム項目（2〜4推奨）</p>
                                 <button

@@ -89,6 +89,14 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
               ? block.dividerThickness
               : undefined,
           dividerColor: typeof block.dividerColor === "string" ? block.dividerColor : undefined,
+          cardRadius:
+            block.cardRadius === "sm" ||
+            block.cardRadius === "md" ||
+            block.cardRadius === "lg" ||
+            block.cardRadius === "xl" ||
+            block.cardRadius === "full"
+              ? block.cardRadius
+              : undefined,
           sectionTitle: typeof block.sectionTitle === "string" ? block.sectionTitle : undefined,
           sectionBody: typeof block.sectionBody === "string" ? block.sectionBody : undefined,
           sectionBackgroundColor:
@@ -450,6 +458,22 @@ function getSpaceHeightClass(spacing: InformationBlock["spacing"] | undefined): 
     return "h-12";
   }
   return "h-8";
+}
+
+function getCardRadiusClass(radius: InformationBlock["cardRadius"] | undefined): string {
+  if (radius === "sm") {
+    return "rounded-md";
+  }
+  if (radius === "md") {
+    return "rounded-lg";
+  }
+  if (radius === "xl") {
+    return "rounded-2xl";
+  }
+  if (radius === "full") {
+    return "rounded-3xl";
+  }
+  return "rounded-xl";
 }
 
 function renderLineIcon(token: string): ReactNode {
@@ -829,7 +853,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                     <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
                       <div className="grid gap-2 sm:grid-cols-2">
                         <div
-                          className="rounded-lg border border-slate-200 p-3"
+                          className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                           style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
                         >
                           <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
@@ -840,7 +864,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                           </p>
                         </div>
                         <div
-                          className="rounded-lg border border-slate-200 p-3"
+                          className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                           style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
                         >
                           <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
@@ -1022,7 +1046,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                     <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
                       <div className={`grid gap-2 ${columnsClass}`}>
                         {items.map((entry) => (
-                          <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                          <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
                             <p
                               className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                               style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}

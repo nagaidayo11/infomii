@@ -103,6 +103,14 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
               ? block.dividerThickness
               : undefined,
           dividerColor: typeof block.dividerColor === "string" ? block.dividerColor : undefined,
+          cardRadius:
+            block.cardRadius === "sm" ||
+            block.cardRadius === "md" ||
+            block.cardRadius === "lg" ||
+            block.cardRadius === "xl" ||
+            block.cardRadius === "full"
+              ? block.cardRadius
+              : undefined,
           sectionTitle: typeof block.sectionTitle === "string" ? block.sectionTitle : undefined,
           sectionBody: typeof block.sectionBody === "string" ? block.sectionBody : undefined,
           sectionBackgroundColor:
