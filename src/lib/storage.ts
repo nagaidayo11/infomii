@@ -5,7 +5,7 @@ import type {
   InformationTheme,
 } from "@/types/information";
 import { createSlug } from "@/lib/slug";
-import { starterTemplates } from "@/lib/templates";
+import { starterTemplates, type StarterTemplate } from "@/lib/templates";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
@@ -497,25 +497,44 @@ function mapRow(row: SupabaseInformationRow): Information {
   };
 }
 
+function cloneTemplateBlocks(blocks: InformationBlock[]): InformationBlock[] {
+  return blocks.map((block) => ({
+    ...block,
+    iconItems: block.iconItems?.map((entry) => ({ ...entry })),
+    hoursItems: block.hoursItems?.map((entry) => ({ ...entry })),
+    pricingItems: block.pricingItems?.map((entry) => ({ ...entry })),
+  }));
+}
+
+function resolveTemplateBlocks(template: StarterTemplate): InformationBlock[] {
+  if (template.blocks && template.blocks.length > 0) {
+    return cloneTemplateBlocks(template.blocks);
+  }
+  return normalizeBlocks([], template.body);
+}
+
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
   return plan === "pro" ? 1000 : 3;
 }
 
 function bootstrapLocalData(): Information[] {
   const now = new Date().toISOString();
-  return starterTemplates.map((template, i) => ({
+  return starterTemplates.map((template, i) => {
+    const blocks = resolveTemplateBlocks(template);
+    return {
     id: `local-${i + 1}`,
     title: template.title,
-    body: template.body,
-    images: [],
-    contentBlocks: normalizeBlocks([], template.body),
+    body: blocksToBody(blocks),
+    images: blocksToImages(blocks),
+    contentBlocks: blocks,
     theme: {},
     status: i === 0 ? "published" : "draft",
     publishAt: null,
     unpublishAt: null,
     slug: createSlug(template.title),
     updatedAt: now,
-  }));
+    };
+  });
 }
 
 function getLocalData(): Information[] {
@@ -975,7 +994,7 @@ export async function createInformationFromTemplate(
 ): Promise<string> {
   const template = starterTemplates[templateIndex] ?? starterTemplates[0];
   const supabase = getBrowserSupabaseClient();
-  const blocks = normalizeBlocks([], template.body);
+  const blocks = resolveTemplateBlocks(template);
 
   if (supabase) {
     const hotelId = await ensureUserHotelScope();
