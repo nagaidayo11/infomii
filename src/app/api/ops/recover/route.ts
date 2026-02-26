@@ -134,21 +134,33 @@ export async function POST(request: NextRequest) {
 
     const { data: sub, error: subError } = await admin
       .from("subscriptions")
-      .select("stripe_subscription_id")
+      .select("stripe_subscription_id,stripe_customer_id")
       .eq("hotel_id", hotelId)
       .maybeSingle();
     if (subError) {
       return NextResponse.json({ message: subError.message }, { status: 500 });
     }
-    if (!sub?.stripe_subscription_id) {
+    const stripe = getStripeServerClient();
+    let stripeSub: Stripe.Subscription | null = null;
+    if (sub?.stripe_subscription_id) {
+      stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+    } else if (sub?.stripe_customer_id) {
+      const list = await stripe.subscriptions.list({
+        customer: sub.stripe_customer_id,
+        status: "all",
+        limit: 10,
+      });
+      stripeSub =
+        list.data.find((entry) => entry.status === "active" || entry.status === "trialing") ??
+        list.data[0] ??
+        null;
+    }
+    if (!stripeSub) {
       return NextResponse.json(
-        { message: "StripeサブスクリプションIDが未設定です。先にCheckoutを実行してください。" },
+        { message: "Stripeサブスクリプションを特定できませんでした。Checkoutを再実行してください。" },
         { status: 400 },
       );
     }
-
-    const stripe = getStripeServerClient();
-    const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
     const plan = mapPlanByStatus(stripeSub.status);
     const status = mapStripeStatus(stripeSub.status);
     const firstItem = stripeSub.items.data[0];
