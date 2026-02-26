@@ -87,6 +87,7 @@ const BLOCK_TEXT_SWATCHES = [
 
 type AddPanelSection = "text" | "column" | "section" | "preset";
 type BlockSetKind = "campaign" | "menu" | "faq" | "access" | "notice";
+type IndustryBlockSetKind = "hotel" | "restaurant" | "cafe" | "salon" | "clinic" | "retail";
 
 type PublishCheckIssue = {
   level: "error" | "warning";
@@ -433,6 +434,80 @@ function makeBlockSet(kind: BlockSetKind): InformationBlock[] {
     { id: crypto.randomUUID(), type: "title", text: "営業に関するお知らせ" },
     { id: crypto.randomUUID(), type: "paragraph", text: "いつもご利用ありがとうございます。本日のお知らせ内容をこちらに記載します。" },
     { id: crypto.randomUUID(), type: "section", sectionTitle: "詳細", sectionBody: "該当する日時・対象・注意事項をご入力ください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+  ];
+}
+
+function getIndustryBlockSetLabel(kind: IndustryBlockSetKind): string {
+  if (kind === "hotel") {
+    return "ホテル向けセット";
+  }
+  if (kind === "restaurant") {
+    return "飲食店向けセット";
+  }
+  if (kind === "cafe") {
+    return "カフェ向けセット";
+  }
+  if (kind === "salon") {
+    return "サロン向けセット";
+  }
+  if (kind === "clinic") {
+    return "クリニック向けセット";
+  }
+  return "小売店向けセット";
+}
+
+function makeIndustryBlockSet(kind: IndustryBlockSetKind): InformationBlock[] {
+  if (kind === "hotel") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "宿泊者向け情報", badgeColor: "#dcfce7", badgeTextColor: "#065f46", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "チェックイン・館内案内" },
+      { id: crypto.randomUUID(), type: "image", url: "/templates/hotel-business.svg", spacing: "md" },
+      { id: crypto.randomUUID(), type: "hours", hoursItems: [{ id: crypto.randomUUID(), label: "チェックイン", value: "15:00〜24:00" }, { id: crypto.randomUUID(), label: "チェックアウト", value: "10:00まで" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "iconRow", iconRowBackgroundColor: "#f8fafc", iconItems: [{ id: crypto.randomUUID(), icon: "svg:wifi", label: "Wi-Fi" }, { id: crypto.randomUUID(), icon: "svg:car", label: "駐車場" }, { id: crypto.randomUUID(), icon: "svg:clock", label: "朝食時間" }], spacing: "md" },
+    ];
+  }
+  if (kind === "restaurant") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "本日のおすすめ", badgeColor: "#fee2e2", badgeTextColor: "#991b1b", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "メニュー・営業時間案内" },
+      { id: crypto.randomUUID(), type: "image", url: "/templates/restaurant.svg", spacing: "md" },
+      { id: crypto.randomUUID(), type: "pricing", pricingItems: [{ id: crypto.randomUUID(), label: "ランチセット", value: "¥1,200" }, { id: crypto.randomUUID(), label: "ディナーセット", value: "¥2,400" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "cta", ctaLabel: "予約する", ctaUrl: "https://example.com/reserve", spacing: "md", textAlign: "left" },
+    ];
+  }
+  if (kind === "cafe") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "期間限定メニュー", badgeColor: "#fef3c7", badgeTextColor: "#92400e", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "季節限定ドリンク案内" },
+      { id: crypto.randomUUID(), type: "image", url: "/templates/cafe.svg", spacing: "md" },
+      { id: crypto.randomUUID(), type: "pricing", pricingItems: [{ id: crypto.randomUUID(), label: "さくらラテ", value: "¥680" }, { id: crypto.randomUUID(), label: "抹茶スムージー", value: "¥720" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Wi-Fi / 電源", sectionBody: "SSID: [SSID]\nPASS: [PASSWORD]\n電源席: 窓側 [席数]席", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  if (kind === "salon") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "予約前にご確認ください", badgeColor: "#fce7f3", badgeTextColor: "#9d174d", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "施術メニュー・来店案内" },
+      { id: crypto.randomUUID(), type: "image", url: "/templates/salon.svg", spacing: "md" },
+      { id: crypto.randomUUID(), type: "pricing", pricingItems: [{ id: crypto.randomUUID(), label: "カット", value: "¥4,500" }, { id: crypto.randomUUID(), label: "カラー", value: "¥6,800" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "遅刻・キャンセル", sectionBody: "10分以上遅れる場合はご連絡ください。\n前日まで無料 / 当日条件あり。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  if (kind === "clinic") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "受診前チェック", badgeColor: "#cffafe", badgeTextColor: "#155e75", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "診療時間・持ち物案内" },
+      { id: crypto.randomUUID(), type: "image", url: "/templates/clinic.svg", spacing: "md" },
+      { id: crypto.randomUUID(), type: "hours", hoursItems: [{ id: crypto.randomUUID(), label: "午前", value: "9:00〜12:00" }, { id: crypto.randomUUID(), label: "午後", value: "15:00〜18:00" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "ご持参いただくもの", sectionBody: "健康保険証 / 診察券 / お薬手帳", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  return [
+    { id: crypto.randomUUID(), type: "badge", badgeText: "ご来店前に確認", badgeColor: "#dcfce7", badgeTextColor: "#166534", spacing: "md" },
+    { id: crypto.randomUUID(), type: "title", text: "キャンペーン・返品案内" },
+    { id: crypto.randomUUID(), type: "image", url: "/templates/retail.svg", spacing: "md" },
+    { id: crypto.randomUUID(), type: "section", sectionTitle: "キャンペーン内容", sectionBody: "対象商品2点以上で10%OFF\n会員様は追加特典あり", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    { id: crypto.randomUUID(), type: "section", sectionTitle: "返品・交換", sectionBody: "購入日より [日数] 日以内\nレシート持参で対応", sectionBackgroundColor: "#f8fafc", spacing: "md" },
   ];
 }
 
@@ -1540,6 +1615,29 @@ export default function EditorPage() {
     void saveBlocks(nextBlocks);
     if (clickEvent) {
       showInlineFeedback(`「${getBlockSetLabel(kind)}」を追加しました`, {
+        x: clickEvent.clientX,
+        y: clickEvent.clientY - 8,
+      });
+    }
+  }
+
+  function onAddIndustryBlockSet(kind: IndustryBlockSetKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (!item) {
+      return;
+    }
+    const setBlocks = makeIndustryBlockSet(kind);
+    setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((b) => ({ ...b }))]);
+    setBlockHistoryFuture([]);
+    const nextBlocks = [...item.contentBlocks, ...setBlocks];
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    void saveBlocks(nextBlocks);
+    if (clickEvent) {
+      showInlineFeedback(`「${getIndustryBlockSetLabel(kind)}」を追加しました`, {
         x: clickEvent.clientX,
         y: clickEvent.clientY - 8,
       });
@@ -3040,6 +3138,60 @@ function onUpdateIconRowItem(
                         </button>
                         {!collapsedAddSections.preset && (
                           <>
+                            <div className="col-span-2 rounded-md border border-emerald-200 bg-emerald-50/60 px-2 py-1 text-[11px] font-semibold text-emerald-800 sm:col-span-3 lg:col-span-4">
+                              業種別セット
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("hotel", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-cyan-300 hover:bg-cyan-50"
+                            >
+                              <div className="font-medium">+ ホテル向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-cyan-700">チェックイン・館内導線・時間情報</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("restaurant", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-rose-300 hover:bg-rose-50"
+                            >
+                              <div className="font-medium">+ 飲食店向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-rose-700">おすすめ・価格・予約CTA</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("cafe", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-amber-300 hover:bg-amber-50"
+                            >
+                              <div className="font-medium">+ カフェ向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-amber-700">限定メニュー・Wi-Fi導線</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("salon", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-pink-300 hover:bg-pink-50"
+                            >
+                              <div className="font-medium">+ サロン向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-pink-700">メニュー価格・来店ルール</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("clinic", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-sky-300 hover:bg-sky-50"
+                            >
+                              <div className="font-medium">+ クリニック向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">診療時間・持ち物・注意事項</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddIndustryBlockSet("retail", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-lime-300 hover:bg-lime-50"
+                            >
+                              <div className="font-medium">+ 小売店向けセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-lime-700">キャンペーン・返品案内</div>
+                            </button>
+                            <div className="col-span-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-700 sm:col-span-3 lg:col-span-4">
+                              汎用セット
+                            </div>
                             <button
                               type="button"
                               onClick={(event) => onAddBlockSet("campaign", event)}
