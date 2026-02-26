@@ -767,6 +767,18 @@ export default function DashboardPage() {
     };
   }, [pendingDeleteBatches.length]);
 
+  useEffect(() => {
+    if (!success) {
+      return;
+    }
+    const timerId = window.setTimeout(() => {
+      setSuccess(null);
+    }, 5000);
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [success]);
+
   function dismissQuickStart() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(QUICKSTART_DISMISSED_KEY, "1");
