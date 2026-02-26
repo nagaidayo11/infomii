@@ -187,6 +187,7 @@ export default function DashboardPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [countdownNow, setCountdownNow] = useState<number>(Date.now());
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
+  const autoSyncedRenewalRef = useRef(false);
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -272,6 +273,33 @@ export default function DashboardPage() {
       mounted = false;
     };
   }, [loading]);
+
+  useEffect(() => {
+    if (loading || autoSyncedRenewalRef.current) {
+      return;
+    }
+    const needsAutoSync =
+      subscription?.plan === "pro" &&
+      (subscription.status === "active" || subscription.status === "trialing") &&
+      !subscription.currentPeriodEnd;
+    if (!needsAutoSync) {
+      return;
+    }
+    autoSyncedRenewalRef.current = true;
+    void (async () => {
+      try {
+        await runOpsRecoveryAction("sync_subscription");
+        const latest = await getCurrentHotelSubscription();
+        setSubscription(latest);
+        if (latest) {
+          setPlanDraft(latest.plan);
+          setStatusDraft(latest.status);
+        }
+      } catch {
+        autoSyncedRenewalRef.current = false;
+      }
+    })();
+  }, [loading, subscription]);
 
   async function refreshOpsHealth() {
     setLoadingOpsHealth(true);
