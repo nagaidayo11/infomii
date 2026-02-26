@@ -590,28 +590,31 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                       return <line key={edge.id} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="#94a3b8" strokeWidth="0.55" />;
                     })}
                   </svg>
-                  {nodeMap.nodes.map((node) => (
+                  {nodeMap.nodes.map((node) => {
+                    const clampedX = Math.min(84, Math.max(16, node.x));
+                    const clampedY = Math.min(90, Math.max(10, node.y));
+                    return (
                     <div
                       key={node.id}
                       className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                      style={{ left: `${clampedX}%`, top: `${clampedY}%` }}
                     >
                       {node.targetSlug ? (
                         <a
                           href={`/p/${node.targetSlug}`}
-                          className="flex min-w-[124px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-center shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
+                          className="flex min-w-[98px] max-w-[118px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center shadow-sm transition hover:-translate-y-[1px] hover:shadow-md sm:min-w-[124px] sm:max-w-none sm:px-3"
                         >
                           <span className="text-lg">{node.icon || "📄"}</span>
                           <span className="text-xs font-medium text-slate-800">{node.title}</span>
                         </a>
                       ) : (
-                        <div className="flex min-w-[124px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center shadow-sm">
+                        <div className="flex min-w-[98px] max-w-[118px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center shadow-sm sm:min-w-[124px] sm:max-w-none sm:px-3">
                           <span className="text-lg">{node.icon || "📄"}</span>
                           <span className="text-xs font-medium text-slate-500">{node.title}</span>
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </section>
             )}
