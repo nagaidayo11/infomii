@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
@@ -86,6 +87,24 @@ function clampPercent(value: number): number {
     return 100;
   }
   return value;
+}
+
+function getTemplateBlockLabel(type: string): string {
+  if (type === "title") return "タイトル";
+  if (type === "heading") return "見出し";
+  if (type === "paragraph") return "本文";
+  if (type === "image") return "画像";
+  if (type === "icon") return "アイコン";
+  if (type === "iconRow") return "導線アイコン";
+  if (type === "section") return "セクション";
+  if (type === "columns") return "2カラム";
+  if (type === "cta") return "CTA";
+  if (type === "badge") return "バッジ";
+  if (type === "hours") return "営業時間";
+  if (type === "pricing") return "料金表";
+  if (type === "divider") return "区切り線";
+  if (type === "space") return "余白";
+  return "ブロック";
 }
 
 function StatCard({ label, value, note }: { label: string; value: string; note: string }) {
@@ -183,6 +202,7 @@ export default function DashboardPage() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
+  const [previewTemplateIndex, setPreviewTemplateIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -512,6 +532,33 @@ export default function DashboardPage() {
         .filter((group) => group.entries.length > 0),
     [filteredTemplateEntries],
   );
+  const activeTemplatePreviewEntry = useMemo(() => {
+    if (filteredTemplateEntries.length === 0) {
+      return null;
+    }
+    if (previewTemplateIndex === null) {
+      return filteredTemplateEntries[0];
+    }
+    return (
+      filteredTemplateEntries.find((entry) => entry.originalIndex === previewTemplateIndex) ??
+      filteredTemplateEntries[0]
+    );
+  }, [filteredTemplateEntries, previewTemplateIndex]);
+
+  useEffect(() => {
+    if (filteredTemplateEntries.length === 0) {
+      setPreviewTemplateIndex(null);
+      return;
+    }
+    if (previewTemplateIndex === null) {
+      setPreviewTemplateIndex(filteredTemplateEntries[0].originalIndex);
+      return;
+    }
+    const exists = filteredTemplateEntries.some((entry) => entry.originalIndex === previewTemplateIndex);
+    if (!exists) {
+      setPreviewTemplateIndex(filteredTemplateEntries[0].originalIndex);
+    }
+  }, [filteredTemplateEntries, previewTemplateIndex]);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -1263,49 +1310,102 @@ export default function DashboardPage() {
                 </div>
               </article>
 
-              <div className="space-y-4">
-                {groupedTemplateEntries.map((group) => (
-                  <section key={group.industry} className="space-y-2">
-                    <div className="flex items-center justify-between rounded-xl border border-emerald-100/80 bg-emerald-50/60 px-3 py-2">
-                      <p className="text-xs font-semibold tracking-[0.08em] text-emerald-800">{group.label}</p>
-                      <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
-                    </div>
-                    <div className="grid gap-3 lg:grid-cols-3">
-                      {group.entries.map(({ template, originalIndex }) => (
-                        <article
-                          key={`${template.title}-${originalIndex}`}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => void onCreateFromTemplate(originalIndex)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              void onCreateFromTemplate(originalIndex);
-                            }
-                          }}
-                          aria-label={`${template.title} で作成`}
-                          className="cursor-pointer rounded-2xl lux-section-card border border-emerald-100 bg-white p-4 shadow-sm"
-                        >
-                          <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
-                            {INDUSTRY_PRESET_LABELS[template.industry]}
-                          </p>
-                          <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
-                          <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
-                            {template.body}
-                          </p>
-                          <p className="mt-3 inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
-                            このテンプレで作成
-                          </p>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                ))}
-                {filteredTemplateEntries.length === 0 && (
-                  <article className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-                    検索条件に一致するテンプレートがありません。
-                  </article>
-                )}
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <div className="space-y-4">
+                  {groupedTemplateEntries.map((group) => (
+                    <section key={group.industry} className="space-y-2">
+                      <div className="flex items-center justify-between rounded-xl border border-emerald-100/80 bg-emerald-50/60 px-3 py-2">
+                        <p className="text-xs font-semibold tracking-[0.08em] text-emerald-800">{group.label}</p>
+                        <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
+                      </div>
+                      <div className="grid gap-3 lg:grid-cols-3">
+                        {group.entries.map(({ template, originalIndex }) => (
+                          <article
+                            key={`${template.title}-${originalIndex}`}
+                            role="button"
+                            tabIndex={0}
+                            onMouseEnter={() => setPreviewTemplateIndex(originalIndex)}
+                            onFocus={() => setPreviewTemplateIndex(originalIndex)}
+                            onClick={() => void onCreateFromTemplate(originalIndex)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                void onCreateFromTemplate(originalIndex);
+                              }
+                            }}
+                            aria-label={`${template.title} で作成`}
+                            className="cursor-pointer rounded-2xl lux-section-card border border-emerald-100 bg-white p-4 shadow-sm"
+                          >
+                            <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
+                              {INDUSTRY_PRESET_LABELS[template.industry]}
+                            </p>
+                            <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
+                            <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
+                              {template.body}
+                            </p>
+                            <p className="mt-3 inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
+                              このテンプレで作成
+                            </p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                  {filteredTemplateEntries.length === 0 && (
+                    <article className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+                      検索条件に一致するテンプレートがありません。
+                    </article>
+                  )}
+                </div>
+
+                <aside className="h-fit rounded-2xl border border-emerald-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-4">
+                  <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">テンプレプレビュー</p>
+                  {!activeTemplatePreviewEntry ? (
+                    <p className="mt-3 text-sm text-slate-500">テンプレートを選択するとここに表示されます。</p>
+                  ) : (
+                    <>
+                      <p className="mt-2 text-[11px] uppercase tracking-[0.12em] text-slate-500">
+                        {INDUSTRY_PRESET_LABELS[activeTemplatePreviewEntry.template.industry]}
+                      </p>
+                      <h3 className="mt-1 text-sm font-semibold text-slate-900">
+                        {activeTemplatePreviewEntry.template.title}
+                      </h3>
+                      {(() => {
+                        const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
+                        if (!previewImage) {
+                          return null;
+                        }
+                        return (
+                          <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                            <Image
+                              src={previewImage}
+                              alt="template preview"
+                              width={640}
+                              height={360}
+                              className="h-auto w-full object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        );
+                      })()}
+                      <p className="mt-3 max-h-36 overflow-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">
+                        {activeTemplatePreviewEntry.template.body}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {(activeTemplatePreviewEntry.template.blocks ?? [])
+                          .slice(0, 8)
+                          .map((block) => (
+                            <span
+                              key={`${activeTemplatePreviewEntry.originalIndex}-${block.id}`}
+                              className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800"
+                            >
+                              {getTemplateBlockLabel(block.type)}
+                            </span>
+                          ))}
+                      </div>
+                    </>
+                  )}
+                </aside>
               </div>
             </section>
           ) : activeTab === "project" ? (
