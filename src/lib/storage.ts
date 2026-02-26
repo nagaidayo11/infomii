@@ -58,7 +58,10 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           type !== "cta" &&
           type !== "badge" &&
           type !== "hours" &&
-          type !== "pricing"
+          type !== "pricing" &&
+          type !== "quote" &&
+          type !== "checklist" &&
+          type !== "gallery"
         ) {
           return null;
         }
@@ -196,6 +199,42 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                   (entry): entry is { id: string; label: string; value: string } =>
                     Boolean(entry),
                 )
+            : undefined,
+          quoteAuthor: typeof block.quoteAuthor === "string" ? block.quoteAuthor : undefined,
+          checklistItems: Array.isArray(block.checklistItems)
+            ? block.checklistItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; text?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `check-item-${itemIndex + 1}`,
+                    text: typeof item.text === "string" ? item.text : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; text: string } => Boolean(entry))
+            : undefined,
+          galleryItems: Array.isArray(block.galleryItems)
+            ? block.galleryItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; url?: unknown; caption?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `gallery-item-${itemIndex + 1}`,
+                    url: typeof item.url === "string" ? item.url : "",
+                    caption: typeof item.caption === "string" ? item.caption : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
             : undefined,
         } as InformationBlock;
       })
@@ -346,7 +385,9 @@ function blocksToBody(blocks: InformationBlock[]): string {
         block.type === "cta" ||
         block.type === "badge" ||
         block.type === "hours" ||
-        block.type === "pricing",
+        block.type === "pricing" ||
+        block.type === "quote" ||
+        block.type === "checklist",
     )
     .map((block) => {
       if (block.type === "icon") {
@@ -389,6 +430,15 @@ function blocksToBody(blocks: InformationBlock[]): string {
           .filter(Boolean)
           .join("\n");
       }
+      if (block.type === "quote") {
+        return [block.text?.trim(), block.quoteAuthor?.trim()].filter(Boolean).join("\n");
+      }
+      if (block.type === "checklist") {
+        return (block.checklistItems ?? [])
+          .map((entry) => entry.text.trim())
+          .filter(Boolean)
+          .join("\n");
+      }
       return block.text?.trim() ?? "";
     })
     .filter(Boolean)
@@ -397,8 +447,17 @@ function blocksToBody(blocks: InformationBlock[]): string {
 
 function blocksToImages(blocks: InformationBlock[]): string[] {
   return blocks
-    .filter((block) => block.type === "image" && typeof block.url === "string")
-    .map((block) => block.url as string)
+    .flatMap((block) => {
+      if (block.type === "image" && typeof block.url === "string") {
+        return [block.url];
+      }
+      if (block.type === "gallery") {
+        return (block.galleryItems ?? [])
+          .map((entry) => entry.url.trim())
+          .filter(Boolean);
+      }
+      return [];
+    })
     .slice(0, 3);
 }
 
@@ -503,6 +562,8 @@ function cloneTemplateBlocks(blocks: InformationBlock[]): InformationBlock[] {
     iconItems: block.iconItems?.map((entry) => ({ ...entry })),
     hoursItems: block.hoursItems?.map((entry) => ({ ...entry })),
     pricingItems: block.pricingItems?.map((entry) => ({ ...entry })),
+    checklistItems: block.checklistItems?.map((entry) => ({ ...entry })),
+    galleryItems: block.galleryItems?.map((entry) => ({ ...entry })),
   }));
 }
 

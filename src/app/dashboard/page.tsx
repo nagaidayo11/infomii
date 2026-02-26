@@ -102,6 +102,9 @@ function getTemplateBlockLabel(type: string): string {
   if (type === "badge") return "バッジ";
   if (type === "hours") return "営業時間";
   if (type === "pricing") return "料金表";
+  if (type === "quote") return "引用";
+  if (type === "checklist") return "チェックリスト";
+  if (type === "gallery") return "ギャラリー";
   if (type === "divider") return "区切り線";
   if (type === "space") return "余白";
   return "ブロック";

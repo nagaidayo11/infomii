@@ -168,6 +168,15 @@ function collectPublishCheckIssues(
     if (block.type === "pricing") {
       return (block.pricingItems ?? []).some((entry) => (entry.label ?? "").trim() || (entry.value ?? "").trim());
     }
+    if (block.type === "checklist") {
+      return (block.checklistItems ?? []).some((entry) => (entry.text ?? "").trim());
+    }
+    if (block.type === "gallery") {
+      return (block.galleryItems ?? []).some((entry) => (entry.url ?? "").trim());
+    }
+    if (block.type === "quote") {
+      return Boolean((block.text ?? "").trim() || (block.quoteAuthor ?? "").trim());
+    }
     return Boolean((block.text ?? "").trim() || (block.label ?? "").trim() || (block.description ?? "").trim());
   });
 
@@ -188,6 +197,17 @@ function collectPublishCheckIssues(
       issues.push({
         level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
         message: `${blockIndex + 1}.画像ブロック: 画像URLが未設定です。`,
+      });
+      return;
+    }
+    if (block.type === "gallery") {
+      (block.galleryItems ?? []).forEach((entry, entryIndex) => {
+        if (!(entry.url ?? "").trim()) {
+          issues.push({
+            level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
+            message: `${blockIndex + 1}.ギャラリー-${entryIndex + 1}: 画像URLが未設定です。`,
+          });
+        }
       });
       return;
     }
@@ -615,6 +635,39 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       spacing: "md",
     };
   }
+  if (type === "quote") {
+    return {
+      id,
+      type,
+      text: "“ ここに印象的な一言を入力 ”",
+      quoteAuthor: "出典・コメント主",
+      spacing: "md",
+      textAlign: "left",
+    };
+  }
+  if (type === "checklist") {
+    return {
+      id,
+      type,
+      checklistItems: [
+        { id: crypto.randomUUID(), text: "チェック項目 1" },
+        { id: crypto.randomUUID(), text: "チェック項目 2" },
+        { id: crypto.randomUUID(), text: "チェック項目 3" },
+      ],
+      spacing: "md",
+    };
+  }
+  if (type === "gallery") {
+    return {
+      id,
+      type,
+      galleryItems: [
+        { id: crypto.randomUUID(), url: "", caption: "画像キャプション 1" },
+        { id: crypto.randomUUID(), url: "", caption: "画像キャプション 2" },
+      ],
+      spacing: "md",
+    };
+  }
   return { id, type };
 }
 
@@ -632,7 +685,9 @@ function blocksToBody(blocks: InformationBlock[]): string {
         block.type === "cta" ||
         block.type === "badge" ||
         block.type === "hours" ||
-        block.type === "pricing",
+        block.type === "pricing" ||
+        block.type === "quote" ||
+        block.type === "checklist",
     )
     .map((block) => {
       if (block.type === "icon") {
@@ -675,6 +730,15 @@ function blocksToBody(blocks: InformationBlock[]): string {
           .filter(Boolean)
           .join("\n");
       }
+      if (block.type === "quote") {
+        return [block.text?.trim(), block.quoteAuthor?.trim()].filter(Boolean).join("\n");
+      }
+      if (block.type === "checklist") {
+        return (block.checklistItems ?? [])
+          .map((entry) => entry.text.trim())
+          .filter(Boolean)
+          .join("\n");
+      }
       return block.text?.trim() ?? "";
     })
     .filter(Boolean)
@@ -683,8 +747,17 @@ function blocksToBody(blocks: InformationBlock[]): string {
 
 function blocksToImages(blocks: InformationBlock[]): string[] {
   return blocks
-    .filter((block) => block.type === "image" && block.url)
-    .map((block) => block.url as string)
+    .flatMap((block) => {
+      if (block.type === "image" && block.url) {
+        return [block.url];
+      }
+      if (block.type === "gallery") {
+        return (block.galleryItems ?? [])
+          .map((entry) => entry.url.trim())
+          .filter(Boolean);
+      }
+      return [];
+    })
     .slice(0, 3);
 }
 
@@ -817,6 +890,15 @@ function getBlockTypeLabel(type: InformationBlock["type"]): string {
   if (type === "pricing") {
     return "料金表";
   }
+  if (type === "quote") {
+    return "引用";
+  }
+  if (type === "checklist") {
+    return "チェックリスト";
+  }
+  if (type === "gallery") {
+    return "ギャラリー";
+  }
   return "スペース";
 }
 
@@ -828,7 +910,9 @@ function supportsDetailTextAlign(type: InformationBlock["type"]): boolean {
     type === "icon" ||
     type === "section" ||
     type === "cta" ||
-    type === "badge"
+    type === "badge" ||
+    type === "quote" ||
+    type === "checklist"
   );
 }
 
@@ -1443,6 +1527,66 @@ export default function EditorPage() {
           </div>
         );
       }
+      if (block.type === "quote") {
+        return (
+          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+            <blockquote className={`rounded-xl border-l-4 border-emerald-400 bg-emerald-50/60 px-4 py-3 ${getBlockAlignClass(block.textAlign)}`}>
+              <p
+                className={`whitespace-pre-wrap italic ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+              >
+                {block.text || "引用文"}
+              </p>
+              {(block.quoteAuthor ?? "").trim() && (
+                <p
+                  className={`mt-2 ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
+                  style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#475569" }}
+                >
+                  {block.quoteAuthor}
+                </p>
+              )}
+            </blockquote>
+          </div>
+        );
+      }
+      if (block.type === "checklist") {
+        return (
+          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+            <div className="rounded-xl border border-slate-200 bg-white p-3">
+              <ul className="space-y-2">
+                {(block.checklistItems ?? []).map((entry) => (
+                  <li key={entry.id} className="flex items-start gap-2">
+                    <span className="mt-0.5 text-emerald-600">✓</span>
+                    <span
+                      className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                      style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                    >
+                      {entry.text || "項目を入力"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        );
+      }
+      if (block.type === "gallery") {
+        const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
+        return (
+          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {galleryItems.map((entry) => (
+                <figure key={entry.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  <Image src={entry.url} alt={entry.caption || "gallery"} width={640} height={360} unoptimized className="h-40 w-full object-cover" />
+                  {(entry.caption ?? "").trim() && (
+                    <figcaption className="px-2 py-1.5 text-[11px] text-slate-600">{entry.caption}</figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </div>
+        );
+      }
       if (block.type === "space") {
         return (
           <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
@@ -1698,7 +1842,10 @@ export default function EditorPage() {
       type === "cta" ||
       type === "badge" ||
       type === "hours" ||
-      type === "pricing"
+      type === "pricing" ||
+      type === "quote" ||
+      type === "checklist" ||
+      type === "gallery"
     ) {
       return type;
     }
@@ -3116,6 +3263,39 @@ function onUpdateIconRowItem(
                           <div className="font-medium">+ 料金表</div>
                           <div className="mt-1 text-[10px] text-slate-500 group-hover:text-fuchsia-700">価格を見やすく表示</div>
                         </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("quote", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "quote")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ 引用</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">口コミ・コメントに最適</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("checklist", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "checklist")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-sky-300 hover:bg-sky-50"
+                        >
+                          <div className="font-medium">+ チェックリスト</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">持ち物・手順を整理</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("gallery", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "gallery")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
+                        >
+                          <div className="font-medium">+ ギャラリー</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">複数画像を一覧表示</div>
+                        </button>
                         <label
                           draggable
                           onDragStart={(event) => onPaletteDragStart(event, "image")}
@@ -3297,7 +3477,10 @@ function onUpdateIconRowItem(
                               block.type === "cta" ||
                               block.type === "badge" ||
                               block.type === "hours" ||
-                              block.type === "pricing") ? (
+                              block.type === "pricing" ||
+                              block.type === "quote" ||
+                              block.type === "checklist" ||
+                              block.type === "gallery") ? (
                               <button
                                 type="button"
                                 onClick={(event) => {
@@ -3401,7 +3584,10 @@ function onUpdateIconRowItem(
                             block.type === "cta" ||
                             block.type === "badge" ||
                             block.type === "hours" ||
-                            block.type === "pricing"
+                            block.type === "pricing" ||
+                            block.type === "quote" ||
+                            block.type === "checklist" ||
+                            block.type === "gallery"
                           ) && (
                             <div
                               className={`overflow-hidden transition-all duration-300 ease-out ${
@@ -3989,6 +4175,138 @@ function onUpdateIconRowItem(
                                     >
                                       削除
                                     </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {!collapsedBlocks[block.id] && block.type === "quote" && (
+                            <div className="space-y-2">
+                              <textarea
+                                rows={3}
+                                value={block.text ?? ""}
+                                onChange={(e) => onUpdateBlock(block.id, { text: e.target.value })}
+                                onBlur={onBlurBlockSave}
+                                placeholder="引用文"
+                                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm leading-5"
+                              />
+                              <input
+                                value={block.quoteAuthor ?? ""}
+                                onChange={(e) => onUpdateBlock(block.id, { quoteAuthor: e.target.value })}
+                                onBlur={onBlurBlockSave}
+                                placeholder="出典・コメント主"
+                                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                              />
+                            </div>
+                          )}
+
+                          {!collapsedBlocks[block.id] && block.type === "checklist" && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs text-slate-600">チェック項目</p>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onUpdateBlock(block.id, {
+                                      checklistItems: [
+                                        ...(block.checklistItems ?? []),
+                                        { id: crypto.randomUUID(), text: "" },
+                                      ],
+                                    })}
+                                  className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+                                >
+                                  + 項目を追加
+                                </button>
+                              </div>
+                              <div className="space-y-1.5">
+                                {(block.checklistItems ?? []).map((entry) => (
+                                  <div key={entry.id} className="grid gap-1.5 sm:grid-cols-[1fr_auto]">
+                                    <input
+                                      value={entry.text}
+                                      onChange={(e) =>
+                                        onUpdateBlock(block.id, {
+                                          checklistItems: (block.checklistItems ?? []).map((item) =>
+                                            item.id === entry.id ? { ...item, text: e.target.value } : item,
+                                          ),
+                                        })}
+                                      onBlur={onBlurBlockSave}
+                                      placeholder="項目内容"
+                                      className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onUpdateBlock(block.id, {
+                                          checklistItems: (block.checklistItems ?? []).filter((item) => item.id !== entry.id),
+                                        })}
+                                      className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
+                                    >
+                                      削除
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {!collapsedBlocks[block.id] && block.type === "gallery" && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs text-slate-600">画像一覧</p>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onUpdateBlock(block.id, {
+                                      galleryItems: [
+                                        ...(block.galleryItems ?? []),
+                                        { id: crypto.randomUUID(), url: "", caption: "" },
+                                      ],
+                                    })}
+                                  className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+                                >
+                                  + 画像を追加
+                                </button>
+                              </div>
+                              <div className="space-y-2">
+                                {(block.galleryItems ?? []).map((entry) => (
+                                  <div key={entry.id} className="rounded-md border border-slate-200 p-2">
+                                    <input
+                                      value={entry.url}
+                                      onChange={(e) =>
+                                        onUpdateBlock(block.id, {
+                                          galleryItems: (block.galleryItems ?? []).map((item) =>
+                                            item.id === entry.id ? { ...item, url: e.target.value } : item,
+                                          ),
+                                        })}
+                                      onBlur={onBlurBlockSave}
+                                      placeholder="画像URL"
+                                      className="mb-1.5 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                    />
+                                    <input
+                                      value={entry.caption}
+                                      onChange={(e) =>
+                                        onUpdateBlock(block.id, {
+                                          galleryItems: (block.galleryItems ?? []).map((item) =>
+                                            item.id === entry.id ? { ...item, caption: e.target.value } : item,
+                                          ),
+                                        })}
+                                      onBlur={onBlurBlockSave}
+                                      placeholder="キャプション（任意）"
+                                      className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                    />
+                                    <div className="mt-1.5 flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          onUpdateBlock(block.id, {
+                                            galleryItems: (block.galleryItems ?? []).filter((item) => item.id !== entry.id),
+                                          })}
+                                        className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
+                                      >
+                                        画像を削除
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>

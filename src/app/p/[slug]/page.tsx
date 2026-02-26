@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
@@ -43,7 +44,10 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           block.type !== "cta" &&
           block.type !== "badge" &&
           block.type !== "hours" &&
-          block.type !== "pricing"
+          block.type !== "pricing" &&
+          block.type !== "quote" &&
+          block.type !== "checklist" &&
+          block.type !== "gallery"
         ) {
           return null;
         }
@@ -181,6 +185,42 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                   (entry): entry is { id: string; label: string; value: string } =>
                     Boolean(entry),
                 )
+            : undefined,
+          quoteAuthor: typeof block.quoteAuthor === "string" ? block.quoteAuthor : undefined,
+          checklistItems: Array.isArray(block.checklistItems)
+            ? block.checklistItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; text?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `check-item-${itemIndex + 1}`,
+                    text: typeof item.text === "string" ? item.text : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; text: string } => Boolean(entry))
+            : undefined,
+          galleryItems: Array.isArray(block.galleryItems)
+            ? block.galleryItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; url?: unknown; caption?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `gallery-item-${itemIndex + 1}`,
+                    url: typeof item.url === "string" ? item.url : "",
+                    caption: typeof item.caption === "string" ? item.caption : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
             : undefined,
         } as InformationBlock;
       })
@@ -659,9 +699,12 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "image") {
                   return (
                     <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
-                      <img
+                      <Image
                         src={block.url || ""}
                         alt="block"
+                        width={960}
+                        height={540}
+                        unoptimized
                         className="h-auto w-full rounded-2xl object-cover"
                       />
                     </div>
@@ -882,6 +925,73 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                             </div>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  );
+                }
+                if (block.type === "quote") {
+                  return (
+                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                      <blockquote className="rounded-xl border-l-4 border-emerald-400 bg-emerald-50/50 px-4 py-3">
+                        <p
+                          className={`whitespace-pre-wrap italic ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                          style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                        >
+                          {block.text || "引用文"}
+                        </p>
+                        {(block.quoteAuthor ?? "").trim() && (
+                          <p
+                            className={`mt-2 ${getBlockTextSizeClass("sm", theme.bodySize)} text-slate-600`}
+                            style={{ color: block.textColor ?? theme.textColor ?? "#475569" }}
+                          >
+                            {block.quoteAuthor}
+                          </p>
+                        )}
+                      </blockquote>
+                    </div>
+                  );
+                }
+                if (block.type === "checklist") {
+                  return (
+                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <ul className="space-y-2">
+                          {(block.checklistItems ?? []).map((entry) => (
+                            <li key={entry.id} className="flex items-start gap-2">
+                              <span className="mt-0.5 text-emerald-600">✓</span>
+                              <span
+                                className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                                style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                              >
+                                {entry.text || "項目を入力"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                }
+                if (block.type === "gallery") {
+                  const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
+                  return (
+                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {galleryItems.map((entry) => (
+                          <figure key={entry.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <Image
+                              src={entry.url}
+                              alt={entry.caption || "gallery"}
+                              width={640}
+                              height={360}
+                              unoptimized
+                              className="h-44 w-full object-cover"
+                            />
+                            {(entry.caption ?? "").trim() && (
+                              <figcaption className="px-3 py-2 text-xs text-slate-600">{entry.caption}</figcaption>
+                            )}
+                          </figure>
+                        ))}
                       </div>
                     </div>
                   );
