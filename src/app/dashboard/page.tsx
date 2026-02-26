@@ -481,10 +481,12 @@ export default function DashboardPage() {
         ? "請求ポータルで確認"
         : "未設定"
     : "-";
-  const filteredTemplates = useMemo(
+  const filteredTemplateEntries = useMemo(
     () => {
       const q = quickSearch.trim().toLowerCase();
-      return starterTemplates.filter((template) => {
+      return starterTemplates
+        .map((template, originalIndex) => ({ template, originalIndex }))
+        .filter(({ template }) => {
         if (industryFilter !== "all" && template.industry !== industryFilter) {
           return false;
         }
@@ -498,6 +500,17 @@ export default function DashboardPage() {
       });
     },
     [quickSearch, industryFilter],
+  );
+  const groupedTemplateEntries = useMemo(
+    () =>
+      (Object.keys(INDUSTRY_PRESET_LABELS) as IndustryPreset[])
+        .map((industry) => ({
+          industry,
+          label: INDUSTRY_PRESET_LABELS[industry],
+          entries: filteredTemplateEntries.filter((entry) => entry.template.industry === industry),
+        }))
+        .filter((group) => group.entries.length > 0),
+    [filteredTemplateEntries],
   );
   const trackedEditActions = useMemo(
     () =>
@@ -1238,40 +1251,45 @@ export default function DashboardPage() {
                 </div>
               </article>
 
-              <div className="grid gap-3 lg:grid-cols-3">
-                {filteredTemplates.map((template, index) => {
-                  const originalIndex = starterTemplates.findIndex(
-                    (item) => item.title === template.title && item.body === template.body,
-                  );
-                  return (
-                    <article
-                      key={`${template.title}-${index}`}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => void onCreateFromTemplate(originalIndex)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          void onCreateFromTemplate(originalIndex);
-                        }
-                      }}
-                      aria-label={`${template.title} で作成`}
-                      className="cursor-pointer rounded-2xl lux-section-card border border-emerald-100 bg-white p-4 shadow-sm"
-                    >
-                      <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
-                        {INDUSTRY_PRESET_LABELS[template.industry]}
-                      </p>
-                      <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
-                      <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
-                        {template.body}
-                      </p>
-                      <p className="mt-3 inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
-                        このテンプレで作成
-                      </p>
-                    </article>
-                  );
-                })}
-                {filteredTemplates.length === 0 && (
+              <div className="space-y-4">
+                {groupedTemplateEntries.map((group) => (
+                  <section key={group.industry} className="space-y-2">
+                    <div className="flex items-center justify-between rounded-xl border border-emerald-100/80 bg-emerald-50/60 px-3 py-2">
+                      <p className="text-xs font-semibold tracking-[0.08em] text-emerald-800">{group.label}</p>
+                      <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
+                    </div>
+                    <div className="grid gap-3 lg:grid-cols-3">
+                      {group.entries.map(({ template, originalIndex }) => (
+                        <article
+                          key={`${template.title}-${originalIndex}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => void onCreateFromTemplate(originalIndex)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              void onCreateFromTemplate(originalIndex);
+                            }
+                          }}
+                          aria-label={`${template.title} で作成`}
+                          className="cursor-pointer rounded-2xl lux-section-card border border-emerald-100 bg-white p-4 shadow-sm"
+                        >
+                          <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
+                            {INDUSTRY_PRESET_LABELS[template.industry]}
+                          </p>
+                          <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
+                          <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
+                            {template.body}
+                          </p>
+                          <p className="mt-3 inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
+                            このテンプレで作成
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+                {filteredTemplateEntries.length === 0 && (
                   <article className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
                     検索条件に一致するテンプレートがありません。
                   </article>
