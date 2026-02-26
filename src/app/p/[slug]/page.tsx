@@ -796,17 +796,19 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "iconRow") {
                   const iconItems = block.iconItems ?? [];
                   const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
+                  const isRoundIconRow = block.cardRadius === "full";
+                  const iconItemRadiusClass = isRoundIconRow ? "rounded-full" : getCardRadiusClass(block.cardRadius);
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div
-                        className="rounded-xl border border-slate-200 p-3"
+                        className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                         style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
                       >
                         <div className={`grid gap-2 ${iconColumnsClass}`}>
                           {iconItems.map((entry) => (
                             <div
                               key={entry.id}
-                              className="rounded-md border border-slate-200 text-center shadow-sm"
+                              className={`${iconItemRadiusClass} border border-slate-200 text-center shadow-sm ${isRoundIconRow ? "aspect-square overflow-hidden" : ""}`}
                               style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                             >
                               {entry.link ? (
@@ -814,7 +816,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   href={entry.link}
                                   target={entry.link.startsWith("/p/") ? undefined : "_blank"}
                                   rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
-                                  className="flex min-h-[76px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99]"
+                                  className={`flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}
                                 >
                                   {renderIconVisual(entry.icon)}
                                   <p
@@ -825,7 +827,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   </p>
                                 </a>
                               ) : (
-                                <div className="flex min-h-[76px] w-full flex-col items-center justify-center gap-1 px-2 py-2.5">
+                                <div className={`flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}>
                                   {renderIconVisual(entry.icon)}
                                   <p
                                     className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}

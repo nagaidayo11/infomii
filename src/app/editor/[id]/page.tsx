@@ -596,6 +596,7 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       id,
       type,
       iconRowBackgroundColor: "#f8fafc",
+      cardRadius: "lg",
       iconItems: [
         { id: crypto.randomUUID(), icon: "svg:wifi", label: "Wi-Fi", link: "", backgroundColor: "#ffffff" },
         { id: crypto.randomUUID(), icon: "svg:car", label: "駐車場", link: "", backgroundColor: "#ffffff" },
@@ -1397,24 +1398,26 @@ export default function EditorPage() {
       if (block.type === "iconRow") {
         const iconItems = block.iconItems ?? [];
         const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
+        const isRoundIconRow = block.cardRadius === "full";
+        const iconItemRadiusClass = isRoundIconRow ? "rounded-full" : getCardRadiusClass(block.cardRadius);
         return (
           <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div
-              className="rounded-lg border border-slate-200 p-3"
+              className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
               style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
             >
               <div className={`grid gap-2 ${iconColumnsClass}`}>
                 {iconItems.map((entry) => (
                   <div
                     key={entry.id}
-                    className="rounded-md border border-slate-200 text-center shadow-sm"
+                    className={`${iconItemRadiusClass} border border-slate-200 text-center shadow-sm ${isRoundIconRow ? "aspect-square overflow-hidden" : ""}`}
                     style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                   >
                     {entry.link ? (
                       <button
                         type="button"
                         onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
-                        className="flex min-h-[76px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99]"
+                        className={`flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}
                       >
                         {renderIconVisual(entry.icon)}
                         <p
@@ -1425,7 +1428,7 @@ export default function EditorPage() {
                         </p>
                       </button>
                     ) : (
-                      <div className="flex min-h-[76px] w-full flex-col items-center justify-center gap-1 px-2 py-2.5">
+                      <div className={`flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}>
                         {renderIconVisual(entry.icon)}
                         <p
                           className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
@@ -3971,15 +3974,35 @@ function onUpdateIconRowItem(
 
                           {!collapsedBlocks[block.id] && block.type === "iconRow" && (
                             <div className="space-y-2">
-                              <div className="sm:max-w-[160px]">
-                                <label className="mb-1 block text-xs text-slate-600">背景色</label>
-                                <input
-                                  type="color"
-                                  value={block.iconRowBackgroundColor ?? "#f8fafc"}
-                                  onChange={(e) => onUpdateBlock(block.id, { iconRowBackgroundColor: e.target.value })}
-                                  onBlur={onBlurBlockSave}
-                                  className="h-9 w-full rounded border border-slate-300 bg-white p-1"
-                                />
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <div className="sm:max-w-[160px]">
+                                  <label className="mb-1 block text-xs text-slate-600">背景色</label>
+                                  <input
+                                    type="color"
+                                    value={block.iconRowBackgroundColor ?? "#f8fafc"}
+                                    onChange={(e) => onUpdateBlock(block.id, { iconRowBackgroundColor: e.target.value })}
+                                    onBlur={onBlurBlockSave}
+                                    className="h-9 w-full rounded border border-slate-300 bg-white p-1"
+                                  />
+                                </div>
+                                <div className="sm:max-w-[160px]">
+                                  <label className="mb-1 block text-xs text-slate-600">角丸</label>
+                                  <select
+                                    value={block.cardRadius ?? "lg"}
+                                    onChange={(e) =>
+                                      onUpdateBlock(block.id, {
+                                        cardRadius: e.target.value as InformationBlock["cardRadius"],
+                                      })}
+                                    onBlur={onBlurBlockSave}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                  >
+                                    <option value="sm">小</option>
+                                    <option value="md">中</option>
+                                    <option value="lg">大</option>
+                                    <option value="xl">特大</option>
+                                    <option value="full">まん丸</option>
+                                  </select>
+                                </div>
                               </div>
                               <div className="flex items-center justify-between">
                                 <p className="text-xs text-slate-600">横並びアイコン項目</p>
