@@ -1147,7 +1147,10 @@ export default function DashboardPage() {
               </div>
             </aside>
 
-            <div className="space-y-3">
+            <div
+              key={loading ? "loading" : activeTab}
+              className={`space-y-3 ${loading ? "" : "dashboard-tab-fade"}`}
+            >
           {loading ? (
             <div className="animate-pulse space-y-4">
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
