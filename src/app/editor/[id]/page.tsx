@@ -282,8 +282,22 @@ function collectPublishCheckIssues(
   return issues;
 }
 
-function renderLineIcon(token: string): ReactNode {
-  const className = "h-5 w-5 text-slate-700";
+function getIconSizeClass(size: InformationBlock["iconSize"] | undefined): string {
+  if (size === "sm") {
+    return "text-base h-4 w-4";
+  }
+  if (size === "lg") {
+    return "text-2xl h-6 w-6";
+  }
+  if (size === "xl") {
+    return "text-3xl h-7 w-7";
+  }
+  return "text-xl h-5 w-5";
+}
+
+function renderLineIcon(token: string, size: InformationBlock["iconSize"] | undefined): ReactNode {
+  const iconSize = getIconSizeClass(size);
+  const className = `${iconSize.split(" ").filter((c) => c.startsWith("h-") || c.startsWith("w-")).join(" ")} text-slate-700`;
   if (token === "svg:clock") {
     return (
       <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -351,14 +365,15 @@ function renderLineIcon(token: string): ReactNode {
   return null;
 }
 
-function renderIconVisual(icon: string | undefined): ReactNode {
+function renderIconVisual(icon: string | undefined, size: InformationBlock["iconSize"] | undefined): ReactNode {
+  const iconSize = getIconSizeClass(size).split(" ")[0];
   if (!icon) {
-    return <span className="text-xl">⭐</span>;
+    return <span className={iconSize}>⭐</span>;
   }
   if (icon.startsWith("svg:")) {
-    return renderLineIcon(icon) ?? <span className="text-xl">⭐</span>;
+    return renderLineIcon(icon, size) ?? <span className={iconSize}>⭐</span>;
   }
-  return <span className="text-xl">{icon}</span>;
+  return <span className={iconSize}>{icon}</span>;
 }
 
 function toDateTimeLocal(value: string | null): string {
@@ -571,6 +586,7 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       id,
       type,
       icon: "⭐",
+      iconSize: "md",
       label: "サービス名",
       description: "説明を入力してください",
     };
@@ -607,6 +623,7 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       type,
       iconRowBackgroundColor: "#f8fafc",
       cardRadius: "lg",
+      iconSize: "md",
       iconItems: [
         { id: crypto.randomUUID(), icon: "svg:wifi", label: "Wi-Fi", link: "", backgroundColor: "#ffffff" },
         { id: crypto.randomUUID(), icon: "svg:car", label: "駐車場", link: "", backgroundColor: "#ffffff" },
@@ -1387,7 +1404,7 @@ export default function EditorPage() {
           <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className={`rounded-lg border border-slate-200 bg-slate-50/70 p-3 ${getBlockAlignClass(block.textAlign)}`}>
               <div className={`flex items-center gap-2 ${getBlockJustifyClass(block.textAlign)}`}>
-                {renderIconVisual(block.icon)}
+                {renderIconVisual(block.icon, block.iconSize)}
                 <p
                   className={`${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                   style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -1429,7 +1446,7 @@ export default function EditorPage() {
                         onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
                         className={`flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}
                       >
-                        {renderIconVisual(entry.icon)}
+                        {renderIconVisual(entry.icon, block.iconSize)}
                         <p
                           className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -1439,7 +1456,7 @@ export default function EditorPage() {
                       </button>
                     ) : (
                       <div className={`flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}>
-                        {renderIconVisual(entry.icon)}
+                        {renderIconVisual(entry.icon, block.iconSize)}
                         <p
                           className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -3969,12 +3986,26 @@ function onUpdateIconRowItem(
                                     <option key={icon.value} value={icon.value}>{icon.label}</option>
                                   ))}
                                 </select>
+                                <select
+                                  value={block.iconSize ?? "md"}
+                                  onChange={(e) =>
+                                    onUpdateBlock(block.id, {
+                                      iconSize: e.target.value as InformationBlock["iconSize"],
+                                    })}
+                                  onBlur={onBlurBlockSave}
+                                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                >
+                                  <option value="sm">アイコン小</option>
+                                  <option value="md">アイコン中</option>
+                                  <option value="lg">アイコン大</option>
+                                  <option value="xl">アイコン特大</option>
+                                </select>
                                 <input
                                   value={block.label ?? ""}
                                   onChange={(e) => onUpdateBlock(block.id, { label: e.target.value })}
                                   onBlur={onBlurBlockSave}
                                   placeholder="ラベル"
-                                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm sm:col-span-2"
+                                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                                 />
                               </div>
                               <textarea
@@ -4017,6 +4048,23 @@ function onUpdateIconRowItem(
                                     <option value="lg">大</option>
                                     <option value="xl">特大</option>
                                     <option value="full">まん丸</option>
+                                  </select>
+                                </div>
+                                <div className="sm:max-w-[160px]">
+                                  <label className="mb-1 block text-xs text-slate-600">アイコンサイズ</label>
+                                  <select
+                                    value={block.iconSize ?? "md"}
+                                    onChange={(e) =>
+                                      onUpdateBlock(block.id, {
+                                        iconSize: e.target.value as InformationBlock["iconSize"],
+                                      })}
+                                    onBlur={onBlurBlockSave}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                  >
+                                    <option value="sm">小</option>
+                                    <option value="md">中</option>
+                                    <option value="lg">大</option>
+                                    <option value="xl">特大</option>
                                   </select>
                                 </div>
                               </div>

@@ -65,6 +65,13 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
             block.textSize === "sm" || block.textSize === "md" || block.textSize === "lg"
               ? block.textSize
               : undefined,
+          iconSize:
+            block.iconSize === "sm" ||
+            block.iconSize === "md" ||
+            block.iconSize === "lg" ||
+            block.iconSize === "xl"
+              ? block.iconSize
+              : undefined,
           fontFamily: typeof block.fontFamily === "string" ? block.fontFamily : undefined,
           textColor: typeof block.textColor === "string" ? block.textColor : undefined,
           textWeight:
@@ -489,8 +496,22 @@ function getBlockContainerStyle(
   };
 }
 
-function renderLineIcon(token: string): ReactNode {
-  const className = "h-5 w-5 text-slate-700";
+function getIconSizeClass(size: InformationBlock["iconSize"] | undefined): string {
+  if (size === "sm") {
+    return "text-base h-4 w-4";
+  }
+  if (size === "lg") {
+    return "text-2xl h-6 w-6";
+  }
+  if (size === "xl") {
+    return "text-3xl h-7 w-7";
+  }
+  return "text-xl h-5 w-5";
+}
+
+function renderLineIcon(token: string, size: InformationBlock["iconSize"] | undefined): ReactNode {
+  const iconSize = getIconSizeClass(size);
+  const className = `${iconSize.split(" ").filter((c) => c.startsWith("h-") || c.startsWith("w-")).join(" ")} text-slate-700`;
   if (token === "svg:clock") {
     return (
       <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -558,14 +579,15 @@ function renderLineIcon(token: string): ReactNode {
   return null;
 }
 
-function renderIconVisual(icon: string | undefined): ReactNode {
+function renderIconVisual(icon: string | undefined, size: InformationBlock["iconSize"] | undefined): ReactNode {
+  const iconSize = getIconSizeClass(size).split(" ")[0];
   if (!icon) {
-    return <span className="text-xl">⭐</span>;
+    return <span className={iconSize}>⭐</span>;
   }
   if (icon.startsWith("svg:")) {
-    return renderLineIcon(icon) ?? <span className="text-xl">⭐</span>;
+    return renderLineIcon(icon, size) ?? <span className={iconSize}>⭐</span>;
   }
-  return <span className="text-xl">{icon}</span>;
+  return <span className={iconSize}>{icon}</span>;
 }
 
 export default async function PublicInformationPage({ params, searchParams }: PublicPageProps) {
@@ -775,7 +797,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className={`rounded-xl border border-slate-200 bg-slate-50/60 p-3 ${getBlockAlignClass(block.textAlign)}`}>
                         <div className={`flex items-center gap-2 ${getBlockJustifyClass(block.textAlign)}`}>
-                          {renderIconVisual(block.icon)}
+                          {renderIconVisual(block.icon, block.iconSize)}
                           <p
                             className={`${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                             style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -818,7 +840,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
                                   className={`flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}
                                 >
-                                  {renderIconVisual(entry.icon)}
+                                  {renderIconVisual(entry.icon, block.iconSize)}
                                   <p
                                     className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                     style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -828,7 +850,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                 </a>
                               ) : (
                                 <div className={`flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}>
-                                  {renderIconVisual(entry.icon)}
+                                  {renderIconVisual(entry.icon, block.iconSize)}
                                   <p
                                     className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                     style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}

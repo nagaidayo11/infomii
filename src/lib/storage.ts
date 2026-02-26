@@ -72,6 +72,13 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           text: typeof block.text === "string" ? block.text : undefined,
           url: typeof block.url === "string" ? block.url : undefined,
           icon: typeof block.icon === "string" ? block.icon : undefined,
+          iconSize:
+            block.iconSize === "sm" ||
+            block.iconSize === "md" ||
+            block.iconSize === "lg" ||
+            block.iconSize === "xl"
+              ? block.iconSize
+              : undefined,
           label: typeof block.label === "string" ? block.label : undefined,
           description:
             typeof block.description === "string" ? block.description : undefined,

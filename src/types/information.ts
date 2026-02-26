@@ -79,6 +79,7 @@ export type InformationBlock = {
   text?: string;
   url?: string;
   icon?: string;
+  iconSize?: "sm" | "md" | "lg" | "xl";
   label?: string;
   description?: string;
   textSize?: "sm" | "md" | "lg";
