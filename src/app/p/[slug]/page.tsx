@@ -306,12 +306,12 @@ function normalizeTheme(value: unknown): InformationTheme {
 
 function getTitleSizeClass(size: InformationTheme["titleSize"]): string {
   if (size === "sm") {
-    return "text-xl";
+    return "text-xl sm:text-2xl";
   }
   if (size === "lg") {
-    return "text-3xl";
+    return "text-3xl sm:text-4xl";
   }
-  return "text-2xl";
+  return "text-2xl sm:text-3xl";
 }
 
 function getBlockTextSizeClass(
@@ -320,12 +320,12 @@ function getBlockTextSizeClass(
 ): string {
   const value = size ?? fallback;
   if (value === "sm") {
-    return "text-sm";
+    return "text-[14px] sm:text-sm";
   }
   if (value === "lg") {
-    return "text-lg";
+    return "text-[17px] sm:text-lg";
   }
-  return "text-base";
+  return "text-[15px] sm:text-base";
 }
 
 function getWeightClass(weight: "normal" | "medium" | "semibold" | undefined): string {
@@ -479,7 +479,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return (
-      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen pl-4 pr-6 py-12 sm:pl-6 sm:pr-8"}`}>
+      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">公開ページ</h1>
         <p className="text-sm text-slate-600">
           Supabase環境変数が未設定のため、公開ページを取得できません。
@@ -514,7 +514,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       // service role未設定時は従来どおり not found 扱い
     }
     return (
-      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen pl-4 pr-6 py-12 sm:pl-6 sm:pr-8"}`}>
+      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">ご案内</h1>
         <p className="text-sm text-slate-600">
           {isDraft ? "このページは未公開です。公開後にご利用いただけます。" : "ページが見つかりませんでした。"}
@@ -560,7 +560,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       className={`lux-main text-slate-900 ${
         isEmbed
           ? "bg-transparent p-0"
-          : "min-h-screen bg-[radial-gradient(circle_at_top,#fde68a1a_0%,#dbeafe38_32%,#f8fafc_100%)] pl-4 pr-6 py-10 sm:pl-6 sm:pr-8 sm:py-12"
+          : "min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#fde68a1a_0%,#dbeafe38_32%,#f8fafc_100%)] px-3 py-8 sm:px-8 sm:py-12"
       }`}
     >
       <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-2xl"}`}>
@@ -569,17 +569,17 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           style={{ backgroundColor: theme.backgroundColor || "#ffffff", color: theme.textColor || "#0f172a" }}
         >
           {!isEmbed ? (
-            <div className="border-b border-slate-100 px-6 py-5">
+            <div className="border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
               <p className="lux-kicker text-[11px]">Infomii</p>
               <p className="mt-2 text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
             </div>
           ) : null}
 
-          <div className="px-6 py-6">
+          <div className="px-4 py-5 sm:px-6 sm:py-6">
             {nodeMap?.enabled && nodeMap.nodes.length > 0 && (
-              <section className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+              <section className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 sm:mb-6 sm:p-3">
                 <p className="mb-2 text-xs font-semibold text-emerald-800">総合案内ナビゲーション</p>
-                <div className="relative h-[360px] overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <div className="relative h-[320px] overflow-hidden rounded-lg border border-slate-200 bg-white sm:h-[360px]">
                   <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     {nodeMap.edges.map((edge) => {
                       const from = nodeMap.nodes.find((n) => n.id === edge.from);
@@ -602,15 +602,15 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                       {node.targetSlug ? (
                         <a
                           href={`/p/${node.targetSlug}`}
-                          className="flex min-w-[98px] max-w-[118px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center shadow-sm transition hover:-translate-y-[1px] hover:shadow-md sm:min-w-[124px] sm:max-w-none sm:px-3"
+                          className="flex min-h-[72px] min-w-[86px] max-w-[108px] touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-center shadow-sm transition active:scale-[0.99] hover:-translate-y-[1px] hover:shadow-md sm:min-h-[78px] sm:min-w-[124px] sm:max-w-none sm:px-3"
                         >
                           <span className="text-lg">{node.icon || "📄"}</span>
-                          <span className="text-xs font-medium text-slate-800">{node.title}</span>
+                          <span className="break-words text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">{node.title}</span>
                         </a>
                       ) : (
-                        <div className="flex min-w-[98px] max-w-[118px] flex-col items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center shadow-sm sm:min-w-[124px] sm:max-w-none sm:px-3">
+                        <div className="flex min-h-[72px] min-w-[86px] max-w-[108px] flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2.5 text-center shadow-sm sm:min-h-[78px] sm:min-w-[124px] sm:max-w-none sm:px-3">
                           <span className="text-lg">{node.icon || "📄"}</span>
-                          <span className="text-xs font-medium text-slate-500">{node.title}</span>
+                          <span className="break-words text-[11px] font-medium leading-tight text-slate-500 sm:text-xs">{node.title}</span>
                         </div>
                       )}
                     </div>
@@ -647,11 +647,11 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "paragraph") {
                   return (
                     <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
-                      <p
-                        className={`whitespace-pre-wrap leading-8 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
-                        style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
-                      >
-                        {block.text || ""}
+                        <p
+                          className={`whitespace-pre-wrap leading-7 sm:leading-8 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                          style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                        >
+                          {block.text || ""}
                       </p>
                     </div>
                   );
@@ -701,7 +701,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                           {(block.iconItems ?? []).map((entry) => (
                             <div
                               key={entry.id}
-                              className="rounded-md border border-slate-200 px-2 py-2 text-center"
+                              className="rounded-md border border-slate-200 text-center shadow-sm"
                               style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                             >
                               {entry.link ? (
@@ -709,7 +709,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   href={entry.link}
                                   target={entry.link.startsWith("/p/") ? undefined : "_blank"}
                                   rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
-                                  className="flex flex-col items-center gap-1"
+                                  className="flex min-h-[76px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99]"
                                 >
                                   {renderIconVisual(entry.icon)}
                                   <p
@@ -720,7 +720,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   </p>
                                 </a>
                               ) : (
-                                <div className="flex flex-col items-center gap-1">
+                                <div className="flex min-h-[76px] w-full flex-col items-center justify-center gap-1 px-2 py-2.5">
                                   {renderIconVisual(entry.icon)}
                                   <p
                                     className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -797,7 +797,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                         href={block.ctaUrl || "#"}
                         target="_blank"
                         rel="noreferrer"
-                        className={`inline-flex rounded-lg bg-emerald-600 px-4 py-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                        className={`inline-flex min-h-[44px] items-center rounded-lg bg-emerald-600 px-4 py-2.5 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                         style={{ color: block.textColor ?? "#ffffff" }}
                       >
                         {block.ctaLabel || "ボタン"}
@@ -903,7 +903,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             </div>
           </div>
 
-          <footer className="border-t border-emerald-100 bg-[linear-gradient(180deg,#fffdf7,#f8fafc)] px-6 py-4">
+          <footer className="border-t border-emerald-100 bg-[linear-gradient(180deg,#fffdf7,#f8fafc)] px-4 py-4 sm:px-6">
               <p className="text-xs leading-6 text-slate-600">
               ご不明な点はスタッフまでお声がけください。
             </p>
