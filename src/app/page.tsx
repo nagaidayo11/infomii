@@ -5,6 +5,9 @@ import LpDemoVideo from "@/components/lp-demo-video";
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const demoVideoUrl = process.env.NEXT_PUBLIC_LP_DEMO_VIDEO_URL ?? "/demo/editor-demo.mp4";
+  const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
+  const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
+  const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -99,6 +102,7 @@ export default function Home() {
   ];
 
   const compareRows = [
+    { item: "月額料金（税込）", free: "¥0", pro: `${proMonthlyPriceLabel}` },
     { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能" },
     { item: "複数ページ連携", free: "-", pro: "ノードマップ対応" },
     { item: "運用監視", free: "基本", pro: "Webhook/同期監視" },
@@ -151,6 +155,9 @@ export default function Home() {
                 店舗向けインフォメーションを、ブロック編集で直感的に作成。QRから1ページ案内、
                 Proならノードで複数ページ連携まで。現場で必要な更新を、その場で反映できます。
               </p>
+              <p className="lp-reveal lp-delay-3 mt-3 text-xs font-medium text-slate-600 sm:text-sm">
+                Free: ¥0 / Pro: {proMonthlyPriceLabel}（税込・いつでも解約可能）
+              </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {metrics.map((metric, index) => (
@@ -168,13 +175,13 @@ export default function Home() {
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
                 <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
-                  無料で始める
+                  無料で1ページ作成（30秒登録）
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="#demo"
                   className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
                 >
-                  ダッシュボードへ
+                  30秒デモを見る
                 </Link>
               </div>
             </div>
@@ -236,7 +243,7 @@ export default function Home() {
               href="/login"
               className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800"
             >
-              管理画面を試す
+              無料で試す（30秒登録）
             </Link>
           </div>
 
@@ -307,6 +314,7 @@ export default function Home() {
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-2 text-4xl font-bold text-slate-900">¥0</p>
+              <p className="mt-1 text-xs text-slate-500">まずは無料で公開を開始</p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>・公開ページ上限あり</li>
                 <li>・基本ブロックエディタ</li>
@@ -315,7 +323,11 @@ export default function Home() {
             </article>
             <article className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Pro</p>
-              <p className="mt-2 text-4xl font-bold text-slate-900">月額課金</p>
+              <p className="mt-2 text-4xl font-bold text-slate-900">
+                {proMonthlyPriceLabel}
+                <span className="ml-1 text-base font-semibold text-slate-700">/ 月</span>
+              </p>
+              <p className="mt-1 text-xs text-slate-500">税込・Stripe決済・いつでも解約可能</p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>・公開ページ上限を拡張</li>
                 <li>・ノードマップで複数ページ連携</li>
@@ -325,7 +337,7 @@ export default function Home() {
                 href="/login"
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
               >
-                Proを試す
+                無料登録してProを試す
               </Link>
             </article>
           </div>
@@ -385,7 +397,7 @@ export default function Home() {
               href="/login"
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
-              無料で始める
+              無料で1ページ作成する
             </Link>
             <a
               href="#pricing"
