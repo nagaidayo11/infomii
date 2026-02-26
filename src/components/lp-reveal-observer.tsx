@@ -25,14 +25,29 @@ export default function LpRevealObserver() {
       },
       {
         root: null,
-        rootMargin: "0px 0px -10% 0px",
-        threshold: 0.12,
+        rootMargin: "0px 0px -2% 0px",
+        threshold: 0.02,
       },
     );
 
     targets.forEach((el) => observer.observe(el));
 
-    return () => observer.disconnect();
+    const revealRemainingWhenBottomReached = () => {
+      const reachedBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6;
+      if (!reachedBottom) return;
+      targets.forEach((el) => el.classList.add("lp-visible"));
+    };
+
+    window.addEventListener("scroll", revealRemainingWhenBottomReached, { passive: true });
+    window.addEventListener("resize", revealRemainingWhenBottomReached);
+    revealRemainingWhenBottomReached();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", revealRemainingWhenBottomReached);
+      window.removeEventListener("resize", revealRemainingWhenBottomReached);
+    };
   }, []);
 
   return null;
