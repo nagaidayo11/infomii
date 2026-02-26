@@ -569,7 +569,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           style={{ backgroundColor: theme.backgroundColor || "#ffffff", color: theme.textColor || "#0f172a" }}
         >
           {!isEmbed ? (
-            <div className="border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
+            <div className="hidden border-b border-slate-100 px-4 py-4 sm:block sm:px-6 sm:py-5">
               <p className="lux-kicker text-[11px]">Infomii</p>
               <p className="mt-2 text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
             </div>
@@ -577,7 +577,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
           <div className="px-4 py-5 sm:px-6 sm:py-6">
             {nodeMap?.enabled && nodeMap.nodes.length > 0 && (
-              <section className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 sm:mb-6 sm:p-3">
+              <section className="mb-5 hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 sm:mb-6 sm:block sm:p-3">
                 <p className="mb-2 text-xs font-semibold text-emerald-800">総合案内ナビゲーション</p>
                 <div className="relative h-[320px] overflow-hidden rounded-lg border border-slate-200 bg-white sm:h-[360px]">
                   <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
