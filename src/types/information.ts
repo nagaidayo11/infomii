@@ -17,7 +17,8 @@ export type InformationBlockType =
   | "pricing"
   | "quote"
   | "checklist"
-  | "gallery";
+  | "gallery"
+  | "columnGroup";
 
 export type IconRowItem = {
   id: string;
@@ -43,6 +44,12 @@ export type GalleryItem = {
   id: string;
   url: string;
   caption: string;
+};
+
+export type ColumnGroupItem = {
+  id: string;
+  title: string;
+  body: string;
 };
 
 export type NodeMapNode = {
@@ -101,6 +108,7 @@ export type InformationBlock = {
   quoteAuthor?: string;
   checklistItems?: ChecklistItem[];
   galleryItems?: GalleryItem[];
+  columnGroupItems?: ColumnGroupItem[];
 };
 
 export type InformationTheme = {

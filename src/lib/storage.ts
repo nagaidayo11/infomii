@@ -61,7 +61,8 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           type !== "pricing" &&
           type !== "quote" &&
           type !== "checklist" &&
-          type !== "gallery"
+          type !== "gallery" &&
+          type !== "columnGroup"
         ) {
           return null;
         }
@@ -236,6 +237,24 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                 })
                 .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
             : undefined,
+          columnGroupItems: Array.isArray(block.columnGroupItems)
+            ? block.columnGroupItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; title?: unknown; body?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `column-group-item-${itemIndex + 1}`,
+                    title: typeof item.title === "string" ? item.title : "",
+                    body: typeof item.body === "string" ? item.body : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; title: string; body: string } => Boolean(entry))
+            : undefined,
         } as InformationBlock;
       })
       .filter((block): block is InformationBlock => Boolean(block));
@@ -387,7 +406,8 @@ function blocksToBody(blocks: InformationBlock[]): string {
         block.type === "hours" ||
         block.type === "pricing" ||
         block.type === "quote" ||
-        block.type === "checklist",
+        block.type === "checklist" ||
+        block.type === "columnGroup",
     )
     .map((block) => {
       if (block.type === "icon") {
@@ -436,6 +456,12 @@ function blocksToBody(blocks: InformationBlock[]): string {
       if (block.type === "checklist") {
         return (block.checklistItems ?? [])
           .map((entry) => entry.text.trim())
+          .filter(Boolean)
+          .join("\n");
+      }
+      if (block.type === "columnGroup") {
+        return (block.columnGroupItems ?? [])
+          .flatMap((entry) => [entry.title.trim(), entry.body.trim()])
           .filter(Boolean)
           .join("\n");
       }
@@ -564,6 +590,7 @@ function cloneTemplateBlocks(blocks: InformationBlock[]): InformationBlock[] {
     pricingItems: block.pricingItems?.map((entry) => ({ ...entry })),
     checklistItems: block.checklistItems?.map((entry) => ({ ...entry })),
     galleryItems: block.galleryItems?.map((entry) => ({ ...entry })),
+    columnGroupItems: block.columnGroupItems?.map((entry) => ({ ...entry })),
   }));
 }
 

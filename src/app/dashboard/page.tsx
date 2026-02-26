@@ -105,6 +105,7 @@ function getTemplateBlockLabel(type: string): string {
   if (type === "quote") return "引用";
   if (type === "checklist") return "チェックリスト";
   if (type === "gallery") return "ギャラリー";
+  if (type === "columnGroup") return "カラムグループ";
   if (type === "divider") return "区切り線";
   if (type === "space") return "余白";
   return "ブロック";

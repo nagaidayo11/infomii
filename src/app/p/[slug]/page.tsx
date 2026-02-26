@@ -47,7 +47,8 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           block.type !== "pricing" &&
           block.type !== "quote" &&
           block.type !== "checklist" &&
-          block.type !== "gallery"
+          block.type !== "gallery" &&
+          block.type !== "columnGroup"
         ) {
           return null;
         }
@@ -221,6 +222,24 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                   };
                 })
                 .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
+            : undefined,
+          columnGroupItems: Array.isArray(block.columnGroupItems)
+            ? block.columnGroupItems
+                .map((entry, itemIndex) => {
+                  if (!entry || typeof entry !== "object") {
+                    return null;
+                  }
+                  const item = entry as { id?: unknown; title?: unknown; body?: unknown };
+                  return {
+                    id:
+                      typeof item.id === "string" && item.id
+                        ? item.id
+                        : `column-group-item-${itemIndex + 1}`,
+                    title: typeof item.title === "string" ? item.title : "",
+                    body: typeof item.body === "string" ? item.body : "",
+                  };
+                })
+                .filter((entry): entry is { id: string; title: string; body: string } => Boolean(entry))
             : undefined,
         } as InformationBlock;
       })
@@ -991,6 +1010,32 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                               <figcaption className="px-3 py-2 text-xs text-slate-600">{entry.caption}</figcaption>
                             )}
                           </figure>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                if (block.type === "columnGroup") {
+                  const items = block.columnGroupItems ?? [];
+                  const columnsClass = items.length >= 4 ? "sm:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
+                  return (
+                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                      <div className={`grid gap-2 ${columnsClass}`}>
+                        {items.map((entry) => (
+                          <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                            <p
+                              className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                              style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                            >
+                              {entry.title || "タイトル"}
+                            </p>
+                            <p
+                              className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                              style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                            >
+                              {entry.body || ""}
+                            </p>
+                          </div>
                         ))}
                       </div>
                     </div>

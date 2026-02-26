@@ -177,6 +177,9 @@ function collectPublishCheckIssues(
     if (block.type === "quote") {
       return Boolean((block.text ?? "").trim() || (block.quoteAuthor ?? "").trim());
     }
+    if (block.type === "columnGroup") {
+      return (block.columnGroupItems ?? []).some((entry) => (entry.title ?? "").trim() || (entry.body ?? "").trim());
+    }
     return Boolean((block.text ?? "").trim() || (block.label ?? "").trim() || (block.description ?? "").trim());
   });
 
@@ -668,6 +671,17 @@ function makeBlock(type: InformationBlock["type"]): InformationBlock {
       spacing: "md",
     };
   }
+  if (type === "columnGroup") {
+    return {
+      id,
+      type,
+      columnGroupItems: [
+        { id: crypto.randomUUID(), title: "カラム 1", body: "内容を入力してください" },
+        { id: crypto.randomUUID(), title: "カラム 2", body: "内容を入力してください" },
+      ],
+      spacing: "md",
+    };
+  }
   return { id, type };
 }
 
@@ -687,7 +701,8 @@ function blocksToBody(blocks: InformationBlock[]): string {
         block.type === "hours" ||
         block.type === "pricing" ||
         block.type === "quote" ||
-        block.type === "checklist",
+        block.type === "checklist" ||
+        block.type === "columnGroup",
     )
     .map((block) => {
       if (block.type === "icon") {
@@ -736,6 +751,12 @@ function blocksToBody(blocks: InformationBlock[]): string {
       if (block.type === "checklist") {
         return (block.checklistItems ?? [])
           .map((entry) => entry.text.trim())
+          .filter(Boolean)
+          .join("\n");
+      }
+      if (block.type === "columnGroup") {
+        return (block.columnGroupItems ?? [])
+          .flatMap((entry) => [entry.title.trim(), entry.body.trim()])
           .filter(Boolean)
           .join("\n");
       }
@@ -899,6 +920,9 @@ function getBlockTypeLabel(type: InformationBlock["type"]): string {
   if (type === "gallery") {
     return "ギャラリー";
   }
+  if (type === "columnGroup") {
+    return "カラムグループ";
+  }
   return "スペース";
 }
 
@@ -912,7 +936,8 @@ function supportsDetailTextAlign(type: InformationBlock["type"]): boolean {
     type === "cta" ||
     type === "badge" ||
     type === "quote" ||
-    type === "checklist"
+    type === "checklist" ||
+    type === "columnGroup"
   );
 }
 
@@ -1587,6 +1612,32 @@ export default function EditorPage() {
           </div>
         );
       }
+      if (block.type === "columnGroup") {
+        const items = block.columnGroupItems ?? [];
+        const columnsClass = items.length >= 4 ? "sm:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
+        return (
+          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+            <div className={`grid gap-2 ${columnsClass}`}>
+              {items.map((entry) => (
+                <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                  <p
+                    className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                    style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                  >
+                    {entry.title || "タイトル"}
+                  </p>
+                  <p
+                    className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                    style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                  >
+                    {entry.body || ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
       if (block.type === "space") {
         return (
           <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
@@ -1845,7 +1896,8 @@ export default function EditorPage() {
       type === "pricing" ||
       type === "quote" ||
       type === "checklist" ||
-      type === "gallery"
+      type === "gallery" ||
+      type === "columnGroup"
     ) {
       return type;
     }
@@ -3207,6 +3259,17 @@ function onUpdateIconRowItem(
                           <div className="font-medium">+ 2カラム</div>
                           <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">左右で情報整理</div>
                         </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("columnGroup", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "columnGroup")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-indigo-300 hover:bg-indigo-50"
+                        >
+                          <div className="font-medium">+ カラムグループ</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-indigo-700">2〜4列で要点を比較</div>
+                        </button>
                           </>
                         )}
                         <button
@@ -3480,7 +3543,8 @@ function onUpdateIconRowItem(
                               block.type === "pricing" ||
                               block.type === "quote" ||
                               block.type === "checklist" ||
-                              block.type === "gallery") ? (
+                              block.type === "gallery" ||
+                              block.type === "columnGroup") ? (
                               <button
                                 type="button"
                                 onClick={(event) => {
@@ -3587,7 +3651,8 @@ function onUpdateIconRowItem(
                             block.type === "pricing" ||
                             block.type === "quote" ||
                             block.type === "checklist" ||
-                            block.type === "gallery"
+                            block.type === "gallery" ||
+                            block.type === "columnGroup"
                           ) && (
                             <div
                               className={`overflow-hidden transition-all duration-300 ease-out ${
@@ -4307,6 +4372,84 @@ function onUpdateIconRowItem(
                                         画像を削除
                                       </button>
                                     </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {!collapsedBlocks[block.id] && block.type === "columnGroup" && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs text-slate-600">カラム項目（2〜4推奨）</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const items = block.columnGroupItems ?? [];
+                                    if (items.length >= 4) {
+                                      setNoticeKind("error");
+                                      setNotice("カラムグループは最大4列までです");
+                                      return;
+                                    }
+                                    onUpdateBlock(block.id, {
+                                      columnGroupItems: [
+                                        ...items,
+                                        { id: crypto.randomUUID(), title: `カラム ${items.length + 1}`, body: "" },
+                                      ],
+                                    });
+                                  }}
+                                  className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+                                >
+                                  + カラムを追加
+                                </button>
+                              </div>
+                              <div className="space-y-2">
+                                {(block.columnGroupItems ?? []).map((entry) => (
+                                  <div key={entry.id} className="rounded-md border border-slate-200 p-2">
+                                    <div className="mb-1.5 grid gap-1.5 sm:grid-cols-[1fr_auto]">
+                                      <input
+                                        value={entry.title}
+                                        onChange={(e) =>
+                                          onUpdateBlock(block.id, {
+                                            columnGroupItems: (block.columnGroupItems ?? []).map((item) =>
+                                              item.id === entry.id ? { ...item, title: e.target.value } : item,
+                                            ),
+                                          })}
+                                        onBlur={onBlurBlockSave}
+                                        placeholder="カラムタイトル"
+                                        className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const items = block.columnGroupItems ?? [];
+                                          if (items.length <= 2) {
+                                            setNoticeKind("error");
+                                            setNotice("カラムは最低2列必要です");
+                                            return;
+                                          }
+                                          onUpdateBlock(block.id, {
+                                            columnGroupItems: items.filter((item) => item.id !== entry.id),
+                                          });
+                                        }}
+                                        className="rounded border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50"
+                                      >
+                                        削除
+                                      </button>
+                                    </div>
+                                    <textarea
+                                      rows={3}
+                                      value={entry.body}
+                                      onChange={(e) =>
+                                        onUpdateBlock(block.id, {
+                                          columnGroupItems: (block.columnGroupItems ?? []).map((item) =>
+                                            item.id === entry.id ? { ...item, body: e.target.value } : item,
+                                          ),
+                                        })}
+                                      onBlur={onBlurBlockSave}
+                                      placeholder="カラム本文"
+                                      className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm leading-5"
+                                    />
                                   </div>
                                 ))}
                               </div>
