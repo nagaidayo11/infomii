@@ -423,6 +423,16 @@ export default function DashboardPage() {
   const isLimitReached = publishedLimit > 0 && published.length >= publishedLimit;
   const isNearLimit = !isLimitReached && publishedLimit > 0 && usagePercent >= 80;
   const isProActive = subscription?.plan === "pro" && (subscription.status === "active" || subscription.status === "trialing");
+  const primaryBillingCtaLabel = isProActive ? "解約する" : "Proにアップグレード";
+  const primaryBillingCtaLoading = isProActive ? openingPortal : creatingCheckout;
+  const primaryBillingCtaDisabled = isProActive ? openingPortal || !subscription?.hasStripeCustomer : creatingCheckout;
+  const nextRenewalLabel = subscription
+    ? subscription.currentPeriodEnd
+      ? formatShortDate(subscription.currentPeriodEnd)
+      : isProActive
+        ? "請求ポータルで確認"
+        : "未設定"
+    : "-";
   const filteredTemplates = useMemo(
     () => {
       const q = quickSearch.trim().toLowerCase();
@@ -1069,7 +1079,7 @@ export default function DashboardPage() {
                 </SideNavButton>
               </div>
               <div className="mt-auto hidden lg:flex lg:flex-col lg:items-center lg:gap-3">
-                <SideNavButton label="法務ページ" onClick={() => router.push("/commerce")}>
+                <SideNavButton label="利用規約へ" onClick={() => router.push("/terms")}>
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M6 3h9l3 3v15H6z" />
                     <path d="M15 3v4h3" />
@@ -1701,9 +1711,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-xs text-slate-500">次回更新日</p>
-                      <p className="mt-1 font-medium text-slate-900">
-                        {subscription ? formatShortDate(subscription.currentPeriodEnd) : "-"}
-                      </p>
+                      <p className="mt-1 font-medium text-slate-900">{nextRenewalLabel}</p>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
@@ -1770,11 +1778,11 @@ export default function DashboardPage() {
                     </button>
                     <button
                       type="button"
-                      disabled={creatingCheckout}
-                      onClick={onStartStripeCheckout}
+                      disabled={primaryBillingCtaDisabled}
+                      onClick={isProActive ? onOpenBillingPortal : onStartStripeCheckout}
                       className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
                     >
-                      {creatingCheckout ? "遷移中..." : "StripeでProにアップグレード"}
+                      {primaryBillingCtaLoading ? "遷移中..." : primaryBillingCtaLabel}
                     </button>
                     <button
                       type="button"

@@ -2516,7 +2516,7 @@ function onUpdateIconRowItem(
             </SideNavButton>
           </div>
           <div className="mt-auto hidden lg:flex lg:flex-col lg:items-center lg:gap-3">
-            <SideNavButton label="法務ページ" onClick={() => router.push("/commerce")}>
+            <SideNavButton label="利用規約へ" onClick={() => router.push("/terms")}>
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M6 3h9l3 3v15H6z" />
                 <path d="M15 3v4h3" />
