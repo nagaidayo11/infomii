@@ -65,6 +65,7 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
             block.textSize === "sm" || block.textSize === "md" || block.textSize === "lg"
               ? block.textSize
               : undefined,
+          fontFamily: typeof block.fontFamily === "string" ? block.fontFamily : undefined,
           textColor: typeof block.textColor === "string" ? block.textColor : undefined,
           textWeight:
             block.textWeight === "normal" ||
@@ -348,6 +349,7 @@ function normalizeTheme(value: unknown): InformationTheme {
   return {
     backgroundColor: typeof theme.backgroundColor === "string" ? theme.backgroundColor : undefined,
     textColor: typeof theme.textColor === "string" ? theme.textColor : undefined,
+    fontFamily: typeof theme.fontFamily === "string" ? theme.fontFamily : undefined,
     titleSize:
       theme.titleSize === "sm" || theme.titleSize === "md" || theme.titleSize === "lg"
         ? theme.titleSize
@@ -474,6 +476,17 @@ function getCardRadiusClass(radius: InformationBlock["cardRadius"] | undefined):
     return "rounded-3xl";
   }
   return "rounded-xl";
+}
+
+function getBlockContainerStyle(
+  block: InformationBlock,
+  theme: InformationTheme,
+): { marginBottom: string; fontFamily: string } {
+  const defaultFont = "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", sans-serif";
+  return {
+    ...getBlockSpacingStyle(block.spacing),
+    fontFamily: block.fontFamily ?? theme.fontFamily ?? defaultFont,
+  };
 }
 
 function renderLineIcon(token: string): ReactNode {
@@ -649,7 +662,11 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-2xl"}`}>
         <article
           className="lux-card lux-section-card overflow-hidden rounded-3xl"
-          style={{ backgroundColor: theme.backgroundColor || "#ffffff", color: theme.textColor || "#0f172a" }}
+          style={{
+            backgroundColor: theme.backgroundColor || "#ffffff",
+            color: theme.textColor || "#0f172a",
+            fontFamily: theme.fontFamily ?? "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", sans-serif",
+          }}
         >
           {!isEmbed ? (
             <div className="hidden border-b border-slate-100 px-4 py-4 sm:block sm:px-6 sm:py-5">
@@ -705,7 +722,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
               {blocks.map((block) => {
                 if (block.type === "title") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <h2
                         className={`${getWeightClass(block.textWeight ?? "semibold")} ${getTitleSizeClass(block.textSize ?? "md")} ${getBlockAlignClass(block.textAlign)}`}
                         style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -717,7 +734,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "heading") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <h2
                         className={`${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                         style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -729,7 +746,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "paragraph") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                         <p
                           className={`whitespace-pre-wrap leading-7 sm:leading-8 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                           style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -741,7 +758,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "image") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <Image
                         src={block.url || ""}
                         alt="block"
@@ -755,7 +772,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "icon") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className={`rounded-xl border border-slate-200 bg-slate-50/60 p-3 ${getBlockAlignClass(block.textAlign)}`}>
                         <div className={`flex items-center gap-2 ${getBlockJustifyClass(block.textAlign)}`}>
                           {renderIconVisual(block.icon)}
@@ -780,7 +797,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   const iconItems = block.iconItems ?? [];
                   const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div
                         className="rounded-xl border border-slate-200 p-3"
                         style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
@@ -827,7 +844,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "section") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div
                         className={`rounded-xl border border-slate-200 px-4 py-4 ${getBlockAlignClass(block.textAlign)}`}
                         style={{ backgroundColor: block.sectionBackgroundColor ?? "#f8fafc" }}
@@ -850,7 +867,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "columns") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="grid gap-2 sm:grid-cols-2">
                         <div
                           className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
@@ -880,7 +897,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "cta") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)} className={getBlockAlignClass(block.textAlign)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)} className={getBlockAlignClass(block.textAlign)}>
                       <a
                         href={block.ctaUrl || "#"}
                         target="_blank"
@@ -895,7 +912,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "badge") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)} className={getBlockAlignClass(block.textAlign)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)} className={getBlockAlignClass(block.textAlign)}>
                       <span
                         className={`inline-flex rounded-full px-3 py-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                         style={{
@@ -910,7 +927,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "hours") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
                         <p
                           className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -942,7 +959,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "pricing") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
                         <p
                           className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -974,7 +991,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "quote") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <blockquote className="rounded-xl border-l-4 border-emerald-400 bg-emerald-50/50 px-4 py-3">
                         <p
                           className={`whitespace-pre-wrap italic ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -996,7 +1013,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "checklist") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="rounded-xl border border-slate-200 bg-white p-3">
                         <ul className="space-y-2">
                           {(block.checklistItems ?? []).map((entry) => (
@@ -1018,7 +1035,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "gallery") {
                   const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {galleryItems.map((entry) => (
                           <figure key={entry.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -1043,7 +1060,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   const items = block.columnGroupItems ?? [];
                   const columnsClass = items.length >= 4 ? "sm:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className={`grid gap-2 ${columnsClass}`}>
                         {items.map((entry) => (
                           <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
@@ -1067,13 +1084,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "space") {
                   return (
-                    <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                    <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className={getSpaceHeightClass(block.spacing)} />
                     </div>
                   );
                 }
                 return (
-                  <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+                  <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                     <hr
                       className="border-slate-200"
                       style={getDividerThicknessStyle(block.dividerThickness, block.dividerColor)}

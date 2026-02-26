@@ -82,6 +82,7 @@ export type InformationBlock = {
   label?: string;
   description?: string;
   textSize?: "sm" | "md" | "lg";
+  fontFamily?: string;
   textColor?: string;
   textWeight?: "normal" | "medium" | "semibold";
   textAlign?: "left" | "center" | "right";
@@ -115,6 +116,7 @@ export type InformationBlock = {
 export type InformationTheme = {
   backgroundColor?: string;
   textColor?: string;
+  fontFamily?: string;
   titleSize?: "sm" | "md" | "lg";
   titleColor?: string;
   titleWeight?: "normal" | "medium" | "semibold";

@@ -79,6 +79,7 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
             block.textSize === "sm" || block.textSize === "md" || block.textSize === "lg"
               ? block.textSize
               : undefined,
+          fontFamily: typeof block.fontFamily === "string" ? block.fontFamily : undefined,
           textColor: typeof block.textColor === "string" ? block.textColor : undefined,
           textWeight:
             block.textWeight === "normal" ||
@@ -375,6 +376,7 @@ function normalizeTheme(value: unknown): InformationTheme {
     backgroundColor:
       typeof theme.backgroundColor === "string" ? theme.backgroundColor : undefined,
     textColor: typeof theme.textColor === "string" ? theme.textColor : undefined,
+    fontFamily: typeof theme.fontFamily === "string" ? theme.fontFamily : undefined,
     titleSize:
       theme.titleSize === "sm" || theme.titleSize === "md" || theme.titleSize === "lg"
         ? theme.titleSize

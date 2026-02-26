@@ -85,6 +85,14 @@ const BLOCK_TEXT_SWATCHES = [
   "#ffffff",
 ];
 
+const FONT_FAMILY_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: "標準（ゴシック）", value: "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", sans-serif" },
+  { label: "明朝", value: "\"Noto Serif JP\", \"Hiragino Mincho ProN\", \"Yu Mincho\", serif" },
+  { label: "丸ゴシック", value: "\"M PLUS Rounded 1c\", \"Hiragino Maru Gothic ProN\", sans-serif" },
+  { label: "英字モダン", value: "\"Avenir Next\", \"Helvetica Neue\", Arial, sans-serif" },
+  { label: "等幅", value: "\"SFMono-Regular\", Menlo, Monaco, Consolas, \"Courier New\", monospace" },
+];
+
 type AddPanelSection = "text" | "column" | "section" | "preset";
 type BlockSetKind = "campaign" | "menu" | "faq" | "access" | "notice";
 type IndustryBlockSetKind = "hotel" | "restaurant" | "cafe" | "salon" | "clinic" | "retail";
@@ -889,6 +897,17 @@ function getCardRadiusClass(radius: InformationBlock["cardRadius"] | undefined):
   return "rounded-xl";
 }
 
+function getBlockContainerStyle(
+  block: InformationBlock,
+  theme: InformationTheme,
+): { marginBottom: string; fontFamily: string } {
+  const defaultFont = FONT_FAMILY_OPTIONS[0]?.value ?? "sans-serif";
+  return {
+    ...getBlockSpacingStyle(block.spacing),
+    fontFamily: block.fontFamily ?? theme.fontFamily ?? defaultFont,
+  };
+}
+
 function getBlockTypeLabel(type: InformationBlock["type"]): string {
   if (type === "title") {
     return "タイトル";
@@ -1302,7 +1321,7 @@ export default function EditorPage() {
     return sourceItem.contentBlocks.map((block) => {
       if (block.type === "title") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <h3
               className={`${getWeightClass(block.textWeight ?? "semibold")} ${getTitleSizeClass(block.textSize ?? "md")} ${getBlockAlignClass(block.textAlign)}`}
               style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -1314,7 +1333,7 @@ export default function EditorPage() {
       }
       if (block.type === "heading") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <h3
               className={`${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
               style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -1326,7 +1345,7 @@ export default function EditorPage() {
       }
       if (block.type === "paragraph") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <p
               className={`whitespace-pre-wrap leading-7 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
               style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
@@ -1338,7 +1357,7 @@ export default function EditorPage() {
       }
       if (block.type === "image") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             {block.url ? (
               <Image
                 src={block.url}
@@ -1354,7 +1373,7 @@ export default function EditorPage() {
       }
       if (block.type === "icon") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className={`rounded-lg border border-slate-200 bg-slate-50/70 p-3 ${getBlockAlignClass(block.textAlign)}`}>
               <div className={`flex items-center gap-2 ${getBlockJustifyClass(block.textAlign)}`}>
                 {renderIconVisual(block.icon)}
@@ -1379,7 +1398,7 @@ export default function EditorPage() {
         const iconItems = block.iconItems ?? [];
         const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div
               className="rounded-lg border border-slate-200 p-3"
               style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
@@ -1425,7 +1444,7 @@ export default function EditorPage() {
       }
       if (block.type === "section") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div
               className={`rounded-xl border border-slate-200 px-4 py-4 ${getBlockAlignClass(block.textAlign)}`}
               style={{ backgroundColor: block.sectionBackgroundColor ?? "#f8fafc" }}
@@ -1448,7 +1467,7 @@ export default function EditorPage() {
       }
       if (block.type === "columns") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="grid gap-2 sm:grid-cols-2">
               <div
                 className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
@@ -1478,7 +1497,7 @@ export default function EditorPage() {
       }
       if (block.type === "cta") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)} className={getBlockAlignClass(block.textAlign)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)} className={getBlockAlignClass(block.textAlign)}>
             <a
               href={block.ctaUrl || "#"}
               target="_blank"
@@ -1493,7 +1512,7 @@ export default function EditorPage() {
       }
       if (block.type === "badge") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)} className={getBlockAlignClass(block.textAlign)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)} className={getBlockAlignClass(block.textAlign)}>
             <span
               className={`inline-flex rounded-full px-3 py-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
               style={{
@@ -1508,7 +1527,7 @@ export default function EditorPage() {
       }
       if (block.type === "hours") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
               <p
                 className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
@@ -1540,7 +1559,7 @@ export default function EditorPage() {
       }
       if (block.type === "pricing") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
               <p
                 className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
@@ -1572,7 +1591,7 @@ export default function EditorPage() {
       }
       if (block.type === "quote") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <blockquote className={`rounded-xl border-l-4 border-emerald-400 bg-emerald-50/60 px-4 py-3 ${getBlockAlignClass(block.textAlign)}`}>
               <p
                 className={`whitespace-pre-wrap italic ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
@@ -1594,7 +1613,7 @@ export default function EditorPage() {
       }
       if (block.type === "checklist") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="rounded-xl border border-slate-200 bg-white p-3">
               <ul className="space-y-2">
                 {(block.checklistItems ?? []).map((entry) => (
@@ -1616,7 +1635,7 @@ export default function EditorPage() {
       if (block.type === "gallery") {
         const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="grid gap-2 sm:grid-cols-2">
               {galleryItems.map((entry) => (
                 <figure key={entry.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -1634,7 +1653,7 @@ export default function EditorPage() {
         const items = block.columnGroupItems ?? [];
         const columnsClass = items.length >= 4 ? "sm:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className={`grid gap-2 ${columnsClass}`}>
               {items.map((entry) => (
                 <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
@@ -1658,13 +1677,13 @@ export default function EditorPage() {
       }
       if (block.type === "space") {
         return (
-          <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+          <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className={getSpaceHeightClass(block.spacing)} />
           </div>
         );
       }
       return (
-        <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
+        <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
           <hr
             className="border-slate-200"
             style={getDividerThicknessStyle(block.dividerThickness, block.dividerColor)}
@@ -3710,6 +3729,23 @@ function onUpdateIconRowItem(
                                     <option value="semibold">太め</option>
                                   </select>
                                 </div>
+                                <div className="sm:col-span-2 lg:col-span-2">
+                                  <label className="mb-1 block text-[11px] text-slate-600">フォント</label>
+                                  <select
+                                    value={block.fontFamily ?? item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value}
+                                    onChange={(e) =>
+                                      onApplyBlockStyle(block.id, {
+                                        fontFamily: e.target.value,
+                                      })}
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  >
+                                    {FONT_FAMILY_OPTIONS.map((option) => (
+                                      <option key={`font-${option.value}`} value={option.value}>
+                                        {option.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                                 {supportsDetailTextAlign(block.type) && (
                                   <div>
                                     <label className="mb-1 block text-[11px] text-slate-600">配置</label>
@@ -4709,6 +4745,24 @@ function onUpdateIconRowItem(
                           <option value="lg">大</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-slate-600">全体フォント</label>
+                        <select
+                          value={item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value}
+                          onChange={(e) => {
+                            const nextTheme = { ...item.theme, fontFamily: e.target.value };
+                            setItem({ ...item, theme: nextTheme });
+                            void save({ theme: nextTheme });
+                          }}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        >
+                          {FONT_FAMILY_OPTIONS.map((option) => (
+                            <option key={`global-font-${option.value}`} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </article>
 
@@ -5021,6 +5075,7 @@ function onUpdateIconRowItem(
                       style={{
                         backgroundColor: item.theme.backgroundColor ?? "#ffffff",
                         color: item.theme.textColor ?? "#0f172a",
+                        fontFamily: item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
                       }}
                     >
                       {previewOverlay ? (
@@ -5060,6 +5115,7 @@ function onUpdateIconRowItem(
                               style={{
                                 backgroundColor: previewOverlay.information.theme.backgroundColor ?? "#ffffff",
                                 color: previewOverlay.information.theme.textColor ?? "#0f172a",
+                                fontFamily: previewOverlay.information.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
                               }}
                             >
                               <div>{renderSmartphoneBlocks(previewOverlay.information)}</div>
