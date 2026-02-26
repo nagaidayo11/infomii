@@ -3265,6 +3265,34 @@ function onUpdateIconRowItem(
                         </button>
                         {!collapsedAddSections.column && (
                           <>
+                        <div className="col-span-2 rounded-md border border-indigo-200 bg-indigo-50/60 px-2 py-1 text-[11px] font-semibold text-indigo-800 sm:col-span-3 lg:col-span-4">
+                          比較・案内カラム
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("columns", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "columns")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
+                        >
+                          <div className="font-medium">+ 2カラム（固定）</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">左右で情報を比較</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("columnGroup", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "columnGroup")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-indigo-300 hover:bg-indigo-50"
+                        >
+                          <div className="font-medium">+ カラムグループ（可変）</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-indigo-700">2〜4列を自由に追加</div>
+                        </button>
+                        <div className="col-span-2 rounded-md border border-sky-200 bg-sky-50/60 px-2 py-1 text-[11px] font-semibold text-sky-800 sm:col-span-3 lg:col-span-4">
+                          アイコン導線カラム
+                        </div>
                         <button
                           type="button"
                           onClick={(event) => void onAddBlock("icon", event)}
@@ -3287,39 +3315,6 @@ function onUpdateIconRowItem(
                           <div className="font-medium">+ アイコン並び</div>
                           <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">横並びで一覧化</div>
                         </button>
-                        <button
-                          type="button"
-                          onClick={(event) => void onAddBlock("section", event)}
-                          draggable
-                          onDragStart={(event) => onPaletteDragStart(event, "section")}
-                          onDragEnd={onPaletteDragEnd}
-                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
-                        >
-                          <div className="font-medium">+ セクション</div>
-                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">背景付きブロック</div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(event) => void onAddBlock("columns", event)}
-                          draggable
-                          onDragStart={(event) => onPaletteDragStart(event, "columns")}
-                          onDragEnd={onPaletteDragEnd}
-                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
-                        >
-                          <div className="font-medium">+ 2カラム</div>
-                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">左右で情報整理</div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(event) => void onAddBlock("columnGroup", event)}
-                          draggable
-                          onDragStart={(event) => onPaletteDragStart(event, "columnGroup")}
-                          onDragEnd={onPaletteDragEnd}
-                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-indigo-300 hover:bg-indigo-50"
-                        >
-                          <div className="font-medium">+ カラムグループ</div>
-                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-indigo-700">2〜4列で要点を比較</div>
-                        </button>
                           </>
                         )}
                         <button
@@ -3332,6 +3327,17 @@ function onUpdateIconRowItem(
                         </button>
                         {!collapsedAddSections.section && (
                           <>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("section", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "section")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ セクション</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">背景付きの説明ブロック</div>
+                        </button>
                         <button
                           type="button"
                           onClick={(event) => void onAddBlock("cta", event)}
