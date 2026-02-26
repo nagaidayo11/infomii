@@ -85,7 +85,8 @@ const BLOCK_TEXT_SWATCHES = [
   "#ffffff",
 ];
 
-type AddPanelSection = "text" | "column" | "section";
+type AddPanelSection = "text" | "column" | "section" | "preset";
+type BlockSetKind = "campaign" | "menu" | "faq" | "access" | "notice";
 
 type PublishCheckIssue = {
   level: "error" | "warning";
@@ -375,6 +376,64 @@ function isProActivated(sub: HotelSubscription | null): boolean {
     return false;
   }
   return sub.plan === "pro" && (sub.status === "active" || sub.status === "trialing");
+}
+
+function getBlockSetLabel(kind: BlockSetKind): string {
+  if (kind === "campaign") {
+    return "キャンペーン告知セット";
+  }
+  if (kind === "menu") {
+    return "営業時間・料金セット";
+  }
+  if (kind === "faq") {
+    return "FAQセット";
+  }
+  if (kind === "access") {
+    return "アクセス案内セット";
+  }
+  return "お知らせセット";
+}
+
+function makeBlockSet(kind: BlockSetKind): InformationBlock[] {
+  if (kind === "campaign") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "期間限定", badgeColor: "#dcfce7", badgeTextColor: "#065f46", spacing: "md", textAlign: "left" },
+      { id: crypto.randomUUID(), type: "title", text: "キャンペーンのお知らせ" },
+      { id: crypto.randomUUID(), type: "paragraph", text: "期間限定キャンペーンを実施中です。詳細は以下をご確認ください。" },
+      { id: crypto.randomUUID(), type: "pricing", pricingItems: [{ id: crypto.randomUUID(), label: "通常価格", value: "¥3,000" }, { id: crypto.randomUUID(), label: "キャンペーン価格", value: "¥2,400" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "cta", ctaLabel: "詳細を見る", ctaUrl: "https://example.com", spacing: "md", textAlign: "center" },
+    ];
+  }
+  if (kind === "menu") {
+    return [
+      { id: crypto.randomUUID(), type: "heading", text: "営業時間・料金案内" },
+      { id: crypto.randomUUID(), type: "hours", hoursItems: [{ id: crypto.randomUUID(), label: "平日", value: "10:00 - 20:00" }, { id: crypto.randomUUID(), label: "土日祝", value: "9:00 - 21:00" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "pricing", pricingItems: [{ id: crypto.randomUUID(), label: "スタンダード", value: "¥3,000" }, { id: crypto.randomUUID(), label: "プレミアム", value: "¥5,000" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "ご利用時の注意", sectionBody: "混雑時はご案内までお時間をいただく場合があります。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  if (kind === "faq") {
+    return [
+      { id: crypto.randomUUID(), type: "heading", text: "よくあるご質問" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. 予約は必要ですか？", sectionBody: "A. 混雑が予想されるため、事前予約をおすすめします。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. 支払い方法は？", sectionBody: "A. 現金・クレジットカード・QR決済に対応しています。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. キャンセル料はかかりますか？", sectionBody: "A. 前日まで無料、当日は条件により発生します。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  if (kind === "access") {
+    return [
+      { id: crypto.randomUUID(), type: "heading", text: "アクセス案内" },
+      { id: crypto.randomUUID(), type: "columns", leftTitle: "電車でお越しの方", leftText: "最寄り駅から徒歩 [分]", rightTitle: "お車でお越しの方", rightText: "駐車場 [台] / 1時間 [料金] 円", columnsBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "iconRow", iconRowBackgroundColor: "#f8fafc", iconItems: [{ id: crypto.randomUUID(), icon: "svg:map-pin", label: "地図", link: "https://maps.google.com", backgroundColor: "#ffffff" }, { id: crypto.randomUUID(), icon: "svg:car", label: "駐車場", link: "", backgroundColor: "#ffffff" }, { id: crypto.randomUUID(), icon: "svg:clock", label: "営業時間", link: "", backgroundColor: "#ffffff" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "cta", ctaLabel: "地図を開く", ctaUrl: "https://maps.google.com", spacing: "md", textAlign: "left" },
+    ];
+  }
+  return [
+    { id: crypto.randomUUID(), type: "badge", badgeText: "重要なお知らせ", badgeColor: "#fef3c7", badgeTextColor: "#92400e", spacing: "md", textAlign: "left" },
+    { id: crypto.randomUUID(), type: "title", text: "営業に関するお知らせ" },
+    { id: crypto.randomUUID(), type: "paragraph", text: "いつもご利用ありがとうございます。本日のお知らせ内容をこちらに記載します。" },
+    { id: crypto.randomUUID(), type: "section", sectionTitle: "詳細", sectionBody: "該当する日時・対象・注意事項をご入力ください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+  ];
 }
 
 function makeBlock(type: InformationBlock["type"]): InformationBlock {
@@ -756,6 +815,7 @@ export default function EditorPage() {
     text: false,
     column: false,
     section: false,
+    preset: false,
   });
   const [inlineAddToast, setInlineAddToast] = useState<{
     id: string;
@@ -1457,6 +1517,29 @@ export default function EditorPage() {
     void saveBlocks(nextBlocks);
     if (clickEvent) {
       showInlineFeedback(`「${getBlockTypeLabel(type)}」を行末に追加しました`, {
+        x: clickEvent.clientX,
+        y: clickEvent.clientY - 8,
+      });
+    }
+  }
+
+  function onAddBlockSet(kind: BlockSetKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (!item) {
+      return;
+    }
+    const setBlocks = makeBlockSet(kind);
+    setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((b) => ({ ...b }))]);
+    setBlockHistoryFuture([]);
+    const nextBlocks = [...item.contentBlocks, ...setBlocks];
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    void saveBlocks(nextBlocks);
+    if (clickEvent) {
+      showInlineFeedback(`「${getBlockSetLabel(kind)}」を追加しました`, {
         x: clickEvent.clientX,
         y: clickEvent.clientY - 8,
       });
@@ -2945,6 +3028,58 @@ function onUpdateIconRowItem(
                           <div className="mt-1 text-[10px] text-slate-500 group-hover:text-cyan-700">アップロードして追加</div>
                           <input type="file" accept="image/*" onChange={onAddImageBlock} className="hidden" />
                         </label>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => toggleAddSection("preset")}
+                          className="col-span-2 mt-1 mb-0.5 flex items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold tracking-wide text-slate-600 sm:col-span-3 lg:col-span-4"
+                        >
+                          <span>ブロックセット</span>
+                          <span>{collapsedAddSections.preset ? "+" : "-"}</span>
+                        </button>
+                        {!collapsedAddSections.preset && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddBlockSet("campaign", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                            >
+                              <div className="font-medium">+ キャンペーン告知セット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">バッジ+価格+CTAを一括追加</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddBlockSet("menu", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-sky-300 hover:bg-sky-50"
+                            >
+                              <div className="font-medium">+ 営業時間・料金セット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">時間+料金+注意事項を自動配置</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddBlockSet("faq", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
+                            >
+                              <div className="font-medium">+ FAQセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">よくある質問の雛形を3問追加</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddBlockSet("access", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-cyan-300 hover:bg-cyan-50"
+                            >
+                              <div className="font-medium">+ アクセス案内セット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-cyan-700">2カラム+アイコン導線+CTA</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => onAddBlockSet("notice", event)}
+                              className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-amber-300 hover:bg-amber-50"
+                            >
+                              <div className="font-medium">+ お知らせセット</div>
+                              <div className="mt-1 text-[10px] text-slate-500 group-hover:text-amber-700">重要告知の基本構成を追加</div>
+                            </button>
                           </>
                         )}
                       </div>
