@@ -151,7 +151,7 @@ function normalizeProjectName(value: string): string {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [items, setItems] = useState<Information[]>([]);
   const [hotelName, setHotelName] = useState("");
   const [subscription, setSubscription] = useState<HotelSubscription | null>(null);
@@ -188,6 +188,18 @@ export default function DashboardPage() {
   const [countdownNow, setCountdownNow] = useState<number>(Date.now());
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
+  const opsAdminEmails = useMemo(
+    () =>
+      (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
+        .split(",")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter((entry) => entry.length > 0),
+    [],
+  );
+  const userEmail = user?.email?.trim().toLowerCase() ?? "";
+  const hasAdminRoleClaim =
+    user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
+  const canAccessOps = hasAdminRoleClaim || (userEmail.length > 0 && opsAdminEmails.includes(userEmail));
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -210,6 +222,13 @@ export default function DashboardPage() {
       window.history.replaceState({}, "", nextUrl);
     }
   }, []);
+
+  useEffect(() => {
+    if (canAccessOps || activeTab !== "ops") {
+      return;
+    }
+    setActiveTab("dashboard");
+  }, [canAccessOps, activeTab]);
 
   useEffect(() => {
     let mounted = true;
@@ -871,6 +890,11 @@ export default function DashboardPage() {
                 <p className="mt-1 text-xs text-slate-600">
                   誰でも迷わずページ作成と公開管理ができます。
                 </p>
+                {canAccessOps && (
+                  <p className="mt-1 inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                    管理者モード: 運用センター表示中
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -1020,26 +1044,25 @@ export default function DashboardPage() {
           {activeTab === "dashboard" && showQuickStart && (
             <div className="rounded-2xl lux-section-card border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+                <div className="min-w-[220px]">
                   <p className="text-sm font-semibold text-emerald-900">初回3分セットアップ</p>
-                  <p className="mt-1 text-xs text-emerald-800">
-                    1クリックで最初のインフォメーションを作成します。作成後はそのまま編集画面に移動します。
-                  </p>
+                  <p className="mt-1 text-xs text-emerald-800">まずは1ページ作成して公開まで進めます。</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => void onCreate(0)}
                     className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-500"
                   >
-                    1クリックで開始
+                    + 新規インフォメーションを作成
                   </button>
                   <button
                     type="button"
                     onClick={dismissQuickStart}
-                    className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs text-emerald-800 hover:bg-emerald-50"
+                    className="rounded-md border border-transparent px-2 py-1 text-xs text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100/70"
+                    aria-label="初回セットアップを閉じる"
                   >
-                    後で
+                    ×
                   </button>
                 </div>
               </div>
@@ -1090,21 +1113,23 @@ export default function DashboardPage() {
                     <path d="M3 9h18" />
                   </svg>
                 </SideNavButton>
-                <SideNavButton
-                  label="運用センター"
-                  active={activeTab === "ops"}
-                  onClick={() => setActiveTab("ops")}
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M4 20h16" />
-                    <path d="M7 17v-3" />
-                    <path d="M12 17v-6" />
-                    <path d="M17 17v-9" />
-                    <circle cx="7" cy="10" r="1.2" />
-                    <circle cx="12" cy="7" r="1.2" />
-                    <circle cx="17" cy="4" r="1.2" />
-                  </svg>
-                </SideNavButton>
+                {canAccessOps && (
+                  <SideNavButton
+                    label="運用センター"
+                    active={activeTab === "ops"}
+                    onClick={() => setActiveTab("ops")}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M4 20h16" />
+                      <path d="M7 17v-3" />
+                      <path d="M12 17v-6" />
+                      <path d="M17 17v-9" />
+                      <circle cx="7" cy="10" r="1.2" />
+                      <circle cx="12" cy="7" r="1.2" />
+                      <circle cx="17" cy="4" r="1.2" />
+                    </svg>
+                  </SideNavButton>
+                )}
               </div>
               <div className="mt-auto hidden lg:flex lg:flex-col lg:items-center lg:gap-3">
                 <SideNavButton label="利用規約へ" onClick={() => router.push("/terms")}>
@@ -1191,15 +1216,18 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => void onCreate(0)}
-                  className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
-                >
-                  + 新規インフォメーションを作成
-                </button>
-              </div>
+              <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-slate-800">最短1クリックで新規作成</p>
+                  <button
+                    type="button"
+                    onClick={() => void onCreate(0)}
+                    className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
+                  >
+                    + 新規インフォメーションを作成
+                  </button>
+                </div>
+              </article>
 
               <div className="grid gap-3 lg:grid-cols-3">
                 {filteredTemplates.map((template, index) => {
@@ -1501,7 +1529,7 @@ export default function DashboardPage() {
                 </div>
               </article>
             </section>
-          ) : activeTab === "ops" ? (
+          ) : activeTab === "ops" && canAccessOps ? (
             <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
               <article className="rounded-2xl lux-section-card border border-emerald-200/70 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between gap-2">

@@ -49,8 +49,8 @@ export default function Home() {
       desc: "1つの入口ページから複数ページへ自然遷移。",
     },
     {
-      title: "運用センター",
-      desc: "Webhook同期や障害復旧導線を一画面で管理。",
+      title: "閲覧分析（7日）",
+      desc: "公開後の閲覧数・QR流入を見える化して改善サイクルを回せます。",
     },
     {
       title: "監査ログ",
@@ -87,7 +87,7 @@ export default function Home() {
     },
     {
       q: "無料プランとProの違いは？",
-      a: "Proでは公開上限の拡張、複数ページ連携（ノード）、運用管理機能が利用できます。",
+      a: "Proでは公開上限の拡張、複数ページ連携（ノード）、詳細な閲覧分析が利用できます。",
     },
     {
       q: "デザイン知識がなくても使えますか？",
@@ -105,7 +105,7 @@ export default function Home() {
     { item: "月額料金（税込）", free: "¥0", pro: `${proMonthlyPriceLabel}` },
     { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能" },
     { item: "複数ページ連携", free: "-", pro: "ノードマップ対応" },
-    { item: "運用監視", free: "基本", pro: "Webhook/同期監視" },
+    { item: "閲覧分析", free: "基本", pro: "詳細に確認可能" },
     { item: "更新体験", free: "1ページ運用", pro: "ハブ導線で運用集約" },
   ];
 
