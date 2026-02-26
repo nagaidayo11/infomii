@@ -29,10 +29,19 @@ type TemplateQuickLink = {
   backgroundColor?: string;
 };
 
+type TemplateLayoutVariant =
+  | "hero"
+  | "story"
+  | "catalog"
+  | "practical"
+  | "compact"
+  | "timeline";
+
 function buildTemplateBlocks(params: {
   title: string;
   badgeText: string;
   lead: string;
+  variant?: TemplateLayoutVariant;
   heroImageUrl?: string;
   quickLinks?: TemplateQuickLink[];
   hours?: Array<[string, string]>;
@@ -47,16 +56,20 @@ function buildTemplateBlocks(params: {
   ctaLabel?: string;
   ctaUrl?: string;
 }): InformationBlock[] {
-  const blocks: InformationBlock[] = [
-    { id: "title-1", type: "title", text: params.title, textWeight: "semibold", textSize: "lg" },
-    { id: "badge-1", type: "badge", badgeText: params.badgeText, badgeColor: "#dcfce7", badgeTextColor: "#065f46" },
-    ...(params.heroImageUrl
-      ? [{ id: "image-1", type: "image", url: params.heroImageUrl, spacing: "md" } as InformationBlock]
-      : []),
-    { id: "paragraph-1", type: "paragraph", text: params.lead },
-  ];
+  const blocks: InformationBlock[] = [];
+  const variant = params.variant ?? "hero";
 
-  if (params.quickLinks && params.quickLinks.length > 0) {
+  const addTitle = () =>
+    blocks.push({ id: "title-1", type: "title", text: params.title, textWeight: "semibold", textSize: "lg" });
+  const addBadge = () =>
+    blocks.push({ id: "badge-1", type: "badge", badgeText: params.badgeText, badgeColor: "#dcfce7", badgeTextColor: "#065f46" });
+  const addLead = () => blocks.push({ id: "paragraph-1", type: "paragraph", text: params.lead });
+  const addImage = () => {
+    if (!params.heroImageUrl) return;
+    blocks.push({ id: "image-1", type: "image", url: params.heroImageUrl, spacing: "md" });
+  };
+  const addQuickLinks = () => {
+    if (!params.quickLinks || params.quickLinks.length === 0) return;
     blocks.push({
       id: "icon-row-1",
       type: "iconRow",
@@ -70,9 +83,9 @@ function buildTemplateBlocks(params: {
         backgroundColor: entry.backgroundColor ?? "#ffffff",
       })),
     });
-  }
-
-  if (params.hours && params.hours.length > 0) {
+  };
+  const addHours = () => {
+    if (!params.hours || params.hours.length === 0) return;
     blocks.push({
       id: "hours-1",
       type: "hours",
@@ -82,9 +95,9 @@ function buildTemplateBlocks(params: {
         value,
       })),
     });
-  }
-
-  if (params.pricing && params.pricing.length > 0) {
+  };
+  const addPricing = () => {
+    if (!params.pricing || params.pricing.length === 0) return;
     blocks.push({
       id: "pricing-1",
       type: "pricing",
@@ -94,9 +107,9 @@ function buildTemplateBlocks(params: {
         value,
       })),
     });
-  }
-
-  if (params.columns) {
+  };
+  const addColumns = () => {
+    if (!params.columns) return;
     blocks.push({
       id: "columns-1",
       type: "columns",
@@ -106,19 +119,20 @@ function buildTemplateBlocks(params: {
       rightText: params.columns.rightText,
       columnsBackgroundColor: "#f8fafc",
     });
-  }
-
-  params.sections.forEach((section, index) => {
-    blocks.push({
-      id: `section-${index + 1}`,
-      type: "section",
-      sectionTitle: section.title,
-      sectionBody: section.body,
-      sectionBackgroundColor: "#f8fafc",
+  };
+  const addSections = () => {
+    params.sections.forEach((section, index) => {
+      blocks.push({
+        id: `section-${index + 1}`,
+        type: "section",
+        sectionTitle: section.title,
+        sectionBody: section.body,
+        sectionBackgroundColor: "#f8fafc",
+      });
     });
-  });
-
-  if (params.ctaLabel && params.ctaUrl) {
+  };
+  const addCta = () => {
+    if (!params.ctaLabel || !params.ctaUrl) return;
     blocks.push({
       id: "cta-1",
       type: "cta",
@@ -127,7 +141,79 @@ function buildTemplateBlocks(params: {
       textWeight: "semibold",
       textAlign: "left",
     });
+  };
+
+  if (variant === "story") {
+    addTitle();
+    addLead();
+    addImage();
+    addSections();
+    addQuickLinks();
+    addBadge();
+    addCta();
+    addHours();
+    addPricing();
+    addColumns();
+    return blocks;
   }
+  if (variant === "catalog") {
+    addTitle();
+    addImage();
+    addPricing();
+    addQuickLinks();
+    addSections();
+    addBadge();
+    addCta();
+    addHours();
+    addColumns();
+    return blocks;
+  }
+  if (variant === "practical") {
+    addBadge();
+    addTitle();
+    addHours();
+    addColumns();
+    addSections();
+    addQuickLinks();
+    addLead();
+    addCta();
+    addPricing();
+    return blocks;
+  }
+  if (variant === "compact") {
+    addBadge();
+    addTitle();
+    addSections();
+    addQuickLinks();
+    addLead();
+    addCta();
+    addHours();
+    addPricing();
+    return blocks;
+  }
+  if (variant === "timeline") {
+    addTitle();
+    addBadge();
+    addHours();
+    addSections();
+    addImage();
+    addQuickLinks();
+    addLead();
+    addCta();
+    addPricing();
+    addColumns();
+    return blocks;
+  }
+  addTitle();
+  addBadge();
+  addImage();
+  addLead();
+  addQuickLinks();
+  addHours();
+  addPricing();
+  addColumns();
+  addSections();
+  addCta();
 
   return blocks;
 }
@@ -152,6 +238,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "チェックイン・館内総合案内",
       badgeText: "まずはこちらを確認",
       lead: "滞在中に必要な情報を1ページにまとめています。",
+      variant: "practical",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
         { icon: "📶", label: "Wi-Fi", link: "/p/wifi" },
@@ -191,6 +278,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "深夜到着・セルフチェックイン案内",
       badgeText: "深夜到着向け",
       lead: "24:00以降の来館でも迷わないように手順をまとめています。",
+      variant: "timeline",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
         { icon: "🪪", label: "本人確認" },
@@ -214,6 +302,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "滞在アクティビティ案内",
       badgeText: "本日のおすすめ体験",
       lead: "予約が必要なプログラムは早めの確保がおすすめです。",
+      variant: "catalog",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
         { icon: "🧘", label: "朝ヨガ", link: "https://example.com/reserve/yoga" },
@@ -246,6 +335,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "プール・スパ利用ガイド",
       badgeText: "混雑ピーク回避に便利",
       lead: "快適にご利用いただくための営業時間・注意事項をまとめています。",
+      variant: "story",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
         { icon: "🏊", label: "プール" },
@@ -271,6 +361,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "お食事処のご案内",
       badgeText: "夕食は3部制です",
       lead: "お時間になりましたら会場までお越しください。",
+      variant: "timeline",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
         { icon: "🍱", label: "夕食会場" },
@@ -298,6 +389,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "大浴場・貸切風呂のご案内",
       badgeText: "入浴前にご確認ください",
       lead: "混雑回避に便利な時間帯情報も掲載しています。",
+      variant: "compact",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
         { icon: "🛁", label: "大浴場" },
@@ -323,6 +415,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "本日のおすすめメニュー",
       badgeText: "数量限定あり",
       lead: "売り切れ次第終了します。スタッフまでお気軽にお声がけください。",
+      variant: "catalog",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
         { icon: "📋", label: "メニュー一覧", link: "/p/menu" },
@@ -354,6 +447,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "営業時間・予約・席利用案内",
       badgeText: "ご来店前に確認",
       lead: "ピーク時間帯の席利用ルールを事前共有して、オペレーションを安定化します。",
+      variant: "practical",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
         { icon: "📅", label: "予約", link: "https://example.com/restaurant-reserve" },
@@ -381,6 +475,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "宴会・コース利用案内",
       badgeText: "団体利用向け",
       lead: "宴会予約時に必要な条件を1ページで共有できます。",
+      variant: "story",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
         { icon: "🍽️", label: "コース一覧" },
@@ -409,6 +504,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "季節限定ドリンクのお知らせ",
       badgeText: "期間限定",
       lead: "テイクアウト対応。混雑時は提供にお時間をいただく場合があります。",
+      variant: "catalog",
       heroImageUrl: "/templates/cafe.svg",
       quickLinks: [
         { icon: "🥤", label: "限定ドリンク", link: "/p/seasonal" },
@@ -437,6 +533,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "Wi-Fi・電源・滞在ルール案内",
       badgeText: "作業利用向けガイド",
       lead: "店内ルールを明確にして、快適な空間を維持します。",
+      variant: "practical",
       heroImageUrl: "/templates/cafe.svg",
       quickLinks: [
         { icon: "📶", label: "Wi-Fi情報" },
@@ -463,6 +560,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "ご来店前のご案内",
       badgeText: "予約前に要確認",
       lead: "スムーズな施術のため、ご来店前にご確認をお願いします。",
+      variant: "timeline",
       heroImageUrl: "/templates/salon.svg",
       quickLinks: [
         { icon: "🧴", label: "施術前準備" },
@@ -489,6 +587,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "料金・指名・オプション案内",
       badgeText: "料金を事前に明確化",
       lead: "メニュー価格の見える化で予約前の不安を減らします。",
+      variant: "catalog",
       heroImageUrl: "/templates/salon.svg",
       quickLinks: [
         { icon: "✂️", label: "基本メニュー" },
@@ -517,6 +616,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "受診前のご案内",
       badgeText: "来院前に確認",
       lead: "受診前に必要な持ち物・連絡事項を掲載しています。",
+      variant: "practical",
       heroImageUrl: "/templates/clinic.svg",
       quickLinks: [
         { icon: "🧾", label: "持ち物確認" },
@@ -545,6 +645,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "予防接種・健診の予約案内",
       badgeText: "予約必須メニュー",
       lead: "接種当日の流れと持ち物を分かりやすく整理しています。",
+      variant: "story",
       heroImageUrl: "/templates/clinic.svg",
       quickLinks: [
         { icon: "💉", label: "接種案内" },
@@ -568,6 +669,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "キャンペーンのお知らせ",
       badgeText: "期間限定キャンペーン",
       lead: "対象商品・対象外条件をご確認のうえご利用ください。",
+      variant: "catalog",
       heroImageUrl: "/templates/retail.svg",
       quickLinks: [
         { icon: "🛍️", label: "対象商品", link: "https://example.com/retail-campaign" },
@@ -592,6 +694,7 @@ export const starterTemplates: StarterTemplate[] = [
       title: "返品・交換ポリシー案内",
       badgeText: "購入前に確認",
       lead: "返品可否の基準を明確化し、問い合わせ対応を効率化します。",
+      variant: "compact",
       heroImageUrl: "/templates/retail.svg",
       quickLinks: [
         { icon: "🔁", label: "返品条件" },
