@@ -691,14 +691,16 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   );
                 }
                 if (block.type === "iconRow") {
+                  const iconItems = block.iconItems ?? [];
+                  const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
                   return (
                     <div key={block.id} style={getBlockSpacingStyle(block.spacing)}>
                       <div
                         className="rounded-xl border border-slate-200 p-3"
                         style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
                       >
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                          {(block.iconItems ?? []).map((entry) => (
+                        <div className={`grid gap-2 ${iconColumnsClass}`}>
+                          {iconItems.map((entry) => (
                             <div
                               key={entry.id}
                               className="rounded-md border border-slate-200 text-center shadow-sm"
