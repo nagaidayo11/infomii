@@ -91,6 +91,16 @@ const FONT_FAMILY_OPTIONS: Array<{ label: string; value: string }> = [
   { label: "丸ゴシック", value: "\"M PLUS Rounded 1c\", \"Hiragino Maru Gothic ProN\", sans-serif" },
   { label: "英字モダン", value: "\"Avenir Next\", \"Helvetica Neue\", Arial, sans-serif" },
   { label: "等幅", value: "\"SFMono-Regular\", Menlo, Monaco, Consolas, \"Courier New\", monospace" },
+  { label: "UDゴシック", value: "\"BIZ UDPGothic\", \"Yu Gothic UI\", \"Noto Sans JP\", sans-serif" },
+  { label: "UD明朝", value: "\"BIZ UDPMincho\", \"Yu Mincho\", \"Noto Serif JP\", serif" },
+  { label: "ヒラギノ角ゴ", value: "\"Hiragino Kaku Gothic ProN\", \"Hiragino Sans\", sans-serif" },
+  { label: "游ゴシック", value: "\"Yu Gothic\", \"YuGothic\", \"Noto Sans JP\", sans-serif" },
+  { label: "游明朝", value: "\"Yu Mincho\", \"YuMincho\", \"Noto Serif JP\", serif" },
+  { label: "クラシック Serif", value: "Georgia, \"Times New Roman\", \"Noto Serif JP\", serif" },
+  { label: "モダン Sans", value: "\"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif" },
+  { label: "Condensed", value: "\"Arial Narrow\", \"Yu Gothic\", sans-serif" },
+  { label: "筆記体（英字）", value: "\"Segoe Script\", \"Snell Roundhand\", cursive" },
+  { label: "手書き風", value: "\"Comic Sans MS\", \"Chalkboard SE\", cursive" },
 ];
 
 type AddPanelSection = "text" | "column" | "section" | "preset";
