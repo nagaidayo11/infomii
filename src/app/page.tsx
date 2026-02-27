@@ -119,15 +119,9 @@ export default function Home() {
           <div className="lp-float-slow pointer-events-none absolute right-0 top-20 h-40 w-40 rounded-full bg-cyan-200/20 blur-2xl" />
 
           <div className="relative lp-reveal lp-delay-1 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white">
-                I
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Infomii</p>
-                <p className="text-[11px] text-slate-500">店舗インフォメーション作成SaaS</p>
-              </div>
-            </div>
+            <p className="text-xl font-black tracking-[0.28em] text-slate-900 sm:text-2xl">
+              INFOMII
+            </p>
             <nav className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
               <a href="#features" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
                 機能
@@ -146,7 +140,7 @@ export default function Home() {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
-              <p className="lux-kicker lp-reveal lp-delay-2 text-xs font-semibold">Infomii</p>
+              <p className="lux-kicker lp-reveal lp-delay-2 text-xs font-bold tracking-[0.24em]">INFOMII</p>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 現場で使える案内ページを
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
