@@ -1137,7 +1137,7 @@ function SideNavButton(props: {
 export default function EditorPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const id = params.id;
 
   const [item, setItem] = useState<Information | null>(null);
@@ -1188,6 +1188,18 @@ export default function EditorPage() {
     information: Information | null;
   } | null>(null);
   const [overlayTouchStartX, setOverlayTouchStartX] = useState<number | null>(null);
+  const opsAdminEmails = useMemo(
+    () =>
+      (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
+        .split(",")
+        .map((entry) => entry.trim().toLowerCase())
+        .filter((entry) => entry.length > 0),
+    [],
+  );
+  const userEmail = user?.email?.trim().toLowerCase() ?? "";
+  const hasAdminRoleClaim =
+    user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
+  const canAccessOps = hasAdminRoleClaim || (userEmail.length > 0 && opsAdminEmails.includes(userEmail));
 
   useEffect(() => {
     let mounted = true;
@@ -3080,17 +3092,19 @@ function onUpdateIconRowItem(
                 <path d="M3 9h18" />
               </svg>
             </SideNavButton>
-            <SideNavButton label="運用センター" onClick={() => router.push("/dashboard?tab=ops")}>
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M4 20h16" />
-                <path d="M7 17v-3" />
-                <path d="M12 17v-6" />
-                <path d="M17 17v-9" />
-                <circle cx="7" cy="10" r="1.2" />
-                <circle cx="12" cy="7" r="1.2" />
-                <circle cx="17" cy="4" r="1.2" />
-              </svg>
-            </SideNavButton>
+            {canAccessOps && (
+              <SideNavButton label="運用センター" onClick={() => router.push("/dashboard?tab=ops")}>
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 20h16" />
+                  <path d="M7 17v-3" />
+                  <path d="M12 17v-6" />
+                  <path d="M17 17v-9" />
+                  <circle cx="7" cy="10" r="1.2" />
+                  <circle cx="12" cy="7" r="1.2" />
+                  <circle cx="17" cy="4" r="1.2" />
+                </svg>
+              </SideNavButton>
+            )}
           </div>
           <div className="mt-auto hidden lg:flex lg:flex-col lg:items-center lg:gap-3">
             <SideNavButton label="利用規約へ" onClick={() => router.push("/terms")}>

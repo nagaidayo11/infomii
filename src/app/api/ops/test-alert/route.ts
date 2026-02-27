@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
+import { isOpsAdminUser } from "@/lib/server/ops-auth";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,9 @@ export async function POST(request: NextRequest) {
     } = await anon.auth.getUser(token);
     if (userError || !user) {
       return NextResponse.json({ message: "認証に失敗しました" }, { status: 401 });
+    }
+    if (!isOpsAdminUser(user)) {
+      return NextResponse.json({ message: "運用センターへのアクセス権限がありません" }, { status: 403 });
     }
     const admin = getSupabaseAdminServerClient();
     const { data: membership } = await admin

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeServerClient } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { isOpsAdminUser } from "@/lib/server/ops-auth";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest) {
 
     if (userError || !user) {
       return NextResponse.json({ message: "認証に失敗しました" }, { status: 401 });
+    }
+    if (!isOpsAdminUser(user)) {
+      return NextResponse.json({ message: "運用センターへのアクセス権限がありません" }, { status: 403 });
     }
 
     const env = {
