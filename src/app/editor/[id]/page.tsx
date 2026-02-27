@@ -3297,15 +3297,13 @@ function onUpdateIconRowItem(
     <AuthGate>
       <main className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_left,#86efac30_0%,#34d39924_35%,#ecfdf5_100%)] pl-4 pr-6 py-10 sm:pl-8 sm:pr-10 lg:pl-[92px] lg:pr-8">
         <aside className="rounded-3xl border border-emerald-200/70 bg-white p-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.7)] backdrop-blur lg:fixed lg:left-0 lg:top-0 lg:z-20 lg:flex lg:h-screen lg:w-[72px] lg:flex-col lg:rounded-none lg:rounded-r-3xl">
-          <div className="mb-2 flex items-center justify-center rounded-2xl border border-emerald-200/60 bg-white py-3 text-xs font-semibold text-slate-700">
-            <SideNavButton label="LPへ" onClick={() => router.push("/")}>
+          <div className="flex flex-row items-center justify-center gap-2 lg:flex-col lg:gap-3">
+            <SideNavButton label="トップページへ" onClick={() => router.push("/")}>
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M3 10.5 12 3l9 7.5" />
                 <path d="M5 9.5V21h14V9.5" />
               </svg>
             </SideNavButton>
-          </div>
-          <div className="flex flex-row items-center justify-center gap-2 lg:flex-col lg:gap-3">
             <SideNavButton label="ダッシュボード" onClick={() => router.push("/dashboard?tab=dashboard")}>
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <rect x="3" y="3" width="8" height="8" rx="1.5" />
