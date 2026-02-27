@@ -2,15 +2,20 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 
 export default function LoginPage() {
   const router = useRouter();
-  const next = "/dashboard";
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
+  const requestedNext = searchParams.get("next");
+  const next =
+    requestedNext && requestedNext.startsWith("/")
+      ? requestedNext
+      : "/dashboard?tab=create";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +26,7 @@ export default function LoginPage() {
     if (!loading && user) {
       router.replace(next);
     }
-  }, [user, loading, router, next]);
+  }, [loading, next, router, user]);
 
   async function signIn(e: FormEvent) {
     e.preventDefault();
