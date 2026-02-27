@@ -736,6 +736,18 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   const source = query.src === "qr" ? "qr" : "direct";
   const requestHeaders = await headers();
+  const referer = requestHeaders.get("referer");
+  const isChildPage = (() => {
+    if (!referer) {
+      return false;
+    }
+    try {
+      const refererPath = new URL(referer).pathname;
+      return refererPath.startsWith("/p/") && refererPath !== `/p/${slug}`;
+    } catch {
+      return false;
+    }
+  })();
 
   if (row.hotel_id) {
     const { error: viewError } = await supabase.from("information_views").insert({
@@ -769,9 +781,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           }}
         >
           {!isEmbed ? (
-            <div className="hidden border-b border-slate-100 px-4 py-4 sm:block sm:px-6 sm:py-5">
-              <p className="lux-kicker text-[11px]">Infomii</p>
-              <p className="mt-2 text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
+            <div className="border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-h-8">
+                  {isChildPage ? <PublicFooterBackButton fallbackHref="/" /> : null}
+                </div>
+                <p className="text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
+              </div>
             </div>
           ) : null}
 
@@ -1204,9 +1220,6 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           </div>
 
           <footer className="border-t border-emerald-100 bg-[linear-gradient(180deg,#fffdf7,#f8fafc)] px-4 py-4 sm:px-6">
-            <div className="mb-2">
-              <PublicFooterBackButton fallbackHref="/" />
-            </div>
             <p className="text-xs leading-6 text-slate-600">
               ご不明な点はスタッフまでお声がけください。
             </p>
