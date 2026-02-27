@@ -8,6 +8,7 @@ import {
   type TouchEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Image from "next/image";
@@ -131,7 +132,20 @@ type IndustryBlockSetKind = "hotel" | "restaurant" | "cafe" | "salon" | "clinic"
 type PublishCheckIssue = {
   level: "error" | "warning";
   message: string;
+  target?: "pageTitle" | "blocks" | "schedule" | "publish";
+  blockId?: string;
 };
+
+type PreviewDevice = "iphone" | "android" | "wide";
+
+type BlockQuickAction = {
+  type: InformationBlock["type"];
+  label: string;
+  description: string;
+};
+
+const EDITOR_BLOCK_FAVORITES_KEY = "editor-block-favorites-v2";
+const CTA_EXPERIMENT_METRICS_KEY = "editor-cta-experiment-metrics-v1";
 
 const PUBLISH_CHECK_SEVERITY = {
   emptyImageUrl: "error",
@@ -171,7 +185,7 @@ function collectPublishCheckIssues(
   const issues: PublishCheckIssue[] = [];
 
   if (!currentItem.title.trim()) {
-    issues.push({ level: "error", message: "ページタイトルを入力してください。" });
+    issues.push({ level: "error", message: "ページタイトルを入力してください。", target: "pageTitle" });
   }
 
   const hasAnyContentBlock = currentItem.contentBlocks.some((block) => {
@@ -223,23 +237,29 @@ function collectPublishCheckIssues(
   });
 
   if (!hasAnyContentBlock) {
-    issues.push({ level: "error", message: "本文ブロックが空です。最低1つ入力してください。" });
+    issues.push({ level: "error", message: "本文ブロックが空です。最低1つ入力してください。", target: "blocks" });
   }
 
   if (currentItem.publishAt && currentItem.unpublishAt) {
     const publishAtMs = new Date(currentItem.publishAt).getTime();
     const unpublishAtMs = new Date(currentItem.unpublishAt).getTime();
     if (!Number.isNaN(publishAtMs) && !Number.isNaN(unpublishAtMs) && publishAtMs >= unpublishAtMs) {
-      issues.push({ level: "error", message: "公開終了日時は公開開始日時より後に設定してください。" });
+      issues.push({
+        level: "error",
+        message: "公開終了日時は公開開始日時より後に設定してください。",
+        target: "schedule",
+      });
     }
   }
 
   currentItem.contentBlocks.forEach((block, blockIndex) => {
     if (block.type === "image" && !(block.url ?? "").trim()) {
-      issues.push({
-        level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
-        message: `${blockIndex + 1}.画像ブロック: 画像URLが未設定です。`,
-      });
+        issues.push({
+          level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
+          message: `${blockIndex + 1}.画像ブロック: 画像URLが未設定です。`,
+          target: "blocks",
+          blockId: block.id,
+        });
       return;
     }
     if (block.type === "gallery") {
@@ -248,6 +268,8 @@ function collectPublishCheckIssues(
           issues.push({
             level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
             message: `${blockIndex + 1}.ギャラリー-${entryIndex + 1}: 画像URLが未設定です。`,
+            target: "blocks",
+            blockId: block.id,
           });
         }
       });
@@ -271,6 +293,8 @@ function collectPublishCheckIssues(
           issues.push({
             level: "error",
             message: `${rowLabel}: ページリンク形式が不正です。`,
+            target: "blocks",
+            blockId: block.id,
           });
           return;
         }
@@ -279,6 +303,8 @@ function collectPublishCheckIssues(
           issues.push({
             level: "error",
             message: `${rowLabel}: 遷移先ページが見つかりません。`,
+            target: "blocks",
+            blockId: block.id,
           });
           return;
         }
@@ -286,6 +312,8 @@ function collectPublishCheckIssues(
           issues.push({
             level: PUBLISH_CHECK_SEVERITY.draftInternalTarget,
             message: `${rowLabel}: 遷移先ページが未公開（下書き）です。`,
+            target: "blocks",
+            blockId: block.id,
           });
         }
         return;
@@ -295,6 +323,8 @@ function collectPublishCheckIssues(
         issues.push({
           level: PUBLISH_CHECK_SEVERITY.invalidExternalUrlFormat,
           message: `${rowLabel}: 外部リンクは http(s) で始めることを推奨します。`,
+          target: "blocks",
+          blockId: block.id,
         });
       }
     });
@@ -1089,6 +1119,27 @@ function getBlockTypeLabel(type: InformationBlock["type"]): string {
   return "スペース";
 }
 
+const BLOCK_QUICK_ACTIONS: BlockQuickAction[] = [
+  { type: "title", label: "タイトル", description: "ページの主見出し" },
+  { type: "heading", label: "見出し", description: "セクション分け" },
+  { type: "paragraph", label: "テキスト", description: "本文ブロック" },
+  { type: "image", label: "画像", description: "単体画像" },
+  { type: "icon", label: "アイコン", description: "1項目アイコン" },
+  { type: "iconRow", label: "アイコン並び", description: "導線を並べる" },
+  { type: "section", label: "セクション", description: "背景付き説明" },
+  { type: "columns", label: "2カラム", description: "比較表示" },
+  { type: "columnGroup", label: "カラムグループ", description: "2〜4列の可変" },
+  { type: "cta", label: "CTA", description: "行動ボタン" },
+  { type: "badge", label: "バッジ", description: "限定/注意表示" },
+  { type: "hours", label: "営業時間", description: "時間情報一覧" },
+  { type: "pricing", label: "料金表", description: "価格情報一覧" },
+  { type: "quote", label: "引用", description: "口コミ/コメント" },
+  { type: "checklist", label: "チェックリスト", description: "持ち物/手順" },
+  { type: "gallery", label: "ギャラリー", description: "複数画像" },
+  { type: "divider", label: "区切り線", description: "区切りを追加" },
+  { type: "space", label: "スペース", description: "余白を追加" },
+];
+
 function supportsDetailTextAlign(type: InformationBlock["type"]): boolean {
   return (
     type === "title" ||
@@ -1188,6 +1239,26 @@ export default function EditorPage() {
     information: Information | null;
   } | null>(null);
   const [overlayTouchStartX, setOverlayTouchStartX] = useState<number | null>(null);
+  const [blockQuickSearch, setBlockQuickSearch] = useState("");
+  const [favoriteBlockTypes, setFavoriteBlockTypes] = useState<InformationBlock["type"][]>([]);
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("iphone");
+  const [historySnapshots, setHistorySnapshots] = useState<Array<{
+    id: string;
+    createdAt: string;
+    blocks: InformationBlock[];
+  }>>([]);
+  const [ctaExperimentMetrics, setCtaExperimentMetrics] = useState<{
+    aViews: number;
+    aClicks: number;
+    bViews: number;
+    bClicks: number;
+  }>({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
+  const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
+  const blockPanelRef = useRef<HTMLElement | null>(null);
+  const schedulePanelRef = useRef<HTMLDivElement | null>(null);
+  const publishPanelRef = useRef<HTMLElement | null>(null);
+  const historySerializeRef = useRef<string>("");
+  const historyInitRef = useRef(false);
   const opsAdminEmails = useMemo(
     () =>
       (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
@@ -1263,6 +1334,100 @@ export default function EditorPage() {
       return;
     }
     setPageTitleDraft(item.title);
+  }, [item]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(EDITOR_BLOCK_FAVORITES_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) {
+        return;
+      }
+      const next = parsed.filter(
+        (entry): entry is InformationBlock["type"] =>
+          typeof entry === "string" &&
+          BLOCK_QUICK_ACTIONS.some((action) => action.type === entry as InformationBlock["type"]),
+      );
+      setFavoriteBlockTypes(next);
+    } catch {
+      // ignore parse error
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(EDITOR_BLOCK_FAVORITES_KEY, JSON.stringify(favoriteBlockTypes));
+  }, [favoriteBlockTypes]);
+
+  useEffect(() => {
+    if (!id || typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(`${CTA_EXPERIMENT_METRICS_KEY}:${id}`);
+    if (!raw) {
+      setCtaExperimentMetrics({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as Partial<typeof ctaExperimentMetrics>;
+      setCtaExperimentMetrics({
+        aViews: Number(parsed.aViews ?? 0),
+        aClicks: Number(parsed.aClicks ?? 0),
+        bViews: Number(parsed.bViews ?? 0),
+        bClicks: Number(parsed.bClicks ?? 0),
+      });
+    } catch {
+      setCtaExperimentMetrics({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id || typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(`${CTA_EXPERIMENT_METRICS_KEY}:${id}`, JSON.stringify(ctaExperimentMetrics));
+  }, [id, ctaExperimentMetrics]);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+    const serialized = JSON.stringify(item.contentBlocks);
+    if (!historyInitRef.current) {
+      historyInitRef.current = true;
+      historySerializeRef.current = serialized;
+      setHistorySnapshots([
+        {
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+          blocks: item.contentBlocks.map((block) => ({ ...block })),
+        },
+      ]);
+      return;
+    }
+    if (serialized === historySerializeRef.current) {
+      return;
+    }
+    historySerializeRef.current = serialized;
+    const timer = window.setTimeout(() => {
+      setHistorySnapshots((prev) => [
+        {
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+          blocks: item.contentBlocks.map((block) => ({ ...block })),
+        },
+        ...prev,
+      ].slice(0, 20));
+    }, 700);
+    return () => window.clearTimeout(timer);
   }, [item]);
 
   useEffect(() => {
@@ -2014,6 +2179,85 @@ export default function EditorPage() {
         y: clickEvent.clientY - 8,
       });
     }
+  }
+
+  function onToggleFavoriteBlockType(type: InformationBlock["type"]) {
+    setFavoriteBlockTypes((prev) =>
+      prev.includes(type) ? prev.filter((entry) => entry !== type) : [...prev, type],
+    );
+  }
+
+  function jumpToFixTarget(issue: PublishCheckIssue) {
+    if (issue.blockId) {
+      const blockTarget = document.querySelector(`[data-block-id="${issue.blockId}"]`);
+      if (blockTarget) {
+        blockTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
+    const element =
+      issue.target === "pageTitle"
+        ? pageTitleSectionRef.current
+        : issue.target === "blocks"
+          ? blockPanelRef.current
+          : issue.target === "schedule"
+            ? schedulePanelRef.current
+            : publishPanelRef.current;
+    element?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function restoreSnapshot(snapshotId: string) {
+    if (!item) {
+      return;
+    }
+    const snapshot = historySnapshots.find((entry) => entry.id === snapshotId);
+    if (!snapshot) {
+      return;
+    }
+    const nextBlocks = snapshot.blocks.map((block) => ({ ...block }));
+    setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((block) => ({ ...block }))]);
+    setBlockHistoryFuture([]);
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    await saveBlocks(nextBlocks);
+    setNoticeKind("success");
+    setNotice("選択した履歴に復元しました");
+  }
+
+  function autoLayoutNodeMap() {
+    if (!item || !proNodeEnabled || nodeMap.nodes.length === 0) {
+      return;
+    }
+    const hub = nodeMap.nodes.find((node) => node.id === "__hub__");
+    const others = nodeMap.nodes.filter((node) => node.id !== "__hub__");
+    const radius = others.length > 4 ? 34 : 28;
+    const centerX = 50;
+    const centerY = 52;
+    const nextNodes = others.map((node, index) => {
+      const angle = ((Math.PI * 2) / Math.max(others.length, 1)) * index - Math.PI / 2;
+      return {
+        ...node,
+        x: Math.round((centerX + Math.cos(angle) * radius) * 10) / 10,
+        y: Math.round((centerY + Math.sin(angle) * radius) * 10) / 10,
+      };
+    });
+    if (hub) {
+      nextNodes.unshift({ ...hub, x: 50, y: 14 });
+    }
+    const nextTheme = { ...item.theme, nodeMap: { ...nodeMap, nodes: nextNodes } };
+    setSharedNodeMap({ ...nodeMap, nodes: nextNodes });
+    setItem({ ...item, theme: nextTheme });
+    void save({ theme: nextTheme });
+    setNoticeKind("success");
+    setNotice("導線マップを自動整列しました");
+  }
+
+  function bumpCtaMetric(kind: "aViews" | "aClicks" | "bViews" | "bClicks") {
+    setCtaExperimentMetrics((prev) => ({ ...prev, [kind]: prev[kind] + 1 }));
   }
 
   function onUndoBlocks() {
@@ -2976,6 +3220,46 @@ function onUpdateIconRowItem(
   }, [item, pageStatusBySlug]);
   const publishCheckErrors = publishCheckIssues.filter((issue) => issue.level === "error");
   const publishCheckWarnings = publishCheckIssues.filter((issue) => issue.level === "warning");
+  const publishScore = useMemo(
+    () => Math.max(0, 100 - publishCheckErrors.length * 25 - publishCheckWarnings.length * 10),
+    [publishCheckErrors.length, publishCheckWarnings.length],
+  );
+  const favoriteBlockTypeSet = useMemo(
+    () => new Set(favoriteBlockTypes),
+    [favoriteBlockTypes],
+  );
+  const filteredQuickBlocks = useMemo(() => {
+    const q = blockQuickSearch.trim().toLowerCase();
+    if (!q) {
+      return BLOCK_QUICK_ACTIONS;
+    }
+    return BLOCK_QUICK_ACTIONS.filter((action) =>
+      action.label.toLowerCase().includes(q) || action.description.toLowerCase().includes(q),
+    );
+  }, [blockQuickSearch]);
+  const pinnedQuickBlocks = useMemo(
+    () => BLOCK_QUICK_ACTIONS.filter((action) => favoriteBlockTypeSet.has(action.type)),
+    [favoriteBlockTypeSet],
+  );
+  const ctaExperimentRates = useMemo(() => {
+    const aRate = ctaExperimentMetrics.aViews > 0
+      ? Math.round((ctaExperimentMetrics.aClicks / ctaExperimentMetrics.aViews) * 100)
+      : 0;
+    const bRate = ctaExperimentMetrics.bViews > 0
+      ? Math.round((ctaExperimentMetrics.bClicks / ctaExperimentMetrics.bViews) * 100)
+      : 0;
+    return { aRate, bRate };
+  }, [ctaExperimentMetrics]);
+  const previewFrameClass = previewDevice === "wide"
+    ? "mx-auto min-h-[640px] max-w-[420px] rounded-[26px]"
+    : previewDevice === "android"
+      ? "mx-auto min-h-[640px] max-w-[380px] rounded-[18px]"
+      : "mx-auto min-h-[640px] max-w-sm rounded-3xl";
+  const previewFrameLabel = previewDevice === "wide"
+    ? "タブレット幅"
+    : previewDevice === "android"
+      ? "Android幅"
+      : "iPhone幅";
 
   function getNodeTargetStatus(node: { id: string; targetSlug?: string }): "published" | "draft" | null {
     const slug = (node.targetSlug ?? "").trim();
@@ -3060,7 +3344,7 @@ function onUpdateIconRowItem(
 
   return (
     <AuthGate>
-      <main className="lux-main min-h-screen bg-[radial-gradient(circle_at_top_left,#86efac30_0%,#34d39924_35%,#ecfdf5_100%)] pl-4 pr-6 py-10 sm:pl-8 sm:pr-10 lg:pl-[92px] lg:pr-8">
+      <main className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_left,#86efac30_0%,#34d39924_35%,#ecfdf5_100%)] pl-4 pr-6 py-10 sm:pl-8 sm:pr-10 lg:pl-[92px] lg:pr-8">
         <aside className="rounded-3xl border border-emerald-200/70 bg-white p-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.7)] backdrop-blur lg:fixed lg:left-0 lg:top-0 lg:z-20 lg:flex lg:h-screen lg:w-[72px] lg:flex-col lg:rounded-none lg:rounded-r-3xl">
           <div className="mb-2 flex items-center justify-center rounded-2xl border border-emerald-200/60 bg-white py-3 text-xs font-semibold text-slate-700">
             <SideNavButton label="LPへ" onClick={() => router.push("/")}>
@@ -3174,34 +3458,34 @@ function onUpdateIconRowItem(
           {!item ? (
             <section className="animate-pulse space-y-5">
               <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                <div className="h-4 w-40 rounded bg-slate-200" />
+                <div className="h-4 w-40 rounded ux-skeleton" />
                 <div className="mt-3 h-8 w-64 rounded bg-slate-200" />
                 <div className="mt-3 h-4 w-80 rounded bg-slate-200" />
               </div>
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
                 <div className="space-y-5">
                   <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                    <div className="h-5 w-28 rounded bg-slate-200" />
+                    <div className="h-5 w-28 rounded ux-skeleton" />
                     <div className="mt-4 h-10 w-full rounded bg-slate-200" />
                     <div className="mt-3 h-24 w-full rounded bg-slate-200" />
                     <div className="mt-3 h-24 w-full rounded bg-slate-200" />
                   </div>
                   <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                    <div className="h-5 w-20 rounded bg-slate-200" />
+                    <div className="h-5 w-20 rounded ux-skeleton" />
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <div className="h-10 rounded bg-slate-200" />
-                      <div className="h-10 rounded bg-slate-200" />
+                      <div className="h-10 rounded ux-skeleton" />
+                      <div className="h-10 rounded ux-skeleton" />
                     </div>
                   </div>
                 </div>
                 <div className="space-y-5">
                   <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                    <div className="h-5 w-36 rounded bg-slate-200" />
+                    <div className="h-5 w-36 rounded ux-skeleton" />
                     <div className="mt-3 h-4 w-full rounded bg-slate-200" />
                     <div className="mt-3 h-36 w-36 rounded bg-slate-200" />
                   </div>
                   <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                    <div className="h-5 w-28 rounded bg-slate-200" />
+                    <div className="h-5 w-28 rounded ux-skeleton" />
                     <div className="mt-3 h-80 w-full rounded-3xl bg-slate-200" />
                   </div>
                 </div>
@@ -3263,7 +3547,7 @@ function onUpdateIconRowItem(
 
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
                 <section className="space-y-5">
-                  <article className="lux-card lux-section-card rounded-2xl p-5">
+                  <article ref={pageTitleSectionRef} className="lux-card lux-section-card rounded-2xl p-5">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                       <h2 className="text-lg font-semibold">基本情報</h2>
                       {editingPageTitle ? (
@@ -3311,10 +3595,56 @@ function onUpdateIconRowItem(
                       ブロックを追加してオリジナルのページを作成しよう！
                     </p>
 
-                    <section className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
+                    <section ref={blockPanelRef} className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
                       <div className="mb-3 flex items-center justify-between gap-2">
                         <h3 className="text-sm font-semibold text-slate-800">ブロックを追加</h3>
                         <p className="text-[11px] text-slate-500">クリックまたはドラッグで追加</p>
+                      </div>
+                      <div className="mb-3 rounded-lg border border-slate-200 bg-white p-2">
+                        <input
+                          value={blockQuickSearch}
+                          onChange={(e) => setBlockQuickSearch(e.target.value)}
+                          placeholder="ブロック検索（例: 画像 / CTA / カラム）"
+                          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+                        />
+                        {pinnedQuickBlocks.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {pinnedQuickBlocks.map((action) => (
+                              <button
+                                key={`pinned-${action.type}`}
+                                type="button"
+                                onClick={(event) => void onAddBlock(action.type, event)}
+                                className="rounded-full border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-900"
+                              >
+                                ★ {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <div className="mt-2 flex max-h-[96px] flex-wrap gap-1.5 overflow-auto">
+                          {filteredQuickBlocks.map((action) => (
+                            <div key={`quick-${action.type}`} className="inline-flex items-center rounded-full border border-slate-200 bg-white pr-1">
+                              <button
+                                type="button"
+                                onClick={(event) => void onAddBlock(action.type, event)}
+                                className="rounded-full px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-100"
+                              >
+                                {action.label}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onToggleFavoriteBlockType(action.type)}
+                                className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                                  favoriteBlockTypeSet.has(action.type) ? "text-amber-700" : "text-slate-400"
+                                }`}
+                                aria-label={`${action.label}をよく使うに追加`}
+                                title={action.description}
+                              >
+                                ★
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                         <button
@@ -4836,6 +5166,34 @@ function onUpdateIconRowItem(
                   </article>
 
                   <article className="lux-card lux-section-card rounded-2xl p-5">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <h2 className="text-lg font-semibold">変更履歴（ブロック）</h2>
+                      <p className="text-xs text-slate-500">最新20件を保持</p>
+                    </div>
+                    <div className="space-y-2">
+                      {historySnapshots.map((snapshot) => {
+                        const blockCountDelta = snapshot.blocks.length - item.contentBlocks.length;
+                        const deltaText = blockCountDelta === 0 ? "±0" : blockCountDelta > 0 ? `+${blockCountDelta}` : `${blockCountDelta}`;
+                        return (
+                          <div key={snapshot.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs">
+                            <div>
+                              <p className="font-medium text-slate-700">{formatSavedAt(snapshot.createdAt)}</p>
+                              <p className="text-slate-500">ブロック数差分: {deltaText}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => void restoreSnapshot(snapshot.id)}
+                              className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-800 hover:bg-emerald-100"
+                            >
+                              この状態に復元
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+
+                  <article className="lux-card lux-section-card rounded-2xl p-5">
                     <h2 className="mb-4 text-lg font-semibold">デザイン</h2>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
@@ -4987,6 +5345,15 @@ function onUpdateIconRowItem(
                         )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {proNodeEnabled && (
+                          <button
+                            type="button"
+                            onClick={autoLayoutNodeMap}
+                            className="rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100"
+                          >
+                            自動整列
+                          </button>
+                        )}
                         {nodeMapOwner && nodeMapOwner.id !== item.id && (
                           <button
                             type="button"
@@ -5152,7 +5519,7 @@ function onUpdateIconRowItem(
                     )}
                   </article>
 
-                  <article className="lux-card lux-section-card rounded-2xl p-5">
+                  <article ref={publishPanelRef} className="lux-card lux-section-card rounded-2xl p-5">
                     <h2 className="mb-4 text-lg font-semibold">公開設定</h2>
                     <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                       <p>
@@ -5186,15 +5553,37 @@ function onUpdateIconRowItem(
                             : "border-emerald-200 bg-emerald-50 text-emerald-900"
                       }`}
                     >
-                      <p className="font-medium">公開前チェック（自動）</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">公開前チェック（自動）</p>
+                        <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-700">
+                          スコア {publishScore} / 100
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/70">
+                        <div
+                          className={`h-full ${
+                            publishScore >= 80 ? "bg-emerald-500" : publishScore >= 60 ? "bg-amber-400" : "bg-rose-500"
+                          }`}
+                          style={{ width: `${publishScore}%` }}
+                        />
+                      </div>
                       {publishCheckIssues.length === 0 ? (
                         <p className="mt-1">すべてOKです。このまま公開できます。</p>
                       ) : (
                         <ul className="mt-2 space-y-1">
                           {publishCheckIssues.map((issue, index) => (
-                            <li key={`${issue.level}-${index}`} className="leading-relaxed">
-                              <span className="mr-1">{issue.level === "error" ? "✕" : "!"}</span>
-                              {issue.message}
+                            <li key={`${issue.level}-${index}`} className="flex items-start justify-between gap-2 leading-relaxed">
+                              <span>
+                                <span className="mr-1">{issue.level === "error" ? "✕" : "!"}</span>
+                                {issue.message}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => jumpToFixTarget(issue)}
+                                className="shrink-0 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-100"
+                              >
+                                修正へ
+                              </button>
                             </li>
                           ))}
                         </ul>
@@ -5226,7 +5615,7 @@ function onUpdateIconRowItem(
                       </button>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div ref={schedulePanelRef} className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <label className="mb-1 block text-xs text-slate-600">公開開始日時 (任意)</label>
                         <input
@@ -5263,20 +5652,95 @@ function onUpdateIconRowItem(
                       <p>開始: {formatSchedule(item.publishAt)}</p>
                       <p className="mt-1">終了: {formatSchedule(item.unpublishAt)}</p>
                     </div>
+                    <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-xs text-indigo-900">
+                      <p className="font-semibold">CTA A/B テスト（編集シミュレーション）</p>
+                      <p className="mt-1 text-indigo-800">クリック率の比較用に、表示/クリックを手動で計測できます。</p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-md border border-indigo-200 bg-white px-2 py-2">
+                          <p className="text-[11px] font-semibold text-indigo-900">Variant A</p>
+                          <p className="mt-1 text-[11px] text-indigo-700">
+                            表示 {ctaExperimentMetrics.aViews} / クリック {ctaExperimentMetrics.aClicks} / CTR {ctaExperimentRates.aRate}%
+                          </p>
+                          <div className="mt-2 flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => bumpCtaMetric("aViews")}
+                              className="rounded border border-indigo-300 bg-white px-2 py-1 text-[10px] text-indigo-800"
+                            >
+                              表示 +1
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => bumpCtaMetric("aClicks")}
+                              className="rounded border border-indigo-300 bg-white px-2 py-1 text-[10px] text-indigo-800"
+                            >
+                              クリック +1
+                            </button>
+                          </div>
+                        </div>
+                        <div className="rounded-md border border-fuchsia-200 bg-white px-2 py-2">
+                          <p className="text-[11px] font-semibold text-fuchsia-900">Variant B</p>
+                          <p className="mt-1 text-[11px] text-fuchsia-700">
+                            表示 {ctaExperimentMetrics.bViews} / クリック {ctaExperimentMetrics.bClicks} / CTR {ctaExperimentRates.bRate}%
+                          </p>
+                          <div className="mt-2 flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => bumpCtaMetric("bViews")}
+                              className="rounded border border-fuchsia-300 bg-white px-2 py-1 text-[10px] text-fuchsia-800"
+                            >
+                              表示 +1
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => bumpCtaMetric("bClicks")}
+                              className="rounded border border-fuchsia-300 bg-white px-2 py-1 text-[10px] text-fuchsia-800"
+                            >
+                              クリック +1
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </article>
                 </section>
 
                 <section className="space-y-5 lg:sticky lg:top-6 lg:h-fit lg:w-full">
                   <article className="lux-card lux-section-card rounded-2xl p-5">
-                    <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                      <p className="text-lg font-semibold text-slate-700">スマホプレビュー</p>
+                      <div className="flex items-center gap-1">
+                        {([
+                          ["iphone", "iPhone"],
+                          ["android", "Android"],
+                          ["wide", "Wide"],
+                        ] as Array<[PreviewDevice, string]>).map(([value, label]) => (
+                          <button
+                            key={`preview-device-${value}`}
+                            type="button"
+                            onClick={() => setPreviewDevice(value)}
+                            className={`rounded-md border px-2 py-1 text-[11px] ${
+                              previewDevice === value
+                                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                : "border-slate-300 bg-white text-slate-600"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <article
-                      className="relative mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
+                      className={`relative border border-slate-200 p-6 shadow-sm ${previewFrameClass}`}
                       style={{
                         backgroundColor: item.theme.backgroundColor ?? "#ffffff",
                         color: item.theme.textColor ?? "#0f172a",
                         fontFamily: item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
                       }}
                     >
+                      <p className="mb-3 inline-flex rounded-full border border-slate-200 bg-white/70 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                        {previewFrameLabel}
+                      </p>
                       {previewOverlay ? (
                         <div
                           className="absolute inset-0 z-30 overflow-y-auto rounded-3xl border border-slate-200 bg-white/95 p-4 pt-16 shadow-lg backdrop-blur-sm"
@@ -5310,7 +5774,7 @@ function onUpdateIconRowItem(
                             </div>
                           ) : previewOverlay.information ? (
                             <article
-                              className="mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
+                              className={`mx-auto min-h-[640px] border border-slate-200 p-6 shadow-sm ${previewFrameClass}`}
                               style={{
                                 backgroundColor: previewOverlay.information.theme.backgroundColor ?? "#ffffff",
                                 color: previewOverlay.information.theme.textColor ?? "#0f172a",

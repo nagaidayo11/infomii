@@ -186,7 +186,28 @@ a {
 }
 
 .toast-slide-in-out {
-  animation: toast-slide-in-out 2.2s ease both;
+  animation: toast-slide-in-out 5s ease both;
+}
+
+.ux-route-fade {
+  animation: dashboard-tab-fade 260ms ease-out;
+}
+
+.ux-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 40%, #e2e8f0 100%);
+  background-size: 220% 100%;
+  animation: ux-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes ux-skeleton-shimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
 }
 
 @keyframes inline-pop-in-out {
@@ -449,6 +470,8 @@ a {
   .lp-metric,
   .lp-cta-attention,
   .dashboard-tab-fade,
+  .ux-route-fade,
+  .ux-skeleton,
   .lux-main::before,
   .lp-hero-shell::after,
   .lp-cta-shell::after {

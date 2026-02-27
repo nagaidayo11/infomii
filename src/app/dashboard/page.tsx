@@ -161,6 +161,9 @@ type PendingDeleteBatch = {
   expiresAt: number;
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
+const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
+
+type TemplateCompareSlot = 0 | 1;
 
 function parseDashboardTab(value: string | null): DashboardTab | null {
   if (value === "dashboard" || value === "create" || value === "project" || value === "ops") {
@@ -207,6 +210,9 @@ export default function DashboardPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [previewTemplateIndex, setPreviewTemplateIndex] = useState<number | null>(null);
+  const [templateCompareMode, setTemplateCompareMode] = useState(false);
+  const [templateCompareIndices, setTemplateCompareIndices] = useState<[number | null, number | null]>([null, null]);
+  const [favoriteTemplateIndices, setFavoriteTemplateIndices] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -539,16 +545,46 @@ export default function DashboardPage() {
     },
     [quickSearch, industryFilter],
   );
+  const recommendedTemplateByIndustry = useMemo(() => {
+    const map = new Map<IndustryPreset, number>();
+    starterTemplates.forEach((template, index) => {
+      if (!map.has(template.industry)) {
+        map.set(template.industry, index);
+      }
+    });
+    return map;
+  }, []);
+  const favoriteTemplateSet = useMemo(
+    () => new Set(favoriteTemplateIndices),
+    [favoriteTemplateIndices],
+  );
   const groupedTemplateEntries = useMemo(
     () =>
       (Object.keys(INDUSTRY_PRESET_LABELS) as IndustryPreset[])
         .map((industry) => ({
           industry,
           label: INDUSTRY_PRESET_LABELS[industry],
-          entries: filteredTemplateEntries.filter((entry) => entry.template.industry === industry),
+          entries: filteredTemplateEntries
+            .filter((entry) => entry.template.industry === industry)
+            .sort((a, b) => {
+              const aFav = favoriteTemplateSet.has(a.originalIndex);
+              const bFav = favoriteTemplateSet.has(b.originalIndex);
+              if (aFav !== bFav) {
+                return aFav ? -1 : 1;
+              }
+              const recommended = recommendedTemplateByIndustry.get(industry);
+              if (recommended !== undefined) {
+                const aRec = a.originalIndex === recommended;
+                const bRec = b.originalIndex === recommended;
+                if (aRec !== bRec) {
+                  return aRec ? -1 : 1;
+                }
+              }
+              return a.originalIndex - b.originalIndex;
+            }),
         }))
         .filter((group) => group.entries.length > 0),
-    [filteredTemplateEntries],
+    [favoriteTemplateSet, filteredTemplateEntries, recommendedTemplateByIndustry],
   );
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -562,6 +598,16 @@ export default function DashboardPage() {
       filteredTemplateEntries[0]
     );
   }, [filteredTemplateEntries, previewTemplateIndex]);
+  const compareTemplateEntries = useMemo(
+    () =>
+      templateCompareIndices.map((index) => {
+        if (index === null) {
+          return null;
+        }
+        return starterTemplates[index] ? { index, template: starterTemplates[index] } : null;
+      }),
+    [templateCompareIndices],
+  );
 
   useEffect(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -577,6 +623,38 @@ export default function DashboardPage() {
       setPreviewTemplateIndex(filteredTemplateEntries[0].originalIndex);
     }
   }, [filteredTemplateEntries, previewTemplateIndex]);
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(DASHBOARD_TEMPLATE_FAVORITES_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        setFavoriteTemplateIndices(
+          parsed
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value) && value >= 0 && value < starterTemplates.length),
+        );
+      }
+    } catch {
+      // ignore parse error
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
+  }, [favoriteTemplateIndices]);
+  useEffect(() => {
+    if (templateCompareIndices[0] !== null || templateCompareIndices[1] !== null) {
+      setTemplateCompareMode(true);
+    }
+  }, [templateCompareIndices]);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -654,6 +732,22 @@ export default function DashboardPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
     }
+  }
+
+  function onToggleTemplateFavorite(templateIndex: number) {
+    setFavoriteTemplateIndices((prev) =>
+      prev.includes(templateIndex)
+        ? prev.filter((value) => value !== templateIndex)
+        : [...prev, templateIndex],
+    );
+  }
+
+  function onSelectTemplateCompare(slot: TemplateCompareSlot, templateIndex: number) {
+    setTemplateCompareIndices((prev) => {
+      const next: [number | null, number | null] = [...prev] as [number | null, number | null];
+      next[slot] = templateIndex;
+      return next;
+    });
   }
 
   async function onCreateBlank() {
@@ -932,7 +1026,7 @@ export default function DashboardPage() {
   return (
     <AuthGate>
       <main
-        className={`lux-main min-h-screen bg-[radial-gradient(circle_at_top_right,#86efac33_0%,#34d39926_24%,#ecfdf5_58%,#dcfce7_100%)] px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6 ${
+        className={`lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_right,#86efac33_0%,#34d39926_24%,#ecfdf5_58%,#dcfce7_100%)] px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6 ${
           activeTab === "dashboard" ? "lg:h-screen lg:overflow-hidden" : ""
         }`}
       >
@@ -1141,18 +1235,21 @@ export default function DashboardPage() {
           )}
           {activeTab === "dashboard" && showQuickStart && (
             <div className="rounded-2xl lux-section-card border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-[220px]">
-                  <p className="text-sm font-semibold text-emerald-900">初回3分セットアップ</p>
-                  <p className="mt-1 text-xs text-emerald-800">まずは1ページ作成して公開まで進めます。</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-[240px]">
+                  <p className="text-sm font-semibold text-emerald-900">初回セットアップ（1画面完了）</p>
+                  <p className="mt-1 text-xs text-emerald-800">テンプレ選択から公開まで、この画面内の4ステップで進めます。</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => void onCreateBlank()}
+                    onClick={() => {
+                      setActiveTab("create");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-500"
                   >
-                    + 新規インフォメーションを作成
+                    セットアップ開始
                   </button>
                   <button
                     type="button"
@@ -1163,6 +1260,19 @@ export default function DashboardPage() {
                     ×
                   </button>
                 </div>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["1. テンプレ選択", "業種と用途でテンプレを選ぶ"],
+                  ["2. 必要情報を編集", "営業時間・料金・導線を調整"],
+                  ["3. 公開前チェック", "不足項目を自動検出して修正"],
+                  ["4. 公開してQR配布", "URL/QRで現場運用を開始"],
+                ].map(([title, description]) => (
+                  <div key={title} className="rounded-xl border border-emerald-200 bg-white/80 px-3 py-2">
+                    <p className="text-xs font-semibold text-emerald-900">{title}</p>
+                    <p className="mt-1 text-[11px] text-slate-600">{description}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1252,7 +1362,7 @@ export default function DashboardPage() {
           {loading ? (
             <div className="animate-pulse space-y-4">
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
-                <div className="h-4 w-36 rounded bg-slate-200" />
+                <div className="h-4 w-36 rounded ux-skeleton" />
                 <div className="mt-3 h-9 w-72 rounded bg-slate-200" />
                 <div className="mt-3 h-4 w-96 rounded bg-slate-200" />
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1283,6 +1393,28 @@ export default function DashboardPage() {
                     placeholder="テンプレートを検索（タイトル / 本文）"
                     className="w-full rounded-2xl border border-emerald-300/70 bg-white/95 px-4 py-3 text-sm text-slate-800 shadow-sm outline-none ring-emerald-300 focus:ring"
                   />
+                </div>
+                <div className="mx-auto mt-3 flex max-w-3xl flex-wrap items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTemplateCompareMode((prev) => !prev)}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      templateCompareMode
+                        ? "border-indigo-400 bg-indigo-100 text-indigo-900"
+                        : "border-slate-300 bg-white/90 text-slate-700"
+                    }`}
+                  >
+                    {templateCompareMode ? "比較モードON" : "比較モードOFF"}
+                  </button>
+                  {(templateCompareIndices[0] !== null || templateCompareIndices[1] !== null) && (
+                    <button
+                      type="button"
+                      onClick={() => setTemplateCompareIndices([null, null])}
+                      className="rounded-full border border-slate-300 bg-white/90 px-3 py-1 text-xs text-slate-700"
+                    >
+                      比較候補をクリア
+                    </button>
+                  )}
                 </div>
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
@@ -1354,10 +1486,56 @@ export default function DashboardPage() {
                             aria-label={`${template.title} で作成`}
                             className="cursor-pointer rounded-2xl lux-section-card border border-emerald-100 bg-white p-4 shadow-sm"
                           >
-                            <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
-                              {INDUSTRY_PRESET_LABELS[template.industry]}
-                            </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-[11px] uppercase tracking-[0.12em] text-emerald-700">
+                                {INDUSTRY_PRESET_LABELS[template.industry]}
+                              </p>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    onToggleTemplateFavorite(originalIndex);
+                                  }}
+                                  className={`rounded-md border px-1.5 py-0.5 text-[11px] ${
+                                    favoriteTemplateSet.has(originalIndex)
+                                      ? "border-amber-300 bg-amber-100 text-amber-800"
+                                      : "border-slate-200 bg-white text-slate-500"
+                                  }`}
+                                  title="お気に入り"
+                                >
+                                  ★
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    onSelectTemplateCompare(0, originalIndex);
+                                  }}
+                                  className="rounded-md border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] text-indigo-700"
+                                  title="比較Aへ"
+                                >
+                                  A
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    onSelectTemplateCompare(1, originalIndex);
+                                  }}
+                                  className="rounded-md border border-fuchsia-200 bg-fuchsia-50 px-1.5 py-0.5 text-[10px] text-fuchsia-700"
+                                  title="比較Bへ"
+                                >
+                                  B
+                                </button>
+                              </div>
+                            </div>
                             <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
+                            {recommendedTemplateByIndustry.get(template.industry) === originalIndex && (
+                              <p className="mt-1 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-emerald-800">
+                                おすすめ
+                              </p>
+                            )}
                             <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
                               {template.body}
                             </p>
@@ -1377,8 +1555,52 @@ export default function DashboardPage() {
                 </div>
 
                 <aside className="h-fit rounded-2xl border border-emerald-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-4">
-                  <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">テンプレプレビュー</p>
-                  {!activeTemplatePreviewEntry ? (
+                  <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">
+                    {templateCompareMode ? "テンプレ比較プレビュー" : "テンプレプレビュー"}
+                  </p>
+                  {templateCompareMode ? (
+                    <div className="mt-3 grid gap-3">
+                      {[0, 1].map((slot) => {
+                        const compareEntry = compareTemplateEntries[slot];
+                        if (!compareEntry) {
+                          return (
+                            <div key={`compare-empty-${slot}`} className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-xs text-slate-500">
+                              比較{slot === 0 ? "A" : "B"}をテンプレカードの {slot === 0 ? "A" : "B"} ボタンで選択してください。
+                            </div>
+                          );
+                        }
+                        const previewImage = compareEntry.template.blocks?.find((block) => block.type === "image")?.url;
+                        return (
+                          <div key={`compare-${compareEntry.index}`} className="rounded-xl border border-slate-200 bg-white p-3">
+                            <p className="text-[10px] font-semibold tracking-[0.1em] text-slate-500">比較{slot === 0 ? "A" : "B"}</p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {INDUSTRY_PRESET_LABELS[compareEntry.template.industry]}
+                            </p>
+                            <h3 className="mt-1 text-sm font-semibold text-slate-900">{compareEntry.template.title}</h3>
+                            {previewImage ? (
+                              <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                                <Image
+                                  src={previewImage}
+                                  alt="template compare"
+                                  width={640}
+                                  height={360}
+                                  className="h-auto w-full object-cover"
+                                  unoptimized
+                                />
+                              </div>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => void onCreateFromTemplate(compareEntry.index)}
+                              className="mt-2 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500"
+                            >
+                              この比較案で作成
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : !activeTemplatePreviewEntry ? (
                     <p className="mt-3 text-sm text-slate-500">テンプレートを選択するとここに表示されます。</p>
                   ) : (
                     <>
@@ -2018,7 +2240,7 @@ export default function DashboardPage() {
                     <h2 className="text-lg font-semibold">閲覧分析（直近7日）</h2>
                     {loadingMetrics && (
                       <div className="mt-2 animate-pulse space-y-2">
-                        <div className="h-4 w-44 rounded bg-slate-200" />
+                        <div className="h-4 w-44 rounded ux-skeleton" />
                       </div>
                     )}
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -2087,7 +2309,7 @@ export default function DashboardPage() {
                     )}
                     {loadingAuditLogs && (
                       <div className="mt-2 animate-pulse space-y-2">
-                        <div className="h-4 w-36 rounded bg-slate-200" />
+                        <div className="h-4 w-36 rounded ux-skeleton" />
                       </div>
                     )}
                     <div className="mt-3 space-y-2">
