@@ -163,8 +163,6 @@ type PendingDeleteBatch = {
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
 
-type TemplateCompareSlot = 0 | 1;
-
 function parseDashboardTab(value: string | null): DashboardTab | null {
   if (value === "dashboard" || value === "create" || value === "project" || value === "ops") {
     return value;
@@ -210,8 +208,6 @@ export default function DashboardPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [previewTemplateIndex, setPreviewTemplateIndex] = useState<number | null>(null);
-  const [templateCompareMode, setTemplateCompareMode] = useState(false);
-  const [templateCompareIndices, setTemplateCompareIndices] = useState<[number | null, number | null]>([null, null]);
   const [favoriteTemplateIndices, setFavoriteTemplateIndices] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -598,16 +594,6 @@ export default function DashboardPage() {
       filteredTemplateEntries[0]
     );
   }, [filteredTemplateEntries, previewTemplateIndex]);
-  const compareTemplateEntries = useMemo(
-    () =>
-      templateCompareIndices.map((index) => {
-        if (index === null) {
-          return null;
-        }
-        return starterTemplates[index] ? { index, template: starterTemplates[index] } : null;
-      }),
-    [templateCompareIndices],
-  );
 
   useEffect(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -650,11 +636,6 @@ export default function DashboardPage() {
     }
     window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
   }, [favoriteTemplateIndices]);
-  useEffect(() => {
-    if (templateCompareIndices[0] !== null || templateCompareIndices[1] !== null) {
-      setTemplateCompareMode(true);
-    }
-  }, [templateCompareIndices]);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -740,14 +721,6 @@ export default function DashboardPage() {
         ? prev.filter((value) => value !== templateIndex)
         : [...prev, templateIndex],
     );
-  }
-
-  function onSelectTemplateCompare(slot: TemplateCompareSlot, templateIndex: number) {
-    setTemplateCompareIndices((prev) => {
-      const next: [number | null, number | null] = [...prev] as [number | null, number | null];
-      next[slot] = templateIndex;
-      return next;
-    });
   }
 
   async function onCreateBlank() {
@@ -1394,28 +1367,6 @@ export default function DashboardPage() {
                     className="w-full rounded-2xl border border-emerald-300/70 bg-white/95 px-4 py-3 text-sm text-slate-800 shadow-sm outline-none ring-emerald-300 focus:ring"
                   />
                 </div>
-                <div className="mx-auto mt-3 flex max-w-3xl flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTemplateCompareMode((prev) => !prev)}
-                    className={`rounded-full border px-3 py-1 text-xs ${
-                      templateCompareMode
-                        ? "border-indigo-400 bg-indigo-100 text-indigo-900"
-                        : "border-slate-300 bg-white/90 text-slate-700"
-                    }`}
-                  >
-                    {templateCompareMode ? "比較モードON" : "比較モードOFF"}
-                  </button>
-                  {(templateCompareIndices[0] !== null || templateCompareIndices[1] !== null) && (
-                    <button
-                      type="button"
-                      onClick={() => setTemplateCompareIndices([null, null])}
-                      className="rounded-full border border-slate-300 bg-white/90 px-3 py-1 text-xs text-slate-700"
-                    >
-                      比較候補をクリア
-                    </button>
-                  )}
-                </div>
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
@@ -1506,28 +1457,6 @@ export default function DashboardPage() {
                                 >
                                   ★
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    onSelectTemplateCompare(0, originalIndex);
-                                  }}
-                                  className="rounded-md border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] text-indigo-700"
-                                  title="比較Aへ"
-                                >
-                                  A
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    onSelectTemplateCompare(1, originalIndex);
-                                  }}
-                                  className="rounded-md border border-fuchsia-200 bg-fuchsia-50 px-1.5 py-0.5 text-[10px] text-fuchsia-700"
-                                  title="比較Bへ"
-                                >
-                                  B
-                                </button>
                               </div>
                             </div>
                             <h3 className="mt-1 text-sm font-semibold text-slate-900">{template.title}</h3>
@@ -1555,52 +1484,8 @@ export default function DashboardPage() {
                 </div>
 
                 <aside className="h-fit rounded-2xl border border-emerald-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-4">
-                  <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">
-                    {templateCompareMode ? "テンプレ比較プレビュー" : "テンプレプレビュー"}
-                  </p>
-                  {templateCompareMode ? (
-                    <div className="mt-3 grid gap-3">
-                      {[0, 1].map((slot) => {
-                        const compareEntry = compareTemplateEntries[slot];
-                        if (!compareEntry) {
-                          return (
-                            <div key={`compare-empty-${slot}`} className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-xs text-slate-500">
-                              比較{slot === 0 ? "A" : "B"}をテンプレカードの {slot === 0 ? "A" : "B"} ボタンで選択してください。
-                            </div>
-                          );
-                        }
-                        const previewImage = compareEntry.template.blocks?.find((block) => block.type === "image")?.url;
-                        return (
-                          <div key={`compare-${compareEntry.index}`} className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="text-[10px] font-semibold tracking-[0.1em] text-slate-500">比較{slot === 0 ? "A" : "B"}</p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              {INDUSTRY_PRESET_LABELS[compareEntry.template.industry]}
-                            </p>
-                            <h3 className="mt-1 text-sm font-semibold text-slate-900">{compareEntry.template.title}</h3>
-                            {previewImage ? (
-                              <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                                <Image
-                                  src={previewImage}
-                                  alt="template compare"
-                                  width={640}
-                                  height={360}
-                                  className="h-auto w-full object-cover"
-                                  unoptimized
-                                />
-                              </div>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => void onCreateFromTemplate(compareEntry.index)}
-                              className="mt-2 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500"
-                            >
-                              この比較案で作成
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : !activeTemplatePreviewEntry ? (
+                  <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">テンプレプレビュー</p>
+                  {!activeTemplatePreviewEntry ? (
                     <p className="mt-3 text-sm text-slate-500">テンプレートを選択するとここに表示されます。</p>
                   ) : (
                     <>
