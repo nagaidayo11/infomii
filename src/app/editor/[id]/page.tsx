@@ -145,7 +145,6 @@ type BlockQuickAction = {
 };
 
 const EDITOR_BLOCK_FAVORITES_KEY = "editor-block-favorites-v2";
-const CTA_EXPERIMENT_METRICS_KEY = "editor-cta-experiment-metrics-v1";
 
 const PUBLISH_CHECK_SEVERITY = {
   emptyImageUrl: "error",
@@ -1247,12 +1246,6 @@ export default function EditorPage() {
     createdAt: string;
     blocks: InformationBlock[];
   }>>([]);
-  const [ctaExperimentMetrics, setCtaExperimentMetrics] = useState<{
-    aViews: number;
-    aClicks: number;
-    bViews: number;
-    bClicks: number;
-  }>({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
   const schedulePanelRef = useRef<HTMLDivElement | null>(null);
@@ -1366,35 +1359,6 @@ export default function EditorPage() {
     }
     window.localStorage.setItem(EDITOR_BLOCK_FAVORITES_KEY, JSON.stringify(favoriteBlockTypes));
   }, [favoriteBlockTypes]);
-
-  useEffect(() => {
-    if (!id || typeof window === "undefined") {
-      return;
-    }
-    const raw = window.localStorage.getItem(`${CTA_EXPERIMENT_METRICS_KEY}:${id}`);
-    if (!raw) {
-      setCtaExperimentMetrics({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as Partial<typeof ctaExperimentMetrics>;
-      setCtaExperimentMetrics({
-        aViews: Number(parsed.aViews ?? 0),
-        aClicks: Number(parsed.aClicks ?? 0),
-        bViews: Number(parsed.bViews ?? 0),
-        bClicks: Number(parsed.bClicks ?? 0),
-      });
-    } catch {
-      setCtaExperimentMetrics({ aViews: 0, aClicks: 0, bViews: 0, bClicks: 0 });
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (!id || typeof window === "undefined") {
-      return;
-    }
-    window.localStorage.setItem(`${CTA_EXPERIMENT_METRICS_KEY}:${id}`, JSON.stringify(ctaExperimentMetrics));
-  }, [id, ctaExperimentMetrics]);
 
   useEffect(() => {
     if (!item) {
@@ -2254,10 +2218,6 @@ export default function EditorPage() {
     void save({ theme: nextTheme });
     setNoticeKind("success");
     setNotice("導線マップを自動整列しました");
-  }
-
-  function bumpCtaMetric(kind: "aViews" | "aClicks" | "bViews" | "bClicks") {
-    setCtaExperimentMetrics((prev) => ({ ...prev, [kind]: prev[kind] + 1 }));
   }
 
   function onUndoBlocks() {
@@ -3241,15 +3201,6 @@ function onUpdateIconRowItem(
     () => BLOCK_QUICK_ACTIONS.filter((action) => favoriteBlockTypeSet.has(action.type)),
     [favoriteBlockTypeSet],
   );
-  const ctaExperimentRates = useMemo(() => {
-    const aRate = ctaExperimentMetrics.aViews > 0
-      ? Math.round((ctaExperimentMetrics.aClicks / ctaExperimentMetrics.aViews) * 100)
-      : 0;
-    const bRate = ctaExperimentMetrics.bViews > 0
-      ? Math.round((ctaExperimentMetrics.bClicks / ctaExperimentMetrics.bViews) * 100)
-      : 0;
-    return { aRate, bRate };
-  }, [ctaExperimentMetrics]);
   const previewFrameClass = previewDevice === "wide"
     ? "mx-auto min-h-[640px] max-w-[420px] rounded-[26px]"
     : previewDevice === "android"
@@ -5651,56 +5602,6 @@ function onUpdateIconRowItem(
                     <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
                       <p>開始: {formatSchedule(item.publishAt)}</p>
                       <p className="mt-1">終了: {formatSchedule(item.unpublishAt)}</p>
-                    </div>
-                    <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-xs text-indigo-900">
-                      <p className="font-semibold">CTA A/B テスト（編集シミュレーション）</p>
-                      <p className="mt-1 text-indigo-800">クリック率の比較用に、表示/クリックを手動で計測できます。</p>
-                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                        <div className="rounded-md border border-indigo-200 bg-white px-2 py-2">
-                          <p className="text-[11px] font-semibold text-indigo-900">Variant A</p>
-                          <p className="mt-1 text-[11px] text-indigo-700">
-                            表示 {ctaExperimentMetrics.aViews} / クリック {ctaExperimentMetrics.aClicks} / CTR {ctaExperimentRates.aRate}%
-                          </p>
-                          <div className="mt-2 flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => bumpCtaMetric("aViews")}
-                              className="rounded border border-indigo-300 bg-white px-2 py-1 text-[10px] text-indigo-800"
-                            >
-                              表示 +1
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => bumpCtaMetric("aClicks")}
-                              className="rounded border border-indigo-300 bg-white px-2 py-1 text-[10px] text-indigo-800"
-                            >
-                              クリック +1
-                            </button>
-                          </div>
-                        </div>
-                        <div className="rounded-md border border-fuchsia-200 bg-white px-2 py-2">
-                          <p className="text-[11px] font-semibold text-fuchsia-900">Variant B</p>
-                          <p className="mt-1 text-[11px] text-fuchsia-700">
-                            表示 {ctaExperimentMetrics.bViews} / クリック {ctaExperimentMetrics.bClicks} / CTR {ctaExperimentRates.bRate}%
-                          </p>
-                          <div className="mt-2 flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => bumpCtaMetric("bViews")}
-                              className="rounded border border-fuchsia-300 bg-white px-2 py-1 text-[10px] text-fuchsia-800"
-                            >
-                              表示 +1
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => bumpCtaMetric("bClicks")}
-                              className="rounded border border-fuchsia-300 bg-white px-2 py-1 text-[10px] text-fuchsia-800"
-                            >
-                              クリック +1
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </article>
                 </section>
