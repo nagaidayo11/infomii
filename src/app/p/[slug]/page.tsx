@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
+import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
@@ -1203,7 +1204,10 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           </div>
 
           <footer className="border-t border-emerald-100 bg-[linear-gradient(180deg,#fffdf7,#f8fafc)] px-4 py-4 sm:px-6">
-              <p className="text-xs leading-6 text-slate-600">
+            <div className="mb-2">
+              <PublicFooterBackButton fallbackHref="/" />
+            </div>
+            <p className="text-xs leading-6 text-slate-600">
               ご不明な点はスタッフまでお声がけください。
             </p>
           </footer>
