@@ -136,8 +136,6 @@ type PublishCheckIssue = {
   blockId?: string;
 };
 
-type PreviewDevice = "iphone" | "android" | "wide";
-
 type BlockQuickAction = {
   type: InformationBlock["type"];
   label: string;
@@ -1240,7 +1238,6 @@ export default function EditorPage() {
   const [overlayTouchStartX, setOverlayTouchStartX] = useState<number | null>(null);
   const [blockQuickSearch, setBlockQuickSearch] = useState("");
   const [favoriteBlockTypes, setFavoriteBlockTypes] = useState<InformationBlock["type"][]>([]);
-  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("iphone");
   const [historySnapshots, setHistorySnapshots] = useState<Array<{
     id: string;
     createdAt: string;
@@ -3201,16 +3198,6 @@ function onUpdateIconRowItem(
     () => BLOCK_QUICK_ACTIONS.filter((action) => favoriteBlockTypeSet.has(action.type)),
     [favoriteBlockTypeSet],
   );
-  const previewFrameClass = previewDevice === "wide"
-    ? "mx-auto min-h-[640px] max-w-[420px] rounded-[26px]"
-    : previewDevice === "android"
-      ? "mx-auto min-h-[640px] max-w-[380px] rounded-[18px]"
-      : "mx-auto min-h-[640px] max-w-sm rounded-3xl";
-  const previewFrameLabel = previewDevice === "wide"
-    ? "タブレット幅"
-    : previewDevice === "android"
-      ? "Android幅"
-      : "iPhone幅";
 
   function getNodeTargetStatus(node: { id: string; targetSlug?: string }): "published" | "draft" | null {
     const slug = (node.targetSlug ?? "").trim();
@@ -5606,40 +5593,15 @@ function onUpdateIconRowItem(
 
                 <section className="space-y-5 lg:sticky lg:top-6 lg:h-fit lg:w-full">
                   <article className="lux-card lux-section-card rounded-2xl p-5">
-                    <div className="mb-4 flex items-center justify-between gap-2">
-                      <p className="text-lg font-semibold text-slate-700">スマホプレビュー</p>
-                      <div className="flex items-center gap-1">
-                        {([
-                          ["iphone", "iPhone"],
-                          ["android", "Android"],
-                          ["wide", "Wide"],
-                        ] as Array<[PreviewDevice, string]>).map(([value, label]) => (
-                          <button
-                            key={`preview-device-${value}`}
-                            type="button"
-                            onClick={() => setPreviewDevice(value)}
-                            className={`rounded-md border px-2 py-1 text-[11px] ${
-                              previewDevice === value
-                                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                                : "border-slate-300 bg-white text-slate-600"
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
                     <article
-                      className={`relative border border-slate-200 p-6 shadow-sm ${previewFrameClass}`}
+                      className="relative mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
                       style={{
                         backgroundColor: item.theme.backgroundColor ?? "#ffffff",
                         color: item.theme.textColor ?? "#0f172a",
                         fontFamily: item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
                       }}
                     >
-                      <p className="mb-3 inline-flex rounded-full border border-slate-200 bg-white/70 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                        {previewFrameLabel}
-                      </p>
                       {previewOverlay ? (
                         <div
                           className="absolute inset-0 z-30 overflow-y-auto rounded-3xl border border-slate-200 bg-white/95 p-4 pt-16 shadow-lg backdrop-blur-sm"
@@ -5673,7 +5635,7 @@ function onUpdateIconRowItem(
                             </div>
                           ) : previewOverlay.information ? (
                             <article
-                              className={`mx-auto min-h-[640px] border border-slate-200 p-6 shadow-sm ${previewFrameClass}`}
+                              className="mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
                               style={{
                                 backgroundColor: previewOverlay.information.theme.backgroundColor ?? "#ffffff",
                                 color: previewOverlay.information.theme.textColor ?? "#0f172a",
