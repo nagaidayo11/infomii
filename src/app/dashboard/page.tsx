@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -345,7 +345,12 @@ export default function DashboardPage() {
     })();
   }, [loading, subscription]);
 
-  async function refreshOpsHealth() {
+  const refreshOpsHealth = useCallback(async () => {
+    if (!canAccessOps) {
+      setOpsHealth(null);
+      setLoadingOpsHealth(false);
+      return;
+    }
     setLoadingOpsHealth(true);
     try {
       const health = await getOpsHealthSnapshot();
@@ -355,23 +360,32 @@ export default function DashboardPage() {
     } finally {
       setLoadingOpsHealth(false);
     }
-  }
+  }, [canAccessOps]);
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !canAccessOps) {
       return;
     }
     void refreshOpsHealth();
-  }, [loading]);
+  }, [loading, canAccessOps, refreshOpsHealth]);
 
   useEffect(() => {
-    if (loading || !opsHealth || typeof window === "undefined") {
+    if (loading || typeof window === "undefined") {
+      return;
+    }
+    if (!canAccessOps) {
+      const dismissed = window.localStorage.getItem(QUICKSTART_DISMISSED_KEY) === "1";
+      const shouldShow = !dismissed && items.length === 0;
+      setShowQuickStart(shouldShow);
+      return;
+    }
+    if (!opsHealth) {
       return;
     }
     const dismissed = window.localStorage.getItem(QUICKSTART_DISMISSED_KEY) === "1";
     const shouldShow = !dismissed && opsHealth.onboarding.totalPages === 0;
     setShowQuickStart(shouldShow);
-  }, [loading, opsHealth]);
+  }, [loading, opsHealth, canAccessOps, items.length]);
 
   useEffect(() => {
     if (loading) {
