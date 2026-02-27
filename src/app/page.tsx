@@ -140,7 +140,6 @@ export default function Home() {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
-              <p className="lux-kicker lp-reveal lp-delay-2 text-xs font-bold tracking-[0.24em]">INFOMII</p>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 現場で使える案内ページを
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
