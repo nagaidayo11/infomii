@@ -168,6 +168,12 @@ export default function Home() {
                 <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
                   無料で1ページ作成（30秒登録）
                 </Link>
+                <Link
+                  href="/login"
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
+                >
+                  ログイン
+                </Link>
               </div>
             </div>
 
