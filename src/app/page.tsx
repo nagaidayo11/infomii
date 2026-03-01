@@ -1,10 +1,8 @@
 import Link from "next/link";
 import LpRevealObserver from "@/components/lp-reveal-observer";
-import LpDemoVideo from "@/components/lp-demo-video";
 
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
-  const demoVideoUrl = process.env.NEXT_PUBLIC_LP_DEMO_VIDEO_URL ?? "/demo/editor-demo.mp4";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
   const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
@@ -170,12 +168,6 @@ export default function Home() {
                 <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
                   無料で1ページ作成（30秒登録）
                 </Link>
-                <Link
-                  href="#demo"
-                  className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
-                >
-                  30秒デモを見る
-                </Link>
               </div>
             </div>
 
@@ -221,28 +213,6 @@ export default function Home() {
               </ul>
             </article>
           ))}
-        </section>
-
-        <section id="demo" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="lux-kicker text-xs font-semibold">Product Demo</p>
-              <h2 className="mt-1 text-2xl font-bold text-slate-900">編集画面を30秒で確認</h2>
-              <p className="mt-2 text-sm text-slate-700">
-                実際の編集操作を短時間で確認できます。導入前のイメージ共有に使えます。
-              </p>
-            </div>
-            <Link
-              href="/login"
-              className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800"
-            >
-              無料で試す（30秒登録）
-            </Link>
-          </div>
-
-          <div className="mt-5 overflow-hidden rounded-2xl border border-emerald-200 bg-slate-950/95 shadow-[0_18px_36px_-22px_rgba(2,6,23,0.8)]">
-            <LpDemoVideo src={demoVideoUrl} />
-          </div>
         </section>
 
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
