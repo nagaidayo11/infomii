@@ -164,7 +164,10 @@ type PendingDeleteBatch = {
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
-const OPS_OWNER_EMAIL = "nagai9_119@ezwe.ne.jp";
+const OPS_OWNER_EMAILS = new Set([
+  "nagai9_119@ezweb.ne.jp",
+  "nagaisoccer@gmail.com",
+]);
 
 function parseDashboardTab(value: string | null): DashboardTab | null {
   if (value === "dashboard" || value === "create" || value === "project" || value === "ops") {
@@ -221,7 +224,7 @@ export default function DashboardPage() {
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
-  const canAccessOps = userEmail.length > 0 && userEmail === OPS_OWNER_EMAIL;
+  const canAccessOps = userEmail.length > 0 && OPS_OWNER_EMAILS.has(userEmail);
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
