@@ -1,6 +1,99 @@
 import Link from "next/link";
 import Image from "next/image";
 import LpRevealObserver from "@/components/lp-reveal-observer";
+import { starterTemplates } from "@/lib/templates";
+import type { InformationBlock } from "@/types/information";
+
+function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
+  const previewBlocks = (blocks ?? []).slice(0, 9);
+  if (previewBlocks.length === 0) {
+    return <div className="h-64 rounded-xl border border-slate-200 bg-slate-50" />;
+  }
+
+  return (
+    <div className="h-64 overflow-hidden rounded-xl border border-slate-200 bg-white p-3">
+      <div className="space-y-2">
+        {previewBlocks.map((block) => {
+          if (block.type === "title" || block.type === "heading") {
+            return (
+              <p key={block.id} className="text-sm font-semibold text-slate-900">
+                {block.text || "タイトル"}
+              </p>
+            );
+          }
+          if (block.type === "paragraph") {
+            return (
+              <p key={block.id} className="line-clamp-2 text-xs leading-5 text-slate-700">
+                {block.text || ""}
+              </p>
+            );
+          }
+          if (block.type === "image" && block.url) {
+            return (
+              <Image
+                key={block.id}
+                src={block.url}
+                alt="template preview"
+                width={720}
+                height={360}
+                className="h-24 w-full rounded-lg border border-slate-200 object-cover"
+                unoptimized
+              />
+            );
+          }
+          if (block.type === "iconRow") {
+            return (
+              <div key={block.id} className="grid grid-cols-3 gap-1">
+                {(block.iconItems ?? []).slice(0, 3).map((entry) => (
+                  <div key={entry.id} className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-2 text-center">
+                    <p className="text-sm leading-none">{entry.icon || "⭐"}</p>
+                    <p className="mt-1 truncate text-[10px] text-slate-700">{entry.label || "項目"}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          if (block.type === "hours" || block.type === "pricing") {
+            const items = block.type === "hours" ? block.hoursItems ?? [] : block.pricingItems ?? [];
+            return (
+              <div key={block.id} className="rounded-md border border-slate-200 bg-slate-50 p-2">
+                {items.slice(0, 3).map((entry) => (
+                  <div key={entry.id} className="flex items-center justify-between gap-2 text-[11px] text-slate-700">
+                    <span className="truncate">{entry.label || "-"}</span>
+                    <span className="shrink-0 font-medium">{entry.value || "-"}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          if (block.type === "section") {
+            return (
+              <div key={block.id} className="rounded-md border border-slate-200 bg-slate-50 p-2">
+                <p className="text-[11px] font-semibold text-slate-800">{block.sectionTitle || "セクション"}</p>
+                <p className="line-clamp-2 text-[10px] text-slate-600">{block.sectionBody || ""}</p>
+              </div>
+            );
+          }
+          if (block.type === "cta") {
+            return (
+              <div key={block.id} className="inline-flex rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                {block.ctaLabel || "ボタン"}
+              </div>
+            );
+          }
+          if (block.type === "badge") {
+            return (
+              <span key={block.id} className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                {block.badgeText || "バッジ"}
+              </span>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
@@ -17,16 +110,16 @@ export default function Home() {
 
   const useCases = [
     {
-      title: "ホテル",
-      items: ["館内案内", "Wi-Fi / 設備案内", "チェックイン情報"],
+      title: "ビジネスホテル",
+      items: ["チェックイン/アウト案内", "館内設備・Wi-Fi情報", "深夜到着ゲスト対応"],
     },
     {
-      title: "飲食店",
-      items: ["メニュー", "営業時間", "注文・注意事項"],
+      title: "リゾートホテル",
+      items: ["アクティビティ案内", "プール・スパ案内", "滞在中の導線集約"],
     },
     {
-      title: "サロン・クリニック",
-      items: ["予約導線", "施術前後の案内", "アクセス・連絡先"],
+      title: "旅館",
+      items: ["お食事処の案内", "大浴場・貸切風呂案内", "館内ルールの共有"],
     },
   ];
 
@@ -34,20 +127,34 @@ export default function Home() {
     {
       title: "ビジネスホテル案内",
       subtitle: "チェックイン・館内導線",
-      image: "/templates/hotel-business.svg",
+      template:
+        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
+        starterTemplates[0],
       points: ["Wi-Fi / 駐車場", "チェックイン情報", "フロント連絡ボタン"],
     },
     {
-      title: "飲食店の営業案内",
-      subtitle: "営業時間・予約導線",
-      image: "/templates/restaurant.svg",
-      points: ["営業時間", "メニュー", "予約ボタン"],
+      title: "深夜到着ゲスト案内",
+      subtitle: "セルフチェックイン導線",
+      template:
+        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
+        starterTemplates[1],
+      points: ["本人確認/入室導線", "緊急連絡先", "夜間運用ルール"],
     },
     {
-      title: "サロン来店前ガイド",
-      subtitle: "予約変更・施術前案内",
-      image: "/templates/salon.svg",
-      points: ["施術前準備", "遅刻連絡", "予約変更導線"],
+      title: "リゾート滞在案内",
+      subtitle: "アクティビティ導線",
+      template:
+        starterTemplates.find((entry) => entry.title === "【リゾートホテル】滞在アクティビティ案内") ??
+        starterTemplates[2],
+      points: ["体験予約導線", "雨天時の案内", "滞在プログラム共有"],
+    },
+    {
+      title: "旅館の浴場案内",
+      subtitle: "大浴場・貸切風呂",
+      template:
+        starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
+        starterTemplates[3],
+      points: ["利用時間", "貸切予約方法", "注意事項"],
     },
   ];
 
@@ -164,11 +271,11 @@ export default function Home() {
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
-                現場で使える案内ページを
+                ホテル現場で使える案内ページを
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
               </h1>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
-                店舗向けインフォメーションを、ブロック編集で直感的に作成。QRから1ページ案内、
+                ホテル向けインフォメーションを、ブロック編集で直感的に作成。チェックイン案内から館内導線、
                 Proならノードで複数ページ連携まで。現場で必要な更新を、その場で反映できます。
               </p>
               <p className="lp-reveal lp-delay-3 mt-3 text-xs font-medium text-slate-600 sm:text-sm">
@@ -191,7 +298,7 @@ export default function Home() {
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
                 <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
-                  無料で1ページ作成（30秒登録）
+                  無料でホテル案内を作成
                 </Link>
                 <Link
                   href="/login"
@@ -248,10 +355,10 @@ export default function Home() {
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">こんなのが作れます</h2>
-            <p className="text-sm text-slate-600">テンプレを選んで、すぐに編集スタート</p>
+            <h2 className="text-2xl font-bold text-slate-900">ホテルでこんなのが作れます</h2>
+            <p className="text-sm text-slate-600">テンプレを選んで、ホテル案内をすぐ公開</p>
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {templatePreviews.map((template, index) => (
               <article
                 key={template.title}
@@ -259,14 +366,7 @@ export default function Home() {
                 style={{ transitionDelay: `${180 + index * 70}ms` }}
               >
                 <div className="border-b border-slate-200 bg-slate-50 p-2">
-                  <Image
-                    src={template.image}
-                    alt={template.title}
-                    width={800}
-                    height={450}
-                    className="h-40 w-full rounded-lg object-cover"
-                    unoptimized
-                  />
+                  <TemplateScreenPreview blocks={template.template?.blocks} />
                 </div>
                 <div className="p-4">
                   <p className="text-xs font-semibold text-emerald-700">{template.subtitle}</p>
@@ -427,7 +527,7 @@ export default function Home() {
               href="/login"
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
-              無料で1ページ作成する
+              無料でホテル案内を作成
             </Link>
             <a
               href="#pricing"
