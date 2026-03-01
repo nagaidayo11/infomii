@@ -208,20 +208,20 @@ export default function Home() {
 
   const faqItems = [
     {
-      q: "どんな業種で使えますか？",
-      a: "ホテル・飲食店・サロン・クリニック・観光施設など、案内情報を更新する業種で利用できます。",
+      q: "夜間帯の無人運用でも使えますか？",
+      a: "使えます。セルフチェックイン案内、緊急連絡先、館内導線を1ページにまとめて運用できます。",
     },
     {
-      q: "QRコードはすぐ発行できますか？",
-      a: "はい。ページ保存後に公開URLとQRコードをすぐ発行できます。紙印刷にもそのまま使えます。",
+      q: "スタッフ間で更新を共有できますか？",
+      a: "はい。管理画面から同じ施設のページを共同運用できるため、担当者依存を減らせます。",
     },
     {
-      q: "無料プランとProの違いは？",
-      a: "Proでは公開上限の拡張、複数ページ連携（ノード）、詳細な閲覧分析が利用できます。",
+      q: "多言語案内にも対応できますか？",
+      a: "1施設内でページを分けて多言語案内を作成できます。ノード連携を使うと入口ページから言語別に遷移させられます。",
     },
     {
-      q: "デザイン知識がなくても使えますか？",
-      a: "問題ありません。ブロックを追加し、テキストや色を編集するだけで見栄えの良いページを作れます。",
+      q: "無料から有料に切り替えるタイミングは？",
+      a: "まず無料で運用開始し、公開ページ数や導線連携が必要になった段階でProへ切り替える運用が一般的です。",
     },
   ];
 
@@ -505,12 +505,20 @@ export default function Home() {
               </ul>
             </article>
             <article className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Pro</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Pro</p>
+                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  おすすめ
+                </span>
+              </div>
               <p className="mt-2 text-4xl font-bold text-slate-900">
                 {proMonthlyPriceLabel}
                 <span className="ml-1 text-base font-semibold text-slate-700">/ 月</span>
               </p>
               <p className="mt-1 text-xs text-slate-500">税込・Stripe決済・いつでも解約可能</p>
+              <p className="mt-1 rounded-lg border border-emerald-200 bg-white/70 px-2 py-1 text-[11px] font-medium text-emerald-800">
+                初期費用0円 / 契約縛りなし / 必要になった時だけアップグレード
+              </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>・公開ページ上限を拡張</li>
                 <li>・ノードマップで複数ページ連携</li>
@@ -646,8 +654,8 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_16px_30px_-20px_rgba(2,6,23,0.55)] backdrop-blur">
           <p className="hidden text-xs font-semibold text-slate-600 sm:block">ホテル案内を今すぐ公開</p>
           <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
-            <a href="#pricing" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-              料金
+            <a href="#templates" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+              テンプレ例
             </a>
             <Link href="/login?ref=lp-sticky" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
               ログイン
@@ -657,6 +665,15 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="fixed right-3 top-3 z-40 sm:right-4 sm:top-4">
+        <Link
+          href="/login?ref=lp-sticky"
+          className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
+        >
+          無料で始める
+        </Link>
       </div>
     </main>
   );

@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import AppToast from "@/components/app-toast";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/components/auth-provider";
 import {
@@ -180,6 +181,14 @@ function collectPublishCheckIssues(
   pageStatusBySlug: Map<string, Information["status"]>,
 ): PublishCheckIssue[] {
   const issues: PublishCheckIssue[] = [];
+  const isValidHttpUrl = (value: string): boolean => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
 
   if (!currentItem.title.trim()) {
     issues.push({ level: "error", message: "ページタイトルを入力してください。", target: "pageTitle" });
@@ -237,6 +246,52 @@ function collectPublishCheckIssues(
     issues.push({ level: "error", message: "本文ブロックが空です。最低1つ入力してください。", target: "blocks" });
   }
 
+  const serializedText = currentItem.contentBlocks
+    .flatMap((block) => {
+      if (block.type === "title" || block.type === "heading" || block.type === "paragraph" || block.type === "quote") {
+        return [block.text ?? ""];
+      }
+      if (block.type === "section") {
+        return [block.sectionTitle ?? "", block.sectionBody ?? ""];
+      }
+      if (block.type === "columns") {
+        return [block.leftTitle ?? "", block.leftText ?? "", block.rightTitle ?? "", block.rightText ?? ""];
+      }
+      if (block.type === "hours") {
+        return (block.hoursItems ?? []).flatMap((entry) => [entry.label ?? "", entry.value ?? ""]);
+      }
+      if (block.type === "cta") {
+        return [block.ctaLabel ?? "", block.ctaUrl ?? ""];
+      }
+      if (block.type === "iconRow") {
+        return (block.iconItems ?? []).flatMap((entry) => [entry.label ?? "", entry.link ?? ""]);
+      }
+      return [];
+    })
+    .join("\n");
+  const contactPattern = /(?:\+?\d[\d\-()\s]{8,}\d)|(?:@)|(?:tel:)|(?:連絡|お問い合わせ|フロント|電話)/i;
+  const hasContactInfo = contactPattern.test(serializedText);
+  if (!hasContactInfo) {
+    issues.push({
+      level: "warning",
+      message: "連絡先情報（電話番号・メール等）が見つかりません。緊急連絡先の記載を推奨します。",
+      target: "blocks",
+    });
+  }
+
+  const hasHoursCompleteRow = currentItem.contentBlocks.some(
+    (block) =>
+      block.type === "hours" &&
+      (block.hoursItems ?? []).some((entry) => (entry.label ?? "").trim() && (entry.value ?? "").trim()),
+  );
+  if (!hasHoursCompleteRow) {
+    issues.push({
+      level: "warning",
+      message: "営業時間ブロックが未設定です。受付時間・利用時間の記載を推奨します。",
+      target: "blocks",
+    });
+  }
+
   if (currentItem.publishAt && currentItem.unpublishAt) {
     const publishAtMs = new Date(currentItem.publishAt).getTime();
     const unpublishAtMs = new Date(currentItem.unpublishAt).getTime();
@@ -274,6 +329,17 @@ function collectPublishCheckIssues(
     }
 
     if (block.type !== "iconRow") {
+      if (block.type === "cta") {
+        const ctaUrl = (block.ctaUrl ?? "").trim();
+        if (ctaUrl && !isValidHttpUrl(ctaUrl) && !ctaUrl.startsWith("/p/")) {
+          issues.push({
+            level: "error",
+            message: `${blockIndex + 1}.CTA: URL形式が不正です（http(s) または /p/slug）。`,
+            target: "blocks",
+            blockId: block.id,
+          });
+        }
+      }
       return;
     }
 
@@ -318,8 +384,17 @@ function collectPublishCheckIssues(
 
       if (!/^https?:\/\//i.test(link)) {
         issues.push({
-          level: PUBLISH_CHECK_SEVERITY.invalidExternalUrlFormat,
-          message: `${rowLabel}: 外部リンクは http(s) で始めることを推奨します。`,
+          level: "error",
+          message: `${rowLabel}: 外部リンク形式が不正です（http(s) で始めてください）。`,
+          target: "blocks",
+          blockId: block.id,
+        });
+        return;
+      }
+      if (!isValidHttpUrl(link)) {
+        issues.push({
+          level: "error",
+          message: `${rowLabel}: URLが無効です。形式を確認してください。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -2036,6 +2111,20 @@ export default function EditorPage() {
     } catch {
       setNoticeKind("error");
       setNotice("URLコピーに失敗しました");
+    }
+  }
+
+  async function onCopyQrUrl() {
+    if (!qrPublicUrl) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(qrPublicUrl);
+      setNoticeKind("success");
+      setNotice("QR用URLをコピーしました");
+    } catch {
+      setNoticeKind("error");
+      setNotice("QR用URLのコピーに失敗しました");
     }
   }
 
@@ -5588,6 +5677,42 @@ function onUpdateIconRowItem(
                       <p>開始: {formatSchedule(item.publishAt)}</p>
                       <p className="mt-1">終了: {formatSchedule(item.unpublishAt)}</p>
                     </div>
+                    {item.status === "published" && (
+                      <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+                        <p className="text-xs font-semibold text-emerald-900">公開後の次アクション</p>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                          <button
+                            type="button"
+                            onClick={() => void onCopyUrl()}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            1. 公開URLをコピー
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void onCopyQrUrl()}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            2. QR用URLをコピー
+                          </button>
+                          <a
+                            href={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrPublicUrl)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-center text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            3. QR画像を開く
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => router.push("/dashboard?tab=dashboard")}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            4. スタッフ共有へ進む
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </article>
                 </section>
 
@@ -5688,27 +5813,14 @@ function onUpdateIconRowItem(
             </>
           )}
         </div>
-        {notice && (
-          <div className="pointer-events-none fixed bottom-5 right-5 z-50">
-            <div
-              onAnimationEnd={() => {
-                if (noticeKind === "success") {
-                  setNotice("");
-                }
-              }}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur ${
-                noticeKind === "success"
-                  ? "toast-slide-in-out border-emerald-200 bg-emerald-50/95 text-emerald-900"
-                  : "border-rose-200 bg-rose-50/95 text-rose-900"
-              }`}
-            >
-              <span className="text-base leading-none">
-                {noticeKind === "success" ? "✓" : "!"}
-              </span>
-              <span>{notice}</span>
-            </div>
-          </div>
-        )}
+        {notice ? (
+          <AppToast
+            kind={noticeKind}
+            message={notice}
+            onClose={() => setNotice("")}
+            durationMs={5000}
+          />
+        ) : null}
       </main>
     </AuthGate>
   );

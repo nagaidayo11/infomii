@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/components/auth-provider";
+import AppToast from "@/components/app-toast";
 import {
   buildPublicUrl,
   createBlankInformation,
@@ -36,7 +37,7 @@ import {
   updateInformation,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
-import { INDUSTRY_PRESET_LABELS, type IndustryPreset, starterTemplates } from "@/lib/templates";
+import { INDUSTRY_PRESET_LABELS, type IndustryPreset, type StarterTemplate, starterTemplates } from "@/lib/templates";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("ja-JP", {
@@ -113,6 +114,111 @@ function getTemplateBlockLabel(type: string): string {
   return "ブロック";
 }
 
+type TemplatePurposeFilter = "all" | "checkin" | "facility" | "breakfast" | "bath";
+
+const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
+  all: "すべて",
+  checkin: "チェックイン",
+  facility: "館内案内",
+  breakfast: "朝食",
+  bath: "温浴",
+};
+
+function detectTemplatePurposes(template: StarterTemplate): TemplatePurposeFilter[] {
+  const text = `${template.title}\n${template.body}`.toLowerCase();
+  const purposes = new Set<TemplatePurposeFilter>();
+
+  if (
+    text.includes("チェックイン") ||
+    text.includes("チェックアウト") ||
+    text.includes("深夜到着") ||
+    text.includes("セルフチェックイン")
+  ) {
+    purposes.add("checkin");
+  }
+  if (
+    text.includes("館内") ||
+    text.includes("設備") ||
+    text.includes("wi-fi") ||
+    text.includes("アクセス") ||
+    text.includes("案内")
+  ) {
+    purposes.add("facility");
+  }
+  if (
+    text.includes("朝食") ||
+    text.includes("お食事") ||
+    text.includes("レストラン") ||
+    text.includes("メニュー")
+  ) {
+    purposes.add("breakfast");
+  }
+  if (
+    text.includes("大浴場") ||
+    text.includes("貸切風呂") ||
+    text.includes("温泉") ||
+    text.includes("風呂") ||
+    text.includes("スパ")
+  ) {
+    purposes.add("bath");
+  }
+
+  if (purposes.size === 0) {
+    purposes.add("facility");
+  }
+
+  return Array.from(purposes);
+}
+
+function estimateTemplateInputCount(template: StarterTemplate): number {
+  const blocks = template.blocks ?? [];
+  if (blocks.length === 0) {
+    const lines = template.body.split("\n").map((line) => line.trim()).filter(Boolean);
+    return Math.max(3, Math.min(12, lines.length));
+  }
+
+  let count = 0;
+  for (const block of blocks) {
+    if (block.type === "title" || block.type === "heading" || block.type === "paragraph" || block.type === "section") {
+      count += 1;
+      continue;
+    }
+    if (block.type === "iconRow") {
+      count += Math.max(1, block.iconItems?.length ?? 0);
+      continue;
+    }
+    if (block.type === "hours") {
+      count += Math.max(1, block.hoursItems?.length ?? 0);
+      continue;
+    }
+    if (block.type === "pricing") {
+      count += Math.max(1, block.pricingItems?.length ?? 0);
+      continue;
+    }
+    if (block.type === "checklist") {
+      count += Math.max(1, block.checklistItems?.length ?? 0);
+      continue;
+    }
+    if (block.type === "gallery") {
+      count += Math.max(1, block.galleryItems?.length ?? 0);
+      continue;
+    }
+    if (block.type === "columnGroup") {
+      count += Math.max(1, block.columnGroupItems?.length ?? 0);
+      continue;
+    }
+    count += 1;
+  }
+
+  return Math.max(3, Math.min(24, count));
+}
+
+function estimateTemplateViewSeconds(template: StarterTemplate, inputCount: number): number {
+  const textLength = `${template.title}\n${template.body}`.replace(/\s+/g, "").length;
+  const seconds = Math.round(12 + inputCount * 2.6 + textLength / 22);
+  return Math.max(18, Math.min(90, seconds));
+}
+
 function StatCard({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <article className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 backdrop-blur shadow-[0_4px_12px_-10px_rgba(15,23,42,0.22)]">
@@ -164,6 +270,7 @@ type PendingDeleteBatch = {
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
+const CREATE_GUIDE_DISMISSED_KEY = "dashboard-create-guide-dismissed-v1";
 const OPS_OWNER_EMAILS = new Set([
   "nagai9_119@ezweb.ne.jp",
   "nagaisoccer@gmail.com",
@@ -210,8 +317,10 @@ export default function DashboardPage() {
   const [projectSearch, setProjectSearch] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<ProjectStatusFilter>("all");
   const [industryFilter, setIndustryFilter] = useState<IndustryPreset | "all">("all");
+  const [purposeFilter, setPurposeFilter] = useState<TemplatePurposeFilter>("all");
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
+  const [showCreateGuide, setShowCreateGuide] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
@@ -556,9 +665,17 @@ export default function DashboardPage() {
     () => {
       const q = quickSearch.trim().toLowerCase();
       return starterTemplates
-        .map((template, originalIndex) => ({ template, originalIndex }))
-        .filter(({ template }) => {
+        .map((template, originalIndex) => {
+          const purposes = detectTemplatePurposes(template);
+          const inputCount = estimateTemplateInputCount(template);
+          const viewSeconds = estimateTemplateViewSeconds(template, inputCount);
+          return { template, originalIndex, purposes, inputCount, viewSeconds };
+        })
+        .filter(({ template, purposes }) => {
         if (industryFilter !== "all" && template.industry !== industryFilter) {
+          return false;
+        }
+        if (purposeFilter !== "all" && !purposes.includes(purposeFilter)) {
           return false;
         }
         if (!q) {
@@ -570,7 +687,7 @@ export default function DashboardPage() {
         );
       });
     },
-    [quickSearch, industryFilter],
+    [quickSearch, industryFilter, purposeFilter],
   );
   const recommendedTemplateByIndustry = useMemo(() => {
     const map = new Map<IndustryPreset, number>();
@@ -667,6 +784,13 @@ export default function DashboardPage() {
     }
     window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
   }, [favoriteTemplateIndices]);
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const dismissed = window.localStorage.getItem(CREATE_GUIDE_DISMISSED_KEY) === "1";
+    setShowCreateGuide(!dismissed);
+  }, []);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -735,6 +859,26 @@ export default function DashboardPage() {
   );
   const normalizedProjectName = useMemo(() => normalizeProjectName(newProjectName), [newProjectName]);
   const canCreateProject = normalizedProjectName.length >= 2;
+  const week1Snapshot = useMemo(() => {
+    const lpRate = onboardingFunnel?.lpToSignupRate ?? 0;
+    const views = viewMetrics?.totalViews7d ?? 0;
+    const publishedPages = published.length;
+    const score =
+      (lpRate >= 20 ? 1 : 0) +
+      (views >= 50 ? 1 : 0) +
+      (publishedPages >= 3 ? 1 : 0);
+    const level = score >= 3 ? "good" : score === 2 ? "mid" : "low";
+    return { lpRate, views, publishedPages, score, level };
+  }, [onboardingFunnel, viewMetrics, published.length]);
+  const lpOptimizationTip = useMemo(() => {
+    if (week1Snapshot.lpRate >= 20) {
+      return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
+    }
+    if ((onboardingFunnel?.lpAttributedLogins ?? 0) === 0) {
+      return "LP ref付き流入が未計測です。SNS投稿リンクを /login?ref=lp-hero 付きで統一してください。";
+    }
+    return "LP→登録率が20%未満です。ヒーロー見出しとCTA文言をホテル業務課題にさらに寄せるのが有効です。";
+  }, [onboardingFunnel?.lpAttributedLogins, week1Snapshot.lpRate]);
 
   async function onCreateFromTemplate(templateIndex: number) {
     try {
@@ -930,23 +1074,18 @@ export default function DashboardPage() {
     };
   }, [pendingDeleteBatches.length]);
 
-  useEffect(() => {
-    if (!success) {
-      return;
-    }
-    const timerId = window.setTimeout(() => {
-      setSuccess(null);
-    }, 5000);
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  }, [success]);
-
   function dismissQuickStart() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(QUICKSTART_DISMISSED_KEY, "1");
     }
     setShowQuickStart(false);
+  }
+
+  function dismissCreateGuide() {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CREATE_GUIDE_DISMISSED_KEY, "1");
+    }
+    setShowCreateGuide(false);
   }
 
   async function onRunRecovery(action: "ensure_scope" | "sync_subscription") {
@@ -1126,24 +1265,6 @@ export default function DashboardPage() {
           </header>
           )}
 
-          {error && (
-            <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-900">
-              <p>{error}</p>
-              {(error.toLowerCase().includes("row-level security") || error.includes("施設所属")) && (
-                <button
-                  type="button"
-                  onClick={() => void onRunRecovery("ensure_scope")}
-                  disabled={recoveringAction !== null}
-                  className="mt-2 rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-800 hover:bg-rose-50 disabled:opacity-60"
-                >
-                  {recoveringAction === "ensure_scope" ? "復旧中..." : "施設所属を再同期する"}
-                </button>
-              )}
-            </div>
-          )}
-          {success && (
-            <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">{success}</div>
-          )}
           {pendingDeleteBatches.length > 0 && (
             <div className="fixed bottom-5 right-5 z-50 space-y-2">
               {pendingDeleteBatches.map((batch) => (
@@ -1427,7 +1548,55 @@ export default function DashboardPage() {
                     ),
                   )}
                 </div>
+                <div className="mx-auto mt-2 flex max-w-5xl flex-wrap justify-center gap-1.5">
+                  {(Object.entries(TEMPLATE_PURPOSE_LABELS) as Array<[TemplatePurposeFilter, string]>).map(
+                    ([key, label]) => (
+                      <button
+                        key={`purpose-${key}`}
+                        type="button"
+                        onClick={() => setPurposeFilter(key)}
+                        className={`rounded-full border px-3 py-1 text-xs ${
+                          purposeFilter === key
+                            ? "border-cyan-400 bg-cyan-100 text-cyan-900"
+                            : "border-slate-300 bg-white/90 text-slate-700 hover:bg-white"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ),
+                  )}
+                </div>
               </div>
+
+              {showCreateGuide && (
+                <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">初回ガイド（3ステップ）</p>
+                      <p className="mt-1 text-sm text-slate-700">初回はこの順で進めると最短で公開できます。</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={dismissCreateGuide}
+                      className="rounded-md border border-cyan-300 bg-white px-2 py-1 text-xs text-cyan-800 hover:bg-cyan-50"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {[
+                      ["1. 目的で絞る", "チェックイン/館内案内などでテンプレを絞り込み"],
+                      ["2. テンプレ選択", "想定表示時間と必要入力項目数を見て選択"],
+                      ["3. 編集して公開", "不足項目を入力してURL/QRを配布"],
+                    ].map(([title, desc]) => (
+                      <div key={title} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-sm font-semibold text-slate-900">{title}</p>
+                        <p className="mt-1 text-xs text-slate-600">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              )}
 
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1451,7 +1620,7 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
                       </div>
                       <div className="grid gap-3 lg:grid-cols-3">
-                        {group.entries.map(({ template, originalIndex }) => (
+                        {group.entries.map(({ template, originalIndex, purposes, inputCount, viewSeconds }) => (
                           <article
                             key={`${template.title}-${originalIndex}`}
                             role="button"
@@ -1496,6 +1665,20 @@ export default function DashboardPage() {
                                 おすすめ
                               </p>
                             )}
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {purposes.slice(0, 2).map((purpose) => (
+                                <span
+                                  key={`${template.title}-${purpose}`}
+                                  className="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold text-cyan-800"
+                                >
+                                  {TEMPLATE_PURPOSE_LABELS[purpose]}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                              <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">想定表示時間: 約{viewSeconds}秒</p>
+                              <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">必要入力: {inputCount}項目</p>
+                            </div>
                             <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
                               {template.body}
                             </p>
@@ -1526,6 +1709,14 @@ export default function DashboardPage() {
                       <h3 className="mt-1 text-sm font-semibold text-slate-900">
                         {activeTemplatePreviewEntry.template.title}
                       </h3>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                        <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+                          想定表示時間: 約{activeTemplatePreviewEntry.viewSeconds}秒
+                        </p>
+                        <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+                          必要入力: {activeTemplatePreviewEntry.inputCount}項目
+                        </p>
+                      </div>
                       {(() => {
                         const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
                         if (!previewImage) {
@@ -2237,6 +2428,35 @@ export default function DashboardPage() {
                   </article>
 
                   <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
+                    <h2 className="text-lg font-semibold">Week1結果サマリー</h2>
+                    <p className="mt-1 text-sm text-slate-600">初週のKPI進捗を3指標で確認します。</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">LP→登録率</p>
+                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.lpRate}%</p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">7日閲覧数</p>
+                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.views}</p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">公開ページ数</p>
+                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.publishedPages}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-600">
+                      判定:{" "}
+                      <span className={`font-semibold ${week1Snapshot.level === "good" ? "text-emerald-700" : week1Snapshot.level === "mid" ? "text-amber-700" : "text-rose-700"}`}>
+                        {week1Snapshot.level === "good" ? "順調" : week1Snapshot.level === "mid" ? "改善余地あり" : "優先改善が必要"}
+                      </span>{" "}
+                      （{week1Snapshot.score}/3）
+                    </p>
+                    <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-2 text-xs text-cyan-900">
+                      改善提案: {lpOptimizationTip}
+                    </p>
+                  </article>
+
+                  <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
                     <div>
                       <h2 className="text-lg font-semibold">監査ログ</h2>
                       <p className="mt-1 text-sm text-slate-600">
@@ -2284,6 +2504,28 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        {(error || success) && (
+          <AppToast
+            kind={error ? "error" : "success"}
+            message={error ?? success ?? ""}
+            onClose={() => {
+              setError(null);
+              setSuccess(null);
+            }}
+            action={
+              error && (error.toLowerCase().includes("row-level security") || error.includes("施設所属")) ? (
+                <button
+                  type="button"
+                  onClick={() => void onRunRecovery("ensure_scope")}
+                  disabled={recoveringAction !== null}
+                  className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-800 hover:bg-rose-50 disabled:opacity-60"
+                >
+                  {recoveringAction === "ensure_scope" ? "復旧中..." : "施設所属を再同期する"}
+                </button>
+              ) : undefined
+            }
+          />
+        )}
       </main>
     </AuthGate>
   );
