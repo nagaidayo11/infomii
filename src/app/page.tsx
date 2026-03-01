@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import LpRevealObserver from "@/components/lp-reveal-observer";
 
 export default function Home() {
@@ -26,6 +27,27 @@ export default function Home() {
     {
       title: "サロン・クリニック",
       items: ["予約導線", "施術前後の案内", "アクセス・連絡先"],
+    },
+  ];
+
+  const templatePreviews = [
+    {
+      title: "ビジネスホテル案内",
+      subtitle: "チェックイン・館内導線",
+      image: "/templates/hotel-business.svg",
+      points: ["Wi-Fi / 駐車場", "チェックイン情報", "フロント連絡ボタン"],
+    },
+    {
+      title: "飲食店の営業案内",
+      subtitle: "営業時間・予約導線",
+      image: "/templates/restaurant.svg",
+      points: ["営業時間", "メニュー", "予約ボタン"],
+    },
+    {
+      title: "サロン来店前ガイド",
+      subtitle: "予約変更・施術前案内",
+      image: "/templates/salon.svg",
+      points: ["施術前準備", "遅刻連絡", "予約変更導線"],
     },
   ];
 
@@ -121,6 +143,9 @@ export default function Home() {
               INFOMII
             </p>
             <nav className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+              <a href="#templates" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                テンプレ例
+              </a>
               <a href="#features" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
                 機能
               </a>
@@ -219,6 +244,42 @@ export default function Home() {
               </ul>
             </article>
           ))}
+        </section>
+
+        <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">こんなのが作れます</h2>
+            <p className="text-sm text-slate-600">テンプレを選んで、すぐに編集スタート</p>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {templatePreviews.map((template, index) => (
+              <article
+                key={template.title}
+                className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                style={{ transitionDelay: `${180 + index * 70}ms` }}
+              >
+                <div className="border-b border-slate-200 bg-slate-50 p-2">
+                  <Image
+                    src={template.image}
+                    alt={template.title}
+                    width={800}
+                    height={450}
+                    className="h-40 w-full rounded-lg object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div className="p-4">
+                  <p className="text-xs font-semibold text-emerald-700">{template.subtitle}</p>
+                  <h3 className="mt-1 text-base font-semibold text-slate-900">{template.title}</h3>
+                  <ul className="mt-3 space-y-1 text-sm text-slate-700">
+                    {template.points.map((point) => (
+                      <li key={`${template.title}-${point}`}>・{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
