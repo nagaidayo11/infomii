@@ -1,5 +1,10 @@
 import type { User } from "@supabase/supabase-js";
 
+const FIXED_OPS_ADMIN_EMAILS = new Set([
+  "nagai9_119@ezweb.ne.jp",
+  "nagaisoccer@gmail.com",
+]);
+
 function readAdminEmails(): string[] {
   return (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
     .split(",")
@@ -16,6 +21,9 @@ export function isOpsAdminUser(user: User): boolean {
   const email = user.email?.trim().toLowerCase() ?? "";
   if (!email) {
     return false;
+  }
+  if (FIXED_OPS_ADMIN_EMAILS.has(email)) {
+    return true;
   }
   return readAdminEmails().includes(email);
 }
