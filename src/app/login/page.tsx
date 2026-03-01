@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { trackOnboardingAuthEvent } from "@/lib/storage";
 import { useAuth } from "@/components/auth-provider";
 
 export default function LoginPage() {
@@ -18,6 +19,14 @@ export default function LoginPage() {
     requestedNext && requestedNext.startsWith("/")
       ? requestedNext
       : "/dashboard?tab=create";
+  const requestedRef =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("ref")
+      : null;
+  const sourceRef =
+    requestedRef === "lp-hero" || requestedRef === "lp-sticky" || requestedRef === "lp-bottom"
+      ? requestedRef
+      : null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,6 +57,8 @@ export default function LoginPage() {
       return;
     }
 
+    await trackOnboardingAuthEvent("login_success", sourceRef);
+
     setSubmitting(false);
     router.replace(next);
   }
@@ -68,6 +79,8 @@ export default function LoginPage() {
       setSubmitting(false);
       return;
     }
+
+    await trackOnboardingAuthEvent("signup_completed", sourceRef);
 
     setSubmitting(false);
     setMessage("登録しました。確認メール設定が有効な場合はメールをご確認ください。");

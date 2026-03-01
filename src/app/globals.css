@@ -233,6 +233,24 @@ a {
   animation: inline-pop-in-out 0.9s ease both;
 }
 
+.template-preview-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.template-preview-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.template-preview-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.template-preview-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.55);
+}
+
 @keyframes node-pop {
   0% {
     opacity: 0;

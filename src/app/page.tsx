@@ -5,14 +5,17 @@ import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
 
 function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
-  const previewBlocks = (blocks ?? []).slice(0, 9);
+  const previewBlocks = (blocks ?? []).slice(0, 18);
   if (previewBlocks.length === 0) {
     return <div className="h-64 rounded-xl border border-slate-200 bg-slate-50" />;
   }
 
   return (
-    <div className="h-64 overflow-hidden rounded-xl border border-slate-200 bg-white p-3">
-      <div className="space-y-2">
+    <div className="relative h-64 overflow-hidden rounded-xl border border-slate-200 bg-white p-3">
+      <p className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+        スクロールで詳細
+      </p>
+      <div className="template-preview-scroll h-full space-y-2 overflow-y-auto pr-1 pb-8">
         {previewBlocks.map((block) => {
           if (block.type === "title" || block.type === "heading") {
             return (
@@ -23,7 +26,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
           }
           if (block.type === "paragraph") {
             return (
-              <p key={block.id} className="line-clamp-2 text-xs leading-5 text-slate-700">
+              <p key={block.id} className="line-clamp-4 text-xs leading-5 text-slate-700">
                 {block.text || ""}
               </p>
             );
@@ -57,7 +60,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
             const items = block.type === "hours" ? block.hoursItems ?? [] : block.pricingItems ?? [];
             return (
               <div key={block.id} className="rounded-md border border-slate-200 bg-slate-50 p-2">
-                {items.slice(0, 3).map((entry) => (
+                {items.slice(0, 6).map((entry) => (
                   <div key={entry.id} className="flex items-center justify-between gap-2 text-[11px] text-slate-700">
                     <span className="truncate">{entry.label || "-"}</span>
                     <span className="shrink-0 font-medium">{entry.value || "-"}</span>
@@ -70,7 +73,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
             return (
               <div key={block.id} className="rounded-md border border-slate-200 bg-slate-50 p-2">
                 <p className="text-[11px] font-semibold text-slate-800">{block.sectionTitle || "セクション"}</p>
-                <p className="line-clamp-2 text-[10px] text-slate-600">{block.sectionBody || ""}</p>
+                <p className="line-clamp-4 text-[10px] text-slate-600">{block.sectionBody || ""}</p>
               </div>
             );
           }
@@ -323,11 +326,11 @@ export default function Home() {
               </div>
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
-                <Link href="/login" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
+                <Link href="/login?ref=lp-hero" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
                   無料でホテル案内を作成
                 </Link>
                 <Link
-                  href="/login"
+                  href="/login?ref=lp-hero"
                   className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
                 >
                   ログイン
@@ -514,7 +517,7 @@ export default function Home() {
                 <li>・運用管理機能</li>
               </ul>
               <Link
-                href="/login"
+                href="/login?ref=lp-bottom"
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
                 無料登録してProを試す
@@ -586,7 +589,7 @@ export default function Home() {
               <p className="text-xs font-semibold text-emerald-700">最短スタート</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
               <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
-              <Link href="/login" className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+              <Link href="/login?ref=lp-bottom" className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
                 無料でホテル案内を作成
               </Link>
             </aside>
@@ -601,7 +604,7 @@ export default function Home() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/login"
+              href="/login?ref=lp-bottom"
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
               無料でホテル案内を作成
@@ -631,7 +634,7 @@ export default function Home() {
               <Link className="hover:underline" href="/refund">
                 返金・キャンセルポリシー
               </Link>
-              <Link className="hover:underline" href="/login">
+              <Link className="hover:underline" href="/login?ref=lp-bottom">
                 ログイン
               </Link>
             </div>
@@ -646,10 +649,10 @@ export default function Home() {
             <a href="#pricing" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
               料金
             </a>
-            <Link href="/login" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
+            <Link href="/login?ref=lp-sticky" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
               ログイン
             </Link>
-            <Link href="/login" className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
+            <Link href="/login?ref=lp-sticky" className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
               無料で作成
             </Link>
           </div>

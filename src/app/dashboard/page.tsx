@@ -18,12 +18,14 @@ import {
   getInformation,
   getCurrentHotelSubscription,
   getCurrentHotelViewMetrics,
+  getOnboardingFunnel7d,
   getOpsHealthSnapshot,
   listCurrentHotelAuditLogs,
   runOpsRecoveryAction,
   runOpsAlertTest,
   trackUpgradeClick,
   type HotelAuditLog,
+  type OnboardingFunnel7d,
   type HotelSubscription,
   type HotelViewMetrics,
   type OpsHealthSnapshot,
@@ -186,8 +188,10 @@ export default function DashboardPage() {
   const [creatingCheckout, setCreatingCheckout] = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);
+  const [onboardingFunnel, setOnboardingFunnel] = useState<OnboardingFunnel7d | null>(null);
   const [auditLogs, setAuditLogs] = useState<HotelAuditLog[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [loadingOnboardingFunnel, setLoadingOnboardingFunnel] = useState(false);
   const [loadingAuditLogs, setLoadingAuditLogs] = useState(false);
   const [loadingOpsHealth, setLoadingOpsHealth] = useState(false);
   const [opsHealth, setOpsHealth] = useState<OpsHealthSnapshot | null>(null);
@@ -313,6 +317,37 @@ export default function DashboardPage() {
           return;
         }
         setLoadingMetrics(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+    let mounted = true;
+    setLoadingOnboardingFunnel(true);
+    void getOnboardingFunnel7d()
+      .then((funnel) => {
+        if (!mounted) {
+          return;
+        }
+        setOnboardingFunnel(funnel);
+      })
+      .catch((e) => {
+        if (!mounted) {
+          return;
+        }
+        setError(e instanceof Error ? e.message : "オンボーディング指標の取得に失敗しました");
+      })
+      .finally(() => {
+        if (!mounted) {
+          return;
+        }
+        setLoadingOnboardingFunnel(false);
       });
 
     return () => {
@@ -2170,6 +2205,38 @@ export default function DashboardPage() {
                           まだ閲覧データがありません。
                         </p>
                       )}
+                    </div>
+                  </article>
+
+                  <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
+                    <h2 className="text-lg font-semibold">LP→登録ファネル（直近7日）</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      refパラメータ（lp-hero / lp-sticky / lp-bottom）付き導線の集計です。
+                    </p>
+                    {loadingOnboardingFunnel && (
+                      <div className="mt-2 animate-pulse space-y-2">
+                        <div className="h-4 w-44 rounded ux-skeleton" />
+                      </div>
+                    )}
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">LP経由ログイン</p>
+                        <p className="mt-1 text-xl font-semibold text-slate-900">
+                          {onboardingFunnel?.lpAttributedLogins ?? 0}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">新規登録完了</p>
+                        <p className="mt-1 text-xl font-semibold text-slate-900">
+                          {onboardingFunnel?.signupCompleted ?? 0}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs text-slate-500">LP→登録率</p>
+                        <p className="mt-1 text-xl font-semibold text-emerald-700">
+                          {onboardingFunnel?.lpToSignupRate ?? 0}%
+                        </p>
+                      </div>
                     </div>
                   </article>
 

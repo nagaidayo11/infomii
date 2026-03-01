@@ -546,6 +546,12 @@ export type DashboardBootstrapData = {
   informations: Information[];
 };
 
+export type OnboardingFunnel7d = {
+  lpAttributedLogins: number;
+  signupCompleted: number;
+  lpToSignupRate: number;
+};
+
 async function appendAuditLog(params: {
   hotelId: string;
   action: string;
@@ -1710,6 +1716,110 @@ export async function trackUpgradeClick(context: "dashboard" | "editor"): Promis
     targetType: "subscription",
     metadata: { context },
   });
+}
+
+type OnboardingSourceRef = "lp-hero" | "lp-sticky" | "lp-bottom";
+type OnboardingAuthAction = "login_success" | "signup_completed";
+
+function toOnboardingSourceRef(value: string | null | undefined): OnboardingSourceRef | null {
+  if (!value) {
+    return null;
+  }
+  if (value === "lp-hero" || value === "lp-sticky" || value === "lp-bottom") {
+    return value;
+  }
+  return null;
+}
+
+export async function trackOnboardingAuthEvent(
+  action: OnboardingAuthAction,
+  sourceRef?: string | null,
+): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  const safeRef = toOnboardingSourceRef(sourceRef);
+  const actionName = `onboarding.${action}`;
+  const message =
+    action === "signup_completed"
+      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""}`
+      : `ログインしました${safeRef ? `（${safeRef}）` : ""}`;
+
+  await appendAuditLog({
+    hotelId,
+    action: actionName,
+    message,
+    targetType: "onboarding",
+    metadata: {
+      sourceRef: safeRef,
+      sourceType: safeRef?.startsWith("lp-") ? "lp" : "unknown",
+    },
+  });
+}
+
+export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return {
+      lpAttributedLogins: 0,
+      signupCompleted: 0,
+      lpToSignupRate: 0,
+    };
+  }
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return {
+      lpAttributedLogins: 0,
+      signupCompleted: 0,
+      lpToSignupRate: 0,
+    };
+  }
+
+  const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .select("action,metadata")
+    .eq("hotel_id", hotelId)
+    .in("action", ["onboarding.login_success", "onboarding.signup_completed"])
+    .gte("created_at", sinceIso);
+
+  if (error) {
+    throw toError(error, "オンボーディング指標の取得に失敗しました");
+  }
+
+  let lpAttributedLogins = 0;
+  let signupCompleted = 0;
+
+  for (const row of data ?? []) {
+    const metadata = row.metadata as Record<string, unknown> | null;
+    const sourceRef = toOnboardingSourceRef(
+      typeof metadata?.sourceRef === "string" ? metadata.sourceRef : null,
+    );
+
+    if (row.action === "onboarding.login_success" && sourceRef) {
+      lpAttributedLogins += 1;
+    }
+
+    if (row.action === "onboarding.signup_completed") {
+      signupCompleted += 1;
+    }
+  }
+
+  const lpToSignupRate =
+    lpAttributedLogins > 0 ? Math.round((signupCompleted / lpAttributedLogins) * 100) : 0;
+
+  return {
+    lpAttributedLogins,
+    signupCompleted,
+    lpToSignupRate,
+  };
 }
 
 export async function createStripeCheckoutSession(
