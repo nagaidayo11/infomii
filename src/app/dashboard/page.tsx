@@ -2127,6 +2127,33 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
+                  <div className="mt-3 rounded-md border border-cyan-200 bg-white p-3">
+                    <p className="text-xs font-semibold text-slate-700">Week1結果サマリー（運用者向け）</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                        <p className="text-xs text-slate-500">LP→登録率</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-900">{week1Snapshot.lpRate}%</p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                        <p className="text-xs text-slate-500">7日閲覧数</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-900">{week1Snapshot.views}</p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                        <p className="text-xs text-slate-500">公開ページ数</p>
+                        <p className="mt-1 text-lg font-semibold text-slate-900">{week1Snapshot.publishedPages}</p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-600">
+                      判定:{" "}
+                      <span className={`font-semibold ${week1Snapshot.level === "good" ? "text-emerald-700" : week1Snapshot.level === "mid" ? "text-amber-700" : "text-rose-700"}`}>
+                        {week1Snapshot.level === "good" ? "順調" : week1Snapshot.level === "mid" ? "改善余地あり" : "優先改善が必要"}
+                      </span>{" "}
+                      （{week1Snapshot.score}/3）
+                    </p>
+                    <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-2 text-xs text-cyan-900">
+                      改善提案: {lpOptimizationTip}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
@@ -2425,35 +2452,6 @@ export default function DashboardPage() {
                         </p>
                       )}
                     </div>
-                  </article>
-
-                  <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
-                    <h2 className="text-lg font-semibold">Week1結果サマリー</h2>
-                    <p className="mt-1 text-sm text-slate-600">初週のKPI進捗を3指標で確認します。</p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">LP→登録率</p>
-                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.lpRate}%</p>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">7日閲覧数</p>
-                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.views}</p>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">公開ページ数</p>
-                        <p className="mt-1 text-xl font-semibold text-slate-900">{week1Snapshot.publishedPages}</p>
-                      </div>
-                    </div>
-                    <p className="mt-3 text-xs text-slate-600">
-                      判定:{" "}
-                      <span className={`font-semibold ${week1Snapshot.level === "good" ? "text-emerald-700" : week1Snapshot.level === "mid" ? "text-amber-700" : "text-rose-700"}`}>
-                        {week1Snapshot.level === "good" ? "順調" : week1Snapshot.level === "mid" ? "改善余地あり" : "優先改善が必要"}
-                      </span>{" "}
-                      （{week1Snapshot.score}/3）
-                    </p>
-                    <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-2 text-xs text-cyan-900">
-                      改善提案: {lpOptimizationTip}
-                    </p>
                   </article>
 
                   <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
