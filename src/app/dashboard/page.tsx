@@ -164,6 +164,7 @@ type PendingDeleteBatch = {
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
+const OPS_OWNER_EMAIL = "nagai9_119@ezwe.ne.jp";
 
 function parseDashboardTab(value: string | null): DashboardTab | null {
   if (value === "dashboard" || value === "create" || value === "project" || value === "ops") {
@@ -219,18 +220,8 @@ export default function DashboardPage() {
   const [countdownNow, setCountdownNow] = useState<number>(Date.now());
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
-  const opsAdminEmails = useMemo(
-    () =>
-      (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
-        .split(",")
-        .map((entry) => entry.trim().toLowerCase())
-        .filter((entry) => entry.length > 0),
-    [],
-  );
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
-  const hasAdminRoleClaim =
-    user?.app_metadata?.role === "admin" || user?.user_metadata?.role === "admin";
-  const canAccessOps = hasAdminRoleClaim || (userEmail.length > 0 && opsAdminEmails.includes(userEmail));
+  const canAccessOps = userEmail.length > 0 && userEmail === OPS_OWNER_EMAIL;
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -325,7 +316,9 @@ export default function DashboardPage() {
   }, [loading]);
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !canAccessOps) {
+      setOnboardingFunnel(null);
+      setLoadingOnboardingFunnel(false);
       return;
     }
     let mounted = true;
@@ -353,7 +346,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [loading]);
+  }, [loading, canAccessOps]);
 
   useEffect(() => {
     if (loading || autoSyncedRenewalRef.current) {
@@ -1910,6 +1903,38 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/50 p-3">
+                  <p className="text-xs font-semibold text-cyan-900">LP→登録ファネル（直近7日）</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    refパラメータ（lp-hero / lp-sticky / lp-bottom）付き導線の集計です。
+                  </p>
+                  {loadingOnboardingFunnel && (
+                    <div className="mt-2 animate-pulse space-y-2">
+                      <div className="h-4 w-44 rounded ux-skeleton" />
+                    </div>
+                  )}
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP経由ログイン</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {onboardingFunnel?.lpAttributedLogins ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">新規登録完了</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {onboardingFunnel?.signupCompleted ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録率</p>
+                      <p className="mt-1 text-lg font-semibold text-emerald-700">
+                        {onboardingFunnel?.lpToSignupRate ?? 0}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-sm text-slate-700">{opsHealth?.billing.message ?? "データ取得中..."}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -2205,38 +2230,6 @@ export default function DashboardPage() {
                           まだ閲覧データがありません。
                         </p>
                       )}
-                    </div>
-                  </article>
-
-                  <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
-                    <h2 className="text-lg font-semibold">LP→登録ファネル（直近7日）</h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                      refパラメータ（lp-hero / lp-sticky / lp-bottom）付き導線の集計です。
-                    </p>
-                    {loadingOnboardingFunnel && (
-                      <div className="mt-2 animate-pulse space-y-2">
-                        <div className="h-4 w-44 rounded ux-skeleton" />
-                      </div>
-                    )}
-                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">LP経由ログイン</p>
-                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                          {onboardingFunnel?.lpAttributedLogins ?? 0}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">新規登録完了</p>
-                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                          {onboardingFunnel?.signupCompleted ?? 0}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">LP→登録率</p>
-                        <p className="mt-1 text-xl font-semibold text-emerald-700">
-                          {onboardingFunnel?.lpToSignupRate ?? 0}%
-                        </p>
-                      </div>
                     </div>
                   </article>
 
