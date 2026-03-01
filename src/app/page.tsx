@@ -236,6 +236,32 @@ export default function Home() {
     { item: "更新体験", free: "1ページ運用", pro: "ハブ導線で運用集約" },
   ];
 
+  const painSolutionRows = [
+    {
+      pain: "紙・PDF案内の差し替えが遅く、現場ごとに内容がズレる",
+      solution: "1つの編集画面で更新し、URL/QRをそのまま使い回し",
+      outcome: "全館一斉に最新案内へ更新",
+    },
+    {
+      pain: "深夜帯の問い合わせがフロントに集中する",
+      solution: "セルフチェックイン/連絡先/館内導線を1ページ集約",
+      outcome: "電話対応を減らし、案内の自己解決率を向上",
+    },
+    {
+      pain: "担当者しか更新できず、運用が属人化する",
+      solution: "テンプレとブロック編集で誰でも同品質で更新",
+      outcome: "引き継ぎしやすい運用体制を構築",
+    },
+  ];
+
+  const launchChecklist = [
+    "施設名・連絡先を入力",
+    "チェックイン/アウト情報を入力",
+    "館内設備・Wi-Fi・駐車場を反映",
+    "公開してURL/QRを配布",
+    "閲覧分析で反応を確認",
+  ];
+
   return (
     <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
       <LpRevealObserver />
@@ -402,6 +428,30 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">ホテル現場の課題を、運用導線で解決</h2>
+            <p className="text-sm text-slate-600">導入後すぐ実感しやすい改善ポイント</p>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 md:grid-cols-[1.1fr_1fr_0.9fr]">
+              <p className="px-4 py-3">よくある課題</p>
+              <p className="px-4 py-3">Infomiiでの対応</p>
+              <p className="px-4 py-3">期待できる変化</p>
+            </div>
+            {painSolutionRows.map((row, index) => (
+              <div
+                key={row.pain}
+                className={`grid grid-cols-1 text-sm md:grid-cols-[1.1fr_1fr_0.9fr] ${index < painSolutionRows.length - 1 ? "border-b border-slate-200" : ""}`}
+              >
+                <p className="px-4 py-3 text-slate-700">{row.pain}</p>
+                <p className="px-4 py-3 font-medium text-emerald-700">{row.solution}</p>
+                <p className="px-4 py-3 text-slate-900">{row.outcome}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">機能</h2>
@@ -516,6 +566,33 @@ export default function Home() {
           <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
         </section>
 
+        <section className="lux-card lp-reveal lp-delay-4 rounded-3xl border border-emerald-300 p-6 sm:p-8">
+          <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">公開までのチェックリスト</h2>
+              <p className="mt-2 text-sm text-slate-600">SNS流入ユーザーが迷わず始められるよう、初回作業を5項目に固定しています。</p>
+              <ol className="mt-4 space-y-2">
+                {launchChecklist.map((item, index) => (
+                  <li key={item} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                      {index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <aside className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
+              <p className="text-xs font-semibold text-emerald-700">最短スタート</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
+              <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
+              <Link href="/login" className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                無料でホテル案内を作成
+              </Link>
+            </aside>
+          </div>
+        </section>
+
         <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
           <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
           <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料で1ページ公開してみましょう</h2>
@@ -560,6 +637,23 @@ export default function Home() {
             </div>
           </div>
         </footer>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-3 z-40 px-3 sm:bottom-4">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_16px_30px_-20px_rgba(2,6,23,0.55)] backdrop-blur">
+          <p className="hidden text-xs font-semibold text-slate-600 sm:block">ホテル案内を今すぐ公開</p>
+          <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
+            <a href="#pricing" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+              料金
+            </a>
+            <Link href="/login" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
+              ログイン
+            </Link>
+            <Link href="/login" className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
+              無料で作成
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   );
