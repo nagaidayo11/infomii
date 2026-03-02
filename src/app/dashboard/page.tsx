@@ -1572,9 +1572,7 @@ export default function DashboardPage() {
   return (
     <AuthGate>
       <main
-        className={`lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_right,#86efac33_0%,#34d39926_24%,#ecfdf5_58%,#dcfce7_100%)] px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6 ${
-          activeTab === "dashboard" ? "lg:h-screen lg:overflow-hidden" : ""
-        }`}
+        className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_right,#86efac33_0%,#34d39926_24%,#ecfdf5_58%,#dcfce7_100%)] px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6"
       >
         <div className="mx-auto w-full max-w-[1820px] space-y-2">
           {activeTab === "dashboard" && (
