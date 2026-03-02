@@ -119,12 +119,12 @@ export default async function Home({ searchParams }: HomePageProps) {
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
   const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
-  const heroPrimaryCtaLabel = ctaVariant === "b" ? "30秒で無料スタート" : "無料でホテル案内を作成";
+  const heroPrimaryCtaLabel = "無料でホテル案内を作成";
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
     { label: "更新反映", value: "即時", sub: "現場変更をそのまま反映" },
-    { label: "導入業種", value: "5+", sub: "ホテル・飲食店・サロンなど" },
+    { label: "対象運用", value: "ホテル特化", sub: "館内案内・温浴案内・客室導線" },
     { label: "運用導線", value: "1QR", sub: "入口ページから案内を集約" },
   ];
 
@@ -138,8 +138,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       items: ["アクティビティ案内", "プール・スパ案内", "滞在中の導線集約"],
     },
     {
-      title: "旅館",
-      items: ["お食事処の案内", "大浴場・貸切風呂案内", "館内ルールの共有"],
+      title: "温浴併設ホテル",
+      items: ["大浴場・貸切風呂案内", "混雑時の誘導案内", "利用ルールの共有"],
     },
   ];
 
@@ -161,20 +161,50 @@ export default async function Home({ searchParams }: HomePageProps) {
       points: ["本人確認/入室導線", "緊急連絡先", "夜間運用ルール"],
     },
     {
-      title: "リゾート滞在案内",
-      subtitle: "アクティビティ導線",
+      title: "館内設備ガイド",
+      subtitle: "フロア・設備案内",
       template:
-        starterTemplates.find((entry) => entry.title === "【リゾートホテル】滞在アクティビティ案内") ??
-        starterTemplates[2],
-      points: ["体験予約導線", "雨天時の案内", "滞在プログラム共有"],
+        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
+        starterTemplates[0],
+      points: ["フロアマップ", "設備利用時間", "問い合わせ導線"],
     },
     {
-      title: "旅館の浴場案内",
+      title: "浴場利用ガイド",
       subtitle: "大浴場・貸切風呂",
       template:
         starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
         starterTemplates[3],
       points: ["利用時間", "貸切予約方法", "注意事項"],
+    },
+  ];
+
+  const publicExamples = [
+    {
+      title: "チェックイン案内ページ",
+      tag: "フロント導線",
+      template:
+        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
+        starterTemplates[0],
+      bullets: ["到着直後の案内を1画面に集約", "深夜到着でも自己解決しやすい導線"],
+      publishPath: "/p/demo-checkin",
+    },
+    {
+      title: "温浴利用ガイドページ",
+      tag: "温浴導線",
+      template:
+        starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
+        starterTemplates[3],
+      bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化"],
+      publishPath: "/p/demo-bath",
+    },
+    {
+      title: "館内設備ページ",
+      tag: "設備導線",
+      template:
+        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
+        starterTemplates[1],
+      bullets: ["Wi-Fi / 駐車場 / 自販機を整理", "客室問い合わせの削減に寄与"],
+      publishPath: "/p/demo-facility",
     },
   ];
 
@@ -388,7 +418,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               className="lux-card lux-section-card lp-reveal rounded-2xl p-5"
               style={{ transitionDelay: `${220 + index * 90}ms` }}
             >
-              <p className="text-xs font-semibold text-emerald-700">導入業種</p>
+              <p className="text-xs font-semibold text-emerald-700">導入シーン</p>
               <h2 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h2>
               <ul className="mt-3 space-y-1 text-sm text-slate-700">
                 {item.items.map((line) => (
@@ -422,6 +452,38 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <li key={`${template.title}-${point}`}>・{point}</li>
                     ))}
                   </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（3件）</h2>
+            <p className="text-sm text-slate-600">チェックイン / 温浴 / 館内設備の運用イメージ</p>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {publicExamples.map((example, index) => (
+              <article
+                key={example.title}
+                className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                style={{ transitionDelay: `${180 + index * 80}ms` }}
+              >
+                <div className="border-b border-slate-200 bg-slate-50 p-2">
+                  <TemplateScreenPreview blocks={example.template?.blocks} />
+                </div>
+                <div className="p-4">
+                  <p className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                    {example.tag}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold text-slate-900">{example.title}</h3>
+                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                    {example.bullets.map((bullet) => (
+                      <li key={`${example.title}-${bullet}`}>・{bullet}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-slate-500">公開URL例: {example.publishPath}</p>
                 </div>
               </article>
             ))}
