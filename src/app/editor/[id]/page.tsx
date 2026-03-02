@@ -6057,7 +6057,7 @@ function onUpdateIconRowItem(
                       <p>{item.status === "published" ? "✓" : "・"} 公開後にURL/QRを共有</p>
                     </div>
                   </article>
-                  <article className="lux-card lux-section-card rounded-2xl p-5">
+                  <article className="lux-card lux-section-card rounded-2xl p-5 lg:sticky lg:top-6 lg:h-fit">
                     <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
                     <article
                       className="relative mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
