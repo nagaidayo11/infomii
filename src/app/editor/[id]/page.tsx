@@ -6046,7 +6046,7 @@ function onUpdateIconRowItem(
                   </article>
                 </section>
 
-                <section className="space-y-5 lg:sticky lg:top-6 lg:h-fit lg:w-full">
+                <section className="space-y-5 lg:w-full">
                   <article className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4 shadow-sm">
                     <p className="text-sm font-semibold text-sky-900">初回公開チェックリスト</p>
                     <div className="mt-2 space-y-1 text-xs text-slate-700">
