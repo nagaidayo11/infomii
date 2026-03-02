@@ -34,6 +34,12 @@ export default function LoginPage() {
   const requestedAb =
     search?.get("ab") ?? null;
   const ctaVariant = requestedAb === "b" || requestedAb === "c" ? requestedAb : "a";
+  const requestedLp =
+    search?.get("lp") ?? null;
+  const landingPage =
+    requestedLp === "business" || requestedLp === "resort" || requestedLp === "spa"
+      ? requestedLp
+      : "unknown";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,6 +79,7 @@ export default function LoginPage() {
       sourceRef,
       sourceChannel,
       ctaVariant,
+      landingPage,
     });
 
     setSubmitting(false);
@@ -104,6 +111,7 @@ export default function LoginPage() {
       sourceRef,
       sourceChannel,
       ctaVariant,
+      landingPage,
     });
 
     setSubmitting(false);

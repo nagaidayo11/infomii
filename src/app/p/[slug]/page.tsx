@@ -741,17 +741,32 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   const source = query.src === "qr" ? "qr" : "direct";
   const requestHeaders = await headers();
   const referer = requestHeaders.get("referer");
-  const isChildPage = (() => {
+  const parentSlug = (() => {
     if (!referer) {
-      return false;
+      return null;
     }
     try {
       const refererPath = new URL(referer).pathname;
-      return refererPath.startsWith("/p/") && refererPath !== `/p/${slug}`;
+      if (!refererPath.startsWith("/p/") || refererPath === `/p/${slug}`) {
+        return null;
+      }
+      const raw = refererPath.replace("/p/", "").trim();
+      return raw || null;
     } catch {
-      return false;
+      return null;
     }
   })();
+  const isChildPage = Boolean(parentSlug);
+  let parentPageTitle: string | null = null;
+  if (parentSlug) {
+    const { data: parentData } = await supabase
+      .from("informations")
+      .select("title")
+      .eq("slug", parentSlug)
+      .eq("status", "published")
+      .maybeSingle();
+    parentPageTitle = parentData?.title ?? null;
+  }
 
   if (row.hotel_id) {
     const { error: viewError } = await supabase.from("information_views").insert({
@@ -789,7 +804,12 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             <div className="border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-h-8">
-                  {isChildPage ? <PublicFooterBackButton fallbackHref="/" /> : null}
+                  {isChildPage ? (
+                    <PublicFooterBackButton
+                      fallbackHref="/"
+                      label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+                    />
+                  ) : null}
                 </div>
                 <p className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

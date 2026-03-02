@@ -105,18 +105,33 @@ type HomePageProps = {
     scene?: string;
     src?: string;
     utm_source?: string;
+    lp?: string;
   }>;
 };
 
 export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
-  const ctaVariant = query.ab === "b" || query.ab === "c" ? query.ab : "a";
-  const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
+  const inferredVariant = sourceChannel === "instagram" || sourceChannel === "ig"
+    ? "b"
+    : sourceChannel === "tiktok"
+      ? "c"
+      : "a";
+  const ctaVariant = query.ab === "b" || query.ab === "c" ? query.ab : inferredVariant;
+  const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
+  const landingPage = query.lp === "business" || query.lp === "resort" || query.lp === "spa" ? query.lp : "business";
+  const hasDedicatedLpPath = query.lp === "business" || query.lp === "resort" || query.lp === "spa";
+  const lpBasePath = hasDedicatedLpPath
+    ? landingPage === "business"
+      ? "/lp/business"
+      : landingPage === "resort"
+        ? "/lp/resort"
+        : "/lp/spa"
+    : "/";
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
-    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}`;
+    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
@@ -370,7 +385,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 ].map((entry) => (
                   <Link
                     key={entry.id}
-                    href={`/?scene=${entry.id}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}`}
+                    href={`${lpBasePath}?scene=${entry.id}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`}
                     className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
                       heroScene === entry.id
                         ? "border-emerald-400 bg-emerald-600 text-white"
@@ -417,6 +432,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                   ログイン
                 </Link>
               </div>
+              <p className="mt-2 text-[11px] text-slate-600">
+                流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（variant {ctaVariant.toUpperCase()}）を表示中
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {[
                   { id: "a", label: "CTA A" },
@@ -425,7 +443,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 ].map((entry) => (
                   <Link
                     key={entry.id}
-                    href={`/?scene=${heroScene}&ab=${entry.id}&src=${encodeURIComponent(sanitizedSourceChannel)}`}
+                    href={`${lpBasePath}?scene=${heroScene}&ab=${entry.id}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`}
                     className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
                       ctaVariant === entry.id
                         ? "border-cyan-400 bg-cyan-600 text-white"

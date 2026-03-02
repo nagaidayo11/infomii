@@ -22,6 +22,7 @@ type DormancySnapshot = {
   latestUpdateAt: string | null;
   daysSinceLastUpdate: number | null;
   isDormant7d: boolean;
+  stage: "healthy" | "notice3d" | "warning7d" | "critical14d";
   message: string;
 };
 
@@ -126,6 +127,7 @@ function buildDormancySnapshot(params: {
       latestUpdateAt: null,
       daysSinceLastUpdate: null,
       isDormant7d: false,
+      stage: "healthy",
       message: params.totalPages === 0
         ? "まだページが未作成です。テンプレ作成から始めてください。"
         : "更新履歴を確認中です。",
@@ -134,13 +136,25 @@ function buildDormancySnapshot(params: {
 
   const diffDays = Math.floor((Date.now() - new Date(latestUpdateAt).getTime()) / (24 * 60 * 60 * 1000));
   const isDormant7d = diffDays >= 7;
+  const stage = diffDays >= 14
+    ? "critical14d"
+    : diffDays >= 7
+      ? "warning7d"
+      : diffDays >= 3
+        ? "notice3d"
+        : "healthy";
   return {
     latestUpdateAt,
     daysSinceLastUpdate: diffDays,
     isDormant7d,
-    message: isDormant7d
-      ? `最終更新から${diffDays}日経過しています。休眠傾向です。`
-      : `最終更新は${diffDays}日前です。継続運用できています。`,
+    stage,
+    message: stage === "critical14d"
+      ? `最終更新から${diffDays}日経過しています。14日休眠のため再開通知を実施してください。`
+      : stage === "warning7d"
+        ? `最終更新から${diffDays}日経過しています。7日休眠のため通常リマインドを推奨します。`
+        : stage === "notice3d"
+          ? `最終更新から${diffDays}日経過しています。3日以内の軽い通知を推奨します。`
+          : `最終更新は${diffDays}日前です。継続運用できています。`,
   };
 }
 
@@ -375,6 +389,7 @@ export async function GET(request: NextRequest) {
           latestUpdateAt: null,
           daysSinceLastUpdate: null,
           isDormant7d: false,
+          stage: "healthy",
           message: "データ未取得",
         },
         performance7d: {
@@ -382,6 +397,10 @@ export async function GET(request: NextRequest) {
           lcpP75Ms: 0,
           loadAvgMs: 0,
           loadP75Ms: 0,
+          clsAvg: 0,
+          clsP75: 0,
+          inpAvgMs: 0,
+          inpP75Ms: 0,
           sampleCount: 0,
           lastMeasuredAt: null,
           lcpByPage: [],
@@ -395,6 +414,12 @@ export async function GET(request: NextRequest) {
           byFacility: { business: 0, resort: 0, spa: 0 },
           byFacilityCompletionRate: { business: 0, resort: 0, spa: 0 },
           retention7d: { eligible: 0, retained: 0, rate: 0 },
+          retention14d: { eligible: 0, retained: 0, rate: 0 },
+          byPathRetention: {
+            template: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+            draft: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+            publish: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+          },
         },
         week4Review: {
           kpi: {
@@ -477,6 +502,7 @@ export async function GET(request: NextRequest) {
           latestUpdateAt: null,
           daysSinceLastUpdate: null,
           isDormant7d: false,
+          stage: "healthy",
           message: "施設所属がありません",
         },
         performance7d: {
@@ -484,6 +510,10 @@ export async function GET(request: NextRequest) {
           lcpP75Ms: 0,
           loadAvgMs: 0,
           loadP75Ms: 0,
+          clsAvg: 0,
+          clsP75: 0,
+          inpAvgMs: 0,
+          inpP75Ms: 0,
           sampleCount: 0,
           lastMeasuredAt: null,
           lcpByPage: [],
@@ -497,6 +527,12 @@ export async function GET(request: NextRequest) {
           byFacility: { business: 0, resort: 0, spa: 0 },
           byFacilityCompletionRate: { business: 0, resort: 0, spa: 0 },
           retention7d: { eligible: 0, retained: 0, rate: 0 },
+          retention14d: { eligible: 0, retained: 0, rate: 0 },
+          byPathRetention: {
+            template: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+            draft: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+            publish: { eligible: 0, retained7d: 0, rate7d: 0, retained14d: 0, rate14d: 0 },
+          },
         },
         week4Review: {
           kpi: {
@@ -551,7 +587,7 @@ export async function GET(request: NextRequest) {
         .select("action,created_at,metadata")
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
-        .in("action", ["perf.public_lcp", "perf.public_load"])
+        .in("action", ["perf.public_lcp", "perf.public_load", "perf.public_cls", "perf.public_inp"])
         .order("created_at", { ascending: false })
         .limit(500),
       admin
@@ -620,8 +656,24 @@ export async function GET(request: NextRequest) {
         return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : 0;
       })
       .filter((value) => value > 0);
+    const clsValues = (perfLogs ?? [])
+      .filter((row) => row.action === "perf.public_cls")
+      .map((row) => {
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const value = metadata?.value;
+        return typeof value === "number" && Number.isFinite(value) ? value / 1000 : 0;
+      })
+      .filter((value) => value > 0);
+    const inpValues = (perfLogs ?? [])
+      .filter((row) => row.action === "perf.public_inp")
+      .map((row) => {
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const value = metadata?.value;
+        return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : 0;
+      })
+      .filter((value) => value > 0);
     const lastMeasuredAt = (perfLogs ?? [])[0]?.created_at ?? null;
-    const pagePerfMap = new Map<string, { lcp: number[]; load: number[] }>();
+    const pagePerfMap = new Map<string, { lcp: number[]; load: number[]; cls: number[]; inp: number[] }>();
     for (const row of perfLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const value = typeof metadata?.value === "number" && Number.isFinite(metadata.value) ? Math.round(metadata.value) : 0;
@@ -629,11 +681,15 @@ export async function GET(request: NextRequest) {
         continue;
       }
       const key = typeof metadata?.path === "string" && metadata.path ? metadata.path : (typeof metadata?.slug === "string" ? `/p/${metadata.slug}` : "不明");
-      const current = pagePerfMap.get(key) ?? { lcp: [], load: [] };
+      const current = pagePerfMap.get(key) ?? { lcp: [], load: [], cls: [], inp: [] };
       if (row.action === "perf.public_lcp") {
         current.lcp.push(value);
       } else if (row.action === "perf.public_load") {
         current.load.push(value);
+      } else if (row.action === "perf.public_cls") {
+        current.cls.push(value / 1000);
+      } else if (row.action === "perf.public_inp") {
+        current.inp.push(value);
       }
       pagePerfMap.set(key, current);
     }
@@ -642,11 +698,17 @@ export async function GET(request: NextRequest) {
         path,
         lcpMs: roundAverage(values.lcp),
         loadMs: roundAverage(values.load),
-        samples: Math.max(values.lcp.length, values.load.length),
+        cls: Number(roundAverage(values.cls.map((v) => Math.round(v * 1000))) / 1000),
+        inpMs: roundAverage(values.inp),
+        priorityScore: roundAverage(values.lcp) + Math.round(roundAverage(values.load) * 0.35) + Math.round(roundAverage(values.inp) * 0.4),
+        samples: Math.max(values.lcp.length, values.load.length, values.cls.length, values.inp.length),
       }))
       .sort((a, b) => b.lcpMs - a.lcpMs)
       .slice(0, 5);
-    const slowPages = lcpByPage.filter((row) => row.lcpMs >= 2500 || row.loadMs >= 4000).slice(0, 3);
+    const slowPages = lcpByPage
+      .filter((row) => row.lcpMs >= 2500 || row.loadMs >= 4000 || row.inpMs >= 200 || row.cls >= 0.1)
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 3);
     const execution = buildExecutionSnapshot(
       (publishLeadLogs ?? []).map((row) => ({
         action: row.action,
@@ -694,7 +756,7 @@ export async function GET(request: NextRequest) {
     });
     const restartByPath = { template: 0, draft: 0, publish: 0 };
     const restartByFacility = { business: 0, resort: 0, spa: 0 };
-    const restartEvents: Array<{ createdAt: number; facilityType: "business" | "resort" | "spa" }> = [];
+    const restartEvents: Array<{ createdAt: number; facilityType: "business" | "resort" | "spa"; path: "template" | "draft" | "publish" }> = [];
     for (const row of restartLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const path = metadata?.path;
@@ -702,6 +764,8 @@ export async function GET(request: NextRequest) {
         if (new Date(row.created_at).getTime() >= new Date(since7d).getTime()) {
           restartByPath[path] += 1;
         }
+      } else {
+        continue;
       }
       const facilityType = inferFacilityTypeFromText(typeof metadata?.facilityType === "string" ? metadata.facilityType : "");
       if (new Date(row.created_at).getTime() >= new Date(since7d).getTime()) {
@@ -709,7 +773,7 @@ export async function GET(request: NextRequest) {
       }
       const createdAt = new Date(row.created_at).getTime();
       if (Number.isFinite(createdAt)) {
-        restartEvents.push({ createdAt, facilityType });
+        restartEvents.push({ createdAt, facilityType, path });
       }
     }
     const restartClicks = restartByPath.template + restartByPath.draft + restartByPath.publish;
@@ -746,16 +810,58 @@ export async function GET(request: NextRequest) {
         ? Math.round((byFacilityCompletionBase.spa.completed / byFacilityCompletionBase.spa.clicks) * 100)
         : 0,
     };
-    const retentionCandidates = restartEvents.filter((row) => row.createdAt <= Date.now() - 7 * 24 * 60 * 60 * 1000);
-    let retainedCount = 0;
-    for (const entry of retentionCandidates) {
+    const retentionCandidates7d = restartEvents.filter((row) => row.createdAt <= Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const retentionCandidates14d = restartEvents.filter((row) => row.createdAt <= Date.now() - 14 * 24 * 60 * 60 * 1000);
+    let retainedCount7d = 0;
+    let retainedCount14d = 0;
+    const byPathRetentionBase = {
+      template: { eligible7d: 0, retained7d: 0, eligible14d: 0, retained14d: 0 },
+      draft: { eligible7d: 0, retained7d: 0, eligible14d: 0, retained14d: 0 },
+      publish: { eligible7d: 0, retained7d: 0, eligible14d: 0, retained14d: 0 },
+    };
+    for (const entry of retentionCandidates7d) {
       const endAt = entry.createdAt + 7 * 24 * 60 * 60 * 1000;
       const retained = publishTimes30d.some((time) => time > entry.createdAt && time <= endAt);
       if (retained) {
-        retainedCount += 1;
+        retainedCount7d += 1;
       }
+      byPathRetentionBase[entry.path].eligible7d += 1;
+      if (retained) byPathRetentionBase[entry.path].retained7d += 1;
     }
-    const retentionRate = retentionCandidates.length > 0 ? Math.round((retainedCount / retentionCandidates.length) * 100) : 0;
+    for (const entry of retentionCandidates14d) {
+      const endAt = entry.createdAt + 14 * 24 * 60 * 60 * 1000;
+      const retained = publishTimes30d.some((time) => time > entry.createdAt && time <= endAt);
+      if (retained) {
+        retainedCount14d += 1;
+      }
+      byPathRetentionBase[entry.path].eligible14d += 1;
+      if (retained) byPathRetentionBase[entry.path].retained14d += 1;
+    }
+    const retentionRate = retentionCandidates7d.length > 0 ? Math.round((retainedCount7d / retentionCandidates7d.length) * 100) : 0;
+    const retentionRate14d = retentionCandidates14d.length > 0 ? Math.round((retainedCount14d / retentionCandidates14d.length) * 100) : 0;
+    const byPathRetention = {
+      template: {
+        eligible: byPathRetentionBase.template.eligible7d,
+        retained7d: byPathRetentionBase.template.retained7d,
+        rate7d: byPathRetentionBase.template.eligible7d > 0 ? Math.round((byPathRetentionBase.template.retained7d / byPathRetentionBase.template.eligible7d) * 100) : 0,
+        retained14d: byPathRetentionBase.template.retained14d,
+        rate14d: byPathRetentionBase.template.eligible14d > 0 ? Math.round((byPathRetentionBase.template.retained14d / byPathRetentionBase.template.eligible14d) * 100) : 0,
+      },
+      draft: {
+        eligible: byPathRetentionBase.draft.eligible7d,
+        retained7d: byPathRetentionBase.draft.retained7d,
+        rate7d: byPathRetentionBase.draft.eligible7d > 0 ? Math.round((byPathRetentionBase.draft.retained7d / byPathRetentionBase.draft.eligible7d) * 100) : 0,
+        retained14d: byPathRetentionBase.draft.retained14d,
+        rate14d: byPathRetentionBase.draft.eligible14d > 0 ? Math.round((byPathRetentionBase.draft.retained14d / byPathRetentionBase.draft.eligible14d) * 100) : 0,
+      },
+      publish: {
+        eligible: byPathRetentionBase.publish.eligible7d,
+        retained7d: byPathRetentionBase.publish.retained7d,
+        rate7d: byPathRetentionBase.publish.eligible7d > 0 ? Math.round((byPathRetentionBase.publish.retained7d / byPathRetentionBase.publish.eligible7d) * 100) : 0,
+        retained14d: byPathRetentionBase.publish.retained14d,
+        rate14d: byPathRetentionBase.publish.eligible14d > 0 ? Math.round((byPathRetentionBase.publish.retained14d / byPathRetentionBase.publish.eligible14d) * 100) : 0,
+      },
+    };
     const week3Review = buildWeek3Review({
       lpToSignupRate,
       publishCompletionRate: week2Review.kpi.publishCompletionRate,
@@ -809,7 +915,11 @@ export async function GET(request: NextRequest) {
         lcpP75Ms: p75(lcpValues),
         loadAvgMs: roundAverage(loadValues),
         loadP75Ms: p75(loadValues),
-        sampleCount: Math.max(lcpValues.length, loadValues.length),
+        clsAvg: Number((roundAverage(clsValues.map((v) => Math.round(v * 1000))) / 1000).toFixed(3)),
+        clsP75: Number((p75(clsValues.map((v) => Math.round(v * 1000))) / 1000).toFixed(3)),
+        inpAvgMs: roundAverage(inpValues),
+        inpP75Ms: p75(inpValues),
+        sampleCount: Math.max(lcpValues.length, loadValues.length, clsValues.length, inpValues.length),
         lastMeasuredAt,
         lcpByPage,
         slowPages,
@@ -822,10 +932,16 @@ export async function GET(request: NextRequest) {
         byFacility: restartByFacility,
         byFacilityCompletionRate,
         retention7d: {
-          eligible: retentionCandidates.length,
-          retained: retainedCount,
+          eligible: retentionCandidates7d.length,
+          retained: retainedCount7d,
           rate: retentionRate,
         },
+        retention14d: {
+          eligible: retentionCandidates14d.length,
+          retained: retainedCount14d,
+          rate: retentionRate14d,
+        },
+        byPathRetention,
       },
       recentBillingLogs: (logs ?? []) as BillingLogRow[],
     });

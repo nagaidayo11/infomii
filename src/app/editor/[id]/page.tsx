@@ -273,11 +273,11 @@ function collectPublishCheckIssues(
   const contactPattern = /(?:\+?\d[\d\-()\s]{8,}\d)|(?:@)|(?:tel:)|(?:連絡|お問い合わせ|フロント|電話)/i;
   const hasContactInfo = contactPattern.test(serializedText);
   if (!hasContactInfo) {
-    issues.push({
-      level: "warning",
-      message: "連絡先情報（電話番号・メール等）が見つかりません。緊急連絡先の記載を推奨します。",
-      target: "blocks",
-    });
+      issues.push({
+        level: "warning",
+        message: "連絡先情報が未記載です（例: 03-1234-5678 / front@example.com）。緊急連絡先の記載を推奨します。",
+        target: "blocks",
+      });
   }
 
   const hasHoursCompleteRow = currentItem.contentBlocks.some(
@@ -288,7 +288,7 @@ function collectPublishCheckIssues(
   if (!hasHoursCompleteRow) {
     issues.push({
       level: "warning",
-      message: "営業時間ブロックが未設定です。受付時間・利用時間の記載を推奨します。",
+      message: "営業時間ブロックが未設定です（例: チェックイン 15:00-24:00）。受付時間・利用時間の記載を推奨します。",
       target: "blocks",
     });
   }
@@ -335,7 +335,7 @@ function collectPublishCheckIssues(
         if (ctaUrl && !isValidHttpUrl(ctaUrl) && !ctaUrl.startsWith("/p/")) {
           issues.push({
             level: "error",
-            message: `${blockIndex + 1}.CTA: URL形式が不正です（http(s) または /p/slug）。`,
+            message: `${blockIndex + 1}.CTA: URL形式が不正です（例: https://example.com または /p/sample）。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -386,7 +386,7 @@ function collectPublishCheckIssues(
       if (!/^https?:\/\//i.test(link)) {
         issues.push({
           level: "error",
-          message: `${rowLabel}: 外部リンク形式が不正です（http(s) で始めてください）。`,
+          message: `${rowLabel}: 外部リンク形式が不正です（例: https://hotel.example.com）。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -1265,7 +1265,6 @@ export default function EditorPage() {
   const id = params.id;
 
   const [item, setItem] = useState<Information | null>(null);
-  const [saving, setSaving] = useState(false);
   const [autosaveState, setAutosaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [notice, setNotice] = useState<string>("");
@@ -2125,7 +2124,6 @@ export default function EditorPage() {
       return;
     }
 
-    setSaving(true);
     setAutosaveState("saving");
     try {
       await updateInformation(id, {
@@ -2165,7 +2163,6 @@ export default function EditorPage() {
       setNoticeKind("error");
       setNotice(e instanceof Error ? e.message : "保存に失敗しました");
     } finally {
-      setSaving(false);
     }
   }
 
@@ -3432,6 +3429,35 @@ function onUpdateIconRowItem(
     }
     return (pageStatusBySlug.get(slug) as "published" | "draft" | undefined) ?? null;
   }
+
+  const nodeMapBrokenSummary = useMemo(() => {
+    const summary = { empty: 0, missing: 0, draft: 0 };
+    if (!proNodeEnabled) {
+      return summary;
+    }
+    for (const node of nodeMap.nodes) {
+      if (node.id === "__hub__") {
+        continue;
+      }
+      const slug = (node.targetSlug ?? "").trim();
+      if (!slug) {
+        summary.empty += 1;
+        continue;
+      }
+      const status = (() => {
+        if (item && slug === item.slug) {
+          return item.status;
+        }
+        return (pageStatusBySlug.get(slug) as "published" | "draft" | undefined) ?? null;
+      })();
+      if (!status) {
+        summary.missing += 1;
+      } else if (status !== "published") {
+        summary.draft += 1;
+      }
+    }
+    return summary;
+  }, [nodeMap.nodes, proNodeEnabled, item, pageStatusBySlug]);
 
   async function onPublishWithCheck() {
     if (!item) {
@@ -5591,6 +5617,15 @@ function onUpdateIconRowItem(
                       </div>
                     ) : (
                       <div className="space-y-3">
+                        {(nodeMapBrokenSummary.empty + nodeMapBrokenSummary.missing + nodeMapBrokenSummary.draft) > 0 ? (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                            導線切れ検知: 未設定 {nodeMapBrokenSummary.empty} / 未存在 {nodeMapBrokenSummary.missing} / 未公開 {nodeMapBrokenSummary.draft}
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                            導線切れはありません。ノード遷移先はすべて公開済みです。
+                          </div>
+                        )}
                         <div
                           className="relative h-[460px] overflow-hidden rounded-xl border border-slate-200 bg-[radial-gradient(circle_at_20%_20%,#ecfeff_0%,#f8fafc_55%,#ffffff_100%)]"
                           onMouseMove={onMoveNode}

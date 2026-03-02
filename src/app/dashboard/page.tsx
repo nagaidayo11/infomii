@@ -29,6 +29,7 @@ import {
   revokeHotelInvite,
   runOpsRecoveryAction,
   runOpsAlertTest,
+  runOpsWeeklyReport,
   setSharedTemplateFavorite,
   trackBillingResumeClick,
   trackDormancyNoticeVariantCopy,
@@ -135,6 +136,7 @@ type TemplateSortMode = "recommended" | "latest";
 type TemplateScene = "front" | "guestroom" | "facility";
 type FacilityType = "business" | "resort" | "spa";
 type TemplateGrouping = "industry" | "scene";
+type HotelScale = "small" | "mid" | "large";
 
 const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
   all: "すべて",
@@ -152,6 +154,11 @@ const FACILITY_LABELS: Record<FacilityType, string> = {
   business: "ビジネス",
   resort: "リゾート",
   spa: "温浴・スパ",
+};
+const SCALE_LABELS: Record<HotelScale, string> = {
+  small: "小規模（~59室）",
+  mid: "中規模（60-149室）",
+  large: "大規模（150室~）",
 };
 
 function inferFacilityType(hotelName: string): FacilityType {
@@ -184,6 +191,26 @@ function mapFacilityToIndustry(type: FacilityType): IndustryPreset {
     return "ryokan";
   }
   return "hotel_business";
+}
+
+function inferHotelScale(roomCount: number): HotelScale {
+  if (roomCount >= 150) {
+    return "large";
+  }
+  if (roomCount >= 60) {
+    return "mid";
+  }
+  return "small";
+}
+
+function getRecommendedPurposeByScale(scale: HotelScale): TemplatePurposeFilter {
+  if (scale === "small") {
+    return "checkin";
+  }
+  if (scale === "mid") {
+    return "facility";
+  }
+  return "bath";
 }
 
 function getTemplateRequirementHints(template: StarterTemplate): { required: string[]; recommended: string[] } {
@@ -223,6 +250,24 @@ function getTemplateSlaMs(template: StarterTemplate): number {
     return 2500;
   }
   return 2300;
+}
+
+function getTemplateQualityScore(template: StarterTemplate): { score: number; missing: string[] } {
+  const blocks = template.blocks ?? [];
+  const blockTypes = new Set(blocks.map((block) => block.type));
+  const checks = [
+    { ok: blockTypes.has("title") || blockTypes.has("heading"), label: "見出し" },
+    { ok: blockTypes.has("cta"), label: "CTA" },
+    { ok: blockTypes.has("hours") || blockTypes.has("pricing"), label: "時間/料金情報" },
+    { ok: blockTypes.has("iconRow") || blockTypes.has("columnGroup") || blockTypes.has("columns"), label: "導線/比較情報" },
+    { ok: blockTypes.has("image") || blockTypes.has("gallery"), label: "視覚要素" },
+  ];
+  const passed = checks.filter((entry) => entry.ok).length;
+  const score = Math.round((passed / checks.length) * 100);
+  return {
+    score,
+    missing: checks.filter((entry) => !entry.ok).map((entry) => entry.label),
+  };
 }
 
 function detectTemplatePurposes(template: StarterTemplate): TemplatePurposeFilter[] {
@@ -454,6 +499,7 @@ export default function DashboardPage() {
   const [opsHealth, setOpsHealth] = useState<OpsHealthSnapshot | null>(null);
   const [recoveringAction, setRecoveringAction] = useState<"ensure_scope" | "sync_subscription" | null>(null);
   const [sendingOpsTest, setSendingOpsTest] = useState(false);
+  const [sendingWeeklyReport, setSendingWeeklyReport] = useState(false);
   const [pendingDeleteBatches, setPendingDeleteBatches] = useState<PendingDeleteBatch[]>([]);
   const [editingHotelName, setEditingHotelName] = useState(false);
   const [hotelNameDraft, setHotelNameDraft] = useState("");
@@ -466,6 +512,7 @@ export default function DashboardPage() {
   const [purposeFilter, setPurposeFilter] = useState<TemplatePurposeFilter>("all");
   const [templateSortMode, setTemplateSortMode] = useState<TemplateSortMode>("recommended");
   const [templateGrouping, setTemplateGrouping] = useState<TemplateGrouping>("industry");
+  const [roomCountInput, setRoomCountInput] = useState("80");
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
@@ -482,6 +529,15 @@ export default function DashboardPage() {
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
   const canAccessOps = userEmail.length > 0 && OPS_OWNER_EMAILS.has(userEmail);
   const inferredFacilityType = useMemo<FacilityType>(() => inferFacilityType(hotelName), [hotelName]);
+  const roomCount = useMemo(() => {
+    const parsed = Number(roomCountInput);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 80;
+    }
+    return Math.round(parsed);
+  }, [roomCountInput]);
+  const hotelScale = useMemo(() => inferHotelScale(roomCount), [roomCount]);
+  const recommendedPurposeByScale = useMemo(() => getRecommendedPurposeByScale(hotelScale), [hotelScale]);
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -715,6 +771,13 @@ export default function DashboardPage() {
     }
     setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
   }, [hotelName, industryFilter, inferredFacilityType]);
+
+  useEffect(() => {
+    if (purposeFilter !== "all") {
+      return;
+    }
+    setPurposeFilter(recommendedPurposeByScale);
+  }, [purposeFilter, recommendedPurposeByScale]);
 
   useEffect(() => {
     if (loading) {
@@ -996,6 +1059,24 @@ export default function DashboardPage() {
     () => (activeTemplatePreviewEntry ? getTemplateSlaMs(activeTemplatePreviewEntry.template) : 2300),
     [activeTemplatePreviewEntry],
   );
+  const templateUsageRanking = useMemo(() => {
+    const usageMap = new Map<string, number>();
+    for (const information of items) {
+      const title = information.title.trim();
+      if (!title) {
+        continue;
+      }
+      usageMap.set(title, (usageMap.get(title) ?? 0) + 1);
+    }
+    return starterTemplates
+      .map((template, index) => ({
+        index,
+        title: template.title,
+        count: usageMap.get(template.title) ?? 0,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [items]);
 
   useEffect(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -1221,6 +1302,42 @@ export default function DashboardPage() {
       `停止/修正: ${week5Kpi.stopOrFix.join(" / ") || "なし"}`,
     [week5Kpi],
   );
+  const unoptimizedImageUrls = useMemo(() => {
+    const urls = new Set<string>();
+    for (const info of items) {
+      for (const block of info.contentBlocks) {
+        if (block.type === "image") {
+          const url = (block.url ?? "").trim();
+          if (!url) continue;
+          const lower = url.toLowerCase();
+          if (
+            lower.startsWith("http") &&
+            (lower.includes(".png") || lower.includes(".bmp") || lower.includes(".tiff") || lower.includes(".gif")) &&
+            !lower.includes("w=") &&
+            !lower.includes("q=")
+          ) {
+            urls.add(url);
+          }
+        }
+        if (block.type === "gallery") {
+          for (const entry of block.galleryItems ?? []) {
+            const url = (entry.url ?? "").trim();
+            if (!url) continue;
+            const lower = url.toLowerCase();
+            if (
+              lower.startsWith("http") &&
+              (lower.includes(".png") || lower.includes(".bmp") || lower.includes(".tiff") || lower.includes(".gif")) &&
+              !lower.includes("w=") &&
+              !lower.includes("q=")
+            ) {
+              urls.add(url);
+            }
+          }
+        }
+      }
+    }
+    return Array.from(urls).slice(0, 8);
+  }, [items]);
   const lpOptimizationTip = useMemo(() => {
     if (week1Snapshot.lpRate >= 20) {
       return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
@@ -1520,6 +1637,20 @@ export default function DashboardPage() {
       setError(e instanceof Error ? e.message : "通知テストに失敗しました");
     } finally {
       setSendingOpsTest(false);
+    }
+  }
+
+  async function onSendWeeklyReport() {
+    setSendingWeeklyReport(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const message = await runOpsWeeklyReport(weeklyOpsReport);
+      setSuccess(message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "週次レポート送信に失敗しました");
+    } finally {
+      setSendingWeeklyReport(false);
     }
   }
 
@@ -1961,6 +2092,20 @@ export default function DashboardPage() {
                     施設タイプ推定: {FACILITY_LABELS[inferredFacilityType]}（おすすめカテゴリを自動選択）
                   </p>
                 </div>
+                <div className="mx-auto mt-2 flex max-w-5xl flex-wrap items-center justify-center gap-2">
+                  <label className="text-xs text-slate-600" htmlFor="room-count-input">客室数</label>
+                  <input
+                    id="room-count-input"
+                    type="number"
+                    min={1}
+                    value={roomCountInput}
+                    onChange={(e) => setRoomCountInput(e.target.value)}
+                    className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800"
+                  />
+                  <p className="rounded-full border border-cyan-300 bg-white/90 px-3 py-1 text-xs text-cyan-900">
+                    規模推定: {SCALE_LABELS[hotelScale]} / 推奨用途: {TEMPLATE_PURPOSE_LABELS[recommendedPurposeByScale]}
+                  </p>
+                </div>
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
@@ -2094,6 +2239,7 @@ export default function DashboardPage() {
                         {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds }) => {
                           const requirementHints = getTemplateRequirementHints(template);
                           const slaMs = getTemplateSlaMs(template);
+                          const quality = getTemplateQualityScore(template);
                           return (
                           <article
                             key={`${template.title}-${originalIndex}`}
@@ -2140,6 +2286,11 @@ export default function DashboardPage() {
                               </p>
                             )}
                             <div className="mt-2 flex flex-wrap gap-1">
+                              {purposes.includes(recommendedPurposeByScale) && (
+                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                                  規模推奨
+                                </span>
+                              )}
                               {purposes.slice(0, 2).map((purpose) => (
                                 <span
                                   key={`${template.title}-${purpose}`}
@@ -2167,6 +2318,20 @@ export default function DashboardPage() {
                             <p className="mt-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
                               速度目標: LCP {slaMs}ms 以下
                             </p>
+                            <p className={`mt-1 rounded-md border px-2 py-1 text-[11px] ${
+                              quality.score >= 80
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                                : quality.score >= 60
+                                  ? "border-amber-200 bg-amber-50 text-amber-900"
+                                  : "border-rose-200 bg-rose-50 text-rose-900"
+                            }`}>
+                              品質スコア: {quality.score}/100
+                            </p>
+                            {quality.score < 80 && (
+                              <p className="mt-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] text-rose-900">
+                                不足補完ガイド: {quality.missing.join(" / ")}
+                              </p>
+                            )}
                             <div className="mt-2 space-y-1 text-[11px] text-slate-600">
                               <p className="font-semibold text-slate-700">必須: {requirementHints.required.join(" / ")}</p>
                               <p>推奨: {requirementHints.recommended.join(" / ")}</p>
@@ -2223,6 +2388,17 @@ export default function DashboardPage() {
                           <p className="mt-1">推奨: {activeTemplateRequirements.recommended.join(" / ")}</p>
                         </div>
                       )}
+                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] text-slate-700">
+                        <p className="font-semibold text-amber-900">テンプレ利用ランキング（施設内）</p>
+                        <div className="mt-1 space-y-1">
+                          {templateUsageRanking.map((row, index) => (
+                            <p key={`rank-${row.title}`}>
+                              {index + 1}. {row.title}（{row.count}件）
+                            </p>
+                          ))}
+                          {templateUsageRanking.length === 0 && <p>データなし</p>}
+                        </div>
+                      </div>
                       {(() => {
                         const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
                         if (!previewImage) {
@@ -2608,7 +2784,7 @@ export default function DashboardPage() {
 
                 <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-3">
                   <p className="text-xs font-semibold text-indigo-900">公開ページ速度（直近7日）</p>
-                  <p className="mt-1 text-xs text-slate-600">LCPと読み込み時間を公開ページで自動計測しています。</p>
+                  <p className="mt-1 text-xs text-slate-600">LCP / Load / CLS / INP を公開ページで自動計測しています。</p>
                   <div className="mt-2 grid gap-2 sm:grid-cols-2">
                     <div className="rounded-lg border border-slate-200 bg-white p-2">
                       <p className="text-xs text-slate-500">LCP 平均 / P75</p>
@@ -2620,6 +2796,18 @@ export default function DashboardPage() {
                       <p className="text-xs text-slate-500">Load 平均 / P75</p>
                       <p className="mt-1 text-lg font-semibold text-slate-900">
                         {opsHealth?.performance7d.loadAvgMs ?? 0}ms / {opsHealth?.performance7d.loadP75Ms ?? 0}ms
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">CLS 平均 / P75</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.performance7d.clsAvg ?? 0} / {opsHealth?.performance7d.clsP75 ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">INP 平均 / P75</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.performance7d.inpAvgMs ?? 0}ms / {opsHealth?.performance7d.inpP75Ms ?? 0}ms
                       </p>
                     </div>
                   </div>
@@ -2634,7 +2822,7 @@ export default function DashboardPage() {
                   <div className="mt-2 space-y-1 text-xs text-slate-700">
                     {(opsHealth?.performance7d.slowPages ?? []).map((row) => (
                       <p key={`slow-${row.path}`}>
-                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms
+                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms / INP {row.inpMs}ms / CLS {row.cls}
                       </p>
                     ))}
                     {(opsHealth?.performance7d.slowPages ?? []).length === 0 && <p>しきい値超過ページはありません。</p>}
@@ -2647,12 +2835,12 @@ export default function DashboardPage() {
                   {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
                     <div className="mt-2 rounded-md border border-rose-200 bg-white px-2 py-2 text-[11px] text-rose-800">
                       優先修正: {(opsHealth?.performance7d.slowPages ?? [])
-                        .sort((a, b) => b.lcpMs - a.lcpMs)
+                        .sort((a, b) => b.priorityScore - a.priorityScore)
                         .map((row, index) => `${index + 1}.${row.path}`)
                         .join(" / ")}
                     </div>
                   )}
-                  <p className="mt-2 text-[11px] text-slate-600">しきい値: LCP 2500ms以上 または Load 4000ms以上</p>
+                  <p className="mt-2 text-[11px] text-slate-600">しきい値: LCP 2500ms以上 または Load 4000ms以上 または INP 200ms以上 または CLS 0.1以上</p>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -2660,10 +2848,20 @@ export default function DashboardPage() {
                   <div className="mt-2 space-y-1 text-xs text-slate-700">
                     {(opsHealth?.performance7d.lcpByPage ?? []).map((row) => (
                       <p key={`lcp-page-${row.path}`}>
-                        {row.path}: LCP {row.lcpMs}ms / SLA 2300ms（{row.lcpMs <= 2300 ? "達成" : "未達"}・{row.samples}件）
+                        {row.path}: LCP {row.lcpMs}ms / INP {row.inpMs}ms / CLS {row.cls}（{row.samples}件）
                       </p>
                     ))}
                     {(opsHealth?.performance7d.lcpByPage ?? []).length === 0 && <p>計測データがありません。</p>}
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50/50 p-3">
+                  <p className="text-xs font-semibold text-rose-900">画像最適化未対応URL（一括検出）</p>
+                  <div className="mt-2 space-y-1 text-[11px] text-rose-900">
+                    {unoptimizedImageUrls.map((url) => (
+                      <p key={`unoptimized-${url}`} className="truncate">{url}</p>
+                    ))}
+                    {unoptimizedImageUrls.length === 0 && <p>未最適化URLは検出されませんでした。</p>}
                   </div>
                 </div>
 
@@ -2684,7 +2882,11 @@ export default function DashboardPage() {
                       </p>
                       <p
                         className={`text-[11px] ${
-                          opsHealth?.dormancy.isDormant7d ? "text-rose-700" : "text-emerald-700"
+                          opsHealth?.dormancy.stage === "critical14d"
+                            ? "text-rose-700"
+                            : opsHealth?.dormancy.stage === "warning7d"
+                              ? "text-amber-700"
+                              : "text-emerald-700"
                         }`}
                       >
                         {opsHealth?.dormancy.message ?? "データ未取得"}
@@ -2751,6 +2953,14 @@ export default function DashboardPage() {
                     <p className="mt-1 text-[11px] text-slate-600">
                       再開後7日継続率: {opsHealth?.restart7d.retention7d.rate ?? 0}%（対象 {opsHealth?.restart7d.retention7d.eligible ?? 0} / 継続 {opsHealth?.restart7d.retention7d.retained ?? 0}）
                     </p>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      再開後14日継続率: {opsHealth?.restart7d.retention14d.rate ?? 0}%（対象 {opsHealth?.restart7d.retention14d.eligible ?? 0} / 継続 {opsHealth?.restart7d.retention14d.retained ?? 0}）
+                    </p>
+                    <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                      施策別7日/14日継続率: テンプレ {opsHealth?.restart7d.byPathRetention.template.rate7d ?? 0}% / {opsHealth?.restart7d.byPathRetention.template.rate14d ?? 0}% ・
+                      下書き {opsHealth?.restart7d.byPathRetention.draft.rate7d ?? 0}% / {opsHealth?.restart7d.byPathRetention.draft.rate14d ?? 0}% ・
+                      公開確認 {opsHealth?.restart7d.byPathRetention.publish.rate7d ?? 0}% / {opsHealth?.restart7d.byPathRetention.publish.rate14d ?? 0}%
+                    </div>
                     <p className={`mt-1 text-[11px] ${dormancyStage === "critical" ? "text-rose-700" : dormancyStage === "warning" ? "text-amber-700" : "text-emerald-700"}`}>
                       休眠判定: {dormancyStage === "critical" ? "14日以上停止（強リマインド）" : dormancyStage === "warning" ? "7日以上停止（通常リマインド）" : "正常運用"}
                     </p>
@@ -2788,6 +2998,17 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-slate-700">LP別 CVR</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-600">
+                        {(onboardingFunnel?.byLandingPage ?? []).map((row) => (
+                          <p key={`lp-${row.lp}`}>
+                            {row.lp}: {row.logins}→{row.signups}（{row.rate}%）
+                          </p>
+                        ))}
+                        {(onboardingFunnel?.byLandingPage ?? []).length === 0 && <p>データなし</p>}
+                      </div>
+                    </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-2">
                       <p className="text-xs font-semibold text-slate-700">SNS別</p>
                       <div className="mt-1 space-y-1 text-xs text-slate-600">
@@ -2981,13 +3202,23 @@ export default function DashboardPage() {
                   <div className="mt-1 rounded-md border border-rose-200 bg-white px-2 py-2 text-xs text-slate-700">
                     停止/修正候補: {week5Kpi.stopOrFix.join(" / ") || "なし"}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void navigator.clipboard.writeText(weeklyOpsReport).then(() => setSuccess("週次レポート文面をコピーしました"))}
-                    className="mt-2 rounded-md border border-cyan-300 bg-white px-3 py-1.5 text-xs text-cyan-800 hover:bg-cyan-50"
-                  >
-                    週次レポートをコピー
-                  </button>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void navigator.clipboard.writeText(weeklyOpsReport).then(() => setSuccess("週次レポート文面をコピーしました"))}
+                      className="rounded-md border border-cyan-300 bg-white px-3 py-1.5 text-xs text-cyan-800 hover:bg-cyan-50"
+                    >
+                      週次レポートをコピー
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void onSendWeeklyReport()}
+                      disabled={sendingWeeklyReport}
+                      className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
+                    >
+                      {sendingWeeklyReport ? "送信中..." : "週次レポート送信"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">

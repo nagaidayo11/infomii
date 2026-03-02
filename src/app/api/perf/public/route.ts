@@ -8,8 +8,8 @@ type PerfMetricInput = {
   value?: unknown;
 };
 
-function toMetricName(value: unknown): "lcp" | "load" | null {
-  if (value === "lcp" || value === "load") {
+function toMetricName(value: unknown): "lcp" | "load" | "cls" | "inp" | null {
+  if (value === "lcp" || value === "load" || value === "cls" || value === "inp") {
     return value;
   }
   return null;
@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
         }
         return { name, value };
       })
-      .filter((entry): entry is { name: "lcp" | "load"; value: number } => Boolean(entry))
-      .slice(0, 2);
+      .filter((entry): entry is { name: "lcp" | "load" | "cls" | "inp"; value: number } => Boolean(entry))
+      .slice(0, 4);
 
     if (metrics.length === 0) {
       return NextResponse.json({ ok: false, message: "metrics required" }, { status: 400 });
@@ -77,14 +77,21 @@ export async function POST(request: NextRequest) {
     const rows = metrics.map((metric) => ({
       hotel_id: hotelId,
       actor_user_id: null,
-      action: metric.name === "lcp" ? "perf.public_lcp" : "perf.public_load",
+      action:
+        metric.name === "lcp"
+          ? "perf.public_lcp"
+          : metric.name === "load"
+            ? "perf.public_load"
+            : metric.name === "cls"
+              ? "perf.public_cls"
+              : "perf.public_inp",
       target_type: "performance",
       target_id: slug,
       message: `公開ページ速度計測: ${metric.name.toUpperCase()} ${metric.value}ms`,
       metadata: {
         slug,
         value: metric.value,
-        unit: "ms",
+        unit: metric.name === "cls" ? "score_x1000" : "ms",
         path: urlPath,
         ua,
         referer,

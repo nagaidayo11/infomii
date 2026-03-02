@@ -567,6 +567,12 @@ export type OnboardingFunnel7d = {
   lpAttributedLogins: number;
   signupCompleted: number;
   lpToSignupRate: number;
+  byLandingPage: Array<{
+    lp: "business" | "resort" | "spa" | "unknown";
+    logins: number;
+    signups: number;
+    rate: number;
+  }>;
   byChannel: Array<{
     channel: "x" | "instagram" | "tiktok" | "other" | "unknown";
     logins: number;
@@ -1860,6 +1866,7 @@ export type OpsHealthSnapshot = {
     latestUpdateAt: string | null;
     daysSinceLastUpdate: number | null;
     isDormant7d: boolean;
+    stage: "healthy" | "notice3d" | "warning7d" | "critical14d";
     message: string;
   };
   performance7d: {
@@ -1867,18 +1874,28 @@ export type OpsHealthSnapshot = {
     lcpP75Ms: number;
     loadAvgMs: number;
     loadP75Ms: number;
+    clsAvg: number;
+    clsP75: number;
+    inpAvgMs: number;
+    inpP75Ms: number;
     sampleCount: number;
     lastMeasuredAt: string | null;
     lcpByPage: Array<{
       path: string;
       lcpMs: number;
       loadMs: number;
+      cls: number;
+      inpMs: number;
+      priorityScore: number;
       samples: number;
     }>;
     slowPages: Array<{
       path: string;
       lcpMs: number;
       loadMs: number;
+      cls: number;
+      inpMs: number;
+      priorityScore: number;
       samples: number;
     }>;
   };
@@ -1905,6 +1922,16 @@ export type OpsHealthSnapshot = {
       eligible: number;
       retained: number;
       rate: number;
+    };
+    retention14d: {
+      eligible: number;
+      retained: number;
+      rate: number;
+    };
+    byPathRetention: {
+      template: { eligible: number; retained7d: number; rate7d: number; retained14d: number; rate14d: number };
+      draft: { eligible: number; retained7d: number; rate7d: number; retained14d: number; rate14d: number };
+      publish: { eligible: number; retained7d: number; rate7d: number; retained14d: number; rate14d: number };
     };
   };
   week4Review: {
@@ -2159,6 +2186,7 @@ type OnboardingSourceRef = "lp-hero" | "lp-sticky" | "lp-bottom";
 type OnboardingAuthAction = "login_success" | "signup_completed";
 type OnboardingSourceChannel = "x" | "instagram" | "tiktok" | "other" | "unknown";
 type OnboardingCtaVariant = "a" | "b" | "c";
+type OnboardingLandingPage = "business" | "resort" | "spa" | "unknown";
 
 function toOnboardingSourceRef(value: string | null | undefined): OnboardingSourceRef | null {
   if (!value) {
@@ -2195,12 +2223,21 @@ function toOnboardingCtaVariant(value: string | null | undefined): OnboardingCta
   return "a";
 }
 
+function toOnboardingLandingPage(value: string | null | undefined): OnboardingLandingPage {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "business" || normalized === "resort" || normalized === "spa") {
+    return normalized;
+  }
+  return "unknown";
+}
+
 export async function trackOnboardingAuthEvent(
   action: OnboardingAuthAction,
   params?: {
     sourceRef?: string | null;
     sourceChannel?: string | null;
     ctaVariant?: string | null;
+    landingPage?: string | null;
   },
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
@@ -2214,11 +2251,12 @@ export async function trackOnboardingAuthEvent(
   const safeRef = toOnboardingSourceRef(params?.sourceRef);
   const sourceChannel = toOnboardingSourceChannel(params?.sourceChannel);
   const ctaVariant = toOnboardingCtaVariant(params?.ctaVariant);
+  const landingPage = toOnboardingLandingPage(params?.landingPage);
   const actionName = `onboarding.${action}`;
   const message =
     action === "signup_completed"
-      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant}`
-      : `ログインしました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant}`;
+      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage}`
+      : `ログインしました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage}`;
 
   await appendAuditLog({
     hotelId,
@@ -2230,6 +2268,7 @@ export async function trackOnboardingAuthEvent(
       sourceType: safeRef?.startsWith("lp-") ? "lp" : "unknown",
       sourceChannel,
       ctaVariant,
+      landingPage,
     },
   });
 }
@@ -2241,6 +2280,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      byLandingPage: [],
       byChannel: [],
       byVariant: [],
     };
@@ -2252,6 +2292,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      byLandingPage: [],
       byChannel: [],
       byVariant: [],
     };
@@ -2272,6 +2313,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
   let lpAttributedLogins = 0;
   let signupCompleted = 0;
+  const landingPageMap = new Map<OnboardingLandingPage, { logins: number; signups: number }>();
   const channelMap = new Map<OnboardingSourceChannel, { logins: number; signups: number }>();
   const variantMap = new Map<OnboardingCtaVariant, { logins: number; signups: number }>();
 
@@ -2286,9 +2328,15 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     const ctaVariant = toOnboardingCtaVariant(
       typeof metadata?.ctaVariant === "string" ? metadata.ctaVariant : null,
     );
+    const landingPage = toOnboardingLandingPage(
+      typeof metadata?.landingPage === "string" ? metadata.landingPage : null,
+    );
 
     if (row.action === "onboarding.login_success" && sourceRef) {
       lpAttributedLogins += 1;
+      const landingPageStat = landingPageMap.get(landingPage) ?? { logins: 0, signups: 0 };
+      landingPageStat.logins += 1;
+      landingPageMap.set(landingPage, landingPageStat);
       const channelStat = channelMap.get(sourceChannel) ?? { logins: 0, signups: 0 };
       channelStat.logins += 1;
       channelMap.set(sourceChannel, channelStat);
@@ -2300,6 +2348,9 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
     if (row.action === "onboarding.signup_completed") {
       signupCompleted += 1;
+      const landingPageStat = landingPageMap.get(landingPage) ?? { logins: 0, signups: 0 };
+      landingPageStat.signups += 1;
+      landingPageMap.set(landingPage, landingPageStat);
       const channelStat = channelMap.get(sourceChannel) ?? { logins: 0, signups: 0 };
       channelStat.signups += 1;
       channelMap.set(sourceChannel, channelStat);
@@ -2312,6 +2363,18 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
   const lpToSignupRate =
     lpAttributedLogins > 0 ? Math.round((signupCompleted / lpAttributedLogins) * 100) : 0;
+
+  const byLandingPage: OnboardingFunnel7d["byLandingPage"] = (["business", "resort", "spa", "unknown"] as const)
+    .map((lp) => {
+      const counts = landingPageMap.get(lp) ?? { logins: 0, signups: 0 };
+      return {
+        lp,
+        logins: counts.logins,
+        signups: counts.signups,
+        rate: counts.logins > 0 ? Math.round((counts.signups / counts.logins) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.logins - a.logins);
 
   const byChannel = Array.from(channelMap.entries())
     .map(([channel, counts]) => ({
@@ -2336,9 +2399,36 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     lpAttributedLogins,
     signupCompleted,
     lpToSignupRate,
+    byLandingPage,
     byChannel,
     byVariant,
   };
+}
+
+export async function runOpsWeeklyReport(message: string): Promise<string> {
+  const token = await getAccessTokenOrThrow();
+  const response = await fetch("/api/ops/weekly-report", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ message }),
+  });
+  const payload = (await response.json()) as {
+    message?: string;
+    channels?: {
+      slack?: { ok: boolean; detail: string };
+      email?: { ok: boolean; detail: string };
+    };
+  };
+  if (!response.ok) {
+    const detail = payload.channels?.email?.detail || payload.channels?.slack?.detail;
+    throw new Error(`${payload.message || "週次レポート送信に失敗しました"}${detail ? `: ${detail}` : ""}`);
+  }
+  const email = payload.channels?.email;
+  const slack = payload.channels?.slack;
+  return `${payload.message || "週次レポートを送信しました"} / Slack: ${slack?.ok ? "OK" : "NG"} / Mail: ${email?.ok ? "OK" : "NG"}${email?.detail ? ` (${email.detail})` : ""}`;
 }
 
 export async function createStripeCheckoutSession(

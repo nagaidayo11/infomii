@@ -8,7 +8,7 @@ type PublicPerformanceTrackerProps = {
 };
 
 type PerfMetricPayload = {
-  name: "lcp" | "load";
+  name: "lcp" | "load" | "cls" | "inp";
   value: number;
 };
 
@@ -21,6 +21,8 @@ export function PublicPerformanceTracker({ hotelId, slug }: PublicPerformanceTra
     }
 
     let lcpMs = 0;
+    let clsScore = 0;
+    let inpMs = 0;
     const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
     const loadMsRaw = nav?.loadEventEnd || nav?.domContentLoadedEventEnd || 0;
     const loadMs = Math.round(loadMsRaw);
@@ -39,6 +41,38 @@ export function PublicPerformanceTracker({ hotelId, slug }: PublicPerformanceTra
     } catch {
       // ignored
     }
+    const clsObserver = typeof PerformanceObserver !== "undefined"
+      ? new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            const layoutShift = entry as PerformanceEntry & { value?: number; hadRecentInput?: boolean };
+            if (!layoutShift.hadRecentInput) {
+              clsScore += typeof layoutShift.value === "number" ? layoutShift.value : 0;
+            }
+          }
+        })
+      : null;
+    try {
+      clsObserver?.observe({ type: "layout-shift", buffered: true });
+    } catch {
+      // ignored
+    }
+
+    const inpObserver = typeof PerformanceObserver !== "undefined"
+      ? new PerformanceObserver((entryList) => {
+          for (const entry of entryList.getEntries()) {
+            const eventEntry = entry as PerformanceEntry & { duration?: number };
+            const duration = typeof eventEntry.duration === "number" ? Math.round(eventEntry.duration) : 0;
+            if (duration > inpMs) {
+              inpMs = duration;
+            }
+          }
+        })
+      : null;
+    try {
+      inpObserver?.observe({ type: "event", buffered: true } as PerformanceObserverInit);
+    } catch {
+      // ignored
+    }
 
     const flush = () => {
       if (sentRef.current) {
@@ -46,6 +80,8 @@ export function PublicPerformanceTracker({ hotelId, slug }: PublicPerformanceTra
       }
       sentRef.current = true;
       observer?.disconnect();
+      clsObserver?.disconnect();
+      inpObserver?.disconnect();
 
       const metrics: PerfMetricPayload[] = [];
       if (lcpMs > 0) {
@@ -53,6 +89,12 @@ export function PublicPerformanceTracker({ hotelId, slug }: PublicPerformanceTra
       }
       if (loadMs > 0) {
         metrics.push({ name: "load", value: loadMs });
+      }
+      if (clsScore > 0) {
+        metrics.push({ name: "cls", value: Math.round(clsScore * 1000) });
+      }
+      if (inpMs > 0) {
+        metrics.push({ name: "inp", value: inpMs });
       }
       if (metrics.length === 0) {
         return;
@@ -94,6 +136,8 @@ export function PublicPerformanceTracker({ hotelId, slug }: PublicPerformanceTra
       document.removeEventListener("visibilitychange", onHidden);
       window.removeEventListener("pagehide", flush);
       observer?.disconnect();
+      clsObserver?.disconnect();
+      inpObserver?.disconnect();
     };
   }, [hotelId, slug]);
 
