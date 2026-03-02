@@ -47,6 +47,17 @@ type Week3Review = {
   weak: string[];
 };
 
+type Week4Review = {
+  kpi: {
+    lpToSignupRate: number;
+    publishCompletionRate: number;
+    proConversionRate: number;
+    retentionRate: number;
+  };
+  standardize: string[];
+  stopOrFix: string[];
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -202,6 +213,61 @@ function buildWeek3Review(params: {
   };
 }
 
+function inferFacilityTypeFromText(text: string | null | undefined): "business" | "resort" | "spa" {
+  const normalized = (text ?? "").toLowerCase();
+  if (
+    normalized.includes("温浴") ||
+    normalized.includes("温泉") ||
+    normalized.includes("浴場") ||
+    normalized.includes("スパ") ||
+    normalized.includes("spa")
+  ) {
+    return "spa";
+  }
+  if (
+    normalized.includes("リゾート") ||
+    normalized.includes("resort") ||
+    normalized.includes("旅館") ||
+    normalized.includes("ryokan")
+  ) {
+    return "resort";
+  }
+  return "business";
+}
+
+function buildWeek4Review(params: {
+  lpToSignupRate: number;
+  publishCompletionRate: number;
+  proConversionRate: number;
+  retentionRate: number;
+}): Week4Review {
+  const standardize: string[] = [];
+  const stopOrFix: string[] = [];
+  const entries = [
+    { name: "LP→登録導線", score: params.lpToSignupRate, good: 20 },
+    { name: "編集→公開導線", score: params.publishCompletionRate, good: 60 },
+    { name: "アップグレード導線", score: params.proConversionRate, good: 15 },
+    { name: "再開後7日継続導線", score: params.retentionRate, good: 40 },
+  ];
+  for (const entry of entries) {
+    if (entry.score >= entry.good) {
+      standardize.push(entry.name);
+    } else {
+      stopOrFix.push(entry.name);
+    }
+  }
+  return {
+    kpi: {
+      lpToSignupRate: params.lpToSignupRate,
+      publishCompletionRate: params.publishCompletionRate,
+      proConversionRate: params.proConversionRate,
+      retentionRate: params.retentionRate,
+    },
+    standardize,
+    stopOrFix,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization") || "";
@@ -326,6 +392,19 @@ export async function GET(request: NextRequest) {
           publishes: 0,
           completionRate: 0,
           byPath: { template: 0, draft: 0, publish: 0 },
+          byFacility: { business: 0, resort: 0, spa: 0 },
+          byFacilityCompletionRate: { business: 0, resort: 0, spa: 0 },
+          retention7d: { eligible: 0, retained: 0, rate: 0 },
+        },
+        week4Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retentionRate: 0,
+          },
+          standardize: [],
+          stopOrFix: [],
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -415,6 +494,19 @@ export async function GET(request: NextRequest) {
           publishes: 0,
           completionRate: 0,
           byPath: { template: 0, draft: 0, publish: 0 },
+          byFacility: { business: 0, resort: 0, spa: 0 },
+          byFacilityCompletionRate: { business: 0, resort: 0, spa: 0 },
+          retention7d: { eligible: 0, retained: 0, rate: 0 },
+        },
+        week4Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retentionRate: 0,
+          },
+          standardize: [],
+          stopOrFix: [],
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -486,9 +578,9 @@ export async function GET(request: NextRequest) {
         .limit(3000),
       admin
         .from("audit_logs")
-        .select("metadata")
+        .select("metadata,created_at")
         .eq("hotel_id", hotelId)
-        .gte("created_at", since7d)
+        .gte("created_at", since30d)
         .eq("action", "ops.restart_flow_click")
         .limit(1000),
     ]);
@@ -601,20 +693,79 @@ export async function GET(request: NextRequest) {
       completedCheckouts,
     });
     const restartByPath = { template: 0, draft: 0, publish: 0 };
+    const restartByFacility = { business: 0, resort: 0, spa: 0 };
+    const restartEvents: Array<{ createdAt: number; facilityType: "business" | "resort" | "spa" }> = [];
     for (const row of restartLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const path = metadata?.path;
       if (path === "template" || path === "draft" || path === "publish") {
-        restartByPath[path] += 1;
+        if (new Date(row.created_at).getTime() >= new Date(since7d).getTime()) {
+          restartByPath[path] += 1;
+        }
+      }
+      const facilityType = inferFacilityTypeFromText(typeof metadata?.facilityType === "string" ? metadata.facilityType : "");
+      if (new Date(row.created_at).getTime() >= new Date(since7d).getTime()) {
+        restartByFacility[facilityType] += 1;
+      }
+      const createdAt = new Date(row.created_at).getTime();
+      if (Number.isFinite(createdAt)) {
+        restartEvents.push({ createdAt, facilityType });
       }
     }
     const restartClicks = restartByPath.template + restartByPath.draft + restartByPath.publish;
     const restartPublishes = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
     const restartCompletionRate = restartClicks > 0 ? Math.min(100, Math.round((restartPublishes / restartClicks) * 100)) : 0;
+    const publishTimes30d = (publishLeadLogs ?? [])
+      .filter((row) => row.action === "information.published")
+      .map((row) => new Date(row.created_at).getTime())
+      .filter((value) => Number.isFinite(value))
+      .sort((a, b) => a - b);
+    const byFacilityCompletionBase = {
+      business: { clicks: 0, completed: 0 },
+      resort: { clicks: 0, completed: 0 },
+      spa: { clicks: 0, completed: 0 },
+    };
+    for (const entry of restartEvents) {
+      if (entry.createdAt < new Date(since7d).getTime()) {
+        continue;
+      }
+      byFacilityCompletionBase[entry.facilityType].clicks += 1;
+      const completed = publishTimes30d.some((time) => time > entry.createdAt && time <= entry.createdAt + 48 * 60 * 60 * 1000);
+      if (completed) {
+        byFacilityCompletionBase[entry.facilityType].completed += 1;
+      }
+    }
+    const byFacilityCompletionRate = {
+      business: byFacilityCompletionBase.business.clicks > 0
+        ? Math.round((byFacilityCompletionBase.business.completed / byFacilityCompletionBase.business.clicks) * 100)
+        : 0,
+      resort: byFacilityCompletionBase.resort.clicks > 0
+        ? Math.round((byFacilityCompletionBase.resort.completed / byFacilityCompletionBase.resort.clicks) * 100)
+        : 0,
+      spa: byFacilityCompletionBase.spa.clicks > 0
+        ? Math.round((byFacilityCompletionBase.spa.completed / byFacilityCompletionBase.spa.clicks) * 100)
+        : 0,
+    };
+    const retentionCandidates = restartEvents.filter((row) => row.createdAt <= Date.now() - 7 * 24 * 60 * 60 * 1000);
+    let retainedCount = 0;
+    for (const entry of retentionCandidates) {
+      const endAt = entry.createdAt + 7 * 24 * 60 * 60 * 1000;
+      const retained = publishTimes30d.some((time) => time > entry.createdAt && time <= endAt);
+      if (retained) {
+        retainedCount += 1;
+      }
+    }
+    const retentionRate = retentionCandidates.length > 0 ? Math.round((retainedCount / retentionCandidates.length) * 100) : 0;
     const week3Review = buildWeek3Review({
       lpToSignupRate,
       publishCompletionRate: week2Review.kpi.publishCompletionRate,
       proConversionRate: week2Review.kpi.proConversionRate,
+    });
+    const week4Review = buildWeek4Review({
+      lpToSignupRate,
+      publishCompletionRate: week2Review.kpi.publishCompletionRate,
+      proConversionRate: week2Review.kpi.proConversionRate,
+      retentionRate,
     });
 
     return NextResponse.json({
@@ -650,6 +801,7 @@ export async function GET(request: NextRequest) {
       },
       week2Review,
       week3Review,
+      week4Review,
       execution,
       dormancy,
       performance7d: {
@@ -667,6 +819,13 @@ export async function GET(request: NextRequest) {
         publishes: restartPublishes,
         completionRate: restartCompletionRate,
         byPath: restartByPath,
+        byFacility: restartByFacility,
+        byFacilityCompletionRate,
+        retention7d: {
+          eligible: retentionCandidates.length,
+          retained: retainedCount,
+          rate: retentionRate,
+        },
       },
       recentBillingLogs: (logs ?? []) as BillingLogRow[],
     });

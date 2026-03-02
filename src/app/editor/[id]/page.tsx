@@ -29,6 +29,7 @@ import {
   getInformation,
   listCurrentHotelNodeMapInfos,
   listCurrentHotelPageLinks,
+  trackShareClick,
   trackUpgradeClick,
   type HotelNodeMapInfo,
   type HotelPageLink,
@@ -2216,6 +2217,7 @@ export default function EditorPage() {
     if (!shareTemplateText) {
       return;
     }
+    void trackShareClick("line");
     const encoded = encodeURIComponent(shareTemplateText);
     window.open(`https://line.me/R/msg/text/?${encoded}`, "_blank", "noopener,noreferrer");
   }
@@ -2224,6 +2226,7 @@ export default function EditorPage() {
     if (!item || !publicUrl) {
       return;
     }
+    void trackShareClick("mail");
     const subject = encodeURIComponent(`【Infomii】${item.title}の共有`);
     const body = encodeURIComponent(shareTemplateText);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
@@ -5854,6 +5857,14 @@ function onUpdateIconRowItem(
                             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-center text-xs text-slate-700 hover:bg-slate-50"
                           >
                             3. QR画像を開く
+                          </a>
+                          <a
+                            href={`/print/a4-qr?title=${encodeURIComponent(item.title)}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrPublicUrl)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-center text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            A4印刷テンプレ
                           </a>
                           <button
                             type="button"

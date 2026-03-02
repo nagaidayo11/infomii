@@ -295,6 +295,33 @@ export const starterTemplates: StarterTemplate[] = [
     }),
   },
   {
+    industry: "hotel_business",
+    title: "【JP/EN】チェックイン・館内導線（バイリンガル）",
+    body: "日本語 / English で同時案内するテンプレです。\n\n【チェックイン / Check-in】\n15:00〜24:00 / 3:00 PM - 12:00 AM\n\n【チェックアウト / Check-out】\n10:00まで / Until 10:00 AM\n\n【Wi-Fi / Internet】\n客室TVをご確認ください / Check your room TV guide\n\n【緊急連絡 / Emergency】\nフロント内線 [番号] / Front desk ext. [number]",
+    blocks: buildTemplateBlocks({
+      title: "チェックイン / Check-in Guide",
+      badgeText: "JP / EN",
+      lead: "日本語と英語の案内を1ページで管理できます。",
+      variant: "hero",
+      heroImageUrl: "/templates/hotel-business.svg",
+      quickLinks: [
+        { icon: "🛎️", label: "Front / フロント" },
+        { icon: "📶", label: "Wi-Fi" },
+        { icon: "🚕", label: "Taxi / タクシー" },
+      ],
+      hours: [
+        ["チェックイン / Check-in", "15:00〜24:00 / 3:00 PM - 12:00 AM"],
+        ["チェックアウト / Check-out", "10:00まで / Until 10:00 AM"],
+      ],
+      sections: [
+        { title: "館内設備 / Facility", body: "ランドリー: 2F / Laundry: 2F\n電子レンジ: 2F / Microwave: 2F" },
+        { title: "連絡先 / Contact", body: "フロント内線 [番号] / Front desk ext. [number]" },
+      ],
+      ctaLabel: "Contact Front Desk",
+      ctaUrl: "tel:+81-00-0000-0000",
+    }),
+  },
+  {
     industry: "hotel_resort",
     title: "【リゾートホテル】滞在アクティビティ案内",
     body: "ご滞在中にお楽しみいただけるプログラムをご案内します。\n\n【朝ヨガ】\n7:00〜7:40（ガーデン）\n参加費: 無料 / 事前予約不要\n\n【サンセットクルーズ】\n17:30〜18:30（要予約）\n料金: 大人 [料金] 円 / 小人 [料金] 円\n\n【キッズプログラム】\n10:00〜16:00（ロビー集合）\n対象: 4〜10歳\n\n【予約方法】\nフロント内線 [番号] または QR 予約フォーム\n\n【雨天時】\n屋内ワークショップへ振替実施",
@@ -325,6 +352,33 @@ export const starterTemplates: StarterTemplate[] = [
       ],
       ctaLabel: "アクティビティを予約",
       ctaUrl: "https://example.com/reserve",
+    }),
+  },
+  {
+    industry: "hotel_resort",
+    title: "【JP/EN】リゾート施設・温浴案内",
+    body: "海外ゲスト向けに日本語/英語で温浴・施設情報を案内します。\n\n【大浴場 / Public Bath】\n15:00〜24:00 / 5:00〜9:30\n\n【プール / Pool】\n9:00〜18:00\n\n【予約 / Reservation】\nフロントまたは客室タブレット / Front desk or room tablet\n\n【注意事項 / Notice】\nタオルを客室から持参 / Please bring towels from your room",
+    blocks: buildTemplateBlocks({
+      title: "温浴・施設案内 / Spa & Facility",
+      badgeText: "JP / EN",
+      lead: "リゾート滞在に必要な施設ルールを二言語でまとめます。",
+      variant: "story",
+      heroImageUrl: "/templates/hotel-resort.svg",
+      quickLinks: [
+        { icon: "♨️", label: "Bath / 温浴" },
+        { icon: "🏊", label: "Pool / プール" },
+        { icon: "📱", label: "Reserve / 予約" },
+      ],
+      hours: [
+        ["大浴場 / Public Bath", "15:00〜24:00 / 5:00〜9:30"],
+        ["プール / Pool", "9:00〜18:00"],
+      ],
+      sections: [
+        { title: "予約方法 / Reservation", body: "フロント または 客室タブレット\nFront desk or room tablet" },
+        { title: "注意事項 / Notice", body: "タオルは客室から持参\nPlease bring towels from your room" },
+      ],
+      ctaLabel: "施設ルールを確認",
+      ctaUrl: "https://example.com/facility",
     }),
   },
   {

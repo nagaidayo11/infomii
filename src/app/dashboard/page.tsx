@@ -29,6 +29,7 @@ import {
   runOpsRecoveryAction,
   runOpsAlertTest,
   trackBillingResumeClick,
+  trackDormancyNoticeVariantCopy,
   trackOpsRestartFlowClick,
   trackUpgradeClick,
   type HotelAuditLog,
@@ -130,6 +131,7 @@ function getTemplateBlockLabel(type: string): string {
 type TemplatePurposeFilter = "all" | "checkin" | "facility" | "breakfast" | "bath";
 type TemplateSortMode = "recommended" | "latest";
 type TemplateScene = "front" | "guestroom" | "facility";
+type FacilityType = "business" | "resort" | "spa";
 
 const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
   all: "すべて",
@@ -143,6 +145,82 @@ const TEMPLATE_SCENE_LABELS: Record<TemplateScene, string> = {
   guestroom: "客室",
   facility: "館内",
 };
+const FACILITY_LABELS: Record<FacilityType, string> = {
+  business: "ビジネス",
+  resort: "リゾート",
+  spa: "温浴・スパ",
+};
+
+function inferFacilityType(hotelName: string): FacilityType {
+  const normalized = hotelName.toLowerCase();
+  if (
+    normalized.includes("温泉") ||
+    normalized.includes("温浴") ||
+    normalized.includes("浴場") ||
+    normalized.includes("スパ") ||
+    normalized.includes("spa")
+  ) {
+    return "spa";
+  }
+  if (
+    normalized.includes("リゾート") ||
+    normalized.includes("resort") ||
+    normalized.includes("旅館") ||
+    normalized.includes("ryokan")
+  ) {
+    return "resort";
+  }
+  return "business";
+}
+
+function mapFacilityToIndustry(type: FacilityType): IndustryPreset {
+  if (type === "resort") {
+    return "hotel_resort";
+  }
+  if (type === "spa") {
+    return "ryokan";
+  }
+  return "hotel_business";
+}
+
+function getTemplateRequirementHints(template: StarterTemplate): { required: string[]; recommended: string[] } {
+  const blockTypes = new Set((template.blocks ?? []).map((block) => block.type));
+  const required = ["タイトル", "公開導線（CTA）"];
+  const recommended: string[] = [];
+  if (blockTypes.has("hours")) {
+    required.push("営業時間/提供時間");
+  }
+  if (blockTypes.has("iconRow")) {
+    recommended.push("導線アイコンの遷移先URL");
+  }
+  if (blockTypes.has("pricing")) {
+    recommended.push("料金・補足条件");
+  }
+  if (blockTypes.has("image") || blockTypes.has("gallery")) {
+    recommended.push("画像の軽量化（WebP推奨）");
+  }
+  if (blockTypes.has("columns") || blockTypes.has("columnGroup")) {
+    recommended.push("比較カラムの数値/条件");
+  }
+  if (recommended.length === 0) {
+    recommended.push("連絡先・受付時間");
+  }
+  return { required, recommended };
+}
+
+function getTemplateSlaMs(template: StarterTemplate): number {
+  const text = `${template.title}\n${template.body}`.toLowerCase();
+  if (text.includes("チェックイン") || text.includes("深夜到着")) {
+    return 2200;
+  }
+  if (text.includes("温浴") || text.includes("温泉") || text.includes("スパ")) {
+    return 2400;
+  }
+  if (text.includes("アクティビティ") || text.includes("プール")) {
+    return 2500;
+  }
+  return 2300;
+}
 
 function detectTemplatePurposes(template: StarterTemplate): TemplatePurposeFilter[] {
   const text = `${template.title}\n${template.body}`.toLowerCase();
@@ -382,6 +460,7 @@ export default function DashboardPage() {
   const autoSyncedRenewalRef = useRef(false);
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
   const canAccessOps = userEmail.length > 0 && OPS_OWNER_EMAILS.has(userEmail);
+  const inferredFacilityType = useMemo<FacilityType>(() => inferFacilityType(hotelName), [hotelName]);
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -610,6 +689,13 @@ export default function DashboardPage() {
   }, [loading, opsHealth, canAccessOps, items.length]);
 
   useEffect(() => {
+    if (!hotelName || industryFilter !== "all") {
+      return;
+    }
+    setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
+  }, [hotelName, industryFilter, inferredFacilityType]);
+
+  useEffect(() => {
     if (loading) {
       return;
     }
@@ -732,7 +818,9 @@ export default function DashboardPage() {
   const isNearLimit = !isLimitReached && publishedLimit > 0 && usagePercent >= 80;
   const isProActive = subscription?.plan === "pro" && (subscription.status === "active" || subscription.status === "trialing");
   const isHighTraffic = (viewMetrics?.totalViews7d ?? 0) >= 120;
-  const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic);
+  const currentMonth = new Date().getMonth() + 1;
+  const isPeakSeason = [3, 4, 5, 8, 11, 12].includes(currentMonth);
+  const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic || isPeakSeason);
   const primaryBillingCtaLabel = isProActive ? "解約する" : "Proにアップグレード";
   const primaryBillingCtaLoading = isProActive ? openingPortal : creatingCheckout;
   const primaryBillingCtaDisabled = isProActive ? openingPortal || !subscription?.hasStripeCustomer : creatingCheckout;
@@ -858,6 +946,14 @@ export default function DashboardPage() {
       filteredTemplateEntries[0]
     );
   }, [filteredTemplateEntries, previewTemplateIndex]);
+  const activeTemplateRequirements = useMemo(
+    () => (activeTemplatePreviewEntry ? getTemplateRequirementHints(activeTemplatePreviewEntry.template) : null),
+    [activeTemplatePreviewEntry],
+  );
+  const activeTemplateSlaMs = useMemo(
+    () => (activeTemplatePreviewEntry ? getTemplateSlaMs(activeTemplatePreviewEntry.template) : 2300),
+    [activeTemplatePreviewEntry],
+  );
 
   useEffect(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -1004,6 +1100,24 @@ export default function DashboardPage() {
     const level = score >= 3 ? "good" : score === 2 ? "mid" : "low";
     return { lpRate, views, publishedPages, score, level };
   }, [onboardingFunnel, viewMetrics, published.length]);
+  const firstPublishDropOff = useMemo(() => {
+    const logins = onboardingFunnel?.lpAttributedLogins ?? 0;
+    const signups = onboardingFunnel?.signupCompleted ?? 0;
+    const created = items.length;
+    const publishedCount = published.length;
+    const loginToSignupDrop = logins > 0 ? Math.max(0, 100 - Math.round((signups / logins) * 100)) : 0;
+    const signupToCreatedDrop = signups > 0 ? Math.max(0, 100 - Math.round((created / signups) * 100)) : 0;
+    const createdToPublishedDrop = created > 0 ? Math.max(0, 100 - Math.round((publishedCount / created) * 100)) : 0;
+    return {
+      logins,
+      signups,
+      created,
+      publishedCount,
+      loginToSignupDrop,
+      signupToCreatedDrop,
+      createdToPublishedDrop,
+    };
+  }, [items.length, onboardingFunnel?.lpAttributedLogins, onboardingFunnel?.signupCompleted, published.length]);
   const lpOptimizationTip = useMemo(() => {
     if (week1Snapshot.lpRate >= 20) {
       return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
@@ -1546,6 +1660,11 @@ export default function DashboardPage() {
                 <p>小規模運用</p>
                 <p>本番運用 / 複数案件</p>
               </div>
+              {isPeakSeason && !isProActive && (
+                <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  繁忙期シーズンのため、Pro導線を優先表示しています（混雑時の案内更新と複数ページ運用を想定）。
+                </p>
+              )}
             </article>
           )}
           {activeTab === "dashboard" && showQuickStart && (
@@ -1590,6 +1709,29 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
+          )}
+          {activeTab === "dashboard" && (
+            <article className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-sky-900">導入初日チェックリスト（固定）</p>
+                <p className="text-xs text-sky-800">この5項目が埋まれば運用開始できます</p>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                {[
+                  { label: "施設名を設定", done: hotelName.trim().length > 0 },
+                  { label: "テンプレ/新規作成", done: items.length > 0 },
+                  { label: "1ページ公開", done: published.length > 0 },
+                  { label: "スタッフ招待発行", done: (inviteMetrics?.issued ?? 0) > 0 },
+                  { label: "A4 QR配布準備", done: published.length > 0 },
+                ].map((entry) => (
+                  <div key={entry.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <p className={`text-xs font-semibold ${entry.done ? "text-emerald-700" : "text-slate-500"}`}>
+                      {entry.done ? "✓" : "・"} {entry.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </article>
           )}
 
           <div className="relative">
@@ -1709,6 +1851,11 @@ export default function DashboardPage() {
                     className="w-full rounded-2xl border border-emerald-300/70 bg-white/95 px-4 py-3 text-sm text-slate-800 shadow-sm outline-none ring-emerald-300 focus:ring"
                   />
                 </div>
+                <div className="mx-auto mt-3 flex max-w-5xl items-center justify-center">
+                  <p className="rounded-full border border-emerald-300 bg-white/90 px-3 py-1 text-xs text-emerald-900">
+                    施設タイプ推定: {FACILITY_LABELS[inferredFacilityType]}（おすすめカテゴリを自動選択）
+                  </p>
+                </div>
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
@@ -1820,7 +1967,10 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
                       </div>
                       <div className="grid gap-3 lg:grid-cols-3">
-                        {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds }) => (
+                        {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds }) => {
+                          const requirementHints = getTemplateRequirementHints(template);
+                          const slaMs = getTemplateSlaMs(template);
+                          return (
                           <article
                             key={`${template.title}-${originalIndex}`}
                             role="button"
@@ -1887,6 +2037,13 @@ export default function DashboardPage() {
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">想定表示時間: 約{viewSeconds}秒</p>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">必要入力: {inputCount}項目</p>
                             </div>
+                            <p className="mt-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
+                              速度目標: LCP {slaMs}ms 以下
+                            </p>
+                            <div className="mt-2 space-y-1 text-[11px] text-slate-600">
+                              <p className="font-semibold text-slate-700">必須: {requirementHints.required.join(" / ")}</p>
+                              <p>推奨: {requirementHints.recommended.join(" / ")}</p>
+                            </div>
                             <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
                               {template.body}
                             </p>
@@ -1894,7 +2051,8 @@ export default function DashboardPage() {
                               このテンプレで作成
                             </p>
                           </article>
-                        ))}
+                          );
+                        })}
                       </div>
                     </section>
                   ))}
@@ -1925,6 +2083,16 @@ export default function DashboardPage() {
                           必要入力: {activeTemplatePreviewEntry.inputCount}項目
                         </p>
                       </div>
+                      <p className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
+                        速度目標（SLA）: LCP {activeTemplateSlaMs}ms 以下
+                      </p>
+                      {activeTemplateRequirements && (
+                        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-700">
+                          <p className="font-semibold text-slate-800">不足項目チェック（公開前）</p>
+                          <p className="mt-1">必須: {activeTemplateRequirements.required.join(" / ")}</p>
+                          <p className="mt-1">推奨: {activeTemplateRequirements.recommended.join(" / ")}</p>
+                        </div>
+                      )}
                       {(() => {
                         const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
                         if (!previewImage) {
@@ -2341,6 +2509,11 @@ export default function DashboardPage() {
                     ))}
                     {(opsHealth?.performance7d.slowPages ?? []).length === 0 && <p>しきい値超過ページはありません。</p>}
                   </div>
+                  {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
+                    <div className="mt-2 rounded-md border border-amber-200 bg-white px-2 py-2 text-[11px] text-amber-900">
+                      改善提案: 画像ブロックをWebPに置換 / ギャラリー枚数を削減 / 先頭CTAより下に重い画像を移動
+                    </div>
+                  )}
                   <p className="mt-2 text-[11px] text-slate-600">しきい値: LCP 2500ms以上 または Load 4000ms以上</p>
                 </div>
 
@@ -2349,7 +2522,7 @@ export default function DashboardPage() {
                   <div className="mt-2 space-y-1 text-xs text-slate-700">
                     {(opsHealth?.performance7d.lcpByPage ?? []).map((row) => (
                       <p key={`lcp-page-${row.path}`}>
-                        {row.path}: LCP {row.lcpMs}ms（{row.samples}件）
+                        {row.path}: LCP {row.lcpMs}ms / SLA 2300ms（{row.lcpMs <= 2300 ? "達成" : "未達"}・{row.samples}件）
                       </p>
                     ))}
                     {(opsHealth?.performance7d.lcpByPage ?? []).length === 0 && <p>計測データがありません。</p>}
@@ -2386,7 +2559,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          void trackOpsRestartFlowClick("template");
+                          void trackOpsRestartFlowClick("template", inferredFacilityType);
                           setActiveTab("create");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2397,7 +2570,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          void trackOpsRestartFlowClick("draft");
+                          void trackOpsRestartFlowClick("draft", inferredFacilityType);
                           setActiveTab("project");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2408,7 +2581,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          void trackOpsRestartFlowClick("publish");
+                          void trackOpsRestartFlowClick("publish", inferredFacilityType);
                           setActiveTab("dashboard");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2420,8 +2593,17 @@ export default function DashboardPage() {
                     <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
                       再開導線AB: テンプレ {opsHealth?.restart7d.byPath.template ?? 0} / 下書き {opsHealth?.restart7d.byPath.draft ?? 0} / 公開確認 {opsHealth?.restart7d.byPath.publish ?? 0}
                     </div>
+                    <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                      施設タイプ比較: ビジネス {opsHealth?.restart7d.byFacility.business ?? 0} / リゾート {opsHealth?.restart7d.byFacility.resort ?? 0} / 温浴 {opsHealth?.restart7d.byFacility.spa ?? 0}
+                    </div>
+                    <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                      施設タイプ別完了率: ビジネス {opsHealth?.restart7d.byFacilityCompletionRate.business ?? 0}% / リゾート {opsHealth?.restart7d.byFacilityCompletionRate.resort ?? 0}% / 温浴 {opsHealth?.restart7d.byFacilityCompletionRate.spa ?? 0}%
+                    </div>
                     <p className="mt-1 text-[11px] text-slate-600">
                       再開完了率: {opsHealth?.restart7d.completionRate ?? 0}%（再開クリック {opsHealth?.restart7d.clicks ?? 0} 件 / 公開 {opsHealth?.restart7d.publishes ?? 0} 件）
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      再開後7日継続率: {opsHealth?.restart7d.retention7d.rate ?? 0}%（対象 {opsHealth?.restart7d.retention7d.eligible ?? 0} / 継続 {opsHealth?.restart7d.retention7d.retained ?? 0}）
                     </p>
                   </div>
                 </div>
@@ -2506,6 +2688,26 @@ export default function DashboardPage() {
                       改善提案: {lpOptimizationTip}
                     </p>
                   </div>
+                  <div className="mt-3 rounded-md border border-sky-200 bg-white p-3">
+                    <p className="text-xs font-semibold text-slate-700">初回公開までの離脱可視化</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                      <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+                        LPログイン {firstPublishDropOff.logins}
+                      </div>
+                      <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+                        登録完了 {firstPublishDropOff.signups}
+                      </div>
+                      <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+                        作成 {firstPublishDropOff.created}
+                      </div>
+                      <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs">
+                        公開 {firstPublishDropOff.publishedCount}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-700">
+                      離脱率: ログイン→登録 {firstPublishDropOff.loginToSignupDrop}% / 登録→作成 {firstPublishDropOff.signupToCreatedDrop}% / 作成→公開 {firstPublishDropOff.createdToPublishedDrop}%
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-fuchsia-200 bg-fuchsia-50/50 p-3">
@@ -2576,6 +2778,34 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+                  <p className="text-xs font-semibold text-emerald-900">Week4 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week4Review.kpi.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week4Review.kpi.publishCompletionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week4Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">再開後7日継続率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week4Review.kpi.retentionRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    標準化する施策: {(opsHealth?.week4Review.standardize ?? []).join(" / ") || "なし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-rose-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    停止/修正する施策: {(opsHealth?.week4Review.stopOrFix ?? []).join(" / ") || "なし"}
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -2583,6 +2813,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => {
                         const text = "【Infomii再開案内】最終更新から7日以上経過しています。テンプレ再開から3分で再公開できます。";
+                        void trackDormancyNoticeVariantCopy("short");
                         void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（短文）をコピーしました"));
                       }}
                       className="rounded-md border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50"
@@ -2593,6 +2824,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => {
                         const text = "【Infomii運用再開のお願い】\n最終更新から7日以上経過しています。\n1) ダッシュボード > テンプレから再開\n2) 必要箇所だけ更新\n3) URL/QRを再配布\n本日中に再公開できる状態です。";
+                        void trackDormancyNoticeVariantCopy("detail");
                         void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（詳細）をコピーしました"));
                       }}
                       className="rounded-md border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50"
@@ -2880,6 +3112,32 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   )}
+                  {subscription?.status === "past_due" && (
+                    <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                      <p className="text-xs font-semibold text-rose-900">決済失敗の再試行ガイド</p>
+                      <p className="mt-1 text-xs text-rose-800">
+                        1. 請求書・カード管理でカード情報を更新 → 2. 決済を再開する → 3. 反映後に状態更新
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={onOpenBillingPortal}
+                          disabled={openingPortal || !subscription?.hasStripeCustomer}
+                          className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100 disabled:opacity-60"
+                        >
+                          {openingPortal ? "遷移中..." : "カード情報を更新"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void onResumeCheckout()}
+                          disabled={creatingCheckout}
+                          className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-500 disabled:opacity-60"
+                        >
+                          {creatingCheckout ? "遷移中..." : "決済を再試行"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <p className="text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</p>
                     <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -2938,6 +3196,22 @@ export default function DashboardPage() {
                     <p className="font-medium">共有手順</p>
                     <p className="mt-1">1. 招待コードを発行 → 2. コードをコピー → 3. スタッフへ送信</p>
                     <p className="mt-1">ログイン画面の「招待コード（任意）」に入力すると同じ施設へ参加できます。</p>
+                  </div>
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900">
+                    <p>
+                      承認待ち: {inviteMetrics?.pendingApproval ?? 0}件
+                      {` / `}24時間超: {inviteMetrics?.pendingOver24h ?? 0}件
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = `【Infomii】スタッフ招待の承認が未完了です。\nログイン後に招待コードを入力して参加してください。`;
+                        void navigator.clipboard.writeText(text).then(() => setSuccess("承認待ちリマインド文面をコピーしました"));
+                      }}
+                      className="mt-2 rounded-md border border-amber-300 bg-white px-2 py-1 text-[11px] hover:bg-amber-100/40"
+                    >
+                      承認待ちリマインド文面をコピー
+                    </button>
                   </div>
 
                   <div className="mt-3 space-y-2">

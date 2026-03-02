@@ -559,6 +559,8 @@ export type HotelInviteMetrics = {
   redeemed: number;
   active: number;
   redeemRate: number;
+  pendingApproval: number;
+  pendingOver24h: number;
 };
 
 export type OnboardingFunnel7d = {
@@ -1722,12 +1724,26 @@ export async function getCurrentHotelInviteMetrics(): Promise<HotelInviteMetrics
   const issued = invites.length;
   const redeemed = invites.filter((invite) => invite.consumedAt !== null).length;
   const active = invites.filter((invite) => invite.isActive).length;
+  const now = Date.now();
+  const pendingApproval = invites.filter((invite) => invite.isActive && !invite.consumedAt).length;
+  const pendingOver24h = invites.filter((invite) => {
+    if (!invite.isActive || invite.consumedAt) {
+      return false;
+    }
+    const createdAt = new Date(invite.createdAt).getTime();
+    if (!Number.isFinite(createdAt)) {
+      return false;
+    }
+    return now - createdAt >= 24 * 60 * 60 * 1000;
+  }).length;
   const redeemRate = issued > 0 ? Math.round((redeemed / issued) * 100) : 0;
   return {
     issued,
     redeemed,
     active,
     redeemRate,
+    pendingApproval,
+    pendingOver24h,
   };
 }
 
@@ -1875,6 +1891,31 @@ export type OpsHealthSnapshot = {
       draft: number;
       publish: number;
     };
+    byFacility: {
+      business: number;
+      resort: number;
+      spa: number;
+    };
+    byFacilityCompletionRate: {
+      business: number;
+      resort: number;
+      spa: number;
+    };
+    retention7d: {
+      eligible: number;
+      retained: number;
+      rate: number;
+    };
+  };
+  week4Review: {
+    kpi: {
+      lpToSignupRate: number;
+      publishCompletionRate: number;
+      proConversionRate: number;
+      retentionRate: number;
+    };
+    standardize: string[];
+    stopOrFix: string[];
   };
   recentBillingLogs: Array<{
     id: string;
@@ -1997,7 +2038,10 @@ export async function trackBillingResumeClick(): Promise<void> {
   });
 }
 
-export async function trackOpsRestartFlowClick(path: "template" | "draft" | "publish"): Promise<void> {
+export async function trackOpsRestartFlowClick(
+  path: "template" | "draft" | "publish",
+  facilityType?: "business" | "resort" | "spa",
+): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     return;
@@ -2011,7 +2055,43 @@ export async function trackOpsRestartFlowClick(path: "template" | "draft" | "pub
     action: "ops.restart_flow_click",
     message: `再開導線をクリックしました（${path}）`,
     targetType: "ops",
-    metadata: { path },
+    metadata: { path, facilityType: facilityType ?? "business" },
+  });
+}
+
+export async function trackShareClick(channel: "line" | "mail"): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "share.channel_click",
+    message: `公開後共有をクリックしました（${channel}）`,
+    targetType: "share",
+    metadata: { channel },
+  });
+}
+
+export async function trackDormancyNoticeVariantCopy(variant: "short" | "detail"): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.dormancy_notice_copy",
+    message: `休眠通知テンプレをコピーしました（${variant}）`,
+    targetType: "ops",
+    metadata: { variant },
   });
 }
 
