@@ -3401,6 +3401,54 @@ function onUpdateIconRowItem(
     () => Math.max(0, 100 - publishCheckErrors.length * 25 - publishCheckWarnings.length * 10),
     [publishCheckErrors.length, publishCheckWarnings.length],
   );
+  const publishErrorTypeStats = useMemo(() => {
+    const stats = {
+      missingTitle: 0,
+      missingContent: 0,
+      url: 0,
+      schedule: 0,
+      linkTarget: 0,
+      other: 0,
+    };
+    for (const issue of publishCheckIssues) {
+      if (issue.message.includes("ページタイトル")) stats.missingTitle += 1;
+      else if (issue.message.includes("本文ブロック")) stats.missingContent += 1;
+      else if (issue.message.includes("URL") || issue.message.includes("リンク")) stats.url += 1;
+      else if (issue.target === "schedule") stats.schedule += 1;
+      else if (issue.message.includes("遷移先")) stats.linkTarget += 1;
+      else stats.other += 1;
+    }
+    const total = publishCheckIssues.length;
+    return {
+      total,
+      rows: [
+        { label: "タイトル未入力", count: stats.missingTitle },
+        { label: "本文不足", count: stats.missingContent },
+        { label: "URL/リンク不備", count: stats.url },
+        { label: "公開日時不備", count: stats.schedule },
+        { label: "遷移先不備", count: stats.linkTarget },
+        { label: "その他", count: stats.other },
+      ],
+    };
+  }, [publishCheckIssues]);
+  const publishFixRecommendation = useMemo(() => {
+    const top = publishErrorTypeStats.rows
+      .filter((row) => row.count > 0)
+      .sort((a, b) => b.count - a.count)[0];
+    if (!top) {
+      return "修正項目はありません。公開できます。";
+    }
+    if (top.label === "URL/リンク不備") {
+      return "URL形式を先に修正してください（https://... または /p/slug）。";
+    }
+    if (top.label === "遷移先不備") {
+      return "遷移先の公開状態を優先確認してください。";
+    }
+    if (top.label === "本文不足") {
+      return "最低1つの本文ブロックと連絡先情報を追加してください。";
+    }
+    return `${top.label}を優先修正してください。`;
+  }, [publishErrorTypeStats]);
   const favoriteBlockTypeSet = useMemo(
     () => new Set(favoriteBlockTypes),
     [favoriteBlockTypes],
@@ -5825,6 +5873,19 @@ function onUpdateIconRowItem(
                           ))}
                         </ul>
                       )}
+                      <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                        <p className="font-semibold text-slate-800">エラー種別の発生率</p>
+                        <div className="mt-1 grid grid-cols-2 gap-1">
+                          {publishErrorTypeStats.rows.map((row) => (
+                            <p key={row.label}>
+                              {row.label}: {row.count}件（{publishErrorTypeStats.total > 0 ? Math.round((row.count / publishErrorTypeStats.total) * 100) : 0}%）
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-2 text-[11px] text-indigo-900">
+                        公開直前の推奨修正: {publishFixRecommendation}
+                      </p>
                     </div>
                     <div className="mb-4 flex gap-2">
                       <button

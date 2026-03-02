@@ -585,6 +585,13 @@ export type OnboardingFunnel7d = {
     signups: number;
     rate: number;
   }>;
+  wizard: {
+    started: number;
+    step1Completed: number;
+    completed: number;
+    dropoff: number;
+    step1CompletionRate: number;
+  };
 };
 
 async function appendAuditLog(params: {
@@ -1176,6 +1183,14 @@ export async function createInformationFromTemplate(
       targetType: "information",
       targetId: data.id,
       metadata: { templateTitle: template.title },
+    });
+    await appendAuditLog({
+      hotelId,
+      action: "template.selected",
+      message: `テンプレートを選択しました（${template.title}）`,
+      targetType: "template",
+      targetId: data.id,
+      metadata: { templateTitle: template.title, templateIndex },
     });
 
     return data.id;
@@ -1887,6 +1902,7 @@ export type OpsHealthSnapshot = {
       cls: number;
       inpMs: number;
       priorityScore: number;
+      effort: "S" | "M" | "L";
       samples: number;
     }>;
     slowPages: Array<{
@@ -1896,6 +1912,7 @@ export type OpsHealthSnapshot = {
       cls: number;
       inpMs: number;
       priorityScore: number;
+      effort: "S" | "M" | "L";
       samples: number;
     }>;
   };
@@ -1943,6 +1960,25 @@ export type OpsHealthSnapshot = {
     };
     standardize: string[];
     stopOrFix: string[];
+  };
+  week7Review: {
+    kpi: {
+      lpToSignupRate: number;
+      firstPublishRate: number;
+      proConversionRate: number;
+      retention14dRate: number;
+    };
+    lpWinnerByIndustry: {
+      business: "a" | "b" | "c" | "-";
+      resort: "a" | "b" | "c" | "-";
+      spa: "a" | "b" | "c" | "-";
+    };
+    templateToPublishMedianMinutes: number;
+    dormancyNoticeSent7d: {
+      day3: number;
+      day7: number;
+      day14: number;
+    };
   };
   recentBillingLogs: Array<{
     id: string;
@@ -2184,6 +2220,7 @@ export async function getSharedTemplateFavorites(): Promise<number[]> {
 
 type OnboardingSourceRef = "lp-hero" | "lp-sticky" | "lp-bottom";
 type OnboardingAuthAction = "login_success" | "signup_completed";
+type OnboardingWizardAction = "wizard_started" | "wizard_step_completed" | "wizard_dropoff" | "wizard_completed";
 type OnboardingSourceChannel = "x" | "instagram" | "tiktok" | "other" | "unknown";
 type OnboardingCtaVariant = "a" | "b" | "c";
 type OnboardingLandingPage = "business" | "resort" | "spa" | "unknown";
@@ -2273,6 +2310,33 @@ export async function trackOnboardingAuthEvent(
   });
 }
 
+export async function trackOnboardingWizardEvent(
+  action: OnboardingWizardAction,
+  params?: {
+    step?: number;
+    reason?: string;
+  },
+): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: `onboarding.${action}`,
+    message: `初回公開ウィザード: ${action}${params?.step ? ` step${params.step}` : ""}`,
+    targetType: "onboarding",
+    metadata: {
+      step: params?.step ?? null,
+      reason: params?.reason ?? null,
+    },
+  });
+}
+
 export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
@@ -2283,6 +2347,13 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       byLandingPage: [],
       byChannel: [],
       byVariant: [],
+      wizard: {
+        started: 0,
+        step1Completed: 0,
+        completed: 0,
+        dropoff: 0,
+        step1CompletionRate: 0,
+      },
     };
   }
 
@@ -2295,6 +2366,13 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       byLandingPage: [],
       byChannel: [],
       byVariant: [],
+      wizard: {
+        started: 0,
+        step1Completed: 0,
+        completed: 0,
+        dropoff: 0,
+        step1CompletionRate: 0,
+      },
     };
   }
 
@@ -2304,7 +2382,14 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     .from("audit_logs")
     .select("action,metadata")
     .eq("hotel_id", hotelId)
-    .in("action", ["onboarding.login_success", "onboarding.signup_completed"])
+    .in("action", [
+      "onboarding.login_success",
+      "onboarding.signup_completed",
+      "onboarding.wizard_started",
+      "onboarding.wizard_step_completed",
+      "onboarding.wizard_dropoff",
+      "onboarding.wizard_completed",
+    ])
     .gte("created_at", sinceIso);
 
   if (error) {
@@ -2316,6 +2401,10 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
   const landingPageMap = new Map<OnboardingLandingPage, { logins: number; signups: number }>();
   const channelMap = new Map<OnboardingSourceChannel, { logins: number; signups: number }>();
   const variantMap = new Map<OnboardingCtaVariant, { logins: number; signups: number }>();
+  let wizardStarted = 0;
+  let wizardStep1Completed = 0;
+  let wizardCompleted = 0;
+  let wizardDropoff = 0;
 
   for (const row of data ?? []) {
     const metadata = row.metadata as Record<string, unknown> | null;
@@ -2358,6 +2447,21 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       const variantStat = variantMap.get(ctaVariant) ?? { logins: 0, signups: 0 };
       variantStat.signups += 1;
       variantMap.set(ctaVariant, variantStat);
+    }
+    if (row.action === "onboarding.wizard_started") {
+      wizardStarted += 1;
+    }
+    if (row.action === "onboarding.wizard_step_completed") {
+      const step = typeof metadata?.step === "number" ? metadata.step : Number(metadata?.step ?? 0);
+      if (step === 1) {
+        wizardStep1Completed += 1;
+      }
+    }
+    if (row.action === "onboarding.wizard_completed") {
+      wizardCompleted += 1;
+    }
+    if (row.action === "onboarding.wizard_dropoff") {
+      wizardDropoff += 1;
     }
   }
 
@@ -2402,7 +2506,53 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     byLandingPage,
     byChannel,
     byVariant,
+    wizard: {
+      started: wizardStarted,
+      step1Completed: wizardStep1Completed,
+      completed: wizardCompleted,
+      dropoff: wizardDropoff,
+      step1CompletionRate: wizardStarted > 0 ? Math.round((wizardStep1Completed / wizardStarted) * 100) : 0,
+    },
   };
+}
+
+export async function trackDormancyNoticeSent(
+  stage: "day3" | "day7" | "day14",
+  channel: "line" | "mail" | "dashboard",
+): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.dormancy_notice_sent",
+    message: `休眠通知を送信しました（${stage} / ${channel}）`,
+    targetType: "ops",
+    metadata: { stage, channel },
+  });
+}
+
+export async function trackRestartWinnerLocked(path: "template" | "draft" | "publish"): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.restart_winner_locked",
+    message: `再開勝ち導線を固定しました（${path}）`,
+    targetType: "ops",
+    metadata: { path },
+  });
 }
 
 export async function runOpsWeeklyReport(message: string): Promise<string> {

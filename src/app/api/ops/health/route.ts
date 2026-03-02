@@ -59,6 +59,26 @@ type Week4Review = {
   stopOrFix: string[];
 };
 
+type Week7Review = {
+  kpi: {
+    lpToSignupRate: number;
+    firstPublishRate: number;
+    proConversionRate: number;
+    retention14dRate: number;
+  };
+  lpWinnerByIndustry: {
+    business: "a" | "b" | "c" | "-";
+    resort: "a" | "b" | "c" | "-";
+    spa: "a" | "b" | "c" | "-";
+  };
+  templateToPublishMedianMinutes: number;
+  dormancyNoticeSent7d: {
+    day3: number;
+    day7: number;
+    day14: number;
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -73,6 +93,18 @@ function p75(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.75));
   return sorted[index] ?? 0;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return Math.round(((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2);
+  }
+  return sorted[mid] ?? 0;
 }
 
 function buildExecutionSnapshot(logs: Array<{ action: string; target_id: string | null; created_at: string }>): ExecutionSnapshot {
@@ -431,6 +463,25 @@ export async function GET(request: NextRequest) {
           standardize: [],
           stopOrFix: [],
         },
+        week7Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            firstPublishRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+          },
+          lpWinnerByIndustry: {
+            business: "-",
+            resort: "-",
+            spa: "-",
+          },
+          templateToPublishMedianMinutes: 0,
+          dormancyNoticeSent7d: {
+            day3: 0,
+            day7: 0,
+            day14: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -544,12 +595,31 @@ export async function GET(request: NextRequest) {
           standardize: [],
           stopOrFix: [],
         },
+        week7Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            firstPublishRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+          },
+          lpWinnerByIndustry: {
+            business: "-",
+            resort: "-",
+            spa: "-",
+          },
+          templateToPublishMedianMinutes: 0,
+          dormancyNoticeSent7d: {
+            day3: 0,
+            day7: 0,
+            day14: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }] = await Promise.all([
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }, { data: dormancyNoticeLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -595,7 +665,7 @@ export async function GET(request: NextRequest) {
         .select("action,target_id,created_at")
         .eq("hotel_id", hotelId)
         .gte("created_at", since30d)
-        .in("action", ["information.created", "information.published"])
+        .in("action", ["information.created", "information.published", "template.selected"])
         .order("created_at", { ascending: true })
         .limit(2000),
       admin
@@ -618,6 +688,13 @@ export async function GET(request: NextRequest) {
         .eq("hotel_id", hotelId)
         .gte("created_at", since30d)
         .eq("action", "ops.restart_flow_click")
+        .limit(1000),
+      admin
+        .from("audit_logs")
+        .select("metadata,created_at")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .eq("action", "ops.dormancy_notice_sent")
         .limit(1000),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
@@ -701,6 +778,12 @@ export async function GET(request: NextRequest) {
         cls: Number(roundAverage(values.cls.map((v) => Math.round(v * 1000))) / 1000),
         inpMs: roundAverage(values.inp),
         priorityScore: roundAverage(values.lcp) + Math.round(roundAverage(values.load) * 0.35) + Math.round(roundAverage(values.inp) * 0.4),
+        effort: (() => {
+          const score = roundAverage(values.lcp) + Math.round(roundAverage(values.load) * 0.35) + Math.round(roundAverage(values.inp) * 0.4);
+          if (score >= 3800) return "L";
+          if (score >= 2600) return "M";
+          return "S";
+        })(),
         samples: Math.max(values.lcp.length, values.load.length, values.cls.length, values.inp.length),
       }))
       .sort((a, b) => b.lcpMs - a.lcpMs)
@@ -726,20 +809,50 @@ export async function GET(request: NextRequest) {
       ["lp-sticky", { logins: 0, signups: 0 }],
       ["lp-bottom", { logins: 0, signups: 0 }],
     ]);
+    const onboardingByLpVariant = new Map<
+      "business" | "resort" | "spa",
+      Map<"a" | "b" | "c", { logins: number; signups: number }>
+    >([
+      ["business", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["resort", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["spa", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+    ]);
     for (const row of onboardingLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const ref = metadata?.sourceRef;
       if (ref !== "lp-hero" && ref !== "lp-sticky" && ref !== "lp-bottom") {
         continue;
       }
+      const lp = metadata?.landingPage;
+      const variant = metadata?.ctaVariant;
+      const safeLp =
+        lp === "business" || lp === "resort" || lp === "spa"
+          ? lp
+          : null;
+      const safeVariant =
+        variant === "a" || variant === "b" || variant === "c"
+          ? variant
+          : "a";
       const entry = onboardingByRef.get(ref);
       if (!entry) {
         continue;
       }
       if (row.action === "onboarding.login_success") {
         entry.logins += 1;
+        if (safeLp) {
+          const stat = onboardingByLpVariant.get(safeLp)?.get(safeVariant);
+          if (stat) {
+            stat.logins += 1;
+          }
+        }
       } else if (row.action === "onboarding.signup_completed") {
         entry.signups += 1;
+        if (safeLp) {
+          const stat = onboardingByLpVariant.get(safeLp)?.get(safeVariant);
+          if (stat) {
+            stat.signups += 1;
+          }
+        }
       }
     }
     const lpLogins = Array.from(onboardingByRef.values()).reduce((sum, row) => sum + row.logins, 0);
@@ -747,6 +860,25 @@ export async function GET(request: NextRequest) {
     const lpToSignupRate = lpLogins > 0 ? Math.round((lpSignups / lpLogins) * 100) : 0;
     const createdCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.created").length;
     const publishedCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
+    const selectedByTarget = new Map<string, number>();
+    const templateToPublishDurations: number[] = [];
+    for (const row of publishLeadLogs ?? []) {
+      const targetId = row.target_id ?? "";
+      const createdAtMs = new Date(row.created_at).getTime();
+      if (!targetId || !Number.isFinite(createdAtMs)) {
+        continue;
+      }
+      if (row.action === "template.selected" && !selectedByTarget.has(targetId)) {
+        selectedByTarget.set(targetId, createdAtMs);
+      }
+      if (row.action === "information.published") {
+        const selectedAt = selectedByTarget.get(targetId);
+        if (selectedAt && createdAtMs >= selectedAt) {
+          templateToPublishDurations.push(Math.round((createdAtMs - selectedAt) / 60000));
+        }
+      }
+    }
+    const templateToPublishMedianMinutes = median(templateToPublishDurations);
     const week2Review = buildWeek2Review({
       lpToSignupRate,
       createdCount7d,
@@ -873,6 +1005,48 @@ export async function GET(request: NextRequest) {
       proConversionRate: week2Review.kpi.proConversionRate,
       retentionRate,
     });
+    const lpWinnerByIndustry = {
+      business: "-" as "a" | "b" | "c" | "-",
+      resort: "-" as "a" | "b" | "c" | "-",
+      spa: "-" as "a" | "b" | "c" | "-",
+    };
+    for (const lp of ["business", "resort", "spa"] as const) {
+      const variantMap = onboardingByLpVariant.get(lp);
+      if (!variantMap) continue;
+      let winner: "a" | "b" | "c" | "-" = "-";
+      let bestRate = -1;
+      let bestLogins = -1;
+      for (const variant of ["a", "b", "c"] as const) {
+        const stat = variantMap.get(variant);
+        if (!stat) continue;
+        const rate = stat.logins > 0 ? Math.round((stat.signups / stat.logins) * 100) : 0;
+        if (rate > bestRate || (rate === bestRate && stat.logins > bestLogins)) {
+          bestRate = rate;
+          bestLogins = stat.logins;
+          winner = stat.logins > 0 ? variant : winner;
+        }
+      }
+      lpWinnerByIndustry[lp] = winner;
+    }
+    const dormancyNoticeSent7d = { day3: 0, day7: 0, day14: 0 };
+    for (const row of dormancyNoticeLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const stage = metadata?.stage;
+      if (stage === "day3") dormancyNoticeSent7d.day3 += 1;
+      if (stage === "day7") dormancyNoticeSent7d.day7 += 1;
+      if (stage === "day14") dormancyNoticeSent7d.day14 += 1;
+    }
+    const week7Review: Week7Review = {
+      kpi: {
+        lpToSignupRate,
+        firstPublishRate: week2Review.kpi.publishCompletionRate,
+        proConversionRate: week2Review.kpi.proConversionRate,
+        retention14dRate: retentionRate14d,
+      },
+      lpWinnerByIndustry,
+      templateToPublishMedianMinutes,
+      dormancyNoticeSent7d,
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -908,6 +1082,7 @@ export async function GET(request: NextRequest) {
       week2Review,
       week3Review,
       week4Review,
+      week7Review,
       execution,
       dormancy,
       performance7d: {

@@ -32,7 +32,10 @@ import {
   runOpsWeeklyReport,
   setSharedTemplateFavorite,
   trackBillingResumeClick,
+  trackDormancyNoticeSent,
   trackDormancyNoticeVariantCopy,
+  trackOnboardingWizardEvent,
+  trackRestartWinnerLocked,
   trackOpsRestartFlowClick,
   trackUpgradeClick,
   type HotelAuditLog,
@@ -513,6 +516,9 @@ export default function DashboardPage() {
   const [templateSortMode, setTemplateSortMode] = useState<TemplateSortMode>("recommended");
   const [templateGrouping, setTemplateGrouping] = useState<TemplateGrouping>("industry");
   const [roomCountInput, setRoomCountInput] = useState("80");
+  const [wizardVisible, setWizardVisible] = useState(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+  const [lockingRestartWinner, setLockingRestartWinner] = useState(false);
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
@@ -553,8 +559,15 @@ export default function DashboardPage() {
     if (billing === "cancel") {
       setError("決済はキャンセルされました。");
     }
-    if (billing && typeof window !== "undefined") {
+    if (params.get("wizard") === "1") {
+      setActiveTab("create");
+      setWizardVisible(true);
+      setWizardStep(1);
+      void trackOnboardingWizardEvent("wizard_started", { step: 1 });
+    }
+    if ((billing || params.get("wizard") === "1") && typeof window !== "undefined") {
       params.delete("billing");
+      params.delete("wizard");
       const next = params.toString();
       const nextUrl = `${window.location.pathname}${next ? `?${next}` : ""}`;
       window.history.replaceState({}, "", nextUrl);
@@ -1039,6 +1052,12 @@ export default function DashboardPage() {
       }))
       .filter((group) => group.entries.length > 0);
   }, [filteredTemplateEntries, sortTemplateEntries, templateGrouping]);
+  const fixedTopTemplatesByFacility = useMemo(() => {
+    const targetIndustry = mapFacilityToIndustry(inferredFacilityType);
+    return filteredTemplateEntries
+      .filter((entry) => entry.template.industry === targetIndustry)
+      .slice(0, 3);
+  }, [filteredTemplateEntries, inferredFacilityType]);
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
       return null;
@@ -1076,6 +1095,15 @@ export default function DashboardPage() {
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
+  }, [items]);
+  const templateUsageCountByTitle = useMemo(() => {
+    const usageMap = new Map<string, number>();
+    for (const information of items) {
+      const title = information.title.trim();
+      if (!title) continue;
+      usageMap.set(title, (usageMap.get(title) ?? 0) + 1);
+    }
+    return usageMap;
   }, [items]);
 
   useEffect(() => {
@@ -1291,6 +1319,22 @@ export default function DashboardPage() {
       stopOrFix,
     };
   }, [items.length, onboardingFunnel?.lpToSignupRate, opsHealth?.billing.funnel7d.checkoutToPaidRate, opsHealth?.restart7d.retention7d.rate, published.length]);
+  const week7PriorityTop3 = useMemo(() => {
+    const priorities: string[] = [];
+    if ((onboardingFunnel?.wizard.step1CompletionRate ?? 0) < 60) {
+      priorities.push("初回公開ウィザード1画面目の完了率を改善");
+    }
+    if ((opsHealth?.performance7d.slowPages ?? []).length > 0) {
+      priorities.push("速度低下ページの画像最適化を実施");
+    }
+    if ((opsHealth?.restart7d.retention14d.rate ?? 0) < 30) {
+      priorities.push("14日継続率向上の再開導線を固定");
+    }
+    for (const label of week5Kpi.stopOrFix) {
+      priorities.push(`${label}を優先修正`);
+    }
+    return Array.from(new Set(priorities)).slice(0, 3);
+  }, [onboardingFunnel?.wizard.step1CompletionRate, opsHealth?.performance7d.slowPages, opsHealth?.restart7d.retention14d.rate, week5Kpi.stopOrFix]);
   const weeklyOpsReport = useMemo(
     () =>
       `【Infomii 週次レポート】\n` +
@@ -1299,8 +1343,9 @@ export default function DashboardPage() {
       `Pro転換率: ${week5Kpi.proConversion}%\n` +
       `再開後7日継続率: ${week5Kpi.retention}%\n` +
       `標準化: ${week5Kpi.standardize.join(" / ") || "なし"}\n` +
-      `停止/修正: ${week5Kpi.stopOrFix.join(" / ") || "なし"}`,
-    [week5Kpi],
+      `停止/修正: ${week5Kpi.stopOrFix.join(" / ") || "なし"}\n` +
+      `今週の最優先3施策: ${week7PriorityTop3.join(" / ") || "なし"}`,
+    [week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
     const urls = new Set<string>();
@@ -1637,6 +1682,52 @@ export default function DashboardPage() {
       setError(e instanceof Error ? e.message : "通知テストに失敗しました");
     } finally {
       setSendingOpsTest(false);
+    }
+  }
+
+  function onWizardClose() {
+    if (wizardVisible && wizardStep < 3) {
+      void trackOnboardingWizardEvent("wizard_dropoff", { step: wizardStep, reason: "manual_close" });
+    }
+    setWizardVisible(false);
+  }
+
+  function onWizardNext() {
+    if (wizardStep < 3) {
+      const nextStep = (wizardStep + 1) as 2 | 3;
+      void trackOnboardingWizardEvent("wizard_step_completed", { step: wizardStep });
+      setWizardStep(nextStep);
+      return;
+    }
+    void trackOnboardingWizardEvent("wizard_completed", { step: 3 });
+    setWizardVisible(false);
+    setSuccess("初回公開ウィザードを完了しました。テンプレを選んで公開を進めましょう。");
+  }
+
+  async function onLockRestartWinnerPath() {
+    if (!opsHealth?.restart7d?.byPathRetention) {
+      return;
+    }
+    setLockingRestartWinner(true);
+    try {
+      const entries: Array<{
+        path: "template" | "draft" | "publish";
+        score: number;
+      }> = [
+        { path: "template", score: (opsHealth.restart7d.byPathRetention.template.rate7d ?? 0) + (opsHealth.restart7d.byPathRetention.template.rate14d ?? 0) },
+        { path: "draft", score: (opsHealth.restart7d.byPathRetention.draft.rate7d ?? 0) + (opsHealth.restart7d.byPathRetention.draft.rate14d ?? 0) },
+        { path: "publish", score: (opsHealth.restart7d.byPathRetention.publish.rate7d ?? 0) + (opsHealth.restart7d.byPathRetention.publish.rate14d ?? 0) },
+      ];
+      const winner = entries.sort((a, b) => b.score - a.score)[0]?.path;
+      if (!winner) {
+        return;
+      }
+      await trackRestartWinnerLocked(winner);
+      setSuccess(`再開勝ち導線を固定しました（${winner}）`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "勝ち導線の固定に失敗しました");
+    } finally {
+      setLockingRestartWinner(false);
     }
   }
 
@@ -2194,25 +2285,68 @@ export default function DashboardPage() {
               </div>
 
               <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">初回ガイド（3ステップ）</p>
-                      <p className="mt-1 text-sm text-slate-700">初回はこの順で進めると最短で公開できます。</p>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">初回公開ウィザード（3画面）</p>
+                    <p className="mt-1 text-sm text-slate-700">新規登録直後はこの順で進めると最短で公開できます。</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWizardVisible((prev) => {
+                        const next = !prev;
+                        if (next) {
+                          setWizardStep(1);
+                          void trackOnboardingWizardEvent("wizard_started", { step: 1, reason: "manual_open" });
+                        }
+                        return next;
+                      });
+                    }}
+                    className="rounded-md border border-cyan-300 bg-white px-3 py-1 text-xs text-cyan-800 hover:bg-cyan-50"
+                  >
+                    {wizardVisible ? "ウィザード表示中" : "ウィザードを開始"}
+                  </button>
+                </div>
+                <div className="mt-2 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs text-cyan-900">
+                  1画面目完了率（7日）: {onboardingFunnel?.wizard.step1CompletionRate ?? 0}% / 開始 {onboardingFunnel?.wizard.started ?? 0} / 完了 {onboardingFunnel?.wizard.step1Completed ?? 0}
+                </div>
+                {wizardVisible ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {wizardStep === 1
+                          ? "1. 目的で絞る"
+                          : wizardStep === 2
+                            ? "2. テンプレ選択"
+                            : "3. 編集して公開"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {wizardStep === 1
+                          ? "チェックイン/館内案内などでテンプレを絞り込みます。"
+                          : wizardStep === 2
+                            ? "想定表示時間と必要入力項目数を見て選択します。"
+                            : "不足項目を入力して公開し、URL/QRを配布します。"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={onWizardClose}
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                      >
+                        閉じる
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onWizardNext}
+                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100"
+                      >
+                        {wizardStep < 3 ? "次へ" : "完了"}
+                      </button>
                     </div>
                   </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    {[
-                      ["1. 目的で絞る", "チェックイン/館内案内などでテンプレを絞り込み"],
-                      ["2. テンプレ選択", "想定表示時間と必要入力項目数を見て選択"],
-                      ["3. 編集して公開", "不足項目を入力してURL/QRを配布"],
-                    ].map(([title, desc]) => (
-                      <div key={title} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <p className="text-sm font-semibold text-slate-900">{title}</p>
-                        <p className="mt-1 text-xs text-slate-600">{desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </article>
+                ) : null}
+              </article>
 
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -2224,6 +2358,29 @@ export default function DashboardPage() {
                   >
                     + 新規インフォメーションを作成
                   </button>
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-emerald-900">施設タイプ別 固定Top3テンプレ</p>
+                  <p className="text-xs text-slate-500">{FACILITY_LABELS[inferredFacilityType]}</p>
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {fixedTopTemplatesByFacility.map((entry, index) => (
+                    <button
+                      key={`fixed-top-${entry.originalIndex}`}
+                      type="button"
+                      onClick={() => void onCreateFromTemplate(entry.originalIndex)}
+                      className="rounded-lg border border-slate-200 bg-white p-3 text-left hover:border-emerald-300 hover:bg-emerald-50/40"
+                    >
+                      <p className="text-[11px] font-semibold text-emerald-700">TOP {index + 1}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-900 line-clamp-2">{entry.template.title}</p>
+                    </button>
+                  ))}
+                  {fixedTopTemplatesByFacility.length === 0 && (
+                    <p className="text-xs text-slate-500">該当テンプレがありません。</p>
+                  )}
                 </div>
               </article>
 
@@ -2240,6 +2397,7 @@ export default function DashboardPage() {
                           const requirementHints = getTemplateRequirementHints(template);
                           const slaMs = getTemplateSlaMs(template);
                           const quality = getTemplateQualityScore(template);
+                          const usageCount = templateUsageCountByTitle.get(template.title) ?? 0;
                           return (
                           <article
                             key={`${template.title}-${originalIndex}`}
@@ -2283,6 +2441,11 @@ export default function DashboardPage() {
                             {recommendedTemplateByIndustry.get(template.industry) === originalIndex && (
                               <p className="mt-1 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-emerald-800">
                                 おすすめ
+                              </p>
+                            )}
+                            {usageCount <= 1 && (
+                              <p className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-amber-800">
+                                改善候補
                               </p>
                             )}
                             <div className="mt-2 flex flex-wrap gap-1">
@@ -2822,7 +2985,7 @@ export default function DashboardPage() {
                   <div className="mt-2 space-y-1 text-xs text-slate-700">
                     {(opsHealth?.performance7d.slowPages ?? []).map((row) => (
                       <p key={`slow-${row.path}`}>
-                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms / INP {row.inpMs}ms / CLS {row.cls}
+                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms / INP {row.inpMs}ms / CLS {row.cls}（工数 {row.effort}）
                       </p>
                     ))}
                     {(opsHealth?.performance7d.slowPages ?? []).length === 0 && <p>しきい値超過ページはありません。</p>}
@@ -2830,6 +2993,13 @@ export default function DashboardPage() {
                   {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
                     <div className="mt-2 rounded-md border border-amber-200 bg-white px-2 py-2 text-[11px] text-amber-900">
                       改善提案: 画像ブロックをWebPに置換 / ギャラリー枚数を削減 / 先頭CTAより下に重い画像を移動
+                    </div>
+                  )}
+                  {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
+                    <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-indigo-900">
+                      自動提案: {((opsHealth?.performance7d.inpP75Ms ?? 0) > 200 ? "INP対策（重いJS/イベント削減） / " : "")}
+                      {((opsHealth?.performance7d.clsP75 ?? 0) > 0.1 ? "CLS対策（画像縦横指定/プレースホルダ） / " : "")}
+                      {((opsHealth?.performance7d.lcpP75Ms ?? 0) > 2500 ? "LCP対策（先頭画像軽量化）" : "Load対策（画像圧縮・遅延読込）")}
                     </div>
                   )}
                   {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
@@ -2863,6 +3033,19 @@ export default function DashboardPage() {
                     ))}
                     {unoptimizedImageUrls.length === 0 && <p>未最適化URLは検出されませんでした。</p>}
                   </div>
+                  {unoptimizedImageUrls.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void navigator.clipboard
+                          .writeText(unoptimizedImageUrls.join("\n"))
+                          .then(() => setSuccess("未最適化URL一覧をコピーしました（画像一括変換オペレーション用）"))
+                      }
+                      className="mt-2 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-[11px] text-rose-800 hover:bg-rose-50"
+                    >
+                      一括変換用URLリストをコピー
+                    </button>
+                  )}
                 </div>
 
                 <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
@@ -2961,6 +3144,14 @@ export default function DashboardPage() {
                       下書き {opsHealth?.restart7d.byPathRetention.draft.rate7d ?? 0}% / {opsHealth?.restart7d.byPathRetention.draft.rate14d ?? 0}% ・
                       公開確認 {opsHealth?.restart7d.byPathRetention.publish.rate7d ?? 0}% / {opsHealth?.restart7d.byPathRetention.publish.rate14d ?? 0}%
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => void onLockRestartWinnerPath()}
+                      disabled={lockingRestartWinner}
+                      className="mt-1 rounded-md border border-violet-300 bg-violet-50 px-3 py-1.5 text-[11px] text-violet-800 hover:bg-violet-100 disabled:opacity-60"
+                    >
+                      {lockingRestartWinner ? "固定中..." : "勝ち導線を固定（記録）"}
+                    </button>
                     <p className={`mt-1 text-[11px] ${dormancyStage === "critical" ? "text-rose-700" : dormancyStage === "warning" ? "text-amber-700" : "text-emerald-700"}`}>
                       休眠判定: {dormancyStage === "critical" ? "14日以上停止（強リマインド）" : dormancyStage === "warning" ? "7日以上停止（通常リマインド）" : "正常運用"}
                     </p>
@@ -3028,6 +3219,14 @@ export default function DashboardPage() {
                             variant {row.variant.toUpperCase()}: {row.logins}→{row.signups}（{row.rate}%）
                           </p>
                         ))}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-slate-700">業態別 勝ちCTA（自動）</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-600">
+                        <p>business: {opsHealth?.week7Review.lpWinnerByIndustry.business ?? "-"}</p>
+                        <p>resort: {opsHealth?.week7Review.lpWinnerByIndustry.resort ?? "-"}</p>
+                        <p>spa: {opsHealth?.week7Review.lpWinnerByIndustry.spa ?? "-"}</p>
                       </div>
                     </div>
                   </div>
@@ -3221,6 +3420,37 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
+                  <p className="text-xs font-semibold text-indigo-900">Week7 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">初回公開率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.firstPublishRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">14日継続率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    テンプレ選択→公開 中央値: {opsHealth?.week7Review.templateToPublishMedianMinutes ?? 0} 分
+                  </div>
+                  <div className="mt-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    休眠通知送信（7日）: 3日 {opsHealth?.week7Review.dormancyNoticeSent7d.day3 ?? 0} / 7日 {opsHealth?.week7Review.dormancyNoticeSent7d.day7 ?? 0} / 14日 {opsHealth?.week7Review.dormancyNoticeSent7d.day14 ?? 0}
+                  </div>
+                  <div className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    今週の最優先3施策: {week7PriorityTop3.join(" / ") || "なし"}
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -3235,6 +3465,29 @@ export default function DashboardPage() {
                     >
                       通知テンプレ（短文）をコピー
                     </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void trackDormancyNoticeSent("day3", "dashboard").then(() => setSuccess("3日通知の送信ログを記録しました"))}
+                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] hover:bg-emerald-100"
+                      >
+                        3日通知を送信済みにする
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void trackDormancyNoticeSent("day7", "dashboard").then(() => setSuccess("7日通知の送信ログを記録しました"))}
+                        className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11px] hover:bg-amber-100"
+                      >
+                        7日通知を送信済みにする
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void trackDormancyNoticeSent("day14", "dashboard").then(() => setSuccess("14日通知の送信ログを記録しました"))}
+                        className="rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-[11px] hover:bg-rose-100"
+                      >
+                        14日通知を送信済みにする
+                      </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {

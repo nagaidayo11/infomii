@@ -115,8 +115,8 @@ export default function LoginPage() {
     });
 
     setSubmitting(false);
-    setMessage("登録しました。作成タブへ移動します。");
-    router.replace("/dashboard?tab=create");
+    setMessage("登録しました。初回公開ウィザードへ移動します。");
+    router.replace("/dashboard?tab=create&wizard=1");
   }
 
   return (

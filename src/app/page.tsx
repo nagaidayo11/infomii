@@ -154,10 +154,27 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
+  const heroValuePropositionByLpVariant = {
+    business: {
+      a: "フロント問い合わせ削減を最優先",
+      b: "夜間帯の案内を自己解決化",
+      c: "チェックイン導線を最短で標準化",
+    },
+    resort: {
+      a: "滞在導線を一画面に集約",
+      b: "アクティビティ案内を即更新",
+      c: "館内導線の迷いを最小化",
+    },
+    spa: {
+      a: "温浴ルール共有を即時反映",
+      b: "混雑時の誘導変更を即配布",
+      c: "大浴場案内の問い合わせを削減",
+    },
+  } as const;
   const heroCtaLabelByVariant = {
-    a: "無料でホテル案内を作成",
-    b: "今すぐ無料で公開を始める",
-    c: "30秒登録で運用を始める",
+    a: landingPage === "business" ? "無料でチェックイン案内を作成" : landingPage === "resort" ? "無料で滞在案内を作成" : "無料で温浴案内を作成",
+    b: landingPage === "business" ? "今すぐ夜間案内を公開" : landingPage === "resort" ? "今すぐ導線案内を公開" : "今すぐ温浴案内を公開",
+    c: landingPage === "business" ? "30秒登録でフロント運用を改善" : landingPage === "resort" ? "30秒登録で滞在導線を整備" : "30秒登録で温浴運用を整備",
   } as const;
   const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
   const heroCtaShortLabelByVariant = {
@@ -166,6 +183,11 @@ export default async function Home({ searchParams }: HomePageProps) {
     c: "30秒で開始",
   } as const;
   const heroPrimaryShortCtaLabel = heroCtaShortLabelByVariant[ctaVariant];
+  const bottomCtaByLandingPage = {
+    business: "無料でチェックイン導線を公開",
+    resort: "無料で滞在導線を公開",
+    spa: "無料で温浴導線を公開",
+  } as const;
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -400,6 +422,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
+              <p className="mt-2 text-xs font-semibold text-cyan-700">
+                {heroValuePropositionByLpVariant[landingPage][ctaVariant]}
+              </p>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
               </p>
@@ -671,7 +696,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
-                {heroPrimaryCtaLabel}
+                {bottomCtaByLandingPage[landingPage]}
               </Link>
             </article>
           </div>
@@ -758,7 +783,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               href={buildLoginHref("lp-bottom")}
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
-              {heroPrimaryCtaLabel}
+              {bottomCtaByLandingPage[landingPage]}
             </Link>
             <a
               href="#pricing"
