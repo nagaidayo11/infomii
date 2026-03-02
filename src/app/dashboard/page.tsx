@@ -2248,6 +2248,67 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
+                  <p className="text-xs font-semibold text-violet-900">更新継続ヘルス（Day6）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開成功まで平均時間</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.execution.avgMinutesToPublish ?? 0} 分
+                      </p>
+                      <p className="text-[11px] text-slate-500">計測件数: {opsHealth?.execution.samples ?? 0} 件</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">最終更新からの経過</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.dormancy.daysSinceLastUpdate ?? "-"} 日
+                      </p>
+                      <p
+                        className={`text-[11px] ${
+                          opsHealth?.dormancy.isDormant7d ? "text-rose-700" : "text-emerald-700"
+                        }`}
+                      >
+                        {opsHealth?.dormancy.message ?? "データ未取得"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-md border border-violet-200 bg-white p-3">
+                    <p className="text-xs font-semibold text-slate-700">休眠施設向けの再開導線</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("create");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="rounded-md border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs text-violet-800 hover:bg-violet-100"
+                      >
+                        テンプレから再開
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("project");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                      >
+                        下書きを見直す
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("dashboard");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                      >
+                        公開状態を確認
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/50 p-3">
                   <p className="text-xs font-semibold text-cyan-900">LP→登録ファネル（直近7日）</p>
                   <p className="mt-1 text-xs text-slate-600">
@@ -2327,6 +2388,50 @@ export default function DashboardPage() {
                     <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-2 text-xs text-cyan-900">
                       改善提案: {lpOptimizationTip}
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-fuchsia-200 bg-fuchsia-50/50 p-3">
+                  <p className="text-xs font-semibold text-fuchsia-900">Week2 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.week2Review.kpi.lpToSignupRate ?? 0}%
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.week2Review.kpi.publishCompletionRate ?? 0}%
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.week2Review.kpi.proConversionRate ?? 0}%
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-emerald-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-emerald-700">継続強化する施策（強い）</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-700">
+                        {(opsHealth?.week2Review.focus.strong ?? []).map((item) => (
+                          <p key={`strong-${item}`}>・{item}</p>
+                        ))}
+                        {(opsHealth?.week2Review.focus.strong ?? []).length === 0 && <p>・該当なし</p>}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-rose-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-rose-700">停止/縮小する施策（弱い）</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-700">
+                        {(opsHealth?.week2Review.focus.weak ?? []).map((item) => (
+                          <p key={`weak-${item}`}>・{item}</p>
+                        ))}
+                        {(opsHealth?.week2Review.focus.weak ?? []).length === 0 && <p>・該当なし</p>}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

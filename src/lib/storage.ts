@@ -1813,6 +1813,28 @@ export type OpsHealthSnapshot = {
     draftPages: number;
     firstPublishedReady: boolean;
   };
+  week2Review: {
+    kpi: {
+      lpToSignupRate: number;
+      publishCompletionRate: number;
+      proConversionRate: number;
+    };
+    focus: {
+      strong: string[];
+      weak: string[];
+    };
+  };
+  execution: {
+    avgMinutesToPublish: number;
+    samples: number;
+    lastPublishedAt: string | null;
+  };
+  dormancy: {
+    latestUpdateAt: string | null;
+    daysSinceLastUpdate: number | null;
+    isDormant7d: boolean;
+    message: string;
+  };
   performance7d: {
     lcpAvgMs: number;
     lcpP75Ms: number;

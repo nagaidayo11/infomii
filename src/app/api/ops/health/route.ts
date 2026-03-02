@@ -12,6 +12,31 @@ type BillingLogRow = {
   created_at: string;
 };
 
+type ExecutionSnapshot = {
+  avgMinutesToPublish: number;
+  samples: number;
+  lastPublishedAt: string | null;
+};
+
+type DormancySnapshot = {
+  latestUpdateAt: string | null;
+  daysSinceLastUpdate: number | null;
+  isDormant7d: boolean;
+  message: string;
+};
+
+type Week2Review = {
+  kpi: {
+    lpToSignupRate: number;
+    publishCompletionRate: number;
+    proConversionRate: number;
+  };
+  focus: {
+    strong: string[];
+    weak: string[];
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -26,6 +51,122 @@ function p75(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.75));
   return sorted[index] ?? 0;
+}
+
+function buildExecutionSnapshot(logs: Array<{ action: string; target_id: string | null; created_at: string }>): ExecutionSnapshot {
+  const createdByTarget = new Map<string, number>();
+  const durations: number[] = [];
+  let lastPublishedAt: string | null = null;
+
+  for (const log of logs) {
+    const targetId = log.target_id;
+    const time = new Date(log.created_at).getTime();
+    if (!targetId || Number.isNaN(time)) {
+      continue;
+    }
+    if (log.action === "information.created") {
+      if (!createdByTarget.has(targetId)) {
+        createdByTarget.set(targetId, time);
+      }
+      continue;
+    }
+    if (log.action === "information.published") {
+      const createdAt = createdByTarget.get(targetId);
+      if (createdAt && time >= createdAt) {
+        durations.push(Math.round((time - createdAt) / 60000));
+      }
+      if (!lastPublishedAt || time > new Date(lastPublishedAt).getTime()) {
+        lastPublishedAt = log.created_at;
+      }
+    }
+  }
+
+  return {
+    avgMinutesToPublish: roundAverage(durations),
+    samples: durations.length,
+    lastPublishedAt,
+  };
+}
+
+function buildDormancySnapshot(params: {
+  latestInfoUpdateAt: string | null;
+  lastPublishedAt: string | null;
+  totalPages: number;
+}): DormancySnapshot {
+  const latestCandidates = [params.latestInfoUpdateAt, params.lastPublishedAt].filter(
+    (value): value is string => Boolean(value),
+  );
+  const latestUpdateAt = latestCandidates.length > 0
+    ? latestCandidates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0]
+    : null;
+
+  if (!latestUpdateAt) {
+    return {
+      latestUpdateAt: null,
+      daysSinceLastUpdate: null,
+      isDormant7d: false,
+      message: params.totalPages === 0
+        ? "まだページが未作成です。テンプレ作成から始めてください。"
+        : "更新履歴を確認中です。",
+    };
+  }
+
+  const diffDays = Math.floor((Date.now() - new Date(latestUpdateAt).getTime()) / (24 * 60 * 60 * 1000));
+  const isDormant7d = diffDays >= 7;
+  return {
+    latestUpdateAt,
+    daysSinceLastUpdate: diffDays,
+    isDormant7d,
+    message: isDormant7d
+      ? `最終更新から${diffDays}日経過しています。休眠傾向です。`
+      : `最終更新は${diffDays}日前です。継続運用できています。`,
+  };
+}
+
+function buildWeek2Review(params: {
+  lpToSignupRate: number;
+  createdCount7d: number;
+  publishedCount7d: number;
+  upgradeClicks: number;
+  completedCheckouts: number;
+}): Week2Review {
+  const publishCompletionRate =
+    params.createdCount7d > 0 ? Math.round((params.publishedCount7d / params.createdCount7d) * 100) : 0;
+  const proConversionRate =
+    params.upgradeClicks > 0 ? Math.round((params.completedCheckouts / params.upgradeClicks) * 100) : 0;
+
+  const strong: string[] = [];
+  const weak: string[] = [];
+
+  if (params.lpToSignupRate >= 20) {
+    strong.push("LP導線（見出し/CTA）");
+  } else {
+    weak.push("LP導線（見出し/CTA）");
+  }
+
+  if (publishCompletionRate >= 60) {
+    strong.push("作成→公開フロー");
+  } else {
+    weak.push("作成→公開フロー");
+  }
+
+  if (proConversionRate >= 15) {
+    strong.push("課金導線（アップグレード→決済）");
+  } else {
+    weak.push("課金導線（アップグレード→決済）");
+  }
+
+  return {
+    kpi: {
+      lpToSignupRate: params.lpToSignupRate,
+      publishCompletionRate,
+      proConversionRate,
+    },
+    focus: {
+      strong,
+      weak,
+    },
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -104,6 +245,28 @@ export async function GET(request: NextRequest) {
           draftPages: 0,
           firstPublishedReady: false,
         },
+        week2Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+          },
+          focus: {
+            strong: [],
+            weak: [],
+          },
+        },
+        execution: {
+          avgMinutesToPublish: 0,
+          samples: 0,
+          lastPublishedAt: null,
+        },
+        dormancy: {
+          latestUpdateAt: null,
+          daysSinceLastUpdate: null,
+          isDormant7d: false,
+          message: "データ未取得",
+        },
         performance7d: {
           lcpAvgMs: 0,
           lcpP75Ms: 0,
@@ -152,6 +315,28 @@ export async function GET(request: NextRequest) {
           draftPages: 0,
           firstPublishedReady: false,
         },
+        week2Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+          },
+          focus: {
+            strong: [],
+            weak: [],
+          },
+        },
+        execution: {
+          avgMinutesToPublish: 0,
+          samples: 0,
+          lastPublishedAt: null,
+        },
+        dormancy: {
+          latestUpdateAt: null,
+          daysSinceLastUpdate: null,
+          isDormant7d: false,
+          message: "施設所属がありません",
+        },
         performance7d: {
           lcpAvgMs: 0,
           lcpP75Ms: 0,
@@ -164,7 +349,8 @@ export async function GET(request: NextRequest) {
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }] = await Promise.all([
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -205,6 +391,28 @@ export async function GET(request: NextRequest) {
         .in("action", ["perf.public_lcp", "perf.public_load"])
         .order("created_at", { ascending: false })
         .limit(500),
+      admin
+        .from("audit_logs")
+        .select("action,target_id,created_at")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since30d)
+        .in("action", ["information.created", "information.published"])
+        .order("created_at", { ascending: true })
+        .limit(2000),
+      admin
+        .from("informations")
+        .select("updated_at")
+        .eq("hotel_id", hotelId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      admin
+        .from("audit_logs")
+        .select("action,metadata")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .in("action", ["onboarding.login_success", "onboarding.signup_completed"])
+        .limit(3000),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
       .filter(
@@ -241,6 +449,51 @@ export async function GET(request: NextRequest) {
       })
       .filter((value) => value > 0);
     const lastMeasuredAt = (perfLogs ?? [])[0]?.created_at ?? null;
+    const execution = buildExecutionSnapshot(
+      (publishLeadLogs ?? []).map((row) => ({
+        action: row.action,
+        target_id: row.target_id,
+        created_at: row.created_at,
+      })),
+    );
+    const dormancy = buildDormancySnapshot({
+      latestInfoUpdateAt: latestInfo?.updated_at ?? null,
+      lastPublishedAt: execution.lastPublishedAt,
+      totalPages: totalPages ?? 0,
+    });
+    const onboardingByRef = new Map<"lp-hero" | "lp-sticky" | "lp-bottom", { logins: number; signups: number }>([
+      ["lp-hero", { logins: 0, signups: 0 }],
+      ["lp-sticky", { logins: 0, signups: 0 }],
+      ["lp-bottom", { logins: 0, signups: 0 }],
+    ]);
+    for (const row of onboardingLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const ref = metadata?.sourceRef;
+      if (ref !== "lp-hero" && ref !== "lp-sticky" && ref !== "lp-bottom") {
+        continue;
+      }
+      const entry = onboardingByRef.get(ref);
+      if (!entry) {
+        continue;
+      }
+      if (row.action === "onboarding.login_success") {
+        entry.logins += 1;
+      } else if (row.action === "onboarding.signup_completed") {
+        entry.signups += 1;
+      }
+    }
+    const lpLogins = Array.from(onboardingByRef.values()).reduce((sum, row) => sum + row.logins, 0);
+    const lpSignups = Array.from(onboardingByRef.values()).reduce((sum, row) => sum + row.signups, 0);
+    const lpToSignupRate = lpLogins > 0 ? Math.round((lpSignups / lpLogins) * 100) : 0;
+    const createdCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.created").length;
+    const publishedCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
+    const week2Review = buildWeek2Review({
+      lpToSignupRate,
+      createdCount7d,
+      publishedCount7d,
+      upgradeClicks,
+      completedCheckouts,
+    });
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -271,6 +524,9 @@ export async function GET(request: NextRequest) {
         draftPages: draftPages ?? 0,
         firstPublishedReady: (publishedPages ?? 0) > 0,
       },
+      week2Review,
+      execution,
+      dormancy,
       performance7d: {
         lcpAvgMs: roundAverage(lcpValues),
         lcpP75Ms: p75(lcpValues),

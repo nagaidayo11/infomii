@@ -446,3 +446,162 @@ using (
       and m.user_id = auth.uid()
   )
 );
+
+-- Week2 Day3: staff invite flow
+create table if not exists public.hotel_invites (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  code text not null,
+  created_by_user_id uuid not null references auth.users(id) on delete cascade,
+  is_active boolean not null default true,
+  consumed_by_user_id uuid references auth.users(id) on delete set null,
+  consumed_at timestamptz,
+  expires_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.hotel_invites
+add column if not exists hotel_id uuid references public.hotels(id) on delete cascade;
+alter table public.hotel_invites
+add column if not exists code text;
+alter table public.hotel_invites
+add column if not exists created_by_user_id uuid references auth.users(id) on delete cascade;
+alter table public.hotel_invites
+add column if not exists is_active boolean not null default true;
+alter table public.hotel_invites
+add column if not exists consumed_by_user_id uuid references auth.users(id) on delete set null;
+alter table public.hotel_invites
+add column if not exists consumed_at timestamptz;
+alter table public.hotel_invites
+add column if not exists expires_at timestamptz;
+alter table public.hotel_invites
+add column if not exists created_at timestamptz not null default now();
+
+create unique index if not exists hotel_invites_code_key on public.hotel_invites (code);
+create index if not exists hotel_invites_hotel_created_idx on public.hotel_invites (hotel_id, created_at desc);
+
+alter table public.hotel_invites enable row level security;
+
+drop policy if exists "authenticated read own hotel invites" on public.hotel_invites;
+drop policy if exists "authenticated insert own hotel invites" on public.hotel_invites;
+drop policy if exists "authenticated update own hotel invites" on public.hotel_invites;
+drop policy if exists "authenticated delete own hotel invites" on public.hotel_invites;
+
+create policy "authenticated read own hotel invites"
+on public.hotel_invites
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.hotel_memberships m
+    where m.hotel_id = hotel_invites.hotel_id
+      and m.user_id = auth.uid()
+  )
+);
+
+create policy "authenticated insert own hotel invites"
+on public.hotel_invites
+for insert
+to authenticated
+with check (
+  exists (
+    select 1
+    from public.hotel_memberships m
+    where m.hotel_id = hotel_invites.hotel_id
+      and m.user_id = auth.uid()
+  )
+);
+
+create policy "authenticated update own hotel invites"
+on public.hotel_invites
+for update
+to authenticated
+using (
+  exists (
+    select 1
+    from public.hotel_memberships m
+    where m.hotel_id = hotel_invites.hotel_id
+      and m.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.hotel_memberships m
+    where m.hotel_id = hotel_invites.hotel_id
+      and m.user_id = auth.uid()
+  )
+);
+
+create policy "authenticated delete own hotel invites"
+on public.hotel_invites
+for delete
+to authenticated
+using (
+  exists (
+    select 1
+    from public.hotel_memberships m
+    where m.hotel_id = hotel_invites.hotel_id
+      and m.user_id = auth.uid()
+  )
+);
+
+create or replace function public.redeem_hotel_invite(input_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  invite_row public.hotel_invites%rowtype;
+  current_user_id uuid;
+  normalized_code text;
+begin
+  current_user_id := auth.uid();
+  if current_user_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  normalized_code := upper(trim(input_code));
+  if normalized_code is null or normalized_code = '' then
+    raise exception 'invalid_invite_code';
+  end if;
+
+  select *
+  into invite_row
+  from public.hotel_invites
+  where code = normalized_code
+  for update;
+
+  if not found then
+    raise exception 'invite_not_found';
+  end if;
+  if invite_row.is_active is not true then
+    raise exception 'invite_inactive';
+  end if;
+  if invite_row.consumed_at is not null then
+    raise exception 'invite_already_used';
+  end if;
+  if invite_row.expires_at is not null and invite_row.expires_at <= now() then
+    raise exception 'invite_expired';
+  end if;
+
+  insert into public.hotel_memberships (user_id, hotel_id)
+  values (current_user_id, invite_row.hotel_id)
+  on conflict (user_id) do update
+  set hotel_id = excluded.hotel_id;
+
+  update public.hotel_invites
+  set
+    is_active = false,
+    consumed_by_user_id = current_user_id,
+    consumed_at = now()
+  where id = invite_row.id;
+
+  return invite_row.hotel_id;
+end;
+$$;
+
+revoke all on function public.redeem_hotel_invite(text) from public;
+grant execute on function public.redeem_hotel_invite(text) to authenticated;
