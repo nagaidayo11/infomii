@@ -581,6 +581,7 @@ export default function DashboardPage() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
+  const [creatingQuickPublish, setCreatingQuickPublish] = useState(false);
   const [previewTemplateIndex, setPreviewTemplateIndex] = useState<number | null>(null);
   const [favoriteTemplateIndices, setFavoriteTemplateIndices] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1617,9 +1618,10 @@ export default function DashboardPage() {
         "",
         "[改善アクション実行率]",
         `${opsHealth?.week10Preview.actionExecutionRate ?? 0}%`,
+        `実行済み改善数: ${opsHealth?.week11Preview.executedImprovementsCount ?? 0}件`,
       ].join("\n");
     },
-    [opsHealth?.week10Preview.actionExecutionRate, week5Kpi, week7PriorityTop3],
+    [opsHealth?.week10Preview.actionExecutionRate, opsHealth?.week11Preview.executedImprovementsCount, week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
     const urls = new Set<string>();
@@ -1690,6 +1692,21 @@ export default function DashboardPage() {
       router.push(`/editor/${id}?guide=start`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
+    }
+  }
+
+  async function onCreateFromTemplateQuickPublish(templateIndex: number) {
+    setCreatingQuickPublish(true);
+    try {
+      await ensureUserHotelScope();
+      const id = await createInformationFromTemplate(templateIndex);
+      await updateInformation(id, { status: "published" });
+      setSuccess("テンプレ複製から即公開しました。次に内容確認へ進んでください。");
+      router.push(`/editor/${id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "テンプレ即公開に失敗しました");
+    } finally {
+      setCreatingQuickPublish(false);
     }
   }
 
@@ -2791,6 +2808,44 @@ export default function DashboardPage() {
                       <p key={action}>・{action}</p>
                     ))}
                   </div>
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-emerald-300 bg-emerald-50/70 p-4 shadow-sm">
+                <p className="text-sm font-semibold text-emerald-900">Week11 立ち上げショートカット</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-lg border border-slate-200 bg-white p-2">
+                    <p className="text-xs text-slate-500">小規模 完了率</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week11Preview.onboardingCompletionByScale.small ?? 0}%</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white p-2">
+                    <p className="text-xs text-slate-500">中規模 完了率</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week11Preview.onboardingCompletionByScale.mid ?? 0}%</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white p-2">
+                    <p className="text-xs text-slate-500">大規模 完了率</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week11Preview.onboardingCompletionByScale.large ?? 0}%</p>
+                  </div>
+                </div>
+                <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
+                  2本目公開ショートカット: {opsHealth?.week11Preview.secondPublishShortcutReady ? "利用可能" : "1本目公開後に有効"} / 1本目→2本目 中央 {opsHealth?.week11Preview.secondPublishMedianHours ?? 0} 時間
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void onCreateFromTemplate(activeTemplatePreviewEntry?.originalIndex ?? 0)}
+                    className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-50"
+                  >
+                    2本目をテンプレから作成
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void onCreateFromTemplateQuickPublish(activeTemplatePreviewEntry?.originalIndex ?? 0)}
+                    disabled={creatingQuickPublish}
+                    className="rounded-md border border-emerald-300 bg-emerald-600 px-3 py-1.5 text-xs text-white hover:bg-emerald-500 disabled:opacity-60"
+                  >
+                    {creatingQuickPublish ? "公開中..." : "テンプレ複製→即公開"}
+                  </button>
                 </div>
               </article>
 
@@ -4079,9 +4134,57 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50/70 p-3">
+                  <p className="text-xs font-semibold text-emerald-900">Week11 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">2本目公開まで</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week11Preview.secondPublishMedianHours ?? 0}h</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">継続率（14日）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">休眠復帰（推定）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{Math.max(opsHealth?.week11Preview.retention7dByDormancyChannel.line ?? 0, opsHealth?.week11Preview.retention7dByDormancyChannel.mail ?? 0, opsHealth?.week11Preview.retention7dByDormancyChannel.dashboard ?? 0)}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    CTA遷移率（デバイス）: SP {opsHealth?.week11Preview.ctaRateByDevice.sp ?? 0}% / PC {opsHealth?.week11Preview.ctaRateByDevice.pc ?? 0}% / Unknown {opsHealth?.week11Preview.ctaRateByDevice.unknown ?? 0}%
+                  </div>
+                  <div className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    事例セクション閲覧率（スクロール深度）: {opsHealth?.week11Preview.caseSectionViewRate ?? 0}%
+                  </div>
+                  <div className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    休眠通知 最適時間帯: {opsHealth?.week11Preview.optimizedDormancySendWindow ?? "09:00-11:00"} / 勝ち文面: {opsHealth?.week11Preview.dormancyWinnerCopyVariant === "short" ? "短文" : "詳細"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    通知チャネル別 再開後7日継続（推定）: LINE {opsHealth?.week11Preview.retention7dByDormancyChannel.line ?? 0}% / Mail {opsHealth?.week11Preview.retention7dByDormancyChannel.mail ?? 0}% / Dashboard {opsHealth?.week11Preview.retention7dByDormancyChannel.dashboard ?? 0}%
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const winner = opsHealth?.week11Preview.dormancyWinnerCopyVariant ?? "short";
+                        const text =
+                          winner === "short"
+                            ? "【Infomii再開案内】最終更新から7日以上経過しています。テンプレ再開から3分で再公開できます。"
+                            : "【Infomii運用再開のお願い】\n最終更新から7日以上経過しています。\n1) ダッシュボード > テンプレから再開\n2) 必要箇所だけ更新\n3) URL/QRを再配布\n本日中に再公開できる状態です。";
+                        void navigator.clipboard.writeText(text).then(() => setSuccess("勝ち文面をコピーしました"));
+                      }}
+                      className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] text-emerald-900 hover:bg-emerald-100"
+                    >
+                      勝ち文面をコピー（自動選択）
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -4291,6 +4394,9 @@ export default function DashboardPage() {
                 <p className="mt-1 text-sm text-slate-600">課金・復旧に関する失敗イベントを新しい順で表示します。</p>
                 <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-700">
                   優先度: 高 {opsErrorTimeline.filter((log) => log.priority === "high").length} / 中 {opsErrorTimeline.filter((log) => log.priority === "medium").length} / 低 {opsErrorTimeline.filter((log) => log.priority === "low").length}
+                </div>
+                <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50/70 p-2 text-xs text-rose-900">
+                  即時通知対象（重大のみ）: {opsHealth?.week11Preview.criticalAlertCount ?? 0} 件
                 </div>
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-xs font-semibold text-slate-700">導入テスト（3〜5施設）チェック</p>
@@ -4538,6 +4644,35 @@ export default function DashboardPage() {
                     </div>
                     <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
                       請求・カード管理導線 完了率（7日）: {opsHealth?.week10Preview.billingManagementCompletion7d.rate ?? 0}%（開始 {opsHealth?.week10Preview.billingManagementCompletion7d.started ?? 0} / 完了 {opsHealth?.week10Preview.billingManagementCompletion7d.completed ?? 0}）
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
+                    <p className="text-xs font-semibold text-cyan-900">阻害要因からの改善タスク（自動提案）</p>
+                    <div className="mt-2 space-y-1 text-xs text-slate-700">
+                      {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).map((task) => (
+                        <p key={task}>・{task}</p>
+                      ))}
+                      {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).length === 0 && <p>・データ蓄積後に提案されます</p>}
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
+                    <p className="text-xs font-semibold text-emerald-900">カード更新後の再開導線（固定）</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={onOpenBillingPortal}
+                        disabled={openingPortal || !subscription?.hasStripeCustomer}
+                        className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
+                      >
+                        1. カード/請求設定を確認
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("create")}
+                        className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100"
+                      >
+                        2. テンプレ再公開へ進む
+                      </button>
                     </div>
                   </div>
                   <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">

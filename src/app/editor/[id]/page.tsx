@@ -1642,6 +1642,26 @@ export default function EditorPage() {
       })
       .slice(0, 4);
   }, [item]);
+  const heavyImageBlockWarnings = useMemo(() => {
+    if (!item) {
+      return [] as Array<{ blockId: string; url: string }>;
+    }
+    const rows: Array<{ blockId: string; url: string }> = [];
+    for (const block of item.contentBlocks) {
+      if (block.type === "image") {
+        const url = (block.url ?? "").trim();
+        if (!url) {
+          continue;
+        }
+        const normalized = url.toLowerCase();
+        const heavy = normalized.includes(".png") || normalized.includes(".bmp") || normalized.includes(".tiff") || normalized.includes(".gif");
+        if (heavy) {
+          rows.push({ blockId: block.id, url });
+        }
+      }
+    }
+    return rows.slice(0, 6);
+  }, [item]);
   const imageUrlQualityWarnings = useMemo(() => {
     if (!item) {
       return new Map<string, string>();
@@ -3778,6 +3798,40 @@ function onUpdateIconRowItem(
     } finally {
       setApplyingPublishBatchFix(false);
     }
+  }
+
+  async function onQuickAddContactGuide() {
+    if (!item) {
+      return;
+    }
+    const nextBlocks = [
+      ...item.contentBlocks,
+      {
+        id: crypto.randomUUID(),
+        type: "section" as const,
+        sectionTitle: "お問い合わせ",
+        sectionBody: "フロント: 03-1234-5678\nメール: front@example.com",
+        sectionBackgroundColor: "#f8fafc",
+        spacing: "md" as const,
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "cta" as const,
+        ctaLabel: "お問い合わせする",
+        ctaUrl: "https://example.com/contact",
+        spacing: "md" as const,
+        textAlign: "left" as const,
+      },
+    ];
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    await saveBlocks(nextBlocks);
+    setNoticeKind("success");
+    setNotice("問い合わせ導線テンプレを追加しました。");
   }
 
   useEffect(() => {
@@ -6255,8 +6309,17 @@ function onUpdateIconRowItem(
                       <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
                         <p className="text-xs font-semibold text-amber-900">画像サイズ警告（重い可能性）</p>
                         <div className="mt-2 space-y-1 text-[11px] text-amber-900">
-                          {heavyImageWarnings.map((url) => (
-                            <p key={url} className="truncate">{url}</p>
+                          {heavyImageBlockWarnings.map((row) => (
+                            <div key={`${row.blockId}-${row.url}`} className="flex items-center justify-between gap-2">
+                              <p className="truncate">{row.url}</p>
+                              <button
+                                type="button"
+                                onClick={() => jumpToFixTarget({ level: "warning", message: "画像最適化候補", target: "blocks", blockId: row.blockId })}
+                                className="shrink-0 rounded border border-amber-300 bg-white px-1.5 py-0.5 text-[10px] text-amber-900 hover:bg-amber-100"
+                              >
+                                該当へ
+                              </button>
+                            </div>
                           ))}
                         </div>
                         <p className="mt-2 text-[11px] text-amber-800">
@@ -6356,6 +6419,33 @@ function onUpdateIconRowItem(
                       <p>{publishCheckErrors.length === 0 ? "✓" : "・"} 公開前エラーを解消</p>
                       <p>{(item.status === "published" || Boolean(item.publishAt)) ? "✓" : "・"} 公開状態または公開日時を設定</p>
                       <p>{item.status === "published" ? "✓" : "・"} 公開後にURL/QRを共有</p>
+                    </div>
+                  </article>
+                  <article className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-emerald-900">公開後チェック</p>
+                    <div className="mt-2 space-y-1 text-xs text-slate-700">
+                      <p>{item.status === "published" ? "✓" : "・"} 公開ステータス</p>
+                      <p>{(item.contentBlocks ?? []).some((block) => block.type === "cta") ? "✓" : "・"} CTA設置</p>
+                      <p>{publishCheckIssues.some((issue) => issue.message.includes("問い合わせ導線")) ? "・" : "✓"} 問い合わせ導線</p>
+                      <p>{heavyImageBlockWarnings.length === 0 ? "✓" : "・"} 画像軽量化</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void onQuickAddContactGuide()}
+                        className="rounded-md border border-emerald-300 bg-white px-2 py-1 text-[11px] text-emerald-800 hover:bg-emerald-100"
+                      >
+                        問い合わせ導線を追加
+                      </button>
+                      {heavyImageBlockWarnings.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => jumpToFixTarget({ level: "warning", message: "画像最適化候補", target: "blocks", blockId: heavyImageBlockWarnings[0]?.blockId })}
+                          className="rounded-md border border-amber-300 bg-white px-2 py-1 text-[11px] text-amber-900 hover:bg-amber-100"
+                        >
+                          画像候補へ移動
+                        </button>
+                      ) : null}
                     </div>
                   </article>
                   <div className="space-y-5 lg:sticky lg:top-6 lg:h-fit">

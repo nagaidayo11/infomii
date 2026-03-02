@@ -40,6 +40,12 @@ export default function LoginPage() {
     requestedLp === "business" || requestedLp === "resort" || requestedLp === "spa"
       ? requestedLp
       : "unknown";
+  const deviceType =
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 768px)").matches
+        ? "sp"
+        : "pc"
+      : "unknown";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,6 +86,7 @@ export default function LoginPage() {
       sourceChannel,
       ctaVariant,
       landingPage,
+      deviceType,
     });
 
     setSubmitting(false);
@@ -112,6 +119,7 @@ export default function LoginPage() {
       sourceChannel,
       ctaVariant,
       landingPage,
+      deviceType,
     });
 
     setSubmitting(false);

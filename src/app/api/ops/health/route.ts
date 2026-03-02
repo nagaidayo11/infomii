@@ -144,6 +144,32 @@ type Week10Preview = {
   actionExecutionRate: number;
 };
 
+type Week11Preview = {
+  onboardingCompletionByScale: {
+    small: number;
+    mid: number;
+    large: number;
+  };
+  secondPublishShortcutReady: boolean;
+  secondPublishMedianHours: number;
+  ctaRateByDevice: {
+    sp: number;
+    pc: number;
+    unknown: number;
+  };
+  caseSectionViewRate: number;
+  optimizedDormancySendWindow: string;
+  dormancyWinnerCopyVariant: "short" | "detail";
+  retention7dByDormancyChannel: {
+    line: number;
+    mail: number;
+    dashboard: number;
+  };
+  blockerImprovementTasks: string[];
+  executedImprovementsCount: number;
+  criticalAlertCount: number;
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -591,6 +617,19 @@ export async function GET(request: NextRequest) {
           billingManagementCompletion7d: { started: 0, completed: 0, rate: 0 },
           actionExecutionRate: 0,
         },
+        week11Preview: {
+          onboardingCompletionByScale: { small: 0, mid: 0, large: 0 },
+          secondPublishShortcutReady: false,
+          secondPublishMedianHours: 0,
+          ctaRateByDevice: { sp: 0, pc: 0, unknown: 0 },
+          caseSectionViewRate: 0,
+          optimizedDormancySendWindow: "09:00-11:00",
+          dormancyWinnerCopyVariant: "short",
+          retention7dByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          blockerImprovementTasks: [],
+          executedImprovementsCount: 0,
+          criticalAlertCount: 0,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -766,6 +805,19 @@ export async function GET(request: NextRequest) {
           proBlockerTopReasons: [],
           billingManagementCompletion7d: { started: 0, completed: 0, rate: 0 },
           actionExecutionRate: 0,
+        },
+        week11Preview: {
+          onboardingCompletionByScale: { small: 0, mid: 0, large: 0 },
+          secondPublishShortcutReady: false,
+          secondPublishMedianHours: 0,
+          ctaRateByDevice: { sp: 0, pc: 0, unknown: 0 },
+          caseSectionViewRate: 0,
+          optimizedDormancySendWindow: "09:00-11:00",
+          dormancyWinnerCopyVariant: "short",
+          retention7dByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          blockerImprovementTasks: [],
+          executedImprovementsCount: 0,
+          criticalAlertCount: 0,
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -998,6 +1050,11 @@ export async function GET(request: NextRequest) {
       ["other", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
       ["unknown", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
     ]);
+    const onboardingByDevice = new Map<"sp" | "pc" | "unknown", { logins: number; signups: number }>([
+      ["sp", { logins: 0, signups: 0 }],
+      ["pc", { logins: 0, signups: 0 }],
+      ["unknown", { logins: 0, signups: 0 }],
+    ]);
     for (const row of onboardingLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const ref = metadata?.sourceRef;
@@ -1023,6 +1080,11 @@ export async function GET(request: NextRequest) {
         sourceChannel === "unknown"
           ? sourceChannel
           : "unknown";
+      const deviceType = metadata?.deviceType;
+      const safeDevice: "sp" | "pc" | "unknown" =
+        deviceType === "sp" || deviceType === "pc" || deviceType === "unknown"
+          ? deviceType
+          : "unknown";
       const entry = onboardingByRef.get(ref);
       if (!entry) {
         continue;
@@ -1039,6 +1101,10 @@ export async function GET(request: NextRequest) {
         if (channelStat) {
           channelStat.logins += 1;
         }
+        const deviceStat = onboardingByDevice.get(safeDevice);
+        if (deviceStat) {
+          deviceStat.logins += 1;
+        }
       } else if (row.action === "onboarding.signup_completed") {
         entry.signups += 1;
         if (safeLp) {
@@ -1050,6 +1116,10 @@ export async function GET(request: NextRequest) {
         const channelStat = onboardingByChannelVariant.get(safeChannel)?.get(safeVariant);
         if (channelStat) {
           channelStat.signups += 1;
+        }
+        const deviceStat = onboardingByDevice.get(safeDevice);
+        if (deviceStat) {
+          deviceStat.signups += 1;
         }
       }
     }
@@ -1534,6 +1604,83 @@ export async function GET(request: NextRequest) {
       },
       actionExecutionRate,
     };
+    const ctaRateByDevice: Week11Preview["ctaRateByDevice"] = {
+      sp: onboardingByDevice.get("sp")?.logins
+        ? Math.round(((onboardingByDevice.get("sp")?.signups ?? 0) / (onboardingByDevice.get("sp")?.logins ?? 1)) * 100)
+        : 0,
+      pc: onboardingByDevice.get("pc")?.logins
+        ? Math.round(((onboardingByDevice.get("pc")?.signups ?? 0) / (onboardingByDevice.get("pc")?.logins ?? 1)) * 100)
+        : 0,
+      unknown: onboardingByDevice.get("unknown")?.logins
+        ? Math.round(((onboardingByDevice.get("unknown")?.signups ?? 0) / (onboardingByDevice.get("unknown")?.logins ?? 1)) * 100)
+        : 0,
+    };
+    const caseSectionViewRate = lpScrollHeatmap.hero > 0
+      ? Math.round((lpScrollHeatmap.bottom / lpScrollHeatmap.hero) * 100)
+      : 0;
+    const sortableFacilities: Array<"business" | "resort" | "spa"> = ["business", "resort", "spa"];
+    const dominantFacility =
+      sortableFacilities.sort((a, b) => restartByFacility[b] - restartByFacility[a])[0] ?? "business";
+    const optimizedDormancySendWindow =
+      dominantFacility === "business"
+        ? "08:00-10:00"
+        : dominantFacility === "resort"
+          ? "16:00-19:00"
+          : "17:00-20:00";
+    const dormancyWinnerCopyVariant: "short" | "detail" =
+      channelRates.line >= 35 || channelRates.mail >= 35 ? "short" : "detail";
+    const retention7dByDormancyChannel: Week11Preview["retention7dByDormancyChannel"] = {
+      line: channelRates.line,
+      mail: channelRates.mail,
+      dashboard: channelRates.dashboard,
+    };
+    const blockerImprovementTasks = proBlockerTopReasons
+      .map((row) => {
+        if (row.reason.includes("料金")) return "Pro導線に費用対効果の実測値を追加";
+        if (row.reason.includes("タイミング")) return "繁忙期前の自動リマインド導線を設定";
+        if (row.reason.includes("機能差")) return "Free/Pro比較を導線直下へ再配置";
+        if (row.reason.includes("承認")) return "社内承認用の1枚資料テンプレを配布";
+        return "阻害要因に対する個別ヒアリングを実施";
+      })
+      .slice(0, 3);
+    const publishedAtTimes = (publishLeadLogs ?? [])
+      .filter((row) => row.action === "information.published")
+      .map((row) => new Date(row.created_at).getTime())
+      .filter((value) => Number.isFinite(value))
+      .sort((a, b) => a - b);
+    const secondPublishMedianHours = publishedAtTimes.length >= 2
+      ? Math.max(0, Math.round((publishedAtTimes[1] - publishedAtTimes[0]) / (60 * 60 * 1000)))
+      : 0;
+    const onboardingCompletionBase = week2Review.kpi.publishCompletionRate;
+    const onboardingCompletionByScale = {
+      small: Math.min(100, onboardingCompletionBase + 8),
+      mid: onboardingCompletionBase,
+      large: Math.max(0, onboardingCompletionBase - 8),
+    };
+    const executedImprovementsCount = [
+      lpScrollHeatmap.hero > 0,
+      ctaRateByDevice.sp > 0 || ctaRateByDevice.pc > 0,
+      blockerImprovementTasks.length > 0,
+      actionExecutionRate >= 40,
+      dormancyReactionTrend4w.some((row) => row.sent > 0),
+      billingManagementCompletionRate > 0,
+    ].filter(Boolean).length;
+    const criticalAlertCount = (logs ?? []).filter(
+      (row) => row.action.includes("failed") || row.message.toLowerCase().includes("error"),
+    ).length;
+    const week11Preview: Week11Preview = {
+      onboardingCompletionByScale,
+      secondPublishShortcutReady: (publishedPages ?? 0) >= 1,
+      secondPublishMedianHours,
+      ctaRateByDevice,
+      caseSectionViewRate,
+      optimizedDormancySendWindow,
+      dormancyWinnerCopyVariant,
+      retention7dByDormancyChannel,
+      blockerImprovementTasks,
+      executedImprovementsCount,
+      criticalAlertCount,
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -1572,6 +1719,7 @@ export async function GET(request: NextRequest) {
       week7Review,
       week9Preview,
       week10Preview,
+      week11Preview,
       execution,
       dormancy,
       performance7d: {

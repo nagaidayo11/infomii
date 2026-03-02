@@ -2049,6 +2049,31 @@ export type OpsHealthSnapshot = {
     };
     actionExecutionRate: number;
   };
+  week11Preview: {
+    onboardingCompletionByScale: {
+      small: number;
+      mid: number;
+      large: number;
+    };
+    secondPublishShortcutReady: boolean;
+    secondPublishMedianHours: number;
+    ctaRateByDevice: {
+      sp: number;
+      pc: number;
+      unknown: number;
+    };
+    caseSectionViewRate: number;
+    optimizedDormancySendWindow: string;
+    dormancyWinnerCopyVariant: "short" | "detail";
+    retention7dByDormancyChannel: {
+      line: number;
+      mail: number;
+      dashboard: number;
+    };
+    blockerImprovementTasks: string[];
+    executedImprovementsCount: number;
+    criticalAlertCount: number;
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;
@@ -2293,6 +2318,7 @@ type OnboardingWizardAction = "wizard_started" | "wizard_step_completed" | "wiza
 type OnboardingSourceChannel = "x" | "instagram" | "tiktok" | "other" | "unknown";
 type OnboardingCtaVariant = "a" | "b" | "c";
 type OnboardingLandingPage = "business" | "resort" | "spa" | "unknown";
+type OnboardingDeviceType = "sp" | "pc" | "unknown";
 
 function toOnboardingSourceRef(value: string | null | undefined): OnboardingSourceRef | null {
   if (!value) {
@@ -2337,6 +2363,17 @@ function toOnboardingLandingPage(value: string | null | undefined): OnboardingLa
   return "unknown";
 }
 
+function toOnboardingDeviceType(value: string | null | undefined): OnboardingDeviceType {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "sp" || normalized === "mobile") {
+    return "sp";
+  }
+  if (normalized === "pc" || normalized === "desktop") {
+    return "pc";
+  }
+  return "unknown";
+}
+
 export async function trackOnboardingAuthEvent(
   action: OnboardingAuthAction,
   params?: {
@@ -2344,6 +2381,7 @@ export async function trackOnboardingAuthEvent(
     sourceChannel?: string | null;
     ctaVariant?: string | null;
     landingPage?: string | null;
+    deviceType?: string | null;
   },
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
@@ -2358,6 +2396,7 @@ export async function trackOnboardingAuthEvent(
   const sourceChannel = toOnboardingSourceChannel(params?.sourceChannel);
   const ctaVariant = toOnboardingCtaVariant(params?.ctaVariant);
   const landingPage = toOnboardingLandingPage(params?.landingPage);
+  const deviceType = toOnboardingDeviceType(params?.deviceType);
   const actionName = `onboarding.${action}`;
   const message =
     action === "signup_completed"
@@ -2375,6 +2414,7 @@ export async function trackOnboardingAuthEvent(
       sourceChannel,
       ctaVariant,
       landingPage,
+      deviceType,
     },
   });
 }

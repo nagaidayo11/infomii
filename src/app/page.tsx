@@ -116,11 +116,6 @@ export default async function Home({ searchParams }: HomePageProps) {
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
   const normalizedSourceChannel = sourceChannel === "ig" ? "instagram" : sourceChannel;
-  const inferredVariant = sourceChannel === "instagram" || sourceChannel === "ig"
-    ? "b"
-    : sourceChannel === "tiktok"
-      ? "c"
-      : "a";
   const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
   const landingPage = query.lp === "business" || query.lp === "resort" || query.lp === "spa" ? query.lp : "business";
   const winnerVariantByLandingPage = {
@@ -128,14 +123,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     resort: "b",
     spa: "b",
   } as const;
-  const winnerOnlyModeByDefault = (process.env.NEXT_PUBLIC_LP_WINNER_ONLY ?? "true") === "true";
-  const winnerOnlyMode =
-    query.win === "1" || (query.win !== "0" && winnerOnlyModeByDefault);
-  const ctaVariant = winnerOnlyMode
-    ? winnerVariantByLandingPage[landingPage]
-    : query.ab === "a" || query.ab === "b" || query.ab === "c"
-      ? query.ab
-      : inferredVariant;
+  const ctaVariant = winnerVariantByLandingPage[landingPage];
   const hasDedicatedLpPath = query.lp === "business" || query.lp === "resort" || query.lp === "spa";
   const lpBasePath = hasDedicatedLpPath
     ? landingPage === "business"
@@ -146,7 +134,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     : "/";
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
-    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}${winnerOnlyMode ? "&win=1" : ""}`;
+    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
@@ -489,27 +477,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </Link>
               </div>
               <p className="mt-2 text-[11px] text-slate-600">
-                流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（variant {ctaVariant.toUpperCase()}）を表示中
+                流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（固定 variant {ctaVariant.toUpperCase()}）を表示中
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {[
-                  { id: "a", label: "CTA A" },
-                  { id: "b", label: "CTA B" },
-                  { id: "c", label: "CTA C" },
-                ].map((entry) => (
-                  <Link
-                    key={entry.id}
-                    href={`${lpBasePath}?scene=${heroScene}&ab=${entry.id}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`}
-                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                      ctaVariant === entry.id
-                        ? "border-cyan-400 bg-cyan-600 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    {entry.label}
-                  </Link>
-                ))}
-              </div>
+              <p className="mt-1 text-[11px] text-slate-500">Week11: CTA A/Bテストは停止し、業態別の勝ち訴求を固定配信しています。</p>
             </div>
 
             <aside className="lp-reveal lp-delay-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
@@ -592,7 +562,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             ] as const).map(([value, label]) => (
               <Link
                 key={value}
-                href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&tag=${value}${winnerOnlyMode ? "&win=1" : ""}`}
+                href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&tag=${value}`}
                 className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                   activeExampleTag === value
                     ? "border-emerald-500 bg-emerald-600 text-white"
