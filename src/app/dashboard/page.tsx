@@ -33,6 +33,7 @@ import {
   setSharedTemplateFavorite,
   trackBillingResumeClick,
   trackDormancyNoticeSent,
+  trackDormancyNoticeReaction,
   trackDormancyNoticeVariantCopy,
   trackOnboardingWizardEvent,
   trackRestartWinnerLocked,
@@ -163,6 +164,31 @@ const SCALE_LABELS: Record<HotelScale, string> = {
   mid: "中規模（60-149室）",
   large: "大規模（150室~）",
 };
+
+function getLowUsageTemplateImprovementSuggestion(industry: IndustryPreset): string {
+  if (industry === "hotel_business") {
+    return "フロントQ&Aと深夜到着導線を冒頭に追加すると利用率が上がりやすいです。";
+  }
+  if (industry === "hotel_resort") {
+    return "滞在体験（アクティビティ/プール）を先頭に出すと選択率が改善しやすいです。";
+  }
+  if (industry === "ryokan") {
+    return "温浴ルールと混雑回避導線をCTA直下に置くと再利用率が上がりやすいです。";
+  }
+  if (industry === "restaurant") {
+    return "営業時間と注文導線を1画面目に集約すると離脱を抑えられます。";
+  }
+  if (industry === "cafe") {
+    return "混雑時間帯と席利用ルールを短文で追加すると効果的です。";
+  }
+  if (industry === "salon") {
+    return "予約変更導線と注意事項をセットで提示すると問い合わせ削減につながります。";
+  }
+  if (industry === "clinic") {
+    return "当日の持ち物と受付導線を冒頭固定すると初回利用率が上がりやすいです。";
+  }
+  return "主要導線を最上部に配置し、1クリックCTAを追加すると改善しやすいです。";
+}
 
 function inferFacilityType(hotelName: string): FacilityType {
   const normalized = hotelName.toLowerCase();
@@ -461,6 +487,7 @@ type PendingDeleteBatch = {
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
 const WIZARD_RESUME_STORAGE_KEY = "dashboard-onboarding-wizard-resume-v1";
+const OPS_PERF_SNAPSHOT_KEY = "ops-perf-snapshot-v1";
 const OPS_OWNER_EMAILS = new Set([
   "nagai9_119@ezweb.ne.jp",
   "nagaisoccer@gmail.com",
@@ -520,7 +547,15 @@ export default function DashboardPage() {
   const [wizardVisible, setWizardVisible] = useState(false);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
   const [wizardQrDistributed, setWizardQrDistributed] = useState(false);
+  const [wizardQrDistributedAt, setWizardQrDistributedAt] = useState<string | null>(null);
+  const [wizardDropoffReason, setWizardDropoffReason] = useState<"manual_close" | "time_shortage" | "content_not_ready" | "other">("manual_close");
   const [wizardResume, setWizardResume] = useState<{ step: 1 | 2 | 3; updatedAt: string } | null>(null);
+  const [reevaluatingTop3, setReevaluatingTop3] = useState(false);
+  const [top3ReevaluatedAt, setTop3ReevaluatedAt] = useState<string | null>(null);
+  const [perfSnapshot, setPerfSnapshot] = useState<{
+    capturedAt: string;
+    byPath: Array<{ path: string; lcpMs: number; inpMs: number; cls: number; samples: number }>;
+  } | null>(null);
   const [lockingRestartWinner, setLockingRestartWinner] = useState(false);
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -1084,10 +1119,22 @@ export default function DashboardPage() {
   }, [filteredTemplateEntries, sortTemplateEntries, templateGrouping]);
   const fixedTopTemplatesByFacility = useMemo(() => {
     const targetIndustry = mapFacilityToIndustry(inferredFacilityType);
-    return filteredTemplateEntries
+    const usageMap = new Map<string, number>();
+    for (const information of items) {
+      const title = information.title.trim();
+      if (!title) continue;
+      usageMap.set(title, (usageMap.get(title) ?? 0) + 1);
+    }
+    const baseEntries = filteredTemplateEntries
       .filter((entry) => entry.template.industry === targetIndustry)
-      .slice(0, 3);
-  }, [filteredTemplateEntries, inferredFacilityType]);
+      .map((entry) => {
+        const usage = usageMap.get(entry.template.title) ?? 0;
+        const quality = getTemplateQualityScore(entry.template).score;
+        const score = quality + usage * 6 + (entry.viewSeconds <= 60 ? 8 : 0);
+        return { ...entry, score };
+      });
+    return [...baseEntries].sort((a, b) => b.score - a.score).slice(0, 3);
+  }, [filteredTemplateEntries, inferredFacilityType, items]);
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
       return null;
@@ -1190,6 +1237,39 @@ export default function DashboardPage() {
     }
     window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
   }, [favoriteTemplateIndices]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(OPS_PERF_SNAPSHOT_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as {
+        capturedAt?: string;
+        byPath?: Array<{ path?: string; lcpMs?: number; inpMs?: number; cls?: number; samples?: number }>;
+      };
+      if (!parsed.capturedAt || !Array.isArray(parsed.byPath)) {
+        return;
+      }
+      setPerfSnapshot({
+        capturedAt: parsed.capturedAt,
+        byPath: parsed.byPath
+          .filter((row) => typeof row.path === "string")
+          .map((row) => ({
+            path: row.path as string,
+            lcpMs: Number(row.lcpMs ?? 0),
+            inpMs: Number(row.inpMs ?? 0),
+            cls: Number(row.cls ?? 0),
+            samples: Number(row.samples ?? 0),
+          })),
+      });
+    } catch {
+      // no-op
+    }
+  }, []);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -1365,16 +1445,75 @@ export default function DashboardPage() {
     }
     return Array.from(new Set(priorities)).slice(0, 3);
   }, [onboardingFunnel?.wizard.step1CompletionRate, opsHealth?.performance7d.slowPages, opsHealth?.restart7d.retention14d.rate, week5Kpi.stopOrFix]);
+  const speedComparisonByPage = useMemo(() => {
+    if (!perfSnapshot) {
+      return [];
+    }
+    const latestMap = new Map((opsHealth?.performance7d.lcpByPage ?? []).map((row) => [row.path, row]));
+    return perfSnapshot.byPath
+      .map((before) => {
+        const after = latestMap.get(before.path);
+        if (!after) {
+          return null;
+        }
+        return {
+          path: before.path,
+          beforeLcp: before.lcpMs,
+          afterLcp: after.lcpMs,
+          deltaLcp: after.lcpMs - before.lcpMs,
+          beforeInp: before.inpMs,
+          afterInp: after.inpMs,
+          deltaInp: after.inpMs - before.inpMs,
+        };
+      })
+      .filter((row): row is {
+        path: string;
+        beforeLcp: number;
+        afterLcp: number;
+        deltaLcp: number;
+        beforeInp: number;
+        afterInp: number;
+        deltaInp: number;
+      } => Boolean(row))
+      .sort((a, b) => Math.abs(b.deltaLcp) - Math.abs(a.deltaLcp))
+      .slice(0, 5);
+  }, [opsHealth?.performance7d.lcpByPage, perfSnapshot]);
+  const restartDefaultPathByFacility = useMemo(() => {
+    const defaults = opsHealth?.week9Preview.restartDefaultPathByFacility;
+    return {
+      business: defaults?.business ?? "template",
+      resort: defaults?.resort ?? "template",
+      spa: defaults?.spa ?? "template",
+    } as const;
+  }, [opsHealth?.week9Preview.restartDefaultPathByFacility]);
+  const inferredRestartDefaultPath = restartDefaultPathByFacility[inferredFacilityType];
   const weeklyOpsReport = useMemo(
-    () =>
-      `【Infomii 週次レポート】\n` +
-      `LP→登録率: ${week5Kpi.lp}%\n` +
-      `公開完了率: ${week5Kpi.publishCompletion}%\n` +
-      `Pro転換率: ${week5Kpi.proConversion}%\n` +
-      `再開後7日継続率: ${week5Kpi.retention}%\n` +
-      `標準化: ${week5Kpi.standardize.join(" / ") || "なし"}\n` +
-      `停止/修正: ${week5Kpi.stopOrFix.join(" / ") || "なし"}\n` +
-      `今週の最優先3施策: ${week7PriorityTop3.join(" / ") || "なし"}`,
+    () => {
+      const reportDate = new Intl.DateTimeFormat("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+      return [
+        "【Infomii 週次運用レポート v1】",
+        `対象日: ${reportDate}`,
+        "",
+        "[KPI]",
+        `LP→登録率: ${week5Kpi.lp}%`,
+        `公開完了率: ${week5Kpi.publishCompletion}%`,
+        `Pro転換率: ${week5Kpi.proConversion}%`,
+        `再開後7日継続率: ${week5Kpi.retention}%`,
+        "",
+        "[標準化]",
+        week5Kpi.standardize.join(" / ") || "なし",
+        "",
+        "[停止/修正]",
+        week5Kpi.stopOrFix.join(" / ") || "なし",
+        "",
+        "[最優先3施策]",
+        week7PriorityTop3.join(" / ") || "なし",
+      ].join("\n");
+    },
     [week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
@@ -1413,6 +1552,22 @@ export default function DashboardPage() {
     }
     return Array.from(urls).slice(0, 8);
   }, [items]);
+  const imageOptimizationEstimate = useMemo(() => {
+    const estimateBytes = (url: string): number => {
+      const lower = url.toLowerCase();
+      if (lower.includes(".png")) return 1200 * 1024;
+      if (lower.includes(".bmp") || lower.includes(".tiff")) return 2000 * 1024;
+      if (lower.includes(".gif")) return 900 * 1024;
+      return 700 * 1024;
+    };
+    const beforeBytes = unoptimizedImageUrls.reduce((sum, url) => sum + estimateBytes(url), 0);
+    const afterBytes = Math.round(beforeBytes * 0.45);
+    return {
+      beforeKb: Math.round(beforeBytes / 1024),
+      afterKb: Math.round(afterBytes / 1024),
+      reducedKb: Math.max(0, Math.round((beforeBytes - afterBytes) / 1024)),
+    };
+  }, [unoptimizedImageUrls]);
   const lpOptimizationTip = useMemo(() => {
     if (week1Snapshot.lpRate >= 20) {
       return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
@@ -1722,7 +1877,7 @@ export default function DashboardPage() {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(WIZARD_RESUME_STORAGE_KEY, JSON.stringify(resume));
       }
-      void trackOnboardingWizardEvent("wizard_dropoff", { step: wizardStep, reason: "manual_close" });
+      void trackOnboardingWizardEvent("wizard_dropoff", { step: wizardStep, reason: wizardDropoffReason });
       setSuccess(`ウィザードを中断しました。再開リンク（Step ${wizardStep}）から続けられます。`);
     }
     setWizardVisible(false);
@@ -1739,15 +1894,51 @@ export default function DashboardPage() {
       setError("QR配布が完了したらチェックを入れてください。");
       return;
     }
-    void trackOnboardingWizardEvent("wizard_step_completed", { step: 3, reason: "qr_distributed" });
+    void trackOnboardingWizardEvent("wizard_step_completed", {
+      step: 3,
+      reason: wizardQrDistributedAt ? `qr_distributed:${wizardQrDistributedAt}` : "qr_distributed",
+    });
     void trackOnboardingWizardEvent("wizard_completed", { step: 3 });
     setWizardResume(null);
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
     }
     setWizardQrDistributed(false);
+    setWizardQrDistributedAt(null);
     setWizardVisible(false);
     setSuccess("初回公開ウィザードを完了しました。テンプレを選んで公開を進めましょう。");
+  }
+
+  async function onReevaluateTop3Templates() {
+    setReevaluatingTop3(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const now = new Date().toISOString();
+      setTop3ReevaluatedAt(now);
+      setSuccess(`Top3テンプレを再評価しました（${formatDate(now)}）`);
+    } finally {
+      setReevaluatingTop3(false);
+    }
+  }
+
+  function onCapturePerformanceSnapshot() {
+    const byPath = (opsHealth?.performance7d.lcpByPage ?? []).map((row) => ({
+      path: row.path,
+      lcpMs: row.lcpMs,
+      inpMs: row.inpMs,
+      cls: row.cls,
+      samples: row.samples,
+    }));
+    if (byPath.length === 0) {
+      setError("比較用の速度データがありません。計測後に再実行してください。");
+      return;
+    }
+    const snapshot = { capturedAt: new Date().toISOString(), byPath };
+    setPerfSnapshot(snapshot);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(OPS_PERF_SNAPSHOT_KEY, JSON.stringify(snapshot));
+    }
+    setSuccess("速度比較のベースラインを記録しました。");
   }
 
   async function onLockRestartWinnerPath() {
@@ -2362,12 +2553,28 @@ export default function DashboardPage() {
                 <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
                   QR配布完了（7日）: {onboardingFunnel?.wizard.qrDistributedCompleted ?? 0}件 / ウィザード完了者7日継続率: {onboardingFunnel?.wizard.retention7d.rate ?? 0}%（対象 {onboardingFunnel?.wizard.retention7d.eligible ?? 0} / 継続 {onboardingFunnel?.wizard.retention7d.retained ?? 0}）
                 </div>
+                {wizardQrDistributedAt ? (
+                  <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
+                    QR配布証跡: {formatDate(wizardQrDistributedAt)}
+                  </div>
+                ) : null}
                 {wizardResume && !wizardVisible ? (
                   <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
                     <p className="text-xs font-semibold text-amber-900">前回の続きがあります（Step {wizardResume.step}）</p>
                     <p className="mt-1 text-[11px] text-amber-800">
                       中断時刻: {formatDate(wizardResume.updatedAt)}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const resumeUrl = `${window.location.origin}/dashboard?tab=create&wizard=1`;
+                        const body = `Infomii 初回公開ウィザードの再開リンクです。\n${resumeUrl}\n（前回: Step ${wizardResume.step}）`;
+                        void navigator.clipboard.writeText(body).then(() => setSuccess("再開リンク付きメール文面をコピーしました"));
+                      }}
+                      className="mt-2 rounded-md border border-amber-300 bg-white px-3 py-1 text-xs text-amber-900 hover:bg-amber-100"
+                    >
+                      メール文面をコピー
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -2404,7 +2611,10 @@ export default function DashboardPage() {
                           <input
                             type="checkbox"
                             checked={wizardQrDistributed}
-                            onChange={(event) => setWizardQrDistributed(event.target.checked)}
+                            onChange={(event) => {
+                              setWizardQrDistributed(event.target.checked);
+                              setWizardQrDistributedAt(event.target.checked ? new Date().toISOString() : null);
+                            }}
                             className="h-4 w-4 rounded border-emerald-400"
                           />
                           QR配布まで完了した
@@ -2412,6 +2622,20 @@ export default function DashboardPage() {
                       ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <select
+                        value={wizardDropoffReason}
+                        onChange={(event) =>
+                          setWizardDropoffReason(
+                            event.target.value as "manual_close" | "time_shortage" | "content_not_ready" | "other",
+                          )
+                        }
+                        className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
+                      >
+                        <option value="manual_close">離脱理由: 手動終了</option>
+                        <option value="time_shortage">離脱理由: 時間不足</option>
+                        <option value="content_not_ready">離脱理由: 素材未準備</option>
+                        <option value="other">離脱理由: その他</option>
+                      </select>
                       <button
                         type="button"
                         onClick={onWizardClose}
@@ -2447,7 +2671,20 @@ export default function DashboardPage() {
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-emerald-900">施設タイプ別 固定Top3テンプレ</p>
-                  <p className="text-xs text-slate-500">{FACILITY_LABELS[inferredFacilityType]}</p>
+                  <div className="flex items-center gap-2">
+                    {top3ReevaluatedAt ? (
+                      <p className="text-[11px] text-slate-500">最終再評価: {formatDate(top3ReevaluatedAt)}</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => void onReevaluateTop3Templates()}
+                      disabled={reevaluatingTop3}
+                      className="rounded-md border border-emerald-300 bg-white px-2 py-1 text-[11px] text-emerald-800 hover:bg-emerald-50 disabled:opacity-60"
+                    >
+                      {reevaluatingTop3 ? "再評価中..." : "再評価（手動）"}
+                    </button>
+                    <p className="text-xs text-slate-500">{FACILITY_LABELS[inferredFacilityType]}</p>
+                  </div>
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
                   {fixedTopTemplatesByFacility.map((entry, index) => (
@@ -2529,6 +2766,11 @@ export default function DashboardPage() {
                             {usageCount <= 1 && (
                               <p className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-amber-800">
                                 改善候補
+                              </p>
+                            )}
+                            {usageCount <= 1 && (
+                              <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+                                {getLowUsageTemplateImprovementSuggestion(template.industry)}
                               </p>
                             )}
                             <div className="mt-2 flex flex-wrap gap-1">
@@ -3068,7 +3310,8 @@ export default function DashboardPage() {
                   <div className="mt-2 space-y-1 text-xs text-slate-700">
                     {(opsHealth?.performance7d.slowPages ?? []).map((row) => (
                       <p key={`slow-${row.path}`}>
-                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms / INP {row.inpMs}ms / CLS {row.cls}（工数 {row.effort}）
+                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms / INP {row.inpMs}ms / CLS {row.cls}
+                        （工数 {row.effort} / 期待改善 LCP -{row.effort === "L" ? 1500 : row.effort === "M" ? 900 : 450}ms）
                       </p>
                     ))}
                     {(opsHealth?.performance7d.slowPages ?? []).length === 0 && <p>しきい値超過ページはありません。</p>}
@@ -3106,6 +3349,30 @@ export default function DashboardPage() {
                     ))}
                     {(opsHealth?.performance7d.lcpByPage ?? []).length === 0 && <p>計測データがありません。</p>}
                   </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={onCapturePerformanceSnapshot}
+                      className="rounded-md border border-slate-300 bg-white px-3 py-1 text-[11px] text-slate-700 hover:bg-slate-50"
+                    >
+                      改善前スナップショットを記録
+                    </button>
+                    {perfSnapshot ? (
+                      <p className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600">
+                        比較基準: {formatDate(perfSnapshot.capturedAt)}
+                      </p>
+                    ) : null}
+                  </div>
+                  {speedComparisonByPage.length > 0 ? (
+                    <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                      <p className="font-semibold text-slate-800">実行前後比較（ページ別）</p>
+                      {speedComparisonByPage.map((row) => (
+                        <p key={`speed-compare-${row.path}`} className="mt-1">
+                          {row.path}: LCP {row.beforeLcp}→{row.afterLcp}ms（{row.deltaLcp > 0 ? "+" : ""}{row.deltaLcp}ms） / INP {row.beforeInp}→{row.afterInp}ms（{row.deltaInp > 0 ? "+" : ""}{row.deltaInp}ms）
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50/50 p-3">
@@ -3117,17 +3384,22 @@ export default function DashboardPage() {
                     {unoptimizedImageUrls.length === 0 && <p>未最適化URLは検出されませんでした。</p>}
                   </div>
                   {unoptimizedImageUrls.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void navigator.clipboard
-                          .writeText(unoptimizedImageUrls.join("\n"))
-                          .then(() => setSuccess("未最適化URL一覧をコピーしました（画像一括変換オペレーション用）"))
-                      }
-                      className="mt-2 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-[11px] text-rose-800 hover:bg-rose-50"
-                    >
-                      一括変換用URLリストをコピー
-                    </button>
+                    <>
+                      <div className="mt-2 rounded-md border border-rose-200 bg-white px-2 py-2 text-[11px] text-rose-900">
+                        推定サイズ: 変換前 {imageOptimizationEstimate.beforeKb}KB → 変換後 {imageOptimizationEstimate.afterKb}KB（削減 {imageOptimizationEstimate.reducedKb}KB）
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void navigator.clipboard
+                            .writeText(unoptimizedImageUrls.join("\n"))
+                            .then(() => setSuccess("未最適化URL一覧をコピーしました（画像一括変換オペレーション用）"))
+                        }
+                        className="mt-2 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-[11px] text-rose-800 hover:bg-rose-50"
+                      >
+                        一括変換用URLリストをコピー
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -3162,6 +3434,9 @@ export default function DashboardPage() {
                   <div className="mt-3 rounded-md border border-violet-200 bg-white p-3">
                     <p className="text-xs font-semibold text-slate-700">休眠施設向けの再開導線</p>
                     <div className="mt-2 flex flex-wrap gap-2">
+                      <p className="w-full text-[11px] text-violet-800">
+                        施設タイプ別の初期推奨導線: {FACILITY_LABELS[inferredFacilityType]} → {inferredRestartDefaultPath}
+                      </p>
                       <button
                         type="button"
                         onClick={() => {
@@ -3169,7 +3444,11 @@ export default function DashboardPage() {
                           setActiveTab("create");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="rounded-md border border-violet-300 bg-violet-50 px-3 py-1.5 text-xs text-violet-800 hover:bg-violet-100"
+                        className={`rounded-md border px-3 py-1.5 text-xs ${
+                          inferredRestartDefaultPath === "template"
+                            ? "border-violet-300 bg-violet-50 text-violet-800"
+                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
                       >
                         テンプレから再開
                       </button>
@@ -3180,7 +3459,11 @@ export default function DashboardPage() {
                           setActiveTab("project");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                        className={`rounded-md border px-3 py-1.5 text-xs ${
+                          inferredRestartDefaultPath === "draft"
+                            ? "border-violet-300 bg-violet-50 text-violet-800"
+                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
                       >
                         下書きを見直す
                       </button>
@@ -3191,7 +3474,11 @@ export default function DashboardPage() {
                           setActiveTab("dashboard");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                        className={`rounded-md border px-3 py-1.5 text-xs ${
+                          inferredRestartDefaultPath === "publish"
+                            ? "border-violet-300 bg-violet-50 text-violet-800"
+                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
                       >
                         公開状態を確認
                       </button>
@@ -3584,6 +3871,34 @@ export default function DashboardPage() {
                   <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
                     SNS別 推奨CTA: X={opsHealth?.week9Preview.channelRecommendedVariant.x ?? "-"} / Instagram={opsHealth?.week9Preview.channelRecommendedVariant.instagram ?? "-"} / TikTok={opsHealth?.week9Preview.channelRecommendedVariant.tiktok ?? "-"} / Other={opsHealth?.week9Preview.channelRecommendedVariant.other ?? "-"}
                   </div>
+                  <div className="mt-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    テンプレ選択→公開 週次推移（中央値）: {(opsHealth?.week9Preview.templatePublishTrend4w ?? []).map((row) => `${row.label} ${row.medianMinutes}分`).join(" / ") || "データなし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    再開導線 初期推奨: business {opsHealth?.week9Preview.restartDefaultPathByFacility.business ?? "template"} / resort {opsHealth?.week9Preview.restartDefaultPathByFacility.resort ?? "template"} / spa {opsHealth?.week9Preview.restartDefaultPathByFacility.spa ?? "template"}
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-cyan-300 bg-cyan-50/70 p-3">
+                  <p className="text-xs font-semibold text-cyan-900">Week9 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.firstPublishRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">継続率（14日）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
@@ -3622,6 +3937,49 @@ export default function DashboardPage() {
                       >
                         14日通知を送信済みにする
                       </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void trackDormancyNoticeReaction("mail", "read").then(() =>
+                            setSuccess("通知反応（メール既読）を記録しました"),
+                          )
+                        }
+                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] hover:bg-emerald-100"
+                      >
+                        既読（メール）
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void trackDormancyNoticeReaction("line", "read").then(() =>
+                            setSuccess("通知反応（LINE既読）を記録しました"),
+                          )
+                        }
+                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] hover:bg-emerald-100"
+                      >
+                        既読（LINE）
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void trackDormancyNoticeReaction("dashboard", "no_response").then(() =>
+                            setSuccess("通知反応（未反応）を記録しました"),
+                          )
+                        }
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-[11px] hover:bg-slate-50"
+                      >
+                        未反応を記録
+                      </button>
+                    </div>
+                    <div className="rounded-md border border-slate-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                      反応集計（7日）:
+                      メール 既読 {opsHealth?.week9Preview.dormancyReactionByChannel.mail.read ?? 0} / 未反応 {opsHealth?.week9Preview.dormancyReactionByChannel.mail.noResponse ?? 0}
+                      {" ・ "}
+                      LINE 既読 {opsHealth?.week9Preview.dormancyReactionByChannel.line.read ?? 0} / 未反応 {opsHealth?.week9Preview.dormancyReactionByChannel.line.noResponse ?? 0}
+                      {" ・ "}
+                      画面通知 既読 {opsHealth?.week9Preview.dormancyReactionByChannel.dashboard.read ?? 0} / 未反応 {opsHealth?.week9Preview.dormancyReactionByChannel.dashboard.noResponse ?? 0}
                     </div>
                     <button
                       type="button"

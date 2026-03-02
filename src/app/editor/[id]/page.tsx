@@ -138,6 +138,16 @@ type PublishCheckIssue = {
   blockId?: string;
 };
 
+function getPublishIssuePriority(issue: PublishCheckIssue): number {
+  if (issue.level === "error" && issue.message.includes("ページタイトル")) return 100;
+  if (issue.level === "error" && issue.message.includes("本文ブロック")) return 95;
+  if (issue.level === "error" && issue.message.includes("遷移先")) return 90;
+  if (issue.level === "error") return 80;
+  if (issue.target === "schedule") return 60;
+  if (issue.message.includes("URL")) return 55;
+  return 40;
+}
+
 type BlockQuickAction = {
   type: InformationBlock["type"];
   label: string;
@@ -1320,12 +1330,15 @@ export default function EditorPage() {
   }>>([]);
   const [showLaunchGuide, setShowLaunchGuide] = useState(false);
   const [showPostPublishAssist, setShowPostPublishAssist] = useState(false);
+  const [applyingPublishBatchFix, setApplyingPublishBatchFix] = useState(false);
+  const [publishScoreDropReason, setPublishScoreDropReason] = useState<string | null>(null);
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
   const schedulePanelRef = useRef<HTMLDivElement | null>(null);
   const publishPanelRef = useRef<HTMLElement | null>(null);
   const historySerializeRef = useRef<string>("");
   const historyInitRef = useRef(false);
+  const previousPublishScoreRef = useRef<number | null>(null);
   const opsAdminEmails = useMemo(
     () =>
       (process.env.NEXT_PUBLIC_OPS_ADMIN_EMAILS ?? "")
@@ -3395,6 +3408,17 @@ function onUpdateIconRowItem(
     }
     return collectPublishCheckIssues(item, pageStatusBySlug);
   }, [item, pageStatusBySlug]);
+  const prioritizedPublishIssues = useMemo(
+    () =>
+      [...publishCheckIssues].sort((a, b) => {
+        const priorityDelta = getPublishIssuePriority(b) - getPublishIssuePriority(a);
+        if (priorityDelta !== 0) {
+          return priorityDelta;
+        }
+        return a.level === b.level ? 0 : a.level === "error" ? -1 : 1;
+      }),
+    [publishCheckIssues],
+  );
   const publishCheckErrors = publishCheckIssues.filter((issue) => issue.level === "error");
   const publishCheckWarnings = publishCheckIssues.filter((issue) => issue.level === "warning");
   const publishScore = useMemo(
@@ -3449,6 +3473,22 @@ function onUpdateIconRowItem(
     }
     return `${top.label}を優先修正してください。`;
   }, [publishErrorTypeStats]);
+  useEffect(() => {
+    const prevScore = previousPublishScoreRef.current;
+    if (typeof prevScore === "number" && publishScore < prevScore) {
+      const top = publishErrorTypeStats.rows
+        .filter((row) => row.count > 0)
+        .sort((a, b) => b.count - a.count)[0];
+      if (top) {
+        setPublishScoreDropReason(`スコア低下: ${top.label} の増加（現在 ${top.count}件）`);
+      } else {
+        setPublishScoreDropReason("スコア低下: 新しい公開前チェック項目が検出されました。");
+      }
+    } else if (publishScore >= (prevScore ?? publishScore)) {
+      setPublishScoreDropReason(null);
+    }
+    previousPublishScoreRef.current = publishScore;
+  }, [publishErrorTypeStats.rows, publishScore]);
   const favoriteBlockTypeSet = useMemo(
     () => new Set(favoriteBlockTypes),
     [favoriteBlockTypes],
@@ -3521,6 +3561,107 @@ function onUpdateIconRowItem(
       setNotice(`公開前チェック: 警告 ${publishCheckWarnings.length} 件（公開は続行します）。`);
     }
     await save({ status: "published" });
+  }
+
+  async function onApplyPublishBatchFixes() {
+    if (!item) {
+      return;
+    }
+    setApplyingPublishBatchFix(true);
+    try {
+      let changed = false;
+      let nextTitle = item.title;
+      if (!nextTitle.trim()) {
+        nextTitle = "インフォメーション案内";
+        changed = true;
+      }
+      let nextBlocks = item.contentBlocks.map((block) => ({ ...block }));
+      const hasContent = nextBlocks.some((block) =>
+        Boolean((block.text ?? "").trim() || (block.sectionTitle ?? "").trim() || (block.sectionBody ?? "").trim()),
+      );
+      if (!hasContent) {
+        nextBlocks = [
+          {
+            id: crypto.randomUUID(),
+            type: "paragraph",
+            text: "ご案内内容をここに入力してください。",
+            textAlign: "left",
+          },
+          ...nextBlocks,
+        ];
+        changed = true;
+      }
+      const normalizeLink = (value: string): string => {
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+        if (trimmed.startsWith("/p/") || trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+          return trimmed;
+        }
+        return `https://${trimmed.replace(/^\/+/, "")}`;
+      };
+      nextBlocks = nextBlocks
+        .map((block) => {
+          if (block.type === "image" && !(block.url ?? "").trim()) {
+            changed = true;
+            return null;
+          }
+          if (block.type === "cta" && (block.ctaUrl ?? "").trim()) {
+            const normalized = normalizeLink(block.ctaUrl ?? "");
+            if (normalized !== (block.ctaUrl ?? "")) {
+              changed = true;
+              return { ...block, ctaUrl: normalized };
+            }
+          }
+          if (block.type === "iconRow") {
+            const nextItems = (block.iconItems ?? []).map((entry) => {
+              const normalized = normalizeLink(entry.link ?? "");
+              if (normalized !== (entry.link ?? "")) {
+                changed = true;
+              }
+              return { ...entry, link: normalized };
+            });
+            return { ...block, iconItems: nextItems };
+          }
+          return block;
+        })
+        .filter((block): block is InformationBlock => Boolean(block));
+      const nextPublishAt = item.publishAt;
+      let nextUnpublishAt = item.unpublishAt;
+      if (nextPublishAt && nextUnpublishAt && new Date(nextPublishAt).getTime() > new Date(nextUnpublishAt).getTime()) {
+        nextUnpublishAt = null;
+        changed = true;
+      }
+      if (!changed) {
+        setNoticeKind("success");
+        setNotice("一括修正の適用対象はありませんでした。");
+        return;
+      }
+      const nextItem = {
+        ...item,
+        title: nextTitle,
+        contentBlocks: nextBlocks,
+        body: blocksToBody(nextBlocks),
+        images: blocksToImages(nextBlocks),
+        publishAt: nextPublishAt,
+        unpublishAt: nextUnpublishAt,
+      };
+      setItem(nextItem);
+      await save({
+        title: nextTitle,
+        contentBlocks: nextBlocks,
+        body: blocksToBody(nextBlocks),
+        images: blocksToImages(nextBlocks),
+        publishAt: nextPublishAt,
+        unpublishAt: nextUnpublishAt,
+      });
+      setNoticeKind("success");
+      setNotice("公開前チェックの一括修正を適用しました。");
+    } catch (e) {
+      setNoticeKind("error");
+      setNotice(e instanceof Error ? e.message : "一括修正の適用に失敗しました");
+    } finally {
+      setApplyingPublishBatchFix(false);
+    }
   }
 
   useEffect(() => {
@@ -5852,11 +5993,11 @@ function onUpdateIconRowItem(
                           style={{ width: `${publishScore}%` }}
                         />
                       </div>
-                      {publishCheckIssues.length === 0 ? (
+                      {prioritizedPublishIssues.length === 0 ? (
                         <p className="mt-1">すべてOKです。このまま公開できます。</p>
                       ) : (
                         <ul className="mt-2 space-y-1">
-                          {publishCheckIssues.map((issue, index) => (
+                          {prioritizedPublishIssues.map((issue, index) => (
                             <li key={`${issue.level}-${index}`} className="flex items-start justify-between gap-2 leading-relaxed">
                               <span>
                                 <span className="mr-1">{issue.level === "error" ? "✕" : "!"}</span>
@@ -5886,6 +6027,21 @@ function onUpdateIconRowItem(
                       <p className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-2 text-[11px] text-indigo-900">
                         公開直前の推奨修正: {publishFixRecommendation}
                       </p>
+                      {publishScoreDropReason && (
+                        <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-2 py-2 text-[11px] text-rose-900">
+                          {publishScoreDropReason}
+                        </p>
+                      )}
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => void onApplyPublishBatchFixes()}
+                          disabled={applyingPublishBatchFix}
+                          className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-[11px] text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {applyingPublishBatchFix ? "適用中..." : "修正を一括適用"}
+                        </button>
+                      </div>
                     </div>
                     <div className="mb-4 flex gap-2">
                       <button

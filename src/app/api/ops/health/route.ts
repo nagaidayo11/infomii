@@ -98,6 +98,20 @@ type Week9Preview = {
     other: "a" | "b" | "c" | "-";
     unknown: "a" | "b" | "c" | "-";
   };
+  restartDefaultPathByFacility: {
+    business: "template" | "draft" | "publish";
+    resort: "template" | "draft" | "publish";
+    spa: "template" | "draft" | "publish";
+  };
+  dormancyReactionByChannel: {
+    line: { read: number; noResponse: number };
+    mail: { read: number; noResponse: number };
+    dashboard: { read: number; noResponse: number };
+  };
+  templatePublishTrend4w: Array<{
+    label: string;
+    medianMinutes: number;
+  }>;
 };
 
 function roundAverage(values: number[]): number {
@@ -522,6 +536,17 @@ export async function GET(request: NextRequest) {
             other: "-",
             unknown: "-",
           },
+          restartDefaultPathByFacility: {
+            business: "template",
+            resort: "template",
+            spa: "template",
+          },
+          dormancyReactionByChannel: {
+            line: { read: 0, noResponse: 0 },
+            mail: { read: 0, noResponse: 0 },
+            dashboard: { read: 0, noResponse: 0 },
+          },
+          templatePublishTrend4w: [],
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -674,13 +699,24 @@ export async function GET(request: NextRequest) {
             other: "-",
             unknown: "-",
           },
+          restartDefaultPathByFacility: {
+            business: "template",
+            resort: "template",
+            spa: "template",
+          },
+          dormancyReactionByChannel: {
+            line: { read: 0, noResponse: 0 },
+            mail: { read: 0, noResponse: 0 },
+            dashboard: { read: 0, noResponse: 0 },
+          },
+          templatePublishTrend4w: [],
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }, { data: dormancyNoticeLogs }] = await Promise.all([
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }, { data: dormancyNoticeLogs }, { data: dormancyReactionLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -756,6 +792,13 @@ export async function GET(request: NextRequest) {
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
         .eq("action", "ops.dormancy_notice_sent")
+        .limit(1000),
+      admin
+        .from("audit_logs")
+        .select("metadata,created_at")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .eq("action", "ops.dormancy_notice_reaction")
         .limit(1000),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
@@ -951,6 +994,7 @@ export async function GET(request: NextRequest) {
     const selectedByTarget = new Map<string, number>();
     const selectedIndustryByTarget = new Map<string, "business" | "resort" | "spa">();
     const templateToPublishDurations: number[] = [];
+    const templateToPublishDurationRows: Array<{ minutes: number; publishedAtMs: number }> = [];
     const templateToPublishDurationsByIndustry: Record<"business" | "resort" | "spa", number[]> = {
       business: [],
       resort: [],
@@ -973,6 +1017,7 @@ export async function GET(request: NextRequest) {
         if (selectedAt && createdAtMs >= selectedAt) {
           const duration = Math.round((createdAtMs - selectedAt) / 60000);
           templateToPublishDurations.push(duration);
+          templateToPublishDurationRows.push({ minutes: duration, publishedAtMs: createdAtMs });
           const industry = selectedIndustryByTarget.get(targetId);
           if (industry) {
             templateToPublishDurationsByIndustry[industry].push(duration);
@@ -1208,10 +1253,93 @@ export async function GET(request: NextRequest) {
       }
       channelRecommendedVariant[channel] = winner;
     }
+    const restartDefaultPathByFacility: Week9Preview["restartDefaultPathByFacility"] = {
+      business: "template",
+      resort: "template",
+      spa: "template",
+    };
+    const restartPathStatsByFacility: Record<
+      "business" | "resort" | "spa",
+      Record<"template" | "draft" | "publish", { clicks: number; completed: number }>
+    > = {
+      business: {
+        template: { clicks: 0, completed: 0 },
+        draft: { clicks: 0, completed: 0 },
+        publish: { clicks: 0, completed: 0 },
+      },
+      resort: {
+        template: { clicks: 0, completed: 0 },
+        draft: { clicks: 0, completed: 0 },
+        publish: { clicks: 0, completed: 0 },
+      },
+      spa: {
+        template: { clicks: 0, completed: 0 },
+        draft: { clicks: 0, completed: 0 },
+        publish: { clicks: 0, completed: 0 },
+      },
+    };
+    for (const event of restartEvents) {
+      const slot = restartPathStatsByFacility[event.facilityType][event.path];
+      slot.clicks += 1;
+      const completed = publishTimes30d.some(
+        (time) => time > event.createdAt && time <= event.createdAt + 48 * 60 * 60 * 1000,
+      );
+      if (completed) {
+        slot.completed += 1;
+      }
+    }
+    for (const facility of ["business", "resort", "spa"] as const) {
+      let bestPath: "template" | "draft" | "publish" = "template";
+      let bestRate = -1;
+      let bestClicks = -1;
+      for (const path of ["template", "draft", "publish"] as const) {
+        const stat = restartPathStatsByFacility[facility][path];
+        const rate = stat.clicks > 0 ? Math.round((stat.completed / stat.clicks) * 100) : 0;
+        if (rate > bestRate || (rate === bestRate && stat.clicks > bestClicks)) {
+          bestRate = rate;
+          bestClicks = stat.clicks;
+          bestPath = path;
+        }
+      }
+      restartDefaultPathByFacility[facility] = bestPath;
+    }
+    const dormancyReactionByChannel: Week9Preview["dormancyReactionByChannel"] = {
+      line: { read: 0, noResponse: 0 },
+      mail: { read: 0, noResponse: 0 },
+      dashboard: { read: 0, noResponse: 0 },
+    };
+    for (const row of dormancyReactionLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const channel = metadata?.channel;
+      const reaction = metadata?.reaction;
+      const safeChannel =
+        channel === "line" || channel === "mail" || channel === "dashboard" ? channel : null;
+      if (!safeChannel) continue;
+      if (reaction === "read") {
+        dormancyReactionByChannel[safeChannel].read += 1;
+      } else if (reaction === "no_response") {
+        dormancyReactionByChannel[safeChannel].noResponse += 1;
+      }
+    }
+    const templatePublishTrend4w: Week9Preview["templatePublishTrend4w"] = [];
+    for (let weekOffset = 3; weekOffset >= 0; weekOffset -= 1) {
+      const end = Date.now() - weekOffset * 7 * 24 * 60 * 60 * 1000;
+      const start = end - 7 * 24 * 60 * 60 * 1000;
+      const rows = templateToPublishDurationRows
+        .filter((row) => row.publishedAtMs >= start && row.publishedAtMs < end)
+        .map((row) => row.minutes);
+      templatePublishTrend4w.push({
+        label: `W-${weekOffset + 1}`,
+        medianMinutes: median(rows),
+      });
+    }
     const week9Preview: Week9Preview = {
       winnerOnlyMode: (process.env.NEXT_PUBLIC_LP_WINNER_ONLY ?? "true") === "true",
       sectionCvr,
       channelRecommendedVariant,
+      restartDefaultPathByFacility,
+      dormancyReactionByChannel,
+      templatePublishTrend4w,
     };
 
     return NextResponse.json({

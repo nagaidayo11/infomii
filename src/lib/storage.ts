@@ -2005,6 +2005,20 @@ export type OpsHealthSnapshot = {
       other: "a" | "b" | "c" | "-";
       unknown: "a" | "b" | "c" | "-";
     };
+    restartDefaultPathByFacility: {
+      business: "template" | "draft" | "publish";
+      resort: "template" | "draft" | "publish";
+      spa: "template" | "draft" | "publish";
+    };
+    dormancyReactionByChannel: {
+      line: { read: number; noResponse: number };
+      mail: { read: number; noResponse: number };
+      dashboard: { read: number; noResponse: number };
+    };
+    templatePublishTrend4w: Array<{
+      label: string;
+      medianMinutes: number;
+    }>;
   };
   recentBillingLogs: Array<{
     id: string;
@@ -2620,6 +2634,27 @@ export async function trackDormancyNoticeSent(
     message: `休眠通知を送信しました（${stage} / ${channel}）`,
     targetType: "ops",
     metadata: { stage, channel },
+  });
+}
+
+export async function trackDormancyNoticeReaction(
+  channel: "line" | "mail" | "dashboard",
+  reaction: "read" | "no_response",
+): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.dormancy_notice_reaction",
+    message: `休眠通知の反応を記録しました（${channel} / ${reaction}）`,
+    targetType: "ops",
+    metadata: { channel, reaction },
   });
 }
 
