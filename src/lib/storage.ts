@@ -1991,6 +1991,21 @@ export type OpsHealthSnapshot = {
       day14: number;
     };
   };
+  week9Preview: {
+    winnerOnlyMode: boolean;
+    sectionCvr: {
+      hero: number;
+      sticky: number;
+      bottom: number;
+    };
+    channelRecommendedVariant: {
+      x: "a" | "b" | "c" | "-";
+      instagram: "a" | "b" | "c" | "-";
+      tiktok: "a" | "b" | "c" | "-";
+      other: "a" | "b" | "c" | "-";
+      unknown: "a" | "b" | "c" | "-";
+    };
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;

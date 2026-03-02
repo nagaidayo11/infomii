@@ -84,6 +84,22 @@ type Week7Review = {
   };
 };
 
+type Week9Preview = {
+  winnerOnlyMode: boolean;
+  sectionCvr: {
+    hero: number;
+    sticky: number;
+    bottom: number;
+  };
+  channelRecommendedVariant: {
+    x: "a" | "b" | "c" | "-";
+    instagram: "a" | "b" | "c" | "-";
+    tiktok: "a" | "b" | "c" | "-";
+    other: "a" | "b" | "c" | "-";
+    unknown: "a" | "b" | "c" | "-";
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -492,6 +508,21 @@ export async function GET(request: NextRequest) {
             day14: 0,
           },
         },
+        week9Preview: {
+          winnerOnlyMode: true,
+          sectionCvr: {
+            hero: 0,
+            sticky: 0,
+            bottom: 0,
+          },
+          channelRecommendedVariant: {
+            x: "-",
+            instagram: "-",
+            tiktok: "-",
+            other: "-",
+            unknown: "-",
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -627,6 +658,21 @@ export async function GET(request: NextRequest) {
             day3: 0,
             day7: 0,
             day14: 0,
+          },
+        },
+        week9Preview: {
+          winnerOnlyMode: true,
+          sectionCvr: {
+            hero: 0,
+            sticky: 0,
+            bottom: 0,
+          },
+          channelRecommendedVariant: {
+            x: "-",
+            instagram: "-",
+            tiktok: "-",
+            other: "-",
+            unknown: "-",
           },
         },
         recentBillingLogs: [] as BillingLogRow[],
@@ -832,6 +878,16 @@ export async function GET(request: NextRequest) {
       ["resort", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
       ["spa", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
     ]);
+    const onboardingByChannelVariant = new Map<
+      "x" | "instagram" | "tiktok" | "other" | "unknown",
+      Map<"a" | "b" | "c", { logins: number; signups: number }>
+    >([
+      ["x", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["instagram", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["tiktok", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["other", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+      ["unknown", new Map([["a", { logins: 0, signups: 0 }], ["b", { logins: 0, signups: 0 }], ["c", { logins: 0, signups: 0 }]])],
+    ]);
     for (const row of onboardingLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const ref = metadata?.sourceRef;
@@ -848,6 +904,15 @@ export async function GET(request: NextRequest) {
         variant === "a" || variant === "b" || variant === "c"
           ? variant
           : "a";
+      const sourceChannel = metadata?.sourceChannel;
+      const safeChannel: "x" | "instagram" | "tiktok" | "other" | "unknown" =
+        sourceChannel === "x" ||
+        sourceChannel === "instagram" ||
+        sourceChannel === "tiktok" ||
+        sourceChannel === "other" ||
+        sourceChannel === "unknown"
+          ? sourceChannel
+          : "unknown";
       const entry = onboardingByRef.get(ref);
       if (!entry) {
         continue;
@@ -860,6 +925,10 @@ export async function GET(request: NextRequest) {
             stat.logins += 1;
           }
         }
+        const channelStat = onboardingByChannelVariant.get(safeChannel)?.get(safeVariant);
+        if (channelStat) {
+          channelStat.logins += 1;
+        }
       } else if (row.action === "onboarding.signup_completed") {
         entry.signups += 1;
         if (safeLp) {
@@ -867,6 +936,10 @@ export async function GET(request: NextRequest) {
           if (stat) {
             stat.signups += 1;
           }
+        }
+        const channelStat = onboardingByChannelVariant.get(safeChannel)?.get(safeVariant);
+        if (channelStat) {
+          channelStat.signups += 1;
         }
       }
     }
@@ -1082,6 +1155,64 @@ export async function GET(request: NextRequest) {
       templateToPublishMedianByIndustry,
       dormancyNoticeSent7d,
     };
+    const sectionCvr = {
+      hero:
+        onboardingByRef.get("lp-hero")?.logins
+          ? Math.round(
+              ((onboardingByRef.get("lp-hero")?.signups ?? 0) /
+                (onboardingByRef.get("lp-hero")?.logins ?? 1)) *
+                100,
+            )
+          : 0,
+      sticky:
+        onboardingByRef.get("lp-sticky")?.logins
+          ? Math.round(
+              ((onboardingByRef.get("lp-sticky")?.signups ?? 0) /
+                (onboardingByRef.get("lp-sticky")?.logins ?? 1)) *
+                100,
+            )
+          : 0,
+      bottom:
+        onboardingByRef.get("lp-bottom")?.logins
+          ? Math.round(
+              ((onboardingByRef.get("lp-bottom")?.signups ?? 0) /
+                (onboardingByRef.get("lp-bottom")?.logins ?? 1)) *
+                100,
+            )
+          : 0,
+    };
+    const channelRecommendedVariant: Week9Preview["channelRecommendedVariant"] = {
+      x: "-",
+      instagram: "-",
+      tiktok: "-",
+      other: "-",
+      unknown: "-",
+    };
+    for (const channel of ["x", "instagram", "tiktok", "other", "unknown"] as const) {
+      const variantMap = onboardingByChannelVariant.get(channel);
+      if (!variantMap) {
+        continue;
+      }
+      let winner: "a" | "b" | "c" | "-" = "-";
+      let bestRate = -1;
+      let bestLogins = -1;
+      for (const variant of ["a", "b", "c"] as const) {
+        const stat = variantMap.get(variant);
+        if (!stat) continue;
+        const rate = stat.logins > 0 ? Math.round((stat.signups / stat.logins) * 100) : 0;
+        if (rate > bestRate || (rate === bestRate && stat.logins > bestLogins)) {
+          bestRate = rate;
+          bestLogins = stat.logins;
+          winner = stat.logins > 0 ? variant : winner;
+        }
+      }
+      channelRecommendedVariant[channel] = winner;
+    }
+    const week9Preview: Week9Preview = {
+      winnerOnlyMode: (process.env.NEXT_PUBLIC_LP_WINNER_ONLY ?? "true") === "true",
+      sectionCvr,
+      channelRecommendedVariant,
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -1118,6 +1249,7 @@ export async function GET(request: NextRequest) {
       week3Review,
       week4Review,
       week7Review,
+      week9Preview,
       execution,
       dormancy,
       performance7d: {

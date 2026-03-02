@@ -3562,6 +3562,30 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50/70 p-3">
+                  <p className="text-xs font-semibold text-teal-900">Week9 Day1 先行プレビュー（運用者向け）</p>
+                  <div className="mt-2 rounded-md border border-teal-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    勝ち訴求固定モード: {opsHealth?.week9Preview.winnerOnlyMode ? "有効" : "無効"}
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Hero CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week9Preview.sectionCvr.hero ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Sticky CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week9Preview.sectionCvr.sticky ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Bottom CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week9Preview.sectionCvr.bottom ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    SNS別 推奨CTA: X={opsHealth?.week9Preview.channelRecommendedVariant.x ?? "-"} / Instagram={opsHealth?.week9Preview.channelRecommendedVariant.instagram ?? "-"} / TikTok={opsHealth?.week9Preview.channelRecommendedVariant.tiktok ?? "-"} / Other={opsHealth?.week9Preview.channelRecommendedVariant.other ?? "-"}
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
