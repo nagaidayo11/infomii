@@ -10,6 +10,7 @@ import AppToast from "@/components/app-toast";
 import {
   buildPublicUrl,
   createBlankInformation,
+  createHotelInvite,
   createStripePortalSession,
   createStripeCheckoutSession,
   createInformationFromTemplate,
@@ -18,14 +19,19 @@ import {
   getDashboardBootstrapData,
   getInformation,
   getCurrentHotelSubscription,
+  getCurrentHotelInviteMetrics,
   getCurrentHotelViewMetrics,
   getOnboardingFunnel7d,
   getOpsHealthSnapshot,
+  listCurrentHotelInvites,
   listCurrentHotelAuditLogs,
+  revokeHotelInvite,
   runOpsRecoveryAction,
   runOpsAlertTest,
   trackUpgradeClick,
   type HotelAuditLog,
+  type HotelInvite,
+  type HotelInviteMetrics,
   type OnboardingFunnel7d,
   type HotelSubscription,
   type HotelViewMetrics,
@@ -67,6 +73,11 @@ function formatAuditDate(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function toTimestamp(value: string): number {
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : 0;
 }
 
 function getStatusLabel(status: SubscriptionStatus): string {
@@ -299,6 +310,11 @@ export default function DashboardPage() {
   const [creatingCheckout, setCreatingCheckout] = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);
+  const [inviteMetrics, setInviteMetrics] = useState<HotelInviteMetrics | null>(null);
+  const [invites, setInvites] = useState<HotelInvite[]>([]);
+  const [creatingInvite, setCreatingInvite] = useState(false);
+  const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
+  const [loadingInvites, setLoadingInvites] = useState(false);
   const [onboardingFunnel, setOnboardingFunnel] = useState<OnboardingFunnel7d | null>(null);
   const [auditLogs, setAuditLogs] = useState<HotelAuditLog[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
@@ -459,6 +475,38 @@ export default function DashboardPage() {
       mounted = false;
     };
   }, [loading, canAccessOps]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+    let mounted = true;
+    setLoadingInvites(true);
+    void Promise.all([listCurrentHotelInvites(20), getCurrentHotelInviteMetrics()])
+      .then(([rows, metrics]) => {
+        if (!mounted) {
+          return;
+        }
+        setInvites(rows);
+        setInviteMetrics(metrics);
+      })
+      .catch((e) => {
+        if (!mounted) {
+          return;
+        }
+        setError(e instanceof Error ? e.message : "招待情報の取得に失敗しました");
+      })
+      .finally(() => {
+        if (!mounted) {
+          return;
+        }
+        setLoadingInvites(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (loading || autoSyncedRenewalRef.current) {
@@ -651,6 +699,7 @@ export default function DashboardPage() {
   const isLimitReached = publishedLimit > 0 && published.length >= publishedLimit;
   const isNearLimit = !isLimitReached && publishedLimit > 0 && usagePercent >= 80;
   const isProActive = subscription?.plan === "pro" && (subscription.status === "active" || subscription.status === "trialing");
+  const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached);
   const primaryBillingCtaLabel = isProActive ? "解約する" : "Proにアップグレード";
   const primaryBillingCtaLoading = isProActive ? openingPortal : creatingCheckout;
   const primaryBillingCtaDisabled = isProActive ? openingPortal || !subscription?.hasStripeCustomer : creatingCheckout;
@@ -857,6 +906,31 @@ export default function DashboardPage() {
       ),
     [opsTimeline],
   );
+  const latestCheckoutSessionLog = useMemo(
+    () =>
+      auditLogs
+        .filter((log) => log.action === "billing.checkout_session_created")
+        .sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt))[0] ?? null,
+    [auditLogs],
+  );
+  const latestCheckoutCompletedAt = useMemo(
+    () =>
+      auditLogs
+        .filter((log) => log.action === "billing.checkout_completed")
+        .map((log) => toTimestamp(log.createdAt))
+        .sort((a, b) => b - a)[0] ?? null,
+    [auditLogs],
+  );
+  const hasPendingCheckout = useMemo(() => {
+    if (isProActive || !latestCheckoutSessionLog) {
+      return false;
+    }
+    const startedAt = toTimestamp(latestCheckoutSessionLog.createdAt);
+    if (!latestCheckoutCompletedAt) {
+      return true;
+    }
+    return startedAt > latestCheckoutCompletedAt;
+  }, [isProActive, latestCheckoutCompletedAt, latestCheckoutSessionLog]);
   const normalizedProjectName = useMemo(() => normalizeProjectName(newProjectName), [newProjectName]);
   const canCreateProject = normalizedProjectName.length >= 2;
   const week1Snapshot = useMemo(() => {
@@ -875,7 +949,7 @@ export default function DashboardPage() {
       return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
     }
     if ((onboardingFunnel?.lpAttributedLogins ?? 0) === 0) {
-      return "LP ref付き流入が未計測です。SNS投稿リンクを /login?ref=lp-hero 付きで統一してください。";
+      return "LP ref付き流入が未計測です。SNS投稿リンクを /login?ref=lp-hero&src=x&ab=a の形式で統一してください。";
     }
     return "LP→登録率が20%未満です。ヒーロー見出しとCTA文言をホテル業務課題にさらに寄せるのが有効です。";
   }, [onboardingFunnel?.lpAttributedLogins, week1Snapshot.lpRate]);
@@ -884,7 +958,7 @@ export default function DashboardPage() {
     try {
       await ensureUserHotelScope();
       const id = await createInformationFromTemplate(templateIndex);
-      router.push(`/editor/${id}`);
+      router.push(`/editor/${id}?guide=start`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
     }
@@ -902,7 +976,7 @@ export default function DashboardPage() {
     try {
       await ensureUserHotelScope();
       const id = await createBlankInformation();
-      router.push(`/editor/${id}`);
+      router.push(`/editor/${id}?guide=start`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
     }
@@ -969,6 +1043,52 @@ export default function DashboardPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Customer Portalの開始に失敗しました");
       setOpeningPortal(false);
+    }
+  }
+
+  async function refreshInviteData() {
+    const [rows, metrics] = await Promise.all([listCurrentHotelInvites(20), getCurrentHotelInviteMetrics()]);
+    setInvites(rows);
+    setInviteMetrics(metrics);
+  }
+
+  async function onCreateInvite() {
+    setCreatingInvite(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const invite = await createHotelInvite();
+      await navigator.clipboard.writeText(invite.code);
+      setSuccess(`招待コード ${invite.code} を発行しました（コピー済み）`);
+      await Promise.all([refreshInviteData(), listCurrentHotelAuditLogs().then(setAuditLogs)]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "招待コードの発行に失敗しました");
+    } finally {
+      setCreatingInvite(false);
+    }
+  }
+
+  async function onCopyInvite(code: string) {
+    try {
+      await navigator.clipboard.writeText(code);
+      setSuccess(`招待コード ${code} をコピーしました`);
+    } catch {
+      setError("招待コードのコピーに失敗しました");
+    }
+  }
+
+  async function onRevokeInvite(inviteId: string) {
+    setRevokingInviteId(inviteId);
+    setError(null);
+    setSuccess(null);
+    try {
+      await revokeHotelInvite(inviteId);
+      setSuccess("招待コードを無効化しました");
+      await Promise.all([refreshInviteData(), listCurrentHotelAuditLogs().then(setAuditLogs)]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "招待コードの無効化に失敗しました");
+    } finally {
+      setRevokingInviteId(null);
     }
   }
 
@@ -1333,14 +1453,22 @@ export default function DashboardPage() {
             <article className="rounded-2xl lux-section-card border border-emerald-200/80 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-base font-semibold text-slate-900">Free / Pro 比較</h2>
-                <button
-                  type="button"
-                  onClick={() => void onStartStripeCheckout()}
-                  disabled={creatingCheckout || isProActive}
-                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
-                >
-                  {isProActive ? "現在Proプランです" : creatingCheckout ? "遷移中..." : "Proにアップグレード"}
-                </button>
+                {isProActive ? (
+                  <span className="rounded-md bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-800">
+                    現在Proプランです
+                  </span>
+                ) : shouldShowUpgradeCta ? (
+                  <button
+                    type="button"
+                    onClick={() => void onStartStripeCheckout()}
+                    disabled={creatingCheckout}
+                    className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+                  >
+                    {creatingCheckout ? "遷移中..." : "Proにアップグレード"}
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-500">公開枠が80%を超えるとアップグレード導線を表示します</span>
+                )}
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                 <p className="font-medium text-slate-500">項目</p>
@@ -2097,10 +2225,33 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-3">
+                  <p className="text-xs font-semibold text-indigo-900">公開ページ速度（直近7日）</p>
+                  <p className="mt-1 text-xs text-slate-600">LCPと読み込み時間を公開ページで自動計測しています。</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LCP 平均 / P75</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.performance7d.lcpAvgMs ?? 0}ms / {opsHealth?.performance7d.lcpP75Ms ?? 0}ms
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Load 平均 / P75</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {opsHealth?.performance7d.loadAvgMs ?? 0}ms / {opsHealth?.performance7d.loadP75Ms ?? 0}ms
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-600">
+                    計測サンプル: {opsHealth?.performance7d.sampleCount ?? 0} 件 / 最終計測:{" "}
+                    {opsHealth?.performance7d.lastMeasuredAt ? formatDate(opsHealth.performance7d.lastMeasuredAt) : "未計測"}
+                  </p>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/50 p-3">
                   <p className="text-xs font-semibold text-cyan-900">LP→登録ファネル（直近7日）</p>
                   <p className="mt-1 text-xs text-slate-600">
-                    refパラメータ（lp-hero / lp-sticky / lp-bottom）付き導線の集計です。
+                    ref（lp-hero / lp-sticky / lp-bottom）+ src（SNS）+ ab（CTA文言）の集計です。
                   </p>
                   {loadingOnboardingFunnel && (
                     <div className="mt-2 animate-pulse space-y-2">
@@ -2125,6 +2276,29 @@ export default function DashboardPage() {
                       <p className="mt-1 text-lg font-semibold text-emerald-700">
                         {onboardingFunnel?.lpToSignupRate ?? 0}%
                       </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-slate-700">SNS別</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-600">
+                        {(onboardingFunnel?.byChannel ?? []).slice(0, 4).map((row) => (
+                          <p key={`channel-${row.channel}`}>
+                            {row.channel}: {row.logins}→{row.signups}（{row.rate}%）
+                          </p>
+                        ))}
+                        {(onboardingFunnel?.byChannel ?? []).length === 0 && <p>データなし</p>}
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs font-semibold text-slate-700">CTA A/B別</p>
+                      <div className="mt-1 space-y-1 text-xs text-slate-600">
+                        {(onboardingFunnel?.byVariant ?? []).map((row) => (
+                          <p key={`variant-${row.variant}`}>
+                            variant {row.variant.toUpperCase()}: {row.logins}→{row.signups}（{row.rate}%）
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-3 rounded-md border border-cyan-200 bg-white p-3">
@@ -2200,6 +2374,17 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/50 p-3">
+                  <p className="text-sm font-medium text-sky-900">スマホ実機チェック（運用）</p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-700">
+                    <p>1. iPhone Safariで文字サイズと改行崩れがない</p>
+                    <p>2. Android ChromeでCTAがファーストビュー内に表示される</p>
+                    <p>3. 画像ブロックが3G回線で2秒台表示を維持できる</p>
+                    <p>4. 子ページのヘッダー左に戻る導線が表示される</p>
+                    <p>5. QR遷移（src=qr）で公開ページが正常表示される</p>
+                  </div>
+                </div>
+
                 <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
                   <p className="text-sm font-medium text-emerald-900">初回3分導線</p>
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -2261,6 +2446,7 @@ export default function DashboardPage() {
                     <p>2. Pro導線クリック率（目安: 20%以上）</p>
                     <p>3. 決済完了後にプラン反映が 1分以内か</p>
                     <p>4. 障害時に運用センターから復旧できるか</p>
+                    <p>5. スマホ実機（iPhone / Android）で視認性を確認したか</p>
                   </div>
                 </div>
                 <div className="mt-3 space-y-2">
@@ -2377,14 +2563,16 @@ export default function DashboardPage() {
                     >
                       {savingSubscription ? "保存中..." : "プラン設定を保存"}
                     </button>
-                    <button
-                      type="button"
-                      disabled={primaryBillingCtaDisabled}
-                      onClick={isProActive ? onOpenBillingPortal : onStartStripeCheckout}
-                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
-                    >
-                      {primaryBillingCtaLoading ? "遷移中..." : primaryBillingCtaLabel}
-                    </button>
+                    {(isProActive || shouldShowUpgradeCta) && (
+                      <button
+                        type="button"
+                        disabled={primaryBillingCtaDisabled}
+                        onClick={isProActive ? onOpenBillingPortal : onStartStripeCheckout}
+                        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                      >
+                        {primaryBillingCtaLoading ? "遷移中..." : primaryBillingCtaLabel}
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={openingPortal || !subscription?.hasStripeCustomer}
@@ -2399,6 +2587,137 @@ export default function DashboardPage() {
                       請求書・カード管理は、初回アップグレード後に利用できます。
                     </p>
                   )}
+                  {!isProActive && !shouldShowUpgradeCta && (
+                    <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                      公開枠が80%に近づくと、この画面にProアップグレード導線を表示します。
+                    </p>
+                  )}
+                  {hasPendingCheckout && latestCheckoutSessionLog && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                      <p className="text-xs font-semibold text-amber-900">checkout未完了リマインド</p>
+                      <p className="mt-1 text-xs text-amber-800">
+                        {formatAuditDate(latestCheckoutSessionLog.createdAt)} に決済開始しましたが、まだ完了していません。
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void onStartStripeCheckout()}
+                        disabled={creatingCheckout}
+                        className="mt-2 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-400 disabled:opacity-60"
+                      >
+                        {creatingCheckout ? "遷移中..." : "決済を再開する"}
+                      </button>
+                    </div>
+                  )}
+                  <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</p>
+                    <div className="mt-2 space-y-2 text-xs text-slate-700">
+                      <div>
+                        <p className="font-medium">Q. 課金はいつ開始されますか？</p>
+                        <p className="mt-0.5 text-slate-600">A. Checkout完了後にProへ反映され、そこから月次で更新されます。</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">Q. 途中で解約したらどうなりますか？</p>
+                        <p className="mt-0.5 text-slate-600">A. 次回更新日まではProが利用でき、その後Freeに戻ります。</p>
+                      </div>
+                      <div>
+                        <p className="font-medium">Q. 決済画面を閉じてしまいました。</p>
+                        <p className="mt-0.5 text-slate-600">A. 上の「決済を再開する」から再度Checkoutを開けます。</p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 className="text-lg font-semibold">スタッフ招待</h2>
+                      <p className="mt-1 text-sm text-slate-600">発行→コピー→共有を1画面で完了できます。</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void onCreateInvite()}
+                      disabled={creatingInvite}
+                      className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-60"
+                    >
+                      {creatingInvite ? "発行中..." : "招待コードを発行"}
+                    </button>
+                  </div>
+
+                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                      <p className="text-[11px] text-slate-500">発行数</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{inviteMetrics?.issued ?? 0}</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                      <p className="text-[11px] text-slate-500">承認数</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{inviteMetrics?.redeemed ?? 0}</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                      <p className="text-[11px] text-slate-500">承認率</p>
+                      <p className="mt-1 text-lg font-semibold text-emerald-700">{inviteMetrics?.redeemRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                      <p className="text-[11px] text-slate-500">有効コード</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{inviteMetrics?.active ?? 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                    <p className="font-medium">共有手順</p>
+                    <p className="mt-1">1. 招待コードを発行 → 2. コードをコピー → 3. スタッフへ送信</p>
+                    <p className="mt-1">ログイン画面の「招待コード（任意）」に入力すると同じ施設へ参加できます。</p>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {loadingInvites && (
+                      <p className="text-xs text-slate-500">招待コードを読み込み中...</p>
+                    )}
+                    {!loadingInvites && invites.length === 0 && (
+                      <p className="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500">
+                        まだ招待コードがありません。
+                      </p>
+                    )}
+                    {invites.slice(0, 8).map((invite) => (
+                      <div key={invite.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="font-mono text-sm font-semibold text-slate-900">{invite.code}</p>
+                          <p className="text-[11px] text-slate-500">
+                            {invite.isActive ? "有効" : "無効"} / 作成: {formatDate(invite.createdAt)}
+                            {invite.consumedAt ? ` / 承認: ${formatDate(invite.consumedAt)}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => void onCopyInvite(invite.code)}
+                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            コピー
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const text = `Infomii スタッフ招待コード: ${invite.code}\nログイン画面で「招待コード（任意）」に入力してください。`;
+                              void navigator.clipboard.writeText(text).then(() => setSuccess("共有文面をコピーしました"));
+                            }}
+                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            共有文面
+                          </button>
+                          {invite.isActive && (
+                            <button
+                              type="button"
+                              onClick={() => void onRevokeInvite(invite.id)}
+                              disabled={revokingInviteId === invite.id}
+                              className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                            >
+                              {revokingInviteId === invite.id ? "無効化中..." : "無効化"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </article>
 
                 <div className="min-w-0 space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 lg:pb-4">

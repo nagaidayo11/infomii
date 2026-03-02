@@ -1318,6 +1318,7 @@ export default function EditorPage() {
     createdAt: string;
     blocks: InformationBlock[];
   }>>([]);
+  const [showLaunchGuide, setShowLaunchGuide] = useState(false);
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
   const schedulePanelRef = useRef<HTMLDivElement | null>(null);
@@ -1470,6 +1471,7 @@ export default function EditorPage() {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const query = new URLSearchParams(search);
     const billing = query.get("billing");
+    const guide = query.get("guide");
 
     let cancelled = false;
 
@@ -1507,9 +1509,15 @@ export default function EditorPage() {
       setNoticeKind("error");
       setNotice("決済はキャンセルされました。");
     }
+    if (guide === "start") {
+      setShowLaunchGuide(true);
+      setNoticeKind("success");
+      setNotice("公開までの3ステップガイドを表示しています。");
+    }
 
-    if (billing && typeof window !== "undefined") {
+    if ((billing || guide) && typeof window !== "undefined") {
       query.delete("billing");
+      query.delete("guide");
       const next = query.toString();
       const nextUrl = `${window.location.pathname}${next ? `?${next}` : ""}`;
       window.history.replaceState({}, "", nextUrl);
@@ -1535,6 +1543,12 @@ export default function EditorPage() {
     () => (item ? buildPublicQrUrl(item.slug) : ""),
     [item],
   );
+  const shareTemplateText = useMemo(() => {
+    if (!item || !publicUrl) {
+      return "";
+    }
+    return `【${item.title}】の案内ページを公開しました。\nURL: ${publicUrl}\nQR: ${qrPublicUrl}\n必要に応じてスタッフへ共有をお願いします。`;
+  }, [item, publicUrl, qrPublicUrl]);
 
   function extractSlugFromPublicPath(url: string): string | null {
     if (!url.startsWith("/p/")) {
@@ -2125,6 +2139,20 @@ export default function EditorPage() {
     } catch {
       setNoticeKind("error");
       setNotice("QR用URLのコピーに失敗しました");
+    }
+  }
+
+  async function onCopyShareTemplate() {
+    if (!shareTemplateText) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareTemplateText);
+      setNoticeKind("success");
+      setNotice("共有文面テンプレをコピーしました");
+    } catch {
+      setNoticeKind("error");
+      setNotice("共有文面テンプレのコピーに失敗しました");
     }
   }
 
@@ -3569,6 +3597,44 @@ function onUpdateIconRowItem(
                   </div>
                 </div>
               </header>
+
+              {showLaunchGuide && item && (
+                <section className="lux-card lux-section-card rounded-2xl border border-cyan-200 bg-cyan-50/60 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">公開まで残り3手順</p>
+                      <p className="mt-1 text-sm text-slate-700">初回公開を最短で完了するためのガイドです。</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLaunchGuide(false)}
+                      className="rounded-md border border-cyan-300 bg-white px-2 py-1 text-xs text-cyan-800 hover:bg-cyan-50"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-sm font-semibold text-slate-900">1. 情報入力</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {item.contentBlocks.length >= 3 ? "完了" : "タイトル・本文・連絡先を入力"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-sm font-semibold text-slate-900">2. 公開前チェック</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {publishCheckErrors.length === 0 ? "完了" : `エラー ${publishCheckErrors.length} 件を修正`}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-3">
+                      <p className="text-sm font-semibold text-slate-900">3. 公開 & 共有</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {item.status === "published" ? "完了（URL/QR配布）" : "公開ボタンで反映"}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
                 <section className="space-y-5">
@@ -5710,7 +5776,17 @@ function onUpdateIconRowItem(
                           >
                             4. スタッフ共有へ進む
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => void onCopyShareTemplate()}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 sm:col-span-2"
+                          >
+                            共有文面テンプレをコピー
+                          </button>
                         </div>
+                        <p className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-600">
+                          例: 「{item.title}を更新しました。URL/QRから確認お願いします。」
+                        </p>
                       </div>
                     )}
                   </article>

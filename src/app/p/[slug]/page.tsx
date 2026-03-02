@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
+import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
@@ -731,6 +732,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     updated_at: string;
   };
   const blocks = normalizeBlocks(row.content_blocks, row.body);
+  const firstHeroImageBlockId =
+    blocks.find((block) => block.type === "image" && typeof block.url === "string" && block.url.trim().length > 0)?.id ??
+    null;
   const theme = normalizeTheme(row.theme);
   const nodeMap = theme.nodeMap;
 
@@ -771,6 +775,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           : "min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#fde68a1a_0%,#dbeafe38_32%,#f8fafc_100%)] px-3 py-8 sm:px-8 sm:py-12"
       }`}
     >
+      <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
       <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-2xl"}`}>
         <article
           className="lux-card lux-section-card overflow-hidden rounded-3xl"
@@ -873,14 +878,21 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   );
                 }
                 if (block.type === "image") {
+                  const imageUrl = (block.url ?? "").trim();
+                  if (!imageUrl) {
+                    return null;
+                  }
+                  const isLcpCandidate = block.id === firstHeroImageBlockId;
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <Image
-                        src={block.url || ""}
+                        src={imageUrl}
                         alt="block"
                         width={960}
                         height={540}
-                        unoptimized
+                        priority={isLcpCandidate}
+                        loading={isLcpCandidate ? "eager" : "lazy"}
+                        sizes="(max-width: 768px) 100vw, 768px"
                         className="h-auto w-full rounded-2xl object-cover"
                       />
                     </div>
@@ -1162,7 +1174,8 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                               alt={entry.caption || "gallery"}
                               width={640}
                               height={360}
-                              unoptimized
+                              loading="lazy"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
                               className="h-44 w-full object-cover"
                             />
                             {(entry.caption ?? "").trim() && (

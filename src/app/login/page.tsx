@@ -5,31 +5,39 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { redeemHotelInvite } from "@/lib/storage";
 import { trackOnboardingAuthEvent } from "@/lib/storage";
 import { useAuth } from "@/components/auth-provider";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const requestedNext =
+  const search =
     typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("next")
+      ? new URLSearchParams(window.location.search)
       : null;
+  const requestedNext =
+    search?.get("next") ?? null;
   const next =
     requestedNext && requestedNext.startsWith("/")
       ? requestedNext
       : "/dashboard?tab=create";
   const requestedRef =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("ref")
-      : null;
+    search?.get("ref") ?? null;
   const sourceRef =
     requestedRef === "lp-hero" || requestedRef === "lp-sticky" || requestedRef === "lp-bottom"
       ? requestedRef
       : null;
+  const requestedSrc =
+    search?.get("src") ?? search?.get("utm_source") ?? null;
+  const sourceChannel = requestedSrc ?? null;
+  const requestedAb =
+    search?.get("ab") ?? null;
+  const ctaVariant = requestedAb === "b" ? "b" : "a";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,7 +65,15 @@ export default function LoginPage() {
       return;
     }
 
-    await trackOnboardingAuthEvent("login_success", sourceRef);
+    if (inviteCode.trim()) {
+      await redeemHotelInvite(inviteCode.trim());
+    }
+
+    await trackOnboardingAuthEvent("login_success", {
+      sourceRef,
+      sourceChannel,
+      ctaVariant,
+    });
 
     setSubmitting(false);
     router.replace(next);
@@ -80,7 +96,15 @@ export default function LoginPage() {
       return;
     }
 
-    await trackOnboardingAuthEvent("signup_completed", sourceRef);
+    if (inviteCode.trim()) {
+      await redeemHotelInvite(inviteCode.trim());
+    }
+
+    await trackOnboardingAuthEvent("signup_completed", {
+      sourceRef,
+      sourceChannel,
+      ctaVariant,
+    });
 
     setSubmitting(false);
     setMessage("登録しました。確認メール設定が有効な場合はメールをご確認ください。");
@@ -126,6 +150,19 @@ export default function LoginPage() {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             placeholder="6文字以上"
           />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">招待コード（任意）</label>
+          <input
+            type="text"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm tracking-wider"
+            placeholder="例: AB12CD34"
+            maxLength={16}
+          />
+          <p className="mt-1 text-xs text-slate-500">スタッフ招待コードがある場合のみ入力してください。</p>
         </div>
 
         <button

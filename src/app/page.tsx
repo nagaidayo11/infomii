@@ -39,8 +39,9 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
                 alt="template preview"
                 width={720}
                 height={360}
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, 320px"
                 className="h-24 w-full rounded-lg border border-slate-200 object-cover"
-                unoptimized
               />
             );
           }
@@ -98,11 +99,27 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
   );
 }
 
-export default function Home() {
+type HomePageProps = {
+  searchParams: Promise<{
+    ab?: string;
+    src?: string;
+    utm_source?: string;
+  }>;
+};
+
+export default async function Home({ searchParams }: HomePageProps) {
+  const query = await searchParams;
+  const ctaVariant = query.ab === "b" ? "b" : "a";
+  const sourceChannelRaw = query.src ?? query.utm_source ?? "";
+  const sourceChannel = sourceChannelRaw.trim().toLowerCase();
+  const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
+  const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
+    `/login?ref=${ref}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
   const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
+  const heroPrimaryCtaLabel = ctaVariant === "b" ? "30秒で無料スタート" : "無料でホテル案内を作成";
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -326,11 +343,11 @@ export default function Home() {
               </div>
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
-                <Link href="/login?ref=lp-hero" className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
-                  無料でホテル案内を作成
+                <Link href={buildLoginHref("lp-hero")} className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
+                  {heroPrimaryCtaLabel}
                 </Link>
                 <Link
-                  href="/login?ref=lp-hero"
+                  href={buildLoginHref("lp-hero")}
                   className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800"
                 >
                   ログイン
@@ -525,7 +542,7 @@ export default function Home() {
                 <li>・運用管理機能</li>
               </ul>
               <Link
-                href="/login?ref=lp-bottom"
+                href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
                 無料登録してProを試す
@@ -597,7 +614,7 @@ export default function Home() {
               <p className="text-xs font-semibold text-emerald-700">最短スタート</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
               <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
-              <Link href="/login?ref=lp-bottom" className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+              <Link href={buildLoginHref("lp-bottom")} className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
                 無料でホテル案内を作成
               </Link>
             </aside>
@@ -612,7 +629,7 @@ export default function Home() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/login?ref=lp-bottom"
+              href={buildLoginHref("lp-bottom")}
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
               無料でホテル案内を作成
@@ -642,7 +659,7 @@ export default function Home() {
               <Link className="hover:underline" href="/refund">
                 返金・キャンセルポリシー
               </Link>
-              <Link className="hover:underline" href="/login?ref=lp-bottom">
+              <Link className="hover:underline" href={buildLoginHref("lp-bottom")}>
                 ログイン
               </Link>
             </div>
@@ -657,10 +674,10 @@ export default function Home() {
             <a href="#templates" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
               テンプレ例
             </a>
-            <Link href="/login?ref=lp-sticky" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
+            <Link href={buildLoginHref("lp-sticky")} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800">
               ログイン
             </Link>
-            <Link href="/login?ref=lp-sticky" className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
+            <Link href={buildLoginHref("lp-sticky")} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
               無料で作成
             </Link>
           </div>
@@ -669,7 +686,7 @@ export default function Home() {
 
       <div className="fixed right-3 top-3 z-40 sm:right-4 sm:top-4">
         <Link
-          href="/login?ref=lp-sticky"
+          href={buildLoginHref("lp-sticky")}
           className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
         >
           無料で始める

@@ -12,6 +12,22 @@ type BillingLogRow = {
   created_at: string;
 };
 
+function roundAverage(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function p75(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.floor(sorted.length * 0.75));
+  return sorted[index] ?? 0;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization") || "";
@@ -88,6 +104,14 @@ export async function GET(request: NextRequest) {
           draftPages: 0,
           firstPublishedReady: false,
         },
+        performance7d: {
+          lcpAvgMs: 0,
+          lcpP75Ms: 0,
+          loadAvgMs: 0,
+          loadP75Ms: 0,
+          sampleCount: 0,
+          lastMeasuredAt: null,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -128,11 +152,19 @@ export async function GET(request: NextRequest) {
           draftPages: 0,
           firstPublishedReady: false,
         },
+        performance7d: {
+          lcpAvgMs: 0,
+          lcpP75Ms: 0,
+          loadAvgMs: 0,
+          loadP75Ms: 0,
+          sampleCount: 0,
+          lastMeasuredAt: null,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }] = await Promise.all([
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -165,6 +197,14 @@ export async function GET(request: NextRequest) {
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
         .in("action", ["billing.upgrade_click", "billing.checkout_session_created", "billing.checkout_completed"]),
+      admin
+        .from("audit_logs")
+        .select("action,created_at,metadata")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .in("action", ["perf.public_lcp", "perf.public_load"])
+        .order("created_at", { ascending: false })
+        .limit(500),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
       .filter(
@@ -184,6 +224,23 @@ export async function GET(request: NextRequest) {
     const completedCheckouts = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_completed").length;
     const clickToCheckoutRate = upgradeClicks > 0 ? Math.round((checkoutSessions / upgradeClicks) * 100) : 0;
     const checkoutToPaidRate = checkoutSessions > 0 ? Math.round((completedCheckouts / checkoutSessions) * 100) : 0;
+    const lcpValues = (perfLogs ?? [])
+      .filter((row) => row.action === "perf.public_lcp")
+      .map((row) => {
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const value = metadata?.value;
+        return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : 0;
+      })
+      .filter((value) => value > 0);
+    const loadValues = (perfLogs ?? [])
+      .filter((row) => row.action === "perf.public_load")
+      .map((row) => {
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const value = metadata?.value;
+        return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : 0;
+      })
+      .filter((value) => value > 0);
+    const lastMeasuredAt = (perfLogs ?? [])[0]?.created_at ?? null;
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -213,6 +270,14 @@ export async function GET(request: NextRequest) {
         publishedPages: publishedPages ?? 0,
         draftPages: draftPages ?? 0,
         firstPublishedReady: (publishedPages ?? 0) > 0,
+      },
+      performance7d: {
+        lcpAvgMs: roundAverage(lcpValues),
+        lcpP75Ms: p75(lcpValues),
+        loadAvgMs: roundAverage(loadValues),
+        loadP75Ms: p75(loadValues),
+        sampleCount: Math.max(lcpValues.length, loadValues.length),
+        lastMeasuredAt,
       },
       recentBillingLogs: (logs ?? []) as BillingLogRow[],
     });

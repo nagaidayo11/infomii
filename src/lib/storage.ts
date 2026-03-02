@@ -546,10 +546,37 @@ export type DashboardBootstrapData = {
   informations: Information[];
 };
 
+export type HotelInvite = {
+  id: string;
+  code: string;
+  isActive: boolean;
+  consumedAt: string | null;
+  createdAt: string;
+};
+
+export type HotelInviteMetrics = {
+  issued: number;
+  redeemed: number;
+  active: number;
+  redeemRate: number;
+};
+
 export type OnboardingFunnel7d = {
   lpAttributedLogins: number;
   signupCompleted: number;
   lpToSignupRate: number;
+  byChannel: Array<{
+    channel: "x" | "instagram" | "tiktok" | "other" | "unknown";
+    logins: number;
+    signups: number;
+    rate: number;
+  }>;
+  byVariant: Array<{
+    variant: "a" | "b";
+    logins: number;
+    signups: number;
+    rate: number;
+  }>;
 };
 
 async function appendAuditLog(params: {
@@ -1571,6 +1598,177 @@ export async function listCurrentHotelAuditLogs(limit = 20): Promise<HotelAuditL
   }));
 }
 
+function makeInviteCode(length = 8): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < length; i += 1) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+export async function createHotelInvite(): Promise<HotelInvite> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase設定が未完了です");
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    throw new Error("施設情報が見つかりません");
+  }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) {
+    throw new Error("ユーザー情報の取得に失敗しました");
+  }
+
+  const code = makeInviteCode(8);
+  const { data, error } = await supabase
+    .from("hotel_invites")
+    .insert({
+      hotel_id: hotelId,
+      code,
+      created_by_user_id: user.id,
+      is_active: true,
+    })
+    .select("id,code,is_active,consumed_at,created_at")
+    .single();
+
+  if (error || !data) {
+    throw toError(error, "招待コードの発行に失敗しました");
+  }
+
+  await appendAuditLog({
+    hotelId,
+    action: "invite.created",
+    message: `スタッフ招待コードを発行しました（${data.code}）`,
+    targetType: "invite",
+    targetId: data.id,
+    metadata: { inviteCode: data.code },
+  });
+
+  return {
+    id: data.id,
+    code: data.code,
+    isActive: data.is_active,
+    consumedAt: data.consumed_at,
+    createdAt: data.created_at,
+  };
+}
+
+export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("hotel_invites")
+    .select("id,code,is_active,consumed_at,created_at")
+    .eq("hotel_id", hotelId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw toError(error, "招待コード一覧の取得に失敗しました");
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    code: row.code,
+    isActive: row.is_active,
+    consumedAt: row.consumed_at,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function revokeHotelInvite(inviteId: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase設定が未完了です");
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    throw new Error("施設情報が見つかりません");
+  }
+
+  const { error } = await supabase
+    .from("hotel_invites")
+    .update({ is_active: false })
+    .eq("id", inviteId)
+    .eq("hotel_id", hotelId);
+
+  if (error) {
+    throw toError(error, "招待コードの無効化に失敗しました");
+  }
+
+  await appendAuditLog({
+    hotelId,
+    action: "invite.revoked",
+    message: "スタッフ招待コードを無効化しました",
+    targetType: "invite",
+    targetId: inviteId,
+  });
+}
+
+export async function getCurrentHotelInviteMetrics(): Promise<HotelInviteMetrics> {
+  const invites = await listCurrentHotelInvites(100);
+  const issued = invites.length;
+  const redeemed = invites.filter((invite) => invite.consumedAt !== null).length;
+  const active = invites.filter((invite) => invite.isActive).length;
+  const redeemRate = issued > 0 ? Math.round((redeemed / issued) * 100) : 0;
+  return {
+    issued,
+    redeemed,
+    active,
+    redeemRate,
+  };
+}
+
+export async function redeemHotelInvite(inputCode: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase設定が未完了です");
+  }
+  const code = inputCode.trim().toUpperCase();
+  if (!code) {
+    return;
+  }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) {
+    throw new Error("ユーザー情報の取得に失敗しました");
+  }
+
+  const { data: hotelId, error } = await supabase.rpc("redeem_hotel_invite", {
+    input_code: code,
+  });
+  if (error) {
+    throw toError(error, "招待コードの適用に失敗しました");
+  }
+
+  const safeHotelId = typeof hotelId === "string" ? hotelId : null;
+  if (!safeHotelId) {
+    return;
+  }
+
+  await appendAuditLog({
+    hotelId: safeHotelId,
+    action: "invite.accepted",
+    message: `スタッフ招待を承認しました（${code}）`,
+    targetType: "invite",
+    metadata: { inviteCode: code },
+  });
+}
+
 type CheckoutSessionOptions = {
   successPath?: string;
   cancelPath?: string;
@@ -1614,6 +1812,14 @@ export type OpsHealthSnapshot = {
     publishedPages: number;
     draftPages: number;
     firstPublishedReady: boolean;
+  };
+  performance7d: {
+    lcpAvgMs: number;
+    lcpP75Ms: number;
+    loadAvgMs: number;
+    loadP75Ms: number;
+    sampleCount: number;
+    lastMeasuredAt: string | null;
   };
   recentBillingLogs: Array<{
     id: string;
@@ -1720,6 +1926,8 @@ export async function trackUpgradeClick(context: "dashboard" | "editor"): Promis
 
 type OnboardingSourceRef = "lp-hero" | "lp-sticky" | "lp-bottom";
 type OnboardingAuthAction = "login_success" | "signup_completed";
+type OnboardingSourceChannel = "x" | "instagram" | "tiktok" | "other" | "unknown";
+type OnboardingCtaVariant = "a" | "b";
 
 function toOnboardingSourceRef(value: string | null | undefined): OnboardingSourceRef | null {
   if (!value) {
@@ -1731,9 +1939,34 @@ function toOnboardingSourceRef(value: string | null | undefined): OnboardingSour
   return null;
 }
 
+function toOnboardingSourceChannel(value: string | null | undefined): OnboardingSourceChannel {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "x" || normalized === "twitter") {
+    return "x";
+  }
+  if (normalized === "instagram" || normalized === "insta" || normalized === "ig") {
+    return "instagram";
+  }
+  if (normalized === "tiktok" || normalized === "tiktok") {
+    return "tiktok";
+  }
+  if (normalized.length === 0) {
+    return "unknown";
+  }
+  return "other";
+}
+
+function toOnboardingCtaVariant(value: string | null | undefined): OnboardingCtaVariant {
+  return (value ?? "").trim().toLowerCase() === "b" ? "b" : "a";
+}
+
 export async function trackOnboardingAuthEvent(
   action: OnboardingAuthAction,
-  sourceRef?: string | null,
+  params?: {
+    sourceRef?: string | null;
+    sourceChannel?: string | null;
+    ctaVariant?: string | null;
+  },
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
@@ -1743,12 +1976,14 @@ export async function trackOnboardingAuthEvent(
   if (!hotelId) {
     return;
   }
-  const safeRef = toOnboardingSourceRef(sourceRef);
+  const safeRef = toOnboardingSourceRef(params?.sourceRef);
+  const sourceChannel = toOnboardingSourceChannel(params?.sourceChannel);
+  const ctaVariant = toOnboardingCtaVariant(params?.ctaVariant);
   const actionName = `onboarding.${action}`;
   const message =
     action === "signup_completed"
-      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""}`
-      : `ログインしました${safeRef ? `（${safeRef}）` : ""}`;
+      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant}`
+      : `ログインしました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant}`;
 
   await appendAuditLog({
     hotelId,
@@ -1758,6 +1993,8 @@ export async function trackOnboardingAuthEvent(
     metadata: {
       sourceRef: safeRef,
       sourceType: safeRef?.startsWith("lp-") ? "lp" : "unknown",
+      sourceChannel,
+      ctaVariant,
     },
   });
 }
@@ -1769,6 +2006,8 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      byChannel: [],
+      byVariant: [],
     };
   }
 
@@ -1778,6 +2017,8 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      byChannel: [],
+      byVariant: [],
     };
   }
 
@@ -1796,29 +2037,72 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
   let lpAttributedLogins = 0;
   let signupCompleted = 0;
+  const channelMap = new Map<OnboardingSourceChannel, { logins: number; signups: number }>();
+  const variantMap = new Map<OnboardingCtaVariant, { logins: number; signups: number }>();
 
   for (const row of data ?? []) {
     const metadata = row.metadata as Record<string, unknown> | null;
     const sourceRef = toOnboardingSourceRef(
       typeof metadata?.sourceRef === "string" ? metadata.sourceRef : null,
     );
+    const sourceChannel = toOnboardingSourceChannel(
+      typeof metadata?.sourceChannel === "string" ? metadata.sourceChannel : null,
+    );
+    const ctaVariant = toOnboardingCtaVariant(
+      typeof metadata?.ctaVariant === "string" ? metadata.ctaVariant : null,
+    );
 
     if (row.action === "onboarding.login_success" && sourceRef) {
       lpAttributedLogins += 1;
+      const channelStat = channelMap.get(sourceChannel) ?? { logins: 0, signups: 0 };
+      channelStat.logins += 1;
+      channelMap.set(sourceChannel, channelStat);
+
+      const variantStat = variantMap.get(ctaVariant) ?? { logins: 0, signups: 0 };
+      variantStat.logins += 1;
+      variantMap.set(ctaVariant, variantStat);
     }
 
     if (row.action === "onboarding.signup_completed") {
       signupCompleted += 1;
+      const channelStat = channelMap.get(sourceChannel) ?? { logins: 0, signups: 0 };
+      channelStat.signups += 1;
+      channelMap.set(sourceChannel, channelStat);
+
+      const variantStat = variantMap.get(ctaVariant) ?? { logins: 0, signups: 0 };
+      variantStat.signups += 1;
+      variantMap.set(ctaVariant, variantStat);
     }
   }
 
   const lpToSignupRate =
     lpAttributedLogins > 0 ? Math.round((signupCompleted / lpAttributedLogins) * 100) : 0;
 
+  const byChannel = Array.from(channelMap.entries())
+    .map(([channel, counts]) => ({
+      channel,
+      logins: counts.logins,
+      signups: counts.signups,
+      rate: counts.logins > 0 ? Math.round((counts.signups / counts.logins) * 100) : 0,
+    }))
+    .sort((a, b) => b.logins - a.logins);
+
+  const byVariant: OnboardingFunnel7d["byVariant"] = (["a", "b"] as const).map((variant) => {
+    const counts = variantMap.get(variant) ?? { logins: 0, signups: 0 };
+    return {
+      variant,
+      logins: counts.logins,
+      signups: counts.signups,
+      rate: counts.logins > 0 ? Math.round((counts.signups / counts.logins) * 100) : 0,
+    };
+  });
+
   return {
     lpAttributedLogins,
     signupCompleted,
     lpToSignupRate,
+    byChannel,
+    byVariant,
   };
 }
 
