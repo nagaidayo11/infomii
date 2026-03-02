@@ -33,7 +33,7 @@ export default function LoginPage() {
   const sourceChannel = requestedSrc ?? null;
   const requestedAb =
     search?.get("ab") ?? null;
-  const ctaVariant = requestedAb === "b" ? "b" : "a";
+  const ctaVariant = requestedAb === "b" || requestedAb === "c" ? requestedAb : "a";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,7 +107,8 @@ export default function LoginPage() {
     });
 
     setSubmitting(false);
-    setMessage("登録しました。確認メール設定が有効な場合はメールをご確認ください。");
+    setMessage("登録しました。作成タブへ移動します。");
+    router.replace("/dashboard?tab=create");
   }
 
   return (

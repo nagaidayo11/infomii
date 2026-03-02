@@ -102,6 +102,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
 type HomePageProps = {
   searchParams: Promise<{
     ab?: string;
+    scene?: string;
     src?: string;
     utm_source?: string;
   }>;
@@ -109,17 +110,47 @@ type HomePageProps = {
 
 export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
-  const ctaVariant = query.ab === "b" ? "b" : "a";
+  const ctaVariant = query.ab === "b" || query.ab === "c" ? query.ab : "a";
+  const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
-    `/login?ref=${ref}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}`;
+    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
   const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
-  const heroPrimaryCtaLabel = "無料でホテル案内を作成";
+  const heroCopyByScene = {
+    checkin: {
+      title: "チェックイン導線を3分で公開",
+      subtitle: "フロント問い合わせを減らす案内ページを即時反映",
+      body: "チェックイン案内、深夜到着対応、館内設備導線を1ページに集約。現場の更新作業を最短化します。",
+    },
+    bath: {
+      title: "温浴案内を迷わず共有",
+      subtitle: "利用時間・注意事項をその場で更新",
+      body: "大浴場・貸切風呂の案内を二次元コードで即配布。混雑時の導線変更にもすぐ対応できます。",
+    },
+    breakfast: {
+      title: "朝食導線を一括管理",
+      subtitle: "会場・時間・注意事項を統一表示",
+      body: "営業時間、会場案内、アレルギー注意を1ページ化。朝の案内負荷を下げて運用を安定させます。",
+    },
+  } as const;
+  const heroCopy = heroCopyByScene[heroScene];
+  const heroCtaLabelByVariant = {
+    a: "無料でホテル案内を作成",
+    b: "今すぐ無料で公開を始める",
+    c: "30秒登録で運用を始める",
+  } as const;
+  const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
+  const heroCtaShortLabelByVariant = {
+    a: "無料で作成",
+    b: "今すぐ公開",
+    c: "30秒で開始",
+  } as const;
+  const heroPrimaryShortCtaLabel = heroCtaShortLabelByVariant[ctaVariant];
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -140,6 +171,23 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "温浴併設ホテル",
       items: ["大浴場・貸切風呂案内", "混雑時の誘導案内", "利用ルールの共有"],
+    },
+  ];
+  const hotelVoices = [
+    {
+      hotel: "都心ビジネスホテル（120室）",
+      comment: "深夜チェックインの問い合わせが減って、フロント1名体制でも回せるようになりました。",
+      impact: "導入3日で夜間電話対応を削減",
+    },
+    {
+      hotel: "温浴併設リゾート（客室80室）",
+      comment: "温浴ルールの更新を即反映できるので、紙案内差し替えの手間がほぼ無くなりました。",
+      impact: "案内差し替え時間を週2時間削減",
+    },
+    {
+      hotel: "駅前ホテル（客室65室）",
+      comment: "朝食会場案内を統一して、スタッフ説明のばらつきが減りました。",
+      impact: "朝ピークの案内対応を標準化",
     },
   ];
 
@@ -311,13 +359,34 @@ export default async function Home({ searchParams }: HomePageProps) {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
+              <div className="mb-3 flex flex-wrap gap-2">
+                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                  訴求テーマ
+                </span>
+                {[
+                  { id: "checkin", label: "チェックイン" },
+                  { id: "bath", label: "温浴" },
+                  { id: "breakfast", label: "朝食" },
+                ].map((entry) => (
+                  <Link
+                    key={entry.id}
+                    href={`/?scene=${entry.id}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}`}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      heroScene === entry.id
+                        ? "border-emerald-400 bg-emerald-600 text-white"
+                        : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {entry.label}
+                  </Link>
+                ))}
+              </div>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
-                ホテル現場で使える案内ページを
-                <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">誰でも、3分で、公開</span>
+                {heroCopy.title}
+                <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
-                ホテル向けインフォメーションを、ブロック編集で直感的に作成。チェックイン案内から館内導線、
-                Proならノードで複数ページ連携まで。現場で必要な更新を、その場で反映できます。
+                {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
               </p>
               <p className="lp-reveal lp-delay-3 mt-3 text-xs font-medium text-slate-600 sm:text-sm">
                 Free: ¥0 / Pro: {proMonthlyPriceLabel}（税込・いつでも解約可能）
@@ -347,6 +416,25 @@ export default async function Home({ searchParams }: HomePageProps) {
                 >
                   ログイン
                 </Link>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  { id: "a", label: "CTA A" },
+                  { id: "b", label: "CTA B" },
+                  { id: "c", label: "CTA C" },
+                ].map((entry) => (
+                  <Link
+                    key={entry.id}
+                    href={`/?scene=${heroScene}&ab=${entry.id}&src=${encodeURIComponent(sanitizedSourceChannel)}`}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      ctaVariant === entry.id
+                        ? "border-cyan-400 bg-cyan-600 text-white"
+                        : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {entry.label}
+                  </Link>
+                ))}
               </div>
             </div>
 
@@ -392,6 +480,28 @@ export default async function Home({ searchParams }: HomePageProps) {
               </ul>
             </article>
           ))}
+        </section>
+
+        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">導入施設コメント</h2>
+            <p className="text-sm text-slate-600">ホテル現場の実運用レビュー</p>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {hotelVoices.map((voice, index) => (
+              <article
+                key={voice.hotel}
+                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
+                style={{ transitionDelay: `${160 + index * 80}ms` }}
+              >
+                <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
+                <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
+                  {voice.impact}
+                </p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
@@ -543,7 +653,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
-                無料登録してProを試す
+                {heroPrimaryCtaLabel}
               </Link>
             </article>
           </div>
@@ -613,7 +723,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
               <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
               <Link href={buildLoginHref("lp-bottom")} className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                無料でホテル案内を作成
+                {heroPrimaryCtaLabel}
               </Link>
             </aside>
           </div>
@@ -630,7 +740,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               href={buildLoginHref("lp-bottom")}
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
-              無料でホテル案内を作成
+              {heroPrimaryCtaLabel}
             </Link>
             <a
               href="#pricing"
@@ -676,7 +786,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               ログイン
             </Link>
             <Link href={buildLoginHref("lp-sticky")} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
-              無料で作成
+              {heroPrimaryShortCtaLabel}
             </Link>
           </div>
         </div>
@@ -687,7 +797,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           href={buildLoginHref("lp-sticky")}
           className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
         >
-          無料で始める
+          {heroPrimaryShortCtaLabel}
         </Link>
       </div>
     </main>

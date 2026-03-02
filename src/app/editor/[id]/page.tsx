@@ -1320,6 +1320,7 @@ export default function EditorPage() {
     blocks: InformationBlock[];
   }>>([]);
   const [showLaunchGuide, setShowLaunchGuide] = useState(false);
+  const [showPostPublishAssist, setShowPostPublishAssist] = useState(false);
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
   const schedulePanelRef = useRef<HTMLDivElement | null>(null);
@@ -1591,6 +1592,34 @@ export default function EditorPage() {
         return looksPng || looksOriginal || noResizeHint;
       })
       .slice(0, 4);
+  }, [item]);
+  const imageUrlQualityWarnings = useMemo(() => {
+    if (!item) {
+      return new Map<string, string>();
+    }
+    const warnings = new Map<string, string>();
+    for (const block of item.contentBlocks) {
+      if (block.type !== "image") {
+        continue;
+      }
+      const url = (block.url ?? "").trim();
+      if (!url) {
+        continue;
+      }
+      const normalized = url.toLowerCase();
+      if (!normalized.startsWith("https://") && !normalized.startsWith("/")) {
+        warnings.set(block.id, "https:// から始まるURLを推奨します。");
+        continue;
+      }
+      if (normalized.includes(".png") || normalized.includes(".bmp") || normalized.includes(".tiff")) {
+        warnings.set(block.id, "画像形式はWebP/JPEGを推奨します。");
+        continue;
+      }
+      if (!normalized.includes("w=") && !normalized.includes("q=") && !normalized.includes("auto=format") && !normalized.startsWith("/")) {
+        warnings.set(block.id, "幅/圧縮パラメータ付きURLにすると高速化できます。");
+      }
+    }
+    return warnings;
   }, [item]);
 
   function extractSlugFromPublicPath(url: string): string | null {
@@ -2121,6 +2150,7 @@ export default function EditorPage() {
 
         if (prevStatus !== "published" && nextStatus === "published") {
           setPublishedCount((count) => count + 1);
+          setShowPostPublishAssist(true);
         }
         if (prevStatus === "published" && nextStatus !== "published") {
           setPublishedCount((count) => Math.max(count - 1, 0));
@@ -4579,6 +4609,11 @@ function onUpdateIconRowItem(
                                 placeholder="または画像URLを入力"
                                 className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                               />
+                              {imageUrlQualityWarnings.get(block.id) && (
+                                <p className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
+                                  {imageUrlQualityWarnings.get(block.id)}
+                                </p>
+                              )}
                             </div>
                           )}
 
@@ -5916,6 +5951,16 @@ function onUpdateIconRowItem(
                 </section>
 
                 <section className="space-y-5 lg:sticky lg:top-6 lg:h-fit lg:w-full">
+                  <article className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4 shadow-sm">
+                    <p className="text-sm font-semibold text-sky-900">初回公開チェックリスト</p>
+                    <div className="mt-2 space-y-1 text-xs text-slate-700">
+                      <p>{(item.title ?? "").trim().length >= 2 ? "✓" : "・"} ページ名を入力</p>
+                      <p>{item.contentBlocks.length > 0 ? "✓" : "・"} ブロックを追加</p>
+                      <p>{publishCheckErrors.length === 0 ? "✓" : "・"} 公開前エラーを解消</p>
+                      <p>{(item.status === "published" || Boolean(item.publishAt)) ? "✓" : "・"} 公開状態または公開日時を設定</p>
+                      <p>{item.status === "published" ? "✓" : "・"} 公開後にURL/QRを共有</p>
+                    </div>
+                  </article>
                   <article className="lux-card lux-section-card rounded-2xl p-5">
                     <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
                     <article
@@ -6012,6 +6057,43 @@ function onUpdateIconRowItem(
             </>
           )}
         </div>
+        {showPostPublishAssist ? (
+          <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-900/30 px-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <p className="text-base font-semibold text-slate-900">公開しました。次は共有しますか？</p>
+              <p className="mt-1 text-xs text-slate-600">スタッフ共有まで進むと初回運用が定着しやすくなります。</p>
+              <div className="mt-4 grid gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPostPublishAssist(false);
+                    void onCopyShareTemplate();
+                  }}
+                  className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                >
+                  共有文面をコピー
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPostPublishAssist(false);
+                    router.push("/dashboard?tab=dashboard");
+                  }}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
+                >
+                  ダッシュボードで共有する
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPostPublishAssist(false)}
+                  className="rounded-md border border-transparent px-3 py-2 text-xs text-slate-500 hover:bg-slate-50"
+                >
+                  後で
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
         {notice ? (
           <AppToast
             kind={noticeKind}

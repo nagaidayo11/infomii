@@ -19,6 +19,7 @@ import {
   getDashboardBootstrapData,
   getInformation,
   getCurrentHotelSubscription,
+  getSharedTemplateFavorites,
   getCurrentHotelInviteMetrics,
   getCurrentHotelViewMetrics,
   getOnboardingFunnel7d,
@@ -28,6 +29,7 @@ import {
   revokeHotelInvite,
   runOpsRecoveryAction,
   runOpsAlertTest,
+  setSharedTemplateFavorite,
   trackBillingResumeClick,
   trackDormancyNoticeVariantCopy,
   trackOpsRestartFlowClick,
@@ -132,6 +134,7 @@ type TemplatePurposeFilter = "all" | "checkin" | "facility" | "breakfast" | "bat
 type TemplateSortMode = "recommended" | "latest";
 type TemplateScene = "front" | "guestroom" | "facility";
 type FacilityType = "business" | "resort" | "spa";
+type TemplateGrouping = "industry" | "scene";
 
 const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
   all: "すべて",
@@ -341,6 +344,23 @@ function estimateTemplateViewSeconds(template: StarterTemplate, inputCount: numb
   return Math.max(18, Math.min(90, seconds));
 }
 
+function detectTemplatePublishWindow(template: StarterTemplate): "morning" | "daytime" | "night" {
+  const text = `${template.title}\n${template.body}`.toLowerCase();
+  if (text.includes("朝食") || text.includes("モーニング") || text.includes("朝")) {
+    return "morning";
+  }
+  if (text.includes("深夜") || text.includes("夜") || text.includes("温浴") || text.includes("貸切風呂")) {
+    return "night";
+  }
+  return "daytime";
+}
+
+const PUBLISH_WINDOW_LABELS = {
+  morning: "朝（6:00-10:00）",
+  daytime: "日中（10:00-18:00）",
+  night: "夜間（18:00-24:00）",
+} as const;
+
 function StatCard({ label, value, note }: { label: string; value: string; note: string }) {
   return (
     <article className="rounded-2xl border border-slate-200/80 bg-white/95 p-4 backdrop-blur shadow-[0_4px_12px_-10px_rgba(15,23,42,0.22)]">
@@ -445,6 +465,7 @@ export default function DashboardPage() {
   const [industryFilter, setIndustryFilter] = useState<IndustryPreset | "all">("all");
   const [purposeFilter, setPurposeFilter] = useState<TemplatePurposeFilter>("all");
   const [templateSortMode, setTemplateSortMode] = useState<TemplateSortMode>("recommended");
+  const [templateGrouping, setTemplateGrouping] = useState<TemplateGrouping>("industry");
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
@@ -873,67 +894,88 @@ export default function DashboardPage() {
     () => new Set(favoriteTemplateIndices),
     [favoriteTemplateIndices],
   );
-  const groupedTemplateEntries = useMemo(
-    () =>
-      (Object.keys(INDUSTRY_PRESET_LABELS) as IndustryPreset[])
-        .map((industry) => ({
-          industry,
-          label: INDUSTRY_PRESET_LABELS[industry],
-          entries: filteredTemplateEntries
-            .filter((entry) => entry.template.industry === industry)
-            .sort((a, b) => {
-              if (templateSortMode === "latest") {
-                return b.originalIndex - a.originalIndex;
+  const sortTemplateEntries = useCallback(
+    (
+      entries: Array<{
+        template: StarterTemplate;
+        originalIndex: number;
+        purposes: TemplatePurposeFilter[];
+        scenes: TemplateScene[];
+        inputCount: number;
+        viewSeconds: number;
+      }>,
+      industry: IndustryPreset | null,
+    ) =>
+      [...entries].sort((a, b) => {
+        if (templateSortMode === "latest") {
+          return b.originalIndex - a.originalIndex;
+        }
+        if (templateSortMode === "recommended") {
+          const score = (entry: {
+            purposes: TemplatePurposeFilter[];
+            scenes: TemplateScene[];
+            originalIndex: number;
+          }) => {
+            let s = 0;
+            if (purposeFilter !== "all" && entry.purposes.includes(purposeFilter)) {
+              s += 4;
+            }
+            if (entry.scenes.includes("front")) {
+              s += 2;
+            }
+            if (entry.scenes.includes("facility")) {
+              s += 1;
+            }
+            if (industry) {
+              const rec = recommendedTemplateByIndustry.get(industry);
+              if (rec !== undefined && entry.originalIndex === rec) {
+                s += 3;
               }
-              if (templateSortMode === "recommended") {
-                const score = (entry: {
-                  purposes: TemplatePurposeFilter[];
-                  scenes: TemplateScene[];
-                  originalIndex: number;
-                }) => {
-                  let s = 0;
-                  if (purposeFilter !== "all" && entry.purposes.includes(purposeFilter)) {
-                    s += 4;
-                  }
-                  if (entry.scenes.includes("front")) {
-                    s += 2;
-                  }
-                  if (entry.scenes.includes("facility")) {
-                    s += 1;
-                  }
-                  const rec = recommendedTemplateByIndustry.get(industry);
-                  if (rec !== undefined && entry.originalIndex === rec) {
-                    s += 3;
-                  }
-                  if (favoriteTemplateSet.has(entry.originalIndex)) {
-                    s += 5;
-                  }
-                  return s;
-                };
-                const delta = score(b) - score(a);
-                if (delta !== 0) {
-                  return delta;
-                }
-              }
-              const aFav = favoriteTemplateSet.has(a.originalIndex);
-              const bFav = favoriteTemplateSet.has(b.originalIndex);
-              if (aFav !== bFav) {
-                return aFav ? -1 : 1;
-              }
-              const recommended = recommendedTemplateByIndustry.get(industry);
-              if (recommended !== undefined) {
-                const aRec = a.originalIndex === recommended;
-                const bRec = b.originalIndex === recommended;
-                if (aRec !== bRec) {
-                  return aRec ? -1 : 1;
-                }
-              }
-              return a.originalIndex - b.originalIndex;
-            }),
-        }))
-        .filter((group) => group.entries.length > 0),
-    [favoriteTemplateSet, filteredTemplateEntries, purposeFilter, recommendedTemplateByIndustry, templateSortMode],
+            }
+            if (favoriteTemplateSet.has(entry.originalIndex)) {
+              s += 5;
+            }
+            return s;
+          };
+          const delta = score(b) - score(a);
+          if (delta !== 0) {
+            return delta;
+          }
+        }
+        const aFav = favoriteTemplateSet.has(a.originalIndex);
+        const bFav = favoriteTemplateSet.has(b.originalIndex);
+        if (aFav !== bFav) {
+          return aFav ? -1 : 1;
+        }
+        return a.originalIndex - b.originalIndex;
+      }),
+    [favoriteTemplateSet, purposeFilter, recommendedTemplateByIndustry, templateSortMode],
   );
+  const groupedTemplateEntries = useMemo(() => {
+    if (templateGrouping === "scene") {
+      const sceneOrder: TemplateScene[] = ["front", "guestroom", "facility"];
+      return sceneOrder
+        .map((scene) => ({
+          industry: null as IndustryPreset | null,
+          label: TEMPLATE_SCENE_LABELS[scene],
+          entries: sortTemplateEntries(
+            filteredTemplateEntries.filter((entry) => entry.scenes.includes(scene)),
+            null,
+          ),
+        }))
+        .filter((group) => group.entries.length > 0);
+    }
+    return (Object.keys(INDUSTRY_PRESET_LABELS) as IndustryPreset[])
+      .map((industry) => ({
+        industry,
+        label: INDUSTRY_PRESET_LABELS[industry],
+        entries: sortTemplateEntries(
+          filteredTemplateEntries.filter((entry) => entry.template.industry === industry),
+          industry,
+        ),
+      }))
+      .filter((group) => group.entries.length > 0);
+  }, [filteredTemplateEntries, sortTemplateEntries, templateGrouping]);
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
       return null;
@@ -970,25 +1012,38 @@ export default function DashboardPage() {
     }
   }, [filteredTemplateEntries, previewTemplateIndex]);
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const raw = window.localStorage.getItem(DASHBOARD_TEMPLATE_FAVORITES_KEY);
-    if (!raw) {
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        setFavoriteTemplateIndices(
-          parsed
-            .map((value) => Number(value))
-            .filter((value) => Number.isInteger(value) && value >= 0 && value < starterTemplates.length),
-        );
-      }
-    } catch {
-      // ignore parse error
-    }
+    let mounted = true;
+    void getSharedTemplateFavorites()
+      .then((favorites) => {
+        if (!mounted) {
+          return;
+        }
+        setFavoriteTemplateIndices(favorites);
+      })
+      .catch(() => {
+        if (typeof window === "undefined") {
+          return;
+        }
+        const raw = window.localStorage.getItem(DASHBOARD_TEMPLATE_FAVORITES_KEY);
+        if (!raw) {
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw) as unknown;
+          if (Array.isArray(parsed)) {
+            setFavoriteTemplateIndices(
+              parsed
+                .map((value) => Number(value))
+                .filter((value) => Number.isInteger(value) && value >= 0 && value < starterTemplates.length),
+            );
+          }
+        } catch {
+          // ignore parse error
+        }
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1118,6 +1173,54 @@ export default function DashboardPage() {
       createdToPublishedDrop,
     };
   }, [items.length, onboardingFunnel?.lpAttributedLogins, onboardingFunnel?.signupCompleted, published.length]);
+  const dormancyStage = useMemo(() => {
+    const days = opsHealth?.dormancy.daysSinceLastUpdate;
+    if (days === null || days === undefined) {
+      return "unknown" as const;
+    }
+    if (days >= 14) {
+      return "critical" as const;
+    }
+    if (days >= 7) {
+      return "warning" as const;
+    }
+    return "healthy" as const;
+  }, [opsHealth?.dormancy.daysSinceLastUpdate]);
+  const week5Kpi = useMemo(() => {
+    const lp = onboardingFunnel?.lpToSignupRate ?? 0;
+    const publishCompletion = items.length > 0 ? Math.round((published.length / items.length) * 100) : 0;
+    const proConversion = opsHealth?.billing.funnel7d.checkoutToPaidRate ?? 0;
+    const retention = opsHealth?.restart7d.retention7d.rate ?? 0;
+    const standardize = [];
+    const stopOrFix = [];
+    if (lp >= 20) standardize.push("LP訴求とCTA");
+    else stopOrFix.push("LP訴求とCTA");
+    if (publishCompletion >= 60) standardize.push("初回公開導線");
+    else stopOrFix.push("初回公開導線");
+    if (proConversion >= 15) standardize.push("課金導線");
+    else stopOrFix.push("課金導線");
+    if (retention >= 40) standardize.push("休眠再開導線");
+    else stopOrFix.push("休眠再開導線");
+    return {
+      lp,
+      publishCompletion,
+      proConversion,
+      retention,
+      standardize,
+      stopOrFix,
+    };
+  }, [items.length, onboardingFunnel?.lpToSignupRate, opsHealth?.billing.funnel7d.checkoutToPaidRate, opsHealth?.restart7d.retention7d.rate, published.length]);
+  const weeklyOpsReport = useMemo(
+    () =>
+      `【Infomii 週次レポート】\n` +
+      `LP→登録率: ${week5Kpi.lp}%\n` +
+      `公開完了率: ${week5Kpi.publishCompletion}%\n` +
+      `Pro転換率: ${week5Kpi.proConversion}%\n` +
+      `再開後7日継続率: ${week5Kpi.retention}%\n` +
+      `標準化: ${week5Kpi.standardize.join(" / ") || "なし"}\n` +
+      `停止/修正: ${week5Kpi.stopOrFix.join(" / ") || "なし"}`,
+    [week5Kpi],
+  );
   const lpOptimizationTip = useMemo(() => {
     if (week1Snapshot.lpRate >= 20) {
       return "LP導線は良好です。次はテンプレ作成後の公開完了率を改善しましょう。";
@@ -1139,11 +1242,15 @@ export default function DashboardPage() {
   }
 
   function onToggleTemplateFavorite(templateIndex: number) {
-    setFavoriteTemplateIndices((prev) =>
-      prev.includes(templateIndex)
+    setFavoriteTemplateIndices((prev) => {
+      const next = prev.includes(templateIndex)
         ? prev.filter((value) => value !== templateIndex)
-        : [...prev, templateIndex],
-    );
+        : [...prev, templateIndex];
+      void setSharedTemplateFavorite(templateIndex, next.includes(templateIndex)).catch(() => {
+        // no-op
+      });
+      return next;
+    });
   }
 
   async function onCreateBlank() {
@@ -1905,6 +2012,25 @@ export default function DashboardPage() {
                 </div>
                 <div className="mx-auto mt-2 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   {([
+                    ["industry", "業種別"],
+                    ["scene", "シーン別"],
+                  ] as Array<[TemplateGrouping, string]>).map(([value, label]) => (
+                    <button
+                      key={`grouping-${value}`}
+                      type="button"
+                      onClick={() => setTemplateGrouping(value)}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        templateGrouping === value
+                          ? "border-violet-500 bg-violet-600 text-white"
+                          : "border-slate-300 bg-white/90 text-slate-700 hover:bg-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="mx-auto mt-2 flex max-w-5xl flex-wrap justify-center gap-1.5">
+                  {([
                     ["recommended", "おすすめ順"],
                     ["latest", "追加順"],
                   ] as Array<[TemplateSortMode, string]>).map(([value, label]) => (
@@ -2037,6 +2163,9 @@ export default function DashboardPage() {
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">想定表示時間: 約{viewSeconds}秒</p>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">必要入力: {inputCount}項目</p>
                             </div>
+                            <p className="mt-1 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900">
+                              推奨公開時間: {PUBLISH_WINDOW_LABELS[detectTemplatePublishWindow(template)]}
+                            </p>
                             <p className="mt-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
                               速度目標: LCP {slaMs}ms 以下
                             </p>
@@ -2083,6 +2212,9 @@ export default function DashboardPage() {
                           必要入力: {activeTemplatePreviewEntry.inputCount}項目
                         </p>
                       </div>
+                      <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900">
+                        推奨公開時間: {PUBLISH_WINDOW_LABELS[detectTemplatePublishWindow(activeTemplatePreviewEntry.template)]}
+                      </p>
                       <p className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
                         速度目標（SLA）: LCP {activeTemplateSlaMs}ms 以下
                       </p>
@@ -2514,6 +2646,14 @@ export default function DashboardPage() {
                       改善提案: 画像ブロックをWebPに置換 / ギャラリー枚数を削減 / 先頭CTAより下に重い画像を移動
                     </div>
                   )}
+                  {(opsHealth?.performance7d.slowPages ?? []).length > 0 && (
+                    <div className="mt-2 rounded-md border border-rose-200 bg-white px-2 py-2 text-[11px] text-rose-800">
+                      優先修正: {(opsHealth?.performance7d.slowPages ?? [])
+                        .sort((a, b) => b.lcpMs - a.lcpMs)
+                        .map((row, index) => `${index + 1}.${row.path}`)
+                        .join(" / ")}
+                    </div>
+                  )}
                   <p className="mt-2 text-[11px] text-slate-600">しきい値: LCP 2500ms以上 または Load 4000ms以上</p>
                 </div>
 
@@ -2599,11 +2739,22 @@ export default function DashboardPage() {
                     <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
                       施設タイプ別完了率: ビジネス {opsHealth?.restart7d.byFacilityCompletionRate.business ?? 0}% / リゾート {opsHealth?.restart7d.byFacilityCompletionRate.resort ?? 0}% / 温浴 {opsHealth?.restart7d.byFacilityCompletionRate.spa ?? 0}%
                     </div>
+                    <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                      施策別比較（再開クリック比率）: テンプレ{" "}
+                      {opsHealth?.restart7d.clicks ? Math.round(((opsHealth?.restart7d.byPath.template ?? 0) / opsHealth.restart7d.clicks) * 100) : 0}%
+                      {" / "}下書き{" "}
+                      {opsHealth?.restart7d.clicks ? Math.round(((opsHealth?.restart7d.byPath.draft ?? 0) / opsHealth.restart7d.clicks) * 100) : 0}%
+                      {" / "}公開確認{" "}
+                      {opsHealth?.restart7d.clicks ? Math.round(((opsHealth?.restart7d.byPath.publish ?? 0) / opsHealth.restart7d.clicks) * 100) : 0}%
+                    </div>
                     <p className="mt-1 text-[11px] text-slate-600">
                       再開完了率: {opsHealth?.restart7d.completionRate ?? 0}%（再開クリック {opsHealth?.restart7d.clicks ?? 0} 件 / 公開 {opsHealth?.restart7d.publishes ?? 0} 件）
                     </p>
                     <p className="mt-1 text-[11px] text-slate-600">
                       再開後7日継続率: {opsHealth?.restart7d.retention7d.rate ?? 0}%（対象 {opsHealth?.restart7d.retention7d.eligible ?? 0} / 継続 {opsHealth?.restart7d.retention7d.retained ?? 0}）
+                    </p>
+                    <p className={`mt-1 text-[11px] ${dormancyStage === "critical" ? "text-rose-700" : dormancyStage === "warning" ? "text-amber-700" : "text-emerald-700"}`}>
+                      休眠判定: {dormancyStage === "critical" ? "14日以上停止（強リマインド）" : dormancyStage === "warning" ? "7日以上停止（通常リマインド）" : "正常運用"}
                     </p>
                   </div>
                 </div>
@@ -2804,6 +2955,41 @@ export default function DashboardPage() {
                   <div className="mt-1 rounded-md border border-rose-200 bg-white px-2 py-2 text-xs text-slate-700">
                     停止/修正する施策: {(opsHealth?.week4Review.stopOrFix ?? []).join(" / ") || "なし"}
                   </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/60 p-3">
+                  <p className="text-xs font-semibold text-cyan-900">Week5 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{week5Kpi.lp}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{week5Kpi.publishCompletion}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{week5Kpi.proConversion}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">継続率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{week5Kpi.retention}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    標準化候補: {week5Kpi.standardize.join(" / ") || "なし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-rose-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    停止/修正候補: {week5Kpi.stopOrFix.join(" / ") || "なし"}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void navigator.clipboard.writeText(weeklyOpsReport).then(() => setSuccess("週次レポート文面をコピーしました"))}
+                    className="mt-2 rounded-md border border-cyan-300 bg-white px-3 py-1.5 text-xs text-cyan-800 hover:bg-cyan-50"
+                  >
+                    週次レポートをコピー
+                  </button>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">

@@ -574,7 +574,7 @@ export type OnboardingFunnel7d = {
     rate: number;
   }>;
   byVariant: Array<{
-    variant: "a" | "b";
+    variant: "a" | "b" | "c";
     logins: number;
     signups: number;
     rate: number;
@@ -2095,10 +2095,70 @@ export async function trackDormancyNoticeVariantCopy(variant: "short" | "detail"
   });
 }
 
+export async function setSharedTemplateFavorite(templateIndex: number, favorite: boolean): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "template.favorite_set",
+    message: `テンプレお気に入りを更新しました（${templateIndex}: ${favorite ? "on" : "off"}）`,
+    targetType: "template",
+    metadata: {
+      templateIndex,
+      favorite,
+    },
+  });
+}
+
+export async function getSharedTemplateFavorites(): Promise<number[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return [];
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return [];
+  }
+  const sinceIso = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .select("metadata,created_at")
+    .eq("hotel_id", hotelId)
+    .eq("action", "template.favorite_set")
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) {
+    throw toError(error, "テンプレお気に入りの取得に失敗しました");
+  }
+  const stateByIndex = new Map<number, boolean>();
+  for (const row of data ?? []) {
+    const metadata = row.metadata as Record<string, unknown> | null;
+    const index = typeof metadata?.templateIndex === "number" ? metadata.templateIndex : Number(metadata?.templateIndex);
+    const favorite = Boolean(metadata?.favorite);
+    if (!Number.isInteger(index) || index < 0) {
+      continue;
+    }
+    if (!stateByIndex.has(index)) {
+      stateByIndex.set(index, favorite);
+    }
+  }
+  return Array.from(stateByIndex.entries())
+    .filter(([, favorite]) => favorite)
+    .map(([index]) => index)
+    .sort((a, b) => a - b);
+}
+
 type OnboardingSourceRef = "lp-hero" | "lp-sticky" | "lp-bottom";
 type OnboardingAuthAction = "login_success" | "signup_completed";
 type OnboardingSourceChannel = "x" | "instagram" | "tiktok" | "other" | "unknown";
-type OnboardingCtaVariant = "a" | "b";
+type OnboardingCtaVariant = "a" | "b" | "c";
 
 function toOnboardingSourceRef(value: string | null | undefined): OnboardingSourceRef | null {
   if (!value) {
@@ -2128,7 +2188,11 @@ function toOnboardingSourceChannel(value: string | null | undefined): Onboarding
 }
 
 function toOnboardingCtaVariant(value: string | null | undefined): OnboardingCtaVariant {
-  return (value ?? "").trim().toLowerCase() === "b" ? "b" : "a";
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "b" || normalized === "c") {
+    return normalized;
+  }
+  return "a";
 }
 
 export async function trackOnboardingAuthEvent(
@@ -2258,7 +2322,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     }))
     .sort((a, b) => b.logins - a.logins);
 
-  const byVariant: OnboardingFunnel7d["byVariant"] = (["a", "b"] as const).map((variant) => {
+  const byVariant: OnboardingFunnel7d["byVariant"] = (["a", "b", "c"] as const).map((variant) => {
     const counts = variantMap.get(variant) ?? { logins: 0, signups: 0 };
     return {
       variant,
