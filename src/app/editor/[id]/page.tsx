@@ -6057,97 +6057,99 @@ function onUpdateIconRowItem(
                       <p>{item.status === "published" ? "✓" : "・"} 公開後にURL/QRを共有</p>
                     </div>
                   </article>
-                  <article className="lux-card lux-section-card rounded-2xl p-5 lg:sticky lg:top-6 lg:h-fit">
-                    <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
-                    <article
-                      className="relative mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
-                      style={{
-                        backgroundColor: item.theme.backgroundColor ?? "#ffffff",
-                        color: item.theme.textColor ?? "#0f172a",
-                        fontFamily: item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
-                      }}
-                    >
-                      {previewOverlay ? (
-                        <div
-                          className="absolute inset-0 z-30 overflow-y-auto rounded-3xl border border-slate-200 bg-white/95 p-4 pt-16 shadow-lg backdrop-blur-sm"
-                          onTouchStart={onOverlayTouchStart}
-                          onTouchEnd={(event) => void onOverlayTouchEnd(event)}
-                        >
-                          <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-white/90 px-4 py-3 backdrop-blur-sm">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <p className="truncate text-xs font-semibold text-slate-700">{previewOverlay.title}</p>
-                              {overlaySwipePosition ? (
-                                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-                                  {overlaySwipePosition.current}/{overlaySwipePosition.total}
-                                </span>
-                              ) : null}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setPreviewOverlay(null)}
-                              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 hover:bg-slate-50"
-                            >
-                              閉じる
-                            </button>
-                          </div>
-                          {previewOverlay.loading ? (
-                            <div className="flex min-h-[540px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-600">
-                              プレビューを読み込み中...
-                            </div>
-                          ) : previewOverlay.error ? (
-                            <div className="flex min-h-[540px] items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/70 px-4 text-center text-sm text-rose-700">
-                              {previewOverlay.error}
-                            </div>
-                          ) : previewOverlay.information ? (
-                            <article
-                              className="mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
-                              style={{
-                                backgroundColor: previewOverlay.information.theme.backgroundColor ?? "#ffffff",
-                                color: previewOverlay.information.theme.textColor ?? "#0f172a",
-                                fontFamily: previewOverlay.information.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
-                              }}
-                            >
-                              <div>{renderSmartphoneBlocks(previewOverlay.information)}</div>
-                              <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
-                                ご不明な点はスタッフまでお声がけください。
-                              </p>
-                            </article>
-                          ) : null}
-                        </div>
-                      ) : null}
-                      <div>
-                        {renderSmartphoneBlocks(item)}
-                      </div>
-                      <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
-                        ご不明な点はスタッフまでお声がけください。
-                      </p>
-                    </article>
-                  </article>
-
-                  <article className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">公開URL / QR</h2>
-                      <button
-                        type="button"
-                        onClick={onCopyUrl}
-                        className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
+                  <div className="space-y-5 lg:sticky lg:top-6 lg:h-fit">
+                    <article className="lux-card lux-section-card rounded-2xl p-5">
+                      <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
+                      <article
+                        className="relative mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
+                        style={{
+                          backgroundColor: item.theme.backgroundColor ?? "#ffffff",
+                          color: item.theme.textColor ?? "#0f172a",
+                          fontFamily: item.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
+                        }}
                       >
-                        URLコピー
-                      </button>
-                    </div>
-                    <a className="break-all text-sm text-blue-700 underline" href={publicUrl} target="_blank" rel="noreferrer">
-                      {publicUrl}
-                    </a>
-                    <div className="mt-3 inline-block rounded-lg bg-white p-2 shadow-sm">
-                      <Image
-                        alt="QR"
-                        width={140}
-                        height={140}
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrPublicUrl)}`}
-                        unoptimized
-                      />
-                    </div>
-                  </article>
+                        {previewOverlay ? (
+                          <div
+                            className="absolute inset-0 z-30 overflow-y-auto rounded-3xl border border-slate-200 bg-white/95 p-4 pt-16 shadow-lg backdrop-blur-sm"
+                            onTouchStart={onOverlayTouchStart}
+                            onTouchEnd={(event) => void onOverlayTouchEnd(event)}
+                          >
+                            <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-white/90 px-4 py-3 backdrop-blur-sm">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <p className="truncate text-xs font-semibold text-slate-700">{previewOverlay.title}</p>
+                                {overlaySwipePosition ? (
+                                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
+                                    {overlaySwipePosition.current}/{overlaySwipePosition.total}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewOverlay(null)}
+                                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-600 hover:bg-slate-50"
+                              >
+                                閉じる
+                              </button>
+                            </div>
+                            {previewOverlay.loading ? (
+                              <div className="flex min-h-[540px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-600">
+                                プレビューを読み込み中...
+                              </div>
+                            ) : previewOverlay.error ? (
+                              <div className="flex min-h-[540px] items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/70 px-4 text-center text-sm text-rose-700">
+                                {previewOverlay.error}
+                              </div>
+                            ) : previewOverlay.information ? (
+                              <article
+                                className="mx-auto min-h-[640px] max-w-sm rounded-3xl border border-slate-200 p-6 shadow-sm"
+                                style={{
+                                  backgroundColor: previewOverlay.information.theme.backgroundColor ?? "#ffffff",
+                                  color: previewOverlay.information.theme.textColor ?? "#0f172a",
+                                  fontFamily: previewOverlay.information.theme.fontFamily ?? FONT_FAMILY_OPTIONS[0]?.value,
+                                }}
+                              >
+                                <div>{renderSmartphoneBlocks(previewOverlay.information)}</div>
+                                <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
+                                  ご不明な点はスタッフまでお声がけください。
+                                </p>
+                              </article>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        <div>
+                          {renderSmartphoneBlocks(item)}
+                        </div>
+                        <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">
+                          ご不明な点はスタッフまでお声がけください。
+                        </p>
+                      </article>
+                    </article>
+
+                    <article className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h2 className="text-lg font-semibold">公開URL / QR</h2>
+                        <button
+                          type="button"
+                          onClick={onCopyUrl}
+                          className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
+                        >
+                          URLコピー
+                        </button>
+                      </div>
+                      <a className="break-all text-sm text-blue-700 underline" href={publicUrl} target="_blank" rel="noreferrer">
+                        {publicUrl}
+                      </a>
+                      <div className="mt-3 inline-block rounded-lg bg-white p-2 shadow-sm">
+                        <Image
+                          alt="QR"
+                          width={140}
+                          height={140}
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrPublicUrl)}`}
+                          unoptimized
+                        />
+                      </div>
+                    </article>
+                  </div>
                 </section>
               </div>
             </>
