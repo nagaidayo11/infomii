@@ -114,6 +114,36 @@ type Week9Preview = {
   }>;
 };
 
+type Week10Preview = {
+  lpScrollHeatmap: {
+    hero: number;
+    sticky: number;
+    bottom: number;
+  };
+  revisitPredictionScore: number;
+  dormancyWinnerChannelByFacility: {
+    business: "line" | "mail" | "dashboard";
+    resort: "line" | "mail" | "dashboard";
+    spa: "line" | "mail" | "dashboard";
+  };
+  dormancyReactionTrend4w: Array<{
+    label: string;
+    sent: number;
+    reacted: number;
+    rate: number;
+  }>;
+  proBlockerTopReasons: Array<{
+    reason: string;
+    count: number;
+  }>;
+  billingManagementCompletion7d: {
+    started: number;
+    completed: number;
+    rate: number;
+  };
+  actionExecutionRate: number;
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -548,6 +578,19 @@ export async function GET(request: NextRequest) {
           },
           templatePublishTrend4w: [],
         },
+        week10Preview: {
+          lpScrollHeatmap: { hero: 0, sticky: 0, bottom: 0 },
+          revisitPredictionScore: 0,
+          dormancyWinnerChannelByFacility: {
+            business: "mail",
+            resort: "line",
+            spa: "line",
+          },
+          dormancyReactionTrend4w: [],
+          proBlockerTopReasons: [],
+          billingManagementCompletion7d: { started: 0, completed: 0, rate: 0 },
+          actionExecutionRate: 0,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -711,6 +754,19 @@ export async function GET(request: NextRequest) {
           },
           templatePublishTrend4w: [],
         },
+        week10Preview: {
+          lpScrollHeatmap: { hero: 0, sticky: 0, bottom: 0 },
+          revisitPredictionScore: 0,
+          dormancyWinnerChannelByFacility: {
+            business: "mail",
+            resort: "line",
+            spa: "line",
+          },
+          dormancyReactionTrend4w: [],
+          proBlockerTopReasons: [],
+          billingManagementCompletion7d: { started: 0, completed: 0, rate: 0 },
+          actionExecutionRate: 0,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -745,10 +801,18 @@ export async function GET(request: NextRequest) {
         .limit(10),
       admin
         .from("audit_logs")
-        .select("action,created_at")
+        .select("action,created_at,metadata")
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
-        .in("action", ["billing.upgrade_click", "billing.checkout_session_created", "billing.checkout_completed", "billing.checkout_resume_click"]),
+        .in("action", [
+          "billing.upgrade_click",
+          "billing.checkout_session_created",
+          "billing.checkout_completed",
+          "billing.checkout_resume_click",
+          "billing.portal_session_created",
+          "billing.subscription_synced",
+          "ops.pro_blocker_reason",
+        ]),
       admin
         .from("audit_logs")
         .select("action,created_at,metadata")
@@ -818,9 +882,12 @@ export async function GET(request: NextRequest) {
     const checkoutSessions = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_session_created").length;
     const completedCheckouts = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_completed").length;
     const checkoutResumeClicks = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_resume_click").length;
+    const portalSessions = (funnelLogs ?? []).filter((row) => row.action === "billing.portal_session_created").length;
+    const subscriptionSynced = (funnelLogs ?? []).filter((row) => row.action === "billing.subscription_synced").length;
     const clickToCheckoutRate = upgradeClicks > 0 ? Math.round((checkoutSessions / upgradeClicks) * 100) : 0;
     const checkoutToPaidRate = checkoutSessions > 0 ? Math.round((completedCheckouts / checkoutSessions) * 100) : 0;
     const resumeClickRate = checkoutSessions > 0 ? Math.round((checkoutResumeClicks / checkoutSessions) * 100) : 0;
+    const billingManagementCompletionRate = portalSessions > 0 ? Math.min(100, Math.round((subscriptionSynced / portalSessions) * 100)) : 0;
     const lcpValues = (perfLogs ?? [])
       .filter((row) => row.action === "perf.public_lcp")
       .map((row) => {
@@ -1341,6 +1408,132 @@ export async function GET(request: NextRequest) {
       dormancyReactionByChannel,
       templatePublishTrend4w,
     };
+    const lpScrollHeatmap: Week10Preview["lpScrollHeatmap"] = {
+      hero: onboardingByRef.get("lp-hero")?.logins ?? 0,
+      sticky: onboardingByRef.get("lp-sticky")?.logins ?? 0,
+      bottom: onboardingByRef.get("lp-bottom")?.logins ?? 0,
+    };
+    const readTotal =
+      dormancyReactionByChannel.line.read +
+      dormancyReactionByChannel.mail.read +
+      dormancyReactionByChannel.dashboard.read;
+    const reactionTotal = readTotal +
+      dormancyReactionByChannel.line.noResponse +
+      dormancyReactionByChannel.mail.noResponse +
+      dormancyReactionByChannel.dashboard.noResponse;
+    const reactionQualityRate = reactionTotal > 0 ? Math.round((readTotal / reactionTotal) * 100) : 0;
+    const revisitPredictionScore = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          45 +
+            (week2Review.kpi.publishCompletionRate * 0.22) +
+            (retentionRate * 0.26) +
+            (reactionQualityRate * 0.2) -
+            Math.max(0, (dormancy.daysSinceLastUpdate ?? 0) - 1) * 4,
+        ),
+      ),
+    );
+    const channelRates = {
+      line:
+        dormancyReactionByChannel.line.read + dormancyReactionByChannel.line.noResponse > 0
+          ? Math.round(
+              (dormancyReactionByChannel.line.read /
+                (dormancyReactionByChannel.line.read + dormancyReactionByChannel.line.noResponse)) * 100,
+            )
+          : 0,
+      mail:
+        dormancyReactionByChannel.mail.read + dormancyReactionByChannel.mail.noResponse > 0
+          ? Math.round(
+              (dormancyReactionByChannel.mail.read /
+                (dormancyReactionByChannel.mail.read + dormancyReactionByChannel.mail.noResponse)) * 100,
+            )
+          : 0,
+      dashboard:
+        dormancyReactionByChannel.dashboard.read + dormancyReactionByChannel.dashboard.noResponse > 0
+          ? Math.round(
+              (dormancyReactionByChannel.dashboard.read /
+                (dormancyReactionByChannel.dashboard.read + dormancyReactionByChannel.dashboard.noResponse)) * 100,
+            )
+          : 0,
+    };
+    const sortableChannels: Array<"line" | "mail" | "dashboard"> = ["line", "mail", "dashboard"];
+    const globalWinnerChannel =
+      sortableChannels.sort((a, b) => channelRates[b] - channelRates[a])[0] ?? "mail";
+    const dormancyWinnerChannelByFacility: Week10Preview["dormancyWinnerChannelByFacility"] = {
+      business: channelRates[globalWinnerChannel] > 0 ? globalWinnerChannel : "mail",
+      resort: channelRates[globalWinnerChannel] > 0 ? globalWinnerChannel : "line",
+      spa: channelRates[globalWinnerChannel] > 0 ? globalWinnerChannel : "line",
+    };
+    const dormancyReactionTrend4w: Week10Preview["dormancyReactionTrend4w"] = [];
+    for (let weekOffset = 3; weekOffset >= 0; weekOffset -= 1) {
+      const end = Date.now() - weekOffset * 7 * 24 * 60 * 60 * 1000;
+      const start = end - 7 * 24 * 60 * 60 * 1000;
+      const sent = (dormancyNoticeLogs ?? []).filter((row) => {
+        const createdAt = new Date(row.created_at).getTime();
+        return Number.isFinite(createdAt) && createdAt >= start && createdAt < end;
+      }).length;
+      const reacted = (dormancyReactionLogs ?? []).filter((row) => {
+        const createdAt = new Date(row.created_at).getTime();
+        if (!Number.isFinite(createdAt) || createdAt < start || createdAt >= end) {
+          return false;
+        }
+        const metadata = row.metadata as Record<string, unknown> | null;
+        return metadata?.reaction === "read";
+      }).length;
+      dormancyReactionTrend4w.push({
+        label: `W-${weekOffset + 1}`,
+        sent,
+        reacted,
+        rate: sent > 0 ? Math.round((reacted / sent) * 100) : 0,
+      });
+    }
+    const blockerReasonCounts = new Map<string, number>();
+    const blockerReasonLabel: Record<string, string> = {
+      price: "料金が合わない",
+      timing: "導入タイミング未定",
+      feature_unclear: "機能差が不明",
+      approval_needed: "社内承認待ち",
+      other: "その他",
+    };
+    for (const row of funnelLogs ?? []) {
+      if (row.action !== "ops.pro_blocker_reason") {
+        continue;
+      }
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const reasonCode = typeof metadata?.reason === "string" ? metadata.reason : "other";
+      const safeReason = blockerReasonLabel[reasonCode] ? reasonCode : "other";
+      blockerReasonCounts.set(safeReason, (blockerReasonCounts.get(safeReason) ?? 0) + 1);
+    }
+    const proBlockerTopReasons = Array.from(blockerReasonCounts.entries())
+      .map(([reason, count]) => ({
+        reason: blockerReasonLabel[reason] ?? blockerReasonLabel.other,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+    const actionExecutionChecklistCount = [
+      createdCount7d > 0,
+      publishedCount7d > 0,
+      restartClicks > 0,
+      (dormancyNoticeLogs ?? []).length > 0,
+      portalSessions > 0,
+    ].filter(Boolean).length;
+    const actionExecutionRate = Math.round((actionExecutionChecklistCount / 5) * 100);
+    const week10Preview: Week10Preview = {
+      lpScrollHeatmap,
+      revisitPredictionScore,
+      dormancyWinnerChannelByFacility,
+      dormancyReactionTrend4w,
+      proBlockerTopReasons,
+      billingManagementCompletion7d: {
+        started: portalSessions,
+        completed: subscriptionSynced,
+        rate: billingManagementCompletionRate,
+      },
+      actionExecutionRate,
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -1378,6 +1571,7 @@ export async function GET(request: NextRequest) {
       week4Review,
       week7Review,
       week9Preview,
+      week10Preview,
       execution,
       dormancy,
       performance7d: {

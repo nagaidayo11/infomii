@@ -2020,6 +2020,35 @@ export type OpsHealthSnapshot = {
       medianMinutes: number;
     }>;
   };
+  week10Preview: {
+    lpScrollHeatmap: {
+      hero: number;
+      sticky: number;
+      bottom: number;
+    };
+    revisitPredictionScore: number;
+    dormancyWinnerChannelByFacility: {
+      business: "line" | "mail" | "dashboard";
+      resort: "line" | "mail" | "dashboard";
+      spa: "line" | "mail" | "dashboard";
+    };
+    dormancyReactionTrend4w: Array<{
+      label: string;
+      sent: number;
+      reacted: number;
+      rate: number;
+    }>;
+    proBlockerTopReasons: Array<{
+      reason: string;
+      count: number;
+    }>;
+    billingManagementCompletion7d: {
+      started: number;
+      completed: number;
+      rate: number;
+    };
+    actionExecutionRate: number;
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;
@@ -2673,6 +2702,26 @@ export async function trackRestartWinnerLocked(path: "template" | "draft" | "pub
     message: `再開勝ち導線を固定しました（${path}）`,
     targetType: "ops",
     metadata: { path },
+  });
+}
+
+export async function trackProBlockerReason(
+  reason: "price" | "timing" | "feature_unclear" | "approval_needed" | "other",
+): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.pro_blocker_reason",
+    message: `Pro転換の阻害要因を記録しました（${reason}）`,
+    targetType: "ops",
+    metadata: { reason },
   });
 }
 

@@ -130,6 +130,7 @@ const FONT_FAMILY_OPTIONS: Array<{ label: string; value: string }> = [
 type AddPanelSection = "text" | "column" | "section" | "preset";
 type BlockSetKind = "campaign" | "menu" | "faq" | "access" | "notice";
 type IndustryBlockSetKind = "hotel" | "restaurant" | "cafe" | "salon" | "clinic" | "retail";
+type RecommendedCompositionKind = "quick_publish" | "front_support" | "facility_guide";
 
 type PublishCheckIssue = {
   level: "error" | "warning";
@@ -284,8 +285,8 @@ function collectPublishCheckIssues(
   const hasContactInfo = contactPattern.test(serializedText);
   if (!hasContactInfo) {
       issues.push({
-        level: "warning",
-        message: "連絡先情報が未記載です（例: 03-1234-5678 / front@example.com）。緊急連絡先の記載を推奨します。",
+        level: "error",
+        message: "問い合わせ導線（連絡先）が未記載です（例: 03-1234-5678 / front@example.com）。公開前に必須です。",
         target: "blocks",
       });
   }
@@ -721,6 +722,41 @@ function getIndustryBlockSetLabel(kind: IndustryBlockSetKind): string {
     return "クリニック向けセット";
   }
   return "小売店向けセット";
+}
+
+function getRecommendedCompositionLabel(kind: RecommendedCompositionKind): string {
+  if (kind === "quick_publish") {
+    return "3分公開セット";
+  }
+  if (kind === "front_support") {
+    return "フロント問い合わせ削減セット";
+  }
+  return "館内総合案内セット";
+}
+
+function makeRecommendedComposition(kind: RecommendedCompositionKind): InformationBlock[] {
+  if (kind === "quick_publish") {
+    return [
+      { id: crypto.randomUUID(), type: "title", text: "本日のご案内" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "重要なお知らせ", sectionBody: "本日の変更点を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "hours", hoursItems: [{ id: crypto.randomUUID(), label: "受付", value: "15:00〜24:00" }], spacing: "md" },
+      { id: crypto.randomUUID(), type: "cta", ctaLabel: "お問い合わせ", ctaUrl: "https://example.com/contact", spacing: "md" },
+    ];
+  }
+  if (kind === "front_support") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "到着前にご確認ください", badgeColor: "#dcfce7", badgeTextColor: "#065f46", spacing: "md" },
+      { id: crypto.randomUUID(), type: "title", text: "チェックイン・館内導線" },
+      { id: crypto.randomUUID(), type: "iconRow", iconItems: [{ id: crypto.randomUUID(), icon: "svg:clock", label: "チェックイン", link: "" }, { id: crypto.randomUUID(), icon: "svg:wifi", label: "Wi-Fi", link: "" }, { id: crypto.randomUUID(), icon: "svg:phone", label: "連絡先", link: "https://example.com/contact" }], iconRowBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "緊急連絡", sectionBody: "フロント: 03-1234-5678", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  return [
+    { id: crypto.randomUUID(), type: "title", text: "館内総合案内" },
+    { id: crypto.randomUUID(), type: "columns", leftTitle: "アクセス", leftText: "最寄り駅から徒歩 [分]", rightTitle: "駐車場", rightText: "平面 [台] / 料金 [円]", columnsBackgroundColor: "#f8fafc", spacing: "md" },
+    { id: crypto.randomUUID(), type: "hours", hoursItems: [{ id: crypto.randomUUID(), label: "チェックイン", value: "15:00〜24:00" }, { id: crypto.randomUUID(), label: "チェックアウト", value: "10:00まで" }], spacing: "md" },
+    { id: crypto.randomUUID(), type: "cta", ctaLabel: "お問い合わせ", ctaUrl: "https://example.com/contact", spacing: "md" },
+  ];
 }
 
 function makeIndustryBlockSet(kind: IndustryBlockSetKind): InformationBlock[] {
@@ -1331,6 +1367,7 @@ export default function EditorPage() {
   const [showLaunchGuide, setShowLaunchGuide] = useState(false);
   const [showPostPublishAssist, setShowPostPublishAssist] = useState(false);
   const [applyingPublishBatchFix, setApplyingPublishBatchFix] = useState(false);
+  const [applyingAutoFill, setApplyingAutoFill] = useState(false);
   const [publishScoreDropReason, setPublishScoreDropReason] = useState<string | null>(null);
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
@@ -2372,6 +2409,85 @@ export default function EditorPage() {
         x: clickEvent.clientX,
         y: clickEvent.clientY - 8,
       });
+    }
+  }
+
+  function onAddRecommendedComposition(kind: RecommendedCompositionKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (!item) {
+      return;
+    }
+    const setBlocks = makeRecommendedComposition(kind);
+    setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((b) => ({ ...b }))]);
+    setBlockHistoryFuture([]);
+    const nextBlocks = [...item.contentBlocks, ...setBlocks];
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    void saveBlocks(nextBlocks);
+    if (clickEvent) {
+      showInlineFeedback(`「${getRecommendedCompositionLabel(kind)}」を追加しました`, {
+        x: clickEvent.clientX,
+        y: clickEvent.clientY - 8,
+      });
+    }
+  }
+
+  async function onAutoFillMissingFields() {
+    if (!item) {
+      return;
+    }
+    setApplyingAutoFill(true);
+    try {
+      let changed = false;
+      const nextBlocks = item.contentBlocks.map((block) => {
+        if (block.type === "title" && !(block.text ?? "").trim()) {
+          changed = true;
+          return { ...block, text: "インフォメーション案内" };
+        }
+        if (block.type === "paragraph" && !(block.text ?? "").trim()) {
+          changed = true;
+          return { ...block, text: "案内内容を入力してください。" };
+        }
+        if (block.type === "section") {
+          const nextTitle = (block.sectionTitle ?? "").trim() || "詳細";
+          const nextBody = (block.sectionBody ?? "").trim() || "詳細情報を入力してください。";
+          if (nextTitle !== block.sectionTitle || nextBody !== block.sectionBody) {
+            changed = true;
+            return { ...block, sectionTitle: nextTitle, sectionBody: nextBody };
+          }
+        }
+        if (block.type === "cta") {
+          const nextLabel = (block.ctaLabel ?? "").trim() || "お問い合わせ";
+          const nextUrl = (block.ctaUrl ?? "").trim() || "https://example.com/contact";
+          if (nextLabel !== block.ctaLabel || nextUrl !== block.ctaUrl) {
+            changed = true;
+            return { ...block, ctaLabel: nextLabel, ctaUrl: nextUrl };
+          }
+        }
+        return block;
+      });
+      if (!changed) {
+        setNoticeKind("success");
+        setNotice("一括補完の対象はありませんでした。");
+        return;
+      }
+      setItem({
+        ...item,
+        contentBlocks: nextBlocks,
+        body: blocksToBody(nextBlocks),
+        images: blocksToImages(nextBlocks),
+      });
+      await saveBlocks(nextBlocks);
+      setNoticeKind("success");
+      setNotice("未入力項目を一括補完しました。");
+    } catch (e) {
+      setNoticeKind("error");
+      setNotice(e instanceof Error ? e.message : "一括補完に失敗しました");
+    } finally {
+      setApplyingAutoFill(false);
     }
   }
 
@@ -4055,6 +4171,35 @@ function onUpdateIconRowItem(
                                 ★
                               </button>
                             </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mb-3 rounded-lg border border-violet-200 bg-violet-50/60 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-violet-900">おすすめ構成（ワンクリック）</p>
+                          <button
+                            type="button"
+                            onClick={() => void onAutoFillMissingFields()}
+                            disabled={applyingAutoFill}
+                            className="rounded-md border border-violet-300 bg-white px-2 py-1 text-[11px] text-violet-800 hover:bg-violet-50 disabled:opacity-60"
+                          >
+                            {applyingAutoFill ? "補完中..." : "未入力を一括補完"}
+                          </button>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {([
+                            ["quick_publish", "3分公開セット"],
+                            ["front_support", "フロント削減セット"],
+                            ["facility_guide", "館内総合セット"],
+                          ] as Array<[RecommendedCompositionKind, string]>).map(([value, label]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={(event) => onAddRecommendedComposition(value, event)}
+                              className="rounded-md border border-violet-300 bg-white px-2 py-1 text-[11px] text-violet-900 hover:bg-violet-100"
+                            >
+                              + {label}
+                            </button>
                           ))}
                         </div>
                       </div>

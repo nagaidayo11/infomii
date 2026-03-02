@@ -107,6 +107,7 @@ type HomePageProps = {
     utm_source?: string;
     lp?: string;
     win?: string;
+    tag?: string;
   }>;
 };
 
@@ -114,6 +115,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
+  const normalizedSourceChannel = sourceChannel === "ig" ? "instagram" : sourceChannel;
   const inferredVariant = sourceChannel === "instagram" || sourceChannel === "ig"
     ? "b"
     : sourceChannel === "tiktok"
@@ -190,6 +192,15 @@ export default async function Home({ searchParams }: HomePageProps) {
     c: landingPage === "business" ? "30秒登録でフロント運用を改善" : landingPage === "resort" ? "30秒登録で滞在導線を整備" : "30秒登録で温浴運用を整備",
   } as const;
   const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
+  const channelCtaSuffix =
+    normalizedSourceChannel === "x"
+      ? "（X投稿向け）"
+      : normalizedSourceChannel === "instagram"
+        ? "（Instagram向け）"
+        : normalizedSourceChannel === "tiktok"
+          ? "（TikTok向け）"
+          : "";
+  const optimizedHeroPrimaryCtaLabel = `${heroPrimaryCtaLabel}${channelCtaSuffix}`;
   const heroCtaShortLabelByVariant = {
     a: "無料で作成",
     b: "今すぐ公開",
@@ -241,10 +252,12 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   ];
 
+  const activeExampleTag = query.tag === "business" || query.tag === "resort" || query.tag === "spa" ? query.tag : "all";
   const publicExamples = [
     {
       title: "チェックイン案内ページ",
       tag: "フロント導線",
+      industryTag: "business" as const,
       template:
         starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
         starterTemplates[0],
@@ -254,6 +267,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "温浴利用ガイドページ",
       tag: "温浴導線",
+      industryTag: "spa" as const,
       template:
         starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
         starterTemplates[3],
@@ -263,6 +277,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "館内設備ページ",
       tag: "設備導線",
+      industryTag: "resort" as const,
       template:
         starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
         starterTemplates[1],
@@ -270,6 +285,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       publishPath: "/p/demo-facility",
     },
   ];
+  const filteredPublicExamples = activeExampleTag === "all"
+    ? publicExamples
+    : publicExamples.filter((example) => example.industryTag === activeExampleTag);
 
   const features = [
     {
@@ -461,7 +479,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
                 <Link href={buildLoginHref("lp-hero")} className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
-                  {heroPrimaryCtaLabel}
+                  {optimizedHeroPrimaryCtaLabel}
                 </Link>
                 <Link
                   href={buildLoginHref("lp-hero")}
@@ -565,8 +583,28 @@ export default async function Home({ searchParams }: HomePageProps) {
             <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（3件）</h2>
             <p className="text-sm text-slate-600">チェックイン / 温浴 / 館内設備の運用イメージ</p>
           </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {([
+              ["all", "すべて"],
+              ["business", "ビジネス"],
+              ["resort", "リゾート"],
+              ["spa", "温浴・スパ"],
+            ] as const).map(([value, label]) => (
+              <Link
+                key={value}
+                href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&tag=${value}${winnerOnlyMode ? "&win=1" : ""}`}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                  activeExampleTag === value
+                    ? "border-emerald-500 bg-emerald-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {publicExamples.map((example, index) => (
+            {filteredPublicExamples.map((example, index) => (
               <article
                 key={example.title}
                 className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"
@@ -590,6 +628,11 @@ export default async function Home({ searchParams }: HomePageProps) {
               </article>
             ))}
           </div>
+          {filteredPublicExamples.length === 0 && (
+            <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
+              選択した業態タグの事例はまだありません。
+            </p>
+          )}
         </section>
 
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">

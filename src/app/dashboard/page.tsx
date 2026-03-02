@@ -36,6 +36,7 @@ import {
   trackDormancyNoticeReaction,
   trackDormancyNoticeVariantCopy,
   trackOnboardingWizardEvent,
+  trackProBlockerReason,
   trackRestartWinnerLocked,
   trackOpsRestartFlowClick,
   trackUpgradeClick,
@@ -163,6 +164,24 @@ const SCALE_LABELS: Record<HotelScale, string> = {
   small: "小規模（~59室）",
   mid: "中規模（60-149室）",
   large: "大規模（150室~）",
+};
+
+const SCALE_GUIDE: Record<HotelScale, string[]> = {
+  small: [
+    "チェックイン導線テンプレを先に公開",
+    "問い合わせ先を1画面目に固定",
+    "QR配布後に当日中の更新ルールを決める",
+  ],
+  mid: [
+    "館内設備テンプレをフロント導線とセット公開",
+    "朝食/温浴の時間変更導線を事前に用意",
+    "担当者2名以上で更新手順を共通化",
+  ],
+  large: [
+    "入口ハブページ + 子ページ導線を先に構成",
+    "繁忙時間帯向けの案内差し替えテンプレを準備",
+    "運用センターで速度/休眠通知を週次で確認",
+  ],
 };
 
 function getLowUsageTemplateImprovementSuggestion(industry: IndustryPreset): string {
@@ -1182,6 +1201,14 @@ export default function DashboardPage() {
     }
     return usageMap;
   }, [items]);
+  const topAdoptedIndustry = useMemo(() => {
+    const top = templateUsageRanking[0];
+    if (!top || top.count <= 0) {
+      return mapFacilityToIndustry(inferredFacilityType);
+    }
+    const matched = starterTemplates[top.index];
+    return matched?.industry ?? mapFacilityToIndustry(inferredFacilityType);
+  }, [templateUsageRanking, inferredFacilityType]);
 
   useEffect(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -1197,6 +1224,12 @@ export default function DashboardPage() {
       setPreviewTemplateIndex(filteredTemplateEntries[0].originalIndex);
     }
   }, [filteredTemplateEntries, previewTemplateIndex]);
+  useEffect(() => {
+    if (industryFilter !== "all") {
+      return;
+    }
+    setIndustryFilter(topAdoptedIndustry);
+  }, [industryFilter, topAdoptedIndustry]);
   useEffect(() => {
     let mounted = true;
     void getSharedTemplateFavorites()
@@ -1328,12 +1361,31 @@ export default function DashboardPage() {
   );
   const opsErrorTimeline = useMemo(
     () =>
-      opsTimeline.filter(
-        (log) =>
-          log.action.includes("failed") ||
-          log.message.includes("失敗") ||
-          log.message.toLowerCase().includes("error"),
-      ),
+      opsTimeline
+        .filter(
+          (log) =>
+            log.action.includes("failed") ||
+            log.message.includes("失敗") ||
+            log.message.toLowerCase().includes("error"),
+        )
+        .map((log) => {
+          const raw = `${log.action} ${log.message}`.toLowerCase();
+          const priority: "high" | "medium" | "low" =
+            raw.includes("webhook") || raw.includes("checkout_failed") || raw.includes("row-level security")
+              ? "high"
+              : raw.includes("portal") || raw.includes("scope")
+                ? "medium"
+                : "low";
+          return { ...log, priority };
+        })
+        .sort((a, b) => {
+          const score = { high: 3, medium: 2, low: 1 };
+          const delta = score[b.priority] - score[a.priority];
+          if (delta !== 0) {
+            return delta;
+          }
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }),
     [opsTimeline],
   );
   const latestCheckoutSessionLog = useMemo(
@@ -1487,6 +1539,56 @@ export default function DashboardPage() {
     } as const;
   }, [opsHealth?.week9Preview.restartDefaultPathByFacility]);
   const inferredRestartDefaultPath = restartDefaultPathByFacility[inferredFacilityType];
+  const preferredDormancyChannel = useMemo(() => {
+    const preview = opsHealth?.week10Preview.dormancyWinnerChannelByFacility;
+    if (!preview) {
+      return inferredFacilityType === "business" ? "mail" : "line";
+    }
+    return preview[inferredFacilityType];
+  }, [inferredFacilityType, opsHealth?.week10Preview.dormancyWinnerChannelByFacility]);
+  const week10RecommendedActions48h = useMemo(() => {
+    const actions: string[] = [];
+    if ((opsHealth?.week10Preview.revisitPredictionScore ?? 0) < 60) {
+      actions.push("再開通知を当日中に送信し、テンプレ導線へ誘導");
+    }
+    if ((opsHealth?.week10Preview.billingManagementCompletion7d.rate ?? 0) < 50) {
+      actions.push("請求/カード管理導線を1クリックで案内");
+    }
+    if ((opsHealth?.week7Review.kpi.firstPublishRate ?? 0) < 60) {
+      actions.push("初回公開ウィザードを再実行してQR配布まで完了");
+    }
+    if (actions.length === 0) {
+      actions.push("高反応テンプレを複製し、2本目ページを48時間以内に公開");
+    }
+    return actions.slice(0, 3);
+  }, [opsHealth?.week10Preview.billingManagementCompletion7d.rate, opsHealth?.week10Preview.revisitPredictionScore, opsHealth?.week7Review.kpi.firstPublishRate]);
+  const billingFaqEntries = useMemo(() => {
+    const defaultFaq = [
+      {
+        key: "timing",
+        q: "Q. 繁忙期だけPro運用に切り替えできますか？",
+        a: "A. 可能です。必要な期間だけProにして、落ち着いたら解約できます。",
+      },
+      {
+        key: "feature_unclear",
+        q: "Q. 深夜チェックイン導線や温浴案内だけPro化する意味はありますか？",
+        a: "A. 公開枠や複数ページ連携が必要なら効果が高く、問い合わせ削減に繋がります。",
+      },
+      {
+        key: "approval_needed",
+        q: "Q. 決済画面を閉じた後の再開はできますか？",
+        a: "A. できます。上の「決済を再開する」から同じ施設で再開可能です。",
+      },
+    ];
+    const reasonOrder = (opsHealth?.week10Preview.proBlockerTopReasons ?? []).map((row) => row.reason);
+    const score = (key: string) => {
+      const index = reasonOrder.findIndex((reason) => reason.includes(
+        key === "timing" ? "タイミング" : key === "feature_unclear" ? "機能差" : key === "approval_needed" ? "承認" : key,
+      ));
+      return index < 0 ? 99 : index;
+    };
+    return [...defaultFaq].sort((a, b) => score(a.key) - score(b.key));
+  }, [opsHealth?.week10Preview.proBlockerTopReasons]);
   const weeklyOpsReport = useMemo(
     () => {
       const reportDate = new Intl.DateTimeFormat("ja-JP", {
@@ -1512,9 +1614,12 @@ export default function DashboardPage() {
         "",
         "[最優先3施策]",
         week7PriorityTop3.join(" / ") || "なし",
+        "",
+        "[改善アクション実行率]",
+        `${opsHealth?.week10Preview.actionExecutionRate ?? 0}%`,
       ].join("\n");
     },
-    [week5Kpi, week7PriorityTop3],
+    [opsHealth?.week10Preview.actionExecutionRate, week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
     const urls = new Set<string>();
@@ -2653,6 +2758,40 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ) : null}
+              </article>
+
+              <article className="rounded-2xl border border-violet-200 bg-violet-50/70 p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-violet-900">施設規模別 初回公開ガイド</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={roomCountInput}
+                      onChange={(event) => setRoomCountInput(event.target.value)}
+                      className="w-20 rounded-md border border-violet-200 bg-white px-2 py-1 text-xs text-slate-700"
+                      inputMode="numeric"
+                      placeholder="客室数"
+                    />
+                    <span className="text-xs text-violet-800">{SCALE_LABELS[hotelScale]}</span>
+                  </div>
+                </div>
+                <div className="mt-2 rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs text-violet-900">
+                  採用率が高い業態を優先表示中: {INDUSTRY_PRESET_LABELS[topAdoptedIndustry]}
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {SCALE_GUIDE[hotelScale].map((step) => (
+                    <p key={step} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+                      ・{step}
+                    </p>
+                  ))}
+                </div>
+                <div className="mt-2 rounded-lg border border-indigo-200 bg-white p-3">
+                  <p className="text-xs font-semibold text-indigo-900">公開後48時間アクション（自動提案）</p>
+                  <div className="mt-1 space-y-1 text-xs text-slate-700">
+                    {week10RecommendedActions48h.map((action) => (
+                      <p key={action}>・{action}</p>
+                    ))}
+                  </div>
+                </div>
               </article>
 
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
@@ -3901,6 +4040,45 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-violet-300 bg-violet-50/70 p-3">
+                  <p className="text-xs font-semibold text-violet-900">Week10 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">初回公開時間（中央値）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.templateToPublishMedianMinutes ?? 0}分</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">再訪予測スコア</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week10Preview.revisitPredictionScore ?? 0}</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">継続率（14日）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-violet-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    LPスクロール離脱ヒートマップ（CTA到達件数）:
+                    Hero {opsHealth?.week10Preview.lpScrollHeatmap.hero ?? 0} / Sticky {opsHealth?.week10Preview.lpScrollHeatmap.sticky ?? 0} / Bottom {opsHealth?.week10Preview.lpScrollHeatmap.bottom ?? 0}
+                  </div>
+                  <div className="mt-1 rounded-md border border-violet-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    休眠通知の勝ちチャネル（施設別）:
+                    business {opsHealth?.week10Preview.dormancyWinnerChannelByFacility.business ?? "mail"} / resort {opsHealth?.week10Preview.dormancyWinnerChannelByFacility.resort ?? "line"} / spa {opsHealth?.week10Preview.dormancyWinnerChannelByFacility.spa ?? "line"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-violet-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    通知送信後24h反応率（週次）:
+                    {(opsHealth?.week10Preview.dormancyReactionTrend4w ?? [])
+                      .map((row) => `${row.label} ${row.rate}%`)
+                      .join(" / ") || "データなし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-violet-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    改善アクション実行率: {opsHealth?.week10Preview.actionExecutionRate ?? 0}%
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -3918,26 +4096,33 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => void trackDormancyNoticeSent("day3", "dashboard").then(() => setSuccess("3日通知の送信ログを記録しました"))}
-                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] hover:bg-emerald-100"
+                        onClick={() => void trackDormancyNoticeSent("day3", preferredDormancyChannel).then(() => setSuccess("3日通知の送信ログを記録しました"))}
+                        className={`rounded-md border px-3 py-1.5 text-[11px] ${
+                          preferredDormancyChannel === "mail" || preferredDormancyChannel === "line" || preferredDormancyChannel === "dashboard"
+                            ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100"
+                            : "border-slate-300 bg-white hover:bg-slate-50"
+                        }`}
                       >
                         3日通知を送信済みにする
                       </button>
                       <button
                         type="button"
-                        onClick={() => void trackDormancyNoticeSent("day7", "dashboard").then(() => setSuccess("7日通知の送信ログを記録しました"))}
+                        onClick={() => void trackDormancyNoticeSent("day7", preferredDormancyChannel).then(() => setSuccess("7日通知の送信ログを記録しました"))}
                         className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11px] hover:bg-amber-100"
                       >
                         7日通知を送信済みにする
                       </button>
                       <button
                         type="button"
-                        onClick={() => void trackDormancyNoticeSent("day14", "dashboard").then(() => setSuccess("14日通知の送信ログを記録しました"))}
+                        onClick={() => void trackDormancyNoticeSent("day14", preferredDormancyChannel).then(() => setSuccess("14日通知の送信ログを記録しました"))}
                         className="rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-[11px] hover:bg-rose-100"
                       >
                         14日通知を送信済みにする
                       </button>
                     </div>
+                    <p className="text-[11px] text-slate-600">
+                      現在の自動推奨チャネル（{FACILITY_LABELS[inferredFacilityType]}）: {preferredDormancyChannel}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -4104,6 +4289,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="mt-1 text-sm text-slate-600">課金・復旧に関する失敗イベントを新しい順で表示します。</p>
+                <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-700">
+                  優先度: 高 {opsErrorTimeline.filter((log) => log.priority === "high").length} / 中 {opsErrorTimeline.filter((log) => log.priority === "medium").length} / 低 {opsErrorTimeline.filter((log) => log.priority === "low").length}
+                </div>
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-xs font-semibold text-slate-700">導入テスト（3〜5施設）チェック</p>
                   <div className="mt-2 space-y-1 text-xs text-slate-600">
@@ -4112,6 +4300,15 @@ export default function DashboardPage() {
                     <p>3. 決済完了後にプラン反映が 1分以内か</p>
                     <p>4. 障害時に運用センターから復旧できるか</p>
                     <p>5. スマホ実機（iPhone / Android）で視認性を確認したか</p>
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+                  <p className="text-xs font-semibold text-amber-900">再発防止チェックリスト（固定）</p>
+                  <div className="mt-2 space-y-1 text-xs text-amber-900">
+                    <p>1. Stripe Webhook受信時刻を毎日1回確認</p>
+                    <p>2. checkout失敗が出たら3分以内にPortal経由で再開案内</p>
+                    <p>3. 施設所属エラー時は「施設所属を再同期」を先に実行</p>
+                    <p>4. エラー修正後にテスト通知送信で再確認</p>
                   </div>
                 </div>
                 <div className="mt-3 space-y-2">
@@ -4123,7 +4320,18 @@ export default function DashboardPage() {
                   {opsErrorTimeline.slice(0, 20).map((log) => (
                     <div key={log.id} className="rounded-lg border border-rose-200 bg-rose-50/40 px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-rose-800">{log.action}</p>
+                        <p className="flex items-center gap-2 text-xs font-medium text-rose-800">
+                          <span>{log.action}</span>
+                          <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                            log.priority === "high"
+                              ? "bg-rose-200 text-rose-900"
+                              : log.priority === "medium"
+                                ? "bg-amber-200 text-amber-900"
+                                : "bg-slate-200 text-slate-700"
+                          }`}>
+                            {log.priority === "high" ? "高" : log.priority === "medium" ? "中" : "低"}
+                          </span>
+                        </p>
                         <p className="shrink-0 text-xs text-slate-500">{formatDate(log.createdAt)}</p>
                       </div>
                       <p className="mt-1 text-sm text-slate-700">{log.message}</p>
@@ -4299,21 +4507,48 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   )}
+                  <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/70 p-3">
+                    <p className="text-xs font-semibold text-indigo-900">Pro転換の阻害要因アンケート（運用メモ）</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {([
+                        ["price", "料金が合わない"],
+                        ["timing", "導入タイミング未定"],
+                        ["feature_unclear", "機能差が不明"],
+                        ["approval_needed", "社内承認待ち"],
+                        ["other", "その他"],
+                      ] as Array<["price" | "timing" | "feature_unclear" | "approval_needed" | "other", string]>).map(
+                        ([value, label]) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() =>
+                              void trackProBlockerReason(value).then(() =>
+                                setSuccess(`阻害要因「${label}」を記録しました`),
+                              )
+                            }
+                            className="rounded-md border border-indigo-300 bg-white px-2 py-1 text-[11px] text-indigo-800 hover:bg-indigo-50"
+                          >
+                            {label}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                    <div className="mt-2 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                      上位理由: {(opsHealth?.week10Preview.proBlockerTopReasons ?? []).map((row) => `${row.reason} ${row.count}件`).join(" / ") || "データなし"}
+                    </div>
+                    <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                      請求・カード管理導線 完了率（7日）: {opsHealth?.week10Preview.billingManagementCompletion7d.rate ?? 0}%（開始 {opsHealth?.week10Preview.billingManagementCompletion7d.started ?? 0} / 完了 {opsHealth?.week10Preview.billingManagementCompletion7d.completed ?? 0}）
+                    </div>
+                  </div>
                   <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <p className="text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</p>
                     <div className="mt-2 space-y-2 text-xs text-slate-700">
-                      <div>
-                        <p className="font-medium">Q. 繁忙期だけPro運用に切り替えできますか？</p>
-                        <p className="mt-0.5 text-slate-600">A. 可能です。必要な期間だけProにして、落ち着いたら解約できます。</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Q. 深夜チェックイン導線や温浴案内だけPro化する意味はありますか？</p>
-                        <p className="mt-0.5 text-slate-600">A. 公開枠や複数ページ連携が必要なら効果が高く、問い合わせ削減に繋がります。</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Q. 決済画面を閉じた後の再開はできますか？</p>
-                        <p className="mt-0.5 text-slate-600">A. できます。上の「決済を再開する」から同じ施設で再開可能です。</p>
-                      </div>
+                      {billingFaqEntries.map((entry) => (
+                        <div key={entry.q}>
+                          <p className="font-medium">{entry.q}</p>
+                          <p className="mt-0.5 text-slate-600">{entry.a}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </article>
