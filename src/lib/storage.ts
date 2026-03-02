@@ -1802,8 +1802,10 @@ export type OpsHealthSnapshot = {
       upgradeClicks: number;
       checkoutSessions: number;
       completedCheckouts: number;
+      checkoutResumeClicks: number;
       clickToCheckoutRate: number;
       checkoutToPaidRate: number;
+      resumeClickRate: number;
     };
     message: string;
   };
@@ -1824,6 +1826,15 @@ export type OpsHealthSnapshot = {
       weak: string[];
     };
   };
+  week3Review: {
+    kpi: {
+      lpToSignupRate: number;
+      publishCompletionRate: number;
+      proConversionRate: number;
+    };
+    focusTop2: string[];
+    weak: string[];
+  };
   execution: {
     avgMinutesToPublish: number;
     samples: number;
@@ -1842,6 +1853,28 @@ export type OpsHealthSnapshot = {
     loadP75Ms: number;
     sampleCount: number;
     lastMeasuredAt: string | null;
+    lcpByPage: Array<{
+      path: string;
+      lcpMs: number;
+      loadMs: number;
+      samples: number;
+    }>;
+    slowPages: Array<{
+      path: string;
+      lcpMs: number;
+      loadMs: number;
+      samples: number;
+    }>;
+  };
+  restart7d: {
+    clicks: number;
+    publishes: number;
+    completionRate: number;
+    byPath: {
+      template: number;
+      draft: number;
+      publish: number;
+    };
   };
   recentBillingLogs: Array<{
     id: string;
@@ -1943,6 +1976,42 @@ export async function trackUpgradeClick(context: "dashboard" | "editor"): Promis
     message: `アップグレード導線をクリックしました（${context}）`,
     targetType: "subscription",
     metadata: { context },
+  });
+}
+
+export async function trackBillingResumeClick(): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "billing.checkout_resume_click",
+    message: "checkout未完了リマインドから決済再開をクリックしました",
+    targetType: "subscription",
+    metadata: { context: "dashboard" },
+  });
+}
+
+export async function trackOpsRestartFlowClick(path: "template" | "draft" | "publish"): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  await appendAuditLog({
+    hotelId,
+    action: "ops.restart_flow_click",
+    message: `再開導線をクリックしました（${path}）`,
+    targetType: "ops",
+    metadata: { path },
   });
 }
 

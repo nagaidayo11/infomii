@@ -1549,6 +1549,48 @@ export default function EditorPage() {
     }
     return `【${item.title}】の案内ページを公開しました。\nURL: ${publicUrl}\nQR: ${qrPublicUrl}\n必要に応じてスタッフへ共有をお願いします。`;
   }, [item, publicUrl, qrPublicUrl]);
+  const shareTemplateVariants = useMemo(() => {
+    if (!item || !publicUrl) {
+      return [];
+    }
+    return [
+      {
+        label: "標準連絡",
+        text: `【${item.title}】を更新しました。\nURL: ${publicUrl}\nQR: ${qrPublicUrl}\n現場共有をお願いします。`,
+      },
+      {
+        label: "フロント向け",
+        text: `【フロント共有】${item.title}\n到着案内はこちら: ${publicUrl}\nQR: ${qrPublicUrl}\nチェックイン案内時にご案内ください。`,
+      },
+      {
+        label: "館内掲示向け",
+        text: `【館内掲示】${item.title}\n案内ページ: ${publicUrl}\nQR: ${qrPublicUrl}\n必要に応じて掲示物を差し替えてください。`,
+      },
+    ];
+  }, [item, publicUrl, qrPublicUrl]);
+  const heavyImageWarnings = useMemo(() => {
+    if (!item) {
+      return [] as string[];
+    }
+    const urls = item.contentBlocks.flatMap((block) => {
+      if (block.type === "image" && block.url) {
+        return [block.url];
+      }
+      if (block.type === "gallery") {
+        return (block.galleryItems ?? []).map((entry) => entry.url).filter(Boolean);
+      }
+      return [];
+    });
+    return urls
+      .filter((url) => {
+        const normalized = url.toLowerCase();
+        const looksPng = normalized.includes(".png") || normalized.includes(".bmp") || normalized.includes(".tiff");
+        const looksOriginal = normalized.includes("original") || normalized.includes("raw");
+        const noResizeHint = !normalized.includes("w=") && !normalized.includes("q=") && !normalized.includes("auto=format");
+        return looksPng || looksOriginal || noResizeHint;
+      })
+      .slice(0, 4);
+  }, [item]);
 
   function extractSlugFromPublicPath(url: string): string | null {
     if (!url.startsWith("/p/")) {
@@ -2154,6 +2196,37 @@ export default function EditorPage() {
       setNoticeKind("error");
       setNotice("共有文面テンプレのコピーに失敗しました");
     }
+  }
+
+  async function onCopyShareTemplateVariant(label: string, text: string) {
+    if (!text) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setNoticeKind("success");
+      setNotice(`${label}の共有文面をコピーしました`);
+    } catch {
+      setNoticeKind("error");
+      setNotice("共有文面テンプレのコピーに失敗しました");
+    }
+  }
+
+  function onShareToLine() {
+    if (!shareTemplateText) {
+      return;
+    }
+    const encoded = encodeURIComponent(shareTemplateText);
+    window.open(`https://line.me/R/msg/text/?${encoded}`, "_blank", "noopener,noreferrer");
+  }
+
+  function onShareToMail() {
+    if (!item || !publicUrl) {
+      return;
+    }
+    const subject = encodeURIComponent(`【Infomii】${item.title}の共有`);
+    const body = encodeURIComponent(shareTemplateText);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
 
   async function onStartStripeCheckout() {
@@ -5743,6 +5816,19 @@ function onUpdateIconRowItem(
                       <p>開始: {formatSchedule(item.publishAt)}</p>
                       <p className="mt-1">終了: {formatSchedule(item.unpublishAt)}</p>
                     </div>
+                    {heavyImageWarnings.length > 0 && (
+                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <p className="text-xs font-semibold text-amber-900">画像サイズ警告（重い可能性）</p>
+                        <div className="mt-2 space-y-1 text-[11px] text-amber-900">
+                          {heavyImageWarnings.map((url) => (
+                            <p key={url} className="truncate">{url}</p>
+                          ))}
+                        </div>
+                        <p className="mt-2 text-[11px] text-amber-800">
+                          WebP/JPEG圧縮やリサイズ済みURLにすると表示速度が改善します。
+                        </p>
+                      </div>
+                    )}
                     {item.status === "published" && (
                       <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
                         <p className="text-xs font-semibold text-emerald-900">公開後の次アクション</p>
@@ -5783,6 +5869,32 @@ function onUpdateIconRowItem(
                           >
                             共有文面テンプレをコピー
                           </button>
+                          <button
+                            type="button"
+                            onClick={onShareToLine}
+                            className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50"
+                          >
+                            LINEで共有
+                          </button>
+                          <button
+                            type="button"
+                            onClick={onShareToMail}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                          >
+                            メールで共有
+                          </button>
+                        </div>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                          {shareTemplateVariants.map((entry) => (
+                            <button
+                              key={entry.label}
+                              type="button"
+                              onClick={() => void onCopyShareTemplateVariant(entry.label, entry.text)}
+                              className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[11px] text-slate-700 hover:bg-slate-50"
+                            >
+                              {entry.label}文面をコピー
+                            </button>
+                          ))}
                         </div>
                         <p className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-600">
                           例: 「{item.title}を更新しました。URL/QRから確認お願いします。」

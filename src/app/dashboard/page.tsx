@@ -28,6 +28,8 @@ import {
   revokeHotelInvite,
   runOpsRecoveryAction,
   runOpsAlertTest,
+  trackBillingResumeClick,
+  trackOpsRestartFlowClick,
   trackUpgradeClick,
   type HotelAuditLog,
   type HotelInvite,
@@ -126,6 +128,8 @@ function getTemplateBlockLabel(type: string): string {
 }
 
 type TemplatePurposeFilter = "all" | "checkin" | "facility" | "breakfast" | "bath";
+type TemplateSortMode = "recommended" | "latest";
+type TemplateScene = "front" | "guestroom" | "facility";
 
 const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
   all: "すべて",
@@ -133,6 +137,11 @@ const TEMPLATE_PURPOSE_LABELS: Record<TemplatePurposeFilter, string> = {
   facility: "館内案内",
   breakfast: "朝食",
   bath: "温浴",
+};
+const TEMPLATE_SCENE_LABELS: Record<TemplateScene, string> = {
+  front: "フロント",
+  guestroom: "客室",
+  facility: "館内",
 };
 
 function detectTemplatePurposes(template: StarterTemplate): TemplatePurposeFilter[] {
@@ -179,6 +188,30 @@ function detectTemplatePurposes(template: StarterTemplate): TemplatePurposeFilte
   }
 
   return Array.from(purposes);
+}
+
+function detectTemplateScenes(template: StarterTemplate): TemplateScene[] {
+  const text = `${template.title}\n${template.body}`.toLowerCase();
+  const scenes = new Set<TemplateScene>();
+  if (text.includes("チェックイン") || text.includes("フロント") || text.includes("到着")) {
+    scenes.add("front");
+  }
+  if (text.includes("客室") || text.includes("ルーム") || text.includes("滞在")) {
+    scenes.add("guestroom");
+  }
+  if (
+    text.includes("館内") ||
+    text.includes("設備") ||
+    text.includes("大浴場") ||
+    text.includes("朝食") ||
+    text.includes("アクティビティ")
+  ) {
+    scenes.add("facility");
+  }
+  if (scenes.size === 0) {
+    scenes.add("facility");
+  }
+  return Array.from(scenes);
 }
 
 function estimateTemplateInputCount(template: StarterTemplate): number {
@@ -281,7 +314,6 @@ type PendingDeleteBatch = {
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
-const CREATE_GUIDE_DISMISSED_KEY = "dashboard-create-guide-dismissed-v1";
 const OPS_OWNER_EMAILS = new Set([
   "nagai9_119@ezweb.ne.jp",
   "nagaisoccer@gmail.com",
@@ -334,9 +366,9 @@ export default function DashboardPage() {
   const [projectStatusFilter, setProjectStatusFilter] = useState<ProjectStatusFilter>("all");
   const [industryFilter, setIndustryFilter] = useState<IndustryPreset | "all">("all");
   const [purposeFilter, setPurposeFilter] = useState<TemplatePurposeFilter>("all");
+  const [templateSortMode, setTemplateSortMode] = useState<TemplateSortMode>("recommended");
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
-  const [showCreateGuide, setShowCreateGuide] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
@@ -699,7 +731,8 @@ export default function DashboardPage() {
   const isLimitReached = publishedLimit > 0 && published.length >= publishedLimit;
   const isNearLimit = !isLimitReached && publishedLimit > 0 && usagePercent >= 80;
   const isProActive = subscription?.plan === "pro" && (subscription.status === "active" || subscription.status === "trialing");
-  const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached);
+  const isHighTraffic = (viewMetrics?.totalViews7d ?? 0) >= 120;
+  const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic);
   const primaryBillingCtaLabel = isProActive ? "解約する" : "Proにアップグレード";
   const primaryBillingCtaLoading = isProActive ? openingPortal : creatingCheckout;
   const primaryBillingCtaDisabled = isProActive ? openingPortal || !subscription?.hasStripeCustomer : creatingCheckout;
@@ -716,9 +749,10 @@ export default function DashboardPage() {
       return starterTemplates
         .map((template, originalIndex) => {
           const purposes = detectTemplatePurposes(template);
+          const scenes = detectTemplateScenes(template);
           const inputCount = estimateTemplateInputCount(template);
           const viewSeconds = estimateTemplateViewSeconds(template, inputCount);
-          return { template, originalIndex, purposes, inputCount, viewSeconds };
+          return { template, originalIndex, purposes, scenes, inputCount, viewSeconds };
         })
         .filter(({ template, purposes }) => {
         if (industryFilter !== "all" && template.industry !== industryFilter) {
@@ -760,6 +794,39 @@ export default function DashboardPage() {
           entries: filteredTemplateEntries
             .filter((entry) => entry.template.industry === industry)
             .sort((a, b) => {
+              if (templateSortMode === "latest") {
+                return b.originalIndex - a.originalIndex;
+              }
+              if (templateSortMode === "recommended") {
+                const score = (entry: {
+                  purposes: TemplatePurposeFilter[];
+                  scenes: TemplateScene[];
+                  originalIndex: number;
+                }) => {
+                  let s = 0;
+                  if (purposeFilter !== "all" && entry.purposes.includes(purposeFilter)) {
+                    s += 4;
+                  }
+                  if (entry.scenes.includes("front")) {
+                    s += 2;
+                  }
+                  if (entry.scenes.includes("facility")) {
+                    s += 1;
+                  }
+                  const rec = recommendedTemplateByIndustry.get(industry);
+                  if (rec !== undefined && entry.originalIndex === rec) {
+                    s += 3;
+                  }
+                  if (favoriteTemplateSet.has(entry.originalIndex)) {
+                    s += 5;
+                  }
+                  return s;
+                };
+                const delta = score(b) - score(a);
+                if (delta !== 0) {
+                  return delta;
+                }
+              }
               const aFav = favoriteTemplateSet.has(a.originalIndex);
               const bFav = favoriteTemplateSet.has(b.originalIndex);
               if (aFav !== bFav) {
@@ -777,7 +844,7 @@ export default function DashboardPage() {
             }),
         }))
         .filter((group) => group.entries.length > 0),
-    [favoriteTemplateSet, filteredTemplateEntries, recommendedTemplateByIndustry],
+    [favoriteTemplateSet, filteredTemplateEntries, purposeFilter, recommendedTemplateByIndustry, templateSortMode],
   );
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
@@ -833,13 +900,6 @@ export default function DashboardPage() {
     }
     window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
   }, [favoriteTemplateIndices]);
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const dismissed = window.localStorage.getItem(CREATE_GUIDE_DISMISSED_KEY) === "1";
-    setShowCreateGuide(!dismissed);
-  }, []);
   const trackedEditActions = useMemo(
     () =>
       auditLogs.filter(
@@ -1033,6 +1093,15 @@ export default function DashboardPage() {
     }
   }
 
+  async function onResumeCheckout() {
+    try {
+      await trackBillingResumeClick();
+    } catch {
+      // no-op
+    }
+    await onStartStripeCheckout();
+  }
+
   async function onOpenBillingPortal() {
     setOpeningPortal(true);
     setError(null);
@@ -1199,13 +1268,6 @@ export default function DashboardPage() {
       window.localStorage.setItem(QUICKSTART_DISMISSED_KEY, "1");
     }
     setShowQuickStart(false);
-  }
-
-  function dismissCreateGuide() {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(CREATE_GUIDE_DISMISSED_KEY, "1");
-    }
-    setShowCreateGuide(false);
   }
 
   async function onRunRecovery(action: "ensure_scope" | "sync_subscription") {
@@ -1694,22 +1756,33 @@ export default function DashboardPage() {
                     ),
                   )}
                 </div>
+                <div className="mx-auto mt-2 flex max-w-5xl flex-wrap justify-center gap-1.5">
+                  {([
+                    ["recommended", "おすすめ順"],
+                    ["latest", "追加順"],
+                  ] as Array<[TemplateSortMode, string]>).map(([value, label]) => (
+                    <button
+                      key={`sort-${value}`}
+                      type="button"
+                      onClick={() => setTemplateSortMode(value)}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        templateSortMode === value
+                          ? "border-emerald-500 bg-emerald-600 text-white"
+                          : "border-slate-300 bg-white/90 text-slate-700 hover:bg-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {showCreateGuide && (
-                <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
+              <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">初回ガイド（3ステップ）</p>
                       <p className="mt-1 text-sm text-slate-700">初回はこの順で進めると最短で公開できます。</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={dismissCreateGuide}
-                      className="rounded-md border border-cyan-300 bg-white px-2 py-1 text-xs text-cyan-800 hover:bg-cyan-50"
-                    >
-                      閉じる
-                    </button>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {[
@@ -1724,7 +1797,6 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 </article>
-              )}
 
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1748,7 +1820,7 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
                       </div>
                       <div className="grid gap-3 lg:grid-cols-3">
-                        {group.entries.map(({ template, originalIndex, purposes, inputCount, viewSeconds }) => (
+                        {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds }) => (
                           <article
                             key={`${template.title}-${originalIndex}`}
                             role="button"
@@ -1800,6 +1872,14 @@ export default function DashboardPage() {
                                   className="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold text-cyan-800"
                                 >
                                   {TEMPLATE_PURPOSE_LABELS[purpose]}
+                                </span>
+                              ))}
+                              {scenes.slice(0, 2).map((scene) => (
+                                <span
+                                  key={`${template.title}-${scene}`}
+                                  className="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800"
+                                >
+                                  {TEMPLATE_SCENE_LABELS[scene]}
                                 </span>
                               ))}
                             </div>
@@ -2222,6 +2302,9 @@ export default function DashboardPage() {
                     <p>Checkout完了</p>
                     <p>{opsHealth?.billing.funnel7d.completedCheckouts ?? 0}</p>
                     <p>{opsHealth?.billing.funnel7d.checkoutToPaidRate ?? 0}%</p>
+                    <p>再開クリック</p>
+                    <p>{opsHealth?.billing.funnel7d.checkoutResumeClicks ?? 0}</p>
+                    <p>{opsHealth?.billing.funnel7d.resumeClickRate ?? 0}%</p>
                   </div>
                 </div>
 
@@ -2246,6 +2329,31 @@ export default function DashboardPage() {
                     計測サンプル: {opsHealth?.performance7d.sampleCount ?? 0} 件 / 最終計測:{" "}
                     {opsHealth?.performance7d.lastMeasuredAt ? formatDate(opsHealth.performance7d.lastMeasuredAt) : "未計測"}
                   </p>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                  <p className="text-xs font-semibold text-amber-900">速度低下ページ（自動抽出）</p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-700">
+                    {(opsHealth?.performance7d.slowPages ?? []).map((row) => (
+                      <p key={`slow-${row.path}`}>
+                        {row.path}: LCP {row.lcpMs}ms / Load {row.loadMs}ms
+                      </p>
+                    ))}
+                    {(opsHealth?.performance7d.slowPages ?? []).length === 0 && <p>しきい値超過ページはありません。</p>}
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-600">しきい値: LCP 2500ms以上 または Load 4000ms以上</p>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold text-slate-800">テンプレ/ページ別 LCP比較（上位5）</p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-700">
+                    {(opsHealth?.performance7d.lcpByPage ?? []).map((row) => (
+                      <p key={`lcp-page-${row.path}`}>
+                        {row.path}: LCP {row.lcpMs}ms（{row.samples}件）
+                      </p>
+                    ))}
+                    {(opsHealth?.performance7d.lcpByPage ?? []).length === 0 && <p>計測データがありません。</p>}
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
@@ -2278,6 +2386,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          void trackOpsRestartFlowClick("template");
                           setActiveTab("create");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2288,6 +2397,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          void trackOpsRestartFlowClick("draft");
                           setActiveTab("project");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2298,6 +2408,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          void trackOpsRestartFlowClick("publish");
                           setActiveTab("dashboard");
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
@@ -2306,6 +2417,12 @@ export default function DashboardPage() {
                         公開状態を確認
                       </button>
                     </div>
+                    <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                      再開導線AB: テンプレ {opsHealth?.restart7d.byPath.template ?? 0} / 下書き {opsHealth?.restart7d.byPath.draft ?? 0} / 公開確認 {opsHealth?.restart7d.byPath.publish ?? 0}
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      再開完了率: {opsHealth?.restart7d.completionRate ?? 0}%（再開クリック {opsHealth?.restart7d.clicks ?? 0} 件 / 公開 {opsHealth?.restart7d.publishes ?? 0} 件）
+                    </p>
                   </div>
                 </div>
 
@@ -2432,6 +2549,56 @@ export default function DashboardPage() {
                         {(opsHealth?.week2Review.focus.weak ?? []).length === 0 && <p>・該当なし</p>}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50/60 p-3">
+                  <p className="text-xs font-semibold text-rose-900">Week3 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week3Review.kpi.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week3Review.kpi.publishCompletionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week3Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    開発集中（上位2施策）: {(opsHealth?.week3Review.focusTop2 ?? []).join(" / ") || "なし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-rose-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    停止/縮小候補: {(opsHealth?.week3Review.weak ?? []).join(" / ") || "なし"}
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
+                  <div className="mt-2 space-y-2 text-xs text-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = "【Infomii再開案内】最終更新から7日以上経過しています。テンプレ再開から3分で再公開できます。";
+                        void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（短文）をコピーしました"));
+                      }}
+                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50"
+                    >
+                      通知テンプレ（短文）をコピー
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = "【Infomii運用再開のお願い】\n最終更新から7日以上経過しています。\n1) ダッシュボード > テンプレから再開\n2) 必要箇所だけ更新\n3) URL/QRを再配布\n本日中に再公開できる状態です。";
+                        void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（詳細）をコピーしました"));
+                      }}
+                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 hover:bg-slate-50"
+                    >
+                      通知テンプレ（詳細）をコピー
+                    </button>
                   </div>
                 </div>
 
@@ -2705,7 +2872,7 @@ export default function DashboardPage() {
                       </p>
                       <button
                         type="button"
-                        onClick={() => void onStartStripeCheckout()}
+                        onClick={() => void onResumeCheckout()}
                         disabled={creatingCheckout}
                         className="mt-2 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-400 disabled:opacity-60"
                       >
@@ -2717,16 +2884,16 @@ export default function DashboardPage() {
                     <p className="text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</p>
                     <div className="mt-2 space-y-2 text-xs text-slate-700">
                       <div>
-                        <p className="font-medium">Q. 課金はいつ開始されますか？</p>
-                        <p className="mt-0.5 text-slate-600">A. Checkout完了後にProへ反映され、そこから月次で更新されます。</p>
+                        <p className="font-medium">Q. 繁忙期だけPro運用に切り替えできますか？</p>
+                        <p className="mt-0.5 text-slate-600">A. 可能です。必要な期間だけProにして、落ち着いたら解約できます。</p>
                       </div>
                       <div>
-                        <p className="font-medium">Q. 途中で解約したらどうなりますか？</p>
-                        <p className="mt-0.5 text-slate-600">A. 次回更新日まではProが利用でき、その後Freeに戻ります。</p>
+                        <p className="font-medium">Q. 深夜チェックイン導線や温浴案内だけPro化する意味はありますか？</p>
+                        <p className="mt-0.5 text-slate-600">A. 公開枠や複数ページ連携が必要なら効果が高く、問い合わせ削減に繋がります。</p>
                       </div>
                       <div>
-                        <p className="font-medium">Q. 決済画面を閉じてしまいました。</p>
-                        <p className="mt-0.5 text-slate-600">A. 上の「決済を再開する」から再度Checkoutを開けます。</p>
+                        <p className="font-medium">Q. 決済画面を閉じた後の再開はできますか？</p>
+                        <p className="mt-0.5 text-slate-600">A. できます。上の「決済を再開する」から同じ施設で再開可能です。</p>
                       </div>
                     </div>
                   </div>

@@ -143,41 +143,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   ];
 
-  const templatePreviews = [
-    {
-      title: "ビジネスホテル案内",
-      subtitle: "チェックイン・館内導線",
-      template:
-        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
-        starterTemplates[0],
-      points: ["Wi-Fi / 駐車場", "チェックイン情報", "フロント連絡ボタン"],
-    },
-    {
-      title: "深夜到着ゲスト案内",
-      subtitle: "セルフチェックイン導線",
-      template:
-        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
-        starterTemplates[1],
-      points: ["本人確認/入室導線", "緊急連絡先", "夜間運用ルール"],
-    },
-    {
-      title: "館内設備ガイド",
-      subtitle: "フロア・設備案内",
-      template:
-        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
-        starterTemplates[0],
-      points: ["フロアマップ", "設備利用時間", "問い合わせ導線"],
-    },
-    {
-      title: "浴場利用ガイド",
-      subtitle: "大浴場・貸切風呂",
-      template:
-        starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
-        starterTemplates[3],
-      points: ["利用時間", "貸切予約方法", "注意事項"],
-    },
-  ];
-
   const publicExamples = [
     {
       title: "チェックイン案内ページ",
@@ -430,35 +395,6 @@ export default async function Home({ searchParams }: HomePageProps) {
         </section>
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">ホテルでこんなのが作れます</h2>
-            <p className="text-sm text-slate-600">テンプレを選んで、ホテル案内をすぐ公開</p>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {templatePreviews.map((template, index) => (
-              <article
-                key={template.title}
-                className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                style={{ transitionDelay: `${180 + index * 70}ms` }}
-              >
-                <div className="border-b border-slate-200 bg-slate-50 p-2">
-                  <TemplateScreenPreview blocks={template.template?.blocks} />
-                </div>
-                <div className="p-4">
-                  <p className="text-xs font-semibold text-emerald-700">{template.subtitle}</p>
-                  <h3 className="mt-1 text-base font-semibold text-slate-900">{template.title}</h3>
-                  <ul className="mt-3 space-y-1 text-sm text-slate-700">
-                    {template.points.map((point) => (
-                      <li key={`${template.title}-${point}`}>・{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（3件）</h2>
             <p className="text-sm text-slate-600">チェックイン / 温浴 / 館内設備の運用イメージ</p>

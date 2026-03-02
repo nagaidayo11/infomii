@@ -37,6 +37,16 @@ type Week2Review = {
   };
 };
 
+type Week3Review = {
+  kpi: {
+    lpToSignupRate: number;
+    publishCompletionRate: number;
+    proConversionRate: number;
+  };
+  focusTop2: string[];
+  weak: string[];
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -169,6 +179,29 @@ function buildWeek2Review(params: {
   };
 }
 
+function buildWeek3Review(params: {
+  lpToSignupRate: number;
+  publishCompletionRate: number;
+  proConversionRate: number;
+}): Week3Review {
+  const scoring = [
+    { key: "LP導線", score: params.lpToSignupRate },
+    { key: "公開完了導線", score: params.publishCompletionRate },
+    { key: "課金導線", score: params.proConversionRate },
+  ].sort((a, b) => b.score - a.score);
+  const focusTop2 = scoring.slice(0, 2).map((entry) => entry.key);
+  const weak = scoring.filter((entry) => entry.score < 15).map((entry) => entry.key);
+  return {
+    kpi: {
+      lpToSignupRate: params.lpToSignupRate,
+      publishCompletionRate: params.publishCompletionRate,
+      proConversionRate: params.proConversionRate,
+    },
+    focusTop2,
+    weak,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization") || "";
@@ -234,8 +267,10 @@ export async function GET(request: NextRequest) {
             upgradeClicks: 0,
             checkoutSessions: 0,
             completedCheckouts: 0,
+            checkoutResumeClicks: 0,
             clickToCheckoutRate: 0,
             checkoutToPaidRate: 0,
+            resumeClickRate: 0,
           },
           message: "SUPABASE_SERVICE_ROLE_KEY が未設定です",
         },
@@ -256,6 +291,15 @@ export async function GET(request: NextRequest) {
             weak: [],
           },
         },
+        week3Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+          },
+          focusTop2: [],
+          weak: [],
+        },
         execution: {
           avgMinutesToPublish: 0,
           samples: 0,
@@ -274,6 +318,14 @@ export async function GET(request: NextRequest) {
           loadP75Ms: 0,
           sampleCount: 0,
           lastMeasuredAt: null,
+          lcpByPage: [],
+          slowPages: [],
+        },
+        restart7d: {
+          clicks: 0,
+          publishes: 0,
+          completionRate: 0,
+          byPath: { template: 0, draft: 0, publish: 0 },
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -304,8 +356,10 @@ export async function GET(request: NextRequest) {
             upgradeClicks: 0,
             checkoutSessions: 0,
             completedCheckouts: 0,
+            checkoutResumeClicks: 0,
             clickToCheckoutRate: 0,
             checkoutToPaidRate: 0,
+            resumeClickRate: 0,
           },
           message: "施設所属がありません（復旧アクションで再作成可能）",
         },
@@ -326,6 +380,15 @@ export async function GET(request: NextRequest) {
             weak: [],
           },
         },
+        week3Review: {
+          kpi: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+          },
+          focusTop2: [],
+          weak: [],
+        },
         execution: {
           avgMinutesToPublish: 0,
           samples: 0,
@@ -344,13 +407,21 @@ export async function GET(request: NextRequest) {
           loadP75Ms: 0,
           sampleCount: 0,
           lastMeasuredAt: null,
+          lcpByPage: [],
+          slowPages: [],
+        },
+        restart7d: {
+          clicks: 0,
+          publishes: 0,
+          completionRate: 0,
+          byPath: { template: 0, draft: 0, publish: 0 },
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }] = await Promise.all([
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -382,7 +453,7 @@ export async function GET(request: NextRequest) {
         .select("action,created_at")
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
-        .in("action", ["billing.upgrade_click", "billing.checkout_session_created", "billing.checkout_completed"]),
+        .in("action", ["billing.upgrade_click", "billing.checkout_session_created", "billing.checkout_completed", "billing.checkout_resume_click"]),
       admin
         .from("audit_logs")
         .select("action,created_at,metadata")
@@ -413,6 +484,13 @@ export async function GET(request: NextRequest) {
         .gte("created_at", since7d)
         .in("action", ["onboarding.login_success", "onboarding.signup_completed"])
         .limit(3000),
+      admin
+        .from("audit_logs")
+        .select("metadata")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .eq("action", "ops.restart_flow_click")
+        .limit(1000),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
       .filter(
@@ -430,8 +508,10 @@ export async function GET(request: NextRequest) {
     const upgradeClicks = (funnelLogs ?? []).filter((row) => row.action === "billing.upgrade_click").length;
     const checkoutSessions = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_session_created").length;
     const completedCheckouts = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_completed").length;
+    const checkoutResumeClicks = (funnelLogs ?? []).filter((row) => row.action === "billing.checkout_resume_click").length;
     const clickToCheckoutRate = upgradeClicks > 0 ? Math.round((checkoutSessions / upgradeClicks) * 100) : 0;
     const checkoutToPaidRate = checkoutSessions > 0 ? Math.round((completedCheckouts / checkoutSessions) * 100) : 0;
+    const resumeClickRate = checkoutSessions > 0 ? Math.round((checkoutResumeClicks / checkoutSessions) * 100) : 0;
     const lcpValues = (perfLogs ?? [])
       .filter((row) => row.action === "perf.public_lcp")
       .map((row) => {
@@ -449,6 +529,32 @@ export async function GET(request: NextRequest) {
       })
       .filter((value) => value > 0);
     const lastMeasuredAt = (perfLogs ?? [])[0]?.created_at ?? null;
+    const pagePerfMap = new Map<string, { lcp: number[]; load: number[] }>();
+    for (const row of perfLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const value = typeof metadata?.value === "number" && Number.isFinite(metadata.value) ? Math.round(metadata.value) : 0;
+      if (value <= 0) {
+        continue;
+      }
+      const key = typeof metadata?.path === "string" && metadata.path ? metadata.path : (typeof metadata?.slug === "string" ? `/p/${metadata.slug}` : "不明");
+      const current = pagePerfMap.get(key) ?? { lcp: [], load: [] };
+      if (row.action === "perf.public_lcp") {
+        current.lcp.push(value);
+      } else if (row.action === "perf.public_load") {
+        current.load.push(value);
+      }
+      pagePerfMap.set(key, current);
+    }
+    const lcpByPage = Array.from(pagePerfMap.entries())
+      .map(([path, values]) => ({
+        path,
+        lcpMs: roundAverage(values.lcp),
+        loadMs: roundAverage(values.load),
+        samples: Math.max(values.lcp.length, values.load.length),
+      }))
+      .sort((a, b) => b.lcpMs - a.lcpMs)
+      .slice(0, 5);
+    const slowPages = lcpByPage.filter((row) => row.lcpMs >= 2500 || row.loadMs >= 4000).slice(0, 3);
     const execution = buildExecutionSnapshot(
       (publishLeadLogs ?? []).map((row) => ({
         action: row.action,
@@ -494,6 +600,22 @@ export async function GET(request: NextRequest) {
       upgradeClicks,
       completedCheckouts,
     });
+    const restartByPath = { template: 0, draft: 0, publish: 0 };
+    for (const row of restartLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const path = metadata?.path;
+      if (path === "template" || path === "draft" || path === "publish") {
+        restartByPath[path] += 1;
+      }
+    }
+    const restartClicks = restartByPath.template + restartByPath.draft + restartByPath.publish;
+    const restartPublishes = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
+    const restartCompletionRate = restartClicks > 0 ? Math.min(100, Math.round((restartPublishes / restartClicks) * 100)) : 0;
+    const week3Review = buildWeek3Review({
+      lpToSignupRate,
+      publishCompletionRate: week2Review.kpi.publishCompletionRate,
+      proConversionRate: week2Review.kpi.proConversionRate,
+    });
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -511,8 +633,10 @@ export async function GET(request: NextRequest) {
           upgradeClicks,
           checkoutSessions,
           completedCheckouts,
+          checkoutResumeClicks,
           clickToCheckoutRate,
           checkoutToPaidRate,
+          resumeClickRate,
         },
         message: billingOk
           ? "課金設定は正常です"
@@ -525,6 +649,7 @@ export async function GET(request: NextRequest) {
         firstPublishedReady: (publishedPages ?? 0) > 0,
       },
       week2Review,
+      week3Review,
       execution,
       dormancy,
       performance7d: {
@@ -534,6 +659,14 @@ export async function GET(request: NextRequest) {
         loadP75Ms: p75(loadValues),
         sampleCount: Math.max(lcpValues.length, loadValues.length),
         lastMeasuredAt,
+        lcpByPage,
+        slowPages,
+      },
+      restart7d: {
+        clicks: restartClicks,
+        publishes: restartPublishes,
+        completionRate: restartCompletionRate,
+        byPath: restartByPath,
       },
       recentBillingLogs: (logs ?? []) as BillingLogRow[],
     });

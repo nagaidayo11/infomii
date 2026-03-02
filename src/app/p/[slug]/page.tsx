@@ -791,7 +791,10 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 <div className="min-h-8">
                   {isChildPage ? <PublicFooterBackButton fallbackHref="/" /> : null}
                 </div>
-                <p className="text-xs text-slate-500">最終更新: {formatUpdatedAt(row.updated_at)}</p>
+                <p className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  最終更新: {formatUpdatedAt(row.updated_at)}
+                </p>
               </div>
             </div>
           ) : null}
