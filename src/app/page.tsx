@@ -110,12 +110,22 @@ type HomePageProps = {
     tag?: string;
   }>;
 };
+type SeasonKey = "spring" | "summer" | "autumn" | "winter";
 
 export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
   const normalizedSourceChannel = sourceChannel === "ig" ? "instagram" : sourceChannel;
+  const month = new Date().getMonth() + 1;
+  const season: SeasonKey =
+    month >= 3 && month <= 5
+      ? "spring"
+      : month >= 6 && month <= 8
+        ? "summer"
+        : month >= 9 && month <= 11
+          ? "autumn"
+          : "winter";
   const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
   const landingPage = query.lp === "business" || query.lp === "resort" || query.lp === "spa" ? query.lp : "business";
   const winnerVariantByLandingPage = {
@@ -200,6 +210,26 @@ export default async function Home({ searchParams }: HomePageProps) {
     resort: "無料で滞在導線を公開",
     spa: "無料で温浴導線を公開",
   } as const;
+  const seasonalHeroMessage = {
+    business: {
+      spring: "新年度の導線切り替えを1ページで標準化",
+      summer: "繁忙期前のチェックイン導線を即時更新",
+      autumn: "団体・連休対応の案内変更を最短反映",
+      winter: "遅延到着・夜間問い合わせ対策を強化",
+    },
+    resort: {
+      spring: "行楽シーズンの滞在導線を一括更新",
+      summer: "プール・アクティビティ導線をピーク対応",
+      autumn: "館内イベント案内を即時配信",
+      winter: "天候変更時の案内差し替えを高速化",
+    },
+    spa: {
+      spring: "温浴ルールと混雑案内を統一表示",
+      summer: "時間帯別の温浴導線を分かりやすく配信",
+      autumn: "連休時の利用案内を即時差し替え",
+      winter: "繁忙期の温浴案内をリアルタイム更新",
+    },
+  } as const;
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -241,11 +271,20 @@ export default async function Home({ searchParams }: HomePageProps) {
   ];
 
   const activeExampleTag = query.tag === "business" || query.tag === "resort" || query.tag === "spa" ? query.tag : "all";
-  const publicExamples = [
+  const publicExamples: Array<{
+    title: string;
+    tag: string;
+    industryTag: "business" | "resort" | "spa";
+    seasonTags: SeasonKey[];
+    template: (typeof starterTemplates)[number];
+    bullets: string[];
+    publishPath: string;
+  }> = [
     {
       title: "チェックイン案内ページ",
       tag: "フロント導線",
       industryTag: "business" as const,
+      seasonTags: ["spring", "summer", "autumn", "winter"],
       template:
         starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
         starterTemplates[0],
@@ -256,6 +295,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       title: "温浴利用ガイドページ",
       tag: "温浴導線",
       industryTag: "spa" as const,
+      seasonTags: ["autumn", "winter"],
       template:
         starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
         starterTemplates[3],
@@ -266,6 +306,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       title: "館内設備ページ",
       tag: "設備導線",
       industryTag: "resort" as const,
+      seasonTags: ["spring", "summer"],
       template:
         starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
         starterTemplates[1],
@@ -276,6 +317,14 @@ export default async function Home({ searchParams }: HomePageProps) {
   const filteredPublicExamples = activeExampleTag === "all"
     ? publicExamples
     : publicExamples.filter((example) => example.industryTag === activeExampleTag);
+  const sortedPublicExamples = [...filteredPublicExamples].sort((a, b) => {
+    const seasonScore = (example: (typeof publicExamples)[number]) => (example.seasonTags.includes(season) ? 3 : 0);
+    const landingScore = (example: (typeof publicExamples)[number]) => (example.industryTag === landingPage ? 2 : 0);
+    const totalA = seasonScore(a) + landingScore(a);
+    const totalB = seasonScore(b) + landingScore(b);
+    if (totalA !== totalB) return totalB - totalA;
+    return a.title.localeCompare(b.title, "ja");
+  });
 
   const features = [
     {
@@ -444,6 +493,9 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="mt-2 text-xs font-semibold text-cyan-700">
                 {heroValuePropositionByLpVariant[landingPage][ctaVariant]}
               </p>
+              <p className="mt-1 text-xs font-semibold text-emerald-700">
+                季節最適化: {seasonalHeroMessage[landingPage][season]}
+              </p>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
               </p>
@@ -479,7 +531,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="mt-2 text-[11px] text-slate-600">
                 流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（固定 variant {ctaVariant.toUpperCase()}）を表示中
               </p>
-              <p className="mt-1 text-[11px] text-slate-500">Week11: CTA A/Bテストは停止し、業態別の勝ち訴求を固定配信しています。</p>
+              <p className="mt-1 text-[11px] text-slate-500">Week12: 季節要因を加味した業態別の勝ち訴求を固定配信しています。</p>
             </div>
 
             <aside className="lp-reveal lp-delay-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
@@ -574,7 +626,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {filteredPublicExamples.map((example, index) => (
+            {sortedPublicExamples.map((example, index) => (
               <article
                 key={example.title}
                 className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"

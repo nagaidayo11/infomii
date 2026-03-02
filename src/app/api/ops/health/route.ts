@@ -170,6 +170,52 @@ type Week11Preview = {
   criticalAlertCount: number;
 };
 
+type Week12Preview = {
+  ctaRateByDeviceSource: {
+    sp: { x: number; instagram: number; tiktok: number; other: number; unknown: number };
+    pc: { x: number; instagram: number; tiktok: number; other: number; unknown: number };
+    unknown: { x: number; instagram: number; tiktok: number; other: number; unknown: number };
+  };
+  casePriorityByIndustry: Array<{
+    industry: "business" | "resort" | "spa";
+    viewRate: number;
+  }>;
+  dormancyBestWindowByWeekday: Array<{
+    weekday: string;
+    window: string;
+    readRate: number;
+  }>;
+  dormancyWinnerCopyByChannel: {
+    line: "short" | "detail";
+    mail: "short" | "detail";
+    dashboard: "short" | "detail";
+  };
+  republishRateByDormancyChannel: {
+    line: number;
+    mail: number;
+    dashboard: number;
+  };
+  proBlockerActionPlan: Array<{
+    reason: string;
+    action: string;
+    priority: "high" | "medium" | "low";
+  }>;
+  billingDropoffByStep: {
+    upgradeToCheckout: number;
+    checkoutToPaid: number;
+    paidToPortal: number;
+  };
+  recoveryShortcutMedianMinutes: number;
+  weeklyOpsSavedHours: number;
+  criticalAlertRoutes: {
+    slack: boolean;
+    mail: boolean;
+    dashboard: boolean;
+  };
+  priorityCardOrder: string[];
+  referralInflowRate: number;
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -630,6 +676,28 @@ export async function GET(request: NextRequest) {
           executedImprovementsCount: 0,
           criticalAlertCount: 0,
         },
+        week12Preview: {
+          ctaRateByDeviceSource: {
+            sp: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+            pc: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+            unknown: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+          },
+          casePriorityByIndustry: [
+            { industry: "business", viewRate: 0 },
+            { industry: "resort", viewRate: 0 },
+            { industry: "spa", viewRate: 0 },
+          ],
+          dormancyBestWindowByWeekday: [],
+          dormancyWinnerCopyByChannel: { line: "short", mail: "short", dashboard: "short" },
+          republishRateByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          proBlockerActionPlan: [],
+          billingDropoffByStep: { upgradeToCheckout: 0, checkoutToPaid: 0, paidToPortal: 0 },
+          recoveryShortcutMedianMinutes: 0,
+          weeklyOpsSavedHours: 0,
+          criticalAlertRoutes: { slack: false, mail: false, dashboard: true },
+          priorityCardOrder: ["publish", "billing", "dormancy", "alerts"],
+          referralInflowRate: 0,
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -818,6 +886,28 @@ export async function GET(request: NextRequest) {
           blockerImprovementTasks: [],
           executedImprovementsCount: 0,
           criticalAlertCount: 0,
+        },
+        week12Preview: {
+          ctaRateByDeviceSource: {
+            sp: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+            pc: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+            unknown: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+          },
+          casePriorityByIndustry: [
+            { industry: "business", viewRate: 0 },
+            { industry: "resort", viewRate: 0 },
+            { industry: "spa", viewRate: 0 },
+          ],
+          dormancyBestWindowByWeekday: [],
+          dormancyWinnerCopyByChannel: { line: "short", mail: "short", dashboard: "short" },
+          republishRateByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          proBlockerActionPlan: [],
+          billingDropoffByStep: { upgradeToCheckout: 0, checkoutToPaid: 0, paidToPortal: 0 },
+          recoveryShortcutMedianMinutes: 0,
+          weeklyOpsSavedHours: 0,
+          criticalAlertRoutes: { slack: false, mail: false, dashboard: true },
+          priorityCardOrder: ["publish", "billing", "dormancy", "alerts"],
+          referralInflowRate: 0,
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -1055,6 +1145,14 @@ export async function GET(request: NextRequest) {
       ["pc", { logins: 0, signups: 0 }],
       ["unknown", { logins: 0, signups: 0 }],
     ]);
+    const onboardingByDeviceSource = new Map<
+      "sp" | "pc" | "unknown",
+      Map<"x" | "instagram" | "tiktok" | "other" | "unknown", { logins: number; signups: number }>
+    >([
+      ["sp", new Map([["x", { logins: 0, signups: 0 }], ["instagram", { logins: 0, signups: 0 }], ["tiktok", { logins: 0, signups: 0 }], ["other", { logins: 0, signups: 0 }], ["unknown", { logins: 0, signups: 0 }]])],
+      ["pc", new Map([["x", { logins: 0, signups: 0 }], ["instagram", { logins: 0, signups: 0 }], ["tiktok", { logins: 0, signups: 0 }], ["other", { logins: 0, signups: 0 }], ["unknown", { logins: 0, signups: 0 }]])],
+      ["unknown", new Map([["x", { logins: 0, signups: 0 }], ["instagram", { logins: 0, signups: 0 }], ["tiktok", { logins: 0, signups: 0 }], ["other", { logins: 0, signups: 0 }], ["unknown", { logins: 0, signups: 0 }]])],
+    ]);
     for (const row of onboardingLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const ref = metadata?.sourceRef;
@@ -1105,6 +1203,10 @@ export async function GET(request: NextRequest) {
         if (deviceStat) {
           deviceStat.logins += 1;
         }
+        const deviceSourceStat = onboardingByDeviceSource.get(safeDevice)?.get(safeChannel);
+        if (deviceSourceStat) {
+          deviceSourceStat.logins += 1;
+        }
       } else if (row.action === "onboarding.signup_completed") {
         entry.signups += 1;
         if (safeLp) {
@@ -1120,6 +1222,10 @@ export async function GET(request: NextRequest) {
         const deviceStat = onboardingByDevice.get(safeDevice);
         if (deviceStat) {
           deviceStat.signups += 1;
+        }
+        const deviceSourceStat = onboardingByDeviceSource.get(safeDevice)?.get(safeChannel);
+        if (deviceSourceStat) {
+          deviceSourceStat.signups += 1;
         }
       }
     }
@@ -1681,6 +1787,154 @@ export async function GET(request: NextRequest) {
       executedImprovementsCount,
       criticalAlertCount,
     };
+    const ctaRateByDeviceSource: Week12Preview["ctaRateByDeviceSource"] = {
+      sp: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+      pc: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+      unknown: { x: 0, instagram: 0, tiktok: 0, other: 0, unknown: 0 },
+    };
+    for (const device of ["sp", "pc", "unknown"] as const) {
+      for (const channel of ["x", "instagram", "tiktok", "other", "unknown"] as const) {
+        const stat = onboardingByDeviceSource.get(device)?.get(channel);
+        ctaRateByDeviceSource[device][channel] =
+          stat && stat.logins > 0 ? Math.round((stat.signups / stat.logins) * 100) : 0;
+      }
+    }
+    const casePriorityByIndustry: Week12Preview["casePriorityByIndustry"] = (["business", "resort", "spa"] as const)
+      .map((industry) => {
+        const variants = onboardingByLpVariant.get(industry);
+        const totalLogins = variants ? Array.from(variants.values()).reduce((sum, row) => sum + row.logins, 0) : 0;
+        const totalSignups = variants ? Array.from(variants.values()).reduce((sum, row) => sum + row.signups, 0) : 0;
+        return {
+          industry,
+          viewRate: totalLogins > 0 ? Math.round((totalSignups / totalLogins) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.viewRate - a.viewRate);
+    const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"] as const;
+    const weekdayStats = new Map<number, { sent: number; read: number; hourBuckets: Record<string, number> }>();
+    const toWindowLabel = (hour: number): string => {
+      if (hour < 9) return "06:00-09:00";
+      if (hour < 12) return "09:00-12:00";
+      if (hour < 15) return "12:00-15:00";
+      if (hour < 18) return "15:00-18:00";
+      if (hour < 21) return "18:00-21:00";
+      return "21:00-24:00";
+    };
+    for (const row of dormancyNoticeLogs ?? []) {
+      const at = new Date(row.created_at);
+      const day = at.getDay();
+      const stat = weekdayStats.get(day) ?? { sent: 0, read: 0, hourBuckets: {} };
+      stat.sent += 1;
+      const window = toWindowLabel(at.getHours());
+      stat.hourBuckets[window] = (stat.hourBuckets[window] ?? 0) + 1;
+      weekdayStats.set(day, stat);
+    }
+    for (const row of dormancyReactionLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      if (metadata?.reaction !== "read") {
+        continue;
+      }
+      const day = new Date(row.created_at).getDay();
+      const stat = weekdayStats.get(day) ?? { sent: 0, read: 0, hourBuckets: {} };
+      stat.read += 1;
+      weekdayStats.set(day, stat);
+    }
+    const dormancyBestWindowByWeekday: Week12Preview["dormancyBestWindowByWeekday"] = Array.from(weekdayStats.entries())
+      .map(([day, stat]) => {
+        const window = Object.entries(stat.hourBuckets).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "09:00-12:00";
+        return {
+          weekday: weekdayLabels[day] ?? "月",
+          window,
+          readRate: stat.sent > 0 ? Math.round((stat.read / stat.sent) * 100) : 0,
+        };
+      })
+      .sort((a, b) => weekdayLabels.indexOf(a.weekday as (typeof weekdayLabels)[number]) - weekdayLabels.indexOf(b.weekday as (typeof weekdayLabels)[number]));
+    const dormancyWinnerCopyByChannel: Week12Preview["dormancyWinnerCopyByChannel"] = {
+      line: channelRates.line >= 35 ? "short" : "detail",
+      mail: channelRates.mail >= 35 ? "short" : "detail",
+      dashboard: channelRates.dashboard >= 35 ? "short" : "detail",
+    };
+    const republishRateByDormancyChannel: Week12Preview["republishRateByDormancyChannel"] = {
+      line: channelRates.line,
+      mail: channelRates.mail,
+      dashboard: channelRates.dashboard,
+    };
+    const proBlockerActionPlan: Week12Preview["proBlockerActionPlan"] = proBlockerTopReasons.map((row, index) => {
+      if (row.reason.includes("料金")) {
+        return { reason: row.reason, action: "料金比較に「削減時間」と「回収目安月数」を固定表示", priority: "high" as const };
+      }
+      if (row.reason.includes("タイミング")) {
+        return { reason: row.reason, action: "繁忙期の2週間前に再提案通知を自動送信", priority: "medium" as const };
+      }
+      if (row.reason.includes("機能差")) {
+        return { reason: row.reason, action: "Free/Pro差分を導線直下に3点だけ表示", priority: "high" as const };
+      }
+      if (row.reason.includes("承認")) {
+        return { reason: row.reason, action: "社内承認用1枚資料を自動生成して配布", priority: "medium" as const };
+      }
+      return { reason: row.reason, action: "個別ヒアリングの入力フォームを表示", priority: index === 0 ? "high" : "low" as const };
+    });
+    const paidToPortalRate = completedCheckouts > 0 ? Math.round((portalSessions / completedCheckouts) * 100) : 0;
+    const billingDropoffByStep: Week12Preview["billingDropoffByStep"] = {
+      upgradeToCheckout: clickToCheckoutRate,
+      checkoutToPaid: checkoutToPaidRate,
+      paidToPortal: paidToPortalRate,
+    };
+    const failedTimes = (logs ?? [])
+      .filter((row) => row.action.includes("failed") || row.message.toLowerCase().includes("error"))
+      .map((row) => new Date(row.created_at).getTime())
+      .filter((value) => Number.isFinite(value))
+      .sort((a, b) => a - b);
+    const recoveredTimes = (logs ?? [])
+      .filter((row) => row.action.includes("subscription") || row.message.includes("同期") || row.message.includes("復旧"))
+      .map((row) => new Date(row.created_at).getTime())
+      .filter((value) => Number.isFinite(value))
+      .sort((a, b) => a - b);
+    const recoveryDurations: number[] = [];
+    for (const failedAt of failedTimes) {
+      const recoveredAt = recoveredTimes.find((time) => time > failedAt);
+      if (!recoveredAt) continue;
+      recoveryDurations.push(Math.round((recoveredAt - failedAt) / 60000));
+    }
+    const recoveryShortcutMedianMinutes = recoveryDurations.length > 0
+      ? median(recoveryDurations)
+      : Math.max(5, Math.round((execution.avgMinutesToPublish || 15) * 0.5));
+    const weeklyOpsSavedHours = Number(
+      Math.max(
+        0,
+        ((publishedCount7d * 6) + (restartClicks * 3) + (revisitPredictionScore >= 70 ? 40 : 20)) / 60,
+      ).toFixed(1),
+    );
+    const criticalAlertRoutes: Week12Preview["criticalAlertRoutes"] = {
+      slack: Boolean(process.env.OPS_ALERT_SLACK_WEBHOOK_URL),
+      mail: Boolean(process.env.OPS_ALERT_EMAIL_TO),
+      dashboard: true,
+    };
+    const priorityCardOrder = [
+      { key: "publish", score: Math.max(0, 100 - week2Review.kpi.publishCompletionRate) },
+      { key: "billing", score: Math.max(0, 100 - checkoutToPaidRate) },
+      { key: "dormancy", score: Math.min(100, (dormancy.daysSinceLastUpdate ?? 0) * 8) },
+      { key: "alerts", score: Math.min(100, criticalAlertCount * 10) },
+    ]
+      .sort((a, b) => b.score - a.score)
+      .map((row) => row.key);
+    const referralLogins = Array.from(onboardingByChannelVariant.get("other")?.values() ?? []).reduce((sum, row) => sum + row.logins, 0);
+    const referralSignups = Array.from(onboardingByChannelVariant.get("other")?.values() ?? []).reduce((sum, row) => sum + row.signups, 0);
+    const referralInflowRate = referralLogins > 0 ? Math.round((referralSignups / referralLogins) * 100) : 0;
+    const week12Preview: Week12Preview = {
+      ctaRateByDeviceSource,
+      casePriorityByIndustry,
+      dormancyBestWindowByWeekday,
+      dormancyWinnerCopyByChannel,
+      republishRateByDormancyChannel,
+      proBlockerActionPlan,
+      billingDropoffByStep,
+      recoveryShortcutMedianMinutes,
+      weeklyOpsSavedHours,
+      criticalAlertRoutes,
+      priorityCardOrder,
+      referralInflowRate,
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -1720,6 +1974,7 @@ export async function GET(request: NextRequest) {
       week9Preview,
       week10Preview,
       week11Preview,
+      week12Preview,
       execution,
       dormancy,
       performance7d: {

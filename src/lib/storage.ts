@@ -2074,6 +2074,69 @@ export type OpsHealthSnapshot = {
     executedImprovementsCount: number;
     criticalAlertCount: number;
   };
+  week12Preview: {
+    ctaRateByDeviceSource: {
+      sp: {
+        x: number;
+        instagram: number;
+        tiktok: number;
+        other: number;
+        unknown: number;
+      };
+      pc: {
+        x: number;
+        instagram: number;
+        tiktok: number;
+        other: number;
+        unknown: number;
+      };
+      unknown: {
+        x: number;
+        instagram: number;
+        tiktok: number;
+        other: number;
+        unknown: number;
+      };
+    };
+    casePriorityByIndustry: Array<{
+      industry: "business" | "resort" | "spa";
+      viewRate: number;
+    }>;
+    dormancyBestWindowByWeekday: Array<{
+      weekday: string;
+      window: string;
+      readRate: number;
+    }>;
+    dormancyWinnerCopyByChannel: {
+      line: "short" | "detail";
+      mail: "short" | "detail";
+      dashboard: "short" | "detail";
+    };
+    republishRateByDormancyChannel: {
+      line: number;
+      mail: number;
+      dashboard: number;
+    };
+    proBlockerActionPlan: Array<{
+      reason: string;
+      action: string;
+      priority: "high" | "medium" | "low";
+    }>;
+    billingDropoffByStep: {
+      upgradeToCheckout: number;
+      checkoutToPaid: number;
+      paidToPortal: number;
+    };
+    recoveryShortcutMedianMinutes: number;
+    weeklyOpsSavedHours: number;
+    criticalAlertRoutes: {
+      slack: boolean;
+      mail: boolean;
+      dashboard: boolean;
+    };
+    priorityCardOrder: string[];
+    referralInflowRate: number;
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;

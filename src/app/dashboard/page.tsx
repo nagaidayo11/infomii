@@ -183,6 +183,11 @@ const SCALE_GUIDE: Record<HotelScale, string[]> = {
     "運用センターで速度/休眠通知を週次で確認",
   ],
 };
+const SCALE_PRIMARY_PURPOSE: Record<HotelScale, TemplatePurposeFilter> = {
+  small: "checkin",
+  mid: "facility",
+  large: "bath",
+};
 
 function getLowUsageTemplateImprovementSuggestion(industry: IndustryPreset): string {
   if (industry === "hotel_business") {
@@ -1155,6 +1160,33 @@ export default function DashboardPage() {
       });
     return [...baseEntries].sort((a, b) => b.score - a.score).slice(0, 3);
   }, [filteredTemplateEntries, inferredFacilityType, items]);
+  const shortestTemplateByScale = useMemo(() => {
+    const industry = mapFacilityToIndustry(inferredFacilityType);
+    const pickByScale = (scale: HotelScale) => {
+      const purpose = SCALE_PRIMARY_PURPOSE[scale];
+      const candidates = starterTemplates
+        .map((template, originalIndex) => {
+          const inputCount = estimateTemplateInputCount(template);
+          const viewSeconds = estimateTemplateViewSeconds(template, inputCount);
+          const purposes = detectTemplatePurposes(template);
+          const industryMatch = template.industry === industry ? 1 : 0;
+          const purposeMatch = purposes.includes(purpose) ? 1 : 0;
+          return { template, originalIndex, inputCount, viewSeconds, purposeMatch, industryMatch };
+        })
+        .sort((a, b) => {
+          const scoreA = a.purposeMatch * 100 + a.industryMatch * 40 - a.viewSeconds - a.inputCount;
+          const scoreB = b.purposeMatch * 100 + b.industryMatch * 40 - b.viewSeconds - b.inputCount;
+          if (scoreA !== scoreB) return scoreB - scoreA;
+          return a.originalIndex - b.originalIndex;
+        });
+      return candidates[0] ?? null;
+    };
+    return {
+      small: pickByScale("small"),
+      mid: pickByScale("mid"),
+      large: pickByScale("large"),
+    };
+  }, [inferredFacilityType]);
   const activeTemplatePreviewEntry = useMemo(() => {
     if (filteredTemplateEntries.length === 0) {
       return null;
@@ -1619,9 +1651,11 @@ export default function DashboardPage() {
         "[改善アクション実行率]",
         `${opsHealth?.week10Preview.actionExecutionRate ?? 0}%`,
         `実行済み改善数: ${opsHealth?.week11Preview.executedImprovementsCount ?? 0}件`,
+        `運用負荷削減時間（週）: ${opsHealth?.week12Preview.weeklyOpsSavedHours ?? 0}h`,
+        `紹介流入率: ${opsHealth?.week12Preview.referralInflowRate ?? 0}%`,
       ].join("\n");
     },
-    [opsHealth?.week10Preview.actionExecutionRate, opsHealth?.week11Preview.executedImprovementsCount, week5Kpi, week7PriorityTop3],
+    [opsHealth?.week10Preview.actionExecutionRate, opsHealth?.week11Preview.executedImprovementsCount, opsHealth?.week12Preview.referralInflowRate, opsHealth?.week12Preview.weeklyOpsSavedHours, week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
     const urls = new Set<string>();
@@ -2811,6 +2845,47 @@ export default function DashboardPage() {
                 </div>
               </article>
 
+              <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
+                <p className="text-sm font-semibold text-cyan-900">Week12 最短公開導線（規模別）</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {([
+                    ["small", "小規模"],
+                    ["mid", "中規模"],
+                    ["large", "大規模"],
+                  ] as const).map(([scale, label]) => {
+                    const entry = shortestTemplateByScale[scale];
+                    return (
+                      <div key={scale} className="rounded-lg border border-cyan-200 bg-white p-3">
+                        <p className="text-[11px] font-semibold text-cyan-800">{label}</p>
+                        <p className="mt-1 line-clamp-2 text-xs font-semibold text-slate-900">{entry?.template.title ?? "該当なし"}</p>
+                        <p className="mt-1 text-[11px] text-slate-600">
+                          想定 {entry?.viewSeconds ?? 0}秒 / 入力 {entry?.inputCount ?? 0}項目
+                        </p>
+                        {entry ? (
+                          <button
+                            type="button"
+                            onClick={() => void onCreateFromTemplate(entry.originalIndex)}
+                            className="mt-2 rounded-md border border-cyan-300 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900 hover:bg-cyan-100"
+                          >
+                            最短テンプレで作成
+                          </button>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs text-cyan-900">
+                  2本目公開導線: {opsHealth?.week11Preview.secondPublishShortcutReady ? "有効" : "1本目公開後に有効"} /
+                  1→2本目 中央 {opsHealth?.week11Preview.secondPublishMedianHours ?? 0} 時間
+                </div>
+                <div className="mt-2 rounded-lg border border-cyan-200 bg-white p-3 text-xs text-slate-700">
+                  <p className="font-semibold text-cyan-900">QR配布後24時間アクション（固定）</p>
+                  <p className="mt-1">1. 誤字/リンク切れチェック</p>
+                  <p>2. トップ導線のCTAクリック確認</p>
+                  <p>3. 現場スタッフへ更新完了共有</p>
+                </div>
+              </article>
+
               <article className="rounded-2xl border border-emerald-300 bg-emerald-50/70 p-4 shadow-sm">
                 <p className="text-sm font-semibold text-emerald-900">Week11 立ち上げショートカット</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -3394,6 +3469,9 @@ export default function DashboardPage() {
                   </button>
                 </div>
                 <p className="mt-1 text-sm text-slate-600">障害の復旧・課金同期・環境確認をここで実行できます。</p>
+                <div className="mt-2 rounded-lg border border-cyan-200 bg-cyan-50/60 px-3 py-2 text-xs text-cyan-900">
+                  優先カード順（自動）: {(opsHealth?.week12Preview.priorityCardOrder ?? ["publish", "billing", "dormancy", "alerts"]).join(" → ")}
+                </div>
                 <div className="mt-3 rounded-lg border border-emerald-200/70 bg-emerald-50/40 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-emerald-900">運用インパクト（推定）</p>
@@ -4168,6 +4246,67 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-cyan-300 bg-cyan-50/70 p-3">
+                  <p className="text-xs font-semibold text-cyan-900">Week12 KPIレビュー（Launch Hardening）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">再公開率（推定）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">
+                        {Math.max(
+                          opsHealth?.week12Preview.republishRateByDormancyChannel.line ?? 0,
+                          opsHealth?.week12Preview.republishRateByDormancyChannel.mail ?? 0,
+                          opsHealth?.week12Preview.republishRateByDormancyChannel.dashboard ?? 0,
+                        )}%
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">継続率（14日）</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">紹介流入率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week12Preview.referralInflowRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    CTA率（デバイス×流入）:
+                    SP(X {opsHealth?.week12Preview.ctaRateByDeviceSource.sp.x ?? 0}% / IG {opsHealth?.week12Preview.ctaRateByDeviceSource.sp.instagram ?? 0}% / TikTok {opsHealth?.week12Preview.ctaRateByDeviceSource.sp.tiktok ?? 0}%)
+                    {" ・ "}
+                    PC(X {opsHealth?.week12Preview.ctaRateByDeviceSource.pc.x ?? 0}% / IG {opsHealth?.week12Preview.ctaRateByDeviceSource.pc.instagram ?? 0}% / TikTok {opsHealth?.week12Preview.ctaRateByDeviceSource.pc.tiktok ?? 0}%)
+                  </div>
+                  <div className="mt-1 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    事例優先順:
+                    {(opsHealth?.week12Preview.casePriorityByIndustry ?? [])
+                      .map((row) => `${row.industry} ${row.viewRate}%`)
+                      .join(" / ") || "データなし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    曜日別最適通知:
+                    {(opsHealth?.week12Preview.dormancyBestWindowByWeekday ?? [])
+                      .map((row) => `${row.weekday} ${row.window} (${row.readRate}%)`)
+                      .join(" / ") || "データなし"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    勝ち文面（チャネル別）:
+                    LINE {opsHealth?.week12Preview.dormancyWinnerCopyByChannel.line === "short" ? "短文" : "詳細"}
+                    {" / "}
+                    Mail {opsHealth?.week12Preview.dormancyWinnerCopyByChannel.mail === "short" ? "短文" : "詳細"}
+                    {" / "}
+                    Dashboard {opsHealth?.week12Preview.dormancyWinnerCopyByChannel.dashboard === "short" ? "短文" : "詳細"}
+                  </div>
+                  <div className="mt-1 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    復旧中央値: {opsHealth?.week12Preview.recoveryShortcutMedianMinutes ?? 0}分 / 週削減時間: {opsHealth?.week12Preview.weeklyOpsSavedHours ?? 0}h
+                  </div>
+                  <div className="mt-1 rounded-md border border-cyan-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    重大通知ルート:
+                    Slack {opsHealth?.week12Preview.criticalAlertRoutes.slack ? "ON" : "OFF"} / Mail {opsHealth?.week12Preview.criticalAlertRoutes.mail ? "ON" : "OFF"} / Dashboard {opsHealth?.week12Preview.criticalAlertRoutes.dashboard ? "ON" : "OFF"}
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -4653,6 +4792,20 @@ export default function DashboardPage() {
                         <p key={task}>・{task}</p>
                       ))}
                       {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).length === 0 && <p>・データ蓄積後に提案されます</p>}
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3">
+                    <p className="text-xs font-semibold text-sky-900">Week12 阻害要因別アクション（優先順）</p>
+                    <div className="mt-2 space-y-1 text-xs text-slate-700">
+                      {(opsHealth?.week12Preview.proBlockerActionPlan ?? []).map((row) => (
+                        <p key={`${row.reason}-${row.action}`}>
+                          ・[{row.priority === "high" ? "高" : row.priority === "medium" ? "中" : "低"}] {row.reason}: {row.action}
+                        </p>
+                      ))}
+                      {(opsHealth?.week12Preview.proBlockerActionPlan ?? []).length === 0 && <p>・データ蓄積後に自動提案されます</p>}
+                    </div>
+                    <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                      請求導線CVR: Upgrade→Checkout {opsHealth?.week12Preview.billingDropoffByStep.upgradeToCheckout ?? 0}% / Checkout→Paid {opsHealth?.week12Preview.billingDropoffByStep.checkoutToPaid ?? 0}% / Paid→Portal {opsHealth?.week12Preview.billingDropoffByStep.paidToPortal ?? 0}%
                     </div>
                   </div>
                   <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">

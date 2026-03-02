@@ -3561,6 +3561,26 @@ function onUpdateIconRowItem(
     () => Math.max(0, 100 - publishCheckErrors.length * 25 - publishCheckWarnings.length * 10),
     [publishCheckErrors.length, publishCheckWarnings.length],
   );
+  const postPublishCheckScore = useMemo(() => {
+    if (!item) {
+      return 0;
+    }
+    const hasCta = (item.contentBlocks ?? []).some((block) => block.type === "cta");
+    const hasContactGuide = (item.contentBlocks ?? []).some((block) => {
+      if (block.type !== "section") {
+        return false;
+      }
+      const text = `${block.sectionTitle ?? ""}\n${block.sectionBody ?? ""}`.toLowerCase();
+      return text.includes("お問い合わせ") || text.includes("連絡") || text.includes("tel") || text.includes("メール");
+    });
+    const checks = [
+      item.status === "published",
+      hasCta,
+      hasContactGuide,
+      heavyImageBlockWarnings.length === 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [heavyImageBlockWarnings.length, item]);
   const publishErrorTypeStats = useMemo(() => {
     const stats = {
       missingTitle: 0,
@@ -3804,6 +3824,18 @@ function onUpdateIconRowItem(
     if (!item) {
       return;
     }
+    const hasContactGuide = item.contentBlocks.some((block) => {
+      if (block.type !== "section") {
+        return false;
+      }
+      const text = `${block.sectionTitle ?? ""}\n${block.sectionBody ?? ""}`.toLowerCase();
+      return text.includes("お問い合わせ") || text.includes("連絡") || text.includes("tel") || text.includes("メール");
+    });
+    if (hasContactGuide) {
+      setNoticeKind("success");
+      setNotice("問い合わせ導線は既に設定されています。");
+      return;
+    }
     const nextBlocks = [
       ...item.contentBlocks,
       {
@@ -3832,6 +3864,19 @@ function onUpdateIconRowItem(
     await saveBlocks(nextBlocks);
     setNoticeKind("success");
     setNotice("問い合わせ導線テンプレを追加しました。");
+  }
+
+  async function onCopyImageBatchGuide() {
+    const body = [
+      "【画像最適化 一括変換ガイド】",
+      "1. 画像をWebP/JPEGへ一括変換（長辺 1600px目安）",
+      "2. 品質 70-80% で保存し、1枚300KB以下を目標",
+      "3. 差し替え後にスマホプレビューで表示確認",
+      "4. 公開前チェックの画像警告が0件になるまで調整",
+    ].join("\n");
+    await navigator.clipboard.writeText(body);
+    setNoticeKind("success");
+    setNotice("画像最適化の一括変換ガイドをコピーしました。");
   }
 
   useEffect(() => {
@@ -6423,6 +6468,9 @@ function onUpdateIconRowItem(
                   </article>
                   <article className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
                     <p className="text-sm font-semibold text-emerald-900">公開後チェック</p>
+                    <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-emerald-900">
+                      自動採点: {postPublishCheckScore} / 100
+                    </div>
                     <div className="mt-2 space-y-1 text-xs text-slate-700">
                       <p>{item.status === "published" ? "✓" : "・"} 公開ステータス</p>
                       <p>{(item.contentBlocks ?? []).some((block) => block.type === "cta") ? "✓" : "・"} CTA設置</p>
@@ -6446,6 +6494,13 @@ function onUpdateIconRowItem(
                           画像候補へ移動
                         </button>
                       ) : null}
+                      <button
+                        type="button"
+                        onClick={() => void onCopyImageBatchGuide()}
+                        className="rounded-md border border-cyan-300 bg-white px-2 py-1 text-[11px] text-cyan-900 hover:bg-cyan-100"
+                      >
+                        画像一括変換ガイドをコピー
+                      </button>
                     </div>
                   </article>
                   <div className="space-y-5 lg:sticky lg:top-6 lg:h-fit">
