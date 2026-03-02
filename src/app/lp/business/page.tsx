@@ -6,6 +6,7 @@ type LpPageProps = {
     scene?: string;
     src?: string;
     utm_source?: string;
+    win?: string;
   }>;
 };
 

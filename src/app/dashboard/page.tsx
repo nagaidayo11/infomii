@@ -460,6 +460,7 @@ type PendingDeleteBatch = {
 };
 const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
+const WIZARD_RESUME_STORAGE_KEY = "dashboard-onboarding-wizard-resume-v1";
 const OPS_OWNER_EMAILS = new Set([
   "nagai9_119@ezweb.ne.jp",
   "nagaisoccer@gmail.com",
@@ -518,6 +519,8 @@ export default function DashboardPage() {
   const [roomCountInput, setRoomCountInput] = useState("80");
   const [wizardVisible, setWizardVisible] = useState(false);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+  const [wizardQrDistributed, setWizardQrDistributed] = useState(false);
+  const [wizardResume, setWizardResume] = useState<{ step: 1 | 2 | 3; updatedAt: string } | null>(null);
   const [lockingRestartWinner, setLockingRestartWinner] = useState(false);
   const [opsActionFilter, setOpsActionFilter] = useState<OpsActionFilter>("all");
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -563,6 +566,11 @@ export default function DashboardPage() {
       setActiveTab("create");
       setWizardVisible(true);
       setWizardStep(1);
+      setWizardQrDistributed(false);
+      setWizardResume(null);
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
+      }
       void trackOnboardingWizardEvent("wizard_started", { step: 1 });
     }
     if ((billing || params.get("wizard") === "1") && typeof window !== "undefined") {
@@ -571,6 +579,28 @@ export default function DashboardPage() {
       const next = params.toString();
       const nextUrl = `${window.location.pathname}${next ? `?${next}` : ""}`;
       window.history.replaceState({}, "", nextUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(WIZARD_RESUME_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as { step?: unknown; updatedAt?: unknown };
+      const step = parsed.step;
+      const updatedAt = typeof parsed.updatedAt === "string" ? parsed.updatedAt : "";
+      if ((step === 1 || step === 2 || step === 3) && updatedAt) {
+        setWizardResume({ step, updatedAt });
+      } else {
+        window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
+      }
+    } catch {
+      window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
     }
   }, []);
 
@@ -1686,8 +1716,14 @@ export default function DashboardPage() {
   }
 
   function onWizardClose() {
-    if (wizardVisible && wizardStep < 3) {
+    if (wizardVisible && (wizardStep < 3 || !wizardQrDistributed)) {
+      const resume = { step: wizardStep, updatedAt: new Date().toISOString() };
+      setWizardResume(resume);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(WIZARD_RESUME_STORAGE_KEY, JSON.stringify(resume));
+      }
       void trackOnboardingWizardEvent("wizard_dropoff", { step: wizardStep, reason: "manual_close" });
+      setSuccess(`ウィザードを中断しました。再開リンク（Step ${wizardStep}）から続けられます。`);
     }
     setWizardVisible(false);
   }
@@ -1699,7 +1735,17 @@ export default function DashboardPage() {
       setWizardStep(nextStep);
       return;
     }
+    if (!wizardQrDistributed) {
+      setError("QR配布が完了したらチェックを入れてください。");
+      return;
+    }
+    void trackOnboardingWizardEvent("wizard_step_completed", { step: 3, reason: "qr_distributed" });
     void trackOnboardingWizardEvent("wizard_completed", { step: 3 });
+    setWizardResume(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
+    }
+    setWizardQrDistributed(false);
     setWizardVisible(false);
     setSuccess("初回公開ウィザードを完了しました。テンプレを選んで公開を進めましょう。");
   }
@@ -2293,14 +2339,17 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setWizardVisible((prev) => {
-                        const next = !prev;
-                        if (next) {
-                          setWizardStep(1);
-                          void trackOnboardingWizardEvent("wizard_started", { step: 1, reason: "manual_open" });
-                        }
-                        return next;
-                      });
+                      if (wizardVisible) {
+                        return;
+                      }
+                      setWizardVisible(true);
+                      setWizardStep(1);
+                      setWizardQrDistributed(false);
+                      setWizardResume(null);
+                      if (typeof window !== "undefined") {
+                        window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
+                      }
+                      void trackOnboardingWizardEvent("wizard_started", { step: 1, reason: "manual_open" });
                     }}
                     className="rounded-md border border-cyan-300 bg-white px-3 py-1 text-xs text-cyan-800 hover:bg-cyan-50"
                   >
@@ -2310,6 +2359,29 @@ export default function DashboardPage() {
                 <div className="mt-2 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs text-cyan-900">
                   1画面目完了率（7日）: {onboardingFunnel?.wizard.step1CompletionRate ?? 0}% / 開始 {onboardingFunnel?.wizard.started ?? 0} / 完了 {onboardingFunnel?.wizard.step1Completed ?? 0}
                 </div>
+                <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
+                  QR配布完了（7日）: {onboardingFunnel?.wizard.qrDistributedCompleted ?? 0}件 / ウィザード完了者7日継続率: {onboardingFunnel?.wizard.retention7d.rate ?? 0}%（対象 {onboardingFunnel?.wizard.retention7d.eligible ?? 0} / 継続 {onboardingFunnel?.wizard.retention7d.retained ?? 0}）
+                </div>
+                {wizardResume && !wizardVisible ? (
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+                    <p className="text-xs font-semibold text-amber-900">前回の続きがあります（Step {wizardResume.step}）</p>
+                    <p className="mt-1 text-[11px] text-amber-800">
+                      中断時刻: {formatDate(wizardResume.updatedAt)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWizardVisible(true);
+                        setWizardStep(wizardResume.step);
+                        setWizardQrDistributed(false);
+                        void trackOnboardingWizardEvent("wizard_started", { step: wizardResume.step, reason: "resume_link" });
+                      }}
+                      className="mt-2 rounded-md border border-amber-300 bg-white px-3 py-1 text-xs text-amber-900 hover:bg-amber-100"
+                    >
+                      再開する
+                    </button>
+                  </div>
+                ) : null}
                 {wizardVisible ? (
                   <div className="mt-3 space-y-2">
                     <div className="rounded-xl border border-slate-200 bg-white p-3">
@@ -2327,6 +2399,17 @@ export default function DashboardPage() {
                             ? "想定表示時間と必要入力項目数を見て選択します。"
                             : "不足項目を入力して公開し、URL/QRを配布します。"}
                       </p>
+                      {wizardStep === 3 ? (
+                        <label className="mt-3 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs text-emerald-900">
+                          <input
+                            type="checkbox"
+                            checked={wizardQrDistributed}
+                            onChange={(event) => setWizardQrDistributed(event.target.checked)}
+                            className="h-4 w-4 rounded border-emerald-400"
+                          />
+                          QR配布まで完了した
+                        </label>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -3444,10 +3527,38 @@ export default function DashboardPage() {
                     テンプレ選択→公開 中央値: {opsHealth?.week7Review.templateToPublishMedianMinutes ?? 0} 分
                   </div>
                   <div className="mt-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    業態別中央値: business {opsHealth?.week7Review.templateToPublishMedianByIndustry.business ?? 0}分 / resort {opsHealth?.week7Review.templateToPublishMedianByIndustry.resort ?? 0}分 / spa {opsHealth?.week7Review.templateToPublishMedianByIndustry.spa ?? 0}分
+                  </div>
+                  <div className="mt-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
                     休眠通知送信（7日）: 3日 {opsHealth?.week7Review.dormancyNoticeSent7d.day3 ?? 0} / 7日 {opsHealth?.week7Review.dormancyNoticeSent7d.day7 ?? 0} / 14日 {opsHealth?.week7Review.dormancyNoticeSent7d.day14 ?? 0}
                   </div>
                   <div className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
                     今週の最優先3施策: {week7PriorityTop3.join(" / ") || "なし"}
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50/70 p-3">
+                  <p className="text-xs font-semibold text-emerald-900">Week8 KPIレビュー（運用者向け）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP CVR</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.firstPublishRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">14日継続率</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week7Review.kpi.retention14dRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    ウィザード完了者 7日継続率: {onboardingFunnel?.wizard.retention7d.rate ?? 0}%（対象 {onboardingFunnel?.wizard.retention7d.eligible ?? 0} / 継続 {onboardingFunnel?.wizard.retention7d.retained ?? 0}）
                   </div>
                 </div>
 

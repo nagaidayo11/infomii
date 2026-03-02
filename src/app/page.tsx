@@ -106,6 +106,7 @@ type HomePageProps = {
     src?: string;
     utm_source?: string;
     lp?: string;
+    win?: string;
   }>;
 };
 
@@ -118,9 +119,21 @@ export default async function Home({ searchParams }: HomePageProps) {
     : sourceChannel === "tiktok"
       ? "c"
       : "a";
-  const ctaVariant = query.ab === "b" || query.ab === "c" ? query.ab : inferredVariant;
   const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
   const landingPage = query.lp === "business" || query.lp === "resort" || query.lp === "spa" ? query.lp : "business";
+  const winnerVariantByLandingPage = {
+    business: "a",
+    resort: "b",
+    spa: "b",
+  } as const;
+  const winnerOnlyModeByDefault = (process.env.NEXT_PUBLIC_LP_WINNER_ONLY ?? "true") === "true";
+  const winnerOnlyMode =
+    query.win === "1" || (query.win !== "0" && winnerOnlyModeByDefault);
+  const ctaVariant = winnerOnlyMode
+    ? winnerVariantByLandingPage[landingPage]
+    : query.ab === "a" || query.ab === "b" || query.ab === "c"
+      ? query.ab
+      : inferredVariant;
   const hasDedicatedLpPath = query.lp === "business" || query.lp === "resort" || query.lp === "spa";
   const lpBasePath = hasDedicatedLpPath
     ? landingPage === "business"
@@ -131,7 +144,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     : "/";
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
-    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`;
+    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}${winnerOnlyMode ? "&win=1" : ""}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;

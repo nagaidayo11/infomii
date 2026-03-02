@@ -72,6 +72,11 @@ type Week7Review = {
     spa: "a" | "b" | "c" | "-";
   };
   templateToPublishMedianMinutes: number;
+  templateToPublishMedianByIndustry: {
+    business: number;
+    resort: number;
+    spa: number;
+  };
   dormancyNoticeSent7d: {
     day3: number;
     day7: number;
@@ -476,6 +481,11 @@ export async function GET(request: NextRequest) {
             spa: "-",
           },
           templateToPublishMedianMinutes: 0,
+          templateToPublishMedianByIndustry: {
+            business: 0,
+            resort: 0,
+            spa: 0,
+          },
           dormancyNoticeSent7d: {
             day3: 0,
             day7: 0,
@@ -608,6 +618,11 @@ export async function GET(request: NextRequest) {
             spa: "-",
           },
           templateToPublishMedianMinutes: 0,
+          templateToPublishMedianByIndustry: {
+            business: 0,
+            resort: 0,
+            spa: 0,
+          },
           dormancyNoticeSent7d: {
             day3: 0,
             day7: 0,
@@ -662,7 +677,7 @@ export async function GET(request: NextRequest) {
         .limit(500),
       admin
         .from("audit_logs")
-        .select("action,target_id,created_at")
+        .select("action,target_id,created_at,metadata")
         .eq("hotel_id", hotelId)
         .gte("created_at", since30d)
         .in("action", ["information.created", "information.published", "template.selected"])
@@ -861,7 +876,13 @@ export async function GET(request: NextRequest) {
     const createdCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.created").length;
     const publishedCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
     const selectedByTarget = new Map<string, number>();
+    const selectedIndustryByTarget = new Map<string, "business" | "resort" | "spa">();
     const templateToPublishDurations: number[] = [];
+    const templateToPublishDurationsByIndustry: Record<"business" | "resort" | "spa", number[]> = {
+      business: [],
+      resort: [],
+      spa: [],
+    };
     for (const row of publishLeadLogs ?? []) {
       const targetId = row.target_id ?? "";
       const createdAtMs = new Date(row.created_at).getTime();
@@ -870,15 +891,28 @@ export async function GET(request: NextRequest) {
       }
       if (row.action === "template.selected" && !selectedByTarget.has(targetId)) {
         selectedByTarget.set(targetId, createdAtMs);
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const templateTitle = typeof metadata?.templateTitle === "string" ? metadata.templateTitle : "";
+        selectedIndustryByTarget.set(targetId, inferFacilityTypeFromText(templateTitle));
       }
       if (row.action === "information.published") {
         const selectedAt = selectedByTarget.get(targetId);
         if (selectedAt && createdAtMs >= selectedAt) {
-          templateToPublishDurations.push(Math.round((createdAtMs - selectedAt) / 60000));
+          const duration = Math.round((createdAtMs - selectedAt) / 60000);
+          templateToPublishDurations.push(duration);
+          const industry = selectedIndustryByTarget.get(targetId);
+          if (industry) {
+            templateToPublishDurationsByIndustry[industry].push(duration);
+          }
         }
       }
     }
     const templateToPublishMedianMinutes = median(templateToPublishDurations);
+    const templateToPublishMedianByIndustry = {
+      business: median(templateToPublishDurationsByIndustry.business),
+      resort: median(templateToPublishDurationsByIndustry.resort),
+      spa: median(templateToPublishDurationsByIndustry.spa),
+    };
     const week2Review = buildWeek2Review({
       lpToSignupRate,
       createdCount7d,
@@ -1045,6 +1079,7 @@ export async function GET(request: NextRequest) {
       },
       lpWinnerByIndustry,
       templateToPublishMedianMinutes,
+      templateToPublishMedianByIndustry,
       dormancyNoticeSent7d,
     };
 

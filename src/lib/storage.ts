@@ -590,7 +590,13 @@ export type OnboardingFunnel7d = {
     step1Completed: number;
     completed: number;
     dropoff: number;
+    qrDistributedCompleted: number;
     step1CompletionRate: number;
+    retention7d: {
+      eligible: number;
+      retained: number;
+      rate: number;
+    };
   };
 };
 
@@ -1974,6 +1980,11 @@ export type OpsHealthSnapshot = {
       spa: "a" | "b" | "c" | "-";
     };
     templateToPublishMedianMinutes: number;
+    templateToPublishMedianByIndustry: {
+      business: number;
+      resort: number;
+      spa: number;
+    };
     dormancyNoticeSent7d: {
       day3: number;
       day7: number;
@@ -2352,7 +2363,9 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
         step1Completed: 0,
         completed: 0,
         dropoff: 0,
+        qrDistributedCompleted: 0,
         step1CompletionRate: 0,
+        retention7d: { eligible: 0, retained: 0, rate: 0 },
       },
     };
   }
@@ -2371,7 +2384,9 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
         step1Completed: 0,
         completed: 0,
         dropoff: 0,
+        qrDistributedCompleted: 0,
         step1CompletionRate: 0,
+        retention7d: { eligible: 0, retained: 0, rate: 0 },
       },
     };
   }
@@ -2380,7 +2395,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
   const { data, error } = await supabase
     .from("audit_logs")
-    .select("action,metadata")
+    .select("action,metadata,created_at,actor_user_id")
     .eq("hotel_id", hotelId)
     .in("action", [
       "onboarding.login_success",
@@ -2396,6 +2411,17 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     throw toError(error, "オンボーディング指標の取得に失敗しました");
   }
 
+  const activitySinceIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: activityData, error: activityError } = await supabase
+    .from("audit_logs")
+    .select("created_at,actor_user_id")
+    .eq("hotel_id", hotelId)
+    .gte("created_at", activitySinceIso);
+
+  if (activityError) {
+    throw toError(activityError, "継続率指標の取得に失敗しました");
+  }
+
   let lpAttributedLogins = 0;
   let signupCompleted = 0;
   const landingPageMap = new Map<OnboardingLandingPage, { logins: number; signups: number }>();
@@ -2405,6 +2431,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
   let wizardStep1Completed = 0;
   let wizardCompleted = 0;
   let wizardDropoff = 0;
+  let wizardQrDistributedCompleted = 0;
 
   for (const row of data ?? []) {
     const metadata = row.metadata as Record<string, unknown> | null;
@@ -2453,8 +2480,12 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     }
     if (row.action === "onboarding.wizard_step_completed") {
       const step = typeof metadata?.step === "number" ? metadata.step : Number(metadata?.step ?? 0);
+      const reason = typeof metadata?.reason === "string" ? metadata.reason : "";
       if (step === 1) {
         wizardStep1Completed += 1;
+      }
+      if (step === 3 && reason === "qr_distributed") {
+        wizardQrDistributedCompleted += 1;
       }
     }
     if (row.action === "onboarding.wizard_completed") {
@@ -2462,6 +2493,37 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     }
     if (row.action === "onboarding.wizard_dropoff") {
       wizardDropoff += 1;
+    }
+  }
+
+  const retentionBoundaryMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const wizardCompletedActors = new Set<string>();
+  for (const row of data ?? []) {
+    if (row.action !== "onboarding.wizard_completed") {
+      continue;
+    }
+    const actorUserId =
+      typeof row.actor_user_id === "string" ? row.actor_user_id : "";
+    const createdAtMs = new Date(row.created_at).getTime();
+    if (!actorUserId || !Number.isFinite(createdAtMs) || createdAtMs > retentionBoundaryMs) {
+      continue;
+    }
+    wizardCompletedActors.add(actorUserId);
+  }
+  const activeActorsLast7d = new Set<string>();
+  for (const row of activityData ?? []) {
+    const actorUserId =
+      typeof row.actor_user_id === "string" ? row.actor_user_id : "";
+    const createdAtMs = new Date(row.created_at).getTime();
+    if (!actorUserId || !Number.isFinite(createdAtMs) || createdAtMs < retentionBoundaryMs) {
+      continue;
+    }
+    activeActorsLast7d.add(actorUserId);
+  }
+  let wizardRetainedCount7d = 0;
+  for (const actorUserId of wizardCompletedActors) {
+    if (activeActorsLast7d.has(actorUserId)) {
+      wizardRetainedCount7d += 1;
     }
   }
 
@@ -2511,7 +2573,16 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       step1Completed: wizardStep1Completed,
       completed: wizardCompleted,
       dropoff: wizardDropoff,
+      qrDistributedCompleted: wizardQrDistributedCompleted,
       step1CompletionRate: wizardStarted > 0 ? Math.round((wizardStep1Completed / wizardStarted) * 100) : 0,
+      retention7d: {
+        eligible: wizardCompletedActors.size,
+        retained: wizardRetainedCount7d,
+        rate:
+          wizardCompletedActors.size > 0
+            ? Math.round((wizardRetainedCount7d / wizardCompletedActors.size) * 100)
+            : 0,
+      },
     },
   };
 }
