@@ -1051,6 +1051,7 @@ export default function DashboardPage() {
   const utilizationBand =
     publishedLimit <= 0 ? "low" : usagePercent >= 80 ? "high" : usagePercent >= 40 ? "mid" : "low";
   const dashboardCompactMode = true;
+  const createCompactMode = true;
   const currentMonth = new Date().getMonth() + 1;
   const isPeakSeason = [3, 4, 5, 8, 11, 12].includes(currentMonth);
   const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic || isPeakSeason);
@@ -2713,6 +2714,7 @@ export default function DashboardPage() {
                     施設タイプ推定: {FACILITY_LABELS[inferredFacilityType]}（おすすめカテゴリを自動選択）
                   </p>
                 </div>
+                {!createCompactMode && (
                 <div className="mx-auto mt-2 flex max-w-5xl flex-wrap items-center justify-center gap-2">
                   <label className="text-xs text-slate-600" htmlFor="room-count-input">客室数</label>
                   <input
@@ -2727,6 +2729,7 @@ export default function DashboardPage() {
                     規模推定: {SCALE_LABELS[hotelScale]} / 推奨用途: {TEMPLATE_PURPOSE_LABELS[recommendedPurposeByScale]}
                   </p>
                 </div>
+                )}
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
@@ -2774,6 +2777,8 @@ export default function DashboardPage() {
                     ),
                   )}
                 </div>
+                {!createCompactMode && (
+                <>
                 <div className="mx-auto mt-2 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   {([
                     ["industry", "業種別"],
@@ -2812,8 +2817,11 @@ export default function DashboardPage() {
                     </button>
                   ))}
                 </div>
+                </>
+                )}
               </div>
 
+              {!createCompactMode && (
               <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
@@ -2950,7 +2958,9 @@ export default function DashboardPage() {
                   </div>
                 ) : null}
               </article>
+              )}
 
+              {!createCompactMode && (
               <article className="rounded-2xl border border-violet-200 bg-violet-50/70 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-violet-900">施設規模別 初回公開ガイド</p>
@@ -2984,7 +2994,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </article>
+              )}
 
+              {!createCompactMode && (
               <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
                 <p className="text-sm font-semibold text-cyan-900">Week12 最短公開導線（規模別）</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -3025,7 +3037,9 @@ export default function DashboardPage() {
                   <p>3. 現場スタッフへ更新完了共有</p>
                 </div>
               </article>
+              )}
 
+              {!createCompactMode && (
               <article className="rounded-2xl border border-emerald-300 bg-emerald-50/70 p-4 shadow-sm">
                 <p className="text-sm font-semibold text-emerald-900">Week11 立ち上げショートカット</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -3063,7 +3077,9 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </article>
+              )}
 
+              {!createCompactMode && (
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-medium text-slate-800">最短1クリックで新規作成</p>
@@ -3076,6 +3092,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </article>
+              )}
 
               <article className="rounded-2xl border border-emerald-200/80 bg-white/90 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -3173,12 +3190,12 @@ export default function DashboardPage() {
                                 おすすめ
                               </p>
                             )}
-                            {usageCount <= 1 && (
+                            {!createCompactMode && usageCount <= 1 && (
                               <p className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-amber-800">
                                 改善候補
                               </p>
                             )}
-                            {usageCount <= 1 && (
+                            {!createCompactMode && usageCount <= 1 && (
                               <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
                                 {getLowUsageTemplateImprovementSuggestion(template.industry)}
                               </p>
@@ -3206,22 +3223,29 @@ export default function DashboardPage() {
                                 </span>
                               ))}
                             </div>
-                            <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                            <div className={`mt-2 grid gap-2 text-[11px] text-slate-600 ${createCompactMode ? "grid-cols-1" : "grid-cols-2"}`}>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">想定表示時間: 約{viewSeconds}秒</p>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">必要入力: {inputCount}項目</p>
                             </div>
+                            {!createCompactMode && (
                             <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-slate-700">
                               <p className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1">想定運用人数: {operators}</p>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
                                 初回公開率: {firstPublish ? `${firstPublish.rate}%` : "集計中"}
                               </p>
                             </div>
+                            )}
+                            {!createCompactMode && (
                             <p className="mt-1 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900">
                               推奨公開時間: {PUBLISH_WINDOW_LABELS[detectTemplatePublishWindow(template)]}
                             </p>
+                            )}
+                            {!createCompactMode && (
                             <p className="mt-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
                               速度目標: LCP {slaMs}ms 以下
                             </p>
+                            )}
+                            {!createCompactMode && (
                             <p className={`mt-1 rounded-md border px-2 py-1 text-[11px] ${
                               quality.score >= 80
                                 ? "border-emerald-200 bg-emerald-50 text-emerald-900"
@@ -3231,19 +3255,24 @@ export default function DashboardPage() {
                             }`}>
                               品質スコア: {quality.score}/100
                             </p>
-                            {quality.score < 80 && (
+                            )}
+                            {!createCompactMode && quality.score < 80 && (
                               <p className="mt-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] text-rose-900">
                                 不足補完ガイド: {quality.missing.join(" / ")}
                               </p>
                             )}
+                            {!createCompactMode && (
                             <p className="mt-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900">
                               初期値補完: {defaultHints.join(" / ")}
                             </p>
+                            )}
+                            {!createCompactMode && (
                             <div className="mt-2 space-y-1 text-[11px] text-slate-600">
                               <p className="font-semibold text-slate-700">必須: {requirementHints.required.join(" / ")}</p>
                               <p>推奨: {requirementHints.recommended.join(" / ")}</p>
                             </div>
-                            <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap text-xs leading-6 text-slate-600">
+                            )}
+                            <p className={`mt-2 ${createCompactMode ? "line-clamp-2" : "max-h-24 overflow-hidden"} whitespace-pre-wrap text-xs leading-6 text-slate-600`}>
                               {template.body}
                             </p>
                             <p className="mt-3 inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white">
@@ -3282,19 +3311,24 @@ export default function DashboardPage() {
                           必要入力: {activeTemplatePreviewEntry.inputCount}項目
                         </p>
                       </div>
+                      {!createCompactMode && (
                       <p className="mt-2 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900">
                         推奨公開時間: {PUBLISH_WINDOW_LABELS[detectTemplatePublishWindow(activeTemplatePreviewEntry.template)]}
                       </p>
+                      )}
+                      {!createCompactMode && (
                       <p className="mt-2 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] text-indigo-900">
                         速度目標（SLA）: LCP {activeTemplateSlaMs}ms 以下
                       </p>
-                      {activeTemplateRequirements && (
+                      )}
+                      {!createCompactMode && activeTemplateRequirements && (
                         <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-700">
                           <p className="font-semibold text-slate-800">不足項目チェック（公開前）</p>
                           <p className="mt-1">必須: {activeTemplateRequirements.required.join(" / ")}</p>
                           <p className="mt-1">推奨: {activeTemplateRequirements.recommended.join(" / ")}</p>
                         </div>
                       )}
+                      {!createCompactMode && (
                       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] text-slate-700">
                         <p className="font-semibold text-amber-900">テンプレ利用ランキング（施設内）</p>
                         <div className="mt-1 space-y-1">
@@ -3306,6 +3340,7 @@ export default function DashboardPage() {
                           {templateUsageRanking.length === 0 && <p>データなし</p>}
                         </div>
                       </div>
+                      )}
                       {(() => {
                         const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
                         if (!previewImage) {
@@ -3327,6 +3362,7 @@ export default function DashboardPage() {
                       <p className="mt-3 max-h-36 overflow-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">
                         {activeTemplatePreviewEntry.template.body}
                       </p>
+                      {!createCompactMode && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(activeTemplatePreviewEntry.template.blocks ?? [])
                           .slice(0, 8)
@@ -3339,6 +3375,7 @@ export default function DashboardPage() {
                             </span>
                           ))}
                       </div>
+                      )}
                     </>
                   )}
                 </aside>
