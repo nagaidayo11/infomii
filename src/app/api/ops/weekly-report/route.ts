@@ -46,6 +46,17 @@ export async function POST(request: NextRequest) {
 
     const result = await sendOpsAlert("Weekly Ops Report", `${message}\n\nsender: ${user.email ?? user.id}`);
     const ok = result.slack.ok || result.email.ok;
+    await admin.from("audit_logs").insert({
+      hotel_id: hotelId,
+      actor_user_id: user.id,
+      action: "ops.weekly_report_sent",
+      target_type: "ops",
+      message: ok ? "週次レポートを送信しました" : "週次レポート送信に失敗しました",
+      metadata: {
+        slackOk: result.slack.ok,
+        emailOk: result.email.ok,
+      },
+    });
     return NextResponse.json({
       ok,
       message: ok ? "週次レポートを送信しました" : "週次レポート送信に失敗しました",

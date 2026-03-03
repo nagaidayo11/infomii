@@ -244,6 +244,48 @@ type Week13Preview = {
   };
 };
 
+type Week14Preview = {
+  ctaDropoffHeatmap: {
+    hero: number;
+    sticky: number;
+    bottom: number;
+  };
+  lpSpeedTrend4w: Array<{
+    label: string;
+    lcpMs: number;
+    loadMs: number;
+  }>;
+  wizardDropoffByReason: Array<{
+    reason: string;
+    count: number;
+  }>;
+  billingCompletionByWeekday: Array<{
+    weekday: string;
+    started: number;
+    completed: number;
+    rate: number;
+  }>;
+  checkoutAutoResendReady: boolean;
+  rewardRecoveryMessage: string;
+  retentionDownsideAlert: {
+    needed: boolean;
+    message: string;
+  };
+  recoveryPlaybook: string[];
+  weeklyReportAudit: {
+    sent7d: number;
+    lastSentAt: string | null;
+  };
+  kpiReview: {
+    lpToSignupRate: number;
+    publishCompletionRate: number;
+    proConversionRate: number;
+    retention14dRate: number;
+    referralRate: number;
+    recoveryMinutes: number;
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -744,6 +786,28 @@ export async function GET(request: NextRequest) {
             referralRate: 0,
           },
         },
+        week14Preview: {
+          ctaDropoffHeatmap: { hero: 0, sticky: 0, bottom: 0 },
+          lpSpeedTrend4w: [],
+          wizardDropoffByReason: [],
+          billingCompletionByWeekday: [],
+          checkoutAutoResendReady: false,
+          rewardRecoveryMessage: "再公開リワードはデータ蓄積後に表示されます。",
+          retentionDownsideAlert: {
+            needed: false,
+            message: "継続率は安定しています。",
+          },
+          recoveryPlaybook: [],
+          weeklyReportAudit: { sent7d: 0, lastSentAt: null },
+          kpiReview: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            referralRate: 0,
+            recoveryMinutes: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -973,12 +1037,34 @@ export async function GET(request: NextRequest) {
             referralRate: 0,
           },
         },
+        week14Preview: {
+          ctaDropoffHeatmap: { hero: 0, sticky: 0, bottom: 0 },
+          lpSpeedTrend4w: [],
+          wizardDropoffByReason: [],
+          billingCompletionByWeekday: [],
+          checkoutAutoResendReady: false,
+          rewardRecoveryMessage: "再公開リワードはデータ蓄積後に表示されます。",
+          retentionDownsideAlert: {
+            needed: false,
+            message: "継続率は安定しています。",
+          },
+          recoveryPlaybook: [],
+          weeklyReportAudit: { sent7d: 0, lastSentAt: null },
+          kpiReview: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            referralRate: 0,
+            recoveryMinutes: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
     const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }, { data: dormancyNoticeLogs }, { data: dormancyReactionLogs }] = await Promise.all([
+    const [{ data: sub }, { count: totalPages }, { count: publishedPages }, { count: draftPages }, { data: logs }, { data: funnelLogs }, { data: perfLogs }, { data: perfLogs30d }, { data: publishLeadLogs }, { data: latestInfo }, { data: onboardingLogs }, { data: restartLogs }, { data: dormancyNoticeLogs }, { data: dormancyReactionLogs }, { data: wizardDropoffLogs }, { data: weeklyReportLogs }] = await Promise.all([
       admin
         .from("subscriptions")
         .select("plan,status,stripe_customer_id,updated_at")
@@ -1029,6 +1115,14 @@ export async function GET(request: NextRequest) {
         .limit(500),
       admin
         .from("audit_logs")
+        .select("action,created_at,metadata")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since30d)
+        .in("action", ["perf.public_lcp", "perf.public_load"])
+        .order("created_at", { ascending: false })
+        .limit(2000),
+      admin
+        .from("audit_logs")
         .select("action,target_id,created_at,metadata")
         .eq("hotel_id", hotelId)
         .gte("created_at", since30d)
@@ -1070,6 +1164,21 @@ export async function GET(request: NextRequest) {
         .gte("created_at", since7d)
         .eq("action", "ops.dormancy_notice_reaction")
         .limit(1000),
+      admin
+        .from("audit_logs")
+        .select("metadata")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .eq("action", "onboarding.wizard_dropoff")
+        .limit(1000),
+      admin
+        .from("audit_logs")
+        .select("created_at")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", since7d)
+        .eq("action", "ops.weekly_report_sent")
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
     const webhookLastReceivedAt = (logs ?? [])
       .filter(
@@ -2069,6 +2178,124 @@ export async function GET(request: NextRequest) {
         referralRate: referralInflowRate,
       },
     };
+    const ctaDropoffHeatmap: Week14Preview["ctaDropoffHeatmap"] = {
+      hero: Math.max(0, 100 - sectionCvr.hero),
+      sticky: Math.max(0, 100 - sectionCvr.sticky),
+      bottom: Math.max(0, 100 - sectionCvr.bottom),
+    };
+    const lpSpeedTrend4w: Week14Preview["lpSpeedTrend4w"] = [];
+    for (let weekOffset = 3; weekOffset >= 0; weekOffset -= 1) {
+      const end = Date.now() - weekOffset * 7 * 24 * 60 * 60 * 1000;
+      const start = end - 7 * 24 * 60 * 60 * 1000;
+      const weekLcp = (perfLogs30d ?? [])
+        .filter((row) => row.action === "perf.public_lcp")
+        .filter((row) => {
+          const createdAt = new Date(row.created_at).getTime();
+          return Number.isFinite(createdAt) && createdAt >= start && createdAt < end;
+        })
+        .map((row) => {
+          const metadata = row.metadata as Record<string, unknown> | null;
+          return typeof metadata?.value === "number" && Number.isFinite(metadata.value) ? Math.round(metadata.value) : 0;
+        })
+        .filter((value) => value > 0);
+      const weekLoad = (perfLogs30d ?? [])
+        .filter((row) => row.action === "perf.public_load")
+        .filter((row) => {
+          const createdAt = new Date(row.created_at).getTime();
+          return Number.isFinite(createdAt) && createdAt >= start && createdAt < end;
+        })
+        .map((row) => {
+          const metadata = row.metadata as Record<string, unknown> | null;
+          return typeof metadata?.value === "number" && Number.isFinite(metadata.value) ? Math.round(metadata.value) : 0;
+        })
+        .filter((value) => value > 0);
+      lpSpeedTrend4w.push({
+        label: `W-${weekOffset + 1}`,
+        lcpMs: roundAverage(weekLcp),
+        loadMs: roundAverage(weekLoad),
+      });
+    }
+    const wizardDropoffReasonLabel: Record<string, string> = {
+      manual_close: "手動終了",
+      time_shortage: "時間不足",
+      content_not_ready: "素材未準備",
+      other: "その他",
+    };
+    const wizardDropoffByReasonMap = new Map<string, number>();
+    for (const row of wizardDropoffLogs ?? []) {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      const reasonCode = typeof metadata?.reason === "string" ? metadata.reason : "other";
+      const reason = wizardDropoffReasonLabel[reasonCode] ?? wizardDropoffReasonLabel.other;
+      wizardDropoffByReasonMap.set(reason, (wizardDropoffByReasonMap.get(reason) ?? 0) + 1);
+    }
+    const wizardDropoffByReason: Week14Preview["wizardDropoffByReason"] = Array.from(wizardDropoffByReasonMap.entries())
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count);
+    const billingByWeekdayBase = new Map<number, { started: number; completed: number }>();
+    for (const row of funnelLogs ?? []) {
+      const createdAt = new Date(row.created_at);
+      const day = createdAt.getDay();
+      const stat = billingByWeekdayBase.get(day) ?? { started: 0, completed: 0 };
+      if (row.action === "billing.portal_session_created") {
+        stat.started += 1;
+      } else if (row.action === "billing.subscription_synced") {
+        stat.completed += 1;
+      } else {
+        continue;
+      }
+      billingByWeekdayBase.set(day, stat);
+    }
+    const billingCompletionByWeekday: Week14Preview["billingCompletionByWeekday"] = Array.from(billingByWeekdayBase.entries())
+      .map(([day, stat]) => ({
+        weekday: weekdayLabels[day] ?? "月",
+        started: stat.started,
+        completed: stat.completed,
+        rate: stat.started > 0 ? Math.round((stat.completed / stat.started) * 100) : 0,
+      }))
+      .sort((a, b) => weekdayLabels.indexOf(a.weekday as (typeof weekdayLabels)[number]) - weekdayLabels.indexOf(b.weekday as (typeof weekdayLabels)[number]));
+    const checkoutAutoResendReady = checkoutSessions > completedCheckouts;
+    const rewardRecoveryMessage =
+      dominantFacility === "business"
+        ? "再公開後24時間以内にチェックイン導線を更新すると定着率が上がります。"
+        : dominantFacility === "resort"
+          ? "再公開後24時間以内にアクティビティ案内を更新すると再訪率が上がります。"
+          : "再公開後24時間以内に温浴ルール案内を更新すると継続率が上がります。";
+    const retentionDownsideAlert: Week14Preview["retentionDownsideAlert"] = {
+      needed: retentionRate14d < 30,
+      message:
+        retentionRate14d < 30
+          ? `14日継続率が${retentionRate14d}%まで低下しています。休眠通知と再公開リワード導線を優先してください。`
+          : `14日継続率は${retentionRate14d}%で安定しています。`,
+    };
+    const recoveryPlaybook: Week14Preview["recoveryPlaybook"] = [
+      "1. エラー履歴で優先度「高」を確認",
+      "2. Webhook再送の必要有無を判定",
+      "3. Stripe手動同期を実行",
+      "4. 通知テスト送信で復旧確認",
+    ];
+    const weeklyReportAudit = {
+      sent7d: (weeklyReportLogs ?? []).length,
+      lastSentAt: (weeklyReportLogs ?? [])[0]?.created_at ?? null,
+    };
+    const week14Preview: Week14Preview = {
+      ctaDropoffHeatmap,
+      lpSpeedTrend4w,
+      wizardDropoffByReason,
+      billingCompletionByWeekday,
+      checkoutAutoResendReady,
+      rewardRecoveryMessage,
+      retentionDownsideAlert,
+      recoveryPlaybook,
+      weeklyReportAudit,
+      kpiReview: {
+        lpToSignupRate,
+        publishCompletionRate: week2Review.kpi.publishCompletionRate,
+        proConversionRate: week2Review.kpi.proConversionRate,
+        retention14dRate: retentionRate14d,
+        referralRate: referralInflowRate,
+        recoveryMinutes: recoveryShortcutMedianMinutes,
+      },
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -2110,6 +2337,7 @@ export async function GET(request: NextRequest) {
       week11Preview,
       week12Preview,
       week13Preview,
+      week14Preview,
       execution,
       dormancy,
       performance7d: {

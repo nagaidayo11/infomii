@@ -138,6 +138,7 @@ type HomePageProps = {
     lp?: string;
     win?: string;
     tag?: string;
+    kw?: string;
   }>;
 };
 type SeasonKey = "spring" | "summer" | "autumn" | "winter";
@@ -164,6 +165,9 @@ export default async function Home({ searchParams }: HomePageProps) {
           ? "autumn"
           : "winter";
   const heroScene = query.scene === "bath" || query.scene === "breakfast" ? query.scene : "checkin";
+  const keyword = query.kw === "checkin" || query.kw === "bath" || query.kw === "breakfast" || query.kw === "wifi"
+    ? query.kw
+    : "checkin";
   const landingPage = query.lp === "business" || query.lp === "resort" || query.lp === "spa" ? query.lp : "business";
   const winnerVariantByLandingPage = {
     business: "a",
@@ -181,7 +185,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     : "/";
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
-    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`;
+    `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}`;
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp";
   const proMonthlyPriceRaw = Number(process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE ?? "1980");
   const proMonthlyPrice = Number.isFinite(proMonthlyPriceRaw) && proMonthlyPriceRaw > 0 ? proMonthlyPriceRaw : 1980;
@@ -267,6 +271,12 @@ export default async function Home({ searchParams }: HomePageProps) {
       winter: "繁忙期の温浴案内をリアルタイム更新",
     },
   } as const;
+  const keywordGuidance = {
+    checkin: "検索意図: チェックイン導線の最短公開",
+    bath: "検索意図: 温浴ルールの即時共有",
+    breakfast: "検索意図: 朝食導線の統一運用",
+    wifi: "検索意図: 館内設備/Wi-Fi案内の問い合わせ削減",
+  } as const;
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -314,6 +324,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     pain: string;
     solution: string;
     impact: string;
+    impactScore: number;
     industryTag: "business" | "resort" | "spa";
     seasonTags: SeasonKey[];
     template: (typeof starterTemplates)[number];
@@ -326,6 +337,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       pain: "深夜到着時の問い合わせが集中",
       solution: "チェックイン手順と連絡先を1画面固定",
       impact: "夜間問い合わせの一次対応を約40%削減",
+      impactScore: 40,
       industryTag: "business" as const,
       seasonTags: ["spring", "summer", "autumn", "winter"],
       template:
@@ -340,6 +352,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       pain: "利用ルールの説明がスタッフ依存",
       solution: "温浴時間・注意事項・予約導線を集約",
       impact: "案内差し替え時間を週2h削減",
+      impactScore: 35,
       industryTag: "spa" as const,
       seasonTags: ["autumn", "winter"],
       template:
@@ -354,6 +367,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       pain: "設備情報がページごとに分散",
       solution: "Wi-Fi/駐車場/設備情報を統一表示",
       impact: "フロント問い合わせを日次で平準化",
+      impactScore: 30,
       industryTag: "resort" as const,
       seasonTags: ["spring", "summer"],
       template:
@@ -372,6 +386,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     const totalA = seasonScore(a) + landingScore(a);
     const totalB = seasonScore(b) + landingScore(b);
     if (totalA !== totalB) return totalB - totalA;
+    if (a.impactScore !== b.impactScore) return b.impactScore - a.impactScore;
     return a.title.localeCompare(b.title, "ja");
   });
   const fixedImpactCards = [
@@ -556,6 +571,29 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </Link>
                 ))}
               </div>
+              <div className="mb-3 flex flex-wrap gap-2">
+                <span className="rounded-full border border-cyan-300 bg-cyan-50 px-3 py-1 text-[11px] font-semibold text-cyan-800">
+                  検索キーワード
+                </span>
+                {([
+                  ["checkin", "チェックイン"],
+                  ["bath", "温浴"],
+                  ["breakfast", "朝食"],
+                  ["wifi", "Wi-Fi"],
+                ] as const).map(([value, label]) => (
+                  <Link
+                    key={value}
+                    href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${value}`}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      keyword === value
+                        ? "border-cyan-400 bg-cyan-600 text-white"
+                        : "border-slate-300 bg-white text-slate-700"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
@@ -565,6 +603,9 @@ export default async function Home({ searchParams }: HomePageProps) {
               </p>
               <p className="mt-1 text-xs font-semibold text-emerald-700">
                 季節最適化: {seasonalHeroMessage[landingPage][season]}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-cyan-700">
+                {keywordGuidance[keyword]}
               </p>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。

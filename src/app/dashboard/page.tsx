@@ -1095,10 +1095,17 @@ export default function DashboardPage() {
             purposes: TemplatePurposeFilter[];
             scenes: TemplateScene[];
             originalIndex: number;
+            template: StarterTemplate;
           }) => {
             let s = 0;
             if (purposeFilter !== "all" && entry.purposes.includes(purposeFilter)) {
               s += 4;
+            }
+            if (entry.purposes.includes(recommendedPurposeByScale)) {
+              s += 6;
+            }
+            if (entry.template.industry === mapFacilityToIndustry(inferredFacilityType)) {
+              s += 8;
             }
             if (entry.scenes.includes("front")) {
               s += 2;
@@ -1129,7 +1136,7 @@ export default function DashboardPage() {
         }
         return a.originalIndex - b.originalIndex;
       }),
-    [favoriteTemplateSet, purposeFilter, recommendedTemplateByIndustry, templateSortMode],
+    [favoriteTemplateSet, inferredFacilityType, purposeFilter, recommendedPurposeByScale, recommendedTemplateByIndustry, templateSortMode],
   );
   const groupedTemplateEntries = useMemo(() => {
     if (templateGrouping === "scene") {
@@ -2722,6 +2729,9 @@ export default function DashboardPage() {
                 </div>
                 <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
                   QR配布完了（7日）: {onboardingFunnel?.wizard.qrDistributedCompleted ?? 0}件 / ウィザード完了者7日継続率: {onboardingFunnel?.wizard.retention7d.rate ?? 0}%（対象 {onboardingFunnel?.wizard.retention7d.eligible ?? 0} / 継続 {onboardingFunnel?.wizard.retention7d.retained ?? 0}）
+                </div>
+                <div className="mt-2 rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs text-violet-900">
+                  離脱理由（7日）: {(opsHealth?.week14Preview.wizardDropoffByReason ?? []).map((row) => `${row.reason} ${row.count}件`).join(" / ") || "データなし"}
                 </div>
                 {wizardQrDistributedAt ? (
                   <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
@@ -4380,6 +4390,50 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-sky-300 bg-sky-50/70 p-3">
+                  <p className="text-xs font-semibold text-sky-900">Week14 KPIレビュー（Scale Ops + Retention）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-6">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.publishCompletionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">14日継続</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.retention14dRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">紹介</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.referralRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">復旧時間</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week14Preview.kpiReview.recoveryMinutes ?? 0}分</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    CTA離脱ヒートマップ: Hero {opsHealth?.week14Preview.ctaDropoffHeatmap.hero ?? 0}% / Sticky {opsHealth?.week14Preview.ctaDropoffHeatmap.sticky ?? 0}% / Bottom {opsHealth?.week14Preview.ctaDropoffHeatmap.bottom ?? 0}%
+                  </div>
+                  <div className="mt-1 rounded-md border border-sky-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    LP速度週次: {(opsHealth?.week14Preview.lpSpeedTrend4w ?? []).map((row) => `${row.label} LCP${row.lcpMs}ms`).join(" / ") || "データなし"}
+                  </div>
+                </div>
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900">
+                  再公開リワード導線: {opsHealth?.week14Preview.rewardRecoveryMessage ?? "データなし"}
+                </div>
+                {opsHealth?.week14Preview.retentionDownsideAlert.needed ? (
+                  <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+                    14日継続率アラート: {opsHealth.week14Preview.retentionDownsideAlert.message}
+                  </div>
+                ) : null}
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -4558,6 +4612,19 @@ export default function DashboardPage() {
                     >
                       {sendingOpsTest ? "送信中..." : "通知テスト送信"}
                     </button>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-sm font-medium text-slate-800">障害復旧プレイブック（固定）</p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-700">
+                    {(opsHealth?.week14Preview.recoveryPlaybook ?? []).map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                    {(opsHealth?.week14Preview.recoveryPlaybook ?? []).length === 0 ? <p>プレイブック未設定</p> : null}
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                    週次レポート送信監査: 7日 {opsHealth?.week14Preview.weeklyReportAudit.sent7d ?? 0}件 / 最終 {opsHealth?.week14Preview.weeklyReportAudit.lastSentAt ? formatDate(opsHealth.week14Preview.weeklyReportAudit.lastSentAt) : "未送信"}
                   </div>
                 </div>
 
@@ -4825,6 +4892,9 @@ export default function DashboardPage() {
                       <p className="mt-1 text-xs text-amber-800">
                         {formatAuditDate(latestCheckoutSessionLog.createdAt)} に決済開始しましたが、まだ完了していません。
                       </p>
+                      <p className="mt-1 text-[11px] text-amber-800">
+                        自動再送: {opsHealth?.week14Preview.checkoutAutoResendReady ? "次回リマインド対象" : "対象なし"}
+                      </p>
                       <button
                         type="button"
                         onClick={() => void onResumeCheckout()}
@@ -4918,6 +4988,17 @@ export default function DashboardPage() {
                     </div>
                     <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-[11px] text-slate-700">
                       請求導線CVR: Upgrade→Checkout {opsHealth?.week12Preview.billingDropoffByStep.upgradeToCheckout ?? 0}% / Checkout→Paid {opsHealth?.week12Preview.billingDropoffByStep.checkoutToPaid ?? 0}% / Paid→Portal {opsHealth?.week12Preview.billingDropoffByStep.paidToPortal ?? 0}%
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
+                    <p className="text-xs font-semibold text-cyan-900">請求管理 完了率（曜日別）</p>
+                    <div className="mt-2 space-y-1 text-xs text-slate-700">
+                      {(opsHealth?.week14Preview.billingCompletionByWeekday ?? []).map((row) => (
+                        <p key={row.weekday}>
+                          ・{row.weekday}: {row.rate}%（開始 {row.started} / 完了 {row.completed}）
+                        </p>
+                      ))}
+                      {(opsHealth?.week14Preview.billingCompletionByWeekday ?? []).length === 0 ? <p>・データなし</p> : null}
                     </div>
                   </div>
                   <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">

@@ -2164,6 +2164,47 @@ export type OpsHealthSnapshot = {
       referralRate: number;
     };
   };
+  week14Preview: {
+    ctaDropoffHeatmap: {
+      hero: number;
+      sticky: number;
+      bottom: number;
+    };
+    lpSpeedTrend4w: Array<{
+      label: string;
+      lcpMs: number;
+      loadMs: number;
+    }>;
+    wizardDropoffByReason: Array<{
+      reason: string;
+      count: number;
+    }>;
+    billingCompletionByWeekday: Array<{
+      weekday: string;
+      started: number;
+      completed: number;
+      rate: number;
+    }>;
+    checkoutAutoResendReady: boolean;
+    rewardRecoveryMessage: string;
+    retentionDownsideAlert: {
+      needed: boolean;
+      message: string;
+    };
+    recoveryPlaybook: string[];
+    weeklyReportAudit: {
+      sent7d: number;
+      lastSentAt: string | null;
+    };
+    kpiReview: {
+      lpToSignupRate: number;
+      publishCompletionRate: number;
+      proConversionRate: number;
+      retention14dRate: number;
+      referralRate: number;
+      recoveryMinutes: number;
+    };
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;

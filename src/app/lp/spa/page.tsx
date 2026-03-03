@@ -3,6 +3,7 @@ import Home from "@/app/page";
 type LpPageProps = {
   searchParams: Promise<{
     ab?: string;
+    kw?: string;
     scene?: string;
     src?: string;
     utm_source?: string;
