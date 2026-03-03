@@ -155,6 +155,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       : sourceChannel.length > 0
         ? "sns"
         : "direct";
+  const lpCompactMode = true;
   const month = new Date().getMonth() + 1;
   const season: SeasonKey =
     month >= 3 && month <= 5
@@ -720,6 +721,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           ))}
         </section>
 
+        {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">導入施設コメント</h2>
@@ -741,6 +743,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
         </section>
+        )}
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -812,6 +815,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           )}
         </section>
 
+        {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">導入実感（目安）</h2>
@@ -831,7 +835,9 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
         </section>
+        )}
 
+        {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">ホテル現場の課題を、運用導線で解決</h2>
@@ -855,7 +861,9 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
         </section>
+        )}
 
+        {!lpCompactMode && (
         <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">機能</h2>
@@ -874,7 +882,9 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
         </section>
+        )}
 
+        {!lpCompactMode && (
         <section id="flow" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">導入フロー</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -891,6 +901,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
         </section>
+        )}
 
         <section id="pricing" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">料金プラン</h2>
@@ -972,12 +983,15 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
         </section>
 
+        {!lpCompactMode && (
         <section id="contact" className="lux-card lp-reveal lp-delay-4 rounded-2xl p-6">
           <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
           <p className="mt-2 text-sm text-slate-700">導入・プラン・不具合のご相談は以下までご連絡ください。</p>
           <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
         </section>
+        )}
 
+        {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-4 rounded-3xl border border-emerald-300 p-6 sm:p-8">
           <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
             <div>
@@ -1004,6 +1018,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             </aside>
           </div>
         </section>
+        )}
 
         <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
           <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
@@ -1068,6 +1083,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         </div>
       </div>
 
+      {!lpCompactMode && (
       <div className="fixed right-3 top-3 z-40 sm:right-4 sm:top-4">
         <Link
           href={buildLoginHref("lp-sticky")}
@@ -1076,6 +1092,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           {heroPrimaryShortCtaLabel}
         </Link>
       </div>
+      )}
     </main>
   );
 }

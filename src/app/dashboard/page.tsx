@@ -1050,6 +1050,7 @@ export default function DashboardPage() {
   const isHighTraffic = (viewMetrics?.totalViews7d ?? 0) >= 120;
   const utilizationBand =
     publishedLimit <= 0 ? "low" : usagePercent >= 80 ? "high" : usagePercent >= 40 ? "mid" : "low";
+  const dashboardCompactMode = true;
   const currentMonth = new Date().getMonth() + 1;
   const isPeakSeason = [3, 4, 5, 8, 11, 12].includes(currentMonth);
   const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic || isPeakSeason);
@@ -2415,7 +2416,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-          {activeTab === "dashboard" && (
+          {activeTab === "dashboard" && !dashboardCompactMode && (
             <article className="rounded-2xl lux-section-card border border-emerald-200/80 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-base font-semibold text-slate-900">Free / Pro 比較</h2>
@@ -2457,7 +2458,7 @@ export default function DashboardPage() {
               )}
             </article>
           )}
-          {activeTab === "dashboard" && showQuickStart && (
+          {activeTab === "dashboard" && !dashboardCompactMode && showQuickStart && (
             <div className="rounded-2xl lux-section-card border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-[240px]">
@@ -2500,7 +2501,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-          {activeTab === "dashboard" && (
+          {activeTab === "dashboard" && !dashboardCompactMode && (
             <article className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold text-sky-900">導入初日チェックリスト（固定）</p>
@@ -2522,6 +2523,72 @@ export default function DashboardPage() {
                 ))}
               </div>
             </article>
+          )}
+          {activeTab === "dashboard" && dashboardCompactMode && (
+            <section className="space-y-2">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-base font-semibold text-slate-900">今日やること</h2>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("create")}
+                    className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500"
+                  >
+                    作成へ進む
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    1. テンプレ/新規作成
+                  </p>
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    2. 1ページ公開
+                  </p>
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    3. URL/QR共有
+                  </p>
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    4. 請求状態確認
+                  </p>
+                </div>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-base font-semibold text-slate-900">契約・請求</h2>
+                  <button
+                    type="button"
+                    disabled={openingPortal || !subscription?.hasStripeCustomer}
+                    onClick={onOpenBillingPortal}
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    {openingPortal ? "遷移中..." : "請求書・カード管理"}
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    現在プラン: {subscription?.plan ?? "-"}
+                  </p>
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    支払い状態: {subscription?.status ?? "-"}
+                  </p>
+                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    次回更新日: {nextRenewalLabel}
+                  </p>
+                </div>
+                {!isProActive && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      disabled={creatingCheckout}
+                      onClick={() => void onStartStripeCheckout()}
+                      className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-60"
+                    >
+                      {creatingCheckout ? "遷移中..." : "Proにアップグレード"}
+                    </button>
+                  </div>
+                )}
+              </article>
+            </section>
           )}
 
           <div className="relative">
