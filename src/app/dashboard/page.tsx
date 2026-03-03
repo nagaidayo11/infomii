@@ -1546,6 +1546,92 @@ export default function DashboardPage() {
       createdToPublishedDrop,
     };
   }, [items.length, onboardingFunnel?.lpAttributedLogins, onboardingFunnel?.signupCompleted, published.length]);
+  const hotelRevenueValidation = useMemo(() => {
+    const landingRows = onboardingFunnel?.byLandingPage ?? [];
+    const hotelRows = landingRows.filter((row) => row.lp === "business" || row.lp === "resort" || row.lp === "spa");
+    const lpLogins = hotelRows.reduce((sum, row) => sum + row.logins, 0);
+    const lpSignups = hotelRows.reduce((sum, row) => sum + row.signups, 0);
+    const lpRate = lpLogins > 0 ? Math.round((lpSignups / lpLogins) * 100) : 0;
+
+    const createdCount = firstPublishDropOff.created;
+    const publishedCount = firstPublishDropOff.publishedCount;
+    const publishRate = createdCount > 0 ? Math.round((publishedCount / createdCount) * 100) : 0;
+
+    const upgradeClicks = opsHealth?.billing.funnel7d.upgradeClicks ?? 0;
+    const checkoutCount = opsHealth?.billing.funnel7d.checkoutSessions ?? 0;
+    const paidCount = opsHealth?.billing.funnel7d.completedCheckouts ?? 0;
+    const paidRate = checkoutCount > 0 ? Math.round((paidCount / checkoutCount) * 100) : 0;
+    const retention14dRate = opsHealth?.restart7d.retention14d.rate ?? 0;
+
+    const targets = {
+      lp: 20,
+      publish: 60,
+      paid: 40,
+      retention14d: 35,
+    };
+    const stages = [
+      {
+        key: "acquire",
+        label: "獲得",
+        metric: "LP→登録",
+        value: `${lpSignups}/${lpLogins}`,
+        rate: lpRate,
+        target: targets.lp,
+      },
+      {
+        key: "activate",
+        label: "公開",
+        metric: "作成→初回公開",
+        value: `${publishedCount}/${createdCount}`,
+        rate: publishRate,
+        target: targets.publish,
+      },
+      {
+        key: "monetize",
+        label: "課金",
+        metric: "Checkout→完了",
+        value: `${paidCount}/${checkoutCount}`,
+        rate: paidRate,
+        target: targets.paid,
+      },
+    ] as const;
+    const healthyCount = stages.filter((stage) => stage.rate >= stage.target).length;
+    const bottleneck = [...stages].sort((a, b) => (a.rate - a.target) - (b.rate - b.target))[0];
+    const nextActions: string[] = [];
+    if (lpRate < targets.lp) {
+      nextActions.push("LPのホテル訴求見出しを1本に絞り、CTA文言を固定して7日比較");
+    }
+    if (publishRate < targets.publish) {
+      nextActions.push("テンプレ作成直後に初回公開ウィザードを必須導線として再実行");
+    }
+    if (paidRate < targets.paid) {
+      nextActions.push("公開完了直後にアップグレード導線を表示し、未完了には決済再開を即表示");
+    }
+    if (retention14dRate < targets.retention14d) {
+      nextActions.push("公開7日後の休眠通知を固定し、再公開リワードをセットで送信");
+    }
+    if (nextActions.length === 0) {
+      nextActions.push("現行導線を維持し、トラフィック増加だけに集中");
+    }
+
+    return {
+      stages,
+      healthyCount,
+      bottleneck,
+      retention14dRate,
+      targets,
+      upgradeClicks,
+      nextActions: nextActions.slice(0, 3),
+    };
+  }, [
+    firstPublishDropOff.created,
+    firstPublishDropOff.publishedCount,
+    onboardingFunnel?.byLandingPage,
+    opsHealth?.billing.funnel7d.checkoutSessions,
+    opsHealth?.billing.funnel7d.completedCheckouts,
+    opsHealth?.billing.funnel7d.upgradeClicks,
+    opsHealth?.restart7d.retention14d.rate,
+  ]);
   const dormancyStage = useMemo(() => {
     const days = opsHealth?.dormancy.daysSinceLastUpdate;
     if (days === null || days === undefined) {
@@ -3666,6 +3752,49 @@ export default function DashboardPage() {
                       <p key={task}>・{task}</p>
                     ))}
                     {(opsHealth?.week13Preview.top3WeeklyActions ?? []).length === 0 ? <p>・現状は維持運用で問題ありません。</p> : null}
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-cyan-900">ホテル獲得→公開→課金 検証ボード（7日）</p>
+                    <p className="text-xs text-cyan-800">
+                      達成: {hotelRevenueValidation.healthyCount}/3
+                    </p>
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    {hotelRevenueValidation.stages.map((stage) => {
+                      const stageHealthy = stage.rate >= stage.target;
+                      return (
+                        <div key={stage.key} className="rounded-lg border border-slate-200 bg-white p-2">
+                          <p className="text-xs font-semibold text-slate-700">{stage.label}</p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">{stage.metric}</p>
+                          <p className="mt-1 text-base font-semibold text-slate-900">{stage.rate}%</p>
+                          <p className="text-[11px] text-slate-600">
+                            {stage.value} / 目標 {stage.target}%
+                          </p>
+                          <p className={`mt-1 text-[11px] font-semibold ${stageHealthy ? "text-emerald-700" : "text-rose-700"}`}>
+                            {stageHealthy ? "達成" : "未達"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">
+                    <p>
+                      課金導線補足: Upgradeクリック {hotelRevenueValidation.upgradeClicks} 件 / 14日継続率 {hotelRevenueValidation.retention14dRate}%
+                      （目標 {hotelRevenueValidation.targets.retention14d}%）
+                    </p>
+                    <p className="mt-1 text-[11px] text-rose-700">
+                      最優先ボトルネック: {hotelRevenueValidation.bottleneck.label}（{hotelRevenueValidation.bottleneck.rate}%）
+                    </p>
+                  </div>
+                  <div className="mt-2 rounded-md border border-cyan-200 bg-white p-2 text-xs text-slate-700">
+                    <p className="font-semibold text-cyan-900">次にやること（収益優先）</p>
+                    <div className="mt-1 space-y-1">
+                      {hotelRevenueValidation.nextActions.map((action) => (
+                        <p key={action}>・{action}</p>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 rounded-lg border border-emerald-200/70 bg-emerald-50/40 p-3">
