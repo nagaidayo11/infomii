@@ -2137,6 +2137,33 @@ export type OpsHealthSnapshot = {
     priorityCardOrder: string[];
     referralInflowRate: number;
   };
+  week13Preview: {
+    billingCompletionDaily7d: Array<{
+      label: string;
+      rate: number;
+      started: number;
+      completed: number;
+    }>;
+    republish14dByDormancyChannel: {
+      line: number;
+      mail: number;
+      dashboard: number;
+    };
+    autoReminderIntervalHours: number;
+    top3WeeklyActions: string[];
+    webhookResendCheck: {
+      needed: boolean;
+      lastFailureAt: string | null;
+      guide: string;
+    };
+    kpiReview: {
+      lpToSignupRate: number;
+      publishCompletionRate: number;
+      proConversionRate: number;
+      retention14dRate: number;
+      referralRate: number;
+    };
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;

@@ -36,7 +36,7 @@ export default function LoginPage() {
   const ctaVariant = requestedAb === "b" || requestedAb === "c" ? requestedAb : "a";
   const requestedLp =
     search?.get("lp") ?? null;
-  const landingPage =
+  const initialLandingPage =
     requestedLp === "business" || requestedLp === "resort" || requestedLp === "spa"
       ? requestedLp
       : "unknown";
@@ -50,6 +50,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [preferredIndustry, setPreferredIndustry] = useState<"business" | "resort" | "spa">(
+    initialLandingPage === "business" || initialLandingPage === "resort" || initialLandingPage === "spa"
+      ? initialLandingPage
+      : "business",
+  );
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -85,12 +90,15 @@ export default function LoginPage() {
       sourceRef,
       sourceChannel,
       ctaVariant,
-      landingPage,
+      landingPage: preferredIndustry,
       deviceType,
     });
 
     setSubmitting(false);
-    router.replace(next);
+    const nextWithIndustry = next.includes("?")
+      ? `${next}&industry=${preferredIndustry}`
+      : `${next}?industry=${preferredIndustry}`;
+    router.replace(nextWithIndustry);
   }
 
   async function signUp() {
@@ -118,13 +126,13 @@ export default function LoginPage() {
       sourceRef,
       sourceChannel,
       ctaVariant,
-      landingPage,
+      landingPage: preferredIndustry,
       deviceType,
     });
 
     setSubmitting(false);
     setMessage("登録しました。初回公開ウィザードへ移動します。");
-    router.replace("/dashboard?tab=create&wizard=1");
+    router.replace(`/dashboard?tab=create&wizard=1&industry=${preferredIndustry}`);
   }
 
   return (
@@ -167,6 +175,31 @@ export default function LoginPage() {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             placeholder="6文字以上"
           />
+        </div>
+
+        <div>
+          <p className="mb-1 block text-sm font-medium">業態（テンプレ推薦）</p>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              ["business", "ビジネス"],
+              ["resort", "リゾート"],
+              ["spa", "温浴・旅館"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPreferredIndustry(value)}
+                className={`rounded-lg border px-2 py-2 text-xs ${
+                  preferredIndustry === value
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">選択内容は作成画面の初期テンプレ推薦に反映されます。</p>
         </div>
 
         <div>

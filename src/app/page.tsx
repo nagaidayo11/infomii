@@ -4,6 +4,33 @@ import LpRevealObserver from "@/components/lp-reveal-observer";
 import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
 
+function optimizePreviewImageUrl(url: string): string {
+  const value = url.trim();
+  if (!value) {
+    return value;
+  }
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("images.unsplash.com")) {
+      parsed.searchParams.set("auto", "format");
+      parsed.searchParams.set("fit", "crop");
+      parsed.searchParams.set("w", "960");
+      parsed.searchParams.set("q", "72");
+      return parsed.toString();
+    }
+    if (host.includes("images.pexels.com") || host.includes("cdn.pixabay.com")) {
+      parsed.searchParams.set("w", "960");
+      parsed.searchParams.set("h", "540");
+      parsed.searchParams.set("fit", "crop");
+      return parsed.toString();
+    }
+  } catch {
+    return value;
+  }
+  return value;
+}
+
 function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
   const previewBlocks = (blocks ?? []).slice(0, 18);
   if (previewBlocks.length === 0) {
@@ -16,7 +43,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
         スクロールで詳細
       </p>
       <div className="template-preview-scroll h-full space-y-2 overflow-y-auto pr-1 pb-8">
-        {previewBlocks.map((block) => {
+        {previewBlocks.map((block, index) => {
           if (block.type === "title" || block.type === "heading") {
             return (
               <p key={block.id} className="text-sm font-semibold text-slate-900">
@@ -32,16 +59,19 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
             );
           }
           if (block.type === "image" && block.url) {
+            if (index > 10) {
+              return null;
+            }
             return (
               <Image
                 key={block.id}
-                src={block.url}
+                src={optimizePreviewImageUrl(block.url)}
                 alt="template preview"
                 width={720}
                 height={360}
                 loading="lazy"
                 sizes="(max-width: 768px) 100vw, 320px"
-                className="h-24 w-full rounded-lg border border-slate-200 object-cover"
+                className="h-20 w-full rounded-lg border border-slate-200 object-cover"
               />
             );
           }
@@ -111,12 +141,19 @@ type HomePageProps = {
   }>;
 };
 type SeasonKey = "spring" | "summer" | "autumn" | "winter";
+type SearchSource = "search" | "sns" | "direct";
 
 export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
   const normalizedSourceChannel = sourceChannel === "ig" ? "instagram" : sourceChannel;
+  const sourceType: SearchSource =
+    sourceChannel.includes("google") || sourceChannel.includes("yahoo") || sourceChannel.includes("search")
+      ? "search"
+      : sourceChannel.length > 0
+        ? "sns"
+        : "direct";
   const month = new Date().getMonth() + 1;
   const season: SeasonKey =
     month >= 3 && month <= 5
@@ -185,8 +222,8 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCtaLabelByVariant = {
-    a: landingPage === "business" ? "無料でチェックイン案内を作成" : landingPage === "resort" ? "無料で滞在案内を作成" : "無料で温浴案内を作成",
-    b: landingPage === "business" ? "今すぐ夜間案内を公開" : landingPage === "resort" ? "今すぐ導線案内を公開" : "今すぐ温浴案内を公開",
+    a: landingPage === "business" ? "30秒登録でチェックイン案内を作成" : landingPage === "resort" ? "30秒登録で滞在案内を作成" : "30秒登録で温浴案内を作成",
+    b: landingPage === "business" ? "30秒登録で夜間案内を公開" : landingPage === "resort" ? "30秒登録で導線案内を公開" : "30秒登録で温浴案内を公開",
     c: landingPage === "business" ? "30秒登録でフロント運用を改善" : landingPage === "resort" ? "30秒登録で滞在導線を整備" : "30秒登録で温浴運用を整備",
   } as const;
   const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
@@ -200,8 +237,8 @@ export default async function Home({ searchParams }: HomePageProps) {
           : "";
   const optimizedHeroPrimaryCtaLabel = `${heroPrimaryCtaLabel}${channelCtaSuffix}`;
   const heroCtaShortLabelByVariant = {
-    a: "無料で作成",
-    b: "今すぐ公開",
+    a: "30秒登録で作成",
+    b: "30秒登録で公開",
     c: "30秒で開始",
   } as const;
   const heroPrimaryShortCtaLabel = heroCtaShortLabelByVariant[ctaVariant];
@@ -274,6 +311,9 @@ export default async function Home({ searchParams }: HomePageProps) {
   const publicExamples: Array<{
     title: string;
     tag: string;
+    pain: string;
+    solution: string;
+    impact: string;
     industryTag: "business" | "resort" | "spa";
     seasonTags: SeasonKey[];
     template: (typeof starterTemplates)[number];
@@ -283,6 +323,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "チェックイン案内ページ",
       tag: "フロント導線",
+      pain: "深夜到着時の問い合わせが集中",
+      solution: "チェックイン手順と連絡先を1画面固定",
+      impact: "夜間問い合わせの一次対応を約40%削減",
       industryTag: "business" as const,
       seasonTags: ["spring", "summer", "autumn", "winter"],
       template:
@@ -294,6 +337,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "温浴利用ガイドページ",
       tag: "温浴導線",
+      pain: "利用ルールの説明がスタッフ依存",
+      solution: "温浴時間・注意事項・予約導線を集約",
+      impact: "案内差し替え時間を週2h削減",
       industryTag: "spa" as const,
       seasonTags: ["autumn", "winter"],
       template:
@@ -305,6 +351,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     {
       title: "館内設備ページ",
       tag: "設備導線",
+      pain: "設備情報がページごとに分散",
+      solution: "Wi-Fi/駐車場/設備情報を統一表示",
+      impact: "フロント問い合わせを日次で平準化",
       industryTag: "resort" as const,
       seasonTags: ["spring", "summer"],
       template:
@@ -325,6 +374,11 @@ export default async function Home({ searchParams }: HomePageProps) {
     if (totalA !== totalB) return totalB - totalA;
     return a.title.localeCompare(b.title, "ja");
   });
+  const fixedImpactCards = [
+    { label: "更新時間削減", value: "最大70%" },
+    { label: "問い合わせ削減", value: "最大40%" },
+    { label: "初回公開時間", value: "最短3分" },
+  ];
 
   const features = [
     {
@@ -389,6 +443,22 @@ export default async function Home({ searchParams }: HomePageProps) {
       a: "まず無料で運用開始し、公開ページ数や導線連携が必要になった段階でProへ切り替える運用が一般的です。",
     },
   ];
+  const searchOptimizedFaq = sourceType === "search"
+    ? [
+        {
+          q: "ホテル案内ページ作成SaaSは無料で始められますか？",
+          a: "はい。InfomiiはFreeプラン¥0から開始できます。必要になった時のみProへ切り替え可能です。",
+        },
+        {
+          q: "チェックイン案内を最短で公開する方法は？",
+          a: "テンプレ選択→必要項目入力→公開の3ステップで、最短3分で公開できます。",
+        },
+        {
+          q: "QR運用は何を準備すればよいですか？",
+          a: "公開後にURL/QRを発行し、A4テンプレで掲示すればそのまま運用開始できます。",
+        },
+      ]
+    : faqItems;
 
   const impactStats = [
     { label: "更新時間の削減", value: "最大70%", sub: "紙・PDF運用から移行した場合の目安" },
@@ -398,10 +468,10 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   const compareRows = [
     { item: "月額料金（税込）", free: "¥0", pro: `${proMonthlyPriceLabel}` },
-    { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能" },
-    { item: "複数ページ連携", free: "-", pro: "ノードマップ対応" },
-    { item: "閲覧分析", free: "基本", pro: "詳細に確認可能" },
-    { item: "更新体験", free: "1ページ運用", pro: "ハブ導線で運用集約" },
+    { item: "案内ミス時の損失", free: "紙/PDF差し替え遅延", pro: "即時更新で機会損失を抑制" },
+    { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能（繁忙期に強い）" },
+    { item: "複数ページ連携", free: "-", pro: "ノードマップ対応（導線漏れ防止）" },
+    { item: "運用継続リスク", free: "担当者依存になりやすい", pro: "運用センターで復旧導線を固定" },
   ];
 
   const painSolutionRows = [
@@ -602,8 +672,16 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（3件）</h2>
-            <p className="text-sm text-slate-600">チェックイン / 温浴 / 館内設備の運用イメージ</p>
+            <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（課題→解決）</h2>
+            <p className="text-sm text-slate-600">業態別の課題を、公開ページでどう解決するかを可視化</p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {fixedImpactCards.map((card) => (
+              <div key={card.label} className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+                <p className="text-[11px] text-emerald-800">{card.label}</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p>
+              </div>
+            ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {([
@@ -640,6 +718,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                     {example.tag}
                   </p>
                   <h3 className="mt-2 text-base font-semibold text-slate-900">{example.title}</h3>
+                  <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px]">
+                    <p className="text-slate-700"><span className="font-semibold text-rose-700">課題:</span> {example.pain}</p>
+                    <p className="text-slate-700"><span className="font-semibold text-emerald-700">解決:</span> {example.solution}</p>
+                    <p className="text-slate-700"><span className="font-semibold text-cyan-700">効果:</span> {example.impact}</p>
+                  </div>
                   <ul className="mt-2 space-y-1 text-sm text-slate-700">
                     {example.bullets.map((bullet) => (
                       <li key={`${example.title}-${bullet}`}>・{bullet}</li>
@@ -802,9 +885,9 @@ export default async function Home({ searchParams }: HomePageProps) {
         </section>
 
         <section id="faq" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-slate-900">FAQ</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{sourceType === "search" ? "検索ユーザー向けFAQ" : "FAQ"}</h2>
           <div className="mt-4 space-y-2">
-            {faqItems.map((item, index) => (
+            {searchOptimizedFaq.map((item, index) => (
               <details
                 key={item.q}
                 className="lp-reveal rounded-xl border border-slate-200 bg-white p-4"

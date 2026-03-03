@@ -874,6 +874,20 @@ export default function DashboardPage() {
     }
     setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
   }, [hotelName, industryFilter, inferredFacilityType]);
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const industry = params.get("industry");
+    if (industry === "business") {
+      setIndustryFilter("hotel_business");
+    } else if (industry === "resort") {
+      setIndustryFilter("hotel_resort");
+    } else if (industry === "spa") {
+      setIndustryFilter("ryokan");
+    }
+  }, []);
 
   useEffect(() => {
     if (purposeFilter !== "all") {
@@ -3472,6 +3486,15 @@ export default function DashboardPage() {
                 <div className="mt-2 rounded-lg border border-cyan-200 bg-cyan-50/60 px-3 py-2 text-xs text-cyan-900">
                   優先カード順（自動）: {(opsHealth?.week12Preview.priorityCardOrder ?? ["publish", "billing", "dormancy", "alerts"]).join(" → ")}
                 </div>
+                <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-xs text-indigo-900">
+                  <p className="font-semibold">今週の最優先3施策（自動生成）</p>
+                  <div className="mt-1 space-y-1">
+                    {(opsHealth?.week13Preview.top3WeeklyActions ?? []).map((task) => (
+                      <p key={task}>・{task}</p>
+                    ))}
+                    {(opsHealth?.week13Preview.top3WeeklyActions ?? []).length === 0 ? <p>・現状は維持運用で問題ありません。</p> : null}
+                  </div>
+                </div>
                 <div className="mt-3 rounded-lg border border-emerald-200/70 bg-emerald-50/40 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-emerald-900">運用インパクト（推定）</p>
@@ -4059,6 +4082,22 @@ export default function DashboardPage() {
                     >
                       {sendingWeeklyReport ? "送信中..." : "週次レポート送信"}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = [
+                          "【Infomii 週次レポート自動送信テンプレ】",
+                          "送信先: 運用責任者 / 現場責任者",
+                          "頻度: 毎週 月曜 09:00",
+                          "件名: [Infomii] 週次運用レポート",
+                          "本文: LP→登録率 / 公開完了率 / Pro転換率 / 14日継続率 / 紹介流入率",
+                        ].join("\n");
+                        void navigator.clipboard.writeText(text).then(() => setSuccess("自動送信テンプレをコピーしました"));
+                      }}
+                      className="rounded-md border border-indigo-300 bg-white px-3 py-1.5 text-xs text-indigo-800 hover:bg-indigo-50"
+                    >
+                      自動送信テンプレをコピー
+                    </button>
                   </div>
                 </div>
 
@@ -4307,6 +4346,40 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                <div className="mt-3 rounded-lg border border-indigo-300 bg-indigo-50/70 p-3">
+                  <p className="text-xs font-semibold text-indigo-900">Week13 KPIレビュー（Monetization Scale）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-5">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week13Preview.kpiReview.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">公開完了</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week13Preview.kpiReview.publishCompletionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week13Preview.kpiReview.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">14日継続</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week13Preview.kpiReview.retention14dRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">紹介流入</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week13Preview.kpiReview.referralRate ?? 0}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    通知後14日再公開率（推定）: LINE {opsHealth?.week13Preview.republish14dByDormancyChannel.line ?? 0}% / Mail {opsHealth?.week13Preview.republish14dByDormancyChannel.mail ?? 0}% / Dashboard {opsHealth?.week13Preview.republish14dByDormancyChannel.dashboard ?? 0}%
+                  </div>
+                  <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    課金完了率（日次7日）: {(opsHealth?.week13Preview.billingCompletionDaily7d ?? [])
+                      .map((row) => `${row.label} ${row.rate}%`)
+                      .join(" / ") || "データなし"}
+                  </div>
+                </div>
+
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold text-slate-800">管理者通知テンプレ（休眠施設向け）</p>
                   <div className="mt-2 space-y-2 text-xs text-slate-700">
@@ -4327,7 +4400,12 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        const text = "【Infomii再開案内】最終更新から7日以上経過しています。テンプレ再開から3分で再公開できます。";
+                        const text =
+                          inferredFacilityType === "resort"
+                            ? "【Infomii再開案内/リゾート】最終更新から7日以上経過しています。滞在導線テンプレを複製して3分で再公開できます。"
+                            : inferredFacilityType === "spa"
+                              ? "【Infomii再開案内/温浴】最終更新から7日以上経過しています。温浴ルールページを3分で再公開できます。"
+                              : "【Infomii再開案内/ビジネス】最終更新から7日以上経過しています。チェックイン導線テンプレを3分で再公開できます。";
                         void trackDormancyNoticeVariantCopy("short");
                         void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（短文）をコピーしました"));
                       }}
@@ -4411,7 +4489,12 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        const text = "【Infomii運用再開のお願い】\n最終更新から7日以上経過しています。\n1) ダッシュボード > テンプレから再開\n2) 必要箇所だけ更新\n3) URL/QRを再配布\n本日中に再公開できる状態です。";
+                        const text =
+                          inferredFacilityType === "resort"
+                            ? "【Infomii運用再開/リゾート】\n最終更新から7日以上経過しています。\n1) 滞在導線テンプレを複製\n2) アクティビティ情報を更新\n3) URL/QRを再配布"
+                            : inferredFacilityType === "spa"
+                              ? "【Infomii運用再開/温浴】\n最終更新から7日以上経過しています。\n1) 温浴案内テンプレを複製\n2) 営業時間/注意事項を更新\n3) URL/QRを再配布"
+                              : "【Infomii運用再開/ビジネス】\n最終更新から7日以上経過しています。\n1) チェックイン導線テンプレを複製\n2) 連絡先を更新\n3) URL/QRを再配布";
                         void trackDormancyNoticeVariantCopy("detail");
                         void navigator.clipboard.writeText(text).then(() => setSuccess("通知テンプレ（詳細）をコピーしました"));
                       }}
@@ -4419,11 +4502,37 @@ export default function DashboardPage() {
                     >
                       通知テンプレ（詳細）をコピー
                     </button>
+                    <div className="rounded-md border border-violet-200 bg-violet-50 px-2 py-2 text-[11px] text-violet-900">
+                      A/B再テスト（管理者のみ）:
+                      <button
+                        type="button"
+                        onClick={() => void trackDormancyNoticeVariantCopy("short").then(() => setSuccess("Aパターンの再テストを記録しました"))}
+                        className="ml-2 rounded border border-violet-300 bg-white px-2 py-0.5"
+                      >
+                        A（短文）再テスト
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void trackDormancyNoticeVariantCopy("detail").then(() => setSuccess("Bパターンの再テストを記録しました"))}
+                        className="ml-2 rounded border border-violet-300 bg-white px-2 py-0.5"
+                      >
+                        B（詳細）再テスト
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
                   <p className="text-sm text-slate-700">{opsHealth?.billing.message ?? "データ取得中..."}</p>
+                  <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-2 text-xs text-amber-900">
+                    {opsHealth?.week13Preview.webhookResendCheck.needed
+                      ? `Webhook再送チェックが必要です（最終失敗: ${
+                          opsHealth?.week13Preview.webhookResendCheck.lastFailureAt
+                            ? formatDate(opsHealth.week13Preview.webhookResendCheck.lastFailureAt)
+                            : "不明"
+                        }）。${opsHealth?.week13Preview.webhookResendCheck.guide}`
+                      : "Webhook再送チェック: 現在は重大失敗なし"}
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -4731,6 +4840,9 @@ export default function DashboardPage() {
                       <p className="text-xs font-semibold text-rose-900">決済失敗の再試行ガイド</p>
                       <p className="mt-1 text-xs text-rose-800">
                         1. 請求書・カード管理でカード情報を更新 → 2. 決済を再開する → 3. 反映後に状態更新
+                      </p>
+                      <p className="mt-1 text-[11px] text-rose-800">
+                        自動リマインド推奨間隔: {opsHealth?.week13Preview.autoReminderIntervalHours ?? 24}時間ごと
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         <button

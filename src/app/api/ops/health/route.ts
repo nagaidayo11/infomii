@@ -216,6 +216,34 @@ type Week12Preview = {
   referralInflowRate: number;
 };
 
+type Week13Preview = {
+  billingCompletionDaily7d: Array<{
+    label: string;
+    rate: number;
+    started: number;
+    completed: number;
+  }>;
+  republish14dByDormancyChannel: {
+    line: number;
+    mail: number;
+    dashboard: number;
+  };
+  autoReminderIntervalHours: number;
+  top3WeeklyActions: string[];
+  webhookResendCheck: {
+    needed: boolean;
+    lastFailureAt: string | null;
+    guide: string;
+  };
+  kpiReview: {
+    lpToSignupRate: number;
+    publishCompletionRate: number;
+    proConversionRate: number;
+    retention14dRate: number;
+    referralRate: number;
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -698,6 +726,24 @@ export async function GET(request: NextRequest) {
           priorityCardOrder: ["publish", "billing", "dormancy", "alerts"],
           referralInflowRate: 0,
         },
+        week13Preview: {
+          billingCompletionDaily7d: [],
+          republish14dByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          autoReminderIntervalHours: 24,
+          top3WeeklyActions: [],
+          webhookResendCheck: {
+            needed: false,
+            lastFailureAt: null,
+            guide: "重大エラー発生時にWebhook再送を確認してください。",
+          },
+          kpiReview: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            referralRate: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -908,6 +954,24 @@ export async function GET(request: NextRequest) {
           criticalAlertRoutes: { slack: false, mail: false, dashboard: true },
           priorityCardOrder: ["publish", "billing", "dormancy", "alerts"],
           referralInflowRate: 0,
+        },
+        week13Preview: {
+          billingCompletionDaily7d: [],
+          republish14dByDormancyChannel: { line: 0, mail: 0, dashboard: 0 },
+          autoReminderIntervalHours: 24,
+          top3WeeklyActions: [],
+          webhookResendCheck: {
+            needed: false,
+            lastFailureAt: null,
+            guide: "重大エラー発生時にWebhook再送を確認してください。",
+          },
+          kpiReview: {
+            lpToSignupRate: 0,
+            publishCompletionRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            referralRate: 0,
+          },
         },
         recentBillingLogs: [] as BillingLogRow[],
       });
@@ -1935,6 +1999,76 @@ export async function GET(request: NextRequest) {
       priorityCardOrder,
       referralInflowRate,
     };
+    const billingCompletionDaily7d: Week13Preview["billingCompletionDaily7d"] = [];
+    for (let dayOffset = 6; dayOffset >= 0; dayOffset -= 1) {
+      const dayStart = new Date();
+      dayStart.setHours(0, 0, 0, 0);
+      dayStart.setDate(dayStart.getDate() - dayOffset);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const started = (funnelLogs ?? []).filter((row) => {
+        const createdAt = new Date(row.created_at).getTime();
+        return Number.isFinite(createdAt) &&
+          createdAt >= dayStart.getTime() &&
+          createdAt < dayEnd.getTime() &&
+          row.action === "billing.portal_session_created";
+      }).length;
+      const completed = (funnelLogs ?? []).filter((row) => {
+        const createdAt = new Date(row.created_at).getTime();
+        return Number.isFinite(createdAt) &&
+          createdAt >= dayStart.getTime() &&
+          createdAt < dayEnd.getTime() &&
+          row.action === "billing.subscription_synced";
+      }).length;
+      billingCompletionDaily7d.push({
+        label: `${dayStart.getMonth() + 1}/${dayStart.getDate()}`,
+        rate: started > 0 ? Math.round((completed / started) * 100) : 0,
+        started,
+        completed,
+      });
+    }
+    const republish14dByDormancyChannel: Week13Preview["republish14dByDormancyChannel"] = {
+      line: Math.round((channelRates.line * retentionRate14d) / 100),
+      mail: Math.round((channelRates.mail * retentionRate14d) / 100),
+      dashboard: Math.round((channelRates.dashboard * retentionRate14d) / 100),
+    };
+    const autoReminderIntervalHours =
+      (sub?.status ?? "") === "past_due"
+        ? checkoutToPaidRate < 30
+          ? 6
+          : 12
+        : 24;
+    const top3WeeklyActions = [
+      week2Review.kpi.publishCompletionRate < 60 ? "公開完了率が低いため、テンプレ作成→公開の完了動線を最優先で改善" : null,
+      checkoutToPaidRate < 15 ? "決済完了率が低いため、checkout再開導線とカード更新導線を先頭に固定" : null,
+      retentionRate14d < 35 ? "14日継続率が低いため、休眠通知（勝ちチャネル）を曜日別最適時間で送信" : null,
+      referralInflowRate < 20 ? "紹介流入率を上げるため、共有文面テンプレを毎週更新" : null,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .slice(0, 3);
+    const recentFailures = (logs ?? []).filter((row) => row.action.includes("failed") || row.action.includes("webhook"));
+    const webhookFailure = recentFailures.find((row) => row.action.includes("webhook"));
+    const webhookResendCheck: Week13Preview["webhookResendCheck"] = {
+      needed: Boolean(webhookFailure),
+      lastFailureAt: webhookFailure?.created_at ?? null,
+      guide: webhookFailure
+        ? "1) Stripeダッシュボードでイベント再送 2) 運用センターでStripe手動同期 3) status更新で反映確認"
+        : "Webhook失敗は検知されていません。週1回の再送確認のみ継続してください。",
+    };
+    const week13Preview: Week13Preview = {
+      billingCompletionDaily7d,
+      republish14dByDormancyChannel,
+      autoReminderIntervalHours,
+      top3WeeklyActions,
+      webhookResendCheck,
+      kpiReview: {
+        lpToSignupRate,
+        publishCompletionRate: week2Review.kpi.publishCompletionRate,
+        proConversionRate: week2Review.kpi.proConversionRate,
+        retention14dRate: retentionRate14d,
+        referralRate: referralInflowRate,
+      },
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -1975,6 +2109,7 @@ export async function GET(request: NextRequest) {
       week10Preview,
       week11Preview,
       week12Preview,
+      week13Preview,
       execution,
       dormancy,
       performance7d: {

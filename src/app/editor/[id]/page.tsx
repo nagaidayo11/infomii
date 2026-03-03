@@ -36,6 +36,7 @@ import {
   type HotelSubscription,
   updateInformation,
 } from "@/lib/storage";
+import { starterTemplates } from "@/lib/templates";
 import type { Information, InformationBlock, InformationTheme, NodeMap } from "@/types/information";
 
 const ICON_CHOICES: Array<{ value: string; label: string }> = [
@@ -343,7 +344,14 @@ function collectPublishCheckIssues(
     if (block.type !== "iconRow") {
       if (block.type === "cta") {
         const ctaUrl = (block.ctaUrl ?? "").trim();
-        if (ctaUrl && !isValidHttpUrl(ctaUrl) && !ctaUrl.startsWith("/p/")) {
+        if (ctaUrl.startsWith("http://")) {
+          issues.push({
+            level: "error",
+            message: `${blockIndex + 1}.CTA: httpリンクは非推奨です。https:// で設定してください。`,
+            target: "blocks",
+            blockId: block.id,
+          });
+        } else if (ctaUrl && !isValidHttpUrl(ctaUrl) && !ctaUrl.startsWith("/p/")) {
           issues.push({
             level: "error",
             message: `${blockIndex + 1}.CTA: URL形式が不正です（例: https://example.com または /p/sample）。`,
@@ -398,6 +406,15 @@ function collectPublishCheckIssues(
         issues.push({
           level: "error",
           message: `${rowLabel}: 外部リンク形式が不正です（例: https://hotel.example.com）。`,
+          target: "blocks",
+          blockId: block.id,
+        });
+        return;
+      }
+      if (link.startsWith("http://")) {
+        issues.push({
+          level: "error",
+          message: `${rowLabel}: httpリンクは非推奨です。https:// で設定してください。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -1368,6 +1385,8 @@ export default function EditorPage() {
   const [showPostPublishAssist, setShowPostPublishAssist] = useState(false);
   const [applyingPublishBatchFix, setApplyingPublishBatchFix] = useState(false);
   const [applyingAutoFill, setApplyingAutoFill] = useState(false);
+  const [applyingHotelTemplatePack, setApplyingHotelTemplatePack] = useState(false);
+  const [imageGuideExecuted, setImageGuideExecuted] = useState(false);
   const [publishScoreDropReason, setPublishScoreDropReason] = useState<string | null>(null);
   const pageTitleSectionRef = useRef<HTMLDivElement | null>(null);
   const blockPanelRef = useRef<HTMLElement | null>(null);
@@ -3875,8 +3894,51 @@ function onUpdateIconRowItem(
       "4. 公開前チェックの画像警告が0件になるまで調整",
     ].join("\n");
     await navigator.clipboard.writeText(body);
+    setImageGuideExecuted(true);
     setNoticeKind("success");
     setNotice("画像最適化の一括変換ガイドをコピーしました。");
+  }
+
+  async function onApplyHotelTemplatePack() {
+    if (!item) {
+      return;
+    }
+    const businessTemplate = starterTemplates.find((entry) => entry.industry === "hotel_business");
+    const resortTemplate = starterTemplates.find((entry) => entry.industry === "hotel_resort");
+    const sourceBlocks = [...(businessTemplate?.blocks ?? []), ...(resortTemplate?.blocks ?? [])]
+      .filter((block) => block.type !== "space")
+      .slice(0, 14);
+    if (sourceBlocks.length === 0) {
+      setNoticeKind("error");
+      setNotice("テンプレパックの読み込みに失敗しました。");
+      return;
+    }
+    setApplyingHotelTemplatePack(true);
+    try {
+      const nextBlocks = sourceBlocks.map((block) => ({ ...block, id: crypto.randomUUID() }));
+      const nextTitle = item.title?.trim() ? item.title : "ホテル向け完成テンプレパック";
+      const nextItem = {
+        ...item,
+        title: nextTitle,
+        contentBlocks: nextBlocks,
+        body: blocksToBody(nextBlocks),
+        images: blocksToImages(nextBlocks),
+      };
+      setItem(nextItem);
+      await updateInformation(item.id, {
+        title: nextTitle,
+        contentBlocks: nextBlocks,
+        body: nextItem.body,
+        images: nextItem.images,
+      });
+      setNoticeKind("success");
+      setNotice("ホテル向け完成テンプレパックを適用しました。");
+    } catch (e) {
+      setNoticeKind("error");
+      setNotice(e instanceof Error ? e.message : "テンプレパックの適用に失敗しました");
+    } finally {
+      setApplyingHotelTemplatePack(false);
+    }
   }
 
   useEffect(() => {
@@ -6476,8 +6538,17 @@ function onUpdateIconRowItem(
                       <p>{(item.contentBlocks ?? []).some((block) => block.type === "cta") ? "✓" : "・"} CTA設置</p>
                       <p>{publishCheckIssues.some((issue) => issue.message.includes("問い合わせ導線")) ? "・" : "✓"} 問い合わせ導線</p>
                       <p>{heavyImageBlockWarnings.length === 0 ? "✓" : "・"} 画像軽量化</p>
+                      <p>{imageGuideExecuted ? "✓" : "・"} 画像圧縮ガイド実行チェック</p>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void onApplyHotelTemplatePack()}
+                        disabled={applyingHotelTemplatePack}
+                        className="rounded-md border border-indigo-300 bg-white px-2 py-1 text-[11px] text-indigo-900 hover:bg-indigo-100 disabled:opacity-60"
+                      >
+                        {applyingHotelTemplatePack ? "適用中..." : "ホテル向け完成テンプレパックを適用"}
+                      </button>
                       <button
                         type="button"
                         onClick={() => void onQuickAddContactGuide()}
@@ -6499,7 +6570,7 @@ function onUpdateIconRowItem(
                         onClick={() => void onCopyImageBatchGuide()}
                         className="rounded-md border border-cyan-300 bg-white px-2 py-1 text-[11px] text-cyan-900 hover:bg-cyan-100"
                       >
-                        画像一括変換ガイドをコピー
+                        画像一括変換ガイドをコピー（実行チェック）
                       </button>
                     </div>
                   </article>
