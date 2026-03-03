@@ -277,6 +277,23 @@ export default async function Home({ searchParams }: HomePageProps) {
     breakfast: "検索意図: 朝食導線の統一運用",
     wifi: "検索意図: 館内設備/Wi-Fi案内の問い合わせ削減",
   } as const;
+  const anxietyReliefByLanding = {
+    business: [
+      "専門知識なしでもテンプレから3分公開",
+      "深夜到着導線を先に配置して問い合わせを抑制",
+      "更新はテキスト差し替えだけで運用可能",
+    ],
+    resort: [
+      "滞在導線テンプレを選ぶだけで初期構成が完成",
+      "アクティビティ・プール案内を同時に公開",
+      "季節イベント時の差し替えを画面内で完結",
+    ],
+    spa: [
+      "温浴ルール/注意事項を初期値つきで配置",
+      "混雑時の導線変更を即時反映して配布",
+      "貸切風呂/利用時間の案内漏れを防止",
+    ],
+  } as const;
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
@@ -670,6 +687,20 @@ export default async function Home({ searchParams }: HomePageProps) {
             </aside>
           </div>
         </header>
+
+        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">導入までの不安を先回りで解消</h2>
+            <p className="text-sm text-slate-600">{landingPage === "business" ? "ビジネスホテル向け" : landingPage === "resort" ? "リゾートホテル向け" : "温浴施設向け"}の初期導線</p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {anxietyReliefByLanding[landingPage].map((line) => (
+              <article key={line} className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-900">
+                {line}
+              </article>
+            ))}
+          </div>
+        </section>
 
         <section className="lp-reveal lp-delay-2 grid gap-4 md:grid-cols-3">
           {useCases.map((item, index) => (

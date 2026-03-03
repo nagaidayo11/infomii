@@ -672,6 +672,78 @@ function resolveTemplateBlocks(template: StarterTemplate): InformationBlock[] {
   return normalizeBlocks([], template.body);
 }
 
+function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBlock[] {
+  const next = cloneTemplateBlocks(blocks);
+  const joinedText = next
+    .map((block) => {
+      if (block.type === "section") {
+        return `${block.sectionTitle ?? ""}\n${block.sectionBody ?? ""}`;
+      }
+      if (block.type === "paragraph" || block.type === "title" || block.type === "heading") {
+        return block.text ?? "";
+      }
+      if (block.type === "iconRow") {
+        return (block.iconItems ?? []).map((item) => `${item.label ?? ""} ${item.link ?? ""}`).join("\n");
+      }
+      if (block.type === "cta") {
+        return `${block.ctaLabel ?? ""} ${block.ctaUrl ?? ""}`;
+      }
+      return "";
+    })
+    .join("\n")
+    .toLowerCase();
+
+  const hasContact = /(?:\+?\d[\d\-()\s]{8,}\d)|(?:@)|(?:tel:)|(?:連絡|お問い合わせ|フロント|電話)/i.test(joinedText);
+  if (!hasContact) {
+    next.push({
+      id: crypto.randomUUID(),
+      type: "section",
+      sectionTitle: "お問い合わせ",
+      sectionBody: "フロント: 03-1234-5678\nメール: front@example.com",
+      sectionBackgroundColor: "#f8fafc",
+      spacing: "md",
+    });
+  }
+
+  const hasHoursData = next.some(
+    (block) =>
+      block.type === "hours" &&
+      (block.hoursItems ?? []).some((entry) => (entry.label ?? "").trim() && (entry.value ?? "").trim()),
+  );
+  if (!hasHoursData) {
+    const hoursBlock = next.find((block) => block.type === "hours");
+    if (hoursBlock && hoursBlock.type === "hours") {
+      hoursBlock.hoursItems = [
+        ...(hoursBlock.hoursItems ?? []),
+        {
+          id: crypto.randomUUID(),
+          label: "チェックイン",
+          value: "15:00-24:00",
+        },
+      ];
+      if ((hoursBlock.hoursItems ?? []).length < 2) {
+        hoursBlock.hoursItems.push({
+          id: crypto.randomUUID(),
+          label: "チェックアウト",
+          value: "10:00まで",
+        });
+      }
+    } else {
+      next.push({
+        id: crypto.randomUUID(),
+        type: "hours",
+        hoursItems: [
+          { id: crypto.randomUUID(), label: "チェックイン", value: "15:00-24:00" },
+          { id: crypto.randomUUID(), label: "チェックアウト", value: "10:00まで" },
+        ],
+        spacing: "md",
+      });
+    }
+  }
+
+  return next;
+}
+
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
   return plan === "pro" ? 1000 : 3;
 }
@@ -1153,7 +1225,7 @@ export async function createInformationFromTemplate(
 ): Promise<string> {
   const template = starterTemplates[templateIndex] ?? starterTemplates[0];
   const supabase = getBrowserSupabaseClient();
-  const blocks = resolveTemplateBlocks(template);
+  const blocks = applyTemplateInitialDefaults(resolveTemplateBlocks(template));
 
   if (supabase) {
     const hotelId = await ensureUserHotelScope();
@@ -2205,6 +2277,45 @@ export type OpsHealthSnapshot = {
       recoveryMinutes: number;
     };
   };
+  week15Preview: {
+    lpAnxietyReliefMessage: string;
+    ctaFunnelByRefKeyword: Array<{
+      ref: "lp-hero" | "lp-sticky" | "lp-bottom";
+      keyword: "checkin" | "bath" | "breakfast" | "wifi" | "unknown";
+      logins: number;
+      signups: number;
+      rate: number;
+    }>;
+    lpLcpBottleneckFactors: Array<{
+      factor: string;
+      severity: "high" | "medium" | "low";
+    }>;
+    templateFirstPublishRate: Array<{
+      templateTitle: string;
+      selected: number;
+      published: number;
+      rate: number;
+    }>;
+    checkoutResumeOneClickReady: boolean;
+    billingPortalTransitionRate7d: number;
+    retention14dSplit: {
+      newUsers: number;
+      existingUsers: number;
+    };
+    weeklyBottlenecks: string[];
+    criticalRecoveryChecklist: {
+      needed: boolean;
+      items: string[];
+    };
+    weeklyReportImprovementExecutionRate: number;
+    kpiReview: {
+      lpToSignupRate: number;
+      firstPublishRate: number;
+      proConversionRate: number;
+      retention14dRate: number;
+      recoveryMinutes: number;
+    };
+  };
   recentBillingLogs: Array<{
     id: string;
     action: string;
@@ -2505,6 +2616,16 @@ function toOnboardingDeviceType(value: string | null | undefined): OnboardingDev
   return "unknown";
 }
 
+function toOnboardingKeyword(
+  value: string | null | undefined,
+): "checkin" | "bath" | "breakfast" | "wifi" | "unknown" {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "checkin" || normalized === "bath" || normalized === "breakfast" || normalized === "wifi") {
+    return normalized;
+  }
+  return "unknown";
+}
+
 export async function trackOnboardingAuthEvent(
   action: OnboardingAuthAction,
   params?: {
@@ -2513,6 +2634,7 @@ export async function trackOnboardingAuthEvent(
     ctaVariant?: string | null;
     landingPage?: string | null;
     deviceType?: string | null;
+    keyword?: string | null;
   },
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
@@ -2528,11 +2650,12 @@ export async function trackOnboardingAuthEvent(
   const ctaVariant = toOnboardingCtaVariant(params?.ctaVariant);
   const landingPage = toOnboardingLandingPage(params?.landingPage);
   const deviceType = toOnboardingDeviceType(params?.deviceType);
+  const keyword = toOnboardingKeyword(params?.keyword);
   const actionName = `onboarding.${action}`;
   const message =
     action === "signup_completed"
-      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage}`
-      : `ログインしました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage}`;
+      ? `新規登録が完了しました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage} / kw:${keyword}`
+      : `ログインしました${safeRef ? `（${safeRef}）` : ""} / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage} / kw:${keyword}`;
 
   await appendAuditLog({
     hotelId,
@@ -2546,6 +2669,7 @@ export async function trackOnboardingAuthEvent(
       ctaVariant,
       landingPage,
       deviceType,
+      keyword,
     },
   });
 }
@@ -2896,7 +3020,10 @@ export async function trackProBlockerReason(
   });
 }
 
-export async function runOpsWeeklyReport(message: string): Promise<string> {
+export async function runOpsWeeklyReport(
+  message: string,
+  options?: { improvementExecutionRate?: number },
+): Promise<string> {
   const token = await getAccessTokenOrThrow();
   const response = await fetch("/api/ops/weekly-report", {
     method: "POST",
@@ -2904,7 +3031,7 @@ export async function runOpsWeeklyReport(message: string): Promise<string> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, improvementExecutionRate: options?.improvementExecutionRate }),
   });
   const payload = (await response.json()) as {
     message?: string;

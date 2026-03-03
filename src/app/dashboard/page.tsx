@@ -453,6 +453,35 @@ function detectTemplatePublishWindow(template: StarterTemplate): "morning" | "da
   return "daytime";
 }
 
+function estimateTemplateOperators(inputCount: number): string {
+  if (inputCount <= 8) {
+    return "1人";
+  }
+  if (inputCount <= 14) {
+    return "1-2人";
+  }
+  if (inputCount <= 20) {
+    return "2-3人";
+  }
+  return "3人以上";
+}
+
+function getTemplateFailureProneDefaults(template: StarterTemplate): string[] {
+  const text = `${template.title}\n${template.body}`.toLowerCase();
+  const defaults: string[] = [];
+  if (text.includes("チェックイン") || text.includes("チェックアウト")) {
+    defaults.push("チェックイン/チェックアウト時間");
+  }
+  if (text.includes("温浴") || text.includes("大浴場") || text.includes("風呂")) {
+    defaults.push("利用時間・注意事項");
+  }
+  if (text.includes("朝食") || text.includes("レストラン")) {
+    defaults.push("会場・最終入場時刻");
+  }
+  defaults.push("問い合わせ先（TEL/メール）");
+  return Array.from(new Set(defaults)).slice(0, 3);
+}
+
 const PUBLISH_WINDOW_LABELS = {
   morning: "朝（6:00-10:00）",
   daytime: "日中（10:00-18:00）",
@@ -1019,6 +1048,8 @@ export default function DashboardPage() {
   const isNearLimit = !isLimitReached && publishedLimit > 0 && usagePercent >= 80;
   const isProActive = subscription?.plan === "pro" && (subscription.status === "active" || subscription.status === "trialing");
   const isHighTraffic = (viewMetrics?.totalViews7d ?? 0) >= 120;
+  const utilizationBand =
+    publishedLimit <= 0 ? "low" : usagePercent >= 80 ? "high" : usagePercent >= 40 ? "mid" : "low";
   const currentMonth = new Date().getMonth() + 1;
   const isPeakSeason = [3, 4, 5, 8, 11, 12].includes(currentMonth);
   const shouldShowUpgradeCta = !isProActive && (isNearLimit || isLimitReached || isHighTraffic || isPeakSeason);
@@ -1041,7 +1072,9 @@ export default function DashboardPage() {
           const scenes = detectTemplateScenes(template);
           const inputCount = estimateTemplateInputCount(template);
           const viewSeconds = estimateTemplateViewSeconds(template, inputCount);
-          return { template, originalIndex, purposes, scenes, inputCount, viewSeconds };
+          const operators = estimateTemplateOperators(inputCount);
+          const defaultHints = getTemplateFailureProneDefaults(template);
+          return { template, originalIndex, purposes, scenes, inputCount, viewSeconds, operators, defaultHints };
         })
         .filter(({ template, purposes }) => {
         if (industryFilter !== "all" && template.industry !== industryFilter) {
@@ -1083,6 +1116,8 @@ export default function DashboardPage() {
         scenes: TemplateScene[];
         inputCount: number;
         viewSeconds: number;
+        operators: string;
+        defaultHints: string[];
       }>,
       industry: IndustryPreset | null,
     ) =>
@@ -1096,6 +1131,7 @@ export default function DashboardPage() {
             scenes: TemplateScene[];
             originalIndex: number;
             template: StarterTemplate;
+            operators: string;
           }) => {
             let s = 0;
             if (purposeFilter !== "all" && entry.purposes.includes(purposeFilter)) {
@@ -1121,6 +1157,9 @@ export default function DashboardPage() {
             }
             if (favoriteTemplateSet.has(entry.originalIndex)) {
               s += 5;
+            }
+            if (entry.operators === "1人" || entry.operators === "1-2人") {
+              s += 2;
             }
             return s;
           };
@@ -1255,6 +1294,13 @@ export default function DashboardPage() {
     }
     return usageMap;
   }, [items]);
+  const templateFirstPublishRateByTitle = useMemo(() => {
+    const map = new Map<string, { selected: number; published: number; rate: number }>();
+    for (const row of opsHealth?.week15Preview.templateFirstPublishRate ?? []) {
+      map.set(row.templateTitle, { selected: row.selected, published: row.published, rate: row.rate });
+    }
+    return map;
+  }, [opsHealth?.week15Preview.templateFirstPublishRate]);
   const topAdoptedIndustry = useMemo(() => {
     const top = templateUsageRanking[0];
     if (!top || top.count <= 0) {
@@ -1671,12 +1717,13 @@ export default function DashboardPage() {
         "",
         "[改善アクション実行率]",
         `${opsHealth?.week10Preview.actionExecutionRate ?? 0}%`,
+        `週次レポート実行率: ${opsHealth?.week15Preview.weeklyReportImprovementExecutionRate ?? 0}%`,
         `実行済み改善数: ${opsHealth?.week11Preview.executedImprovementsCount ?? 0}件`,
         `運用負荷削減時間（週）: ${opsHealth?.week12Preview.weeklyOpsSavedHours ?? 0}h`,
         `紹介流入率: ${opsHealth?.week12Preview.referralInflowRate ?? 0}%`,
       ].join("\n");
     },
-    [opsHealth?.week10Preview.actionExecutionRate, opsHealth?.week11Preview.executedImprovementsCount, opsHealth?.week12Preview.referralInflowRate, opsHealth?.week12Preview.weeklyOpsSavedHours, week5Kpi, week7PriorityTop3],
+    [opsHealth?.week10Preview.actionExecutionRate, opsHealth?.week11Preview.executedImprovementsCount, opsHealth?.week12Preview.referralInflowRate, opsHealth?.week12Preview.weeklyOpsSavedHours, opsHealth?.week15Preview.weeklyReportImprovementExecutionRate, week5Kpi, week7PriorityTop3],
   );
   const unoptimizedImageUrls = useMemo(() => {
     const urls = new Set<string>();
@@ -2150,7 +2197,9 @@ export default function DashboardPage() {
     setError(null);
     setSuccess(null);
     try {
-      const message = await runOpsWeeklyReport(weeklyOpsReport);
+      const message = await runOpsWeeklyReport(weeklyOpsReport, {
+        improvementExecutionRate: opsHealth?.week15Preview.weeklyReportImprovementExecutionRate ?? opsHealth?.week10Preview.actionExecutionRate ?? 0,
+      });
       setSuccess(message);
     } catch (e) {
       setError(e instanceof Error ? e.message : "週次レポート送信に失敗しました");
@@ -3006,11 +3055,12 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-emerald-700">{group.entries.length}件</p>
                       </div>
                       <div className="grid gap-3 lg:grid-cols-3">
-                        {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds }) => {
+                        {group.entries.map(({ template, originalIndex, purposes, scenes, inputCount, viewSeconds, operators, defaultHints }) => {
                           const requirementHints = getTemplateRequirementHints(template);
                           const slaMs = getTemplateSlaMs(template);
                           const quality = getTemplateQualityScore(template);
                           const usageCount = templateUsageCountByTitle.get(template.title) ?? 0;
+                          const firstPublish = templateFirstPublishRateByTitle.get(template.title);
                           return (
                           <article
                             key={`${template.title}-${originalIndex}`}
@@ -3093,6 +3143,12 @@ export default function DashboardPage() {
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">想定表示時間: 約{viewSeconds}秒</p>
                               <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">必要入力: {inputCount}項目</p>
                             </div>
+                            <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+                              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1">想定運用人数: {operators}</p>
+                              <p className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1">
+                                初回公開率: {firstPublish ? `${firstPublish.rate}%` : "集計中"}
+                              </p>
+                            </div>
                             <p className="mt-1 rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-900">
                               推奨公開時間: {PUBLISH_WINDOW_LABELS[detectTemplatePublishWindow(template)]}
                             </p>
@@ -3113,6 +3169,9 @@ export default function DashboardPage() {
                                 不足補完ガイド: {quality.missing.join(" / ")}
                               </p>
                             )}
+                            <p className="mt-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900">
+                              初期値補完: {defaultHints.join(" / ")}
+                            </p>
                             <div className="mt-2 space-y-1 text-[11px] text-slate-600">
                               <p className="font-semibold text-slate-700">必須: {requirementHints.required.join(" / ")}</p>
                               <p>推奨: {requirementHints.recommended.join(" / ")}</p>
@@ -4425,6 +4484,46 @@ export default function DashboardPage() {
                     LP速度週次: {(opsHealth?.week14Preview.lpSpeedTrend4w ?? []).map((row) => `${row.label} LCP${row.lcpMs}ms`).join(" / ") || "データなし"}
                   </div>
                 </div>
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50/70 p-3">
+                  <p className="text-xs font-semibold text-emerald-900">Week15 KPIレビュー（Expansion Readiness）</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-5">
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">LP→登録</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week15Preview.kpiReview.lpToSignupRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">初回公開</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week15Preview.kpiReview.firstPublishRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">Pro転換</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week15Preview.kpiReview.proConversionRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">14日継続</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week15Preview.kpiReview.retention14dRate ?? 0}%</p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2">
+                      <p className="text-xs text-slate-500">復旧速度</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-900">{opsHealth?.week15Preview.kpiReview.recoveryMinutes ?? 0}分</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    導入不安の解消メッセージ: {opsHealth?.week15Preview.lpAnxietyReliefMessage ?? "データなし"}
+                  </p>
+                  <p className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    LPボトルネック: {(opsHealth?.week15Preview.lpLcpBottleneckFactors ?? []).map((row) => `${row.factor}(${row.severity})`).join(" / ") || "データなし"}
+                  </p>
+                  <p className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    CTA ref/kw分解: {(opsHealth?.week15Preview.ctaFunnelByRefKeyword ?? []).map((row) => `${row.ref}/${row.keyword} ${row.rate}%`).join(" / ") || "データなし"}
+                  </p>
+                  <p className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    週次ボトルネック: {(opsHealth?.week15Preview.weeklyBottlenecks ?? []).join(" / ") || "なし"}
+                  </p>
+                  <p className="mt-1 rounded-md border border-emerald-200 bg-white px-2 py-2 text-xs text-slate-700">
+                    14日継続（新規/既存）: 新規 {opsHealth?.week15Preview.retention14dSplit.newUsers ?? 0}% / 既存 {opsHealth?.week15Preview.retention14dSplit.existingUsers ?? 0}%
+                  </p>
+                </div>
                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900">
                   再公開リワード導線: {opsHealth?.week14Preview.rewardRecoveryMessage ?? "データなし"}
                 </div>
@@ -4625,6 +4724,14 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
                     週次レポート送信監査: 7日 {opsHealth?.week14Preview.weeklyReportAudit.sent7d ?? 0}件 / 最終 {opsHealth?.week14Preview.weeklyReportAudit.lastSentAt ? formatDate(opsHealth.week14Preview.weeklyReportAudit.lastSentAt) : "未送信"}
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                    改善実行率（週次レポート）: {opsHealth?.week15Preview.weeklyReportImprovementExecutionRate ?? 0}%
+                  </div>
+                  <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-700">
+                    重大アラート復旧チェック: {opsHealth?.week15Preview.criticalRecoveryChecklist.needed ? "実施必要" : "通常監視"}
+                    {" / "}
+                    {(opsHealth?.week15Preview.criticalRecoveryChecklist.items ?? []).join(" → ") || "項目なし"}
                   </div>
                 </div>
 
@@ -4886,6 +4993,9 @@ export default function DashboardPage() {
                       公開枠が80%に近づくと、この画面にProアップグレード導線を表示します。
                     </p>
                   )}
+                  <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                    利用状況別Pro訴求: {utilizationBand === "high" ? "公開枠逼迫のため、複数ページ連携と枠拡張を優先提案" : utilizationBand === "mid" ? "更新頻度増加に備えて請求/運用導線を先行整備" : "まずは1ページ運用を安定させ、必要時にPro化"}。
+                  </p>
                   {hasPendingCheckout && latestCheckoutSessionLog && (
                     <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                       <p className="text-xs font-semibold text-amber-900">checkout未完了リマインド</p>
@@ -4894,6 +5004,9 @@ export default function DashboardPage() {
                       </p>
                       <p className="mt-1 text-[11px] text-amber-800">
                         自動再送: {opsHealth?.week14Preview.checkoutAutoResendReady ? "次回リマインド対象" : "対象なし"}
+                      </p>
+                      <p className="mt-1 text-[11px] text-amber-800">
+                        1クリック再開: {opsHealth?.week15Preview.checkoutResumeOneClickReady ? "有効" : "未設定"}
                       </p>
                       <button
                         type="button"
@@ -4905,6 +5018,9 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   )}
+                  <p className="mt-3 rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-900">
+                    請求・カード管理 遷移完了率（7日）: {opsHealth?.week15Preview.billingPortalTransitionRate7d ?? 0}%
+                  </p>
                   {subscription?.status === "past_due" && (
                     <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
                       <p className="text-xs font-semibold text-rose-900">決済失敗の再試行ガイド</p>

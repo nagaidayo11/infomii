@@ -286,6 +286,46 @@ type Week14Preview = {
   };
 };
 
+type Week15Preview = {
+  lpAnxietyReliefMessage: string;
+  ctaFunnelByRefKeyword: Array<{
+    ref: "lp-hero" | "lp-sticky" | "lp-bottom";
+    keyword: "checkin" | "bath" | "breakfast" | "wifi" | "unknown";
+    logins: number;
+    signups: number;
+    rate: number;
+  }>;
+  lpLcpBottleneckFactors: Array<{
+    factor: string;
+    severity: "high" | "medium" | "low";
+  }>;
+  templateFirstPublishRate: Array<{
+    templateTitle: string;
+    selected: number;
+    published: number;
+    rate: number;
+  }>;
+  checkoutResumeOneClickReady: boolean;
+  billingPortalTransitionRate7d: number;
+  retention14dSplit: {
+    newUsers: number;
+    existingUsers: number;
+  };
+  weeklyBottlenecks: string[];
+  criticalRecoveryChecklist: {
+    needed: boolean;
+    items: string[];
+  };
+  weeklyReportImprovementExecutionRate: number;
+  kpiReview: {
+    lpToSignupRate: number;
+    firstPublishRate: number;
+    proConversionRate: number;
+    retention14dRate: number;
+    recoveryMinutes: number;
+  };
+};
+
 function roundAverage(values: number[]): number {
   if (values.length === 0) {
     return 0;
@@ -808,6 +848,25 @@ export async function GET(request: NextRequest) {
             recoveryMinutes: 0,
           },
         },
+        week15Preview: {
+          lpAnxietyReliefMessage: "30秒登録後にテンプレ選択まで進める導線を固定しています。",
+          ctaFunnelByRefKeyword: [],
+          lpLcpBottleneckFactors: [],
+          templateFirstPublishRate: [],
+          checkoutResumeOneClickReady: true,
+          billingPortalTransitionRate7d: 0,
+          retention14dSplit: { newUsers: 0, existingUsers: 0 },
+          weeklyBottlenecks: [],
+          criticalRecoveryChecklist: { needed: false, items: [] },
+          weeklyReportImprovementExecutionRate: 0,
+          kpiReview: {
+            lpToSignupRate: 0,
+            firstPublishRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            recoveryMinutes: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -1059,6 +1118,25 @@ export async function GET(request: NextRequest) {
             recoveryMinutes: 0,
           },
         },
+        week15Preview: {
+          lpAnxietyReliefMessage: "30秒登録後にテンプレ選択まで進める導線を固定しています。",
+          ctaFunnelByRefKeyword: [],
+          lpLcpBottleneckFactors: [],
+          templateFirstPublishRate: [],
+          checkoutResumeOneClickReady: true,
+          billingPortalTransitionRate7d: 0,
+          retention14dSplit: { newUsers: 0, existingUsers: 0 },
+          weeklyBottlenecks: [],
+          criticalRecoveryChecklist: { needed: false, items: [] },
+          weeklyReportImprovementExecutionRate: 0,
+          kpiReview: {
+            lpToSignupRate: 0,
+            firstPublishRate: 0,
+            proConversionRate: 0,
+            retention14dRate: 0,
+            recoveryMinutes: 0,
+          },
+        },
         recentBillingLogs: [] as BillingLogRow[],
       });
     }
@@ -1173,7 +1251,7 @@ export async function GET(request: NextRequest) {
         .limit(1000),
       admin
         .from("audit_logs")
-        .select("created_at")
+        .select("created_at,metadata")
         .eq("hotel_id", hotelId)
         .gte("created_at", since7d)
         .eq("action", "ops.weekly_report_sent")
@@ -1326,6 +1404,7 @@ export async function GET(request: NextRequest) {
       ["pc", new Map([["x", { logins: 0, signups: 0 }], ["instagram", { logins: 0, signups: 0 }], ["tiktok", { logins: 0, signups: 0 }], ["other", { logins: 0, signups: 0 }], ["unknown", { logins: 0, signups: 0 }]])],
       ["unknown", new Map([["x", { logins: 0, signups: 0 }], ["instagram", { logins: 0, signups: 0 }], ["tiktok", { logins: 0, signups: 0 }], ["other", { logins: 0, signups: 0 }], ["unknown", { logins: 0, signups: 0 }]])],
     ]);
+    const onboardingByRefKeyword = new Map<string, { logins: number; signups: number }>();
     for (const row of onboardingLogs ?? []) {
       const metadata = row.metadata as Record<string, unknown> | null;
       const ref = metadata?.sourceRef;
@@ -1356,12 +1435,20 @@ export async function GET(request: NextRequest) {
         deviceType === "sp" || deviceType === "pc" || deviceType === "unknown"
           ? deviceType
           : "unknown";
+      const keyword = metadata?.keyword;
+      const safeKeyword: "checkin" | "bath" | "breakfast" | "wifi" | "unknown" =
+        keyword === "checkin" || keyword === "bath" || keyword === "breakfast" || keyword === "wifi"
+          ? keyword
+          : "unknown";
       const entry = onboardingByRef.get(ref);
       if (!entry) {
         continue;
       }
+      const refKwKey = `${ref}:${safeKeyword}`;
+      const refKwEntry = onboardingByRefKeyword.get(refKwKey) ?? { logins: 0, signups: 0 };
       if (row.action === "onboarding.login_success") {
         entry.logins += 1;
+        refKwEntry.logins += 1;
         if (safeLp) {
           const stat = onboardingByLpVariant.get(safeLp)?.get(safeVariant);
           if (stat) {
@@ -1382,6 +1469,7 @@ export async function GET(request: NextRequest) {
         }
       } else if (row.action === "onboarding.signup_completed") {
         entry.signups += 1;
+        refKwEntry.signups += 1;
         if (safeLp) {
           const stat = onboardingByLpVariant.get(safeLp)?.get(safeVariant);
           if (stat) {
@@ -1401,6 +1489,7 @@ export async function GET(request: NextRequest) {
           deviceSourceStat.signups += 1;
         }
       }
+      onboardingByRefKeyword.set(refKwKey, refKwEntry);
     }
     const lpLogins = Array.from(onboardingByRef.values()).reduce((sum, row) => sum + row.logins, 0);
     const lpSignups = Array.from(onboardingByRef.values()).reduce((sum, row) => sum + row.signups, 0);
@@ -1409,6 +1498,7 @@ export async function GET(request: NextRequest) {
     const publishedCount7d = (publishLeadLogs ?? []).filter((row) => row.action === "information.published").length;
     const selectedByTarget = new Map<string, number>();
     const selectedIndustryByTarget = new Map<string, "business" | "resort" | "spa">();
+    const selectedTemplateTitleByTarget = new Map<string, string>();
     const templateToPublishDurations: number[] = [];
     const templateToPublishDurationRows: Array<{ minutes: number; publishedAtMs: number }> = [];
     const templateToPublishDurationsByIndustry: Record<"business" | "resort" | "spa", number[]> = {
@@ -1426,6 +1516,7 @@ export async function GET(request: NextRequest) {
         selectedByTarget.set(targetId, createdAtMs);
         const metadata = row.metadata as Record<string, unknown> | null;
         const templateTitle = typeof metadata?.templateTitle === "string" ? metadata.templateTitle : "";
+        selectedTemplateTitleByTarget.set(targetId, templateTitle || "テンプレート");
         selectedIndustryByTarget.set(targetId, inferFacilityTypeFromText(templateTitle));
       }
       if (row.action === "information.published") {
@@ -2296,6 +2387,123 @@ export async function GET(request: NextRequest) {
         recoveryMinutes: recoveryShortcutMedianMinutes,
       },
     };
+    const ctaFunnelByRefKeyword: Week15Preview["ctaFunnelByRefKeyword"] = Array.from(onboardingByRefKeyword.entries())
+      .map(([key, row]) => {
+        const [refRaw, keywordRaw] = key.split(":");
+        const ref: "lp-hero" | "lp-sticky" | "lp-bottom" =
+          refRaw === "lp-sticky" || refRaw === "lp-bottom" ? refRaw : "lp-hero";
+        const keyword: "checkin" | "bath" | "breakfast" | "wifi" | "unknown" =
+          keywordRaw === "checkin" || keywordRaw === "bath" || keywordRaw === "breakfast" || keywordRaw === "wifi"
+            ? keywordRaw
+            : "unknown";
+        return {
+          ref,
+          keyword,
+          logins: row.logins,
+          signups: row.signups,
+          rate: row.logins > 0 ? Math.round((row.signups / row.logins) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.logins - a.logins)
+      .slice(0, 8);
+    const lpLcpBottleneckFactors: Week15Preview["lpLcpBottleneckFactors"] = [
+      {
+        factor: "画像容量過多の可能性（LCP上位ページを優先圧縮）",
+        severity: (slowPages.length >= 3 ? "high" : slowPages.length >= 1 ? "medium" : "low") as "high" | "medium" | "low",
+      },
+      {
+        factor: "ファーストビュー情報量過多（ヒーロー直下ブロックを整理）",
+        severity: (roundAverage(lcpValues) >= 2600 ? "high" : roundAverage(lcpValues) >= 2200 ? "medium" : "low") as "high" | "medium" | "low",
+      },
+      {
+        factor: "外部遷移導線の読込待ち（CTA直後の遷移を先に軽量化）",
+        severity: (roundAverage(loadValues) >= 3500 ? "medium" : "low") as "high" | "medium" | "low",
+      },
+    ].sort((a, b) => {
+      const rank = { high: 3, medium: 2, low: 1 };
+      return rank[b.severity] - rank[a.severity];
+    });
+    const templatePublishBase = new Map<string, { selected: number; published: number }>();
+    for (const row of publishLeadLogs ?? []) {
+      const targetId = row.target_id ?? "";
+      if (!targetId) {
+        continue;
+      }
+      if (row.action === "template.selected") {
+        const title = selectedTemplateTitleByTarget.get(targetId) ?? "テンプレート";
+        const stat = templatePublishBase.get(title) ?? { selected: 0, published: 0 };
+        stat.selected += 1;
+        templatePublishBase.set(title, stat);
+      }
+      if (row.action === "information.published") {
+        const title = selectedTemplateTitleByTarget.get(targetId);
+        if (!title) {
+          continue;
+        }
+        const stat = templatePublishBase.get(title) ?? { selected: 0, published: 0 };
+        stat.published += 1;
+        templatePublishBase.set(title, stat);
+      }
+    }
+    const templateFirstPublishRate: Week15Preview["templateFirstPublishRate"] = Array.from(templatePublishBase.entries())
+      .map(([templateTitle, stat]) => ({
+        templateTitle,
+        selected: stat.selected,
+        published: stat.published,
+        rate: stat.selected > 0 ? Math.round((stat.published / stat.selected) * 100) : 0,
+      }))
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, 6);
+    const weeklyBottlenecks = [
+      week2Review.kpi.publishCompletionRate < 65 ? "初回公開率が低い（テンプレ選択後の必須入力を再設計）" : null,
+      checkoutToPaidRate < 35 ? "Checkout→Paidの離脱が高い（再開導線を上段固定）" : null,
+      retentionRate14d < 35 ? "14日継続が低い（休眠通知と再公開導線を優先）" : null,
+      roundAverage(lcpValues) > 2500 ? "LP速度が低下（LCP上位ページの画像最適化）" : null,
+    ].filter((value): value is string => Boolean(value));
+    const weeklyImprovementRates = (weeklyReportLogs ?? [])
+      .map((row) => {
+        const metadata = row.metadata as Record<string, unknown> | null;
+        const value = metadata?.improvementExecutionRate;
+        return typeof value === "number" && Number.isFinite(value) ? Math.round(value) : null;
+      })
+      .filter((value): value is number => value !== null);
+    const weeklyReportImprovementExecutionRate =
+      weeklyImprovementRates.length > 0 ? roundAverage(weeklyImprovementRates) : week10Preview.actionExecutionRate;
+    const week15Preview: Week15Preview = {
+      lpAnxietyReliefMessage:
+        dominantFacility === "resort"
+          ? "導入不安を減らすため、滞在導線テンプレと公開手順を先に提示しています。"
+          : dominantFacility === "spa"
+            ? "導入不安を減らすため、温浴ルールテンプレと注意事項チェックを先に提示しています。"
+            : "導入不安を減らすため、チェックイン導線テンプレと初回公開手順を先に提示しています。",
+      ctaFunnelByRefKeyword,
+      lpLcpBottleneckFactors,
+      templateFirstPublishRate,
+      checkoutResumeOneClickReady: true,
+      billingPortalTransitionRate7d: billingManagementCompletionRate,
+      retention14dSplit: {
+        newUsers: lpToSignupRate,
+        existingUsers: retentionRate14d,
+      },
+      weeklyBottlenecks: weeklyBottlenecks.slice(0, 3),
+      criticalRecoveryChecklist: {
+        needed: week13Preview.webhookResendCheck.needed || (sub?.status ?? "") === "past_due",
+        items: [
+          "1. 重大エラーの再現有無を確認",
+          "2. Webhook再送 / Stripe同期を実行",
+          "3. 課金状態と公開導線を再確認",
+          "4. 復旧完了を監査ログに記録",
+        ],
+      },
+      weeklyReportImprovementExecutionRate,
+      kpiReview: {
+        lpToSignupRate,
+        firstPublishRate: week2Review.kpi.publishCompletionRate,
+        proConversionRate: week2Review.kpi.proConversionRate,
+        retention14dRate: retentionRate14d,
+        recoveryMinutes: recoveryShortcutMedianMinutes,
+      },
+    };
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
@@ -2338,6 +2546,7 @@ export async function GET(request: NextRequest) {
       week12Preview,
       week13Preview,
       week14Preview,
+      week15Preview,
       execution,
       dormancy,
       performance7d: {

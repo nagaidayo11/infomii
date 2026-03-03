@@ -27,8 +27,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "運用センターへのアクセス権限がありません" }, { status: 403 });
     }
 
-    const payload = (await request.json()) as { message?: unknown };
+    const payload = (await request.json()) as { message?: unknown; improvementExecutionRate?: unknown };
     const message = typeof payload.message === "string" ? payload.message.trim() : "";
+    const improvementExecutionRate =
+      typeof payload.improvementExecutionRate === "number" && Number.isFinite(payload.improvementExecutionRate)
+        ? Math.max(0, Math.min(100, Math.round(payload.improvementExecutionRate)))
+        : null;
     if (!message) {
       return NextResponse.json({ message: "レポート本文が空です" }, { status: 400 });
     }
@@ -55,6 +59,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         slackOk: result.slack.ok,
         emailOk: result.email.ok,
+        improvementExecutionRate,
       },
     });
     return NextResponse.json({

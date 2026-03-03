@@ -144,6 +144,11 @@ function getPublishIssuePriority(issue: PublishCheckIssue): number {
   if (issue.level === "error" && issue.message.includes("ページタイトル")) return 100;
   if (issue.level === "error" && issue.message.includes("本文ブロック")) return 95;
   if (issue.level === "error" && issue.message.includes("遷移先")) return 90;
+  if (issue.level === "error" && issue.message.includes("問い合わせ導線")) return 88;
+  if (issue.level === "warning" && issue.message.includes("法務")) return 74;
+  if (issue.level === "warning" && issue.message.includes("子ページ")) return 70;
+  if (issue.level === "warning" && issue.message.includes("画像")) return 66;
+  if (issue.level === "warning" && issue.message.includes("URL")) return 62;
   if (issue.level === "error") return 80;
   if (issue.target === "schedule") return 60;
   if (issue.message.includes("URL")) return 55;
@@ -292,6 +297,16 @@ function collectPublishCheckIssues(
       });
   }
 
+  const legalPattern = /(?:規約|注意事項|キャンセル|免責|利用条件|同意|policy|terms)/i;
+  const hasLegalNotice = legalPattern.test(serializedText);
+  if (!hasLegalNotice) {
+    issues.push({
+      level: "warning",
+      message: "法務チェック: 規約/注意事項/キャンセル条件の明記を推奨します。",
+      target: "blocks",
+    });
+  }
+
   const hasHoursCompleteRow = currentItem.contentBlocks.some(
     (block) =>
       block.type === "hours" &&
@@ -301,6 +316,18 @@ function collectPublishCheckIssues(
     issues.push({
       level: "warning",
       message: "営業時間ブロックが未設定です（例: チェックイン 15:00-24:00）。受付時間・利用時間の記載を推奨します。",
+      target: "blocks",
+    });
+  }
+
+  const childPageLinks = currentItem.contentBlocks
+    .filter((block) => block.type === "iconRow")
+    .flatMap((block) => block.iconItems ?? [])
+    .filter((entry) => (entry.link ?? "").trim().startsWith("/p/")).length;
+  if (childPageLinks === 0) {
+    issues.push({
+      level: "warning",
+      message: "子ページ導線が未設定です。アイコン並びに /p/slug の遷移先を1件以上追加すると回遊率が上がります。",
       target: "blocks",
     });
   }
@@ -6298,6 +6325,16 @@ function onUpdateIconRowItem(
                           }`}
                           style={{ width: `${publishScore}%` }}
                         />
+                      </div>
+                      <div className="mt-2 rounded-md border border-slate-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                        <p className="font-semibold text-slate-800">公開直前チェックリスト（必須5項目）</p>
+                        <div className="mt-1 grid gap-1 sm:grid-cols-2">
+                          <p>{(item.title ?? "").trim().length >= 2 ? "✓" : "・"} ページタイトル入力</p>
+                          <p>{item.contentBlocks.length > 0 ? "✓" : "・"} 本文ブロック追加</p>
+                          <p>{publishCheckErrors.length === 0 ? "✓" : "・"} エラー0件</p>
+                          <p>{/連絡|お問い合わせ|tel|@/i.test(item.body ?? "") ? "✓" : "・"} 問い合わせ導線</p>
+                          <p>{(item.contentBlocks ?? []).some((block) => block.type === "cta") ? "✓" : "・"} CTA設置</p>
+                        </div>
                       </div>
                       {prioritizedPublishIssues.length === 0 ? (
                         <p className="mt-1">すべてOKです。このまま公開できます。</p>

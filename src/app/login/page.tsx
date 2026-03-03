@@ -36,6 +36,12 @@ export default function LoginPage() {
   const ctaVariant = requestedAb === "b" || requestedAb === "c" ? requestedAb : "a";
   const requestedLp =
     search?.get("lp") ?? null;
+  const requestedKw =
+    search?.get("kw") ?? null;
+  const keyword =
+    requestedKw === "checkin" || requestedKw === "bath" || requestedKw === "breakfast" || requestedKw === "wifi"
+      ? requestedKw
+      : "unknown";
   const initialLandingPage =
     requestedLp === "business" || requestedLp === "resort" || requestedLp === "spa"
       ? requestedLp
@@ -92,6 +98,7 @@ export default function LoginPage() {
       ctaVariant,
       landingPage: preferredIndustry,
       deviceType,
+      keyword,
     });
 
     setSubmitting(false);
@@ -128,6 +135,7 @@ export default function LoginPage() {
       ctaVariant,
       landingPage: preferredIndustry,
       deviceType,
+      keyword,
     });
 
     setSubmitting(false);
