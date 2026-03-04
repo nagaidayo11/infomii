@@ -502,7 +502,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       industryTag: "business" as const,
       seasonTags: ["spring", "summer", "autumn", "winter"],
       template:
-        starterTemplates.find((entry) => entry.title === "【ホテル共通】トップ案内ハブ（円形アイコン15）") ??
+        starterTemplates.find((entry) => entry.title === "【ホテル共通】トップ案内ハブ（円形アイコン12）") ??
+        starterTemplates.find((entry) => entry.title.startsWith("【ホテル共通】トップ案内ハブ（円形アイコン")) ??
         starterTemplates[0],
       bullets: ["主要導線を3列アイコンで一覧化", "Wi-Fi/清掃/駐車場など定番導線を即アクセス"],
       publishPath: "/p/demo-hub-menu",
