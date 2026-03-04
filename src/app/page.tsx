@@ -363,6 +363,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     template: (typeof starterTemplates)[number];
     bullets: string[];
     publishPath: string;
+    ctaLabel: string;
   }> = [
     {
       title: "チェックイン案内ページ",
@@ -378,6 +379,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         starterTemplates[0],
       bullets: ["到着直後の案内を1画面に集約", "深夜到着でも自己解決しやすい導線"],
       publishPath: "/p/demo-checkin",
+      ctaLabel: "チェックイン案内を作る",
     },
     {
       title: "温浴利用ガイドページ",
@@ -391,23 +393,25 @@ export default async function Home({ searchParams }: HomePageProps) {
       template:
         starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
         starterTemplates[3],
-      bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化"],
+      bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化", "入浴前ルールを1画面で統一"],
       publishPath: "/p/demo-bath",
+      ctaLabel: "温浴ルール案内を作る",
     },
     {
-      title: "館内設備ページ",
-      tag: "設備導線",
-      pain: "設備情報がページごとに分散",
-      solution: "Wi-Fi/駐車場/設備情報を統一表示",
-      impact: "フロント問い合わせを日次で平準化",
-      impactScore: 30,
+      title: "アクティビティ予約ページ",
+      tag: "滞在体験導線",
+      pain: "体験プログラムの案内が口頭中心で予約漏れが発生",
+      solution: "時間帯・料金・予約導線を1ページで見える化",
+      impact: "現地案内を減らし、体験予約率を向上",
+      impactScore: 33,
       industryTag: "resort" as const,
       seasonTags: ["spring", "summer"],
       template:
-        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】深夜到着・セルフチェックイン案内") ??
-        starterTemplates[1],
-      bullets: ["Wi-Fi / 駐車場 / 自販機を整理", "客室問い合わせの削減に寄与"],
-      publishPath: "/p/demo-facility",
+        starterTemplates.find((entry) => entry.title === "【リゾートホテル】滞在アクティビティ案内") ??
+        starterTemplates[3],
+      bullets: ["アクティビティ案内と予約導線を集約", "雨天時の代替案内まで同時配信", "当日変更を即時反映"],
+      publishPath: "/p/demo-activity",
+      ctaLabel: "体験予約導線を作る",
     },
   ];
   const filteredPublicExamples = activeExampleTag === "all"
@@ -427,6 +431,23 @@ export default async function Home({ searchParams }: HomePageProps) {
     { label: "問い合わせ削減", value: "最大40%" },
     { label: "初回公開時間", value: "最短3分" },
   ];
+  const exampleThemeByIndustry = {
+    business: {
+      cardBorder: "border-cyan-200",
+      chip: "bg-cyan-100 text-cyan-800",
+      subtitle: "チェックイン / フロント導線",
+    },
+    resort: {
+      cardBorder: "border-amber-200",
+      chip: "bg-amber-100 text-amber-800",
+      subtitle: "アクティビティ / 滞在体験導線",
+    },
+    spa: {
+      cardBorder: "border-emerald-200",
+      chip: "bg-emerald-100 text-emerald-800",
+      subtitle: "温浴 / 施設ルール導線",
+    },
+  } as const;
 
   const features = [
     {
@@ -835,20 +856,23 @@ export default async function Home({ searchParams }: HomePageProps) {
             ))}
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {sortedPublicExamples.map((example, index) => (
+            {sortedPublicExamples.map((example, index) => {
+              const theme = exampleThemeByIndustry[example.industryTag];
+              return (
               <article
                 key={example.title}
-                className="lp-reveal overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                className={`lp-reveal overflow-hidden rounded-2xl border bg-white ${theme.cardBorder}`}
                 style={{ transitionDelay: `${180 + index * 80}ms` }}
               >
                 <div className="border-b border-slate-200 bg-slate-50 p-2">
                   <TemplateScreenPreview blocks={example.template?.blocks} />
                 </div>
                 <div className="p-4">
-                  <p className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                  <p className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${theme.chip}`}>
                     {example.tag}
                   </p>
                   <h3 className="mt-2 text-base font-semibold text-slate-900">{example.title}</h3>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{theme.subtitle}</p>
                   <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px]">
                     <p className="text-slate-700"><span className="font-semibold text-rose-700">課題:</span> {example.pain}</p>
                     <p className="text-slate-700"><span className="font-semibold text-emerald-700">解決:</span> {example.solution}</p>
@@ -859,10 +883,20 @@ export default async function Home({ searchParams }: HomePageProps) {
                       <li key={`${example.title}-${bullet}`}>・{bullet}</li>
                     ))}
                   </ul>
-                  <p className="mt-3 text-xs text-slate-500">公開URL例: {example.publishPath}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Link
+                      href={buildLoginHref("lp-bottom")}
+                      className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                    >
+                      {example.ctaLabel}
+                    </Link>
+                    <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">使用テンプレ: {example.template?.title ?? "テンプレート"}</p>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
           {filteredPublicExamples.length === 0 && (
             <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
