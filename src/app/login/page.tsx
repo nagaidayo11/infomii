@@ -18,10 +18,17 @@ export default function LoginPage() {
       : null;
   const requestedNext =
     search?.get("next") ?? null;
-  const next =
-    requestedNext && requestedNext.startsWith("/")
-      ? requestedNext
-      : "/dashboard?tab=create";
+  const requestedLpTemplate =
+    search?.get("lp_template") ?? null;
+  const lpTemplateIndex = requestedLpTemplate !== null ? Number(requestedLpTemplate) : NaN;
+  const lpTemplateNext =
+    Number.isInteger(lpTemplateIndex) && lpTemplateIndex >= 0
+      ? `/dashboard?tab=create&lp_template=${lpTemplateIndex}`
+      : null;
+  const defaultNext = requestedNext && requestedNext.startsWith("/")
+    ? requestedNext
+    : "/dashboard?tab=create";
+  const next = lpTemplateNext ?? defaultNext;
   const requestedRef =
     search?.get("ref") ?? null;
   const sourceRef =

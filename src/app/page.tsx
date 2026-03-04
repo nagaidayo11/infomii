@@ -894,7 +894,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               const templateIndustry = example.industryTag === "business" ? "business" : example.industryTag === "resort" ? "resort" : "spa";
               const templateCreateNext = `/dashboard?tab=create&industry=${templateIndustry}&lp_template=${normalizedTemplateIndex}`;
               const templateCreateHref =
-                `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&next=${encodeURIComponent(templateCreateNext)}`;
+                `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&lp_template=${normalizedTemplateIndex}&next=${encodeURIComponent(templateCreateNext)}`;
               return (
               <article
                 key={example.title}
