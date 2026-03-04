@@ -253,7 +253,7 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
           if (block.type === "iconRow") {
             const isRoundIconRow = block.cardRadius === "full";
             return (
-              <div key={block.id} className="grid grid-cols-4 gap-1">
+              <div key={block.id} className="grid grid-cols-3 gap-1">
                 {(block.iconItems ?? []).slice(0, 12).map((entry) => (
                   <div key={entry.id} className={`border border-slate-200 bg-slate-50 px-1 py-1.5 text-center ${isRoundIconRow ? "rounded-full" : "rounded-md"}`}>
                     <div className="flex justify-center leading-none">{renderTemplatePreviewIcon(entry.icon)}</div>
@@ -352,14 +352,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     spa: "b",
   } as const;
   const ctaVariant = winnerVariantByLandingPage[landingPage];
-  const hasDedicatedLpPath = query.lp === "business" || query.lp === "resort" || query.lp === "spa";
-  const lpBasePath = hasDedicatedLpPath
-    ? landingPage === "business"
-      ? "/lp/business"
-      : landingPage === "resort"
-        ? "/lp/resort"
-        : "/lp/spa"
-    : "/";
   const sanitizedSourceChannel = sourceChannel.length > 0 ? sourceChannel : "unknown";
   const buildLoginHref = (ref: "lp-hero" | "lp-sticky" | "lp-bottom") =>
     `/login?ref=${ref}&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}`;
@@ -477,7 +469,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   ];
 
-  const activeExampleTag = query.tag === "business" || query.tag === "resort" || query.tag === "spa" ? query.tag : "all";
   const publicExamples: Array<{
     title: string;
     tag: string;
@@ -490,7 +481,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     template: (typeof starterTemplates)[number];
     bullets: string[];
     publishPath: string;
-    ctaLabel: string;
   }> = [
     {
       title: "トップメニューハブページ",
@@ -507,7 +497,6 @@ export default async function Home({ searchParams }: HomePageProps) {
         starterTemplates[0],
       bullets: ["主要導線を3列アイコンで一覧化", "Wi-Fi/清掃/駐車場など定番導線を即アクセス"],
       publishPath: "/p/demo-hub-menu",
-      ctaLabel: "トップメニューを作る",
     },
     {
       title: "温浴利用ガイドページ",
@@ -523,7 +512,6 @@ export default async function Home({ searchParams }: HomePageProps) {
         starterTemplates[3],
       bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化", "入浴前ルールを1画面で統一"],
       publishPath: "/p/demo-bath",
-      ctaLabel: "温浴ルール案内を作る",
     },
     {
       title: "アクティビティ予約ページ",
@@ -539,13 +527,9 @@ export default async function Home({ searchParams }: HomePageProps) {
         starterTemplates[3],
       bullets: ["アクティビティ案内と予約導線を集約", "雨天時の代替案内まで同時配信", "当日変更を即時反映"],
       publishPath: "/p/demo-activity",
-      ctaLabel: "体験予約導線を作る",
     },
   ];
-  const filteredPublicExamples = activeExampleTag === "all"
-    ? publicExamples
-    : publicExamples.filter((example) => example.industryTag === activeExampleTag);
-  const sortedPublicExamples = [...filteredPublicExamples].sort((a, b) => {
+  const sortedPublicExamples = [...publicExamples].sort((a, b) => {
     const seasonScore = (example: (typeof publicExamples)[number]) => (example.seasonTags.includes(season) ? 3 : 0);
     const landingScore = (example: (typeof publicExamples)[number]) => (example.industryTag === landingPage ? 2 : 0);
     const totalA = seasonScore(a) + landingScore(a);
@@ -902,29 +886,15 @@ export default async function Home({ searchParams }: HomePageProps) {
             <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（課題→解決）</h2>
             <p className="text-sm text-slate-600">業態別の課題を、公開ページでどう解決するかを可視化</p>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {([
-              ["all", "すべて"],
-              ["business", "ビジネス"],
-              ["resort", "リゾート"],
-              ["spa", "温浴・スパ"],
-            ] as const).map(([value, label]) => (
-              <Link
-                key={value}
-                href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&tag=${value}`}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                  activeExampleTag === value
-                    ? "border-emerald-500 bg-emerald-600 text-white"
-                    : "border-slate-300 bg-white text-slate-700"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             {sortedPublicExamples.map((example, index) => {
               const theme = exampleThemeByIndustry[example.industryTag];
+              const templateIndex = starterTemplates.findIndex((entry) => entry.title === (example.template?.title ?? ""));
+              const normalizedTemplateIndex = templateIndex >= 0 ? templateIndex : 0;
+              const templateIndustry = example.industryTag === "business" ? "business" : example.industryTag === "resort" ? "resort" : "spa";
+              const templateCreateNext = `/dashboard?tab=create&industry=${templateIndustry}&lp_template=${normalizedTemplateIndex}`;
+              const templateCreateHref =
+                `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&next=${encodeURIComponent(templateCreateNext)}`;
               return (
               <article
                 key={example.title}
@@ -952,10 +922,10 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </ul>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Link
-                      href={buildLoginHref("lp-bottom")}
+                      href={templateCreateHref}
                       className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white shadow-[0_8px_18px_-12px_rgba(15,23,42,0.8)] hover:bg-slate-800 hover:!text-white"
                     >
-                      {example.ctaLabel}
+                      このテンプレートで作る
                     </Link>
                     <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
                   </div>
@@ -965,11 +935,6 @@ export default async function Home({ searchParams }: HomePageProps) {
               );
             })}
           </div>
-          {filteredPublicExamples.length === 0 && (
-            <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
-              選択した業態タグの事例はまだありません。
-            </p>
-          )}
         </section>
 
         {!lpCompactMode && (

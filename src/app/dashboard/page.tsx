@@ -624,6 +624,7 @@ export default function DashboardPage() {
   const [countdownNow, setCountdownNow] = useState<number>(Date.now());
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
+  const lpTemplateAutoCreateRef = useRef(false);
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
   const canAccessOps = userEmail.length > 0 && OPS_OWNER_EMAILS.has(userEmail);
   const inferredFacilityType = useMemo<FacilityType>(() => inferFacilityType(hotelName), [hotelName]);
@@ -692,6 +693,31 @@ export default function DashboardPage() {
       window.localStorage.removeItem(WIZARD_RESUME_STORAGE_KEY);
     }
   }, []);
+
+  useEffect(() => {
+    if (loading || lpTemplateAutoCreateRef.current || typeof window === "undefined") {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("lp_template");
+    if (!raw) {
+      return;
+    }
+    const templateIndex = Number(raw);
+    if (!Number.isInteger(templateIndex) || templateIndex < 0 || templateIndex >= starterTemplates.length) {
+      params.delete("lp_template");
+      const next = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+      return;
+    }
+    lpTemplateAutoCreateRef.current = true;
+    setActiveTab("create");
+    void onCreateFromTemplate(templateIndex).finally(() => {
+      params.delete("lp_template");
+      const next = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+    });
+  }, [loading, onCreateFromTemplate]);
 
   useEffect(() => {
     if (canAccessOps || activeTab !== "ops") {
@@ -1875,7 +1901,7 @@ export default function DashboardPage() {
     return "LP→登録率が20%未満です。ヒーロー見出しとCTA文言をホテル業務課題にさらに寄せるのが有効です。";
   }, [onboardingFunnel?.lpAttributedLogins, week1Snapshot.lpRate]);
 
-  async function onCreateFromTemplate(templateIndex: number) {
+  const onCreateFromTemplate = useCallback(async (templateIndex: number) => {
     try {
       await ensureUserHotelScope();
       const id = await createInformationFromTemplate(templateIndex);
@@ -1883,7 +1909,7 @@ export default function DashboardPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
     }
-  }
+  }, [router]);
 
   async function onCreateFromTemplateQuickPublish(templateIndex: number) {
     setCreatingQuickPublish(true);
