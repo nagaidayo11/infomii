@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LpRevealObserver from "@/components/lp-reveal-observer";
+import VoiceLogo from "@/components/voice-logo";
 import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
 
@@ -209,6 +210,11 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
+  const differentiatorCopyByLandingPage = {
+    business: "汎用CMSではなく、ホテル現場の案内運用に特化したテンプレとQR導線を最初から搭載。",
+    resort: "汎用CMSではなく、滞在導線の更新運用に特化したテンプレとQR導線を最初から搭載。",
+    spa: "汎用CMSではなく、温浴施設の案内運用に特化したテンプレとQR導線を最初から搭載。",
+  } as const;
   const heroValuePropositionByLpVariant = {
     business: {
       a: "フロント問い合わせ削減を最優先",
@@ -227,9 +233,9 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCtaLabelByVariant = {
-    a: landingPage === "business" ? "30秒登録でチェックイン案内を作成" : landingPage === "resort" ? "30秒登録で滞在案内を作成" : "30秒登録で温浴案内を作成",
-    b: landingPage === "business" ? "30秒登録で夜間案内を公開" : landingPage === "resort" ? "30秒登録で導線案内を公開" : "30秒登録で温浴案内を公開",
-    c: landingPage === "business" ? "30秒登録でフロント運用を改善" : landingPage === "resort" ? "30秒登録で滞在導線を整備" : "30秒登録で温浴運用を整備",
+    a: landingPage === "business" ? "30秒で無料登録してチェックイン案内を作成" : landingPage === "resort" ? "30秒で無料登録して滞在案内を作成" : "30秒で無料登録して温浴案内を作成",
+    b: landingPage === "business" ? "30秒で無料登録して夜間案内を公開" : landingPage === "resort" ? "30秒で無料登録して導線案内を公開" : "30秒で無料登録して温浴案内を公開",
+    c: landingPage === "business" ? "30秒で無料登録してフロント運用を改善" : landingPage === "resort" ? "30秒で無料登録して滞在導線を整備" : "30秒で無料登録して温浴運用を整備",
   } as const;
   const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
   const channelCtaSuffix =
@@ -242,15 +248,15 @@ export default async function Home({ searchParams }: HomePageProps) {
           : "";
   const optimizedHeroPrimaryCtaLabel = `${heroPrimaryCtaLabel}${channelCtaSuffix}`;
   const heroCtaShortLabelByVariant = {
-    a: "30秒登録で作成",
-    b: "30秒登録で公開",
-    c: "30秒で開始",
+    a: "30秒で無料登録",
+    b: "30秒で無料登録",
+    c: "30秒で無料登録",
   } as const;
   const heroPrimaryShortCtaLabel = heroCtaShortLabelByVariant[ctaVariant];
   const bottomCtaByLandingPage = {
-    business: "無料でチェックイン導線を公開",
-    resort: "無料で滞在導線を公開",
-    spa: "無料で温浴導線を公開",
+    business: "無料登録してチェックイン導線を公開",
+    resort: "無料登録して滞在導線を公開",
+    spa: "無料登録して温浴導線を公開",
   } as const;
   const seasonalHeroMessage = {
     business: {
@@ -319,16 +325,25 @@ export default async function Home({ searchParams }: HomePageProps) {
   ];
   const hotelVoices = [
     {
+      brandMark: "CB",
+      brandTone: "from-slate-700 to-slate-500",
+      logoSrc: "/logos/city-business-hotel",
       hotel: "都心ビジネスホテル（120室）",
       comment: "深夜チェックインの問い合わせが減って、フロント1名体制でも回せるようになりました。",
       impact: "導入3日で夜間電話対応を削減",
     },
     {
+      brandMark: "RS",
+      brandTone: "from-emerald-700 to-emerald-500",
+      logoSrc: "/logos/resort-spa-hotel",
       hotel: "温浴併設リゾート（客室80室）",
       comment: "温浴ルールの更新を即反映できるので、紙案内差し替えの手間がほぼ無くなりました。",
       impact: "案内差し替え時間を週2時間削減",
     },
     {
+      brandMark: "ST",
+      brandTone: "from-cyan-700 to-cyan-500",
+      logoSrc: "/logos/station-town-hotel",
       hotel: "駅前ホテル（客室65室）",
       comment: "朝食会場案内を統一して、スタッフ説明のばらつきが減りました。",
       impact: "朝ピークの案内対応を標準化",
@@ -547,6 +562,9 @@ export default async function Home({ searchParams }: HomePageProps) {
               INFOMII
             </p>
             <nav className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+              <a href="#proof" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
+                実績
+              </a>
               <a href="#templates" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
                 テンプレ例
               </a>
@@ -616,6 +634,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
+              <p className="mt-3 max-w-3xl rounded-lg border border-cyan-200 bg-cyan-50/70 px-3 py-2 text-xs font-semibold text-cyan-900 sm:text-sm">
+                {differentiatorCopyByLandingPage[landingPage]}
+              </p>
               <p className="mt-2 text-xs font-semibold text-cyan-700">
                 {heroValuePropositionByLpVariant[landingPage][ctaVariant]}
               </p>
@@ -657,6 +678,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   ログイン
                 </Link>
               </div>
+              <p className="mt-2 text-[11px] text-slate-500">CTAクリック後は登録/ログイン画面へ遷移します。登録完了後に作成ウィザードを開始できます。</p>
               <p className="mt-2 text-[11px] text-slate-600">
                 流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（固定 variant {ctaVariant.toUpperCase()}）を表示中
               </p>
@@ -721,6 +743,45 @@ export default async function Home({ searchParams }: HomePageProps) {
           ))}
         </section>
 
+        <section id="proof" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold text-slate-900">実績と信頼性</h2>
+            <p className="text-sm text-slate-600">導入ヒアリングで得た運用変化のサンプル</p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {fixedImpactCards.map((card) => (
+              <div key={card.label} className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+                <p className="text-[11px] text-emerald-800">{card.label}</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {hotelVoices.map((voice, index) => (
+              <article
+                key={voice.hotel}
+                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
+                style={{ transitionDelay: `${160 + index * 80}ms` }}
+              >
+                <div className="flex items-center gap-2">
+                  <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
+                  <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
+                <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
+                  {voice.impact}
+                </p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+            <p>※ 数値は導入施設ヒアリングに基づく目安です。運用体制・更新頻度により変動します。</p>
+            <p className="mt-1">
+              法務・運営情報: <Link className="underline" href="/terms">利用規約</Link> / <Link className="underline" href="/privacy">プライバシーポリシー</Link> / <Link className="underline" href="/commerce">特定商取引法に基づく表記</Link>
+            </p>
+          </div>
+        </section>
+
         {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -734,7 +795,10 @@ export default async function Home({ searchParams }: HomePageProps) {
                 className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
                 style={{ transitionDelay: `${160 + index * 80}ms` }}
               >
-                <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
+                <div className="flex items-center gap-2">
+                  <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
+                  <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
+                </div>
                 <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
                 <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
                   {voice.impact}
@@ -749,14 +813,6 @@ export default async function Home({ searchParams }: HomePageProps) {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-2xl font-bold text-slate-900">実際の公開ページ事例（課題→解決）</h2>
             <p className="text-sm text-slate-600">業態別の課題を、公開ページでどう解決するかを可視化</p>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {fixedImpactCards.map((card) => (
-              <div key={card.label} className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
-                <p className="text-[11px] text-emerald-800">{card.label}</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p>
-              </div>
-            ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {([
@@ -1022,9 +1078,9 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
           <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
-          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料で1ページ公開してみましょう</h2>
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料登録して、1ページ公開を始めましょう</h2>
           <p className="mt-2 text-sm text-emerald-50">
-            編集から公開までの流れを、実際の管理画面でそのまま体験できます。必要になった時点でProへ拡張可能です。
+            まず登録/ログイン後に、編集から公開までの流れを管理画面でそのまま体験できます。必要になった時点でProへ拡張可能です。
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link

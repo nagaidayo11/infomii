@@ -1,0 +1,7 @@
+<svg width="220" height="56" viewBox="0 0 220 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="220" height="56" rx="10" fill="#0F172A"/>
+  <circle cx="28" cy="28" r="14" fill="#334155"/>
+  <path d="M22 28H34M28 22V34" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round"/>
+  <text x="52" y="24" font-size="11" font-family="Arial, sans-serif" fill="#E2E8F0" letter-spacing="1.2">CITY BUSINESS</text>
+  <text x="52" y="39" font-size="14" font-family="Arial, sans-serif" fill="#F8FAFC" font-weight="700" letter-spacing="1.4">HOTEL</text>
+</svg>
