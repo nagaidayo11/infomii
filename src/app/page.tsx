@@ -886,7 +886,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Link
                       href={buildLoginHref("lp-bottom")}
-                      className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                      className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white shadow-[0_8px_18px_-12px_rgba(15,23,42,0.8)] hover:bg-slate-800 hover:!text-white"
                     >
                       {example.ctaLabel}
                     </Link>
