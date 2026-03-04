@@ -926,7 +926,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                       href={templateCreateHref}
                       className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white shadow-[0_8px_18px_-12px_rgba(15,23,42,0.8)] hover:bg-slate-800 hover:!text-white"
                     >
-                      このテンプレートで作る
+                      作成する
                     </Link>
                     <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
                   </div>
