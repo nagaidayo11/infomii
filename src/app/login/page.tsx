@@ -139,8 +139,11 @@ export default function LoginPage() {
     });
 
     setSubmitting(false);
-    setMessage("登録しました。初回公開ウィザードへ移動します。");
-    router.replace(`/dashboard?tab=create&wizard=1&industry=${preferredIndustry}`);
+    setMessage("登録しました。テンプレート作成画面へ移動します。");
+    const nextWithIndustry = next.includes("?")
+      ? `${next}&industry=${preferredIndustry}`
+      : `${next}?industry=${preferredIndustry}`;
+    router.replace(nextWithIndustry);
   }
 
   return (

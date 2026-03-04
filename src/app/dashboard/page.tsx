@@ -712,6 +712,7 @@ export default function DashboardPage() {
     }
     lpTemplateAutoCreateRef.current = true;
     setActiveTab("create");
+    setSuccess("テンプレートを複製中...");
     void (async () => {
       try {
         await ensureUserHotelScope();
@@ -1911,6 +1912,7 @@ export default function DashboardPage() {
 
   const onCreateFromTemplate = useCallback(async (templateIndex: number) => {
     try {
+      setSuccess("テンプレートを複製中...");
       await ensureUserHotelScope();
       const id = await createInformationFromTemplate(templateIndex);
       router.push(`/editor/${id}?guide=start`);
