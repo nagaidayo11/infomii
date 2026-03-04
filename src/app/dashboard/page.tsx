@@ -712,12 +712,20 @@ export default function DashboardPage() {
     }
     lpTemplateAutoCreateRef.current = true;
     setActiveTab("create");
-    void onCreateFromTemplate(templateIndex).finally(() => {
-      params.delete("lp_template");
-      const next = params.toString();
-      window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
-    });
-  }, [loading, onCreateFromTemplate]);
+    void (async () => {
+      try {
+        await ensureUserHotelScope();
+        const id = await createInformationFromTemplate(templateIndex);
+        router.push(`/editor/${id}?guide=start`);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "新規作成に失敗しました");
+      } finally {
+        params.delete("lp_template");
+        const next = params.toString();
+        window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+      }
+    })();
+  }, [loading, router]);
 
   useEffect(() => {
     if (canAccessOps || activeTab !== "ops") {
