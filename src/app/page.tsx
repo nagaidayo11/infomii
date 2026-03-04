@@ -215,23 +215,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     resort: "汎用CMSではなく、滞在導線の更新運用に特化したテンプレとQR導線を最初から搭載。",
     spa: "汎用CMSではなく、温浴施設の案内運用に特化したテンプレとQR導線を最初から搭載。",
   } as const;
-  const heroValuePropositionByLpVariant = {
-    business: {
-      a: "フロント問い合わせ削減を最優先",
-      b: "夜間帯の案内を自己解決化",
-      c: "チェックイン導線を最短で標準化",
-    },
-    resort: {
-      a: "滞在導線を一画面に集約",
-      b: "アクティビティ案内を即更新",
-      c: "館内導線の迷いを最小化",
-    },
-    spa: {
-      a: "温浴ルール共有を即時反映",
-      b: "混雑時の誘導変更を即配布",
-      c: "大浴場案内の問い合わせを削減",
-    },
-  } as const;
   const heroCtaLabelByVariant = {
     a: landingPage === "business" ? "30秒で無料登録してチェックイン案内を作成" : landingPage === "resort" ? "30秒で無料登録して滞在案内を作成" : "30秒で無料登録して温浴案内を作成",
     b: landingPage === "business" ? "30秒で無料登録して夜間案内を公開" : landingPage === "resort" ? "30秒で無料登録して導線案内を公開" : "30秒で無料登録して温浴案内を公開",
@@ -257,32 +240,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     business: "無料登録してチェックイン導線を公開",
     resort: "無料登録して滞在導線を公開",
     spa: "無料登録して温浴導線を公開",
-  } as const;
-  const seasonalHeroMessage = {
-    business: {
-      spring: "新年度の導線切り替えを1ページで標準化",
-      summer: "繁忙期前のチェックイン導線を即時更新",
-      autumn: "団体・連休対応の案内変更を最短反映",
-      winter: "遅延到着・夜間問い合わせ対策を強化",
-    },
-    resort: {
-      spring: "行楽シーズンの滞在導線を一括更新",
-      summer: "プール・アクティビティ導線をピーク対応",
-      autumn: "館内イベント案内を即時配信",
-      winter: "天候変更時の案内差し替えを高速化",
-    },
-    spa: {
-      spring: "温浴ルールと混雑案内を統一表示",
-      summer: "時間帯別の温浴導線を分かりやすく配信",
-      autumn: "連休時の利用案内を即時差し替え",
-      winter: "繁忙期の温浴案内をリアルタイム更新",
-    },
-  } as const;
-  const keywordGuidance = {
-    checkin: "検索意図: チェックイン導線の最短公開",
-    bath: "検索意図: 温浴ルールの即時共有",
-    breakfast: "検索意図: 朝食導線の統一運用",
-    wifi: "検索意図: 館内設備/Wi-Fi案内の問い合わせ削減",
   } as const;
   const anxietyReliefByLanding = {
     business: [
@@ -606,66 +563,12 @@ export default async function Home({ searchParams }: HomePageProps) {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
-              <div className="mb-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">
-                  訴求テーマ
-                </span>
-                {[
-                  { id: "checkin", label: "チェックイン" },
-                  { id: "bath", label: "温浴" },
-                  { id: "breakfast", label: "朝食" },
-                ].map((entry) => (
-                  <Link
-                    key={entry.id}
-                    href={`${lpBasePath}?scene=${entry.id}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}`}
-                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                      heroScene === entry.id
-                        ? "border-emerald-400 bg-emerald-600 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    {entry.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="mb-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-cyan-300 bg-cyan-50 px-3 py-1 text-[11px] font-semibold text-cyan-800">
-                  検索キーワード
-                </span>
-                {([
-                  ["checkin", "チェックイン"],
-                  ["bath", "温浴"],
-                  ["breakfast", "朝食"],
-                  ["wifi", "Wi-Fi"],
-                ] as const).map(([value, label]) => (
-                  <Link
-                    key={value}
-                    href={`${lpBasePath}?scene=${heroScene}&ab=${ctaVariant}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${value}`}
-                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                      keyword === value
-                        ? "border-cyan-400 bg-cyan-600 text-white"
-                        : "border-slate-300 bg-white text-slate-700"
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
               <p className="mt-3 max-w-3xl rounded-lg border border-cyan-200 bg-cyan-50/70 px-3 py-2 text-xs font-semibold text-cyan-900 sm:text-sm">
                 {differentiatorCopyByLandingPage[landingPage]}
-              </p>
-              <p className="mt-2 text-xs font-semibold text-cyan-700">
-                {heroValuePropositionByLpVariant[landingPage][ctaVariant]}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-emerald-700">
-                季節最適化: {seasonalHeroMessage[landingPage][season]}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-cyan-700">
-                {keywordGuidance[keyword]}
               </p>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
@@ -700,10 +603,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                 </Link>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">CTAクリック後は登録/ログイン画面へ遷移します。登録完了後に作成ウィザードを開始できます。</p>
-              <p className="mt-2 text-[11px] text-slate-600">
-                流入チャネル最適化: {sourceChannel ? `${sourceChannel}向け` : "通常"} CTA（固定 variant {ctaVariant.toUpperCase()}）を表示中
-              </p>
-              <p className="mt-1 text-[11px] text-slate-500">Week12: 季節要因を加味した業態別の勝ち訴求を固定配信しています。</p>
             </div>
 
             <aside className="lp-reveal lp-delay-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
