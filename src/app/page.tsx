@@ -210,11 +210,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
-  const differentiatorCopyByLandingPage = {
-    business: "汎用CMSではなく、ホテル現場の案内運用に特化したテンプレとQR導線を最初から搭載。",
-    resort: "汎用CMSではなく、滞在導線の更新運用に特化したテンプレとQR導線を最初から搭載。",
-    spa: "汎用CMSではなく、温浴施設の案内運用に特化したテンプレとQR導線を最初から搭載。",
-  } as const;
   const heroCtaLabelByVariant = {
     a: landingPage === "business" ? "30秒で無料登録してチェックイン案内を作成" : landingPage === "resort" ? "30秒で無料登録して滞在案内を作成" : "30秒で無料登録して温浴案内を作成",
     b: landingPage === "business" ? "30秒で無料登録して夜間案内を公開" : landingPage === "resort" ? "30秒で無料登録して導線案内を公開" : "30秒で無料登録して温浴案内を公開",
@@ -567,9 +562,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
-              <p className="mt-3 max-w-3xl rounded-lg border border-cyan-200 bg-cyan-50/70 px-3 py-2 text-xs font-semibold text-cyan-900 sm:text-sm">
-                {differentiatorCopyByLandingPage[landingPage]}
-              </p>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
                 {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
               </p>

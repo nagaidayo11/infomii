@@ -75,6 +75,16 @@ const ICON_CHOICES: Array<{ value: string; label: string }> = [
   { value: "svg:paw", label: "ライン: ペット" },
   { value: "svg:plug", label: "ライン: 電源" },
   { value: "svg:ticket", label: "ライン: チケット" },
+  { value: "svg:key", label: "ライン: 鍵" },
+  { value: "svg:toothbrush", label: "ライン: 歯ブラシ" },
+  { value: "svg:hanger", label: "ライン: ハンガー" },
+  { value: "svg:broom", label: "ライン: 清掃" },
+  { value: "svg:washing-machine", label: "ライン: 洗濯機" },
+  { value: "svg:microwave", label: "ライン: 電子レンジ" },
+  { value: "svg:package", label: "ライン: 宅急便" },
+  { value: "svg:taxi", label: "ライン: タクシー" },
+  { value: "svg:bed", label: "ライン: 客室" },
+  { value: "svg:info", label: "ライン: 案内" },
 ];
 
 const BACKGROUND_SWATCHES = [
@@ -474,6 +484,16 @@ function getIconSizeClass(size: InformationBlock["iconSize"] | undefined): strin
   return "text-xl h-5 w-5";
 }
 
+function getIconRowColumnsClass(iconCount: number): string {
+  if (iconCount >= 10) {
+    return "grid-cols-3 sm:grid-cols-4";
+  }
+  if (iconCount >= 3) {
+    return "grid-cols-3";
+  }
+  return "grid-cols-2";
+}
+
 function renderLineIcon(token: string, size: InformationBlock["iconSize"] | undefined): ReactNode {
   const iconSize = getIconSizeClass(size);
   const className = `${iconSize.split(" ").filter((c) => c.startsWith("h-") || c.startsWith("w-")).join(" ")} text-slate-700`;
@@ -615,6 +635,97 @@ function renderLineIcon(token: string, size: InformationBlock["iconSize"] | unde
       <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M4 8a2 2 0 0 0 2-2h12v4a2 2 0 1 1 0 4v4H6a2 2 0 0 0-2-2V8Z" />
         <path d="M12 7v10" />
+      </svg>
+    );
+  }
+  if (token === "svg:key") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="8.5" cy="12" r="3.2" />
+        <path d="M11.7 12H20" />
+        <path d="M16 12v2" />
+        <path d="M18 12v1.5" />
+      </svg>
+    );
+  }
+  if (token === "svg:toothbrush") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4 18.5h6.5a2.5 2.5 0 0 0 2.3-1.5L20 4.5" />
+        <path d="M17.8 3.8 20.2 6.2" />
+        <path d="M5.5 16.5h3.5" />
+      </svg>
+    );
+  }
+  if (token === "svg:hanger") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M12 7a2 2 0 1 0-2-2" />
+        <path d="M10 7.2 4.5 14a2 2 0 0 0 1.6 3.3h11.8a2 2 0 0 0 1.6-3.3L14 7.2" />
+      </svg>
+    );
+  }
+  if (token === "svg:broom") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4 19h9" />
+        <path d="M14 5 9 10" />
+        <path d="m8 11 4.5 4.5a2 2 0 0 1 0 2.8L11.8 19H6.5" />
+      </svg>
+    );
+  }
+  if (token === "svg:washing-machine") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="5" y="3.5" width="14" height="17" rx="2" />
+        <circle cx="12" cy="13" r="4" />
+        <path d="M8 6.8h.01M10.5 6.8h.01" />
+      </svg>
+    );
+  }
+  if (token === "svg:microwave") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <rect x="3.5" y="5" width="17" height="14" rx="2" />
+        <rect x="6.5" y="8" width="9" height="8" rx="1" />
+        <path d="M18 8v8M19 9v.01M19 12v.01M19 15v.01" />
+      </svg>
+    );
+  }
+  if (token === "svg:package") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M4.5 8.5 12 4l7.5 4.5v7L12 20l-7.5-4.5v-7Z" />
+        <path d="M12 20v-7.5M4.5 8.5 12 13l7.5-4.5" />
+      </svg>
+    );
+  }
+  if (token === "svg:taxi") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M5 13h14l-1.6-4.5H6.6L5 13Z" />
+        <path d="M7.5 8.5 9 6h6l1.5 2.5" />
+        <circle cx="8" cy="17" r="1.6" />
+        <circle cx="16" cy="17" r="1.6" />
+        <path d="M6 13v4M18 13v4" />
+      </svg>
+    );
+  }
+  if (token === "svg:bed") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M3.5 18.5h17" />
+        <path d="M5 18.5V9.5h14v9" />
+        <rect x="6.5" y="11" width="4.5" height="3" rx="1" />
+      </svg>
+    );
+  }
+  if (token === "svg:info") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 10v5" />
+        <path d="M12 7.5h.01" />
       </svg>
     );
   }
@@ -1936,7 +2047,7 @@ export default function EditorPage() {
       }
       if (block.type === "iconRow") {
         const iconItems = block.iconItems ?? [];
-        const iconColumnsClass = iconItems.length >= 3 ? "grid-cols-3" : "grid-cols-2";
+        const iconColumnsClass = getIconRowColumnsClass(iconItems.length);
         const isRoundIconRow = block.cardRadius === "full";
         const iconItemRadiusClass = isRoundIconRow ? "rounded-full" : getCardRadiusClass(block.cardRadius);
         return (
@@ -1945,39 +2056,78 @@ export default function EditorPage() {
               className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
               style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
             >
-              <div className={`grid gap-2 ${iconColumnsClass}`}>
+              <div className={`grid ${isRoundIconRow ? "gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6" : "gap-2"} ${iconColumnsClass}`}>
                 {iconItems.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`${iconItemRadiusClass} border border-slate-200 text-center shadow-sm ${isRoundIconRow ? "aspect-square overflow-hidden" : ""}`}
-                    style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
-                  >
-                    {entry.link ? (
+                  isRoundIconRow ? (
+                    entry.link ? (
                       <button
+                        key={entry.id}
                         type="button"
                         onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
-                        className={`flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}
+                        className="flex w-full touch-manipulation flex-col items-center gap-2 transition active:scale-[0.99]"
                       >
-                        {renderIconVisual(entry.icon, block.iconSize)}
+                        <span
+                          className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-300 shadow-sm sm:h-[72px] sm:w-[72px]"
+                          style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
+                        >
+                          {renderIconVisual(entry.icon, block.iconSize)}
+                        </span>
                         <p
-                          className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
                         </p>
                       </button>
                     ) : (
-                      <div className={`flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 ${isRoundIconRow ? "aspect-square min-h-0" : "min-h-[76px]"}`}>
-                        {renderIconVisual(entry.icon, block.iconSize)}
+                      <div key={entry.id} className="flex w-full flex-col items-center gap-2">
+                        <span
+                          className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-300 shadow-sm sm:h-[72px] sm:w-[72px]"
+                          style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
+                        >
+                          {renderIconVisual(entry.icon, block.iconSize)}
+                        </span>
                         <p
-                          className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
                         </p>
                       </div>
-                    )}
-                  </div>
+                    )
+                  ) : (
+                    <div
+                      key={entry.id}
+                      className={`${iconItemRadiusClass} border border-slate-200 text-center shadow-sm`}
+                      style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
+                    >
+                      {entry.link ? (
+                        <button
+                          type="button"
+                          onClick={() => void openPreviewOverlay(entry.link ?? "", entry.label || "リンク先プレビュー")}
+                          className="flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] min-h-[76px]"
+                        >
+                          {renderIconVisual(entry.icon, block.iconSize)}
+                          <p
+                            className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                            style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                          >
+                            {entry.label || "項目"}
+                          </p>
+                        </button>
+                      ) : (
+                        <div className="flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 min-h-[76px]">
+                          {renderIconVisual(entry.icon, block.iconSize)}
+                          <p
+                            className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                            style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                          >
+                            {entry.label || "項目"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )
                 ))}
               </div>
             </div>
