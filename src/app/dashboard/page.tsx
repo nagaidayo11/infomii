@@ -625,6 +625,7 @@ export default function DashboardPage() {
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
   const lpTemplateAutoCreateRef = useRef(false);
+  const [lpTemplateRetryCount, setLpTemplateRetryCount] = useState(0);
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
   const canAccessOps = userEmail.length > 0 && OPS_OWNER_EMAILS.has(userEmail);
   const inferredFacilityType = useMemo<FacilityType>(() => inferFacilityType(hotelName), [hotelName]);
@@ -724,13 +725,18 @@ export default function DashboardPage() {
     void (async () => {
       let created = false;
       try {
-        await ensureUserHotelScope();
         const id = await createInformationFromTemplate(resolvedTemplateIndex);
         created = true;
         router.push(`/editor/${id}?guide=start`);
       } catch (e) {
         setError(e instanceof Error ? e.message : "新規作成に失敗しました");
         lpTemplateAutoCreateRef.current = false;
+        if (lpTemplateRetryCount < 2) {
+          setSuccess("テンプレート複製を再試行中...");
+          window.setTimeout(() => {
+            setLpTemplateRetryCount((prev) => prev + 1);
+          }, 700);
+        }
       } finally {
         if (created) {
           params.delete("lp_template");
@@ -740,7 +746,7 @@ export default function DashboardPage() {
         }
       }
     })();
-  }, [loading, router, user]);
+  }, [loading, router, user, lpTemplateRetryCount]);
 
   useEffect(() => {
     if (canAccessOps || activeTab !== "ops") {
@@ -1927,7 +1933,6 @@ export default function DashboardPage() {
   const onCreateFromTemplate = useCallback(async (templateIndex: number) => {
     try {
       setSuccess("テンプレートを複製中...");
-      await ensureUserHotelScope();
       const id = await createInformationFromTemplate(templateIndex);
       router.push(`/editor/${id}?guide=start`);
     } catch (e) {
