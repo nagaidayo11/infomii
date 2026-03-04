@@ -1,13 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
-import { redeemHotelInvite } from "@/lib/storage";
+import { createInformationFromTemplate, redeemHotelInvite } from "@/lib/storage";
 import { trackOnboardingAuthEvent } from "@/lib/storage";
 import { useAuth } from "@/components/auth-provider";
+import { starterTemplates } from "@/lib/templates";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,9 +24,16 @@ export default function LoginPage() {
   const requestedLpTemplateTitle =
     search?.get("lp_template_title") ?? null;
   const lpTemplateIndex = requestedLpTemplate !== null ? Number(requestedLpTemplate) : NaN;
+  const resolvedLpTemplateIndex =
+    Number.isInteger(lpTemplateIndex) && lpTemplateIndex >= 0 && lpTemplateIndex < starterTemplates.length
+      ? lpTemplateIndex
+      : requestedLpTemplateTitle
+        ? starterTemplates.findIndex((entry) => entry.title === requestedLpTemplateTitle)
+        : -1;
+  const hasLpTemplateRequest = resolvedLpTemplateIndex >= 0;
   const lpTemplateNext =
-    Number.isInteger(lpTemplateIndex) && lpTemplateIndex >= 0
-      ? `/dashboard?tab=create&lp_template=${lpTemplateIndex}${requestedLpTemplateTitle ? `&lp_template_title=${encodeURIComponent(requestedLpTemplateTitle)}` : ""}`
+    hasLpTemplateRequest
+      ? `/dashboard?tab=create&lp_template=${resolvedLpTemplateIndex}${requestedLpTemplateTitle ? `&lp_template_title=${encodeURIComponent(requestedLpTemplateTitle)}` : ""}`
       : null;
   const defaultNext = requestedNext && requestedNext.startsWith("/")
     ? requestedNext
@@ -72,12 +80,35 @@ export default function LoginPage() {
   );
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const lpTemplateRoutingRef = useRef(false);
+
+  const routeToTemplateEditorIfNeeded = useCallback(async (): Promise<boolean> => {
+    if (!hasLpTemplateRequest || lpTemplateRoutingRef.current) {
+      return false;
+    }
+    lpTemplateRoutingRef.current = true;
+    setMessage("テンプレートを複製中...");
+    try {
+      const id = await createInformationFromTemplate(resolvedLpTemplateIndex);
+      router.replace(`/editor/${id}?guide=start`);
+      return true;
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "テンプレート複製に失敗しました");
+      lpTemplateRoutingRef.current = false;
+      return false;
+    }
+  }, [hasLpTemplateRequest, resolvedLpTemplateIndex, router]);
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace(next);
+      void (async () => {
+        const routed = await routeToTemplateEditorIfNeeded();
+        if (!routed) {
+          router.replace(next);
+        }
+      })();
     }
-  }, [loading, next, router, user]);
+  }, [loading, next, routeToTemplateEditorIfNeeded, router, user]);
 
   async function signIn(e: FormEvent) {
     e.preventDefault();
@@ -111,6 +142,10 @@ export default function LoginPage() {
     });
 
     setSubmitting(false);
+    const routed = await routeToTemplateEditorIfNeeded();
+    if (routed) {
+      return;
+    }
     const nextWithIndustry = next.includes("?")
       ? `${next}&industry=${preferredIndustry}`
       : `${next}?industry=${preferredIndustry}`;
@@ -149,6 +184,10 @@ export default function LoginPage() {
 
     setSubmitting(false);
     setMessage("登録しました。テンプレート作成画面へ移動します。");
+    const routed = await routeToTemplateEditorIfNeeded();
+    if (routed) {
+      return;
+    }
     const nextWithIndustry = next.includes("?")
       ? `${next}&industry=${preferredIndustry}`
       : `${next}?industry=${preferredIndustry}`;
