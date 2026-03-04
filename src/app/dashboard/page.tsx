@@ -616,16 +616,6 @@ export default function DashboardPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [creatingQuickPublish, setCreatingQuickPublish] = useState(false);
-  const [onboarding60Active, setOnboarding60Active] = useState(false);
-  const [onboarding60StartedAt, setOnboarding60StartedAt] = useState<string | null>(null);
-  const [onboarding60Ticker, setOnboarding60Ticker] = useState<number>(Date.now());
-  const [onboarding60PublishedId, setOnboarding60PublishedId] = useState<string | null>(null);
-  const [onboarding60PublishedUrl, setOnboarding60PublishedUrl] = useState<string | null>(null);
-  const [onboarding60SharedDone, setOnboarding60SharedDone] = useState(false);
-  const [onboarding60CompletedAt, setOnboarding60CompletedAt] = useState<string | null>(null);
-  const [onboarding60FacilityName, setOnboarding60FacilityName] = useState("");
-  const [onboarding60Hours, setOnboarding60Hours] = useState("チェックイン 15:00〜24:00 / チェックアウト 10:00");
-  const [onboarding60CtaText, setOnboarding60CtaText] = useState("まずはこちらを確認");
   const [previewTemplateIndex, setPreviewTemplateIndex] = useState<number | null>(null);
   const [favoriteTemplateIndices, setFavoriteTemplateIndices] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
@@ -913,12 +903,6 @@ export default function DashboardPage() {
     }
     setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
   }, [hotelName, industryFilter, inferredFacilityType]);
-  useEffect(() => {
-    if (!hotelName) {
-      return;
-    }
-    setOnboarding60FacilityName((prev) => (prev.trim().length > 0 ? prev : hotelName));
-  }, [hotelName]);
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -1285,33 +1269,6 @@ export default function DashboardPage() {
     () => (activeTemplatePreviewEntry ? getTemplateSlaMs(activeTemplatePreviewEntry.template) : 2300),
     [activeTemplatePreviewEntry],
   );
-  const onboarding60ElapsedSeconds = useMemo(() => {
-    if (!onboarding60StartedAt) {
-      return 0;
-    }
-    const base = new Date(onboarding60StartedAt).getTime();
-    const end = onboarding60CompletedAt ? new Date(onboarding60CompletedAt).getTime() : onboarding60Ticker;
-    if (!Number.isFinite(base) || !Number.isFinite(end) || end <= base) {
-      return 0;
-    }
-    return Math.max(0, Math.floor((end - base) / 1000));
-  }, [onboarding60CompletedAt, onboarding60StartedAt, onboarding60Ticker]);
-  const onboarding60StepStatus = useMemo(
-    () => ({
-      started: onboarding60Active,
-      published: Boolean(onboarding60PublishedUrl),
-      shared: onboarding60SharedDone,
-    }),
-    [onboarding60Active, onboarding60PublishedUrl, onboarding60SharedDone],
-  );
-  const onboarding60SuggestedTemplateIndex = useMemo(() => {
-    const targetIndustry = mapFacilityToIndustry(inferredFacilityType);
-    const byIndustry = filteredTemplateEntries.find((entry) => entry.template.industry === targetIndustry);
-    if (byIndustry) {
-      return byIndustry.originalIndex;
-    }
-    return filteredTemplateEntries[0]?.originalIndex ?? 0;
-  }, [filteredTemplateEntries, inferredFacilityType]);
   const templateUsageRanking = useMemo(() => {
     const usageMap = new Map<string, number>();
     for (const information of items) {
@@ -1415,18 +1372,6 @@ export default function DashboardPage() {
     }
     window.localStorage.setItem(DASHBOARD_TEMPLATE_FAVORITES_KEY, JSON.stringify(favoriteTemplateIndices));
   }, [favoriteTemplateIndices]);
-
-  useEffect(() => {
-    if (!onboarding60Active || !onboarding60StartedAt || onboarding60CompletedAt) {
-      return;
-    }
-    const timerId = window.setInterval(() => {
-      setOnboarding60Ticker(Date.now());
-    }, 1000);
-    return () => {
-      window.clearInterval(timerId);
-    };
-  }, [onboarding60Active, onboarding60CompletedAt, onboarding60StartedAt]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1952,71 +1897,6 @@ export default function DashboardPage() {
       setError(e instanceof Error ? e.message : "テンプレ即公開に失敗しました");
     } finally {
       setCreatingQuickPublish(false);
-    }
-  }
-
-  function onStartOnboarding60() {
-    const now = new Date().toISOString();
-    setOnboarding60Active(true);
-    setOnboarding60StartedAt(now);
-    setOnboarding60Ticker(Date.now());
-    setOnboarding60PublishedId(null);
-    setOnboarding60PublishedUrl(null);
-    setOnboarding60SharedDone(false);
-    setOnboarding60CompletedAt(null);
-    setQuickSearch("");
-    setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
-    setPurposeFilter(recommendedPurposeByScale);
-    setTemplateSortMode("recommended");
-    setTemplateGrouping("industry");
-    setPreviewTemplateIndex(onboarding60SuggestedTemplateIndex);
-    setSuccess("60秒モードを開始しました。おすすめテンプレをそのまま公開して体験できます。");
-    void trackOnboardingWizardEvent("wizard_started", { step: 1, reason: "60s_start" });
-  }
-
-  async function onRunOnboarding60QuickPublish() {
-    setCreatingQuickPublish(true);
-    setError(null);
-    try {
-      await ensureUserHotelScope();
-      const templateIndex = activeTemplatePreviewEntry?.originalIndex ?? onboarding60SuggestedTemplateIndex;
-      const id = await createInformationFromTemplate(templateIndex);
-      const title = onboarding60FacilityName.trim();
-      await updateInformation(id, {
-        status: "published",
-        ...(title ? { title } : {}),
-      });
-      const created = await getInformation(id);
-      if (!created) {
-        throw new Error("公開済みインフォメーションの取得に失敗しました");
-      }
-      setItems((prev) => upsertItemsWithSort([created, ...prev]));
-      setOnboarding60PublishedId(id);
-      setOnboarding60PublishedUrl(buildPublicUrl(created.slug));
-      void trackOnboardingWizardEvent("wizard_step_completed", { step: 2, reason: "60s_quick_publish" });
-      setSuccess("60秒体験: 公開まで完了しました。次はURL共有で完了です。");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "60秒公開に失敗しました");
-    } finally {
-      setCreatingQuickPublish(false);
-    }
-  }
-
-  async function onCompleteOnboarding60Share() {
-    if (!onboarding60PublishedUrl) {
-      setError("先に公開を完了してください。");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(onboarding60PublishedUrl);
-      setOnboarding60SharedDone(true);
-      const completedAt = new Date().toISOString();
-      setOnboarding60CompletedAt(completedAt);
-      void trackOnboardingWizardEvent("wizard_step_completed", { step: 3, reason: "60s_url_copied" });
-      void trackOnboardingWizardEvent("wizard_completed", { step: 3, reason: "60s_completed" });
-      setSuccess("公開URLをコピーしました。このまま配布すれば運用開始できます。");
-    } catch {
-      setError("URLコピーに失敗しました。");
     }
   }
 
@@ -3026,132 +2906,6 @@ export default function DashboardPage() {
                 </>
                 )}
               </div>
-
-              <article className="rounded-2xl border border-emerald-300 bg-white p-4 shadow-sm">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.08em] text-emerald-700">60秒オンボーディング</p>
-                    <h2 className="mt-1 text-lg font-semibold text-slate-900">ホテル向け「獲得→公開→課金」の最短体験</h2>
-                    <p className="mt-1 text-xs text-slate-600">
-                      10秒で完成イメージ確認 → 1クリック公開 → URL共有まで終えると、運用価値を60秒で体験できます。
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-right">
-                    <p className="text-[11px] text-slate-500">経過時間</p>
-                    <p className={`text-2xl font-semibold ${onboarding60ElapsedSeconds <= 60 ? "text-emerald-700" : "text-amber-700"}`}>
-                      {onboarding60ElapsedSeconds}s
-                    </p>
-                    <p className="text-[11px] text-slate-500">目標 60s 以内</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
-                  <div className="space-y-3">
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {[
-                        { key: "started", label: "1. 開始", done: onboarding60StepStatus.started },
-                        { key: "published", label: "2. 公開", done: onboarding60StepStatus.published },
-                        { key: "shared", label: "3. 共有", done: onboarding60StepStatus.shared },
-                      ].map((step) => (
-                        <div key={step.key} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                          <p className={`text-xs font-semibold ${step.done ? "text-emerald-700" : "text-slate-500"}`}>
-                            {step.done ? "✓" : "・"} {step.label}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="space-y-1">
-                        <span className="text-[11px] font-medium text-slate-600">施設名</span>
-                        <input
-                          value={onboarding60FacilityName}
-                          onChange={(event) => setOnboarding60FacilityName(event.target.value)}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
-                          placeholder="例: ○○ホテル"
-                        />
-                      </label>
-                      <label className="space-y-1">
-                        <span className="text-[11px] font-medium text-slate-600">営業時間</span>
-                        <input
-                          value={onboarding60Hours}
-                          onChange={(event) => setOnboarding60Hours(event.target.value)}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
-                        />
-                      </label>
-                      <label className="space-y-1">
-                        <span className="text-[11px] font-medium text-slate-600">CTA文言</span>
-                        <input
-                          value={onboarding60CtaText}
-                          onChange={(event) => setOnboarding60CtaText(event.target.value)}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
-                        />
-                      </label>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={onStartOnboarding60}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
-                      >
-                        60秒モード開始
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void onRunOnboarding60QuickPublish()}
-                        disabled={creatingQuickPublish || !onboarding60Active}
-                        className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
-                      >
-                        {creatingQuickPublish ? "公開中..." : "このテンプレで即公開"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void onCompleteOnboarding60Share()}
-                        disabled={!onboarding60PublishedUrl}
-                        className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100 disabled:opacity-60"
-                      >
-                        公開URLをコピーして完了
-                      </button>
-                      {onboarding60PublishedUrl ? (
-                        <a
-                          href={onboarding60PublishedUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-md border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs text-cyan-900 hover:bg-cyan-100"
-                        >
-                          公開ページを確認
-                        </a>
-                      ) : null}
-                      {onboarding60PublishedId ? (
-                        <Link
-                          href={`/editor/${onboarding60PublishedId}`}
-                          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
-                        >
-                          編集画面を開く
-                        </Link>
-                      ) : null}
-                    </div>
-                    {onboarding60CompletedAt ? (
-                      <p className={`rounded-md border px-3 py-2 text-xs ${onboarding60ElapsedSeconds <= 60 ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-amber-300 bg-amber-50 text-amber-800"}`}>
-                        {onboarding60ElapsedSeconds <= 60
-                          ? `60秒達成（${onboarding60ElapsedSeconds}秒）。このまま課金導線の検証へ進めます。`
-                          : `完了（${onboarding60ElapsedSeconds}秒）。次は公開後のアップグレード導線最適化を実施してください。`}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-500">完成イメージ（10秒確認）</p>
-                    <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3">
-                      <p className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                        {onboarding60CtaText || "まずはこちらを確認"}
-                      </p>
-                      <p className="mt-2 text-lg font-semibold text-slate-900">{onboarding60FacilityName || "ホテル案内ページ"}</p>
-                      <p className="mt-2 text-xs text-slate-700">{onboarding60Hours}</p>
-                      <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] text-slate-600">
-                        公開後すぐに QR / URL で配布できます。
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </article>
 
               {!createCompactMode && (
               <article className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 shadow-sm">
