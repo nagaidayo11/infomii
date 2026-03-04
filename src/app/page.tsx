@@ -318,20 +318,20 @@ export default async function Home({ searchParams }: HomePageProps) {
     ctaLabel: string;
   }> = [
     {
-      title: "チェックイン案内ページ",
-      tag: "フロント導線",
-      pain: "深夜到着時の問い合わせが集中",
-      solution: "チェックイン手順と連絡先を1画面固定",
-      impact: "夜間問い合わせの一次対応を約40%削減",
-      impactScore: 40,
+      title: "トップメニューハブページ",
+      tag: "アイコン導線",
+      pain: "案内項目が分散してゲストが目的情報に辿り着きにくい",
+      solution: "円形アイコンを大量配置したトップメニューで導線を集約",
+      impact: "初動の自己解決率を高め、フロント案内負荷を軽減",
+      impactScore: 42,
       industryTag: "business" as const,
       seasonTags: ["spring", "summer", "autumn", "winter"],
       template:
-        starterTemplates.find((entry) => entry.title === "【ビジネスホテル】チェックイン・館内総合案内") ??
+        starterTemplates.find((entry) => entry.title === "【ホテル共通】トップ案内ハブ（円形アイコン15）") ??
         starterTemplates[0],
-      bullets: ["到着直後の案内を1画面に集約", "深夜到着でも自己解決しやすい導線"],
-      publishPath: "/p/demo-checkin",
-      ctaLabel: "チェックイン案内を作る",
+      bullets: ["主要導線を3列アイコンで一覧化", "Wi-Fi/清掃/駐車場など定番導線を即アクセス"],
+      publishPath: "/p/demo-hub-menu",
+      ctaLabel: "トップメニューを作る",
     },
     {
       title: "温浴利用ガイドページ",
