@@ -695,7 +695,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (loading || lpTemplateAutoCreateRef.current || typeof window === "undefined") {
+    if (loading || !user || lpTemplateAutoCreateRef.current || typeof window === "undefined") {
       return;
     }
     const params = new URLSearchParams(window.location.search);
@@ -714,19 +714,24 @@ export default function DashboardPage() {
     setActiveTab("create");
     setSuccess("テンプレートを複製中...");
     void (async () => {
+      let created = false;
       try {
         await ensureUserHotelScope();
         const id = await createInformationFromTemplate(templateIndex);
+        created = true;
         router.push(`/editor/${id}?guide=start`);
       } catch (e) {
         setError(e instanceof Error ? e.message : "新規作成に失敗しました");
+        lpTemplateAutoCreateRef.current = false;
       } finally {
-        params.delete("lp_template");
-        const next = params.toString();
-        window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+        if (created) {
+          params.delete("lp_template");
+          const next = params.toString();
+          window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
+        }
       }
     })();
-  }, [loading, router]);
+  }, [loading, router, user]);
 
   useEffect(() => {
     if (canAccessOps || activeTab !== "ops") {
