@@ -2067,7 +2067,7 @@ export default function EditorPage() {
                         className="flex w-full touch-manipulation flex-col items-center gap-2 transition active:scale-[0.99]"
                       >
                         <span
-                          className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-300 sm:h-16 sm:w-16"
+                          className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16"
                           style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                         >
                           {renderIconVisual(entry.icon, block.iconSize)}
@@ -2082,7 +2082,7 @@ export default function EditorPage() {
                     ) : (
                       <div key={entry.id} className="flex w-full flex-col items-center gap-2">
                         <span
-                          className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-300 sm:h-16 sm:w-16"
+                          className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16"
                           style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                         >
                           {renderIconVisual(entry.icon, block.iconSize)}

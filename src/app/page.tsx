@@ -251,12 +251,13 @@ function TemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
             );
           }
           if (block.type === "iconRow") {
+            const isRoundIconRow = block.cardRadius === "full";
             return (
-              <div key={block.id} className="grid grid-cols-3 gap-1">
-                {(block.iconItems ?? []).slice(0, 3).map((entry) => (
-                  <div key={entry.id} className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-2 text-center">
+              <div key={block.id} className="grid grid-cols-4 gap-1">
+                {(block.iconItems ?? []).slice(0, 12).map((entry) => (
+                  <div key={entry.id} className={`border border-slate-200 bg-slate-50 px-1 py-1.5 text-center ${isRoundIconRow ? "rounded-full" : "rounded-md"}`}>
                     <div className="flex justify-center leading-none">{renderTemplatePreviewIcon(entry.icon)}</div>
-                    <p className="mt-1 truncate text-[10px] text-slate-700">{entry.label || "項目"}</p>
+                    <p className="mt-1 truncate text-[9px] text-slate-700">{entry.label || "項目"}</p>
                   </div>
                 ))}
               </div>

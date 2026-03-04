@@ -323,8 +323,8 @@ export const starterTemplates: StarterTemplate[] = [
   },
   {
     industry: "hotel_business",
-    title: "【ホテル共通】トップ案内ハブ（円形アイコン15）",
-    body: "トップ画面で使う、アイコン中心の案内メニューです。\n\n【メニュー】\nはじめに / 朝食 / ハッピーアワー / Wi-Fi / 客室案内 / アメニティ / 貸出品・売店 / 客室清掃 / コインランドリー / 電子レンジ / 駐車場 / 宅急便 / マッサージ / タクシー / モーニングコール\n\n【使い方】\n各アイコンをタップして詳細ページへ移動してください。",
+    title: "【ホテル共通】トップ案内ハブ（円形アイコン12）",
+    body: "トップ画面で使う、アイコン中心の案内メニューです。\n\n【メニュー】\nはじめに / 朝食 / ハッピーアワー / Wi-Fi / 客室案内 / アメニティ / 貸出品・売店 / 客室清掃 / コインランドリー / 電子レンジ / 駐車場 / 宅急便\n\n【使い方】\n各アイコンをタップして詳細ページへ移動してください。",
     blocks: [
       {
         id: "hub-title",
@@ -362,9 +362,6 @@ export const starterTemplates: StarterTemplate[] = [
           { id: "hub-10", icon: "svg:microwave", label: "電子レンジ", link: "/p/microwave", backgroundColor: "#ffffff" },
           { id: "hub-11", icon: "svg:car", label: "駐車場", link: "/p/parking", backgroundColor: "#ffffff" },
           { id: "hub-12", icon: "svg:package", label: "宅急便", link: "/p/delivery", backgroundColor: "#ffffff" },
-          { id: "hub-13", icon: "svg:bed", label: "マッサージ", link: "/p/massage", backgroundColor: "#ffffff" },
-          { id: "hub-14", icon: "svg:taxi", label: "タクシー", link: "/p/taxi", backgroundColor: "#ffffff" },
-          { id: "hub-15", icon: "svg:phone", label: "モーニングコール", link: "/p/wakeup-call", backgroundColor: "#ffffff" },
         ],
       },
       {
