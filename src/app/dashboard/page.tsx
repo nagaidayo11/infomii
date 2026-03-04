@@ -700,12 +700,20 @@ export default function DashboardPage() {
     }
     const params = new URLSearchParams(window.location.search);
     const raw = params.get("lp_template");
-    if (!raw) {
+    const rawTitle = params.get("lp_template_title");
+    if (!raw && !rawTitle) {
       return;
     }
-    const templateIndex = Number(raw);
-    if (!Number.isInteger(templateIndex) || templateIndex < 0 || templateIndex >= starterTemplates.length) {
+    const parsedTemplateIndex = raw !== null ? Number(raw) : NaN;
+    const resolvedTemplateIndex =
+      Number.isInteger(parsedTemplateIndex) && parsedTemplateIndex >= 0 && parsedTemplateIndex < starterTemplates.length
+        ? parsedTemplateIndex
+        : rawTitle
+          ? starterTemplates.findIndex((entry) => entry.title === rawTitle)
+          : -1;
+    if (resolvedTemplateIndex < 0 || resolvedTemplateIndex >= starterTemplates.length) {
       params.delete("lp_template");
+      params.delete("lp_template_title");
       const next = params.toString();
       window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
       return;
@@ -717,7 +725,7 @@ export default function DashboardPage() {
       let created = false;
       try {
         await ensureUserHotelScope();
-        const id = await createInformationFromTemplate(templateIndex);
+        const id = await createInformationFromTemplate(resolvedTemplateIndex);
         created = true;
         router.push(`/editor/${id}?guide=start`);
       } catch (e) {
@@ -726,6 +734,7 @@ export default function DashboardPage() {
       } finally {
         if (created) {
           params.delete("lp_template");
+          params.delete("lp_template_title");
           const next = params.toString();
           window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
         }

@@ -891,10 +891,11 @@ export default async function Home({ searchParams }: HomePageProps) {
               const theme = exampleThemeByIndustry[example.industryTag];
               const templateIndex = starterTemplates.findIndex((entry) => entry.title === (example.template?.title ?? ""));
               const normalizedTemplateIndex = templateIndex >= 0 ? templateIndex : 0;
+              const templateTitle = example.template?.title ?? "";
               const templateIndustry = example.industryTag === "business" ? "business" : example.industryTag === "resort" ? "resort" : "spa";
-              const templateCreateNext = `/dashboard?tab=create&industry=${templateIndustry}&lp_template=${normalizedTemplateIndex}`;
+              const templateCreateNext = `/dashboard?tab=create&industry=${templateIndustry}&lp_template=${normalizedTemplateIndex}&lp_template_title=${encodeURIComponent(templateTitle)}`;
               const templateCreateHref =
-                `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&lp_template=${normalizedTemplateIndex}&next=${encodeURIComponent(templateCreateNext)}`;
+                `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&lp_template=${normalizedTemplateIndex}&lp_template_title=${encodeURIComponent(templateTitle)}&next=${encodeURIComponent(templateCreateNext)}`;
               return (
               <article
                 key={example.title}

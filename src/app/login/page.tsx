@@ -20,10 +20,12 @@ export default function LoginPage() {
     search?.get("next") ?? null;
   const requestedLpTemplate =
     search?.get("lp_template") ?? null;
+  const requestedLpTemplateTitle =
+    search?.get("lp_template_title") ?? null;
   const lpTemplateIndex = requestedLpTemplate !== null ? Number(requestedLpTemplate) : NaN;
   const lpTemplateNext =
     Number.isInteger(lpTemplateIndex) && lpTemplateIndex >= 0
-      ? `/dashboard?tab=create&lp_template=${lpTemplateIndex}`
+      ? `/dashboard?tab=create&lp_template=${lpTemplateIndex}${requestedLpTemplateTitle ? `&lp_template_title=${encodeURIComponent(requestedLpTemplateTitle)}` : ""}`
       : null;
   const defaultNext = requestedNext && requestedNext.startsWith("/")
     ? requestedNext
