@@ -3323,7 +3323,7 @@ export default function DashboardPage() {
                 </div>
               </article>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
                 <div className="space-y-4">
                   {groupedTemplateEntries.map((group) => (
                     <section key={group.industry} className="space-y-2">
