@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import LpRevealObserver from "@/components/lp-reveal-observer";
 import VoiceLogo from "@/components/voice-logo";
+import LpProofSection from "@/components/lp-proof-section";
 import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
 
@@ -444,6 +445,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   ];
   const hotelVoices = [
     {
+      industryTag: "business" as const,
       brandMark: "CB",
       brandTone: "from-slate-700 to-slate-500",
       logoSrc: "/logos/city-business-hotel",
@@ -452,6 +454,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       impact: "導入3日で夜間電話対応を削減",
     },
     {
+      industryTag: "resort" as const,
       brandMark: "RS",
       brandTone: "from-emerald-700 to-emerald-500",
       logoSrc: "/logos/resort-spa-hotel",
@@ -460,6 +463,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       impact: "案内差し替え時間を週2時間削減",
     },
     {
+      industryTag: "spa" as const,
       brandMark: "ST",
       brandTone: "from-cyan-700 to-cyan-500",
       logoSrc: "/logos/station-town-hotel",
@@ -542,6 +546,34 @@ export default async function Home({ searchParams }: HomePageProps) {
     { label: "更新時間削減", value: "最大70%" },
     { label: "問い合わせ削減", value: "最大40%" },
     { label: "初回公開時間", value: "最短3分" },
+  ];
+  const proofMethodNotes = [
+    "更新時間削減: 紙/PDF差し替え運用（週5回）から、同一内容をInfomiiで更新した場合の比較",
+    "問い合わせ削減: チェックイン/温浴/朝食の定番質問をトップ導線に集約したケースの比較",
+    "初回公開時間: テンプレ選択→必須項目入力→公開までを担当者1名で計測した目安",
+  ];
+  const beforeAfterProofRows = [
+    {
+      industryTag: "business" as const,
+      scene: "ビジネスホテル / チェックイン案内",
+      before: "夜間の電話問い合わせが集中（フロント都度説明）",
+      after: "入口QR + トップ導線で自己解決率向上",
+      impact: "問い合わせ対応を最大40%削減",
+    },
+    {
+      industryTag: "spa" as const,
+      scene: "温浴併設施設 / 利用ルール案内",
+      before: "紙掲示の差し替えが遅れ、案内内容にズレが発生",
+      after: "1画面更新で即時反映し、全掲示導線を統一",
+      impact: "案内差し替え作業を最大70%短縮",
+    },
+    {
+      industryTag: "resort" as const,
+      scene: "リゾートホテル / 滞在導線",
+      before: "体験案内が口頭依存で予約導線が分散",
+      after: "アイコン導線のトップメニューで導線集約",
+      impact: "初回公開まで最短3分で運用開始",
+    },
   ];
   const exampleThemeByIndustry = {
     business: {
@@ -653,6 +685,26 @@ export default async function Home({ searchParams }: HomePageProps) {
     { item: "公開ページ上限", free: "小規模向け", pro: "拡張可能（繁忙期に強い）" },
     { item: "複数ページ連携", free: "-", pro: "ノードマップ対応（導線漏れ防止）" },
     { item: "運用継続リスク", free: "担当者依存になりやすい", pro: "運用センターで復旧導線を固定" },
+  ];
+  const upgradeTimingExamples = [
+    {
+      trigger: "公開ページが増えて導線が分岐し始めた時",
+      freeState: "入口1ページ運用で限界。案内が長くなり、探しにくくなる",
+      proState: "ノード連携で「入口→詳細」を分岐。案内漏れを減らせる",
+      when: "目安: 4ページ目を作る前",
+    },
+    {
+      trigger: "季節イベント・繁忙期で更新頻度が上がる時",
+      freeState: "都度の差し替えで作業が追いつかない",
+      proState: "複数ページを運用前提で管理し、更新手順を固定化",
+      when: "目安: 週3回以上の差し替えが発生",
+    },
+    {
+      trigger: "担当者が増えて運用を引き継ぐ時",
+      freeState: "更新ルールが人依存になり、品質差が出る",
+      proState: "運用管理機能で作業フローを統一し、属人化を抑制",
+      when: "目安: 更新担当が2名以上",
+    },
   ];
 
   const painSolutionRows = [
@@ -815,44 +867,13 @@ export default async function Home({ searchParams }: HomePageProps) {
           ))}
         </section>
 
-        <section id="proof" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">実績と信頼性</h2>
-            <p className="text-sm text-slate-600">導入ヒアリングで得た運用変化のサンプル</p>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {fixedImpactCards.map((card) => (
-              <div key={card.label} className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
-                <p className="text-[11px] text-emerald-800">{card.label}</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {hotelVoices.map((voice, index) => (
-              <article
-                key={voice.hotel}
-                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
-                style={{ transitionDelay: `${160 + index * 80}ms` }}
-              >
-                <div className="flex items-center gap-2">
-                  <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
-                  <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
-                <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
-                  {voice.impact}
-                </p>
-              </article>
-            ))}
-          </div>
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-            <p>※ 数値は導入施設ヒアリングに基づく目安です。運用体制・更新頻度により変動します。</p>
-            <p className="mt-1">
-              法務・運営情報: <Link className="underline" href="/terms">利用規約</Link> / <Link className="underline" href="/privacy">プライバシーポリシー</Link> / <Link className="underline" href="/commerce">特定商取引法に基づく表記</Link>
-            </p>
-          </div>
-        </section>
+        <LpProofSection
+          initialIndustry={landingPage}
+          impactCards={fixedImpactCards}
+          beforeAfterRows={beforeAfterProofRows}
+          hotelVoices={hotelVoices}
+          proofMethodNotes={proofMethodNotes}
+        />
 
         {!lpCompactMode && (
         <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
@@ -1087,6 +1108,28 @@ export default async function Home({ searchParams }: HomePageProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="mt-6">
+            <h3 className="text-base font-semibold text-slate-900">Free→Pro 切替タイミング（具体例）</h3>
+            <p className="mt-1 text-xs text-slate-600">「いつ上げるべきか」を運用状況ベースで判断できます。</p>
+            <p className="mt-1 text-xs text-emerald-700">まずFreeで公開を開始し、下記トリガーに当てはまった時点でProへ切替する運用が最も無駄が少ないです。</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              {upgradeTimingExamples.map((example) => (
+                <article key={example.trigger} className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3">
+                  <p className="text-xs font-semibold text-emerald-800">切替トリガー</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{example.trigger}</p>
+                  <p className="mt-2 text-[11px] text-slate-700">
+                    <span className="font-semibold text-slate-900">Free:</span> {example.freeState}
+                  </p>
+                  <p className="mt-1 text-[11px] text-emerald-800">
+                    <span className="font-semibold text-emerald-900">Pro:</span> {example.proState}
+                  </p>
+                  <p className="mt-2 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700">
+                    {example.when}
+                  </p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 

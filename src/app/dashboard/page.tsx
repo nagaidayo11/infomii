@@ -3125,6 +3125,14 @@ export default function DashboardPage() {
                 <div className="mt-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs text-emerald-900">
                   QR配布完了（7日）: {onboardingFunnel?.wizard.qrDistributedCompleted ?? 0}件 / ウィザード完了者7日継続率: {onboardingFunnel?.wizard.retention7d.rate ?? 0}%（対象 {onboardingFunnel?.wizard.retention7d.eligible ?? 0} / 継続 {onboardingFunnel?.wizard.retention7d.retained ?? 0}）
                 </div>
+                <div className="mt-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900">
+                  LP作成導線完了率（7日）: {onboardingFunnel?.templateCreateFlow.completionRate ?? 0}%（意図ありログイン {onboardingFunnel?.templateCreateFlow.intentLogins ?? 0} / 編集画面到達 {onboardingFunnel?.templateCreateFlow.editorOpened ?? 0}）
+                </div>
+                {(onboardingFunnel?.templateCreateFlow.intentLogins ?? 0) === 0 && (
+                  <div className="mt-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+                    計測準備中: LPの「作成する」経由でログインが発生すると、この指標の集計が始まります。
+                  </div>
+                )}
                 <div className="mt-2 rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs text-violet-900">
                   離脱理由（7日）: {(opsHealth?.week14Preview.wizardDropoffByReason ?? []).map((row) => `${row.reason} ${row.count}件`).join(" / ") || "データなし"}
                 </div>

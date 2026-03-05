@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { createInformationFromTemplate, redeemHotelInvite } from "@/lib/storage";
-import { trackOnboardingAuthEvent } from "@/lib/storage";
+import { trackOnboardingAuthEvent, trackOnboardingTemplateEditorOpenedEvent } from "@/lib/storage";
 import { useAuth } from "@/components/auth-provider";
 import { starterTemplates } from "@/lib/templates";
 
@@ -90,6 +90,14 @@ export default function LoginPage() {
     setMessage("テンプレートを複製中...");
     try {
       const id = await createInformationFromTemplate(resolvedLpTemplateIndex);
+      await trackOnboardingTemplateEditorOpenedEvent({
+        sourceRef,
+        sourceChannel,
+        ctaVariant,
+        landingPage: preferredIndustry,
+        deviceType,
+        keyword,
+      });
       router.replace(`/editor/${id}?guide=start`);
       return true;
     } catch (e) {
@@ -139,6 +147,7 @@ export default function LoginPage() {
       landingPage: preferredIndustry,
       deviceType,
       keyword,
+      templateIntent: hasLpTemplateRequest,
     });
 
     setSubmitting(false);
@@ -180,6 +189,7 @@ export default function LoginPage() {
       landingPage: preferredIndustry,
       deviceType,
       keyword,
+      templateIntent: hasLpTemplateRequest,
     });
 
     setSubmitting(false);

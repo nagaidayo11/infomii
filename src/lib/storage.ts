@@ -567,6 +567,11 @@ export type OnboardingFunnel7d = {
   lpAttributedLogins: number;
   signupCompleted: number;
   lpToSignupRate: number;
+  templateCreateFlow: {
+    intentLogins: number;
+    editorOpened: number;
+    completionRate: number;
+  };
   byLandingPage: Array<{
     lp: "business" | "resort" | "spa" | "unknown";
     logins: number;
@@ -2635,6 +2640,7 @@ export async function trackOnboardingAuthEvent(
     landingPage?: string | null;
     deviceType?: string | null;
     keyword?: string | null;
+    templateIntent?: boolean;
   },
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
@@ -2651,6 +2657,7 @@ export async function trackOnboardingAuthEvent(
   const landingPage = toOnboardingLandingPage(params?.landingPage);
   const deviceType = toOnboardingDeviceType(params?.deviceType);
   const keyword = toOnboardingKeyword(params?.keyword);
+  const templateIntent = params?.templateIntent === true;
   const actionName = `onboarding.${action}`;
   const message =
     action === "signup_completed"
@@ -2670,6 +2677,48 @@ export async function trackOnboardingAuthEvent(
       landingPage,
       deviceType,
       keyword,
+      templateIntent,
+    },
+  });
+}
+
+export async function trackOnboardingTemplateEditorOpenedEvent(params?: {
+  sourceRef?: string | null;
+  sourceChannel?: string | null;
+  ctaVariant?: string | null;
+  landingPage?: string | null;
+  deviceType?: string | null;
+  keyword?: string | null;
+}): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return;
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return;
+  }
+  const safeRef = toOnboardingSourceRef(params?.sourceRef);
+  const sourceChannel = toOnboardingSourceChannel(params?.sourceChannel);
+  const ctaVariant = toOnboardingCtaVariant(params?.ctaVariant);
+  const landingPage = toOnboardingLandingPage(params?.landingPage);
+  const deviceType = toOnboardingDeviceType(params?.deviceType);
+  const keyword = toOnboardingKeyword(params?.keyword);
+
+  await appendAuditLog({
+    hotelId,
+    action: "onboarding.template_editor_opened",
+    message: `LPテンプレ作成導線の編集画面に到達（${safeRef ?? "unknown"}） / ${sourceChannel.toUpperCase()} / variant:${ctaVariant} / lp:${landingPage} / kw:${keyword}`,
+    targetType: "onboarding",
+    metadata: {
+      sourceRef: safeRef,
+      sourceType: safeRef?.startsWith("lp-") ? "lp" : "unknown",
+      sourceChannel,
+      ctaVariant,
+      landingPage,
+      deviceType,
+      keyword,
+      templateIntent: true,
     },
   });
 }
@@ -2708,6 +2757,11 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      templateCreateFlow: {
+        intentLogins: 0,
+        editorOpened: 0,
+        completionRate: 0,
+      },
       byLandingPage: [],
       byChannel: [],
       byVariant: [],
@@ -2729,6 +2783,11 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       lpAttributedLogins: 0,
       signupCompleted: 0,
       lpToSignupRate: 0,
+      templateCreateFlow: {
+        intentLogins: 0,
+        editorOpened: 0,
+        completionRate: 0,
+      },
       byLandingPage: [],
       byChannel: [],
       byVariant: [],
@@ -2757,6 +2816,7 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       "onboarding.wizard_step_completed",
       "onboarding.wizard_dropoff",
       "onboarding.wizard_completed",
+      "onboarding.template_editor_opened",
     ])
     .gte("created_at", sinceIso);
 
@@ -2777,6 +2837,8 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
 
   let lpAttributedLogins = 0;
   let signupCompleted = 0;
+  let templateIntentLogins = 0;
+  let templateEditorOpened = 0;
   const landingPageMap = new Map<OnboardingLandingPage, { logins: number; signups: number }>();
   const channelMap = new Map<OnboardingSourceChannel, { logins: number; signups: number }>();
   const variantMap = new Map<OnboardingCtaVariant, { logins: number; signups: number }>();
@@ -2800,9 +2862,13 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     const landingPage = toOnboardingLandingPage(
       typeof metadata?.landingPage === "string" ? metadata.landingPage : null,
     );
+    const templateIntent = metadata?.templateIntent === true;
 
     if (row.action === "onboarding.login_success" && sourceRef) {
       lpAttributedLogins += 1;
+      if (templateIntent) {
+        templateIntentLogins += 1;
+      }
       const landingPageStat = landingPageMap.get(landingPage) ?? { logins: 0, signups: 0 };
       landingPageStat.logins += 1;
       landingPageMap.set(landingPage, landingPageStat);
@@ -2827,6 +2893,9 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
       const variantStat = variantMap.get(ctaVariant) ?? { logins: 0, signups: 0 };
       variantStat.signups += 1;
       variantMap.set(ctaVariant, variantStat);
+    }
+    if (row.action === "onboarding.template_editor_opened" && sourceRef) {
+      templateEditorOpened += 1;
     }
     if (row.action === "onboarding.wizard_started") {
       wizardStarted += 1;
@@ -2918,6 +2987,11 @@ export async function getOnboardingFunnel7d(): Promise<OnboardingFunnel7d> {
     lpAttributedLogins,
     signupCompleted,
     lpToSignupRate,
+    templateCreateFlow: {
+      intentLogins: templateIntentLogins,
+      editorOpened: templateEditorOpened,
+      completionRate: templateIntentLogins > 0 ? Math.round((templateEditorOpened / templateIntentLogins) * 100) : 0,
+    },
     byLandingPage,
     byChannel,
     byVariant,
