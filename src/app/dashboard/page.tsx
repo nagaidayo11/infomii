@@ -1984,6 +1984,28 @@ export default function DashboardPage() {
     };
     return [...defaultFaq].sort((a, b) => score(a.key) - score(b.key));
   }, [opsHealth?.week10Preview.proBlockerTopReasons]);
+  const hasBillingInsightData = useMemo(() => {
+    const topReasons = opsHealth?.week10Preview.proBlockerTopReasons ?? [];
+    const blockerTasks = opsHealth?.week11Preview.blockerImprovementTasks ?? [];
+    const actionPlan = opsHealth?.week12Preview.proBlockerActionPlan ?? [];
+    const weekday = opsHealth?.week14Preview.billingCompletionByWeekday ?? [];
+    const completion = opsHealth?.week10Preview.billingManagementCompletion7d;
+    const dropoff = opsHealth?.week12Preview.billingDropoffByStep;
+    const reasonCount = topReasons.reduce((sum, row) => sum + (row.count ?? 0), 0);
+    const hasCompletion = (completion?.started ?? 0) > 0 || (completion?.completed ?? 0) > 0;
+    const hasCvr =
+      (dropoff?.upgradeToCheckout ?? 0) > 0 ||
+      (dropoff?.checkoutToPaid ?? 0) > 0 ||
+      (dropoff?.paidToPortal ?? 0) > 0;
+    return hasCompletion || hasCvr || reasonCount > 0 || blockerTasks.length > 0 || actionPlan.length > 0 || weekday.length > 0;
+  }, [
+    opsHealth?.week10Preview.billingManagementCompletion7d,
+    opsHealth?.week10Preview.proBlockerTopReasons,
+    opsHealth?.week11Preview.blockerImprovementTasks,
+    opsHealth?.week12Preview.billingDropoffByStep,
+    opsHealth?.week12Preview.proBlockerActionPlan,
+    opsHealth?.week14Preview.billingCompletionByWeekday,
+  ]);
   const weeklyOpsReport = useMemo(
     () => {
       const reportDate = new Intl.DateTimeFormat("ja-JP", {
@@ -5439,73 +5461,29 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   )}
-                  <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/70 p-3">
-                    <p className="text-xs font-semibold text-indigo-900">Pro転換の阻害要因アンケート（運用メモ）</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {([
-                        ["price", "料金が合わない"],
-                        ["timing", "導入タイミング未定"],
-                        ["feature_unclear", "機能差が不明"],
-                        ["approval_needed", "社内承認待ち"],
-                        ["other", "その他"],
-                      ] as Array<["price" | "timing" | "feature_unclear" | "approval_needed" | "other", string]>).map(
-                        ([value, label]) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() =>
-                              void trackProBlockerReason(value).then(() =>
-                                setSuccess(`阻害要因「${label}」を記録しました`),
-                              )
-                            }
-                            className="rounded-md border border-indigo-300 bg-white px-2 py-1 text-[11px] text-indigo-800 hover:bg-indigo-50"
-                          >
-                            {label}
-                          </button>
-                        ),
-                      )}
+                  {!hasBillingInsightData ? (
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                      請求分析データは蓄積中です。まずは「アップグレード」または「請求書・カード管理」導線のみ表示しています。
                     </div>
-                    <div className="mt-2 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
-                      上位理由: {(opsHealth?.week10Preview.proBlockerTopReasons ?? []).map((row) => `${row.reason} ${row.count}件`).join(" / ") || "データなし"}
-                    </div>
-                    <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
-                      請求・カード管理導線 完了率（7日）: {opsHealth?.week10Preview.billingManagementCompletion7d.rate ?? 0}%（開始 {opsHealth?.week10Preview.billingManagementCompletion7d.started ?? 0} / 完了 {opsHealth?.week10Preview.billingManagementCompletion7d.completed ?? 0}）
-                    </div>
-                  </div>
-                  <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
-                    <p className="text-xs font-semibold text-cyan-900">阻害要因からの改善タスク（自動提案）</p>
-                    <div className="mt-2 space-y-1 text-xs text-slate-700">
-                      {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).map((task) => (
-                        <p key={task}>・{task}</p>
-                      ))}
-                      {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).length === 0 && <p>・データ蓄積後に提案されます</p>}
-                    </div>
-                  </div>
-                  <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3">
-                    <p className="text-xs font-semibold text-sky-900">Week12 阻害要因別アクション（優先順）</p>
-                    <div className="mt-2 space-y-1 text-xs text-slate-700">
-                      {(opsHealth?.week12Preview.proBlockerActionPlan ?? []).map((row) => (
-                        <p key={`${row.reason}-${row.action}`}>
-                          ・[{row.priority === "high" ? "高" : row.priority === "medium" ? "中" : "低"}] {row.reason}: {row.action}
-                        </p>
-                      ))}
-                      {(opsHealth?.week12Preview.proBlockerActionPlan ?? []).length === 0 && <p>・データ蓄積後に自動提案されます</p>}
-                    </div>
-                    <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-[11px] text-slate-700">
-                      請求導線CVR: Upgrade→Checkout {opsHealth?.week12Preview.billingDropoffByStep.upgradeToCheckout ?? 0}% / Checkout→Paid {opsHealth?.week12Preview.billingDropoffByStep.checkoutToPaid ?? 0}% / Paid→Portal {opsHealth?.week12Preview.billingDropoffByStep.paidToPortal ?? 0}%
-                    </div>
-                  </div>
-                  <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
-                    <p className="text-xs font-semibold text-cyan-900">請求管理 完了率（曜日別）</p>
-                    <div className="mt-2 space-y-1 text-xs text-slate-700">
-                      {(opsHealth?.week14Preview.billingCompletionByWeekday ?? []).map((row) => (
-                        <p key={row.weekday}>
-                          ・{row.weekday}: {row.rate}%（開始 {row.started} / 完了 {row.completed}）
-                        </p>
-                      ))}
-                      {(opsHealth?.week14Preview.billingCompletionByWeekday ?? []).length === 0 ? <p>・データなし</p> : null}
-                    </div>
-                  </div>
+                  ) : (
+                    <details className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50/70 p-3">
+                      <summary className="cursor-pointer text-xs font-semibold text-indigo-900">請求分析の詳細を表示</summary>
+                      <div className="mt-2 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                        請求・カード管理導線 完了率（7日）: {opsHealth?.week10Preview.billingManagementCompletion7d.rate ?? 0}%（開始 {opsHealth?.week10Preview.billingManagementCompletion7d.started ?? 0} / 完了 {opsHealth?.week10Preview.billingManagementCompletion7d.completed ?? 0}）
+                      </div>
+                      <div className="mt-1 rounded-md border border-indigo-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                        上位理由: {(opsHealth?.week10Preview.proBlockerTopReasons ?? []).map((row) => `${row.reason} ${row.count}件`).join(" / ") || "データなし"}
+                      </div>
+                      <div className="mt-2 space-y-1 text-xs text-slate-700">
+                        {(opsHealth?.week11Preview.blockerImprovementTasks ?? []).map((task) => (
+                          <p key={task}>・{task}</p>
+                        ))}
+                      </div>
+                      <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-2 text-[11px] text-slate-700">
+                        請求導線CVR: Upgrade→Checkout {opsHealth?.week12Preview.billingDropoffByStep.upgradeToCheckout ?? 0}% / Checkout→Paid {opsHealth?.week12Preview.billingDropoffByStep.checkoutToPaid ?? 0}% / Paid→Portal {opsHealth?.week12Preview.billingDropoffByStep.paidToPortal ?? 0}%
+                      </div>
+                    </details>
+                  )}
                   <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
                     <p className="text-xs font-semibold text-emerald-900">カード更新後の再開導線（固定）</p>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -5526,8 +5504,8 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</p>
+                  <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-slate-800">導入施設向けFAQ（課金）</summary>
                     <div className="mt-2 space-y-2 text-xs text-slate-700">
                       {billingFaqEntries.map((entry) => (
                         <div key={entry.q}>
@@ -5536,7 +5514,7 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </details>
                 </article>
 
                 <article className="min-w-0 rounded-2xl lux-section-card border border-slate-200/80 bg-white p-4 shadow-sm">

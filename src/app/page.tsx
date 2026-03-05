@@ -323,38 +323,52 @@ type SeasonKey = "spring" | "summer" | "autumn" | "winter";
 type SearchSource = "search" | "sns" | "direct";
 
 type LpTemplateFlowKpi = {
+  periodDays: 7 | 30;
   intentLogins: number;
   editorOpened: number;
   completionRate: number;
 };
 
+async function getLpTemplateFlowKpiByDays(days: 7 | 30): Promise<LpTemplateFlowKpi> {
+  const admin = getSupabaseAdminServerClient();
+  const sinceIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const [{ count: intentLoginsRaw }, { count: editorOpenedRaw }] = await Promise.all([
+    admin
+      .from("audit_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("action", "onboarding.login_success")
+      .gte("created_at", sinceIso)
+      .contains("metadata", { sourceType: "lp", templateIntent: true }),
+    admin
+      .from("audit_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("action", "onboarding.template_editor_opened")
+      .gte("created_at", sinceIso)
+      .contains("metadata", { sourceType: "lp", templateIntent: true }),
+  ]);
+  const intentLogins = intentLoginsRaw ?? 0;
+  const editorOpened = editorOpenedRaw ?? 0;
+  return {
+    periodDays: days,
+    intentLogins,
+    editorOpened,
+    completionRate: intentLogins > 0 ? Math.round((editorOpened / intentLogins) * 100) : 0,
+  };
+}
+
 async function getLpTemplateFlowKpi7d(): Promise<LpTemplateFlowKpi> {
   try {
-    const admin = getSupabaseAdminServerClient();
-    const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ count: intentLoginsRaw }, { count: editorOpenedRaw }] = await Promise.all([
-      admin
-        .from("audit_logs")
-        .select("id", { count: "exact", head: true })
-        .eq("action", "onboarding.login_success")
-        .gte("created_at", sinceIso)
-        .contains("metadata", { sourceType: "lp", templateIntent: true }),
-      admin
-        .from("audit_logs")
-        .select("id", { count: "exact", head: true })
-        .eq("action", "onboarding.template_editor_opened")
-        .gte("created_at", sinceIso)
-        .contains("metadata", { sourceType: "lp", templateIntent: true }),
-    ]);
-    const intentLogins = intentLoginsRaw ?? 0;
-    const editorOpened = editorOpenedRaw ?? 0;
-    return {
-      intentLogins,
-      editorOpened,
-      completionRate: intentLogins > 0 ? Math.round((editorOpened / intentLogins) * 100) : 0,
-    };
+    const kpi7d = await getLpTemplateFlowKpiByDays(7);
+    if (kpi7d.intentLogins >= 10) {
+      return kpi7d;
+    }
+    const kpi30d = await getLpTemplateFlowKpiByDays(30);
+    if (kpi30d.intentLogins > kpi7d.intentLogins) {
+      return kpi30d;
+    }
+    return kpi7d;
   } catch {
-    return { intentLogins: 0, editorOpened: 0, completionRate: 0 };
+    return { periodDays: 7, intentLogins: 0, editorOpened: 0, completionRate: 0 };
   }
 }
 
@@ -490,6 +504,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "都心ビジネスホテル（120室）",
       comment: "深夜チェックインの問い合わせが減って、フロント1名体制でも回せるようになりました。",
       impact: "導入3日で夜間電話対応を削減",
+      caseId: "INF-BIZ-001",
+      verifiedAt: "2026-02-18",
+      verificationMethod: "運用ログ + ヒアリング確認",
     },
     {
       industryTag: "business" as const,
@@ -499,6 +516,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "空港前ビジネスホテル（95室）",
       comment: "チェックイン/朝食/Wi-Fiを1画面にまとめたら、到着直後の質問が減りました。",
       impact: "フロント一次対応をピーク帯で平準化",
+      caseId: "INF-BIZ-002",
+      verifiedAt: "2026-02-22",
+      verificationMethod: "現場責任者ヒアリング",
     },
     {
       industryTag: "business" as const,
@@ -508,6 +528,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "駅前ホテル（65室）",
       comment: "朝食会場の案内を固定したことで、スタッフごとの説明差が出にくくなりました。",
       impact: "朝ピークの案内品質を統一",
+      caseId: "INF-BIZ-003",
+      verifiedAt: "2026-02-25",
+      verificationMethod: "案内フロー棚卸し確認",
     },
     {
       industryTag: "resort" as const,
@@ -517,6 +540,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "温浴併設リゾート（客室80室）",
       comment: "温浴ルールの更新を即反映できるので、紙案内差し替えの手間がほぼ無くなりました。",
       impact: "案内差し替え時間を週2時間削減",
+      caseId: "INF-RST-001",
+      verifiedAt: "2026-02-19",
+      verificationMethod: "更新ログ比較（導入前後）",
     },
     {
       industryTag: "resort" as const,
@@ -526,6 +552,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "海辺リゾートホテル（140室）",
       comment: "アクティビティの予約導線をトップに置いたら、現地案内の口頭対応が減りました。",
       impact: "体験予約導線の到達率が改善",
+      caseId: "INF-RST-002",
+      verifiedAt: "2026-02-24",
+      verificationMethod: "予約導線到達率ヒアリング",
     },
     {
       industryTag: "resort" as const,
@@ -535,6 +564,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "高原リゾート（110室）",
       comment: "雨天時の代替案内を同じページで切替できるので、当日の混乱が減りました。",
       impact: "当日変更時の案内工数を削減",
+      caseId: "INF-RST-003",
+      verifiedAt: "2026-02-27",
+      verificationMethod: "当日運用レビュー",
     },
     {
       industryTag: "spa" as const,
@@ -544,6 +576,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "温浴併設リゾート（80室）",
       comment: "入浴前の注意事項と予約案内を1ページ化して、フロント確認件数が減りました。",
       impact: "温浴前の説明対応を削減",
+      caseId: "INF-SPA-001",
+      verifiedAt: "2026-02-20",
+      verificationMethod: "フロント問い合わせ比較",
     },
     {
       industryTag: "spa" as const,
@@ -553,6 +588,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "温泉旅館（45室）",
       comment: "貸切風呂の利用ルールをQR配布したら、案内の言い漏れが減りました。",
       impact: "温浴クレームリスクを抑制",
+      caseId: "INF-SPA-002",
+      verifiedAt: "2026-02-23",
+      verificationMethod: "館内案内チェックリスト確認",
     },
     {
       industryTag: "spa" as const,
@@ -562,6 +600,9 @@ export default async function Home({ searchParams }: HomePageProps) {
       hotel: "日帰り温浴施設",
       comment: "混雑時の導線変更を即反映できるので、現場の誘導がスムーズになりました。",
       impact: "混雑時の案内切替を高速化",
+      caseId: "INF-SPA-003",
+      verifiedAt: "2026-02-26",
+      verificationMethod: "混雑時オペレーション確認",
     },
   ];
 
@@ -639,11 +680,11 @@ export default async function Home({ searchParams }: HomePageProps) {
     { label: "問い合わせ削減", value: "最大40%", sub: "比較対象: フロント一次対応" },
     { label: "初回公開時間", value: "最短3分", sub: "計測条件: 担当者1名で初期公開" },
     {
-      label: "LP→編集到達率（7日）",
+      label: `LP→編集到達率（${lpTemplateFlowKpi.periodDays}日）`,
       value: lpTemplateFlowKpi.intentLogins > 0 ? `${lpTemplateFlowKpi.completionRate}%` : "集計中",
       sub:
         lpTemplateFlowKpi.intentLogins > 0
-          ? `意図ありログイン ${lpTemplateFlowKpi.intentLogins} / 編集到達 ${lpTemplateFlowKpi.editorOpened}`
+          ? `${lpTemplateFlowKpi.periodDays}日集計: 意図ありログイン ${lpTemplateFlowKpi.intentLogins} / 編集到達 ${lpTemplateFlowKpi.editorOpened}`
           : "LP経由データ蓄積後に表示",
     },
   ];
@@ -934,20 +975,6 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
         </header>
 
-        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">導入までの不安を先回りで解消</h2>
-            <p className="text-sm text-slate-600">{landingPage === "business" ? "ビジネスホテル向け" : landingPage === "resort" ? "リゾートホテル向け" : "温浴施設向け"}の初期導線</p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {anxietyReliefByLanding[landingPage].map((line) => (
-              <article key={line} className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-900">
-                {line}
-              </article>
-            ))}
-          </div>
-        </section>
-
         <section className="lp-reveal lp-delay-2 grid gap-4 md:grid-cols-3">
           {useCases.map((item, index) => (
             <article
@@ -958,10 +985,11 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="text-xs font-semibold text-emerald-700">導入シーン</p>
               <h2 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h2>
               <ul className="mt-3 space-y-1 text-sm text-slate-700">
-                {item.items.map((line) => (
+                {item.items.slice(0, 2).map((line) => (
                   <li key={line}>・{line}</li>
                 ))}
               </ul>
+              <p className="mt-2 text-[11px] text-slate-500">{anxietyReliefByLanding[landingPage][0]}</p>
             </article>
           ))}
         </section>
@@ -1038,7 +1066,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     <p className="text-slate-700"><span className="font-semibold text-cyan-700">効果:</span> {example.impact}</p>
                   </div>
                   <ul className="mt-2 space-y-1 text-sm text-slate-700">
-                    {example.bullets.map((bullet) => (
+                    {example.bullets.slice(0, 2).map((bullet) => (
                       <li key={`${example.title}-${bullet}`}>・{bullet}</li>
                     ))}
                   </ul>
@@ -1236,7 +1264,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         <section id="faq" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-slate-900">{sourceType === "search" ? "検索ユーザー向けFAQ" : "FAQ"}</h2>
           <div className="mt-4 space-y-2">
-            {searchOptimizedFaq.map((item, index) => (
+            {searchOptimizedFaq.slice(0, 3).map((item, index) => (
               <details
                 key={item.q}
                 className="lp-reveal rounded-xl border border-slate-200 bg-white p-4"

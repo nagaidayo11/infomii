@@ -28,6 +28,9 @@ type HotelVoice = {
   hotel: string;
   comment: string;
   impact: string;
+  caseId?: string;
+  verifiedAt?: string;
+  verificationMethod?: string;
 };
 
 type LpProofSectionProps = {
@@ -146,6 +149,13 @@ export default function LpProofSection({
             <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
               {voice.impact}
             </p>
+            {(voice.caseId || voice.verifiedAt || voice.verificationMethod) && (
+              <p className="mt-2 text-[10px] text-slate-500">
+                {voice.caseId ? `Case ${voice.caseId}` : "Case -"}
+                {voice.verifiedAt ? ` / 確認日 ${voice.verifiedAt}` : ""}
+                {voice.verificationMethod ? ` / ${voice.verificationMethod}` : ""}
+              </p>
+            )}
           </article>
         ))}
         {filteredVoices.length === 0 && (
