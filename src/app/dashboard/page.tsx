@@ -141,63 +141,169 @@ function renderDashboardTemplatePreviewIcon(icon: string | undefined): ReactNode
   if (!icon.startsWith("svg:")) {
     return <span className="text-base leading-none">{icon}</span>;
   }
-
-  const iconClass = "h-4 w-4 text-slate-700";
+  const className = "h-4 w-4 text-slate-700";
   if (icon === "svg:clock") {
-    return <span className="icon-[tabler--clock] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4l3 2" />
+      </svg>
+    );
   }
   if (icon === "svg:map-pin") {
-    return <span className="icon-[tabler--map-pin] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M12 21s6-5.4 6-10a6 6 0 1 0-12 0c0 4.6 6 10 6 10Z" />
+        <circle cx="12" cy="11" r="2.5" />
+      </svg>
+    );
   }
   if (icon === "svg:wifi") {
-    return <span className="icon-[tabler--wifi] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4.5 9.5a11 11 0 0 1 15 0" />
+        <path d="M7.5 12.5a7 7 0 0 1 9 0" />
+        <path d="M10.5 15.5a3 3 0 0 1 3 0" />
+        <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    );
   }
   if (icon === "svg:car") {
-    return <span className="icon-[tabler--car] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 13h16l-1.5-4h-13L4 13Z" />
+        <path d="M5 13v4h2" />
+        <path d="M17 17h2v-4" />
+        <circle cx="8" cy="17" r="1.6" />
+        <circle cx="16" cy="17" r="1.6" />
+      </svg>
+    );
   }
   if (icon === "svg:utensils") {
-    return <span className="icon-[tabler--tools-kitchen-2] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M7 4v8" />
+        <path d="M5 4v4" />
+        <path d="M9 4v4" />
+        <path d="M7 12v8" />
+        <path d="M16 4c1.5 2.5 1.5 5.5 0 8v8" />
+      </svg>
+    );
   }
   if (icon === "svg:bath") {
-    return <span className="icon-[tabler--bath] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M5 12h14v3a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-3Z" />
+        <path d="M8 12V8a2 2 0 1 1 4 0" />
+      </svg>
+    );
   }
   if (icon === "svg:phone") {
-    return <span className="icon-[tabler--phone] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M6 3h4l1 4-2 1.5a14 14 0 0 0 6 6L16.5 12l4 1v4l-2 2a3 3 0 0 1-3 .7A18 18 0 0 1 4.3 8.5 3 3 0 0 1 5 5.5L6 3Z" />
+      </svg>
+    );
   }
   if (icon === "svg:key") {
-    return <span className="icon-[tabler--key] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <circle cx="8.5" cy="12" r="3.2" />
+        <path d="M11.7 12H20" />
+        <path d="M16 12v2" />
+        <path d="M18 12v1.5" />
+      </svg>
+    );
   }
   if (icon === "svg:toothbrush") {
-    return <span className="icon-[tabler--tooth] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 18.5h6.5a2.5 2.5 0 0 0 2.3-1.5L20 4.5" />
+        <path d="M17.8 3.8 20.2 6.2" />
+        <path d="M5.5 16.5h3.5" />
+      </svg>
+    );
   }
   if (icon === "svg:hanger") {
-    return <span className="icon-[tabler--hanger] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M12 7a2 2 0 1 0-2-2" />
+        <path d="M10 7.2 4.5 14a2 2 0 0 0 1.6 3.3h11.8a2 2 0 0 0 1.6-3.3L14 7.2" />
+      </svg>
+    );
   }
   if (icon === "svg:broom") {
-    return <span className="icon-[tabler--broom] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 19h9" />
+        <path d="M14 5 9 10" />
+        <path d="m8 11 4.5 4.5a2 2 0 0 1 0 2.8L11.8 19H6.5" />
+      </svg>
+    );
   }
   if (icon === "svg:washing-machine") {
-    return <span className="icon-[tabler--wash-machine] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <rect x="5" y="3.5" width="14" height="17" rx="2" />
+        <circle cx="12" cy="13" r="4" />
+        <path d="M8 6.8h.01M10.5 6.8h.01" />
+      </svg>
+    );
   }
   if (icon === "svg:microwave") {
-    return <span className="icon-[tabler--microwave] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <rect x="3.5" y="5" width="17" height="14" rx="2" />
+        <rect x="6.5" y="8" width="9" height="8" rx="1" />
+        <path d="M18 8v8M19 9v.01M19 12v.01M19 15v.01" />
+      </svg>
+    );
   }
   if (icon === "svg:package") {
-    return <span className="icon-[tabler--package] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4.5 8.5 12 4l7.5 4.5v7L12 20l-7.5-4.5v-7Z" />
+        <path d="M12 20v-7.5M4.5 8.5 12 13l7.5-4.5" />
+      </svg>
+    );
   }
   if (icon === "svg:taxi") {
-    return <span className="icon-[tabler--taxi] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M5 13h14l-1.6-4.5H6.6L5 13Z" />
+        <path d="M7.5 8.5 9 6h6l1.5 2.5" />
+        <circle cx="8" cy="17" r="1.6" />
+        <circle cx="16" cy="17" r="1.6" />
+        <path d="M6 13v4M18 13v4" />
+      </svg>
+    );
   }
   if (icon === "svg:info") {
-    return <span className="icon-[tabler--info-circle] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 10v5" />
+        <path d="M12 7.5h.01" />
+      </svg>
+    );
   }
   if (icon === "svg:ticket") {
-    return <span className="icon-[tabler--ticket] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h11A2.5 2.5 0 0 1 20 8.5V10a2 2 0 1 0 0 4v1.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 15.5V14a2 2 0 1 0 0-4V8.5Z" />
+        <path d="M12 9v6" />
+      </svg>
+    );
   }
   if (icon === "svg:bell") {
-    return <span className="icon-[tabler--bell] h-4 w-4 text-slate-700" aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M8 17h8l-1-2v-4a3 3 0 1 0-6 0v4l-1 2Z" />
+        <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
+      </svg>
+    );
   }
-  return <span className={iconClass} aria-hidden="true">⭐</span>;
+  return <span className="text-base leading-none">⭐</span>;
 }
 
 function DashboardTemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
@@ -208,7 +314,7 @@ function DashboardTemplateScreenPreview({ blocks }: { blocks?: InformationBlock[
 
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-      <div className="template-preview-scroll max-h-[32rem] space-y-2 overflow-y-auto pr-1">
+      <div className="template-preview-scroll max-h-[40rem] space-y-2 overflow-y-auto pr-1">
         {previewBlocks.map((block) => {
           if (block.type === "title" || block.type === "heading") {
             return (

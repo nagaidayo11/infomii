@@ -1166,6 +1166,12 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <li>・基本ブロックエディタ</li>
                 <li>・QR公開</li>
               </ul>
+              <Link
+                href={buildLoginHref("lp-bottom")}
+                className="mt-5 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold !text-white hover:bg-slate-800 hover:!text-white"
+              >
+                無料で作成を始める
+              </Link>
             </article>
             <article className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-5">
               <div className="flex items-center justify-between gap-2">
@@ -1191,8 +1197,9 @@ export default async function Home({ searchParams }: HomePageProps) {
                 href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
-                {primaryCtaLabel}
+                Pro機能を利用する
               </Link>
+              <p className="mt-1 text-[11px] text-slate-600">登録後、ダッシュボードの請求セクションからすぐアップグレードできます。</p>
             </article>
           </div>
 
