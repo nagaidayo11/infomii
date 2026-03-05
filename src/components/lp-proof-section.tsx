@@ -123,8 +123,7 @@ export default function LpProofSection({
         {filteredVoices.map((voice, index) => (
           <article
             key={voice.hotel}
-            className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
-            style={{ transitionDelay: `${160 + index * 80}ms` }}
+            className="rounded-2xl border border-slate-200 bg-white p-4"
           >
             <div className="flex items-center gap-2">
               <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
