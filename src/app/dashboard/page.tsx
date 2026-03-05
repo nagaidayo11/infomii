@@ -47,9 +47,7 @@ import {
   type HotelSubscription,
   type HotelViewMetrics,
   type OpsHealthSnapshot,
-  type SubscriptionPlan,
   type SubscriptionStatus,
-  updateCurrentHotelSubscription,
   updateCurrentHotelName,
   updateInformation,
 } from "@/lib/storage";
@@ -203,14 +201,14 @@ function renderDashboardTemplatePreviewIcon(icon: string | undefined): ReactNode
 }
 
 function DashboardTemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
-  const previewBlocks = (blocks ?? []).slice(0, 14);
+  const previewBlocks = (blocks ?? []).slice(0, 20);
   if (previewBlocks.length === 0) {
     return null;
   }
 
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-      <div className="template-preview-scroll max-h-64 space-y-2 overflow-y-auto pr-1">
+      <div className="template-preview-scroll max-h-[32rem] space-y-2 overflow-y-auto pr-1">
         {previewBlocks.map((block) => {
           if (block.type === "title" || block.type === "heading") {
             return (
@@ -700,9 +698,6 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Information[]>([]);
   const [hotelName, setHotelName] = useState("");
   const [subscription, setSubscription] = useState<HotelSubscription | null>(null);
-  const [planDraft, setPlanDraft] = useState<SubscriptionPlan>("free");
-  const [statusDraft, setStatusDraft] = useState<SubscriptionStatus>("active");
-  const [savingSubscription, setSavingSubscription] = useState(false);
   const [creatingCheckout, setCreatingCheckout] = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);
@@ -928,8 +923,6 @@ export default function DashboardPage() {
           setHotelName(boot.hotelName);
           setHotelNameDraft(boot.hotelName);
           setSubscription(boot.subscription);
-          setPlanDraft(boot.subscription?.plan ?? "free");
-          setStatusDraft(boot.subscription?.status ?? "active");
           setItems(boot.informations);
         }
       } catch (e) {
@@ -1063,10 +1056,6 @@ export default function DashboardPage() {
         await runOpsRecoveryAction("sync_subscription");
         const latest = await getCurrentHotelSubscription();
         setSubscription(latest);
-        if (latest) {
-          setPlanDraft(latest.plan);
-          setStatusDraft(latest.status);
-        }
       } catch {
         autoSyncedRenewalRef.current = false;
       }
@@ -2158,22 +2147,6 @@ export default function DashboardPage() {
       setError(e instanceof Error ? e.message : "施設名の更新に失敗しました");
     } finally {
       setSavingHotelName(false);
-    }
-  }
-
-  async function onSaveSubscription() {
-    setSavingSubscription(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await updateCurrentHotelSubscription(planDraft, statusDraft);
-      const sub = await getCurrentHotelSubscription();
-      setSubscription(sub);
-      setSuccess("プラン情報を更新しました");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "プラン更新に失敗しました");
-    } finally {
-      setSavingSubscription(false);
     }
   }
 
@@ -5371,38 +5344,6 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <div className="mt-4 flex flex-wrap items-end gap-2">
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-600">プラン</label>
-                      <select
-                        value={planDraft}
-                        onChange={(e) => setPlanDraft(e.target.value as SubscriptionPlan)}
-                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      >
-                        <option value="free">free</option>
-                        <option value="pro">pro</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs text-slate-600">ステータス</label>
-                      <select
-                        value={statusDraft}
-                        onChange={(e) => setStatusDraft(e.target.value as SubscriptionStatus)}
-                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      >
-                        <option value="active">active</option>
-                        <option value="trialing">trialing</option>
-                        <option value="past_due">past_due</option>
-                        <option value="canceled">canceled</option>
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={savingSubscription}
-                      onClick={onSaveSubscription}
-                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
-                    >
-                      {savingSubscription ? "保存中..." : "プラン設定を保存"}
-                    </button>
                     {(isProActive || shouldShowUpgradeCta) && (
                       <button
                         type="button"
@@ -5421,6 +5362,15 @@ export default function DashboardPage() {
                     >
                       {openingPortal ? "遷移中..." : "請求書・カード管理"}
                     </button>
+                  </div>
+                  <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                    {subscription?.status === "active" || subscription?.status === "trialing"
+                      ? "現在の契約状態に応じて請求導線を表示しています。Pro契約中は「プラン管理」、Free運用時は必要タイミングでアップグレード導線を表示します。"
+                      : subscription?.status === "past_due"
+                        ? "お支払いが未完了です。まず「請求書・カード管理」から決済情報を更新してください。"
+                        : subscription?.status === "canceled"
+                          ? "現在は解約状態です。再開する場合は「Proにアップグレード」から手続きしてください。"
+                          : "現在の契約状態に応じて、最適な請求導線を表示します。"}
                   </div>
                   {!subscription?.hasStripeCustomer && (
                     <p className="mt-3 text-xs text-slate-500">
