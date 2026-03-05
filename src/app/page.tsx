@@ -430,32 +430,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
-  const heroCtaLabelByVariant = {
-    a: landingPage === "business" ? "30秒で無料登録してチェックイン案内を作成" : landingPage === "resort" ? "30秒で無料登録して滞在案内を作成" : "30秒で無料登録して温浴案内を作成",
-    b: landingPage === "business" ? "30秒で無料登録して夜間案内を公開" : landingPage === "resort" ? "30秒で無料登録して導線案内を公開" : "30秒で無料登録して温浴案内を公開",
-    c: landingPage === "business" ? "30秒で無料登録してフロント運用を改善" : landingPage === "resort" ? "30秒で無料登録して滞在導線を整備" : "30秒で無料登録して温浴運用を整備",
-  } as const;
-  const heroPrimaryCtaLabel = heroCtaLabelByVariant[ctaVariant];
-  const channelCtaSuffix =
-    normalizedSourceChannel === "x"
-      ? "（X投稿向け）"
-      : normalizedSourceChannel === "instagram"
-        ? "（Instagram向け）"
-        : normalizedSourceChannel === "tiktok"
-          ? "（TikTok向け）"
-          : "";
-  const optimizedHeroPrimaryCtaLabel = `${heroPrimaryCtaLabel}${channelCtaSuffix}`;
-  const heroCtaShortLabelByVariant = {
-    a: "30秒で無料登録",
-    b: "30秒で無料登録",
-    c: "30秒で無料登録",
-  } as const;
-  const heroPrimaryShortCtaLabel = heroCtaShortLabelByVariant[ctaVariant];
-  const bottomCtaByLandingPage = {
-    business: "無料登録してチェックイン導線を公開",
-    resort: "無料登録して滞在導線を公開",
-    spa: "無料登録して温浴導線を公開",
-  } as const;
+  const primaryCtaLabel = "無料で作成を始める";
   const anxietyReliefByLanding = {
     business: [
       "専門知識なしでもテンプレから3分公開",
@@ -910,6 +885,9 @@ export default async function Home({ searchParams }: HomePageProps) {
 
           <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
             <div>
+              <p className="lp-reveal lp-delay-2 text-xs font-semibold tracking-[0.08em] text-emerald-700">
+                ホテル現場向け（フロント・運営担当）
+              </p>
               <h1 className="lp-reveal lp-delay-2 mt-3 text-3xl font-bold text-slate-900 sm:text-5xl">
                 {heroCopy.title}
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
@@ -937,7 +915,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
               <div className="lp-reveal lp-delay-4 mt-5 flex flex-wrap gap-3">
                 <Link href={buildLoginHref("lp-hero")} className="lux-btn-primary lp-cta-attention rounded-xl px-5 py-3 text-sm font-semibold">
-                  {optimizedHeroPrimaryCtaLabel}
+                  {primaryCtaLabel}
                 </Link>
                 <Link
                   href={buildLoginHref("lp-hero")}
@@ -946,7 +924,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                   ログイン
                 </Link>
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">CTAクリック後は登録/ログイン画面へ遷移します。登録完了後に作成ウィザードを開始できます。</p>
+              <p className="mt-2 text-[11px] text-slate-500">登録/ログイン後は、テンプレ複製からインフォメーション編集画面へ自動遷移します。</p>
             </div>
 
             <aside className="lp-reveal lp-delay-4 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
@@ -1079,6 +1057,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                     </Link>
                     <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
                   </div>
+                  <p className="mt-1 text-[11px] text-slate-500">作成する → テンプレ複製 → インフォメーション編集画面へ自動遷移</p>
                   <p className="mt-1 text-[11px] text-slate-500">使用テンプレ: {example.template?.title ?? "テンプレート"}</p>
                 </div>
               </article>
@@ -1212,7 +1191,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold !text-white hover:bg-emerald-500 hover:!text-white"
               >
-                {bottomCtaByLandingPage[landingPage]}
+                {primaryCtaLabel}
               </Link>
             </article>
           </div>
@@ -1307,7 +1286,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
               <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
               <Link href={buildLoginHref("lp-bottom")} className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                {heroPrimaryCtaLabel}
+                {primaryCtaLabel}
               </Link>
             </aside>
           </div>
@@ -1325,7 +1304,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               href={buildLoginHref("lp-bottom")}
               className="rounded-xl bg-white px-5 py-3 text-sm font-semibold !text-emerald-700 shadow-[0_12px_24px_-14px_rgba(2,6,23,0.45)]"
             >
-              {bottomCtaByLandingPage[landingPage]}
+              {primaryCtaLabel}
             </Link>
             <a
               href="#pricing"
@@ -1371,7 +1350,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               ログイン
             </Link>
             <Link href={buildLoginHref("lp-sticky")} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">
-              {heroPrimaryShortCtaLabel}
+              {primaryCtaLabel}
             </Link>
           </div>
         </div>
@@ -1383,7 +1362,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           href={buildLoginHref("lp-sticky")}
           className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
         >
-          {heroPrimaryShortCtaLabel}
+          {primaryCtaLabel}
         </Link>
       </div>
       )}
