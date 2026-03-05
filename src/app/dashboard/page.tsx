@@ -313,8 +313,8 @@ function DashboardTemplateScreenPreview({ blocks }: { blocks?: InformationBlock[
   }
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
-      <div className="template-preview-scroll max-h-[40rem] space-y-2 overflow-y-auto pr-1">
+    <div className="mt-3 h-[24rem] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 sm:h-[30rem]">
+      <div className="template-preview-scroll h-full space-y-2 overflow-y-auto pr-1">
         {previewBlocks.map((block) => {
           if (block.type === "title" || block.type === "heading") {
             return (
