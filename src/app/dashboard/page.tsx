@@ -53,7 +53,7 @@ import {
   updateCurrentHotelName,
   updateInformation,
 } from "@/lib/storage";
-import type { Information } from "@/types/information";
+import type { Information, InformationBlock } from "@/types/information";
 import { INDUSTRY_PRESET_LABELS, type IndustryPreset, type StarterTemplate, starterTemplates } from "@/lib/templates";
 
 function formatDate(value: string): string {
@@ -134,6 +134,136 @@ function getTemplateBlockLabel(type: string): string {
   if (type === "divider") return "区切り線";
   if (type === "space") return "余白";
   return "ブロック";
+}
+
+function renderDashboardTemplatePreviewIcon(icon: string | undefined): ReactNode {
+  if (!icon) {
+    return <span className="text-base leading-none">⭐</span>;
+  }
+  if (!icon.startsWith("svg:")) {
+    return <span className="text-base leading-none">{icon}</span>;
+  }
+
+  const iconClass = "h-4 w-4 text-slate-700";
+  if (icon === "svg:clock") {
+    return <span className="icon-[tabler--clock] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:map-pin") {
+    return <span className="icon-[tabler--map-pin] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:wifi") {
+    return <span className="icon-[tabler--wifi] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:car") {
+    return <span className="icon-[tabler--car] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:utensils") {
+    return <span className="icon-[tabler--tools-kitchen-2] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:bath") {
+    return <span className="icon-[tabler--bath] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:phone") {
+    return <span className="icon-[tabler--phone] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:key") {
+    return <span className="icon-[tabler--key] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:toothbrush") {
+    return <span className="icon-[tabler--tooth] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:hanger") {
+    return <span className="icon-[tabler--hanger] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:broom") {
+    return <span className="icon-[tabler--broom] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:washing-machine") {
+    return <span className="icon-[tabler--wash-machine] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:microwave") {
+    return <span className="icon-[tabler--microwave] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:package") {
+    return <span className="icon-[tabler--package] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:taxi") {
+    return <span className="icon-[tabler--taxi] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:info") {
+    return <span className="icon-[tabler--info-circle] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:ticket") {
+    return <span className="icon-[tabler--ticket] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  if (icon === "svg:bell") {
+    return <span className="icon-[tabler--bell] h-4 w-4 text-slate-700" aria-hidden="true" />;
+  }
+  return <span className={iconClass} aria-hidden="true">⭐</span>;
+}
+
+function DashboardTemplateScreenPreview({ blocks }: { blocks?: InformationBlock[] }) {
+  const previewBlocks = (blocks ?? []).slice(0, 14);
+  if (previewBlocks.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
+      <div className="template-preview-scroll max-h-64 space-y-2 overflow-y-auto pr-1">
+        {previewBlocks.map((block) => {
+          if (block.type === "title" || block.type === "heading") {
+            return (
+              <p key={block.id} className="line-clamp-1 text-xs font-semibold text-slate-800">
+                {block.text || "タイトル"}
+              </p>
+            );
+          }
+          if (block.type === "paragraph") {
+            return (
+              <p key={block.id} className="line-clamp-2 text-[11px] text-slate-600">
+                {block.text || "本文"}
+              </p>
+            );
+          }
+          if (block.type === "image" && block.url) {
+            return (
+              <div key={block.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <Image src={block.url} alt="template preview" width={640} height={360} className="h-auto w-full object-cover" unoptimized />
+              </div>
+            );
+          }
+          if (block.type === "icon") {
+            return (
+              <div key={block.id} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50">
+                  {renderDashboardTemplatePreviewIcon(block.icon)}
+                </div>
+                <p className="line-clamp-1 text-[11px] text-slate-700">{block.label || block.text || "アイコン項目"}</p>
+              </div>
+            );
+          }
+          if (block.type === "iconRow") {
+            return (
+              <div key={block.id} className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="grid grid-cols-3 gap-x-2 gap-y-3">
+                  {(block.iconItems ?? []).slice(0, 12).map((entry) => (
+                    <div key={entry.id} className="text-center">
+                      <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50">
+                        {renderDashboardTemplatePreviewIcon(entry.icon)}
+                      </div>
+                      <p className="mt-1 line-clamp-1 text-[10px] text-slate-600">{entry.label || "メニュー"}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
 }
 
 type TemplatePurposeFilter = "all" | "checkin" | "facility" | "breakfast" | "bath";
@@ -3482,27 +3612,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       )}
-                      {(() => {
-                        const previewImage = activeTemplatePreviewEntry.template.blocks?.find((block) => block.type === "image")?.url;
-                        if (!previewImage) {
-                          return null;
-                        }
-                        return (
-                          <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                            <Image
-                              src={previewImage}
-                              alt="template preview"
-                              width={640}
-                              height={360}
-                              className="h-auto w-full object-cover"
-                              unoptimized
-                            />
-                          </div>
-                        );
-                      })()}
-                      <p className="mt-3 max-h-36 overflow-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">
-                        {activeTemplatePreviewEntry.template.body}
-                      </p>
+                      <DashboardTemplateScreenPreview blocks={activeTemplatePreviewEntry.template.blocks} />
                       {!createCompactMode && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(activeTemplatePreviewEntry.template.blocks ?? [])
