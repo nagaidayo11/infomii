@@ -14,16 +14,6 @@ type PublicPageProps = {
   searchParams: Promise<{ src?: string; embed?: string }>;
 };
 
-function formatUpdatedAt(value: string): string {
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
 function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock[] {
   if (Array.isArray(value) && value.length > 0) {
     return value
@@ -777,7 +767,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return (
-      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
+      <main className={`lux-main mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">公開ページ</h1>
         <p className="text-sm text-slate-600">
           Supabase環境変数が未設定のため、公開ページを取得できません。
@@ -812,7 +802,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       // service role未設定時は従来どおり not found 扱い
     }
     return (
-      <main className={`lux-main mx-auto w-full max-w-2xl ${isEmbed ? "p-0" : "min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
+      <main className={`lux-main mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">ご案内</h1>
         <p className="text-sm text-slate-600">
           {isDraft ? "このページは未公開です。公開後にご利用いただけます。" : "ページが見つかりませんでした。"}
@@ -892,7 +882,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       }`}
     >
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
-      <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-2xl"}`}>
+      <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-[420px]"}`}>
         <article
           className="lux-card lux-section-card overflow-hidden rounded-3xl"
           style={{
@@ -903,19 +893,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
         >
           {!isEmbed ? (
             <div className="border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-h-8">
-                  {isChildPage ? (
-                    <PublicFooterBackButton
-                      fallbackHref="/"
-                      label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
-                    />
-                  ) : null}
-                </div>
-                <p className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  最終更新: {formatUpdatedAt(row.updated_at)}
-                </p>
+              <div className="min-h-8">
+                {isChildPage ? (
+                  <PublicFooterBackButton
+                    fallbackHref="/"
+                    label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+                  />
+                ) : null}
               </div>
             </div>
           ) : null}
