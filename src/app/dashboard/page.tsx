@@ -671,10 +671,17 @@ const QUICKSTART_DISMISSED_KEY = "hotel-quickstart-dismissed-v1";
 const DASHBOARD_TEMPLATE_FAVORITES_KEY = "dashboard-template-favorites-v1";
 const WIZARD_RESUME_STORAGE_KEY = "dashboard-onboarding-wizard-resume-v1";
 const OPS_PERF_SNAPSHOT_KEY = "ops-perf-snapshot-v1";
+const LP_TEMPLATE_HANDOFF_KEY = "lp-template-handoff-v1";
 const OPS_OWNER_EMAILS = new Set([
   "nagai9_119@ezweb.ne.jp",
   "nagaisoccer@gmail.com",
 ]);
+
+type LpTemplateHandoff = {
+  templateIndex?: unknown;
+  templateTitle?: unknown;
+  createdAt?: unknown;
+};
 
 function parseDashboardTab(value: string | null): DashboardTab | null {
   if (value === "dashboard" || value === "create" || value === "project" || value === "ops") {
@@ -832,19 +839,44 @@ export default function DashboardPage() {
     const params = new URLSearchParams(window.location.search);
     const raw = params.get("lp_template");
     const rawTitle = params.get("lp_template_title");
+    let handoffTemplateIndex: number | null = null;
+    let handoffTemplateTitle: string | null = null;
     if (!raw && !rawTitle) {
+      const handoffRaw = window.localStorage.getItem(LP_TEMPLATE_HANDOFF_KEY);
+      if (handoffRaw) {
+        try {
+          const parsed = JSON.parse(handoffRaw) as LpTemplateHandoff;
+          const idx = Number(parsed.templateIndex);
+          handoffTemplateIndex =
+            Number.isInteger(idx) && idx >= 0 && idx < starterTemplates.length ? idx : null;
+          handoffTemplateTitle =
+            typeof parsed.templateTitle === "string" && parsed.templateTitle.trim()
+              ? parsed.templateTitle
+              : null;
+        } catch {
+          window.localStorage.removeItem(LP_TEMPLATE_HANDOFF_KEY);
+        }
+      }
+    }
+    if (!raw && !rawTitle && handoffTemplateIndex === null && !handoffTemplateTitle) {
       return;
     }
-    const parsedTemplateIndex = raw !== null ? Number(raw) : NaN;
+    const parsedTemplateIndex =
+      raw !== null
+        ? Number(raw)
+        : handoffTemplateIndex !== null
+          ? handoffTemplateIndex
+          : NaN;
     const resolvedTemplateIndex =
       Number.isInteger(parsedTemplateIndex) && parsedTemplateIndex >= 0 && parsedTemplateIndex < starterTemplates.length
         ? parsedTemplateIndex
-        : rawTitle
-          ? starterTemplates.findIndex((entry) => entry.title === rawTitle)
+        : (rawTitle ?? handoffTemplateTitle)
+          ? starterTemplates.findIndex((entry) => entry.title === (rawTitle ?? handoffTemplateTitle))
           : -1;
     if (resolvedTemplateIndex < 0 || resolvedTemplateIndex >= starterTemplates.length) {
       params.delete("lp_template");
       params.delete("lp_template_title");
+      window.localStorage.removeItem(LP_TEMPLATE_HANDOFF_KEY);
       const next = params.toString();
       window.history.replaceState({}, "", `${window.location.pathname}${next ? `?${next}` : ""}`);
       return;
@@ -857,7 +889,8 @@ export default function DashboardPage() {
       try {
         const id = await createInformationFromTemplate(resolvedTemplateIndex);
         created = true;
-        router.push(`/editor/${id}?guide=start`);
+        window.localStorage.removeItem(LP_TEMPLATE_HANDOFF_KEY);
+        router.replace(`/editor/${id}?guide=start`);
       } catch (e) {
         setError(e instanceof Error ? e.message : "新規作成に失敗しました");
         lpTemplateAutoCreateRef.current = false;

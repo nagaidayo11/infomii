@@ -10,6 +10,14 @@ import { trackOnboardingAuthEvent, trackOnboardingTemplateEditorOpenedEvent } fr
 import { useAuth } from "@/components/auth-provider";
 import { starterTemplates } from "@/lib/templates";
 
+const LP_TEMPLATE_HANDOFF_KEY = "lp-template-handoff-v1";
+
+type LpTemplateHandoff = {
+  templateIndex: number;
+  templateTitle: string | null;
+  createdAt: string;
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -82,6 +90,25 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const lpTemplateRoutingRef = useRef(false);
 
+  const persistLpTemplateHandoff = useCallback(() => {
+    if (!hasLpTemplateRequest || typeof window === "undefined") {
+      return;
+    }
+    const payload: LpTemplateHandoff = {
+      templateIndex: resolvedLpTemplateIndex,
+      templateTitle: requestedLpTemplateTitle,
+      createdAt: new Date().toISOString(),
+    };
+    window.localStorage.setItem(LP_TEMPLATE_HANDOFF_KEY, JSON.stringify(payload));
+  }, [hasLpTemplateRequest, requestedLpTemplateTitle, resolvedLpTemplateIndex]);
+
+  const clearLpTemplateHandoff = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.removeItem(LP_TEMPLATE_HANDOFF_KEY);
+  }, []);
+
   const routeToTemplateEditorIfNeeded = useCallback(async (): Promise<boolean> => {
     if (!hasLpTemplateRequest || lpTemplateRoutingRef.current) {
       return false;
@@ -90,6 +117,7 @@ export default function LoginPage() {
     setMessage("テンプレートを複製中...");
     try {
       const id = await createInformationFromTemplate(resolvedLpTemplateIndex);
+      clearLpTemplateHandoff();
       await trackOnboardingTemplateEditorOpenedEvent({
         sourceRef,
         sourceChannel,
@@ -105,7 +133,11 @@ export default function LoginPage() {
       lpTemplateRoutingRef.current = false;
       return false;
     }
-  }, [hasLpTemplateRequest, resolvedLpTemplateIndex, router]);
+  }, [clearLpTemplateHandoff, ctaVariant, deviceType, hasLpTemplateRequest, keyword, preferredIndustry, resolvedLpTemplateIndex, router, sourceChannel, sourceRef]);
+
+  useEffect(() => {
+    persistLpTemplateHandoff();
+  }, [persistLpTemplateHandoff]);
 
   useEffect(() => {
     if (!loading && user) {

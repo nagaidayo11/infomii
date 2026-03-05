@@ -9,6 +9,7 @@ type ProofIndustry = "business" | "resort" | "spa";
 type ImpactCard = {
   label: string;
   value: string;
+  sub?: string;
 };
 
 type BeforeAfterRow = {
@@ -35,6 +36,11 @@ type LpProofSectionProps = {
   beforeAfterRows: BeforeAfterRow[];
   hotelVoices: HotelVoice[];
   proofMethodNotes: string[];
+  proofSummary: {
+    sample: string;
+    period: string;
+    condition: string;
+  };
 };
 
 const INDUSTRY_LABELS: Record<ProofIndustry, string> = {
@@ -49,6 +55,7 @@ export default function LpProofSection({
   beforeAfterRows,
   hotelVoices,
   proofMethodNotes,
+  proofSummary,
 }: LpProofSectionProps) {
   const [activeIndustry, setActiveIndustry] = useState<ProofIndustry>(initialIndustry);
 
@@ -86,13 +93,19 @@ export default function LpProofSection({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {impactCards.map((card) => (
           <div key={card.label} className="rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
             <p className="text-[11px] text-emerald-800">{card.label}</p>
             <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p>
+            {card.sub ? <p className="mt-1 text-[10px] text-slate-600">{card.sub}</p> : null}
           </div>
         ))}
+      </div>
+      <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-600">
+        <p>{proofSummary.sample}</p>
+        <p className="mt-0.5">{proofSummary.period}</p>
+        <p className="mt-0.5">{proofSummary.condition}</p>
       </div>
       <p className="mt-3 text-xs text-slate-600">現在表示中: {INDUSTRY_LABELS[activeIndustry]} の実績</p>
 

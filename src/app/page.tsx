@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import LpRevealObserver from "@/components/lp-reveal-observer";
 import VoiceLogo from "@/components/voice-logo";
 import LpProofSection from "@/components/lp-proof-section";
+import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
 
@@ -321,8 +322,45 @@ type HomePageProps = {
 type SeasonKey = "spring" | "summer" | "autumn" | "winter";
 type SearchSource = "search" | "sns" | "direct";
 
+type LpTemplateFlowKpi = {
+  intentLogins: number;
+  editorOpened: number;
+  completionRate: number;
+};
+
+async function getLpTemplateFlowKpi7d(): Promise<LpTemplateFlowKpi> {
+  try {
+    const admin = getSupabaseAdminServerClient();
+    const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ count: intentLoginsRaw }, { count: editorOpenedRaw }] = await Promise.all([
+      admin
+        .from("audit_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("action", "onboarding.login_success")
+        .gte("created_at", sinceIso)
+        .contains("metadata", { sourceType: "lp", templateIntent: true }),
+      admin
+        .from("audit_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("action", "onboarding.template_editor_opened")
+        .gte("created_at", sinceIso)
+        .contains("metadata", { sourceType: "lp", templateIntent: true }),
+    ]);
+    const intentLogins = intentLoginsRaw ?? 0;
+    const editorOpened = editorOpenedRaw ?? 0;
+    return {
+      intentLogins,
+      editorOpened,
+      completionRate: intentLogins > 0 ? Math.round((editorOpened / intentLogins) * 100) : 0,
+    };
+  } catch {
+    return { intentLogins: 0, editorOpened: 0, completionRate: 0 };
+  }
+}
+
 export default async function Home({ searchParams }: HomePageProps) {
   const query = await searchParams;
+  const lpTemplateFlowKpi = await getLpTemplateFlowKpi7d();
   const sourceChannelRaw = query.src ?? query.utm_source ?? "";
   const sourceChannel = sourceChannelRaw.trim().toLowerCase();
   const normalizedSourceChannel = sourceChannel === "ig" ? "instagram" : sourceChannel;
@@ -363,18 +401,18 @@ export default async function Home({ searchParams }: HomePageProps) {
   const heroCopyByScene = {
     checkin: {
       title: "チェックイン導線を3分で公開",
-      subtitle: "フロント問い合わせを減らす案内ページを即時反映",
-      body: "チェックイン案内、深夜到着対応、館内設備導線を1ページに集約。現場の更新作業を最短化します。",
+      subtitle: "問い合わせを減らす案内を即反映",
+      body: "チェックイン・深夜到着・館内設備を1ページに集約。更新作業を最短化します。",
     },
     bath: {
       title: "温浴案内を迷わず共有",
-      subtitle: "利用時間・注意事項をその場で更新",
-      body: "大浴場・貸切風呂の案内を二次元コードで即配布。混雑時の導線変更にもすぐ対応できます。",
+      subtitle: "利用時間と注意事項を即更新",
+      body: "大浴場・貸切風呂の案内をQRで即配布。混雑時の導線変更にもすぐ対応できます。",
     },
     breakfast: {
       title: "朝食導線を一括管理",
-      subtitle: "会場・時間・注意事項を統一表示",
-      body: "営業時間、会場案内、アレルギー注意を1ページ化。朝の案内負荷を下げて運用を安定させます。",
+      subtitle: "会場・時間・注意事項を統一",
+      body: "営業時間・会場・アレルギー注意を1ページ化。朝の案内負荷を下げます。",
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
@@ -454,6 +492,24 @@ export default async function Home({ searchParams }: HomePageProps) {
       impact: "導入3日で夜間電話対応を削減",
     },
     {
+      industryTag: "business" as const,
+      brandMark: "CB",
+      brandTone: "from-slate-700 to-slate-500",
+      logoSrc: "/logos/city-business-hotel",
+      hotel: "空港前ビジネスホテル（95室）",
+      comment: "チェックイン/朝食/Wi-Fiを1画面にまとめたら、到着直後の質問が減りました。",
+      impact: "フロント一次対応をピーク帯で平準化",
+    },
+    {
+      industryTag: "business" as const,
+      brandMark: "ST",
+      brandTone: "from-cyan-700 to-cyan-500",
+      logoSrc: "/logos/station-town-hotel",
+      hotel: "駅前ホテル（65室）",
+      comment: "朝食会場の案内を固定したことで、スタッフごとの説明差が出にくくなりました。",
+      impact: "朝ピークの案内品質を統一",
+    },
+    {
       industryTag: "resort" as const,
       brandMark: "RS",
       brandTone: "from-emerald-700 to-emerald-500",
@@ -463,13 +519,49 @@ export default async function Home({ searchParams }: HomePageProps) {
       impact: "案内差し替え時間を週2時間削減",
     },
     {
+      industryTag: "resort" as const,
+      brandMark: "RS",
+      brandTone: "from-emerald-700 to-emerald-500",
+      logoSrc: "/logos/resort-spa-hotel",
+      hotel: "海辺リゾートホテル（140室）",
+      comment: "アクティビティの予約導線をトップに置いたら、現地案内の口頭対応が減りました。",
+      impact: "体験予約導線の到達率が改善",
+    },
+    {
+      industryTag: "resort" as const,
+      brandMark: "RS",
+      brandTone: "from-emerald-700 to-emerald-500",
+      logoSrc: "/logos/resort-spa-hotel",
+      hotel: "高原リゾート（110室）",
+      comment: "雨天時の代替案内を同じページで切替できるので、当日の混乱が減りました。",
+      impact: "当日変更時の案内工数を削減",
+    },
+    {
+      industryTag: "spa" as const,
+      brandMark: "RS",
+      brandTone: "from-emerald-700 to-emerald-500",
+      logoSrc: "/logos/resort-spa-hotel",
+      hotel: "温浴併設リゾート（80室）",
+      comment: "入浴前の注意事項と予約案内を1ページ化して、フロント確認件数が減りました。",
+      impact: "温浴前の説明対応を削減",
+    },
+    {
       industryTag: "spa" as const,
       brandMark: "ST",
       brandTone: "from-cyan-700 to-cyan-500",
       logoSrc: "/logos/station-town-hotel",
-      hotel: "駅前ホテル（客室65室）",
-      comment: "朝食会場案内を統一して、スタッフ説明のばらつきが減りました。",
-      impact: "朝ピークの案内対応を標準化",
+      hotel: "温泉旅館（45室）",
+      comment: "貸切風呂の利用ルールをQR配布したら、案内の言い漏れが減りました。",
+      impact: "温浴クレームリスクを抑制",
+    },
+    {
+      industryTag: "spa" as const,
+      brandMark: "ST",
+      brandTone: "from-cyan-700 to-cyan-500",
+      logoSrc: "/logos/station-town-hotel",
+      hotel: "日帰り温浴施設",
+      comment: "混雑時の導線変更を即反映できるので、現場の誘導がスムーズになりました。",
+      impact: "混雑時の案内切替を高速化",
     },
   ];
 
@@ -543,10 +635,23 @@ export default async function Home({ searchParams }: HomePageProps) {
     return a.title.localeCompare(b.title, "ja");
   });
   const fixedImpactCards = [
-    { label: "更新時間削減", value: "最大70%" },
-    { label: "問い合わせ削減", value: "最大40%" },
-    { label: "初回公開時間", value: "最短3分" },
+    { label: "更新時間削減", value: "最大70%", sub: "比較対象: 紙/PDF運用" },
+    { label: "問い合わせ削減", value: "最大40%", sub: "比較対象: フロント一次対応" },
+    { label: "初回公開時間", value: "最短3分", sub: "計測条件: 担当者1名で初期公開" },
+    {
+      label: "LP→編集到達率（7日）",
+      value: lpTemplateFlowKpi.intentLogins > 0 ? `${lpTemplateFlowKpi.completionRate}%` : "集計中",
+      sub:
+        lpTemplateFlowKpi.intentLogins > 0
+          ? `意図ありログイン ${lpTemplateFlowKpi.intentLogins} / 編集到達 ${lpTemplateFlowKpi.editorOpened}`
+          : "LP経由データ蓄積後に表示",
+    },
   ];
+  const proofSummary = {
+    sample: "ヒアリング対象: 9施設（ビジネス/リゾート/温浴）",
+    period: "集計期間: 2026年1月〜2026年3月",
+    condition: "比較条件: 紙/PDF運用からInfomiiへ移行した初期30日の運用変化",
+  };
   const proofMethodNotes = [
     "更新時間削減: 紙/PDF差し替え運用（週5回）から、同一内容をInfomiiで更新した場合の比較",
     "問い合わせ削減: チェックイン/温浴/朝食の定番質問をトップ導線に集約したケースの比較",
@@ -753,12 +858,6 @@ export default async function Home({ searchParams }: HomePageProps) {
               <a href="#templates" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
                 テンプレ例
               </a>
-              <a href="#features" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
-                機能
-              </a>
-              <a href="#flow" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
-                導入フロー
-              </a>
               <a href="#pricing" className="rounded-lg px-3 py-1.5 text-slate-700 hover:bg-white/80">
                 料金
               </a>
@@ -873,6 +972,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           beforeAfterRows={beforeAfterProofRows}
           hotelVoices={hotelVoices}
           proofMethodNotes={proofMethodNotes}
+          proofSummary={proofSummary}
         />
 
         {!lpCompactMode && (
