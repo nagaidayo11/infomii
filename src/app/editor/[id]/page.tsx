@@ -1421,9 +1421,11 @@ function supportsDetailTextAlign(type: InformationBlock["type"]): boolean {
     type === "paragraph" ||
     type === "icon" ||
     type === "section" ||
+    type === "columns" ||
     type === "cta" ||
     type === "badge" ||
     type === "quote" ||
+    type === "gallery" ||
     type === "columnGroup"
   );
 }
@@ -2171,7 +2173,7 @@ export default function EditorPage() {
                   {block.leftTitle || "左タイトル"}
                 </p>
                 <p
-                  className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                   style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                 >
                   {block.leftText || ""}
@@ -2188,7 +2190,7 @@ export default function EditorPage() {
                   {block.rightTitle || "右タイトル"}
                 </p>
                 <p
-                  className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                   style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                 >
                   {block.rightText || ""}
@@ -2304,7 +2306,7 @@ export default function EditorPage() {
               </p>
               {(block.quoteAuthor ?? "").trim() && (
                 <p
-                  className={`mt-2 ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
+                  className={`mt-2 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                   style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#475569" }}
                 >
                   {block.quoteAuthor}
@@ -2372,7 +2374,7 @@ export default function EditorPage() {
                     {entry.title || "タイトル"}
                   </p>
                   <p
-                    className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                    className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                     style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                   >
                     {entry.body || ""}

@@ -1158,7 +1158,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                             {block.leftTitle || "左タイトル"}
                           </p>
                           <p
-                            className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                             style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                           >
                             {block.leftText || ""}
@@ -1175,7 +1175,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                             {block.rightTitle || "右タイトル"}
                           </p>
                           <p
-                            className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                             style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                           >
                             {block.rightText || ""}
@@ -1291,7 +1291,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                         </p>
                         {(block.quoteAuthor ?? "").trim() && (
                           <p
-                            className={`mt-2 ${getBlockTextSizeClass("sm", theme.bodySize)} text-slate-600`}
+                            className={`mt-2 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)} text-slate-600`}
                             style={{ color: block.textColor ?? theme.textColor ?? "#475569" }}
                           >
                             {block.quoteAuthor}
@@ -1367,7 +1367,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                               {entry.title || "タイトル"}
                             </p>
                             <p
-                              className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                              className={`whitespace-pre-wrap ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                               style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                             >
                               {entry.body || ""}
