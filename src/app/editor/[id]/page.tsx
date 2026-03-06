@@ -1424,13 +1424,12 @@ function supportsDetailTextAlign(type: InformationBlock["type"]): boolean {
     type === "cta" ||
     type === "badge" ||
     type === "quote" ||
-    type === "checklist" ||
     type === "columnGroup"
   );
 }
 
 function supportsDetailTextColor(type: InformationBlock["type"]): boolean {
-  return type !== "columns";
+  return type !== "image" && type !== "divider" && type !== "space";
 }
 
 function SideNavButton(props: {
@@ -2073,7 +2072,7 @@ export default function EditorPage() {
                           {renderIconVisual(entry.icon, block.iconSize)}
                         </span>
                         <p
-                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
+                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
@@ -2088,7 +2087,7 @@ export default function EditorPage() {
                           {renderIconVisual(entry.icon, block.iconSize)}
                         </span>
                         <p
-                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", sourceItem.theme.bodySize)}`}
+                          className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
                           style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                         >
                           {entry.label || "項目"}
@@ -2165,10 +2164,16 @@ export default function EditorPage() {
                 className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                 style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
               >
-                <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
+                <p
+                  className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                >
                   {block.leftTitle || "左タイトル"}
                 </p>
-                <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
+                <p
+                  className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                >
                   {block.leftText || ""}
                 </p>
               </div>
@@ -2176,10 +2181,16 @@ export default function EditorPage() {
                 className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                 style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
               >
-                <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
+                <p
+                  className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                >
                   {block.rightTitle || "右タイトル"}
                 </p>
-                <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}>
+                <p
+                  className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                  style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
+                >
                   {block.rightText || ""}
                 </p>
               </div>
@@ -2333,7 +2344,12 @@ export default function EditorPage() {
                 <figure key={entry.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                   <Image src={entry.url} alt={entry.caption || "gallery"} width={640} height={360} unoptimized className="h-40 w-full object-cover" />
                   {(entry.caption ?? "").trim() && (
-                    <figcaption className="px-2 py-1.5 text-[11px] text-slate-600">{entry.caption}</figcaption>
+                    <figcaption
+                      className={`px-2 py-1.5 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                      style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#475569" }}
+                    >
+                      {entry.caption}
+                    </figcaption>
                   )}
                 </figure>
               ))}
@@ -2350,13 +2366,13 @@ export default function EditorPage() {
               {items.map((entry) => (
                 <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
                   <p
-                    className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                    className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                     style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                   >
                     {entry.title || "タイトル"}
                   </p>
                   <p
-                    className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)}`}
+                    className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, sourceItem.theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                     style={{ color: block.textColor ?? sourceItem.theme.textColor ?? "#0f172a" }}
                   >
                     {entry.body || ""}

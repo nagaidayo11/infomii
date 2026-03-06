@@ -383,7 +383,7 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
                           <span className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16" style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}>
                             {renderIconVisual(entry.icon, block.iconSize)}
                           </span>
-                          <p className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", mergedTheme.bodySize)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>
+                          <p className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>
                             {entry.label || "項目"}
                           </p>
                         </div>
@@ -422,12 +422,12 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
               <div key={block.id} style={getBlockContainerStyle(block, mergedTheme)}>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`} style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}>
-                    <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{block.leftTitle || "左タイトル"}</p>
-                    <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{block.leftText || ""}</p>
+                    <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{block.leftTitle || "左タイトル"}</p>
+                    <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{block.leftText || ""}</p>
                   </div>
                   <div className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`} style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}>
-                    <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{block.rightTitle || "右タイトル"}</p>
-                    <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{block.rightText || ""}</p>
+                    <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{block.rightTitle || "右タイトル"}</p>
+                    <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{block.rightText || ""}</p>
                   </div>
                 </div>
               </div>
@@ -488,7 +488,7 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
           if (block.type === "quote") {
             return (
               <div key={block.id} style={getBlockContainerStyle(block, mergedTheme)}>
-                <blockquote className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                <blockquote className={`rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 ${getBlockAlignClass(block.textAlign)}`}>
                   <p className={`whitespace-pre-wrap ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>
                     {block.text || "引用文"}
                   </p>
@@ -522,9 +522,9 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
                       {entry.url ? (
                         <Image src={entry.url} alt={entry.caption || "gallery"} width={320} height={220} unoptimized className="h-24 w-full object-cover" />
                       ) : (
-                        <div className="flex h-24 w-full items-center justify-center text-xs text-slate-400">画像なし</div>
+                        <div className={`flex h-24 w-full items-center justify-center ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} text-slate-400`}>画像なし</div>
                       )}
-                      {entry.caption ? <p className="px-2 py-1 text-[11px] text-slate-600">{entry.caption}</p> : null}
+                      {entry.caption ? <p className={`px-2 py-1 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#475569" }}>{entry.caption}</p> : null}
                     </div>
                   ))}
                 </div>
@@ -539,8 +539,8 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
                 <div className={`grid gap-2 ${columnsClass}`}>
                   {columns.map((entry) => (
                     <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
-                      <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{entry.title || "見出し"}</p>
-                      <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)}`}>{entry.body || "本文"}</p>
+                      <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{entry.title || "見出し"}</p>
+                      <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, mergedTheme.bodySize)} ${getBlockAlignClass(block.textAlign)}`} style={{ color: block.textColor ?? mergedTheme.textColor ?? "#0f172a" }}>{entry.body || "本文"}</p>
                     </div>
                   ))}
                 </div>

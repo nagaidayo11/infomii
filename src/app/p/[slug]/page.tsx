@@ -1058,7 +1058,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     {renderIconVisual(entry.icon, block.iconSize)}
                                   </span>
                                   <p
-                                    className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", theme.bodySize)}`}
+                                    className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                     style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                                   >
                                     {entry.label || "項目"}
@@ -1073,7 +1073,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     {renderIconVisual(entry.icon, block.iconSize)}
                                   </span>
                                   <p
-                                    className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass("sm", theme.bodySize)}`}
+                                    className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                     style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                                   >
                                     {entry.label || "項目"}
@@ -1151,10 +1151,16 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                           className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                           style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
                         >
-                          <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
+                          <p
+                            className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                          >
                             {block.leftTitle || "左タイトル"}
                           </p>
-                          <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
+                          <p
+                            className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                          >
                             {block.leftText || ""}
                           </p>
                         </div>
@@ -1162,10 +1168,16 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                           className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
                           style={{ backgroundColor: block.columnsBackgroundColor ?? "#f8fafc" }}
                         >
-                          <p className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
+                          <p
+                            className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                          >
                             {block.rightTitle || "右タイトル"}
                           </p>
-                          <p className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}>
+                          <p
+                            className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                            style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
+                          >
                             {block.rightText || ""}
                           </p>
                         </div>
@@ -1270,7 +1282,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "quote") {
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
-                      <blockquote className="rounded-xl border-l-4 border-emerald-400 bg-emerald-50/50 px-4 py-3">
+                      <blockquote className={`rounded-xl border-l-4 border-emerald-400 bg-emerald-50/50 px-4 py-3 ${getBlockAlignClass(block.textAlign)}`}>
                         <p
                           className={`whitespace-pre-wrap italic ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                           style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -1327,7 +1339,12 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                               className="h-44 w-full object-cover"
                             />
                             {(entry.caption ?? "").trim() && (
-                              <figcaption className="px-3 py-2 text-xs text-slate-600">{entry.caption}</figcaption>
+                              <figcaption
+                                className={`px-3 py-2 ${getWeightClass(block.textWeight)} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
+                                style={{ color: block.textColor ?? theme.textColor ?? "#475569" }}
+                              >
+                                {entry.caption}
+                              </figcaption>
                             )}
                           </figure>
                         ))}
@@ -1344,13 +1361,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                         {items.map((entry) => (
                           <div key={entry.id} className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 bg-slate-50/70 p-3`}>
                             <p
-                              className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                              className={`mb-1 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                               style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                             >
                               {entry.title || "タイトル"}
                             </p>
                             <p
-                              className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                              className={`whitespace-pre-wrap ${getBlockTextSizeClass(block.textSize, theme.bodySize)} ${getBlockAlignClass(block.textAlign)}`}
                               style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                             >
                               {entry.body || ""}

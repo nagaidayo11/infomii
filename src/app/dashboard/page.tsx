@@ -642,6 +642,7 @@ export default function DashboardPage() {
   const [countdownNow, setCountdownNow] = useState<number>(Date.now());
   const deleteTimersRef = useRef<Map<string, number>>(new Map());
   const autoSyncedRenewalRef = useRef(false);
+  const industryAutoSelectionDoneRef = useRef(false);
   const lpTemplateAutoCreateRef = useRef(false);
   const [lpTemplateRetryCount, setLpTemplateRetryCount] = useState(0);
   const userEmail = user?.email?.trim().toLowerCase() ?? "";
@@ -991,9 +992,10 @@ export default function DashboardPage() {
   }, [loading, opsHealth, canAccessOps, items.length]);
 
   useEffect(() => {
-    if (!hotelName || industryFilter !== "all") {
+    if (industryAutoSelectionDoneRef.current || !hotelName || industryFilter !== "all") {
       return;
     }
+    industryAutoSelectionDoneRef.current = true;
     setIndustryFilter(mapFacilityToIndustry(inferredFacilityType));
   }, [hotelName, industryFilter, inferredFacilityType]);
   useEffect(() => {
@@ -1420,11 +1422,17 @@ export default function DashboardPage() {
     }
   }, [filteredTemplateEntries, previewTemplateIndex]);
   useEffect(() => {
-    if (industryFilter !== "all") {
+    if (industryAutoSelectionDoneRef.current || industryFilter !== "all") {
       return;
     }
+    industryAutoSelectionDoneRef.current = true;
     setIndustryFilter(topAdoptedIndustry);
   }, [industryFilter, topAdoptedIndustry]);
+
+  const onSelectIndustryFilter = useCallback((next: IndustryPreset | "all") => {
+    industryAutoSelectionDoneRef.current = true;
+    setIndustryFilter(next);
+  }, []);
   useEffect(() => {
     let mounted = true;
     void getSharedTemplateFavorites()
@@ -2918,7 +2926,7 @@ export default function DashboardPage() {
                 <div className="mx-auto mt-3 flex max-w-5xl flex-wrap justify-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setIndustryFilter("all")}
+                    onClick={() => onSelectIndustryFilter("all")}
                     className={`rounded-full border px-3 py-1 text-xs ${
                       industryFilter === "all"
                         ? "border-emerald-400 bg-emerald-100 text-emerald-900"
@@ -2932,7 +2940,7 @@ export default function DashboardPage() {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => setIndustryFilter(key)}
+                        onClick={() => onSelectIndustryFilter(key)}
                         className={`rounded-full border px-3 py-1 text-xs ${
                           industryFilter === key
                             ? "border-emerald-400 bg-emerald-100 text-emerald-900"
