@@ -138,10 +138,19 @@ const FONT_FAMILY_OPTIONS: Array<{ label: string; value: string }> = [
   { label: "手書き風", value: "\"Comic Sans MS\", \"Chalkboard SE\", cursive" },
 ];
 
-type AddPanelSection = "text" | "column" | "section" | "preset";
+type AddPanelSection = "text" | "column" | "section" | "media" | "preset";
 type BlockSetKind = "campaign" | "menu" | "faq" | "access" | "notice";
 type IndustryBlockSetKind = "hotel" | "restaurant" | "cafe" | "salon" | "clinic" | "retail";
 type RecommendedCompositionKind = "quick_publish" | "front_support" | "facility_guide";
+type AddPanelVariantKind =
+  | "text_notice"
+  | "text_steps"
+  | "column_access"
+  | "column_compare3"
+  | "section_faq3"
+  | "section_guide_cta"
+  | "media_hero"
+  | "media_gallery3";
 
 type PublishCheckIssue = {
   level: "error" | "warning";
@@ -914,6 +923,106 @@ function makeRecommendedComposition(kind: RecommendedCompositionKind): Informati
   ];
 }
 
+function getAddPanelVariantLabel(kind: AddPanelVariantKind): string {
+  if (kind === "text_notice") return "お知らせ本文セット";
+  if (kind === "text_steps") return "手順テキストセット";
+  if (kind === "column_access") return "アクセス2カラムセット";
+  if (kind === "column_compare3") return "3比較カラムセット";
+  if (kind === "section_faq3") return "FAQセクションセット";
+  if (kind === "section_guide_cta") return "案内+CTAセクションセット";
+  if (kind === "media_hero") return "ヒーロー画像セット";
+  return "ギャラリー3枚セット";
+}
+
+function makeAddPanelVariant(kind: AddPanelVariantKind): InformationBlock[] {
+  if (kind === "text_notice") {
+    return [
+      { id: crypto.randomUUID(), type: "badge", badgeText: "お知らせ", badgeColor: "#dcfce7", badgeTextColor: "#065f46", spacing: "md" },
+      { id: crypto.randomUUID(), type: "heading", text: "重要なお知らせ" },
+      { id: crypto.randomUUID(), type: "paragraph", text: "変更内容・対象時間・注意事項を入力してください。" },
+    ];
+  }
+  if (kind === "text_steps") {
+    return [
+      { id: crypto.randomUUID(), type: "heading", text: "ご利用手順" },
+      {
+        id: crypto.randomUUID(),
+        type: "checklist",
+        checklistItems: [
+          { id: crypto.randomUUID(), text: "1. 受付でチェックイン" },
+          { id: crypto.randomUUID(), text: "2. ルールと注意事項を確認" },
+          { id: crypto.randomUUID(), text: "3. 案内に沿ってご利用開始" },
+        ],
+        spacing: "md",
+      },
+    ];
+  }
+  if (kind === "column_access") {
+    return [
+      {
+        id: crypto.randomUUID(),
+        type: "columns",
+        leftTitle: "アクセス",
+        leftText: "駅から徒歩 [分]\nタクシー [分]",
+        rightTitle: "駐車場",
+        rightText: "平面 [台] / 立体 [台]\n1泊 [料金] 円",
+        columnsBackgroundColor: "#f8fafc",
+        spacing: "md",
+      },
+    ];
+  }
+  if (kind === "column_compare3") {
+    return [
+      {
+        id: crypto.randomUUID(),
+        type: "columnGroup",
+        columnGroupItems: [
+          { id: crypto.randomUUID(), title: "ライト", body: "必要最小限の案内" },
+          { id: crypto.randomUUID(), title: "標準", body: "よく使う情報を網羅" },
+          { id: crypto.randomUUID(), title: "充実", body: "詳細情報まで掲載" },
+        ],
+        cardRadius: "lg",
+        spacing: "md",
+      },
+    ];
+  }
+  if (kind === "section_faq3") {
+    return [
+      { id: crypto.randomUUID(), type: "heading", text: "よくある質問" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. 利用時間は？", sectionBody: "A. 利用可能時間を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. 予約は必要？", sectionBody: "A. 予約要否と方法を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "Q. 問い合わせ先は？", sectionBody: "A. 連絡先と受付時間を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    ];
+  }
+  if (kind === "section_guide_cta") {
+    return [
+      { id: crypto.randomUUID(), type: "section", sectionTitle: "ご案内", sectionBody: "ご利用前に確認いただきたい内容を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+      { id: crypto.randomUUID(), type: "cta", ctaLabel: "問い合わせる", ctaUrl: "https://example.com/contact", spacing: "md", textAlign: "left" },
+    ];
+  }
+  if (kind === "media_hero") {
+    return [
+      { id: crypto.randomUUID(), type: "image", url: "", spacing: "md" },
+      { id: crypto.randomUUID(), type: "heading", text: "写真でご案内" },
+      { id: crypto.randomUUID(), type: "paragraph", text: "画像の見どころや補足を入力してください。" },
+    ];
+  }
+  return [
+    {
+      id: crypto.randomUUID(),
+      type: "gallery",
+      galleryItems: [
+        { id: crypto.randomUUID(), url: "", caption: "画像キャプション 1" },
+        { id: crypto.randomUUID(), url: "", caption: "画像キャプション 2" },
+        { id: crypto.randomUUID(), url: "", caption: "画像キャプション 3" },
+      ],
+      spacing: "md",
+    },
+    { id: crypto.randomUUID(), type: "section", sectionTitle: "ご案内", sectionBody: "ご利用前に確認いただきたい内容を入力してください。", sectionBackgroundColor: "#f8fafc", spacing: "md" },
+    { id: crypto.randomUUID(), type: "quote", text: "“ 写真の補足説明を入力 ”", quoteAuthor: "補足コメント", spacing: "md" },
+  ];
+}
+
 function makeIndustryBlockSet(kind: IndustryBlockSetKind): InformationBlock[] {
   if (kind === "hotel") {
     return [
@@ -1487,6 +1596,7 @@ export default function EditorPage() {
     text: false,
     column: true,
     section: true,
+    media: true,
     preset: true,
   });
   const [inlineAddToast, setInlineAddToast] = useState<{
@@ -2663,6 +2773,29 @@ export default function EditorPage() {
     void saveBlocks(nextBlocks);
     if (clickEvent) {
       showInlineFeedback(`「${getRecommendedCompositionLabel(kind)}」を追加しました`, {
+        x: clickEvent.clientX,
+        y: clickEvent.clientY - 8,
+      });
+    }
+  }
+
+  function onAddPanelVariant(kind: AddPanelVariantKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (!item) {
+      return;
+    }
+    const setBlocks = makeAddPanelVariant(kind);
+    setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((b) => ({ ...b }))]);
+    setBlockHistoryFuture([]);
+    const nextBlocks = [...item.contentBlocks, ...setBlocks];
+    setItem({
+      ...item,
+      contentBlocks: nextBlocks,
+      body: blocksToBody(nextBlocks),
+      images: blocksToImages(nextBlocks),
+    });
+    void saveBlocks(nextBlocks);
+    if (clickEvent) {
+      showInlineFeedback(`「${getAddPanelVariantLabel(kind)}」を追加しました`, {
         x: clickEvent.clientX,
         y: clickEvent.clientY - 8,
       });
@@ -4569,6 +4702,25 @@ function onUpdateIconRowItem(
                         </button>
                         {!collapsedAddSections.text && (
                           <>
+                        <div className="col-span-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600 sm:col-span-3 lg:col-span-4">
+                          テキスト定型
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("text_notice", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ お知らせ本文セット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">バッジ + 見出し + 本文</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("text_steps", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-sky-300 hover:bg-sky-50"
+                        >
+                          <div className="font-medium">+ 手順テキストセット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">見出し + チェックリスト</div>
+                        </button>
                         <button
                           type="button"
                           onClick={(event) => void onAddBlock("title", event)}
@@ -4641,6 +4793,22 @@ function onUpdateIconRowItem(
                         </div>
                         <button
                           type="button"
+                          onClick={(event) => onAddPanelVariant("column_access", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-indigo-300 hover:bg-indigo-50"
+                        >
+                          <div className="font-medium">+ アクセス2カラムセット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-indigo-700">アクセス + 駐車場の定型</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("column_compare3", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
+                        >
+                          <div className="font-medium">+ 3比較カラムセット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">3列比較を即追加</div>
+                        </button>
+                        <button
+                          type="button"
                           onClick={(event) => void onAddBlock("columns", event)}
                           draggable
                           onDragStart={(event) => onPaletteDragStart(event, "columns")}
@@ -4698,6 +4866,25 @@ function onUpdateIconRowItem(
                         </button>
                         {!collapsedAddSections.section && (
                           <>
+                        <div className="col-span-2 rounded-md border border-emerald-200 bg-emerald-50/60 px-2 py-1 text-[11px] font-semibold text-emerald-800 sm:col-span-3 lg:col-span-4">
+                          セクション定型
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("section_faq3", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ FAQセクションセット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">見出し + FAQ 3項目</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("section_guide_cta", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ 案内 + CTAセット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">説明 + 導線ボタン</div>
+                        </button>
                         <button
                           type="button"
                           onClick={(event) => void onAddBlock("section", event)}
@@ -4755,17 +4942,6 @@ function onUpdateIconRowItem(
                         </button>
                         <button
                           type="button"
-                          onClick={(event) => void onAddBlock("quote", event)}
-                          draggable
-                          onDragStart={(event) => onPaletteDragStart(event, "quote")}
-                          onDragEnd={onPaletteDragEnd}
-                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
-                        >
-                          <div className="font-medium">+ 引用</div>
-                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">口コミ・コメントに最適</div>
-                        </button>
-                        <button
-                          type="button"
                           onClick={(event) => void onAddBlock("checklist", event)}
                           draggable
                           onDragStart={(event) => onPaletteDragStart(event, "checklist")}
@@ -4774,6 +4950,48 @@ function onUpdateIconRowItem(
                         >
                           <div className="font-medium">+ チェックリスト</div>
                           <div className="mt-1 text-[10px] text-slate-500 group-hover:text-sky-700">持ち物・手順を整理</div>
+                        </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => toggleAddSection("media")}
+                          className="col-span-2 mt-1 mb-0.5 flex items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold tracking-wide text-slate-600 sm:col-span-3 lg:col-span-4"
+                        >
+                          <span>メディア</span>
+                          <span>{collapsedAddSections.media ? "+" : "-"}</span>
+                        </button>
+                        {!collapsedAddSections.media && (
+                          <>
+                        <div className="col-span-2 rounded-md border border-cyan-200 bg-cyan-50/60 px-2 py-1 text-[11px] font-semibold text-cyan-800 sm:col-span-3 lg:col-span-4">
+                          メディア定型
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("media_hero", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-cyan-300 hover:bg-cyan-50"
+                        >
+                          <div className="font-medium">+ ヒーロー画像セット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-cyan-700">画像 + 見出し + 説明文</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => onAddPanelVariant("media_gallery3", event)}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-violet-300 hover:bg-violet-50"
+                        >
+                          <div className="font-medium">+ ギャラリー3枚セット</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-violet-700">ギャラリー + 引用</div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => void onAddBlock("quote", event)}
+                          draggable
+                          onDragStart={(event) => onPaletteDragStart(event, "quote")}
+                          onDragEnd={onPaletteDragEnd}
+                          className="group rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <div className="font-medium">+ 引用</div>
+                          <div className="mt-1 text-[10px] text-slate-500 group-hover:text-emerald-700">口コミ・コメントに最適</div>
                         </button>
                         <button
                           type="button"
