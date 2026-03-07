@@ -3460,6 +3460,42 @@ function onUpdateIconRowItem(
     reader.readAsDataURL(file);
   }
 
+  function onReplaceGalleryImage(blockId: string, entryId: string, file: File) {
+    if (!item) {
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setNoticeKind("error");
+      setNotice("画像ファイルを選択してください");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result ?? "");
+      setBlockHistoryPast((prev) => [...prev.slice(-79), item.contentBlocks.map((b) => ({ ...b }))]);
+      setBlockHistoryFuture([]);
+      const nextBlocks = item.contentBlocks.map((block) => {
+        if (block.id !== blockId || block.type !== "gallery") {
+          return block;
+        }
+        return {
+          ...block,
+          galleryItems: (block.galleryItems ?? []).map((entry) =>
+            entry.id === entryId ? { ...entry, url: dataUrl } : entry,
+          ),
+        };
+      });
+      setItem({
+        ...item,
+        contentBlocks: nextBlocks,
+        body: blocksToBody(nextBlocks),
+        images: blocksToImages(nextBlocks),
+      });
+      void saveBlocks(nextBlocks);
+    };
+    reader.readAsDataURL(file);
+  }
+
   function onApplyThemeColor(key: "backgroundColor" | "textColor", color: string) {
     if (!item) {
       return;
@@ -5534,19 +5570,6 @@ function onUpdateIconRowItem(
                                   画像をクリア
                                 </button>
                               </div>
-
-                              <input
-                                value={block.url ?? ""}
-                                onChange={(e) => onUpdateBlock(block.id, { url: e.target.value })}
-                                onBlur={onBlurBlockSave}
-                                placeholder="または画像URLを入力"
-                                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                              />
-                              {imageUrlQualityWarnings.get(block.id) && (
-                                <p className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
-                                  {imageUrlQualityWarnings.get(block.id)}
-                                </p>
-                              )}
                             </div>
                           )}
 
@@ -6072,18 +6095,32 @@ function onUpdateIconRowItem(
                               <div className="space-y-2">
                                 {(block.galleryItems ?? []).map((entry) => (
                                   <div key={entry.id} className="rounded-md border border-slate-200 p-2">
-                                    <input
-                                      value={entry.url}
-                                      onChange={(e) =>
-                                        onUpdateBlock(block.id, {
-                                          galleryItems: (block.galleryItems ?? []).map((item) =>
-                                            item.id === entry.id ? { ...item, url: e.target.value } : item,
-                                          ),
-                                        })}
-                                      onBlur={onBlurBlockSave}
-                                      placeholder="画像URL"
-                                      className="mb-1.5 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                                    />
+                                    {entry.url?.trim() ? (
+                                      <img
+                                        src={entry.url}
+                                        alt={entry.caption || "ギャラリー画像"}
+                                        className="mb-1.5 h-28 w-full rounded-md border border-slate-200 object-cover"
+                                      />
+                                    ) : (
+                                      <div className="mb-1.5 flex h-28 w-full items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-500">
+                                        画像未設定
+                                      </div>
+                                    )}
+                                    <label className="mb-1.5 inline-flex cursor-pointer items-center rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
+                                      画像をアップロード
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            onReplaceGalleryImage(block.id, entry.id, file);
+                                          }
+                                          e.currentTarget.value = "";
+                                        }}
+                                      />
+                                    </label>
                                     <input
                                       value={entry.caption}
                                       onChange={(e) =>
