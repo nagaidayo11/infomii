@@ -2923,7 +2923,7 @@ export default function EditorPage() {
       };
     });
     if (hub) {
-      nextNodes.unshift({ ...hub, x: 50, y: 14 });
+      nextNodes.unshift({ ...hub, x: centerX, y: centerY });
     }
     const nextTheme = { ...item.theme, nodeMap: { ...nodeMap, nodes: nextNodes } };
     setSharedNodeMap({ ...nodeMap, nodes: nextNodes });
@@ -4672,7 +4672,7 @@ function onUpdateIconRowItem(
                             ))}
                           </div>
                         )}
-                        <div className="mt-2 flex max-h-[72px] flex-wrap gap-1.5 overflow-auto">
+                        <div className="mt-2 flex flex-wrap gap-1.5">
                           {filteredQuickBlocks.map((action) => (
                             <div key={`quick-${action.type}`} className="inline-flex items-center rounded-full border border-slate-200 bg-white pr-1">
                               <button
