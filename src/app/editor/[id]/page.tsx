@@ -4396,7 +4396,7 @@ function onUpdateIconRowItem(
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold tracking-[0.08em] text-cyan-800">公開まで残り3手順</p>
-                      <p className="mt-1 text-sm text-slate-700">初回公開を最短で完了するためのガイドです。</p>
+                      <p className="mt-1 text-sm text-slate-700">必要な手順だけをコンパクトに表示します。</p>
                     </div>
                     <button
                       type="button"
@@ -4406,24 +4406,24 @@ function onUpdateIconRowItem(
                       閉じる
                     </button>
                   </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-sm font-semibold text-slate-900">1. 情報入力</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {item.contentBlocks.length >= 3 ? "完了" : "タイトル・本文・連絡先を入力"}
-                      </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
+                      <span className="font-semibold">情報入力</span>
+                      <span className={item.contentBlocks.length >= 3 ? "text-emerald-700" : "text-slate-500"}>
+                        {item.contentBlocks.length >= 3 ? "完了" : "入力中"}
+                      </span>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-sm font-semibold text-slate-900">2. 公開前チェック</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {publishCheckErrors.length === 0 ? "完了" : `エラー ${publishCheckErrors.length} 件を修正`}
-                      </p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
+                      <span className="font-semibold">公開前チェック</span>
+                      <span className={publishCheckErrors.length === 0 ? "text-emerald-700" : "text-amber-700"}>
+                        {publishCheckErrors.length === 0 ? "完了" : `要修正 ${publishCheckErrors.length}件`}
+                      </span>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-sm font-semibold text-slate-900">3. 公開 & 共有</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {item.status === "published" ? "完了（URL/QR配布）" : "公開ボタンで反映"}
-                      </p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
+                      <span className="font-semibold">公開・共有</span>
+                      <span className={item.status === "published" ? "text-emerald-700" : "text-slate-500"}>
+                        {item.status === "published" ? "完了" : "未公開"}
+                      </span>
                     </div>
                   </div>
                 </section>
@@ -4475,9 +4475,7 @@ function onUpdateIconRowItem(
                         </div>
                       )}
                     </div>
-                    <p className="mb-4 text-xs text-slate-500">
-                      ブロックを追加してオリジナルのページを作成しよう！
-                    </p>
+                    <p className="mb-4 text-xs text-slate-500">必要なブロックだけ追加してページを作成します。</p>
 
                     <section ref={blockPanelRef} className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
                       <div className="mb-3 flex items-center justify-between gap-2">
@@ -4505,7 +4503,7 @@ function onUpdateIconRowItem(
                             ))}
                           </div>
                         )}
-                        <div className="mt-2 flex max-h-[96px] flex-wrap gap-1.5 overflow-auto">
+                        <div className="mt-2 flex max-h-[72px] flex-wrap gap-1.5 overflow-auto">
                           {filteredQuickBlocks.map((action) => (
                             <div key={`quick-${action.type}`} className="inline-flex items-center rounded-full border border-slate-200 bg-white pr-1">
                               <button
@@ -4530,9 +4528,11 @@ function onUpdateIconRowItem(
                           ))}
                         </div>
                       </div>
-                      <div className="mb-3 rounded-lg border border-violet-200 bg-violet-50/60 p-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-xs font-semibold text-violet-900">おすすめ構成（ワンクリック）</p>
+                      <details className="mb-3 rounded-lg border border-violet-200 bg-violet-50/60 p-2">
+                        <summary className="cursor-pointer list-none text-xs font-semibold text-violet-900">
+                          おすすめ構成（ワンクリック）
+                        </summary>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                           <button
                             type="button"
                             onClick={() => void onAutoFillMissingFields()}
@@ -4558,7 +4558,7 @@ function onUpdateIconRowItem(
                             </button>
                           ))}
                         </div>
-                      </div>
+                      </details>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                         <button
                           type="button"
