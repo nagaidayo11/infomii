@@ -2118,18 +2118,20 @@ export default function EditorPage() {
         );
       }
       if (block.type === "image") {
+        const imageUrl = (block.url ?? "").trim();
+        if (!imageUrl) {
+          return null;
+        }
         return (
           <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
-            {block.url ? (
-              <Image
-                src={block.url}
-                alt="block"
-                width={640}
-                height={360}
-                unoptimized
-                className="h-auto w-full rounded-lg object-cover"
-              />
-            ) : null}
+            <Image
+              src={imageUrl}
+              alt="block"
+              width={640}
+              height={360}
+              unoptimized
+              className="h-auto w-full rounded-lg object-cover"
+            />
           </div>
         );
       }
@@ -2246,6 +2248,10 @@ export default function EditorPage() {
         );
       }
       if (block.type === "section") {
+        const hasSectionContent = Boolean((block.sectionTitle ?? "").trim() || (block.sectionBody ?? "").trim());
+        if (!hasSectionContent) {
+          return null;
+        }
         return (
           <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div
@@ -2449,6 +2455,9 @@ export default function EditorPage() {
       }
       if (block.type === "gallery") {
         const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
+        if (galleryItems.length === 0) {
+          return null;
+        }
         return (
           <div key={block.id} style={getBlockContainerStyle(block, sourceItem.theme)}>
             <div className="grid gap-2 sm:grid-cols-2">

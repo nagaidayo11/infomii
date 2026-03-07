@@ -1121,6 +1121,10 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   );
                 }
                 if (block.type === "section") {
+                  const hasSectionContent = Boolean((block.sectionTitle ?? "").trim() || (block.sectionBody ?? "").trim());
+                  if (!hasSectionContent) {
+                    return null;
+                  }
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div
@@ -1324,6 +1328,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 }
                 if (block.type === "gallery") {
                   const galleryItems = (block.galleryItems ?? []).filter((entry) => entry.url.trim());
+                  if (galleryItems.length === 0) {
+                    return null;
+                  }
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className="grid gap-3 sm:grid-cols-2">
