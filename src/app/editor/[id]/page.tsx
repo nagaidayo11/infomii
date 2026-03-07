@@ -1485,9 +1485,9 @@ export default function EditorPage() {
   const [collapsedBlocks, setCollapsedBlocks] = useState<Record<string, boolean>>({});
   const [collapsedAddSections, setCollapsedAddSections] = useState<Record<AddPanelSection, boolean>>({
     text: false,
-    column: false,
-    section: false,
-    preset: false,
+    column: true,
+    section: true,
+    preset: true,
   });
   const [inlineAddToast, setInlineAddToast] = useState<{
     id: string;
@@ -4480,7 +4480,7 @@ function onUpdateIconRowItem(
                     <section ref={blockPanelRef} className="mb-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
                       <div className="mb-3 flex items-center justify-between gap-2">
                         <h3 className="text-sm font-semibold text-slate-800">ブロックを追加</h3>
-                        <p className="text-[11px] text-slate-500">クリックまたはドラッグで追加</p>
+                        <p className="text-[11px] text-slate-500">クリックで追加</p>
                       </div>
                       <div className="mb-3 rounded-lg border border-slate-200 bg-white p-2">
                         <input
@@ -4545,7 +4545,6 @@ function onUpdateIconRowItem(
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {([
                             ["quick_publish", "3分公開セット"],
-                            ["front_support", "フロント削減セット"],
                             ["facility_guide", "館内総合セット"],
                           ] as Array<[RecommendedCompositionKind, string]>).map(([value, label]) => (
                             <button
@@ -6080,34 +6079,6 @@ function onUpdateIconRowItem(
 
                         </article>
                       ))}
-                    </div>
-                  </article>
-
-                  <article className="lux-card lux-section-card rounded-2xl p-5">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <h2 className="text-lg font-semibold">変更履歴（ブロック）</h2>
-                      <p className="text-xs text-slate-500">最新20件を保持</p>
-                    </div>
-                    <div className="space-y-2">
-                      {historySnapshots.map((snapshot) => {
-                        const blockCountDelta = snapshot.blocks.length - item.contentBlocks.length;
-                        const deltaText = blockCountDelta === 0 ? "±0" : blockCountDelta > 0 ? `+${blockCountDelta}` : `${blockCountDelta}`;
-                        return (
-                          <div key={snapshot.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs">
-                            <div>
-                              <p className="font-medium text-slate-700">{formatSavedAt(snapshot.createdAt)}</p>
-                              <p className="text-slate-500">ブロック数差分: {deltaText}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => void restoreSnapshot(snapshot.id)}
-                              className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-800 hover:bg-emerald-100"
-                            >
-                              この状態に復元
-                            </button>
-                          </div>
-                        );
-                      })}
                     </div>
                   </article>
 
