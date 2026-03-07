@@ -228,7 +228,7 @@ function collectPublishCheckIssues(
   };
 
   if (!currentItem.title.trim()) {
-    issues.push({ level: "error", message: "ページタイトルを入力してください。", target: "pageTitle" });
+    issues.push({ level: "error", message: "ページタイトルが未入力です。利用者に伝わるタイトルを入力してください。", target: "pageTitle" });
   }
 
   const hasAnyContentBlock = currentItem.contentBlocks.some((block) => {
@@ -280,7 +280,7 @@ function collectPublishCheckIssues(
   });
 
   if (!hasAnyContentBlock) {
-    issues.push({ level: "error", message: "本文ブロックが空です。最低1つ入力してください。", target: "blocks" });
+    issues.push({ level: "error", message: "本文ブロックがまだありません。案内文を1つ追加してください。", target: "blocks" });
   }
 
   const serializedText = currentItem.contentBlocks
@@ -311,7 +311,7 @@ function collectPublishCheckIssues(
   if (!hasContactInfo) {
       issues.push({
         level: "error",
-        message: "問い合わせ導線（連絡先）が未記載です（例: 03-1234-5678 / front@example.com）。公開前に必須です。",
+        message: "問い合わせ導線: お問い合わせ先が見つかりません。連絡先（例: 03-1234-5678 / front@example.com）を1つ追加してください。",
         target: "blocks",
       });
   }
@@ -321,7 +321,7 @@ function collectPublishCheckIssues(
   if (!hasLegalNotice) {
     issues.push({
       level: "warning",
-      message: "法務チェック: 規約/注意事項/キャンセル条件の明記を推奨します。",
+      message: "法務チェック: 安心して利用してもらうために、規約・注意事項・キャンセル条件の記載をおすすめします。",
       target: "blocks",
     });
   }
@@ -334,7 +334,7 @@ function collectPublishCheckIssues(
   if (!hasHoursCompleteRow) {
     issues.push({
       level: "warning",
-      message: "営業時間ブロックが未設定です（例: チェックイン 15:00-24:00）。受付時間・利用時間の記載を推奨します。",
+      message: "営業時間の記載が見つかりません。例（チェックイン 15:00-24:00）のように、受付時間・利用時間を追加しましょう。",
       target: "blocks",
     });
   }
@@ -346,7 +346,7 @@ function collectPublishCheckIssues(
   if (childPageLinks === 0) {
     issues.push({
       level: "warning",
-      message: "子ページ導線が未設定です。アイコン並びに /p/slug の遷移先を1件以上追加すると回遊率が上がります。",
+      message: "子ページ導線: 関連ページへの導線がまだありません。アイコン並びに遷移先を1件追加すると、必要な情報へ移動しやすくなります。",
       target: "blocks",
     });
   }
@@ -357,7 +357,7 @@ function collectPublishCheckIssues(
     if (!Number.isNaN(publishAtMs) && !Number.isNaN(unpublishAtMs) && publishAtMs >= unpublishAtMs) {
       issues.push({
         level: "error",
-        message: "公開終了日時は公開開始日時より後に設定してください。",
+        message: "公開日時の順序を確認してください。公開終了日時は、公開開始日時より後に設定しましょう。",
         target: "schedule",
       });
     }
@@ -367,7 +367,7 @@ function collectPublishCheckIssues(
     if (block.type === "image" && !(block.url ?? "").trim()) {
         issues.push({
           level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
-          message: `${blockIndex + 1}.画像ブロック: 画像URLが未設定です。`,
+          message: `${blockIndex + 1}.画像ブロック: 画像が未設定です。アップロードしてください。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -378,7 +378,7 @@ function collectPublishCheckIssues(
         if (!(entry.url ?? "").trim()) {
           issues.push({
             level: PUBLISH_CHECK_SEVERITY.emptyImageUrl,
-            message: `${blockIndex + 1}.ギャラリー-${entryIndex + 1}: 画像URLが未設定です。`,
+            message: `${blockIndex + 1}.ギャラリー-${entryIndex + 1}: 画像が未設定です。アップロードしてください。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -393,14 +393,14 @@ function collectPublishCheckIssues(
         if (ctaUrl.startsWith("http://")) {
           issues.push({
             level: "error",
-            message: `${blockIndex + 1}.CTA: httpリンクは非推奨です。https:// で設定してください。`,
+            message: `${blockIndex + 1}.CTA: 安全のためURLは https:// で設定してください。`,
             target: "blocks",
             blockId: block.id,
           });
         } else if (ctaUrl && !isValidHttpUrl(ctaUrl) && !ctaUrl.startsWith("/p/")) {
           issues.push({
             level: "error",
-            message: `${blockIndex + 1}.CTA: URL形式が不正です（例: https://example.com または /p/sample）。`,
+            message: `${blockIndex + 1}.CTA: URL形式を確認してください（例: https://example.com または /p/sample）。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -421,7 +421,7 @@ function collectPublishCheckIssues(
         if (!slug) {
           issues.push({
             level: "error",
-            message: `${rowLabel}: ページリンク形式が不正です。`,
+            message: `${rowLabel}: ページリンク形式を確認してください。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -431,7 +431,7 @@ function collectPublishCheckIssues(
         if (!targetStatus) {
           issues.push({
             level: "error",
-            message: `${rowLabel}: 遷移先ページが見つかりません。`,
+            message: `${rowLabel}: 遷移先ページが見つかりません。リンク先を確認してください。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -440,7 +440,7 @@ function collectPublishCheckIssues(
         if (targetStatus !== "published") {
           issues.push({
             level: PUBLISH_CHECK_SEVERITY.draftInternalTarget,
-            message: `${rowLabel}: 遷移先ページが未公開（下書き）です。`,
+            message: `${rowLabel}: 遷移先ページはまだ未公開（下書き）です。公開設定をご確認ください。`,
             target: "blocks",
             blockId: block.id,
           });
@@ -451,7 +451,7 @@ function collectPublishCheckIssues(
       if (!/^https?:\/\//i.test(link)) {
         issues.push({
           level: "error",
-          message: `${rowLabel}: 外部リンク形式が不正です（例: https://hotel.example.com）。`,
+          message: `${rowLabel}: 外部リンク形式を確認してください（例: https://hotel.example.com）。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -460,7 +460,7 @@ function collectPublishCheckIssues(
       if (link.startsWith("http://")) {
         issues.push({
           level: "error",
-          message: `${rowLabel}: httpリンクは非推奨です。https:// で設定してください。`,
+          message: `${rowLabel}: 安全のためURLは https:// で設定してください。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -469,7 +469,7 @@ function collectPublishCheckIssues(
       if (!isValidHttpUrl(link)) {
         issues.push({
           level: "error",
-          message: `${rowLabel}: URLが無効です。形式を確認してください。`,
+          message: `${rowLabel}: URLを確認してください。正しい形式で入力しましょう。`,
           target: "blocks",
           blockId: block.id,
         });
@@ -4090,16 +4090,31 @@ function onUpdateIconRowItem(
     if (!item) {
       return;
     }
-    if (publishCheckErrors.length > 0) {
-      setNoticeKind("error");
-      setNotice(`公開前チェックでエラー ${publishCheckErrors.length} 件があります。内容を修正してください。`);
-      return;
-    }
-    if (publishCheckWarnings.length > 0) {
-      setNoticeKind("success");
-      setNotice(`公開前チェック: 警告 ${publishCheckWarnings.length} 件（公開は続行します）。`);
+    const issueCount = prioritizedPublishIssues.length;
+    if (issueCount > 0) {
+      const preview = prioritizedPublishIssues
+        .slice(0, 3)
+        .map((issue) => `・${issue.message}`)
+        .join("\n");
+      const suffix = issueCount > 3 ? `\n…ほか ${issueCount - 3} 件` : "";
+      const ok = window.confirm(
+        `修正箇所の警告がありますが公開しますか？\n\n` +
+          `エラー: ${publishCheckErrors.length} 件 / 警告: ${publishCheckWarnings.length} 件\n\n` +
+          `${preview}${suffix}\n\n` +
+          `OK: このまま公開\n` +
+          `キャンセル: 編集を続ける`,
+      );
+      if (!ok) {
+        setNoticeKind("success");
+        setNotice("公開を中止しました。編集を続けてください。");
+        return;
+      }
     }
     await save({ status: "published" });
+    if (issueCount > 0) {
+      setNoticeKind("success");
+      setNotice(`警告ありで公開しました（エラー ${publishCheckErrors.length} 件 / 警告 ${publishCheckWarnings.length} 件）。`);
+    }
   }
 
   async function onApplyPublishBatchFixes() {
