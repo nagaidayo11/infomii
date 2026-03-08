@@ -4576,22 +4576,36 @@ function onUpdateIconRowItem(
         )}
         {item && (
           <aside
-            className="fixed top-1/2 z-40 -translate-y-1/2"
-            style={{ left: "max(6px, calc((100vw - min(93.75rem, calc(100vw - 4rem))) / 4 - 8px))" }}
+            className={
+              isMobileEditingLimited
+                ? "fixed inset-x-0 top-3 z-40 flex justify-center px-3"
+                : "fixed top-1/2 z-40 -translate-y-1/2"
+            }
+            style={
+              isMobileEditingLimited
+                ? undefined
+                : { left: "max(6px, calc((100vw - min(93.75rem, calc(100vw - 4rem))) / 4 - 8px))" }
+            }
           >
-            <div className="flex flex-col gap-2 rounded-2xl border border-emerald-300 bg-white/98 p-2.5 shadow-xl ring-1 ring-emerald-200/80 backdrop-blur">
+            <div
+              className={`rounded-2xl border border-emerald-300 bg-white/98 shadow-xl ring-1 ring-emerald-200/80 backdrop-blur ${
+                isMobileEditingLimited ? "flex flex-row gap-2 p-2" : "flex flex-col gap-2 p-2.5"
+              }`}
+            >
               <span className="group relative inline-flex">
                 <button
                   type="button"
                   onClick={onUndoBlocks}
                   disabled={blockHistoryPast.length === 0}
-                  className="flex h-11 w-[54px] flex-col items-center justify-center gap-0.5 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white text-emerald-800 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-400 hover:from-emerald-100 hover:to-emerald-50 hover:text-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-35"
+                  className={`flex items-center justify-center rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white text-emerald-800 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-400 hover:from-emerald-100 hover:to-emerald-50 hover:text-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-35 ${
+                    isMobileEditingLimited ? "h-10 w-[92px] gap-1.5 px-2" : "h-11 w-[54px] flex-col gap-0.5"
+                  }`}
                   aria-label="一つ前に戻す"
                 >
                   <span className="text-[15px] font-semibold leading-none">↶</span>
                   <span className="text-[9px] leading-none">戻る</span>
                 </button>
-                <span className="pointer-events-none absolute left-11 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-11 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100 sm:block">
                   一つ前に戻す
                 </span>
               </span>
@@ -4600,20 +4614,22 @@ function onUpdateIconRowItem(
                   type="button"
                   onClick={onRedoBlocks}
                   disabled={blockHistoryFuture.length === 0}
-                  className="flex h-11 w-[54px] flex-col items-center justify-center gap-0.5 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white text-emerald-800 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-400 hover:from-emerald-100 hover:to-emerald-50 hover:text-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-35"
+                  className={`flex items-center justify-center rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-50 to-white text-emerald-800 shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-400 hover:from-emerald-100 hover:to-emerald-50 hover:text-emerald-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-35 ${
+                    isMobileEditingLimited ? "h-10 w-[92px] gap-1.5 px-2" : "h-11 w-[54px] flex-col gap-0.5"
+                  }`}
                   aria-label="一つ先に進む"
                 >
                   <span className="text-[15px] font-semibold leading-none">↷</span>
                   <span className="text-[9px] leading-none">進む</span>
                 </button>
-                <span className="pointer-events-none absolute left-11 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-11 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100 sm:block">
                   一つ先に進む
                 </span>
               </span>
             </div>
           </aside>
         )}
-        <div className="mx-auto w-full max-w-[1650px] space-y-5">
+        <div className={`mx-auto w-full max-w-[1650px] space-y-5 ${isMobileEditingLimited ? "pt-16" : ""}`}>
           {!item ? (
             <section className="animate-pulse space-y-5">
               <div className="rounded-2xl lux-section-card border border-slate-200/80 bg-white p-5 shadow-sm">
