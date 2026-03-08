@@ -855,7 +855,7 @@ export default async function Home({ searchParams }: HomePageProps) {
   ];
 
   return (
-    <main className="lux-main min-h-screen px-4 py-8 sm:px-8 sm:py-12">
+    <main className="lux-main min-h-screen px-4 pt-8 pb-36 sm:px-8 sm:pt-12 sm:pb-12">
       <LpRevealObserver />
       <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8">
         <header className="lux-card lp-hero-shell lp-reveal overflow-hidden rounded-3xl p-5 sm:p-8">
@@ -1346,7 +1346,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         </footer>
       </div>
 
-      <div className="fixed inset-x-0 bottom-3 z-40 px-3 sm:bottom-4">
+      <div className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 px-3 sm:bottom-4">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_16px_30px_-20px_rgba(2,6,23,0.55)] backdrop-blur">
           <p className="hidden text-xs font-semibold text-slate-600 sm:block">ホテル案内を今すぐ編集・公開</p>
           <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">

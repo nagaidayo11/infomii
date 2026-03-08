@@ -4502,7 +4502,7 @@ function onUpdateIconRowItem(
     <AuthGate>
       <main className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_left,#86efac30_0%,#34d39924_35%,#ecfdf5_100%)] pl-4 pr-6 py-10 sm:pl-8 sm:pr-10 lg:pl-[92px] lg:pr-8">
         {isMobileEditingLimited && (
-          <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="mb-4 mt-16 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             スマホは軽微修正専用です。テキスト更新・公開切替は可能ですが、ブロック追加/削除・並び替えなどの構成変更はPCで行ってください。
           </div>
         )}
