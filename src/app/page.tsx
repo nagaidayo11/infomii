@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import LpRevealObserver from "@/components/lp-reveal-observer";
 import VoiceLogo from "@/components/voice-logo";
@@ -7,6 +8,45 @@ import LpProofSection from "@/components/lp-proof-section";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { starterTemplates } from "@/lib/templates";
 import type { InformationBlock } from "@/types/information";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
+
+export const metadata: Metadata = {
+  title: "ホテル案内ページ作成SaaS（無料あり）",
+  description:
+    "ホテル現場向けに、案内ページを最短3分で作成・公開。1画面編集で即時更新、QR配布まで対応。Free ¥0 / Pro ¥1,980。",
+  keywords: [
+    "ホテル案内ページ",
+    "ホテル DX",
+    "チェックイン案内",
+    "館内案内 QR",
+    "ホテル SaaS",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    url: appUrl,
+    title: "Infomii | ホテル案内ページ作成SaaS（無料あり）",
+    description:
+      "ホテル現場向けに、案内ページを最短3分で作成・公開。1画面編集で即時更新、QR配布まで対応。",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Infomii | ホテル案内ページ作成SaaS（無料あり）",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Infomii | ホテル案内ページ作成SaaS（無料あり）",
+    description:
+      "ホテル現場向けに、案内ページを最短3分で作成・公開。1画面編集で即時更新、QR配布まで対応。",
+    images: ["/twitter-image"],
+  },
+};
 
 function optimizePreviewImageUrl(url: string): string {
   const value = url.trim();
@@ -853,9 +893,36 @@ export default async function Home({ searchParams }: HomePageProps) {
     "公開してURL/QRを配布",
     "閲覧分析で反応を確認",
   ];
+  const softwareSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Infomii",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    url: appUrl,
+    description: "ホテル向け案内ページを最短3分で作成・公開できるSaaS。",
+    offers: [
+      { "@type": "Offer", name: "Free", price: "0", priceCurrency: "JPY" },
+      { "@type": "Offer", name: "Pro", price: String(proMonthlyPrice), priceCurrency: "JPY" },
+    ],
+  };
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: searchOptimizedFaq.slice(0, 3).map((entry) => ({
+      "@type": "Question",
+      name: entry.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: entry.a,
+      },
+    })),
+  };
 
   return (
     <main className="lux-main min-h-screen px-4 pt-8 pb-36 sm:px-8 sm:pt-12 sm:pb-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <LpRevealObserver />
       <div className="mx-auto w-full max-w-6xl space-y-6 sm:space-y-8">
         <header className="lux-card lp-hero-shell lp-reveal overflow-hidden rounded-3xl p-5 sm:p-8">
@@ -1319,6 +1386,21 @@ export default async function Home({ searchParams }: HomePageProps) {
             >
               プラン比較を見る
             </a>
+          </div>
+        </section>
+
+        <section className="lux-card lp-reveal lp-delay-4 rounded-2xl p-5 text-sm text-slate-700">
+          <p className="text-xs font-semibold text-slate-500">業態別ページ</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Link className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50" href="/lp/business">
+              ビジネスホテル向け
+            </Link>
+            <Link className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50" href="/lp/resort">
+              リゾートホテル向け
+            </Link>
+            <Link className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50" href="/lp/spa">
+              温浴・スパ向け
+            </Link>
           </div>
         </section>
 

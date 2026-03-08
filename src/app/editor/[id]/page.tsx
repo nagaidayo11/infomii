@@ -7113,7 +7113,9 @@ function onUpdateIconRowItem(
                     <article className="lux-card lux-section-card rounded-2xl p-5">
                       <p className="mb-4 text-lg font-semibold text-slate-700">スマホプレビュー</p>
                       <article
-                        className="relative mx-auto h-[740px] max-w-sm overflow-hidden rounded-3xl border border-slate-200 p-6 shadow-sm"
+                        className={`relative h-[740px] overflow-hidden rounded-3xl border border-slate-200 shadow-sm ${
+                          isMobileEditingLimited ? "mx-0 w-full max-w-none p-3" : "mx-auto max-w-sm p-6"
+                        }`}
                         style={{
                           backgroundColor: item.theme.backgroundColor ?? "#ffffff",
                           color: item.theme.textColor ?? "#0f172a",
