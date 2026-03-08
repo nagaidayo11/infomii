@@ -414,33 +414,33 @@ export default async function Home({ searchParams }: HomePageProps) {
   const proMonthlyPriceLabel = `¥${new Intl.NumberFormat("ja-JP").format(proMonthlyPrice)}`;
   const heroCopyByScene = {
     checkin: {
-      title: "チェックイン導線を3分で公開",
-      subtitle: "問い合わせを減らす案内を即反映",
-      body: "チェックイン・深夜到着・館内設備を1ページに集約。更新作業を最短化します。",
+      title: "ホテル案内の更新を3分で公開",
+      subtitle: "現場変更をそのまま反映",
+      body: "チェックイン・深夜到着・館内設備を1ページに集約。非エンジニアでもテキスト差し替えだけで更新できます。",
     },
     bath: {
-      title: "温浴案内を迷わず共有",
-      subtitle: "利用時間と注意事項を即更新",
-      body: "大浴場・貸切風呂の案内をQRで即配布。混雑時の導線変更にもすぐ対応できます。",
+      title: "温浴案内の変更をその場で反映",
+      subtitle: "利用時間と注意事項を1画面更新",
+      body: "大浴場・貸切風呂の案内をQRで即配布。混雑時の導線変更も、編集画面の更新だけで全案内に反映できます。",
     },
     breakfast: {
-      title: "朝食導線を一括管理",
-      subtitle: "会場・時間・注意事項を統一",
-      body: "営業時間・会場・アレルギー注意を1ページ化。朝の案内負荷を下げます。",
+      title: "朝食案内の更新漏れを防ぐ",
+      subtitle: "会場・時間・注意事項を同時更新",
+      body: "営業時間・会場・アレルギー注意を1ページ化。変更時は1回編集するだけで、案内品質を揃えられます。",
     },
   } as const;
   const heroCopy = heroCopyByScene[heroScene];
-  const primaryCtaLabel = "無料で作成を始める";
+  const primaryCtaLabel = "無料で編集画面を試す";
   const anxietyReliefByLanding = {
     business: [
       "専門知識なしでもテンプレから3分公開",
-      "深夜到着導線を先に配置して問い合わせを抑制",
+      "担当交代があっても同じ手順で更新しやすい",
       "更新はテキスト差し替えだけで運用可能",
     ],
     resort: [
       "滞在導線テンプレを選ぶだけで初期構成が完成",
       "アクティビティ・プール案内を同時に公開",
-      "季節イベント時の差し替えを画面内で完結",
+      "季節イベント時の差し替えを1画面で完結",
     ],
     spa: [
       "温浴ルール/注意事項を初期値つきで配置",
@@ -451,9 +451,9 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   const metrics = [
     { label: "初回公開まで", value: "最短3分", sub: "テンプレ選択→編集→公開" },
-    { label: "更新反映", value: "即時", sub: "現場変更をそのまま反映" },
+    { label: "差し替え時間", value: "最短1分", sub: "テキスト更新のみの場合" },
     { label: "対象運用", value: "ホテル特化", sub: "館内案内・温浴案内・客室導線" },
-    { label: "運用導線", value: "1QR", sub: "入口ページから案内を集約" },
+    { label: "運用統一", value: "1画面", sub: "誰が更新しても手順を揃えやすい" },
   ];
 
   const useCases = [
@@ -477,8 +477,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-slate-700 to-slate-500",
       logoSrc: "/logos/city-business-hotel",
       hotel: "都心ビジネスホテル（120室）",
-      comment: "深夜チェックインの問い合わせが減って、フロント1名体制でも回せるようになりました。",
-      impact: "導入3日で夜間電話対応を削減",
+      comment: "深夜チェックイン案内をQR化した結果、夜間電話が1日平均18件→11件に減り、1名体制でも回しやすくなりました。",
+      impact: "夜間問い合わせ -39%（18件/日 → 11件/日）",
       caseId: "INF-BIZ-001",
       verifiedAt: "2026-02-18",
       verificationMethod: "運用ログ + ヒアリング確認",
@@ -489,8 +489,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-slate-700 to-slate-500",
       logoSrc: "/logos/city-business-hotel",
       hotel: "空港前ビジネスホテル（95室）",
-      comment: "チェックイン/朝食/Wi-Fiを1画面にまとめたら、到着直後の質問が減りました。",
-      impact: "フロント一次対応をピーク帯で平準化",
+      comment: "チェックイン・朝食・Wi-Fiを1画面に集約したら、到着直後の定番質問が1時間あたり12件→7件になりました。",
+      impact: "ピーク帯の一次対応 -42%（12件/h → 7件/h）",
       caseId: "INF-BIZ-002",
       verifiedAt: "2026-02-22",
       verificationMethod: "現場責任者ヒアリング",
@@ -501,8 +501,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-cyan-700 to-cyan-500",
       logoSrc: "/logos/station-town-hotel",
       hotel: "駅前ホテル（65室）",
-      comment: "朝食会場の案内を固定したことで、スタッフごとの説明差が出にくくなりました。",
-      impact: "朝ピークの案内品質を統一",
+      comment: "朝食会場案内を固定したことで、説明の言い漏れが週10件→週3件に減り、担当者差が小さくなりました。",
+      impact: "案内ミス -70%（週10件 → 週3件）",
       caseId: "INF-BIZ-003",
       verifiedAt: "2026-02-25",
       verificationMethod: "案内フロー棚卸し確認",
@@ -513,8 +513,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-emerald-700 to-emerald-500",
       logoSrc: "/logos/resort-spa-hotel",
       hotel: "温浴併設リゾート（客室80室）",
-      comment: "温浴ルールの更新を即反映できるので、紙案内差し替えの手間がほぼ無くなりました。",
-      impact: "案内差し替え時間を週2時間削減",
+      comment: "温浴ルールの差し替えを紙からWeb更新に変えて、差し替え作業が週3時間→週1時間まで減りました。",
+      impact: "更新工数 -67%（週3h → 週1h）",
       caseId: "INF-RST-001",
       verifiedAt: "2026-02-19",
       verificationMethod: "更新ログ比較（導入前後）",
@@ -525,8 +525,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-emerald-700 to-emerald-500",
       logoSrc: "/logos/resort-spa-hotel",
       hotel: "海辺リゾートホテル（140室）",
-      comment: "アクティビティの予約導線をトップに置いたら、現地案内の口頭対応が減りました。",
-      impact: "体験予約導線の到達率が改善",
+      comment: "アクティビティ予約導線をトップ固定した結果、予約ページ到達率が22%→34%に改善しました。",
+      impact: "予約導線到達率 +12pt（22% → 34%）",
       caseId: "INF-RST-002",
       verifiedAt: "2026-02-24",
       verificationMethod: "予約導線到達率ヒアリング",
@@ -537,8 +537,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-emerald-700 to-emerald-500",
       logoSrc: "/logos/resort-spa-hotel",
       hotel: "高原リゾート（110室）",
-      comment: "雨天時の代替案内を同じページで切替できるので、当日の混乱が減りました。",
-      impact: "当日変更時の案内工数を削減",
+      comment: "雨天時の代替案内を同ページで切替できるため、当日変更時の共有作業が30分→10分になりました。",
+      impact: "当日切替工数 -67%（30分 → 10分）",
       caseId: "INF-RST-003",
       verifiedAt: "2026-02-27",
       verificationMethod: "当日運用レビュー",
@@ -549,8 +549,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-emerald-700 to-emerald-500",
       logoSrc: "/logos/resort-spa-hotel",
       hotel: "温浴併設リゾート（80室）",
-      comment: "入浴前の注意事項と予約案内を1ページ化して、フロント確認件数が減りました。",
-      impact: "温浴前の説明対応を削減",
+      comment: "入浴前の注意事項と予約案内を1ページ化し、フロント確認が1日14件→8件まで減りました。",
+      impact: "温浴前の確認対応 -43%（14件/日 → 8件/日）",
       caseId: "INF-SPA-001",
       verifiedAt: "2026-02-20",
       verificationMethod: "フロント問い合わせ比較",
@@ -561,8 +561,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-cyan-700 to-cyan-500",
       logoSrc: "/logos/station-town-hotel",
       hotel: "温泉旅館（45室）",
-      comment: "貸切風呂の利用ルールをQR配布したら、案内の言い漏れが減りました。",
-      impact: "温浴クレームリスクを抑制",
+      comment: "貸切風呂ルールをQRで事前共有したところ、注意事項の言い漏れが月9件→月2件に減りました。",
+      impact: "案内漏れ -78%（月9件 → 月2件）",
       caseId: "INF-SPA-002",
       verifiedAt: "2026-02-23",
       verificationMethod: "館内案内チェックリスト確認",
@@ -573,8 +573,8 @@ export default async function Home({ searchParams }: HomePageProps) {
       brandTone: "from-cyan-700 to-cyan-500",
       logoSrc: "/logos/station-town-hotel",
       hotel: "日帰り温浴施設",
-      comment: "混雑時の導線変更を即反映できるので、現場の誘導がスムーズになりました。",
-      impact: "混雑時の案内切替を高速化",
+      comment: "混雑時の導線変更を即反映できるため、掲示差し替えと口頭周知の時間が25分→8分に短縮しました。",
+      impact: "混雑時の切替時間 -68%（25分 → 8分）",
       caseId: "INF-SPA-003",
       verifiedAt: "2026-02-26",
       verificationMethod: "混雑時オペレーション確認",
@@ -679,21 +679,21 @@ export default async function Home({ searchParams }: HomePageProps) {
       scene: "ビジネスホテル / チェックイン案内",
       before: "夜間の電話問い合わせが集中（フロント都度説明）",
       after: "入口QR + トップ導線で自己解決率向上",
-      impact: "問い合わせ対応を最大40%削減",
+      impact: "問い合わせ 18件/日 → 11件/日（-39%）",
     },
     {
       industryTag: "spa" as const,
       scene: "温浴併設施設 / 利用ルール案内",
       before: "紙掲示の差し替えが遅れ、案内内容にズレが発生",
       after: "1画面更新で即時反映し、全掲示導線を統一",
-      impact: "案内差し替え作業を最大70%短縮",
+      impact: "差し替え工数 週3h → 週1h（-67%）",
     },
     {
       industryTag: "resort" as const,
       scene: "リゾートホテル / 滞在導線",
       before: "体験案内が口頭依存で予約導線が分散",
       after: "アイコン導線のトップメニューで導線集約",
-      impact: "初回公開まで最短3分で運用開始",
+      impact: "予約ページ到達率 22% → 34%（+12pt）",
     },
   ];
   const exampleThemeByIndustry = {
@@ -893,7 +893,7 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <span className="mt-2 block text-base font-semibold text-emerald-700 sm:text-2xl">{heroCopy.subtitle}</span>
               </h1>
               <p className="lp-reveal lp-delay-3 mt-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-base">
-                {heroCopy.body} Proならノードで複数ページ連携まで対応し、現場で必要な更新をその場で反映できます。
+                {heroCopy.body} Proならノードで複数ページ連携まで対応し、入口ページから詳細案内までまとめて更新できます。
               </p>
               <p className="lp-reveal lp-delay-3 mt-3 text-xs font-medium text-slate-600 sm:text-sm">
                 Free: ¥0 / Pro: {proMonthlyPriceLabel}（税込・いつでも解約可能）
@@ -931,23 +931,23 @@ export default async function Home({ searchParams }: HomePageProps) {
               <p className="text-xs font-semibold tracking-wide text-emerald-700">運用イメージ</p>
               <div className="mt-3 space-y-2">
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">1. 作成</p>
-                  <p className="text-sm font-semibold text-slate-900">ブロックを追加して情報入力</p>
+                  <p className="text-[11px] text-slate-500">1. 初期作成</p>
+                  <p className="text-sm font-semibold text-slate-900">テンプレを選んで必要情報だけ入力</p>
                 </div>
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">2. 公開</p>
-                  <p className="text-sm font-semibold text-slate-900">URL / QRを即発行</p>
+                  <p className="text-[11px] text-slate-500">2. 変更対応</p>
+                  <p className="text-sm font-semibold text-slate-900">営業時間や注意事項を1画面で差し替え</p>
                 </div>
                 <div className="rounded-xl border border-emerald-100 bg-white p-3">
-                  <p className="text-[11px] text-slate-500">3. 拡張（Pro）</p>
-                  <p className="text-sm font-semibold text-slate-900">ノードで複数ページ連携</p>
+                  <p className="text-[11px] text-slate-500">3. 公開・共有</p>
+                  <p className="text-sm font-semibold text-slate-900">URL / QRをそのまま使い回し</p>
                 </div>
               </div>
 
               <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-600 p-3 text-white">
                 <p className="text-xs text-emerald-100">現場向け</p>
-                <p className="text-lg font-bold">更新作業の属人化を減らす</p>
-                <p className="mt-1 text-xs text-emerald-50">&quot;更新できる人が限られる&quot; 状態を、運用画面で解消します。</p>
+                <p className="text-lg font-bold">更新ルールを現場で統一</p>
+                <p className="mt-1 text-xs text-emerald-50">&quot;この人しか更新できない&quot;状態を、共通の編集画面で解消します。</p>
               </div>
             </aside>
           </div>
@@ -1160,17 +1160,17 @@ export default async function Home({ searchParams }: HomePageProps) {
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-2 text-4xl font-bold text-slate-900">¥0</p>
-              <p className="mt-1 text-xs text-slate-500">まずは無料で公開を開始</p>
+              <p className="mt-1 text-xs text-slate-500">まずは無料で編集と公開を開始</p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>・公開ページ上限あり</li>
-                <li>・基本ブロックエディタ</li>
-                <li>・QR公開</li>
+                <li>・基本ブロック編集（テキスト/画像/アイコン）</li>
+                <li>・公開URL / QR発行</li>
               </ul>
               <Link
                 href={buildLoginHref("lp-bottom")}
                 className="mt-5 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold !text-white hover:bg-slate-800 hover:!text-white"
               >
-                無料で作成を始める
+                無料で編集画面を試す
               </Link>
             </article>
             <article className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-5">
@@ -1191,7 +1191,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>・公開ページ上限を拡張</li>
                 <li>・ノードマップで複数ページ連携</li>
-                <li>・運用管理機能</li>
+                <li>・更新フローを揃える運用管理機能</li>
               </ul>
               <Link
                 href={buildLoginHref("lp-bottom")}
@@ -1302,9 +1302,9 @@ export default async function Home({ searchParams }: HomePageProps) {
 
         <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
           <p className="text-xs font-semibold tracking-widest text-emerald-100">READY TO START</p>
-          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料登録して、1ページ公開を始めましょう</h2>
+          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">まずは無料登録して、編集のしやすさを確認してください</h2>
           <p className="mt-2 text-sm text-emerald-50">
-            まず登録/ログイン後に、編集から公開までの流れを管理画面でそのまま体験できます。必要になった時点でProへ拡張可能です。
+            登録後すぐにテンプレ複製から編集画面に入り、変更反映まで一連の流れを体験できます。必要になった時点でProへ拡張可能です。
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
@@ -1348,7 +1348,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
       <div className="fixed inset-x-0 bottom-3 z-40 px-3 sm:bottom-4">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_16px_30px_-20px_rgba(2,6,23,0.55)] backdrop-blur">
-          <p className="hidden text-xs font-semibold text-slate-600 sm:block">ホテル案内を今すぐ公開</p>
+          <p className="hidden text-xs font-semibold text-slate-600 sm:block">ホテル案内を今すぐ編集・公開</p>
           <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
             <a href="#templates" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
               テンプレ例

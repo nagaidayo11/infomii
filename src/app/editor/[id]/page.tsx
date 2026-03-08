@@ -1580,6 +1580,7 @@ export default function EditorPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [notice, setNotice] = useState<string>("");
   const [noticeKind, setNoticeKind] = useState<"success" | "error">("success");
+  const [isMobileEditingLimited, setIsMobileEditingLimited] = useState(false);
   const [creatingCheckout, setCreatingCheckout] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editingPageTitle, setEditingPageTitle] = useState(false);
@@ -1720,6 +1721,19 @@ export default function EditorPage() {
     }
     setPageTitleDraft(item.title);
   }, [item]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobileEditingLimited(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => {
+      media.removeEventListener("change", apply);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -2697,7 +2711,19 @@ export default function EditorPage() {
     }
   }
 
+  function blockDesktopOnly(actionLabel: string): boolean {
+    if (!isMobileEditingLimited) {
+      return false;
+    }
+    setNoticeKind("error");
+    setNotice(`スマホでは${actionLabel}はできません。PCで編集してください。`);
+    return true;
+  }
+
   async function onAddBlock(type: InformationBlock["type"], clickEvent?: MouseEvent<HTMLElement>) {
+    if (blockDesktopOnly("ブロック追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2720,6 +2746,9 @@ export default function EditorPage() {
   }
 
   function onAddBlockSet(kind: BlockSetKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (blockDesktopOnly("セット追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2743,6 +2772,9 @@ export default function EditorPage() {
   }
 
   function onAddIndustryBlockSet(kind: IndustryBlockSetKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (blockDesktopOnly("業種セット追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2766,6 +2798,9 @@ export default function EditorPage() {
   }
 
   function onAddRecommendedComposition(kind: RecommendedCompositionKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (blockDesktopOnly("おすすめ構成追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2789,6 +2824,9 @@ export default function EditorPage() {
   }
 
   function onAddPanelVariant(kind: AddPanelVariantKind, clickEvent?: MouseEvent<HTMLElement>) {
+    if (blockDesktopOnly("雛形追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2812,6 +2850,9 @@ export default function EditorPage() {
   }
 
   async function onAutoFillMissingFields() {
+    if (blockDesktopOnly("一括補完")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2893,6 +2934,9 @@ export default function EditorPage() {
   }
 
   async function restoreSnapshot(snapshotId: string) {
+    if (blockDesktopOnly("履歴復元")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -2943,6 +2987,9 @@ export default function EditorPage() {
   }
 
   function onUndoBlocks() {
+    if (blockDesktopOnly("元に戻す")) {
+      return;
+    }
     if (!item || blockHistoryPast.length === 0) {
       return;
     }
@@ -2961,6 +3008,9 @@ export default function EditorPage() {
   }
 
   function onRedoBlocks() {
+    if (blockDesktopOnly("やり直し")) {
+      return;
+    }
     if (!item || blockHistoryFuture.length === 0) {
       return;
     }
@@ -3008,6 +3058,10 @@ export default function EditorPage() {
   }
 
   function onPaletteDragStart(event: DragEvent<HTMLElement>, type: InformationBlock["type"]) {
+    if (blockDesktopOnly("ドラッグ追加")) {
+      event.preventDefault();
+      return;
+    }
     event.dataTransfer.effectAllowed = "copy";
     event.dataTransfer.setData("application/x-new-block-type", type);
     event.dataTransfer.setData("text/plain", `new-block:${type}`);
@@ -3088,6 +3142,9 @@ function onUpdateIconRowItem(
   }
 
   function onAddIconRowItem(blockId: string) {
+    if (blockDesktopOnly("項目追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3114,6 +3171,9 @@ function onUpdateIconRowItem(
   }
 
   function onDeleteIconRowItem(blockId: string, itemId: string) {
+    if (blockDesktopOnly("項目削除")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3168,6 +3228,9 @@ function onUpdateIconRowItem(
   }
 
   function onAddKeyValueItem(blockId: string, blockType: "hours" | "pricing") {
+    if (blockDesktopOnly("項目追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3192,6 +3255,9 @@ function onUpdateIconRowItem(
   }
 
   function onDeleteKeyValueItem(blockId: string, blockType: "hours" | "pricing", itemId: string) {
+    if (blockDesktopOnly("項目削除")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3224,6 +3290,9 @@ function onUpdateIconRowItem(
   }
 
   function onMoveBlock(blockId: string, direction: "up" | "down") {
+    if (blockDesktopOnly("ブロック並び替え")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3253,6 +3322,9 @@ function onUpdateIconRowItem(
   }
 
   function onDeleteBlock(blockId: string) {
+    if (blockDesktopOnly("ブロック削除")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3293,6 +3365,9 @@ function onUpdateIconRowItem(
   }
 
   function onPasteBlock(afterBlockId: string) {
+    if (blockDesktopOnly("ブロック貼り付け")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -3327,6 +3402,10 @@ function onUpdateIconRowItem(
   }
 
   function onBlockDragStart(event: DragEvent<HTMLElement>, blockId: string) {
+    if (blockDesktopOnly("ドラッグ並び替え")) {
+      event.preventDefault();
+      return;
+    }
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", blockId);
     setDraggingNewBlockType(null);
@@ -3344,6 +3423,14 @@ function onUpdateIconRowItem(
   }
 
   function onBlockDrop(event: DragEvent<HTMLElement>, targetBlockId: string) {
+    if (blockDesktopOnly("構成変更")) {
+      event.preventDefault();
+      event.stopPropagation();
+      setDragOverBlockId(null);
+      setDraggingBlockId(null);
+      setDraggingNewBlockType(null);
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     const newBlockType = draggingNewBlockType ?? toDroppedNewBlockType(event);
@@ -3416,6 +3503,10 @@ function onUpdateIconRowItem(
   }
 
   function onAddImageBlock(event: ChangeEvent<HTMLInputElement>) {
+    if (blockDesktopOnly("画像追加")) {
+      event.target.value = "";
+      return;
+    }
     const file = event.target.files?.[0];
     if (!file || !item) {
       return;
@@ -3583,6 +3674,9 @@ function onUpdateIconRowItem(
   }
 
   function onAddNodeMapNode() {
+    if (blockDesktopOnly("ノード編集")) {
+      return;
+    }
     if (!item || !isProActivated(subscription)) {
       return;
     }
@@ -3611,6 +3705,9 @@ function onUpdateIconRowItem(
   }
 
   function onDeleteNodeMapNode(nodeId: string) {
+    if (blockDesktopOnly("ノード編集")) {
+      return;
+    }
     if (!item || !isProActivated(subscription)) {
       return;
     }
@@ -3658,6 +3755,9 @@ function onUpdateIconRowItem(
   }
 
   function onSelectNodeTarget(nodeId: string, slug: string) {
+    if (blockDesktopOnly("ノード編集")) {
+      return;
+    }
     if (!item || !isProActivated(subscription)) {
       return;
     }
@@ -3798,6 +3898,9 @@ function onUpdateIconRowItem(
   }
 
   async function onCreateNodeProject(nodeId: string) {
+    if (blockDesktopOnly("ノードからの新規ページ作成")) {
+      return;
+    }
     if (!item || !isProActivated(subscription)) {
       return;
     }
@@ -3841,6 +3944,9 @@ function onUpdateIconRowItem(
   }
 
   function onStartDragNode(event: MouseEvent<HTMLElement>, nodeId: string) {
+    if (isMobileEditingLimited) {
+      return;
+    }
     if (!isProActivated(subscription)) {
       return;
     }
@@ -4127,6 +4233,9 @@ function onUpdateIconRowItem(
   }
 
   async function onApplyPublishBatchFixes() {
+    if (blockDesktopOnly("一括構成変更")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -4228,6 +4337,9 @@ function onUpdateIconRowItem(
   }
 
   async function onQuickAddContactGuide() {
+    if (blockDesktopOnly("テンプレ追加")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -4288,6 +4400,9 @@ function onUpdateIconRowItem(
   }
 
   async function onApplyHotelTemplatePack() {
+    if (blockDesktopOnly("テンプレパック適用")) {
+      return;
+    }
     if (!item) {
       return;
     }
@@ -4386,6 +4501,11 @@ function onUpdateIconRowItem(
   return (
     <AuthGate>
       <main className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_left,#86efac30_0%,#34d39924_35%,#ecfdf5_100%)] pl-4 pr-6 py-10 sm:pl-8 sm:pr-10 lg:pl-[92px] lg:pr-8">
+        {isMobileEditingLimited && (
+          <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            スマホは軽微修正専用です。テキスト更新・公開切替は可能ですが、ブロック追加/削除・並び替えなどの構成変更はPCで行ってください。
+          </div>
+        )}
         <aside className="rounded-3xl border border-emerald-200/70 bg-white p-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.7)] backdrop-blur lg:fixed lg:left-0 lg:top-0 lg:z-20 lg:flex lg:h-screen lg:w-[72px] lg:flex-col lg:rounded-none lg:rounded-r-3xl">
           <div className="flex flex-row items-center justify-center gap-2 lg:flex-col lg:gap-3">
             <SideNavButton label="トップページへ" onClick={() => router.push("/")}>
