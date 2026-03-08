@@ -26,10 +26,17 @@ export default function OpenGraphImage() {
       >
         <div style={{ fontSize: 34, letterSpacing: 2, opacity: 0.9 }}>INFOMII</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.15 }}>
-            ホテル案内ページを
-            <br />
-            最短3分で公開
+          <div
+            style={{
+              fontSize: 64,
+              fontWeight: 700,
+              lineHeight: 1.15,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <span>ホテル案内ページを</span>
+            <span>最短3分で公開</span>
           </div>
           <div style={{ fontSize: 30, opacity: 0.95 }}>
             1画面編集で即時更新 / QR運用対応
