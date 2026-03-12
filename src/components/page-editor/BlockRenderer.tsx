@@ -131,7 +131,7 @@ export function BlockRenderer({
               placeholder="リンクURL"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             />
-            <span className="inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm">
+            <span className="inline-flex rounded-xl bg-ds-primary px-4 py-2 text-sm font-medium text-white shadow-sm">
               {block.label}
             </span>
           </div>
@@ -140,7 +140,7 @@ export function BlockRenderer({
       return (
         <a
           href={block.href || "#"}
-          className="my-2 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-sm"
+          className="my-2 inline-flex w-full items-center justify-center rounded-xl bg-ds-primary px-4 py-3 text-sm font-medium text-white shadow-sm"
         >
           {block.label}
         </a>

@@ -112,7 +112,7 @@ export function GuestPageRenderer({
               const href = block.href && block.href !== "#" ? block.href : undefined;
               const label = block.label || "タップ";
               const Btn = (
-                <span className="flex w-full items-center justify-center rounded-2xl bg-stone-900 px-5 py-4 text-[1.0625rem] font-semibold text-white shadow-md active:scale-[0.98]">
+                <span className="flex w-full items-center justify-center rounded-2xl bg-ds-primary px-5 py-4 text-[1.0625rem] font-semibold text-white shadow-md active:scale-[0.98]">
                   {label}
                 </span>
               );

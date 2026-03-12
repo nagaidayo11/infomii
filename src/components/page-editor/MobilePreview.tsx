@@ -1,10 +1,11 @@
 "use client";
 
-import { MobileGuestFrame, GuestPageRenderer } from "@/components/guest-page";
+import { MobileQrPreview } from "@/components/guest-page";
 import { usePageEditorStore } from "./store";
 
 /**
  * Live guest preview: blocks from Zustand update in real time as you edit.
+ * Uses MobileQrPreview (iPhone frame + hotel guest UI).
  */
 export function MobilePreview() {
   const blocks = usePageEditorStore((s) => s.blocks);
@@ -20,9 +21,7 @@ export function MobilePreview() {
         </p>
       </div>
       <div className="flex flex-1 items-start justify-center overflow-hidden p-4">
-        <MobileGuestFrame>
-          <GuestPageRenderer blocks={blocks} brandLabel="インフォミー" />
-        </MobileGuestFrame>
+        <MobileQrPreview blocks={blocks} brandLabel="インフォミー" />
       </div>
     </aside>
   );

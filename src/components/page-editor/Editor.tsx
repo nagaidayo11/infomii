@@ -17,7 +17,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePageEditorStore } from "./store";
 import { BlockLibrary } from "./BlockLibrary";
 import { BlockRenderer } from "./BlockRenderer";
@@ -124,6 +124,7 @@ export function Editor() {
     null
   );
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -194,6 +195,31 @@ export function Editor() {
               >
                 テンプレート
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                aria-hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const text = String(reader.result ?? "");
+                    usePageEditorStore.getState().loadJSON(text);
+                  };
+                  reader.readAsText(file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-lg border border-ds-border bg-ds-card px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                読み込み
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -208,7 +234,7 @@ export function Editor() {
                 }}
                 className="rounded-lg border border-ds-border bg-ds-card px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
-                保存
+                保存（JSON）
               </button>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
                 {blocks.length} 個のブロック
