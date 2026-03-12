@@ -53,6 +53,11 @@ import {
   updateInformation,
 } from "@/lib/storage";
 import type { Information, InformationBlock } from "@/types/information";
+import {
+  DashboardHeaderBar,
+  DashboardPageList,
+  DashboardQrAnalytics,
+} from "@/components/dashboard";
 import { INDUSTRY_PRESET_LABELS, type IndustryPreset, type StarterTemplate, starterTemplates } from "@/lib/templates";
 
 function formatDate(value: string): string {
@@ -2518,7 +2523,7 @@ export default function DashboardPage() {
                   onClick={() => void onCreateBlank()}
                   className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
                 >
-                  + 新規インフォメーションを作成
+                  + ページ作成
                 </button>
                 <button
                   type="button"
@@ -2544,6 +2549,54 @@ export default function DashboardPage() {
               <StatCard label="合計ページ" value={`${items.length}`} note="公開中 + 下書き" />
             </div>
           </header>
+          )}
+
+          {/* Stripe-style overview: page table + QR analytics */}
+          {activeTab === "dashboard" && !dashboardCompactMode && (
+            <section className="space-y-4">
+              <DashboardHeaderBar
+                hotelName={hotelName}
+                onEditHotelName={() => setEditingHotelName(true)}
+                actions={
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void onCreateBlank()}
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                    >
+                      ページ作成
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("project")}
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      プロジェクト一覧
+                    </button>
+                  </>
+                }
+              />
+              <DashboardQrAnalytics
+                metrics={viewMetrics}
+                loading={loadingMetrics}
+              />
+              <DashboardPageList
+                loading={loading}
+                rows={items.map((item) => {
+                  const stat = viewMetrics?.pageStats?.find(
+                    (p) => p.informationId === item.id
+                  );
+                  return {
+                    id: item.id,
+                    title: item.title,
+                    slug: item.slug,
+                    views7d: stat?.views ?? 0,
+                    qrViews7d: stat?.qrViews ?? 0,
+                    status: item.status,
+                  };
+                })}
+              />
+            </section>
           )}
 
           {pendingDeleteBatches.length > 0 && (
@@ -3289,7 +3342,7 @@ export default function DashboardPage() {
                     onClick={() => void onCreateBlank()}
                     className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
                   >
-                    + 新規インフォメーションを作成
+                    + ページ作成
                   </button>
                 </div>
               </article>

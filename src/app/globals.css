@@ -1,10 +1,35 @@
 @import "tailwindcss";
 
+/* ─── Design system (Infomii SaaS) ───
+   Primary #2563EB | Background #F9FAFB | Card #FFFFFF | Border #E5E7EB
+   Font: Inter | UI: rounded-xl, soft shadows, minimal SaaS
+*/
+@theme {
+  --color-ds-primary: #2563eb;
+  --color-ds-bg: #f9fafb;
+  --color-ds-card: #ffffff;
+  --color-ds-border: #e5e7eb;
+  /* rounded-xl 相当（12px）— カード・ボタン・入力の基準 */
+  --radius-ds: 0.75rem;
+  --radius-xl: 0.75rem;
+  /* ソフトシャドウ（ミニマルSaaS） */
+  --shadow-ds-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-ds-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-ds-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-ds-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
 :root {
-  --lux-accent: #10b981;
-  --lux-accent-soft: #bff4df;
+  /* Design system aliases */
+  --ds-primary: #2563eb;
+  --ds-bg: #f9fafb;
+  --ds-card: #ffffff;
+  --ds-border: #e5e7eb;
+  /* Legacy lux (gradual migration) */
+  --lux-accent: #2563eb;
+  --lux-accent-soft: #dbeafe;
   --lux-ink: #0f172a;
-  --lux-line: rgba(16, 153, 110, 0.34);
+  --lux-line: rgba(37, 99, 235, 0.25);
 }
 
 * {
@@ -14,13 +39,17 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(1100px 620px at 0% -10%, rgba(16, 185, 129, 0.22), transparent 58%),
-    radial-gradient(920px 540px at 100% -18%, rgba(16, 185, 129, 0.14), transparent 60%),
-    linear-gradient(180deg, #e6faf1 0%, #dff6ee 30%, #dcf2ed 100%);
-  color: #0f172a;
-  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: var(--ds-bg);
+  color: #111827;
+  font-family: var(--font-inter), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
 }
+
+/* App shell: minimal SaaS background (no gradient) */
+.ds-app {
+  background-color: var(--ds-bg);
+}
+
+/* Optional: pages that still want lux gradient wrap content in .lux-main */
 
 .lux-main::before {
   content: "";
@@ -54,12 +83,49 @@ a {
   z-index: -1;
 }
 
+/* Surface: card + rounded-xl + soft shadow（ミニマルSaaS） */
+.ds-card {
+  background: var(--ds-card);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--radius-ds);
+  box-shadow: var(--shadow-ds-sm);
+}
+
+.ds-card-elevated {
+  background: var(--ds-card);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--radius-ds);
+  box-shadow: var(--shadow-ds-md);
+}
+
+.ds-card-hover {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+@media (hover: hover) {
+  .ds-card-hover:hover {
+    box-shadow: var(--shadow-ds-lg);
+    border-color: #d1d5db;
+  }
+}
+
+.ds-btn-primary {
+  background: var(--ds-primary);
+  color: #fff;
+  border-radius: var(--radius-ds);
+  box-shadow: var(--shadow-ds-xs);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+.ds-btn-primary:hover {
+  background: #1d4ed8;
+}
+
 .lux-card {
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.9));
-  box-shadow:
-    0 22px 48px -34px rgba(15, 23, 42, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--ds-border);
+  background: var(--ds-card);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-ds-md);
 }
 
 .lux-section-card {
@@ -71,29 +137,30 @@ a {
 
 @media (hover: hover) {
   .lux-section-card:hover {
-    transform: translateY(-4px);
-    box-shadow:
-      0 18px 34px -22px rgba(15, 23, 42, 0.42),
-      0 6px 16px -12px rgba(16, 185, 129, 0.35);
-    border-color: rgba(16, 185, 129, 0.35);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-ds-lg);
+    border-color: rgba(37, 99, 235, 0.2);
   }
 }
 
 .lux-kicker {
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #047857;
+  color: #2563eb;
+  font-size: 0.6875rem;
+  font-weight: 600;
 }
 
 .lux-btn-primary {
-  border: 1px solid rgba(16, 185, 129, 0.62);
-  background: linear-gradient(135deg, #10b981, #0f9f74 70%, #0c8762);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  background: var(--ds-primary);
   color: #fff;
-  box-shadow: 0 12px 24px -14px rgba(16, 185, 129, 0.6);
+  border-radius: var(--radius-ds);
+  box-shadow: var(--shadow-ds-xs);
 }
 
 .lux-btn-primary:hover {
-  background: linear-gradient(135deg, #0ea877, #0c956b 70%, #0a7f5c);
+  background: #1d4ed8;
 }
 
 .lux-main {
@@ -122,8 +189,8 @@ a {
 .lux-main select:focus,
 .lux-main textarea:focus {
   outline: none;
-  border-color: rgba(52, 202, 160, 0.72);
-  box-shadow: 0 0 0 3px rgba(52, 202, 160, 0.16);
+  border-color: var(--ds-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .lux-main .rounded-2xl,

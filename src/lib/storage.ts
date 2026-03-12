@@ -528,6 +528,13 @@ export type HotelViewMetrics = {
     views: number;
     qrViews: number;
   }>;
+  /** All pages with 7d view counts (for dashboard table). */
+  pageStats: Array<{
+    informationId: string;
+    title: string;
+    views: number;
+    qrViews: number;
+  }>;
 };
 
 export type HotelAuditLog = {
@@ -1578,6 +1585,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     totalViewsToday: 0,
     qrViewsToday: 0,
     topPages: [],
+    pageStats: [],
   };
 
   const supabase = getBrowserSupabaseClient();
@@ -1652,15 +1660,19 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     }
   }
 
-  const topPages = Array.from(aggregate.entries())
-    .map(([informationId, values]) => ({
-      informationId,
-      title: pageNameMap.get(informationId) ?? "名称未設定",
-      views: values.views,
-      qrViews: values.qrViews,
-    }))
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 5);
+  const allPageStats = (infos ?? [])
+    .map((row) => {
+      const agg = aggregate.get(row.id) ?? { views: 0, qrViews: 0 };
+      return {
+        informationId: row.id,
+        title: row.title ?? "名称未設定",
+        views: agg.views,
+        qrViews: agg.qrViews,
+      };
+    })
+    .sort((a, b) => b.views - a.views);
+
+  const topPages = allPageStats.slice(0, 5);
 
   return {
     totalViews7d,
@@ -1668,7 +1680,72 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     totalViewsToday,
     qrViewsToday,
     topPages,
+    pageStats: allPageStats,
   };
+}
+
+export type QrScanDayBucket = {
+  /** ISO date yyyy-mm-dd */
+  date: string;
+  count: number;
+};
+
+/**
+ * QR source only, last 7 days, one bucket per day (JST-aligned by UTC date from created_at).
+ */
+export async function getQrScansLast7Days(): Promise<QrScanDayBucket[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return buildEmptyLast7Days();
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return buildEmptyLast7Days();
+  }
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(now.getDate() - 7);
+
+  const { data, error } = await supabase
+    .from("information_views")
+    .select("created_at")
+    .eq("hotel_id", hotelId)
+    .eq("source", "qr")
+    .gte("created_at", sevenDaysAgo.toISOString());
+
+  if (error) {
+    throw toError(error, "QRスキャン推移の取得に失敗しました");
+  }
+
+  const buckets = new Map<string, number>();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    buckets.set(key, 0);
+  }
+  for (const row of data ?? []) {
+    const key = (row.created_at as string).slice(0, 10);
+    if (buckets.has(key)) {
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+  }
+  return Array.from(buckets.entries()).map(([date, count]) => ({ date, count }));
+}
+
+function buildEmptyLast7Days(): QrScanDayBucket[] {
+  const out: QrScanDayBucket[] = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    out.push({ date: d.toISOString().slice(0, 10), count: 0 });
+  }
+  return out;
+}
+
+export function qrCodeImageUrl(dataUrl: string, size = 280): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(dataUrl)}`;
 }
 
 export async function listCurrentHotelAuditLogs(limit = 20): Promise<HotelAuditLog[]> {

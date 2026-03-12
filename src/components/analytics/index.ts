@@ -1,0 +1,1 @@
+export { SimpleAnalyticsDashboard } from "./SimpleAnalyticsDashboard";

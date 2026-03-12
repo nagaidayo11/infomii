@@ -18,13 +18,13 @@ export default async function PrintA4QrPage({ searchParams }: PrintA4QrPageProps
   return (
     <main className="min-h-screen bg-white p-6 text-slate-900 print:p-0">
       <article className="mx-auto w-full max-w-[794px] rounded-lg border border-slate-200 p-8 print:border-0 print:p-10">
-        <h1 className="text-3xl font-bold tracking-wide">INFOMII</h1>
+        <h1 className="text-3xl font-bold tracking-wide">インフォミー</h1>
         <p className="mt-1 text-lg font-semibold">{title}</p>
         <p className="mt-4 text-sm text-slate-600">下のQRから最新の案内ページをご確認ください。</p>
         <div className="mt-6 grid items-start gap-6 sm:grid-cols-[220px_1fr]">
           <div className="rounded-xl border border-slate-200 bg-white p-3">
             <Image
-              alt="QR"
+              alt="QRコード"
               width={220}
               height={220}
               src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrValue)}`}
