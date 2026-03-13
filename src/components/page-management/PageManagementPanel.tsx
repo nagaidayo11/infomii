@@ -11,6 +11,8 @@ import {
   getDashboardBootstrapData,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
+import { TemplateGallery } from "@/components/template-gallery-ui";
+import { AIPageGenerator } from "@/components/ai-page-generator";
 
 /**
  * ページ管理 — ゲスト向け案内ページの一覧・新規・削除
@@ -102,6 +104,17 @@ export function PageManagementPanel() {
               {error}
             </div>
           )}
+
+          <div className="mb-10">
+            <AIPageGenerator onCreated={() => void load()} />
+          </div>
+          <div className="mb-10">
+            <TemplateGallery
+              title="テンプレートギャラリー"
+              description="テンプレートを選ぶと、館内案内・WiFi・朝食・チェックアウト・アクセスの5ページが自動作成されます。"
+              onCreated={() => void load()}
+            />
+          </div>
 
           {/* カード内テーブル — 一覧しやすい1枚カード */}
           <div className="overflow-hidden rounded-xl border border-ds-border bg-ds-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
