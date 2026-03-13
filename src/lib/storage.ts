@@ -80,9 +80,9 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           icon: typeof block.icon === "string" ? block.icon : undefined,
           iconSize:
             block.iconSize === "sm" ||
-            block.iconSize === "md" ||
-            block.iconSize === "lg" ||
-            block.iconSize === "xl"
+              block.iconSize === "md" ||
+              block.iconSize === "lg" ||
+              block.iconSize === "xl"
               ? block.iconSize
               : undefined,
           label: typeof block.label === "string" ? block.label : undefined,
@@ -96,14 +96,14 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           textColor: typeof block.textColor === "string" ? block.textColor : undefined,
           textWeight:
             block.textWeight === "normal" ||
-            block.textWeight === "medium" ||
-            block.textWeight === "semibold"
+              block.textWeight === "medium" ||
+              block.textWeight === "semibold"
               ? block.textWeight
               : undefined,
           textAlign:
             block.textAlign === "left" ||
-            block.textAlign === "center" ||
-            block.textAlign === "right"
+              block.textAlign === "center" ||
+              block.textAlign === "right"
               ? block.textAlign
               : undefined,
           spacing:
@@ -112,17 +112,17 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
               : undefined,
           dividerThickness:
             block.dividerThickness === "thin" ||
-            block.dividerThickness === "medium" ||
-            block.dividerThickness === "thick"
+              block.dividerThickness === "medium" ||
+              block.dividerThickness === "thick"
               ? block.dividerThickness
               : undefined,
           dividerColor: typeof block.dividerColor === "string" ? block.dividerColor : undefined,
           cardRadius:
             block.cardRadius === "sm" ||
-            block.cardRadius === "md" ||
-            block.cardRadius === "lg" ||
-            block.cardRadius === "xl" ||
-            block.cardRadius === "full"
+              block.cardRadius === "md" ||
+              block.cardRadius === "lg" ||
+              block.cardRadius === "xl" ||
+              block.cardRadius === "full"
               ? block.cardRadius
               : undefined,
           sectionTitle: typeof block.sectionTitle === "string" ? block.sectionTitle : undefined,
@@ -139,42 +139,42 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
             typeof block.iconRowBackgroundColor === "string" ? block.iconRowBackgroundColor : undefined,
           iconItems: Array.isArray(block.iconItems)
             ? block.iconItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as {
-                    id?: unknown;
-                    icon?: unknown;
-                    label?: unknown;
-                    nodeId?: unknown;
-                    link?: unknown;
-                    backgroundColor?: unknown;
-                  };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `icon-item-${itemIndex + 1}`,
-                    icon: typeof item.icon === "string" ? item.icon : "⭐",
-                    label: typeof item.label === "string" ? item.label : "",
-                    nodeId: typeof item.nodeId === "string" ? item.nodeId : "",
-                    link: typeof item.link === "string" ? item.link : "",
-                    backgroundColor:
-                      typeof item.backgroundColor === "string" ? item.backgroundColor : "#ffffff",
-                  };
-                })
-                .filter(
-                  (entry): entry is {
-                    id: string;
-                    icon: string;
-                    label: string;
-                    nodeId: string;
-                    link: string;
-                    backgroundColor: string;
-                  } =>
-                    Boolean(entry),
-                )
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as {
+                  id?: unknown;
+                  icon?: unknown;
+                  label?: unknown;
+                  nodeId?: unknown;
+                  link?: unknown;
+                  backgroundColor?: unknown;
+                };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `icon-item-${itemIndex + 1}`,
+                  icon: typeof item.icon === "string" ? item.icon : "⭐",
+                  label: typeof item.label === "string" ? item.label : "",
+                  nodeId: typeof item.nodeId === "string" ? item.nodeId : "",
+                  link: typeof item.link === "string" ? item.link : "",
+                  backgroundColor:
+                    typeof item.backgroundColor === "string" ? item.backgroundColor : "#ffffff",
+                };
+              })
+              .filter(
+                (entry): entry is {
+                  id: string;
+                  icon: string;
+                  label: string;
+                  nodeId: string;
+                  link: string;
+                  backgroundColor: string;
+                } =>
+                  Boolean(entry),
+              )
             : undefined,
           ctaLabel: typeof block.ctaLabel === "string" ? block.ctaLabel : undefined,
           ctaUrl: typeof block.ctaUrl === "string" ? block.ctaUrl : undefined,
@@ -183,99 +183,99 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
           badgeTextColor: typeof block.badgeTextColor === "string" ? block.badgeTextColor : undefined,
           hoursItems: Array.isArray(block.hoursItems)
             ? block.hoursItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as { id?: unknown; label?: unknown; value?: unknown };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `hours-item-${itemIndex + 1}`,
-                    label: typeof item.label === "string" ? item.label : "",
-                    value: typeof item.value === "string" ? item.value : "",
-                  };
-                })
-                .filter(
-                  (entry): entry is { id: string; label: string; value: string } =>
-                    Boolean(entry),
-                )
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as { id?: unknown; label?: unknown; value?: unknown };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `hours-item-${itemIndex + 1}`,
+                  label: typeof item.label === "string" ? item.label : "",
+                  value: typeof item.value === "string" ? item.value : "",
+                };
+              })
+              .filter(
+                (entry): entry is { id: string; label: string; value: string } =>
+                  Boolean(entry),
+              )
             : undefined,
           pricingItems: Array.isArray(block.pricingItems)
             ? block.pricingItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as { id?: unknown; label?: unknown; value?: unknown };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `pricing-item-${itemIndex + 1}`,
-                    label: typeof item.label === "string" ? item.label : "",
-                    value: typeof item.value === "string" ? item.value : "",
-                  };
-                })
-                .filter(
-                  (entry): entry is { id: string; label: string; value: string } =>
-                    Boolean(entry),
-                )
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as { id?: unknown; label?: unknown; value?: unknown };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `pricing-item-${itemIndex + 1}`,
+                  label: typeof item.label === "string" ? item.label : "",
+                  value: typeof item.value === "string" ? item.value : "",
+                };
+              })
+              .filter(
+                (entry): entry is { id: string; label: string; value: string } =>
+                  Boolean(entry),
+              )
             : undefined,
           quoteAuthor: typeof block.quoteAuthor === "string" ? block.quoteAuthor : undefined,
           checklistItems: Array.isArray(block.checklistItems)
             ? block.checklistItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as { id?: unknown; text?: unknown };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `check-item-${itemIndex + 1}`,
-                    text: typeof item.text === "string" ? item.text : "",
-                  };
-                })
-                .filter((entry): entry is { id: string; text: string } => Boolean(entry))
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as { id?: unknown; text?: unknown };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `check-item-${itemIndex + 1}`,
+                  text: typeof item.text === "string" ? item.text : "",
+                };
+              })
+              .filter((entry): entry is { id: string; text: string } => Boolean(entry))
             : undefined,
           galleryItems: Array.isArray(block.galleryItems)
             ? block.galleryItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as { id?: unknown; url?: unknown; caption?: unknown };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `gallery-item-${itemIndex + 1}`,
-                    url: typeof item.url === "string" ? item.url : "",
-                    caption: typeof item.caption === "string" ? item.caption : "",
-                  };
-                })
-                .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as { id?: unknown; url?: unknown; caption?: unknown };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `gallery-item-${itemIndex + 1}`,
+                  url: typeof item.url === "string" ? item.url : "",
+                  caption: typeof item.caption === "string" ? item.caption : "",
+                };
+              })
+              .filter((entry): entry is { id: string; url: string; caption: string } => Boolean(entry))
             : undefined,
           columnGroupItems: Array.isArray(block.columnGroupItems)
             ? block.columnGroupItems
-                .map((entry, itemIndex) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const item = entry as { id?: unknown; title?: unknown; body?: unknown };
-                  return {
-                    id:
-                      typeof item.id === "string" && item.id
-                        ? item.id
-                        : `column-group-item-${itemIndex + 1}`,
-                    title: typeof item.title === "string" ? item.title : "",
-                    body: typeof item.body === "string" ? item.body : "",
-                  };
-                })
-                .filter((entry): entry is { id: string; title: string; body: string } => Boolean(entry))
+              .map((entry, itemIndex) => {
+                if (!entry || typeof entry !== "object") {
+                  return null;
+                }
+                const item = entry as { id?: unknown; title?: unknown; body?: unknown };
+                return {
+                  id:
+                    typeof item.id === "string" && item.id
+                      ? item.id
+                      : `column-group-item-${itemIndex + 1}`,
+                  title: typeof item.title === "string" ? item.title : "",
+                  body: typeof item.body === "string" ? item.body : "",
+                };
+              })
+              .filter((entry): entry is { id: string; title: string; body: string } => Boolean(entry))
             : undefined,
         } as InformationBlock;
       })
@@ -309,80 +309,80 @@ function normalizeTheme(value: unknown): InformationTheme {
   const nodeMap =
     nodeMapRaw && typeof nodeMapRaw === "object"
       ? (() => {
-          const map = nodeMapRaw as {
-            enabled?: unknown;
-            nodes?: unknown;
-            edges?: unknown;
-          };
-          const nodes = Array.isArray(map.nodes)
-            ? map.nodes
-                .map((entry, index) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const node = entry as {
-                    id?: unknown;
-                    title?: unknown;
-                    icon?: unknown;
-                    x?: unknown;
-                    y?: unknown;
-                    targetSlug?: unknown;
-                  };
-                  const x = typeof node.x === "number" ? node.x : 50;
-                  const y = typeof node.y === "number" ? node.y : 50;
-                  return {
-                    id:
-                      typeof node.id === "string" && node.id
-                        ? node.id
-                        : `node-${index + 1}`,
-                    title: typeof node.title === "string" ? node.title : "ページ",
-                    icon: typeof node.icon === "string" ? node.icon : "📄",
-                    x: Math.min(98, Math.max(2, x)),
-                    y: Math.min(98, Math.max(2, y)),
-                    targetSlug:
-                      typeof node.targetSlug === "string" ? node.targetSlug : "",
-                  };
-                })
-                .filter(
-                  (
-                    entry,
-                  ): entry is {
-                    id: string;
-                    title: string;
-                    icon: string;
-                    x: number;
-                    y: number;
-                    targetSlug: string;
-                  } => Boolean(entry),
-                )
-            : [];
-          const edges = Array.isArray(map.edges)
-            ? map.edges
-                .map((entry, index) => {
-                  if (!entry || typeof entry !== "object") {
-                    return null;
-                  }
-                  const edge = entry as { id?: unknown; from?: unknown; to?: unknown };
-                  if (typeof edge.from !== "string" || typeof edge.to !== "string") {
-                    return null;
-                  }
-                  return {
-                    id:
-                      typeof edge.id === "string" && edge.id
-                        ? edge.id
-                        : `edge-${index + 1}`,
-                    from: edge.from,
-                    to: edge.to,
-                  };
-                })
-                .filter((entry): entry is { id: string; from: string; to: string } => Boolean(entry))
-            : [];
-          return {
-            enabled: map.enabled === true,
-            nodes,
-            edges,
-          };
-        })()
+        const map = nodeMapRaw as {
+          enabled?: unknown;
+          nodes?: unknown;
+          edges?: unknown;
+        };
+        const nodes = Array.isArray(map.nodes)
+          ? map.nodes
+            .map((entry, index) => {
+              if (!entry || typeof entry !== "object") {
+                return null;
+              }
+              const node = entry as {
+                id?: unknown;
+                title?: unknown;
+                icon?: unknown;
+                x?: unknown;
+                y?: unknown;
+                targetSlug?: unknown;
+              };
+              const x = typeof node.x === "number" ? node.x : 50;
+              const y = typeof node.y === "number" ? node.y : 50;
+              return {
+                id:
+                  typeof node.id === "string" && node.id
+                    ? node.id
+                    : `node-${index + 1}`,
+                title: typeof node.title === "string" ? node.title : "ページ",
+                icon: typeof node.icon === "string" ? node.icon : "📄",
+                x: Math.min(98, Math.max(2, x)),
+                y: Math.min(98, Math.max(2, y)),
+                targetSlug:
+                  typeof node.targetSlug === "string" ? node.targetSlug : "",
+              };
+            })
+            .filter(
+              (
+                entry,
+              ): entry is {
+                id: string;
+                title: string;
+                icon: string;
+                x: number;
+                y: number;
+                targetSlug: string;
+              } => Boolean(entry),
+            )
+          : [];
+        const edges = Array.isArray(map.edges)
+          ? map.edges
+            .map((entry, index) => {
+              if (!entry || typeof entry !== "object") {
+                return null;
+              }
+              const edge = entry as { id?: unknown; from?: unknown; to?: unknown };
+              if (typeof edge.from !== "string" || typeof edge.to !== "string") {
+                return null;
+              }
+              return {
+                id:
+                  typeof edge.id === "string" && edge.id
+                    ? edge.id
+                    : `edge-${index + 1}`,
+                from: edge.from,
+                to: edge.to,
+              };
+            })
+            .filter((entry): entry is { id: string; from: string; to: string } => Boolean(entry))
+          : [];
+        return {
+          enabled: map.enabled === true,
+          nodes,
+          edges,
+        };
+      })()
       : undefined;
 
   return {
@@ -397,8 +397,8 @@ function normalizeTheme(value: unknown): InformationTheme {
     titleColor: typeof theme.titleColor === "string" ? theme.titleColor : undefined,
     titleWeight:
       theme.titleWeight === "normal" ||
-      theme.titleWeight === "medium" ||
-      theme.titleWeight === "semibold"
+        theme.titleWeight === "medium" ||
+        theme.titleWeight === "semibold"
         ? theme.titleWeight
         : undefined,
     titleAlign:
@@ -771,17 +771,17 @@ function bootstrapLocalData(): Information[] {
   return starterTemplates.map((template, i) => {
     const blocks = resolveTemplateBlocks(template);
     return {
-    id: `local-${i + 1}`,
-    title: template.title,
-    body: blocksToBody(blocks),
-    images: blocksToImages(blocks),
-    contentBlocks: blocks,
-    theme: {},
-    status: i === 0 ? "published" : "draft",
-    publishAt: null,
-    unpublishAt: null,
-    slug: createSlug(template.title),
-    updatedAt: now,
+      id: `local-${i + 1}`,
+      title: template.title,
+      body: blocksToBody(blocks),
+      images: blocksToImages(blocks),
+      contentBlocks: blocks,
+      theme: {},
+      status: i === 0 ? "published" : "draft",
+      publishAt: null,
+      unpublishAt: null,
+      slug: createSlug(template.title),
+      updatedAt: now,
     };
   });
 }
@@ -1100,14 +1100,14 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
 
   const subscription = subRes.data
     ? {
-        id: subRes.data.id,
-        plan: subRes.data.plan,
-        status: subRes.data.status,
-        maxPublishedPages: subRes.data.max_published_pages,
-        currentPeriodEnd: subRes.data.current_period_end,
-        hasStripeCustomer: Boolean(subRes.data.stripe_customer_id),
-        updatedAt: subRes.data.updated_at,
-      }
+      id: subRes.data.id,
+      plan: subRes.data.plan,
+      status: subRes.data.status,
+      maxPublishedPages: subRes.data.max_published_pages,
+      currentPeriodEnd: subRes.data.current_period_end,
+      hasStripeCustomer: Boolean(subRes.data.stripe_customer_id),
+      updatedAt: subRes.data.updated_at,
+    }
     : null;
 
   return {
@@ -1434,10 +1434,10 @@ export async function updateInformation(
   if (supabase) {
     let current:
       | {
-          status: InformationStatus;
-          hotel_id: string | null;
-          title: string;
-        }
+        status: InformationStatus;
+        hotel_id: string | null;
+        title: string;
+      }
       | null = null;
 
     if (patch.status !== undefined) {
