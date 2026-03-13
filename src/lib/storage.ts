@@ -7,6 +7,12 @@ import type {
 import { createSlug } from "@/lib/slug";
 import { starterTemplates, type StarterTemplate } from "@/lib/templates";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
+import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
+import type {
+  MultiPageTemplateId,
+  MultiPageTemplate,
+} from "@/lib/multi-page-templates/types";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
 
@@ -1372,6 +1378,39 @@ export async function createBlankInformation(
   items.unshift(next);
   setLocalData(items);
   return next.id;
+}
+
+/**
+ * Template generation: creates multiple pages from a template object.
+ * Each template page becomes one Information with predefined blocks.
+ * Use this with built-in templates (by id) or with templates loaded from JSON.
+ */
+export async function createPagesFromTemplate(
+  template: MultiPageTemplate
+): Promise<string[]> {
+  const ids: string[] = [];
+  for (const page of template.pages) {
+    const id = await createBlankInformation(page.title);
+    const contentBlocks = templatePageToInformationBlocks(page);
+    await updateInformation(id, {
+      contentBlocks,
+      body: blocksToBody(contentBlocks),
+      images: blocksToImages(contentBlocks),
+    });
+    ids.push(id);
+  }
+  return ids;
+}
+
+/** Creates pages from a built-in template by id (e.g. "hotel-basic"). */
+export async function createPagesFromMultiPageTemplate(
+  templateId: MultiPageTemplateId
+): Promise<string[]> {
+  const template = getMultiPageTemplate(templateId);
+  if (!template) {
+    throw new Error("テンプレートが見つかりません");
+  }
+  return createPagesFromTemplate(template);
 }
 
 export async function updateInformation(

@@ -1,0 +1,53 @@
+{
+  "id": "hotel-basic",
+  "name": "Hotel Basic",
+  "description": "館内総合案内・WiFi・朝食・チェックアウト・周辺観光の5ページを自動作成します。",
+  "previewImage": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
+  "pages": [
+    {
+      "title": "館内総合案内",
+      "blocks": [
+        { "type": "title", "content": "館内総合案内" },
+        { "type": "text", "content": "ご滞在に役立つ情報をまとめました。各項目からご確認ください。" },
+        { "type": "image", "src": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80", "alt": "館内" },
+        { "type": "button", "label": "館内マップ", "href": "#" }
+      ]
+    },
+    {
+      "title": "WiFi",
+      "blocks": [
+        { "type": "title", "content": "WiFi" },
+        { "type": "icon", "icon": "📶", "label": "SSID・パスワードはこちらに記載してください" },
+        { "type": "text", "content": "客室カードや備品に記載の情報を転記するか、フロント案内に差し替えてください。" },
+        { "type": "button", "label": "WiFi情報", "href": "#wifi" }
+      ]
+    },
+    {
+      "title": "朝食",
+      "blocks": [
+        { "type": "title", "content": "朝食" },
+        { "type": "icon", "icon": "🍽️", "label": "朝食の時間・場所・形式を記載" },
+        { "type": "text", "content": "ビュッフェ・和食・簡易軽食など、提供内容に合わせて編集してください。" },
+        { "type": "button", "label": "朝食のご案内", "href": "#breakfast" }
+      ]
+    },
+    {
+      "title": "チェックアウト",
+      "blocks": [
+        { "type": "title", "content": "チェックアウト" },
+        { "type": "icon", "icon": "🚪", "label": "出発時刻・鍵・ゴミ出しなど" },
+        { "type": "text", "content": "チェックアウト時刻・返却物・追加料金の有無を記載してください。" },
+        { "type": "button", "label": "チェックアウトのご案内", "href": "#checkout" }
+      ]
+    },
+    {
+      "title": "周辺観光",
+      "blocks": [
+        { "type": "title", "content": "周辺観光" },
+        { "type": "icon", "icon": "📍", "label": "住所・交通・観光スポット" },
+        { "type": "text", "content": "近隣の観光スポット・コンビニ・駅・アクセス方法などを記載してください。" },
+        { "type": "button", "label": "周辺マップ", "href": "#map" }
+      ]
+    }
+  ]
+}
