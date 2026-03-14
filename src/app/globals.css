@@ -49,6 +49,12 @@ body {
   background-color: var(--ds-bg);
 }
 
+/* Unified SaaS LP–aligned app shell (use for /dashboard, /editor, etc.) */
+.saas-app-shell {
+  background-color: #fafafa;
+  min-height: 100vh;
+}
+
 /* Optional: pages that still want lux gradient wrap content in .lux-main */
 
 .lux-main::before {

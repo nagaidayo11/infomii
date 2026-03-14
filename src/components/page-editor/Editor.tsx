@@ -168,7 +168,7 @@ export function Editor() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex h-[100vh] min-h-[640px] w-full overflow-hidden bg-ds-bg">
+      <div className="flex h-[100vh] min-h-[640px] w-full overflow-hidden bg-[#fafafa]">
         <BlockLibrary />
 
         <main

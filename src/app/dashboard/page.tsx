@@ -2457,11 +2457,11 @@ export default function DashboardPage() {
   return (
     <AuthGate>
       <main
-        className="lux-main ux-route-fade min-h-screen bg-[radial-gradient(circle_at_top_right,#86efac33_0%,#34d39926_24%,#ecfdf5_58%,#dcfce7_100%)] px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6"
+        className="saas-app-shell ux-route-fade px-2 pt-3 pb-6 sm:px-3 sm:pb-7 lg:pl-[82px] lg:pr-6"
       >
-        <div className="mx-auto w-full max-w-[1820px] space-y-2">
+        <div className="mx-auto w-full max-w-6xl space-y-2 lg:max-w-[1820px]">
           {activeTab === "dashboard" && (
-          <header className="lux-card lux-section-card rounded-3xl p-4 backdrop-blur">
+          <header className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="lux-kicker text-xs">店舗管理</p>
@@ -2521,14 +2521,14 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => void onCreateBlank()}
-                  className="lux-btn-primary rounded-xl px-4 py-2 text-sm font-medium"
+                  className="rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
                 >
                   + ページ作成
                 </button>
                 <button
                   type="button"
                   onClick={onSignOut}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50"
+                  className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
                 >
                   ログアウト
                 </button>

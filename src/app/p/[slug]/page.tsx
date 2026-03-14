@@ -875,16 +875,16 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   return (
     <main
-      className={`lux-main text-slate-900 ${
+      className={`text-slate-900 ${
         isEmbed
           ? "bg-transparent p-0"
-          : "min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#fde68a1a_0%,#dbeafe38_32%,#f8fafc_100%)] px-3 py-8 sm:px-8 sm:py-12"
+          : "min-h-screen overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-8 sm:py-12"
       }`}
     >
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
       <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-[420px]"}`}>
         <article
-          className="lux-card lux-section-card overflow-hidden rounded-3xl"
+          className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
           style={{
             backgroundColor: theme.backgroundColor || "#ffffff",
             color: theme.textColor || "#0f172a",
@@ -1404,7 +1404,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             </div>
           </div>
 
-          <footer className="border-t border-emerald-100 bg-[linear-gradient(180deg,#fffdf7,#f8fafc)] px-4 py-4 sm:px-6">
+          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6">
             <p className="text-xs leading-6 text-slate-600">
               ご不明な点はスタッフまでお声がけください。
             </p>

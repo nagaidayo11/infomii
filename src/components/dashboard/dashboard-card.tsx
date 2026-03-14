@@ -14,7 +14,7 @@ const paddingClass = {
 };
 
 /**
- * Stripe-like surface: white, hairline border, soft shadow, rounded.
+ * SaaS LP–aligned card: rounded-xl, light border, soft shadow.
  */
 export function DashboardCard({
   children,
@@ -24,7 +24,7 @@ export function DashboardCard({
   return (
     <div
       className={
-        "rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)] " +
+        "rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] " +
         paddingClass[padding] +
         " " +
         className
