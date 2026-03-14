@@ -20,7 +20,7 @@ export function PublicFooterBackButton({ fallbackHref = "/", label = "戻る" }:
         }
         router.push(fallbackHref);
       }}
-      className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+      className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
     >
       <span aria-hidden>←</span>
       <span>{label}</span>

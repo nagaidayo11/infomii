@@ -767,7 +767,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return (
-      <main className={`lux-main mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
+      <main className={`mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">公開ページ</h1>
         <p className="text-sm text-slate-600">
           Supabase環境変数が未設定のため、公開ページを取得できません。
@@ -802,7 +802,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       // service role未設定時は従来どおり not found 扱い
     }
     return (
-      <main className={`lux-main mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden px-3 py-8 sm:px-6 sm:py-12"}`}>
+      <main className={`mx-auto w-full ${isEmbed ? "max-w-none p-0" : "max-w-[420px] min-h-screen overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-6 sm:py-12"}`}>
         <h1 className="mb-4 text-xl font-semibold">ご案内</h1>
         <p className="text-sm text-slate-600">
           {isDraft ? "このページは未公開です。公開後にご利用いただけます。" : "ページが見つかりませんでした。"}

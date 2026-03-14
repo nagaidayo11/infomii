@@ -175,7 +175,7 @@ export function Editor() {
           className="flex min-w-0 flex-1 flex-col bg-ds-bg"
           onClick={() => selectBlock(null)}
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-ds-border bg-ds-card px-5 py-3 shadow-[var(--shadow-ds-xs)]">
+          <header className="flex shrink-0 items-center justify-between border-b border-slate-200/80 bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div>
               <h1 className="text-base font-semibold text-slate-900">Page editor</h1>
               <p className="text-xs text-slate-500">Build your guest information page</p>
