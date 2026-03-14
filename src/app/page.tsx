@@ -1458,3 +1458,5 @@ export default async function Home({ searchParams }: HomePageProps) {
     </main>
   );
 }
+
+console.log("TEST INFOMII");
