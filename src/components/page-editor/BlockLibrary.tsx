@@ -41,6 +41,21 @@ const CARD_ICONS: Record<PageBlockType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   ),
+  breakfast: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  checkout: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  notice: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
   icon: (
     <span className="text-base">◇</span>
   ),
@@ -79,13 +94,13 @@ function LibraryItem({
       {...attributes}
       onClick={() => addBlock(type)}
       className={
-        "flex w-full items-center gap-3 rounded-lg border border-transparent bg-transparent px-3 py-2.5 text-left transition duration-200 " +
+        "flex w-full items-center gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2.5 text-left shadow-[var(--shadow-ds-sm)] transition-all duration-200 " +
         (isDragging
-          ? "cursor-grabbing opacity-80"
-          : "cursor-grab hover:bg-slate-100 active:bg-slate-200")
+          ? "cursor-grabbing opacity-80 ring-2 ring-ds-primary/30"
+          : "cursor-grab hover:border-slate-300 hover:shadow-[var(--shadow-ds-md)] active:scale-[0.99]")
       }
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
         {CARD_ICONS[type]}
       </span>
       <div className="min-w-0 flex-1">
@@ -96,22 +111,25 @@ function LibraryItem({
   );
 }
 
+const MAIN_CARD_TYPES: PageBlockType[] = [
+  "wifi", "breakfast", "checkout", "map", "text", "image", "button", "schedule", "notice",
+];
+
 export function BlockLibrary() {
-  const primary = ["text", "image", "map", "button", "wifi", "schedule", "menu"];
-  const primaryTypes = BLOCK_LIBRARY_ITEMS.filter((item) => primary.includes(item.type));
-  const otherTypes = BLOCK_LIBRARY_ITEMS.filter((item) => !primary.includes(item.type));
+  const mainItems = BLOCK_LIBRARY_ITEMS.filter((item) => MAIN_CARD_TYPES.includes(item.type));
+  const moreItems = BLOCK_LIBRARY_ITEMS.filter((item) => !MAIN_CARD_TYPES.includes(item.type));
 
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-ds-border bg-ds-card transition-colors">
-      <div className="shrink-0 border-b border-ds-border px-4 py-4">
-        <h2 className="text-sm font-semibold text-slate-800">Add card</h2>
+    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-ds-border bg-ds-bg transition-colors">
+      <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-4 shadow-[var(--shadow-ds-xs)]">
+        <h2 className="text-sm font-semibold text-slate-800">カードを追加</h2>
         <p className="mt-1 text-xs text-slate-500">
-          Click to add or drag onto the page
+          クリックで追加、またはドラッグして並べ替え
         </p>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
-        <div className="space-y-0.5">
-          {primaryTypes.map((item) => (
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-2">
+          {mainItems.map((item) => (
             <LibraryItem
               key={item.type}
               type={item.type}
@@ -120,15 +138,15 @@ export function BlockLibrary() {
             />
           ))}
         </div>
-        {otherTypes.length > 0 && (
+        {moreItems.length > 0 && (
           <>
-            <div className="my-3 border-t border-ds-border pt-3">
-              <p className="px-2 text-[10px] font-medium uppercase tracking-wider text-slate-400">
-                More
+            <div className="my-4 border-t border-ds-border pt-4">
+              <p className="mb-2 px-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">
+                その他
               </p>
             </div>
-            <div className="space-y-0.5">
-              {otherTypes.map((item) => (
+            <div className="space-y-2">
+              {moreItems.map((item) => (
                 <LibraryItem
                   key={item.type}
                   type={item.type}

@@ -24,7 +24,9 @@ export function DashboardCard({
   return (
     <div
       className={
-        "rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] " +
+        "rounded-xl border border-slate-200/80 bg-white " +
+        "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.02)] " +
+        "transition-[box-shadow,border-color] duration-200 ease-out " +
         paddingClass[padding] +
         " " +
         className
@@ -69,7 +71,7 @@ type StatTileProps = {
 
 export function DashboardStatTile({ label, value, sub }: StatTileProps) {
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3">
+    <div className="rounded-lg border border-slate-100 bg-slate-50/80 px-4 py-3 transition-colors duration-200 hover:border-slate-200/80 hover:bg-slate-50">
       <p className="text-xs font-medium text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
         {value}

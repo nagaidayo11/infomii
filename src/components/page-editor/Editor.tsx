@@ -61,10 +61,10 @@ function SortablePreviewRow({
       <div className="flex items-stretch gap-0">
         <button
           type="button"
-          className="flex w-8 shrink-0 cursor-grab items-center justify-center rounded-l-lg border border-r-0 border-slate-200/80 bg-slate-50/80 text-slate-400 opacity-0 transition-all duration-200 group-hover:opacity-100 active:cursor-grabbing"
+          className="flex w-9 shrink-0 cursor-grab items-center justify-center rounded-l-xl border border-r-0 border-ds-border bg-ds-bg text-slate-400 opacity-0 transition-all duration-200 group-hover:opacity-100 active:cursor-grabbing"
           {...attributes}
           {...listeners}
-          aria-label="Reorder"
+          aria-label="並べ替え"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M8 6h2v2H8V6zm0 5h2v2H8v-2zm0 5h2v2H8v-2zm5-10h2v2h-2V6zm0 5h2v2h-2v-2zm0 5h2v2h-2v-2z" />
@@ -72,10 +72,10 @@ function SortablePreviewRow({
         </button>
         <div
           className={
-            "min-w-0 flex-1 rounded-r-lg border border-slate-200/80 bg-ds-card transition-all duration-200 " +
+            "min-w-0 flex-1 rounded-r-xl border border-ds-border bg-ds-card shadow-[var(--shadow-ds-sm)] transition-all duration-200 " +
             (isSelected
               ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg"
-              : "hover:border-slate-300")
+              : "hover:border-slate-300 hover:shadow-[var(--shadow-ds-md)]")
           }
           onClick={(e) => {
             e.stopPropagation();
@@ -96,7 +96,7 @@ function PreviewDropZone({ children }: { children: React.ReactNode }) {
       ref={setNodeRef}
       className={
         "flex-1 overflow-y-auto transition-all duration-200 " +
-        (isOver ? "bg-blue-50/60 ring-2 ring-inset ring-blue-200/50 rounded-xl" : "")
+        (isOver ? "bg-ds-primary/5 ring-2 ring-inset ring-ds-primary/20 rounded-2xl" : "")
       }
     >
       {children}
@@ -168,25 +168,25 @@ export function Editor() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex h-[100vh] min-h-[640px] w-full overflow-hidden bg-[#fafafa]">
+      <div className="flex h-[100vh] min-h-[640px] w-full overflow-hidden bg-ds-bg">
         <BlockLibrary />
 
         <main
           className="flex min-w-0 flex-1 flex-col bg-ds-bg"
           onClick={() => selectBlock(null)}
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-slate-200/80 bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <header className="flex shrink-0 items-center justify-between border-b border-ds-border bg-ds-card px-5 py-3 shadow-[var(--shadow-ds-xs)]">
             <div>
-              <h1 className="text-base font-semibold text-slate-900">Page editor</h1>
-              <p className="text-xs text-slate-500">Build your guest information page</p>
+              <h1 className="text-base font-semibold text-slate-900">ページエディタ</h1>
+              <p className="text-xs text-slate-500">ゲスト向け案内ページを作成</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setShowTemplateGallery(true)}
-                className="rounded-lg border border-ds-border bg-ds-card px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-xs font-medium text-slate-700 shadow-[var(--shadow-ds-sm)] transition hover:bg-slate-50 hover:shadow-[var(--shadow-ds-md)]"
               >
-                Templates
+                テンプレート
               </button>
               <input
                 ref={fileInputRef}
@@ -209,9 +209,9 @@ export function Editor() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg border border-ds-border bg-ds-card px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-xs font-medium text-slate-600 shadow-[var(--shadow-ds-sm)] transition hover:bg-slate-50"
               >
-                Load JSON
+                JSONを読み込み
               </button>
               <button
                 type="button"
@@ -225,12 +225,12 @@ export function Editor() {
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="rounded-lg border border-ds-border bg-ds-card px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-xs font-medium text-slate-600 shadow-[var(--shadow-ds-sm)] transition hover:bg-slate-50"
               >
-                Save JSON
+                JSONを保存
               </button>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                {blocks.length} cards
+              <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+                {blocks.length} 枚
               </span>
             </div>
           </header>
@@ -238,13 +238,13 @@ export function Editor() {
           <PreviewDropZone>
             <div className="flex justify-center p-6">
               <div
-                className="flex w-[375px] shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-[#fafaf9] shadow-[var(--shadow-ds-md)] transition-shadow"
+                className="flex w-[375px] shrink-0 flex-col overflow-hidden rounded-2xl border border-ds-border bg-[#fafaf9] shadow-[var(--shadow-ds-lg)] transition-shadow"
                 style={{ width: MOBILE_PREVIEW_WIDTH }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="shrink-0 border-b border-stone-200/80 bg-white/95 px-4 py-3">
-                  <p className="text-center text-[13px] font-semibold tracking-wide text-stone-600">
-                    Preview
+                <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-3">
+                  <p className="text-center text-[13px] font-semibold tracking-wide text-slate-600">
+                    プレビュー
                   </p>
                 </div>
                 <div className="min-h-[480px] flex-1 overflow-y-auto p-4 transition-[background-color] duration-200">
@@ -254,18 +254,18 @@ export function Editor() {
                   >
                     {blocks.length === 0 && (
                       <div
-                        className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center transition"
+                        className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ds-border bg-slate-50/50 py-16 text-center transition"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <p className="text-sm font-medium text-slate-600">
-                          Add a card from the left
+                          左からカードを追加
                         </p>
                         <p className="mt-2 text-xs text-slate-400">
-                          Or drag and drop here. Click a card to edit in the right panel.
+                          ドラッグ＆ドロップも可能。カードをクリックすると右で編集できます。
                         </p>
                       </div>
                     )}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {blocks.map((block) => (
                         <SortablePreviewRow
                           key={block.id}
@@ -286,7 +286,7 @@ export function Editor() {
 
       <DragOverlay dropAnimation={{ duration: 200, easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)" }}>
         {activeLibraryType ? (
-          <div className="flex items-center gap-3 rounded-xl border border-ds-primary/30 bg-ds-card px-4 py-3 shadow-lg">
+          <div className="flex items-center gap-3 rounded-xl border-2 border-ds-primary/40 bg-ds-card px-4 py-3 shadow-[var(--shadow-ds-lg)]">
             <span className="text-sm font-medium text-slate-800">
               {BLOCK_TYPE_LABELS[activeLibraryType]}
             </span>
@@ -301,17 +301,17 @@ export function Editor() {
           aria-modal
           aria-labelledby="template-gallery-title"
         >
-          <div className="my-8 w-full max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="my-8 w-full max-w-5xl rounded-2xl border border-ds-border bg-ds-card p-6 shadow-[var(--shadow-ds-lg)]">
             <div className="mb-4 flex items-center justify-between">
               <h2 id="template-gallery-title" className="text-lg font-semibold text-slate-900">
-                Templates
+                テンプレート
               </h2>
               <button
                 type="button"
                 onClick={() => setShowTemplateGallery(false)}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-ds-border px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
               >
-                Close
+                閉じる
               </button>
             </div>
             <TemplateGallery

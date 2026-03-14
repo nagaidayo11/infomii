@@ -18,7 +18,10 @@ export type PageBlockType =
   | "gallery"
   | "wifi"
   | "schedule"
-  | "menu";
+  | "menu"
+  | "breakfast"
+  | "checkout"
+  | "notice";
 
 export type TextBlock = {
   id: string;
@@ -89,6 +92,33 @@ export type MenuBlock = {
   items: MenuItem[];
 };
 
+export type BreakfastBlock = {
+  id: string;
+  type: "breakfast";
+  title?: string;
+  time?: string;
+  place?: string;
+  note?: string;
+};
+
+export type CheckoutBlock = {
+  id: string;
+  type: "checkout";
+  title?: string;
+  time?: string;
+  note?: string;
+  linkUrl?: string;
+  linkLabel?: string;
+};
+
+export type NoticeBlock = {
+  id: string;
+  type: "notice";
+  title?: string;
+  body?: string;
+  variant?: "info" | "warning";
+};
+
 export type PageBlock =
   | TextBlock
   | ImageBlock
@@ -99,24 +129,30 @@ export type PageBlock =
   | GalleryBlock
   | WifiBlock
   | ScheduleBlock
-  | MenuBlock;
+  | MenuBlock
+  | BreakfastBlock
+  | CheckoutBlock
+  | NoticeBlock;
 
 /**
  * 左サイドバー — カードタイプ（ホテル向け）
- * 要件: Text, Image, Map, Button, WiFi info, Schedule, Menu
+ * WiFi, Breakfast, Checkout, Map, Text, Image, Button, Schedule, Notice
  */
 export const BLOCK_LIBRARY_ITEMS: Array<{
   type: PageBlockType;
   label: string;
   description: string;
 }> = [
-  { type: "text", label: "Text", description: "見出し・本文" },
-  { type: "image", label: "Image", description: "写真" },
-  { type: "map", label: "Map", description: "住所・地図" },
-  { type: "button", label: "Button", description: "リンクボタン" },
-  { type: "wifi", label: "WiFi info", description: "SSID・パスワード" },
-  { type: "schedule", label: "Schedule", description: "営業時間・スケジュール" },
-  { type: "menu", label: "Menu", description: "メニュー・価格" },
+  { type: "wifi", label: "WiFi", description: "SSID・パスワード" },
+  { type: "breakfast", label: "朝食", description: "朝食時間・会場" },
+  { type: "checkout", label: "チェックアウト", description: "チェックアウト案内" },
+  { type: "map", label: "地図", description: "住所・地図" },
+  { type: "text", label: "テキスト", description: "見出し・本文" },
+  { type: "image", label: "画像", description: "写真" },
+  { type: "button", label: "ボタン", description: "リンクボタン" },
+  { type: "schedule", label: "スケジュール", description: "営業時間" },
+  { type: "notice", label: "お知らせ", description: "告知・注意事項" },
+  { type: "menu", label: "メニュー", description: "メニュー・価格" },
   { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
   { type: "divider", label: "区切り線", description: "セクションの区切り" },
   { type: "gallery", label: "ギャラリー", description: "複数画像" },
@@ -124,16 +160,19 @@ export const BLOCK_LIBRARY_ITEMS: Array<{
 
 /** 型→ラベル（ドラッグオーバーレイ・設定パネル用） */
 export const BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
-  text: "Text",
-  image: "Image",
-  button: "Button",
+  text: "テキスト",
+  image: "画像",
+  button: "ボタン",
   icon: "アイコン",
   divider: "区切り線",
-  map: "Map",
+  map: "地図",
   gallery: "ギャラリー",
-  wifi: "WiFi info",
-  schedule: "Schedule",
-  menu: "Menu",
+  wifi: "WiFi",
+  schedule: "スケジュール",
+  menu: "メニュー",
+  breakfast: "朝食",
+  checkout: "チェックアウト",
+  notice: "お知らせ",
 };
 
 export function createEmptyBlock(type: PageBlockType, id: string): PageBlock {
@@ -172,6 +211,12 @@ export function createEmptyBlock(type: PageBlockType, id: string): PageBlock {
         title: "メニュー",
         items: [{ id: `${id}-m0`, name: "", price: "", description: "" }],
       };
+    case "breakfast":
+      return { id, type: "breakfast", title: "朝食", time: "7:00–9:30", place: "1F ダイニング", note: "" };
+    case "checkout":
+      return { id, type: "checkout", title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" };
+    case "notice":
+      return { id, type: "notice", title: "お知らせ", body: "", variant: "info" };
     default:
       return { id, type: "text", content: "" };
   }

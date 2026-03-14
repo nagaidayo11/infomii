@@ -25,10 +25,10 @@ export function CardSettings({ block }: CardSettingsProps) {
       <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-card">
         <div className="border-b border-ds-border px-4 py-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Card settings
+            カード設定
           </h2>
           <p className="mt-3 text-sm text-slate-500">
-            Select a card on the preview to edit its content, or add a card from the left.
+            プレビューでカードを選択すると編集できます。左からカードを追加できます。
           </p>
         </div>
       </aside>
@@ -48,9 +48,9 @@ export function CardSettings({ block }: CardSettingsProps) {
   };
 
   return (
-    <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-card">
-      <div className="flex shrink-0 items-center justify-between border-b border-ds-border px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+    <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-bg">
+      <div className="flex shrink-0 items-center justify-between border-b border-ds-border bg-ds-card px-4 py-3 shadow-[var(--shadow-ds-xs)]">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600">
           {BLOCK_TYPE_LABELS[block.type]}
         </h2>
         <BlockToolbar blockId={block.id} />
@@ -59,7 +59,7 @@ export function CardSettings({ block }: CardSettingsProps) {
         <div className="space-y-4">
           {block.type === "text" && (
             <>
-              <label className={labelClass}>Text</label>
+              <label className={labelClass}>テキスト</label>
               <textarea
                 value={block.content}
                 onChange={(e) =>
@@ -74,7 +74,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "image" && (
             <>
-              <label className={labelClass}>Image URL or upload</label>
+              <label className={labelClass}>画像URLまたはアップロード</label>
               <input
                 type="text"
                 value={block.src}
@@ -96,7 +96,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 onClick={() => fileInputRef.current?.click()}
                 className="mt-2 w-full rounded-lg border border-dashed border-slate-300 py-2.5 text-xs font-medium text-slate-600 transition hover:border-ds-primary hover:bg-blue-50/50 hover:text-ds-primary"
               >
-                Upload image
+                画像をアップロード
               </button>
               {block.src && (
                 <div className="relative mt-3 aspect-video overflow-hidden rounded-lg bg-slate-100">
@@ -109,7 +109,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                   />
                 </div>
               )}
-              <label className={labelClass + " mt-3"}>Alt text</label>
+              <label className={labelClass + " mt-3"}>代替テキスト</label>
               <input
                 type="text"
                 value={block.alt ?? ""}
@@ -124,7 +124,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "map" && (
             <>
-              <label className={labelClass}>Location / Address</label>
+              <label className={labelClass}>住所・施設名</label>
               <input
                 type="text"
                 value={block.address ?? ""}
@@ -134,7 +134,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 className={inputClass}
                 placeholder="住所や施設名"
               />
-              <label className={labelClass + " mt-3"}>Embed URL (optional)</label>
+              <label className={labelClass + " mt-3"}>埋め込みURL（任意）</label>
               <input
                 type="text"
                 value={block.embedUrl ?? ""}
@@ -142,14 +142,14 @@ export function CardSettings({ block }: CardSettingsProps) {
                   updateBlock(block.id, { embedUrl: e.target.value } as Partial<PageBlock>)
                 }
                 className={inputClass}
-                placeholder="Google Maps embed URL"
+                placeholder="Google Maps 埋め込みURL"
               />
             </>
           )}
 
           {block.type === "button" && (
             <>
-              <label className={labelClass}>Button label</label>
+              <label className={labelClass}>ボタンラベル</label>
               <input
                 type="text"
                 value={block.label}
@@ -159,7 +159,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 className={inputClass}
                 placeholder="ボタンのテキスト"
               />
-              <label className={labelClass + " mt-3"}>Link URL</label>
+              <label className={labelClass + " mt-3"}>リンクURL</label>
               <input
                 type="text"
                 value={block.href ?? ""}
@@ -174,7 +174,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "wifi" && (
             <>
-              <label className={labelClass}>Label</label>
+              <label className={labelClass}>ラベル</label>
               <input
                 type="text"
                 value={block.label ?? ""}
@@ -209,7 +209,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "schedule" && (
             <>
-              <label className={labelClass}>Title</label>
+              <label className={labelClass}>タイトル</label>
               <input
                 type="text"
                 value={block.title ?? ""}
@@ -220,7 +220,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 placeholder="営業時間"
               />
               <div className="mt-4 flex items-center justify-between">
-                <label className={labelClass}>Entries</label>
+                <label className={labelClass}>項目</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -229,7 +229,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                   }}
                   className="text-xs font-medium text-ds-primary hover:underline"
                 >
-                  + Add
+                  + 追加
                 </button>
               </div>
               <ul className="mt-2 space-y-2">
@@ -244,7 +244,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className={inputClass + " flex-1 text-xs"}
-                      placeholder="Day"
+                      placeholder="曜日"
                     />
                     <input
                       type="text"
@@ -255,7 +255,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className={inputClass + " w-24 text-xs"}
-                      placeholder="Time"
+                      placeholder="時間"
                     />
                     <button
                       type="button"
@@ -264,7 +264,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
-                      aria-label="Remove"
+                      aria-label="削除"
                     >
                       ×
                     </button>
@@ -276,7 +276,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "menu" && (
             <>
-              <label className={labelClass}>Title</label>
+              <label className={labelClass}>タイトル</label>
               <input
                 type="text"
                 value={block.title ?? ""}
@@ -287,7 +287,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 placeholder="メニュー"
               />
               <div className="mt-4 flex items-center justify-between">
-                <label className={labelClass}>Items</label>
+                <label className={labelClass}>項目</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -296,7 +296,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                   }}
                   className="text-xs font-medium text-ds-primary hover:underline"
                 >
-                  + Add
+                  + 追加
                 </button>
               </div>
               <ul className="mt-2 space-y-3">
@@ -311,7 +311,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className={inputClass + " mb-2"}
-                      placeholder="Name"
+                      placeholder="品名"
                     />
                     <input
                       type="text"
@@ -322,7 +322,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className={inputClass + " mb-2"}
-                      placeholder="Price (e.g. 1,200)"
+                      placeholder="価格（例: 1,200）"
                     />
                     <input
                       type="text"
@@ -333,7 +333,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                         updateBlock(block.id, { items } as Partial<PageBlock>);
                       }}
                       className={inputClass}
-                      placeholder="Description"
+                      placeholder="説明"
                     />
                     <button
                       type="button"
@@ -343,7 +343,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                       }}
                       className="mt-2 text-xs text-slate-400 hover:text-red-600"
                     >
-                      Remove item
+                      削除
                     </button>
                   </li>
                 ))}
@@ -351,9 +351,147 @@ export function CardSettings({ block }: CardSettingsProps) {
             </>
           )}
 
+          {block.type === "breakfast" && (
+            <>
+              <label className={labelClass}>タイトル</label>
+              <input
+                type="text"
+                value={block.title ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { title: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="朝食"
+              />
+              <label className={labelClass + " mt-3"}>時間</label>
+              <input
+                type="text"
+                value={block.time ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { time: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="7:00–9:30"
+              />
+              <label className={labelClass + " mt-3"}>会場</label>
+              <input
+                type="text"
+                value={block.place ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { place: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="1F ダイニング"
+              />
+              <label className={labelClass + " mt-3"}>備考</label>
+              <input
+                type="text"
+                value={block.note ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { note: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="任意"
+              />
+            </>
+          )}
+
+          {block.type === "checkout" && (
+            <>
+              <label className={labelClass}>タイトル</label>
+              <input
+                type="text"
+                value={block.title ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { title: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="チェックアウト"
+              />
+              <label className={labelClass + " mt-3"}>時刻</label>
+              <input
+                type="text"
+                value={block.time ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { time: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="11:00"
+              />
+              <label className={labelClass + " mt-3"}>補足</label>
+              <input
+                type="text"
+                value={block.note ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { note: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="任意"
+              />
+              <label className={labelClass + " mt-3"}>リンクURL</label>
+              <input
+                type="text"
+                value={block.linkUrl ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { linkUrl: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="https://..."
+              />
+              <label className={labelClass + " mt-3"}>リンクラベル</label>
+              <input
+                type="text"
+                value={block.linkLabel ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { linkLabel: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="詳細"
+              />
+            </>
+          )}
+
+          {block.type === "notice" && (
+            <>
+              <label className={labelClass}>タイトル</label>
+              <input
+                type="text"
+                value={block.title ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { title: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass}
+                placeholder="お知らせ"
+              />
+              <label className={labelClass + " mt-3"}>本文</label>
+              <textarea
+                value={block.body ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { body: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass + " min-h-[80px] resize-y"}
+                placeholder="告知内容"
+                rows={3}
+              />
+              <label className={labelClass + " mt-3"}>種類</label>
+              <select
+                value={block.variant ?? "info"}
+                onChange={(e) =>
+                  updateBlock(block.id, {
+                    variant: e.target.value === "warning" ? "warning" : "info",
+                  } as Partial<PageBlock>)
+                }
+                className={inputClass}
+              >
+                <option value="info">お知らせ（青）</option>
+                <option value="warning">注意（黄）</option>
+              </select>
+            </>
+          )}
+
           {block.type === "icon" && (
             <>
-              <label className={labelClass}>Icon (emoji or name)</label>
+              <label className={labelClass}>アイコン（絵文字など）</label>
               <input
                 type="text"
                 value={block.icon}
@@ -363,7 +501,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 className={inputClass + " text-2xl"}
                 placeholder="📍"
               />
-              <label className={labelClass + " mt-3"}>Label</label>
+              <label className={labelClass + " mt-3"}>ラベル</label>
               <input
                 type="text"
                 value={block.label ?? ""}
@@ -377,12 +515,12 @@ export function CardSettings({ block }: CardSettingsProps) {
           )}
 
           {block.type === "divider" && (
-            <p className="text-sm text-slate-500">No settings. Use duplicate or delete in the toolbar.</p>
+            <p className="text-sm text-slate-500">設定はありません。ツールバーで複製・削除できます。</p>
           )}
 
           {block.type === "gallery" && (
             <>
-              <label className={labelClass}>Image URLs</label>
+              <label className={labelClass}>画像URL</label>
               {(block.items ?? []).map((item, i) => (
                 <input
                   key={item.id}
@@ -394,7 +532,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                     updateBlock(block.id, { items } as Partial<PageBlock>);
                   }}
                   className={inputClass + " mt-2"}
-                  placeholder={`Image ${i + 1} URL`}
+                  placeholder={`画像${i + 1}のURL`}
                 />
               ))}
               <button
@@ -405,7 +543,7 @@ export function CardSettings({ block }: CardSettingsProps) {
                 }}
                 className="mt-2 text-xs font-medium text-ds-primary hover:underline"
               >
-                + Add image
+                + 画像を追加
               </button>
             </>
           )}

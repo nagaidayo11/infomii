@@ -1,28 +1,33 @@
 import type { ReactNode } from "react";
 
+type ContainerSize = "sm" | "md" | "wide";
+
 type ContainerProps = {
   children: ReactNode;
   className?: string;
-  /** Max width: same as SaaS LP (max-w-6xl) */
-  narrow?: boolean;
+  /** sm: max-w-3xl, md: max-w-6xl (default), wide: max-w-[1820px] */
+  size?: ContainerSize;
+};
+
+const sizeClass: Record<ContainerSize, string> = {
+  sm: "max-w-3xl",
+  md: "max-w-6xl",
+  wide: "max-w-[1820px]",
 };
 
 /**
  * SaaS landing page–aligned container.
- * max-w-6xl, mx-auto, balanced padding (px-4 sm:px-6).
+ * mx-auto, balanced padding (px-4 sm:px-6), configurable max width.
  */
 export function Container({
   children,
   className = "",
-  narrow = true,
+  size = "md",
 }: ContainerProps) {
   return (
     <div
       className={
-        "mx-auto w-full px-4 sm:px-6 " +
-        (narrow ? "max-w-6xl" : "max-w-[1820px]") +
-        " " +
-        className
+        "mx-auto w-full px-4 sm:px-6 " + sizeClass[size] + " " + className
       }
     >
       {children}

@@ -25,6 +25,12 @@
   --ds-bg: #f9fafb;
   --ds-card: #ffffff;
   --ds-border: #e5e7eb;
+  /* Transitions: Linear/Notion/Stripe-style (snappy, subtle) */
+  --ui-duration-fast: 150ms;
+  --ui-duration: 200ms;
+  --ui-duration-slow: 250ms;
+  --ui-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   /* Legacy lux (gradual migration) */
   --lux-accent: #2563eb;
   --lux-accent-soft: #dbeafe;
@@ -61,6 +67,26 @@ body {
   border: 1px solid rgba(226, 232, 240, 0.8);
   background-color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* ─── UI polish: transitions, elevation, hover ─── */
+.ui-transition {
+  transition-duration: var(--ui-duration);
+  transition-timing-function: var(--ui-ease);
+}
+.ui-transition-slow {
+  transition-duration: var(--ui-duration-slow);
+  transition-timing-function: var(--ui-ease-out);
+}
+/* Card elevation levels (Stripe/Linear-style) */
+.ui-shadow-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+.ui-shadow-card-hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+.ui-shadow-card-active {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 /* Optional: pages that still want lux gradient wrap content in .lux-main */

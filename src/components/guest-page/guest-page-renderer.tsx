@@ -310,6 +310,96 @@ export function GuestPageRenderer({
               );
             }
 
+            case "breakfast": {
+              const title = block.title?.trim() || "朝食";
+              const time = block.time?.trim();
+              const place = block.place?.trim();
+              const note = block.note?.trim();
+              return (
+                <section
+                  key={block.id}
+                  className="mx-4 mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80"
+                >
+                  <div className="flex items-center gap-3 border-b border-stone-100 px-4 py-3">
+                    <span className="text-2xl" aria-hidden>🍳</span>
+                    <p className="text-[1rem] font-semibold text-stone-800">{title}</p>
+                  </div>
+                  <div className="space-y-2 px-4 py-4">
+                    {time && (
+                      <p className="text-[1rem] text-stone-800">
+                        <span className="text-[0.75rem] font-medium uppercase tracking-wider text-stone-400">時間</span>
+                        <span className="ml-2">{time}</span>
+                      </p>
+                    )}
+                    {place && (
+                      <p className="text-[1rem] text-stone-800">
+                        <span className="text-[0.75rem] font-medium uppercase tracking-wider text-stone-400">会場</span>
+                        <span className="ml-2">{place}</span>
+                      </p>
+                    )}
+                    {note && <p className="text-[0.875rem] text-stone-600">{note}</p>}
+                  </div>
+                </section>
+              );
+            }
+
+            case "checkout": {
+              const title = block.title?.trim() || "チェックアウト";
+              const time = block.time?.trim();
+              const note = block.note?.trim();
+              const linkUrl = block.linkUrl?.trim();
+              const linkLabel = block.linkLabel?.trim() || "詳細";
+              return (
+                <section
+                  key={block.id}
+                  className="mx-4 mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80"
+                >
+                  <div className="flex items-center gap-3 border-b border-stone-100 px-4 py-3">
+                    <span className="text-2xl" aria-hidden>🕐</span>
+                    <p className="text-[1rem] font-semibold text-stone-800">{title}</p>
+                  </div>
+                  <div className="space-y-2 px-4 py-4">
+                    {time && (
+                      <p className="text-[1rem] font-medium text-stone-800">{time}</p>
+                    )}
+                    {note && <p className="text-[0.875rem] text-stone-600">{note}</p>}
+                    {linkUrl && (
+                      <a
+                        href={linkUrl}
+                        className="mt-2 inline-flex items-center rounded-xl bg-ds-primary px-4 py-2 text-sm font-medium text-white"
+                      >
+                        {linkLabel}
+                      </a>
+                    )}
+                  </div>
+                </section>
+              );
+            }
+
+            case "notice": {
+              const title = block.title?.trim() || "お知らせ";
+              const body = block.body?.trim();
+              const isWarning = block.variant === "warning";
+              return (
+                <section
+                  key={block.id}
+                  className={`mx-4 mt-6 overflow-hidden rounded-2xl shadow-sm ring-1 ${
+                    isWarning ? "bg-amber-50 ring-amber-200/80" : "bg-sky-50/90 ring-sky-200/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 border-b border-stone-100/80 px-4 py-3">
+                    <span className="text-2xl" aria-hidden>{isWarning ? "⚠️" : "ℹ️"}</span>
+                    <p className="text-[1rem] font-semibold text-stone-800">{title}</p>
+                  </div>
+                  {body && (
+                    <div className="px-4 py-4">
+                      <p className="text-[0.9375rem] leading-relaxed text-stone-700">{body}</p>
+                    </div>
+                  )}
+                </section>
+              );
+            }
+
             default:
               return null;
           }

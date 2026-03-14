@@ -281,7 +281,7 @@ export function BlockRenderer({
         );
       }
       return (
-        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)]">
           <p className="text-sm font-medium text-slate-800">📶 {block.label || "WiFi"}</p>
           {block.ssid && <p className="mt-1 text-xs text-slate-600">{block.ssid}</p>}
         </div>
@@ -297,7 +297,7 @@ export function BlockRenderer({
         );
       }
       return (
-        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)]">
           <p className="text-sm font-medium text-slate-800">{block.title || "営業時間"}</p>
           <p className="mt-1 text-xs text-slate-600">{block.items?.length ?? 0} 件</p>
         </div>
@@ -307,15 +307,68 @@ export function BlockRenderer({
       if (editable) {
         return (
           <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
-            <p className="text-xs font-medium text-slate-500">Menu — 右パネルで編集</p>
+            <p className="text-xs font-medium text-slate-500">メニュー — 右パネルで編集</p>
             <p className="mt-1 text-sm text-slate-700">{block.title || "メニュー"}</p>
           </div>
         );
       }
       return (
-        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)]">
           <p className="text-sm font-medium text-slate-800">{block.title || "メニュー"}</p>
           <p className="mt-1 text-xs text-slate-600">{block.items?.length ?? 0} 品</p>
+        </div>
+      );
+
+    case "breakfast":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">朝食 — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.title || "朝食"}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)]">
+          <p className="text-sm font-medium text-slate-800">{block.title || "朝食"}</p>
+          {(block.time || block.place) && (
+            <p className="mt-1 text-xs text-slate-600">
+              {[block.time, block.place].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
+      );
+
+    case "checkout":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">チェックアウト — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.title || "チェックアウト"}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)]">
+          <p className="text-sm font-medium text-slate-800">{block.title || "チェックアウト"}</p>
+          {block.time && <p className="mt-1 text-xs text-slate-600">{block.time}</p>}
+        </div>
+      );
+
+    case "notice":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">お知らせ — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.title || "お知らせ"}</p>
+          </div>
+        );
+      }
+      const noticeVariant = block.variant === "warning" ? "bg-amber-50 border-amber-200/80" : "bg-sky-50/80 border-sky-200/80";
+      return (
+        <div className={`rounded-xl border bg-ds-card p-4 shadow-[var(--shadow-ds-sm)] ${noticeVariant}`}>
+          <p className="text-sm font-medium text-slate-800">{block.title || "お知らせ"}</p>
+          {block.body && <p className="mt-1 text-xs text-slate-600">{block.body}</p>}
         </div>
       );
 
