@@ -634,53 +634,53 @@ export default async function Home({ searchParams }: HomePageProps) {
     bullets: string[];
     publishPath: string;
   }> = [
-    {
-      title: "トップメニューハブページ",
-      tag: "アイコン導線",
-      pain: "案内項目が分散してゲストが目的情報に辿り着きにくい",
-      solution: "円形アイコンを大量配置したトップメニューで導線を集約",
-      impact: "初動の自己解決率を高め、フロント案内負荷を軽減",
-      impactScore: 42,
-      industryTag: "business" as const,
-      seasonTags: ["spring", "summer", "autumn", "winter"],
-      template:
-        starterTemplates.find((entry) => entry.title === "【ホテル共通】トップ案内ハブ（円形アイコン12）") ??
-        starterTemplates.find((entry) => entry.title.startsWith("【ホテル共通】トップ案内ハブ（円形アイコン")) ??
-        starterTemplates[0],
-      bullets: ["主要導線を3列アイコンで一覧化", "Wi-Fi/清掃/駐車場など定番導線を即アクセス"],
-      publishPath: "/p/demo-hub-menu",
-    },
-    {
-      title: "温浴利用ガイドページ",
-      tag: "温浴導線",
-      pain: "利用ルールの説明がスタッフ依存",
-      solution: "温浴時間・注意事項・予約導線を集約",
-      impact: "案内差し替え時間を週2h削減",
-      impactScore: 35,
-      industryTag: "spa" as const,
-      seasonTags: ["autumn", "winter"],
-      template:
-        starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
-        starterTemplates[3],
-      bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化", "入浴前ルールを1画面で統一"],
-      publishPath: "/p/demo-bath",
-    },
-    {
-      title: "アクティビティ予約ページ",
-      tag: "滞在体験導線",
-      pain: "体験プログラムの案内が口頭中心で予約漏れが発生",
-      solution: "時間帯・料金・予約導線を1ページで見える化",
-      impact: "現地案内を減らし、体験予約率を向上",
-      impactScore: 33,
-      industryTag: "resort" as const,
-      seasonTags: ["spring", "summer"],
-      template:
-        starterTemplates.find((entry) => entry.title === "【リゾートホテル】滞在アクティビティ案内") ??
-        starterTemplates[3],
-      bullets: ["アクティビティ案内と予約導線を集約", "雨天時の代替案内まで同時配信", "当日変更を即時反映"],
-      publishPath: "/p/demo-activity",
-    },
-  ];
+      {
+        title: "トップメニューハブページ",
+        tag: "アイコン導線",
+        pain: "案内項目が分散してゲストが目的情報に辿り着きにくい",
+        solution: "円形アイコンを大量配置したトップメニューで導線を集約",
+        impact: "初動の自己解決率を高め、フロント案内負荷を軽減",
+        impactScore: 42,
+        industryTag: "business" as const,
+        seasonTags: ["spring", "summer", "autumn", "winter"],
+        template:
+          starterTemplates.find((entry) => entry.title === "【ホテル共通】トップ案内ハブ（円形アイコン12）") ??
+          starterTemplates.find((entry) => entry.title.startsWith("【ホテル共通】トップ案内ハブ（円形アイコン")) ??
+          starterTemplates[0],
+        bullets: ["主要導線を3列アイコンで一覧化", "Wi-Fi/清掃/駐車場など定番導線を即アクセス"],
+        publishPath: "/p/demo-hub-menu",
+      },
+      {
+        title: "温浴利用ガイドページ",
+        tag: "温浴導線",
+        pain: "利用ルールの説明がスタッフ依存",
+        solution: "温浴時間・注意事項・予約導線を集約",
+        impact: "案内差し替え時間を週2h削減",
+        impactScore: 35,
+        industryTag: "spa" as const,
+        seasonTags: ["autumn", "winter"],
+        template:
+          starterTemplates.find((entry) => entry.title === "【旅館】大浴場・貸切風呂のご案内") ??
+          starterTemplates[3],
+        bullets: ["利用時間と注意事項を可視化", "貸切風呂予約導線を明確化", "入浴前ルールを1画面で統一"],
+        publishPath: "/p/demo-bath",
+      },
+      {
+        title: "アクティビティ予約ページ",
+        tag: "滞在体験導線",
+        pain: "体験プログラムの案内が口頭中心で予約漏れが発生",
+        solution: "時間帯・料金・予約導線を1ページで見える化",
+        impact: "現地案内を減らし、体験予約率を向上",
+        impactScore: 33,
+        industryTag: "resort" as const,
+        seasonTags: ["spring", "summer"],
+        template:
+          starterTemplates.find((entry) => entry.title === "【リゾートホテル】滞在アクティビティ案内") ??
+          starterTemplates[3],
+        bullets: ["アクティビティ案内と予約導線を集約", "雨天時の代替案内まで同時配信", "当日変更を即時反映"],
+        publishPath: "/p/demo-activity",
+      },
+    ];
   const sortedPublicExamples = [...publicExamples].sort((a, b) => {
     const seasonScore = (example: (typeof publicExamples)[number]) => (example.seasonTags.includes(season) ? 3 : 0);
     const landingScore = (example: (typeof publicExamples)[number]) => (example.industryTag === landingPage ? 2 : 0);
@@ -819,19 +819,19 @@ export default async function Home({ searchParams }: HomePageProps) {
   ];
   const searchOptimizedFaq = sourceType === "search"
     ? [
-        {
-          q: "ホテル案内ページ作成SaaSは無料で始められますか？",
-          a: "はい。InfomiiはFreeプラン¥0から開始できます。必要になった時のみProへ切り替え可能です。",
-        },
-        {
-          q: "チェックイン案内を最短で公開する方法は？",
-          a: "テンプレ選択→必要項目入力→公開の3ステップで、最短3分で公開できます。",
-        },
-        {
-          q: "QR運用は何を準備すればよいですか？",
-          a: "公開後にURL/QRを発行し、A4テンプレで掲示すればそのまま運用開始できます。",
-        },
-      ]
+      {
+        q: "ホテル案内ページ作成SaaSは無料で始められますか？",
+        a: "はい。InfomiiはFreeプラン¥0から開始できます。必要になった時のみProへ切り替え可能です。",
+      },
+      {
+        q: "チェックイン案内を最短で公開する方法は？",
+        a: "テンプレ選択→必要項目入力→公開の3ステップで、最短3分で公開できます。",
+      },
+      {
+        q: "QR運用は何を準備すればよいですか？",
+        a: "公開後にURL/QRを発行し、A4テンプレで掲示すればそのまま運用開始できます。",
+      },
+    ]
     : faqItems;
 
   const impactStats = [
@@ -1049,30 +1049,30 @@ export default async function Home({ searchParams }: HomePageProps) {
         />
 
         {!lpCompactMode && (
-        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">導入施設コメント</h2>
-            <p className="text-sm text-slate-600">ホテル現場の実運用レビュー</p>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {hotelVoices.map((voice, index) => (
-              <article
-                key={voice.hotel}
-                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
-                style={{ transitionDelay: `${160 + index * 80}ms` }}
-              >
-                <div className="flex items-center gap-2">
-                  <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
-                  <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
-                <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
-                  {voice.impact}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
+          <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-2xl font-bold text-slate-900">導入施設コメント</h2>
+              <p className="text-sm text-slate-600">ホテル現場の実運用レビュー</p>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              {hotelVoices.map((voice, index) => (
+                <article
+                  key={voice.hotel}
+                  className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
+                  style={{ transitionDelay: `${160 + index * 80}ms` }}
+                >
+                  <div className="flex items-center gap-2">
+                    <VoiceLogo logoSrc={voice.logoSrc} hotel={voice.hotel} brandMark={voice.brandMark} brandTone={voice.brandTone} />
+                    <p className="text-xs font-semibold text-emerald-700">{voice.hotel}</p>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-800">「{voice.comment}」</p>
+                  <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800">
+                    {voice.impact}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
         )}
 
         <section id="templates" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
@@ -1091,134 +1091,134 @@ export default async function Home({ searchParams }: HomePageProps) {
               const templateCreateHref =
                 `/login?ref=lp-bottom&ab=${ctaVariant}&scene=${heroScene}&src=${encodeURIComponent(sanitizedSourceChannel)}&lp=${landingPage}&kw=${keyword}&lp_template=${normalizedTemplateIndex}&lp_template_title=${encodeURIComponent(templateTitle)}&next=${encodeURIComponent(templateCreateNext)}`;
               return (
-              <article
-                key={example.title}
-                className={`lp-reveal overflow-hidden rounded-2xl border bg-white ${theme.cardBorder}`}
-                style={{ transitionDelay: `${180 + index * 80}ms` }}
-              >
-                <div className="border-b border-slate-200 bg-slate-50 p-2">
-                  <TemplateScreenPreview blocks={example.template?.blocks} />
-                </div>
-                <div className="p-4">
-                  <p className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${theme.chip}`}>
-                    {example.tag}
-                  </p>
-                  <h3 className="mt-2 text-base font-semibold text-slate-900">{example.title}</h3>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">{theme.subtitle}</p>
-                  <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px]">
-                    <p className="text-slate-700"><span className="font-semibold text-rose-700">課題:</span> {example.pain}</p>
-                    <p className="text-slate-700"><span className="font-semibold text-emerald-700">解決:</span> {example.solution}</p>
-                    <p className="text-slate-700"><span className="font-semibold text-cyan-700">効果:</span> {example.impact}</p>
+                <article
+                  key={example.title}
+                  className={`lp-reveal overflow-hidden rounded-2xl border bg-white ${theme.cardBorder}`}
+                  style={{ transitionDelay: `${180 + index * 80}ms` }}
+                >
+                  <div className="border-b border-slate-200 bg-slate-50 p-2">
+                    <TemplateScreenPreview blocks={example.template?.blocks} />
                   </div>
-                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
-                    {example.bullets.slice(0, 2).map((bullet) => (
-                      <li key={`${example.title}-${bullet}`}>・{bullet}</li>
-                    ))}
-                  </ul>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Link
-                      href={templateCreateHref}
-                      className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white shadow-[0_8px_18px_-12px_rgba(15,23,42,0.8)] hover:bg-slate-800 hover:!text-white"
-                    >
-                      作成する
-                    </Link>
-                    <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
+                  <div className="p-4">
+                    <p className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${theme.chip}`}>
+                      {example.tag}
+                    </p>
+                    <h3 className="mt-2 text-base font-semibold text-slate-900">{example.title}</h3>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-500">{theme.subtitle}</p>
+                    <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px]">
+                      <p className="text-slate-700"><span className="font-semibold text-rose-700">課題:</span> {example.pain}</p>
+                      <p className="text-slate-700"><span className="font-semibold text-emerald-700">解決:</span> {example.solution}</p>
+                      <p className="text-slate-700"><span className="font-semibold text-cyan-700">効果:</span> {example.impact}</p>
+                    </div>
+                    <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                      {example.bullets.slice(0, 2).map((bullet) => (
+                        <li key={`${example.title}-${bullet}`}>・{bullet}</li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Link
+                        href={templateCreateHref}
+                        className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white shadow-[0_8px_18px_-12px_rgba(15,23,42,0.8)] hover:bg-slate-800 hover:!text-white"
+                      >
+                        作成する
+                      </Link>
+                      <p className="text-xs text-slate-500">公開URL例: {example.publishPath}</p>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500">作成する → テンプレ複製 → インフォメーション編集画面へ自動遷移</p>
+                    <p className="mt-1 text-[11px] text-slate-500">使用テンプレ: {example.template?.title ?? "テンプレート"}</p>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500">作成する → テンプレ複製 → インフォメーション編集画面へ自動遷移</p>
-                  <p className="mt-1 text-[11px] text-slate-500">使用テンプレ: {example.template?.title ?? "テンプレート"}</p>
-                </div>
-              </article>
+                </article>
               );
             })}
           </div>
         </section>
 
         {!lpCompactMode && (
-        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">導入実感（目安）</h2>
-            <p className="text-sm text-slate-600">現場運用で体感しやすい改善ポイント</p>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {impactStats.map((stat, index) => (
-              <article
-                key={stat.label}
-                className="lp-reveal rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-5"
-                style={{ transitionDelay: `${140 + index * 80}ms` }}
-              >
-                <p className="text-xs font-semibold text-emerald-700">{stat.label}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>
-                <p className="mt-1 text-xs text-slate-600">{stat.sub}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-        )}
-
-        {!lpCompactMode && (
-        <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">ホテル現場の課題を、運用導線で解決</h2>
-            <p className="text-sm text-slate-600">導入後すぐ実感しやすい改善ポイント</p>
-          </div>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 md:grid-cols-[1.1fr_1fr_0.9fr]">
-              <p className="px-4 py-3">よくある課題</p>
-              <p className="px-4 py-3">Infomiiでの対応</p>
-              <p className="px-4 py-3">期待できる変化</p>
+          <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-2xl font-bold text-slate-900">導入実感（目安）</h2>
+              <p className="text-sm text-slate-600">現場運用で体感しやすい改善ポイント</p>
             </div>
-            {painSolutionRows.map((row, index) => (
-              <div
-                key={row.pain}
-                className={`grid grid-cols-1 text-sm md:grid-cols-[1.1fr_1fr_0.9fr] ${index < painSolutionRows.length - 1 ? "border-b border-slate-200" : ""}`}
-              >
-                <p className="px-4 py-3 text-slate-700">{row.pain}</p>
-                <p className="px-4 py-3 font-medium text-emerald-700">{row.solution}</p>
-                <p className="px-4 py-3 text-slate-900">{row.outcome}</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              {impactStats.map((stat, index) => (
+                <article
+                  key={stat.label}
+                  className="lp-reveal rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50 p-5"
+                  style={{ transitionDelay: `${140 + index * 80}ms` }}
+                >
+                  <p className="text-xs font-semibold text-emerald-700">{stat.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>
+                  <p className="mt-1 text-xs text-slate-600">{stat.sub}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {!lpCompactMode && (
+          <section className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-2xl font-bold text-slate-900">ホテル現場の課題を、運用導線で解決</h2>
+              <p className="text-sm text-slate-600">導入後すぐ実感しやすい改善ポイント</p>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 md:grid-cols-[1.1fr_1fr_0.9fr]">
+                <p className="px-4 py-3">よくある課題</p>
+                <p className="px-4 py-3">Infomiiでの対応</p>
+                <p className="px-4 py-3">期待できる変化</p>
               </div>
-            ))}
-          </div>
-        </section>
+              {painSolutionRows.map((row, index) => (
+                <div
+                  key={row.pain}
+                  className={`grid grid-cols-1 text-sm md:grid-cols-[1.1fr_1fr_0.9fr] ${index < painSolutionRows.length - 1 ? "border-b border-slate-200" : ""}`}
+                >
+                  <p className="px-4 py-3 text-slate-700">{row.pain}</p>
+                  <p className="px-4 py-3 font-medium text-emerald-700">{row.solution}</p>
+                  <p className="px-4 py-3 text-slate-900">{row.outcome}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {!lpCompactMode && (
-        <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-bold text-slate-900">機能</h2>
-            <p className="text-sm text-slate-600">作成から運用まで、1つの画面群で完結</p>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <article
-                key={feature.title}
-                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
-                style={{ transitionDelay: `${180 + index * 60}ms` }}
-              >
-                <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
-                <p className="mt-2 text-sm text-slate-700">{feature.desc}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+          <section id="features" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-2xl font-bold text-slate-900">機能</h2>
+              <p className="text-sm text-slate-600">作成から運用まで、1つの画面群で完結</p>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => (
+                <article
+                  key={feature.title}
+                  className="lp-reveal rounded-2xl border border-slate-200 bg-white p-4"
+                  style={{ transitionDelay: `${180 + index * 60}ms` }}
+                >
+                  <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
+                  <p className="mt-2 text-sm text-slate-700">{feature.desc}</p>
+                </article>
+              ))}
+            </div>
+          </section>
         )}
 
         {!lpCompactMode && (
-        <section id="flow" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-slate-900">導入フロー</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {flow.map((item, index) => (
-              <article
-                key={item.step}
-                className="lp-reveal rounded-2xl border border-slate-200 bg-white p-5"
-                style={{ transitionDelay: `${180 + index * 80}ms` }}
-              >
-                <p className="text-xs font-bold tracking-widest text-emerald-600">STEP {item.step}</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-700">{item.desc}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+          <section id="flow" className="lux-card lp-reveal lp-delay-2 rounded-3xl p-6 sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-900">導入フロー</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {flow.map((item, index) => (
+                <article
+                  key={item.step}
+                  className="lp-reveal rounded-2xl border border-slate-200 bg-white p-5"
+                  style={{ transitionDelay: `${180 + index * 80}ms` }}
+                >
+                  <p className="text-xs font-bold tracking-widest text-emerald-600">STEP {item.step}</p>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-sm text-slate-700">{item.desc}</p>
+                </article>
+              ))}
+            </div>
+          </section>
         )}
 
         <section id="pricing" className="lux-card lp-reveal lp-delay-3 rounded-3xl p-6 sm:p-8">
@@ -1331,40 +1331,40 @@ export default async function Home({ searchParams }: HomePageProps) {
         </section>
 
         {!lpCompactMode && (
-        <section id="contact" className="lux-card lp-reveal lp-delay-4 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
-          <p className="mt-2 text-sm text-slate-700">導入・プラン・不具合のご相談は以下までご連絡ください。</p>
-          <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
-        </section>
+          <section id="contact" className="lux-card lp-reveal lp-delay-4 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold text-slate-900">お問い合わせ</h2>
+            <p className="mt-2 text-sm text-slate-700">導入・プラン・不具合のご相談は以下までご連絡ください。</p>
+            <p className="mt-2 text-sm font-medium text-slate-900">{contactEmail}</p>
+          </section>
         )}
 
         {!lpCompactMode && (
-        <section className="lux-card lp-reveal lp-delay-4 rounded-3xl border border-emerald-300 p-6 sm:p-8">
-          <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">公開までのチェックリスト</h2>
-              <p className="mt-2 text-sm text-slate-600">SNS流入ユーザーが迷わず始められるよう、初回作業を5項目に固定しています。</p>
-              <ol className="mt-4 space-y-2">
-                {launchChecklist.map((item, index) => (
-                  <li key={item} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                      {index + 1}
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ol>
+          <section className="lux-card lp-reveal lp-delay-4 rounded-3xl border border-emerald-300 p-6 sm:p-8">
+            <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">公開までのチェックリスト</h2>
+                <p className="mt-2 text-sm text-slate-600">SNS流入ユーザーが迷わず始められるよう、初回作業を5項目に固定しています。</p>
+                <ol className="mt-4 space-y-2">
+                  {launchChecklist.map((item, index) => (
+                    <li key={item} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                        {index + 1}
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <aside className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
+                <p className="text-xs font-semibold text-emerald-700">最短スタート</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
+                <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
+                <Link href={buildLoginHref("lp-bottom")} className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                  {primaryCtaLabel}
+                </Link>
+              </aside>
             </div>
-            <aside className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-4">
-              <p className="text-xs font-semibold text-emerald-700">最短スタート</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">3分で公開</p>
-              <p className="mt-2 text-sm text-slate-700">今すぐテンプレートから開始して、当日中にQR運用へ切り替えできます。</p>
-              <Link href={buildLoginHref("lp-bottom")} className="mt-4 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                {primaryCtaLabel}
-              </Link>
-            </aside>
-          </div>
-        </section>
+          </section>
         )}
 
         <section className="lp-cta-shell lp-reveal lp-delay-4 rounded-3xl border border-emerald-400 bg-gradient-to-r from-emerald-600 to-emerald-500 p-6 text-white shadow-[0_24px_40px_-24px_rgba(5,150,105,0.7)] sm:p-8">
@@ -1446,17 +1446,15 @@ export default async function Home({ searchParams }: HomePageProps) {
       </div>
 
       {!lpCompactMode && (
-      <div className="fixed right-3 top-3 z-40 sm:right-4 sm:top-4">
-        <Link
-          href={buildLoginHref("lp-sticky")}
-          className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
-        >
-          {primaryCtaLabel}
-        </Link>
-      </div>
+        <div className="fixed right-3 top-3 z-40 sm:right-4 sm:top-4">
+          <Link
+            href={buildLoginHref("lp-sticky")}
+            className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_14px_24px_-18px_rgba(5,150,105,0.75)]"
+          >
+            {primaryCtaLabel}
+          </Link>
+        </div>
       )}
     </main>
   );
 }
-
-console.log("TEST INFOMII");
