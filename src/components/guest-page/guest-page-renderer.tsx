@@ -215,6 +215,101 @@ export function GuestPageRenderer({
               );
             }
 
+            case "wifi": {
+              const label = block.label?.trim() || "WiFi";
+              const ssid = block.ssid?.trim();
+              const password = block.password?.trim();
+              return (
+                <section
+                  key={block.id}
+                  className="mx-4 mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80"
+                >
+                  <div className="flex items-center gap-3 border-b border-stone-100 px-4 py-3">
+                    <span className="text-2xl" aria-hidden>📶</span>
+                    <p className="text-[1rem] font-semibold text-stone-800">{label}</p>
+                  </div>
+                  <div className="space-y-3 px-4 py-4">
+                    {ssid && (
+                      <div>
+                        <p className="text-[0.75rem] font-medium uppercase tracking-wider text-stone-400">SSID</p>
+                        <p className="mt-0.5 text-[1rem] font-mono text-stone-800">{ssid}</p>
+                      </div>
+                    )}
+                    {password && (
+                      <div>
+                        <p className="text-[0.75rem] font-medium uppercase tracking-wider text-stone-400">パスワード</p>
+                        <p className="mt-0.5 text-[1rem] font-mono text-stone-800">{password}</p>
+                      </div>
+                    )}
+                    {!ssid && !password && (
+                      <p className="text-sm text-stone-400">WiFi情報を設定してください</p>
+                    )}
+                  </div>
+                </section>
+              );
+            }
+
+            case "schedule": {
+              const title = block.title?.trim() || "営業時間";
+              const items = block.items?.filter((i) => (i.day ?? i.time ?? i.label)) ?? [];
+              return (
+                <section
+                  key={block.id}
+                  className="mx-4 mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80"
+                >
+                  <div className="border-b border-stone-100 px-4 py-3">
+                    <p className="text-[1rem] font-semibold text-stone-800">{title}</p>
+                  </div>
+                  <ul className="divide-y divide-stone-100">
+                    {items.length === 0 ? (
+                      <li className="px-4 py-4 text-sm text-stone-400">スケジュールを追加</li>
+                    ) : (
+                      items.map((item, i) => (
+                        <li key={item.id ?? i} className="flex items-center justify-between gap-4 px-4 py-3">
+                          <span className="text-[1rem] text-stone-800">{item.day || item.label || "—"}</span>
+                          <span className="text-sm font-medium text-stone-600">{item.time || "—"}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </section>
+              );
+            }
+
+            case "menu": {
+              const title = block.title?.trim() || "メニュー";
+              const items = block.items?.filter((i) => (i.name ?? i.price)) ?? [];
+              return (
+                <section
+                  key={block.id}
+                  className="mx-4 mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80"
+                >
+                  <div className="border-b border-stone-100 px-4 py-3">
+                    <p className="text-[1rem] font-semibold text-stone-800">{title}</p>
+                  </div>
+                  <ul className="divide-y divide-stone-100">
+                    {items.length === 0 ? (
+                      <li className="px-4 py-4 text-sm text-stone-400">メニューを追加</li>
+                    ) : (
+                      items.map((item, i) => (
+                        <li key={item.id ?? i} className="px-4 py-3">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-[1rem] font-medium text-stone-800">{item.name || "—"}</span>
+                            {item.price && (
+                              <span className="text-sm font-semibold text-stone-700">¥{item.price}</span>
+                            )}
+                          </div>
+                          {item.description && (
+                            <p className="mt-1 text-[0.875rem] text-stone-500">{item.description}</p>
+                          )}
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </section>
+              );
+            }
+
             default:
               return null;
           }

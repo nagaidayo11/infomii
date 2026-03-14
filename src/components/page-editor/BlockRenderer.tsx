@@ -271,6 +271,54 @@ export function BlockRenderer({
         </div>
       );
 
+    case "wifi":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">WiFi — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.label || "WiFi"}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+          <p className="text-sm font-medium text-slate-800">📶 {block.label || "WiFi"}</p>
+          {block.ssid && <p className="mt-1 text-xs text-slate-600">{block.ssid}</p>}
+        </div>
+      );
+
+    case "schedule":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">Schedule — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.title || "営業時間"}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+          <p className="text-sm font-medium text-slate-800">{block.title || "営業時間"}</p>
+          <p className="mt-1 text-xs text-slate-600">{block.items?.length ?? 0} 件</p>
+        </div>
+      );
+
+    case "menu":
+      if (editable) {
+        return (
+          <div className={baseCard + " p-4"} onClick={() => selectBlock(block.id)}>
+            <p className="text-xs font-medium text-slate-500">Menu — 右パネルで編集</p>
+            <p className="mt-1 text-sm text-slate-700">{block.title || "メニュー"}</p>
+          </div>
+        );
+      }
+      return (
+        <div className="rounded-xl border border-ds-border bg-ds-card p-4">
+          <p className="text-sm font-medium text-slate-800">{block.title || "メニュー"}</p>
+          <p className="mt-1 text-xs text-slate-600">{block.items?.length ?? 0} 品</p>
+        </div>
+      );
+
     default:
       return null;
   }

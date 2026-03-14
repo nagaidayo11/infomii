@@ -16,6 +16,8 @@ export type MobileQrPreviewProps = {
   className?: string;
   /** Optional caption above frame (editor chrome) */
   caption?: string;
+  /** Frame width in px (default 300). Use 375 for editor. */
+  width?: number;
 };
 
 /**
@@ -37,6 +39,7 @@ export function MobileQrPreview({
   brandLabel = "案内",
   className = "",
   caption,
+  width,
 }: MobileQrPreviewProps) {
   const normalized = normalizeBlocksForPreview(blocks);
 
@@ -48,7 +51,7 @@ export function MobileQrPreview({
         </p>
       )}
       <div className="flex justify-center">
-        <MobileGuestFrame>
+        <MobileGuestFrame width={width}>
           <GuestPageRenderer blocks={normalized} brandLabel={brandLabel} />
         </MobileGuestFrame>
       </div>

@@ -28,6 +28,18 @@ function cloneBlock(block: PageBlock): PageBlock {
       id: `${newId}-g${i}`,
     }));
   }
+  if (parsed.type === "schedule" && "items" in parsed) {
+    parsed.items = parsed.items.map((item, i) => ({
+      ...item,
+      id: `${newId}-s${i}`,
+    }));
+  }
+  if (parsed.type === "menu" && "items" in parsed) {
+    parsed.items = parsed.items.map((item, i) => ({
+      ...item,
+      id: `${newId}-m${i}`,
+    }));
+  }
   return parsed;
 }
 
