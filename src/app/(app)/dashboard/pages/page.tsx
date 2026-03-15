@@ -1,8 +1,8 @@
-import { PageManagementPanel } from "@/components/page-management";
+import { PagesListView } from "@/components/saas/PagesListView";
 
 /**
- * ページ管理 — 一覧・新規・QR・編集・削除
+ * ページ — 統一ページ一覧（PageCard: タイトル・ステータス・最終更新・QRビュー・編集・公開ページ）
  */
 export default function DashboardPagesPage() {
-  return <PageManagementPanel />;
+  return <PagesListView />;
 }

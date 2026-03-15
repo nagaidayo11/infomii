@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/app";
 /**
  * Layout for all authenticated app routes.
  * (app) group: dashboard, editor, templates, analytics, settings.
- * Wraps with AuthGate and AppLayout (Sidebar + Topbar + Main).
+ * Wraps with AuthGate and AppLayout (単一サイドバー + メイン).
  */
 export default function AppGroupLayout({
   children,

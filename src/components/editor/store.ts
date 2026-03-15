@@ -31,7 +31,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   setCards: (cards) => set({ cards }),
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["text", "image", "wifi", "breakfast", "checkout", "map", "notice", "button", "schedule", "menu", "taxi", "restaurant", "laundry", "emergency"];
+    const allowed: CardType[] = ["welcome", "wifi", "breakfast", "checkout", "nearby", "notice", "map", "restaurant", "taxi", "emergency", "laundry", "spa", "text", "image", "button", "schedule", "menu"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)

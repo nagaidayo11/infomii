@@ -11,33 +11,36 @@ type AppLayoutProps = {
   title?: string;
   /** Override topbar subtitle */
   subtitle?: string;
-  /** Actions (buttons) in the topbar */
+  /** Actions (buttons) in the topbar, before user menu */
   topbarActions?: ReactNode;
 };
 
 /**
- * Shared app layout for authenticated pages.
- * Structure: Sidebar (left) + Topbar + Main content.
- * Editor routes (/editor/*) use full-bleed main (no padding) for 3-column editor.
+ * Unified SaaS layout for the authenticated app (Next.js App Router).
+ * Structure: Sidebar | Topbar + Main content.
+ * Single sidebar only — icon + label, soft background, clean spacing.
+ * Design: rounded-xl, soft shadows, Linear / Notion / Stripe inspired.
  */
 export function AppLayout({
   children,
-  title,
-  subtitle,
+  title: _title,
+  subtitle: _subtitle,
   topbarActions,
 }: AppLayoutProps) {
   const pathname = usePathname();
   const isEditor = pathname?.startsWith("/editor");
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-ds-bg">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-100/90">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar title={title} subtitle={subtitle} actions={topbarActions} />
+        <Topbar actions={topbarActions} />
         <main
           className={
             "flex-1 overflow-y-auto " +
-            (isEditor ? "flex flex-col p-0 overflow-hidden" : "p-6")
+            (isEditor
+              ? "flex flex-col p-0 overflow-hidden"
+              : "p-6")
           }
         >
           {children}

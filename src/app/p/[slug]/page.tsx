@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
+import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
@@ -903,42 +904,21 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     console.error("failed to insert page_view", pageViewError.message);
   }
 
-  return (
-    <main
-      className={`text-slate-900 ${
-        isEmbed
-          ? "bg-transparent p-0"
-          : "min-h-screen overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-8 sm:py-12"
-      }`}
-    >
-      <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
-      <div className={`mx-auto w-full ${isEmbed ? "max-w-none" : "max-w-[420px]"}`}>
-        <article
-          className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-          style={{
-            backgroundColor: theme.backgroundColor || "#ffffff",
-            color: theme.textColor || "#0f172a",
-            fontFamily: theme.fontFamily ?? "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", sans-serif",
-          }}
-        >
-          {!isEmbed ? (
-            <div className="border-b border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="min-h-8">
-                {isChildPage ? (
-                  <PublicFooterBackButton
-                    fallbackHref="/"
-                    label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
-                  />
-                ) : null}
-              </div>
-            </div>
-          ) : null}
+  const themeStyle = {
+    backgroundColor: theme.backgroundColor || "#ffffff",
+    color: theme.textColor || "#0f172a",
+    fontFamily: theme.fontFamily ?? "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", sans-serif",
+  };
 
-          <div className="px-4 py-5 sm:px-6 sm:py-6">
+  const contentArea = (
+          <div
+            className="rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-5"
+            style={themeStyle}
+          >
             {nodeMap?.enabled && nodeMap.nodes.length > 0 && (
-              <section className="mb-5 hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 sm:mb-6 sm:block sm:p-3">
-                <p className="mb-2 text-xs font-semibold text-emerald-800">総合案内ナビゲーション</p>
-                <div className="relative h-[320px] overflow-hidden rounded-lg border border-slate-200 bg-white sm:h-[360px]">
+              <section className="mb-5 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:mb-6 sm:p-5">
+                <p className="mb-3 text-sm font-semibold text-slate-800">総合案内ナビゲーション</p>
+                <div className="relative h-[280px] overflow-hidden rounded-lg border border-slate-200 bg-white sm:h-[320px]">
                   <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     {nodeMap.edges.map((edge) => {
                       const from = nodeMap.nodes.find((n) => n.id === edge.from);
@@ -961,13 +941,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                       {node.targetSlug ? (
                         <a
                           href={`/p/${node.targetSlug}`}
-                          className="flex min-h-[72px] min-w-[86px] max-w-[108px] touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-center shadow-sm transition active:scale-[0.99] hover:-translate-y-[1px] hover:shadow-md sm:min-h-[78px] sm:min-w-[124px] sm:max-w-none sm:px-3"
+                          className="flex min-h-[56px] min-w-[100px] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-3 text-center shadow-sm transition active:scale-[0.98] hover:shadow-md sm:min-h-[60px] sm:min-w-[120px] sm:max-w-none"
                         >
                           <span className="text-lg">{node.icon || "📄"}</span>
                           <span className="break-words text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">{node.title}</span>
                         </a>
                       ) : (
-                        <div className="flex min-h-[72px] min-w-[86px] max-w-[108px] flex-col items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2.5 text-center shadow-sm sm:min-h-[78px] sm:min-w-[124px] sm:max-w-none sm:px-3">
+                        <div className="flex min-h-[56px] min-w-[100px] flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center shadow-sm sm:min-h-[60px] sm:min-w-[120px] sm:max-w-none">
                           <span className="text-lg">{node.icon || "📄"}</span>
                           <span className="break-words text-[11px] font-medium leading-tight text-slate-500 sm:text-xs">{node.title}</span>
                         </div>
@@ -977,7 +957,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 </div>
               </section>
             )}
-            <div>
+            <div className="space-y-5">
               {blocks.map((block) => {
                 if (block.type === "title") {
                   return (
@@ -1067,7 +1047,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div
-                        className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-3`}
+                        className={`${getCardRadiusClass(block.cardRadius)} border border-slate-200 p-4`}
                         style={{ backgroundColor: block.iconRowBackgroundColor ?? "#f8fafc" }}
                       >
                         <div className={`grid ${isRoundIconRow ? "gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6" : "gap-2"} ${iconColumnsClass}`}>
@@ -1079,7 +1059,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   href={entry.link}
                                   target={entry.link.startsWith("/p/") ? undefined : "_blank"}
                                   rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
-                                  className="flex w-full touch-manipulation flex-col items-center gap-2 transition active:scale-[0.99]"
+                                  className="flex min-h-[48px] w-full touch-manipulation flex-col items-center justify-center gap-2 py-2 transition active:scale-[0.99]"
                                 >
                                   <span
                                     className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16"
@@ -1121,7 +1101,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     href={entry.link}
                                     target={entry.link.startsWith("/p/") ? undefined : "_blank"}
                                     rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
-                                    className="flex w-full touch-manipulation flex-col items-center justify-center gap-1 px-2 py-2.5 transition active:scale-[0.99] min-h-[76px]"
+                                    className="flex min-h-[52px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-3 py-3 transition active:scale-[0.99] sm:min-h-[56px]"
                                   >
                                     {renderIconVisual(entry.icon, block.iconSize)}
                                     <p
@@ -1132,7 +1112,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     </p>
                                   </a>
                                 ) : (
-                                  <div className="flex w-full flex-col items-center justify-center gap-1 px-2 py-2.5 min-h-[76px]">
+                                  <div className="flex min-h-[52px] w-full flex-col items-center justify-center gap-1 px-3 py-3 sm:min-h-[56px]">
                                     {renderIconVisual(entry.icon, block.iconSize)}
                                     <p
                                       className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -1226,7 +1206,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                         href={block.ctaUrl || "#"}
                         target="_blank"
                         rel="noreferrer"
-                        className={`inline-flex min-h-[44px] items-center rounded-lg bg-emerald-600 px-4 py-2.5 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                        className={`inline-flex min-h-[48px] touch-manipulation items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-base ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                         style={{ color: block.textColor ?? "#ffffff" }}
                       >
                         {block.ctaLabel || "ボタン"}
@@ -1252,9 +1232,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "hours") {
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                         <p
-                          className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                          className={`mb-3 text-base ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                           style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                         >
                           営業時間
@@ -1284,9 +1264,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                 if (block.type === "pricing") {
                   return (
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
-                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                         <p
-                          className={`mb-2 ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
+                          className={`mb-3 text-base ${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                           style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
                         >
                           料金表
@@ -1433,14 +1413,45 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
               })}
             </div>
           </div>
+  );
 
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4 sm:px-6">
-            <p className="text-xs leading-6 text-slate-600">
-              ご不明な点はスタッフまでお声がけください。
-            </p>
+  return (
+    <>
+      <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
+      {isEmbed ? (
+        <main className="min-h-screen overflow-x-hidden bg-[#f8fafc] p-0 text-slate-900">
+          <div className="mx-auto max-w-[420px] px-3 py-6" style={themeStyle}>
+            {isChildPage ? (
+              <div className="mb-4">
+                <PublicFooterBackButton
+                  fallbackHref="/"
+                  label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+                />
+              </div>
+            ) : null}
+            <h1 className="mb-5 text-xl font-bold text-slate-900">{row.title}</h1>
+            {contentArea}
+          </div>
+          <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
+            <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
           </footer>
-        </article>
-      </div>
-    </main>
+        </main>
+      ) : (
+        <PublicPageShell
+          title={row.title}
+          backButton={
+            isChildPage ? (
+              <PublicFooterBackButton
+                fallbackHref="/"
+                label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+              />
+            ) : undefined
+          }
+          isEmbed={false}
+        >
+          {contentArea}
+        </PublicPageShell>
+      )}
+    </>
   );
 }

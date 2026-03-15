@@ -3387,6 +3387,8 @@ export type TemplateRow = {
   preview_image: string;
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
   created_at: string;
+  /** Category for marketplace filter: business | resort | ryokan | airbnb | guide */
+  category?: string | null;
 };
 
 export async function listTemplates(): Promise<TemplateRow[]> {
@@ -3394,7 +3396,7 @@ export async function listTemplates(): Promise<TemplateRow[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("templates")
-    .select("id,name,description,preview_image,cards,created_at")
+    .select("id,name,description,preview_image,cards,created_at,category")
     .order("created_at", { ascending: false });
   if (error) throw toError(error, "テンプレート一覧の取得に失敗しました");
   return (data ?? []) as TemplateRow[];

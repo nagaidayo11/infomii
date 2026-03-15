@@ -2,17 +2,26 @@
  * カードの多言語対応。
  * フィールドは文字列のままか、言語キー付きオブジェクトで保存できる。
  *
- * 例: content: { ja: "テキスト", en: "Text", zh: "文本", ko: "텍스트" }
+ * Card content structure (canonical):
+ * { ja: "...", en: "...", zh: "...", ko: "..." }
+ *
+ * Visitor language is detected automatically; fallback is always English (en).
  */
 
 export const SUPPORTED_LOCALES = ["ja", "en", "zh", "ko"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
-export type LocalizedString =
-  | string
-  | { ja?: string; en?: string; zh?: string; ko?: string };
+/** Canonical multilingual content: one key per supported language. */
+export type LocalizedContent = {
+  ja?: string;
+  en?: string;
+  zh?: string;
+  ko?: string;
+};
 
-/** 言語が存在しない場合のフォールバック順（英語を優先） */
+export type LocalizedString = string | LocalizedContent;
+
+/** Fallback order when a value is missing: always prefer English, then ja, zh, ko. */
 const FALLBACK_ORDER: SupportedLocale[] = ["en", "ja", "zh", "ko"];
 
 /**
@@ -28,9 +37,23 @@ export function normalizeLocale(lang: string): SupportedLocale | null {
 }
 
 /**
- * ローカル文字列または通常の文字列から、指定言語の表示用文字列を取得する。
- * - value がオブジェクトの場合: 指定 locale → en → ja → zh → ko の順でフォールバック（英語優先）
- * - value が文字列の場合: そのまま返す（従来の単一言語データとの互換）
+ * Detect visitor locale from Accept-Language header (server-side).
+ * Returns supported locale or "en" as fallback.
+ */
+export function getVisitorLocaleFromHeader(acceptLanguage: string | null): SupportedLocale {
+  if (!acceptLanguage || typeof acceptLanguage !== "string") return "en";
+  const parts = acceptLanguage.split(",").map((p) => p.split(";")[0].trim());
+  for (const part of parts) {
+    const normalized = normalizeLocale(part);
+    if (normalized) return normalized;
+  }
+  return "en";
+}
+
+/**
+ * Get display string for a locale. Fallback order: requested locale → en → ja → zh → ko.
+ * - Object: use preferred locale, then English, then others.
+ * - String: return as-is (backward compatible).
  */
 export function getLocalizedContent(
   value: LocalizedString | undefined | null,

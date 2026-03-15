@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { normalizeLocale } from "@/lib/localized-content";
+import { normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 
 type LocaleContextValue = string;
 
@@ -23,13 +23,19 @@ export function useLocale(): string {
   return useContext(LocaleContext);
 }
 
+type VisitorLocaleProviderProps = {
+  children: ReactNode;
+  /** Initial locale from server (e.g. Accept-Language). Avoids flash before hydration. */
+  initialLocale?: SupportedLocale;
+};
+
 /**
- * 訪問者のブラウザ言語を検出し、ロケールを提供する。
- * 公開ページでカードを表示する際にラップして使用する。
- * 対応外の言語の場合は英語 (en) にフォールバック。
+ * Detect visitor language and provide locale. Fallback to English.
+ * Use on public/guest pages that render cards. Pass initialLocale from
+ * getVisitorLocaleFromHeader(acceptLanguage) for SSR to avoid flash.
  */
-export function VisitorLocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<string>("en");
+export function VisitorLocaleProvider({ children, initialLocale = "en" }: VisitorLocaleProviderProps) {
+  const [locale, setLocale] = useState<string>(initialLocale);
 
   useEffect(() => {
     const raw = typeof navigator !== "undefined" ? navigator.language : "";

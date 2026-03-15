@@ -497,6 +497,7 @@ create table if not exists public.templates (
   cards jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
+alter table public.templates add column if not exists category text default null;
 alter table public.templates enable row level security;
 
 drop policy if exists "pages authenticated read write own hotel" on public.pages;

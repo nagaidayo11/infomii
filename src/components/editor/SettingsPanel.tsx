@@ -37,6 +37,71 @@ async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: stri
   return { en: data.en, zh: data.zh, ko: data.ko };
 }
 
+type NearbyItem = { name?: string; description?: string; link?: string };
+
+function NearbyItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as NearbyItem[];
+  const setItems = (next: NearbyItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof NearbyItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { name: "", description: "", link: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">項目</span>
+        <button
+          type="button"
+          onClick={addItem}
+          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="text-xs text-slate-400 hover:text-red-600"
+            >
+              削除
+            </button>
+          </div>
+          <Input
+            label="名前"
+            value={item.name ?? ""}
+            onChange={(e) => updateItem(i, "name", e.target.value)}
+            placeholder="スポット名"
+          />
+          <Input
+            label="説明"
+            value={item.description ?? ""}
+            onChange={(e) => updateItem(i, "description", e.target.value)}
+            placeholder="任意"
+          />
+          <Input
+            label="リンクURL"
+            value={item.link ?? ""}
+            onChange={(e) => updateItem(i, "link", e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
@@ -114,6 +179,27 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-4">
+          {card.type === "welcome" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="ようこそ"
+              />
+              <div className="w-full">
+                <label className="mb-1.5 block text-xs font-medium text-slate-500">メッセージ</label>
+                <textarea
+                  value={display("message")}
+                  onChange={(e) => updateLocalized("message", e.target.value)}
+                  placeholder="おもてなしメッセージ"
+                  rows={3}
+                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                />
+              </div>
+            </>
+          )}
+
           {card.type === "text" && (
             <>
               <Input
@@ -352,6 +438,57 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
                 value={display("address")}
                 onChange={(e) => updateLocalized("address", e.target.value)}
                 placeholder="ホテル住所"
+              />
+            </>
+          )}
+
+          {card.type === "nearby" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="周辺案内"
+              />
+              <NearbyItemsEditor content={content} onUpdate={update} />
+            </>
+          )}
+
+          {card.type === "spa" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="スパ・温泉"
+              />
+              <Input
+                label="営業時間"
+                value={display("hours")}
+                onChange={(e) => updateLocalized("hours", e.target.value)}
+                placeholder="6:00–24:00"
+              />
+              <Input
+                label="場所"
+                value={display("location")}
+                onChange={(e) => updateLocalized("location", e.target.value)}
+                placeholder="B1F"
+              />
+              <div className="w-full">
+                <label className="mb-1.5 block text-xs font-medium text-slate-500">説明</label>
+                <textarea
+                  value={display("description")}
+                  onChange={(e) => updateLocalized("description", e.target.value)}
+                  placeholder="施設の説明"
+                  rows={2}
+                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                />
+              </div>
+              <Input
+                label="備考"
+                value={display("note")}
+                onChange={(e) => updateLocalized("note", e.target.value)}
+                placeholder="任意"
               />
             </>
           )}

@@ -1,18 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { listTemplates, createPageFromTemplate, type TemplateRow } from "@/lib/storage";
+import { TemplateCard } from "@/components/saas/TemplateCard";
+
+/** Template marketplace categories. Filter by template.category when available. */
+const TEMPLATE_CATEGORIES = [
+  { id: "all", label: "すべて" },
+  { id: "business", label: "ビジネスホテル" },
+  { id: "resort", label: "リゾートホテル" },
+  { id: "ryokan", label: "旅館" },
+  { id: "airbnb", label: "Airbnb" },
+  { id: "guide", label: "観光ガイド" },
+] as const;
+
+function filterByCategory(
+  templates: TemplateRow[],
+  category: string
+): TemplateRow[] {
+  if (category === "all") return templates;
+  const withCat = templates as (TemplateRow & { category?: string })[];
+  return withCat.filter((t) => t.category === category);
+}
 
 /**
- * テンプレートマーケットプレイス — /templates
- * Supabase の templates を一覧表示し、「テンプレートを使う」で新規ページ＋カードを作成。
+ * Template marketplace — /templates
+ * Display template cards (title, description, preview image, Use Template).
+ * Categories: Business Hotel, Resort Hotel, Ryokan, Airbnb, Tourist Guide.
+ * Use Template creates a page and populates cards, then opens the editor.
  */
 export default function TemplatesPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [category, setCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [usingId, setUsingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +68,8 @@ export default function TemplatesPage() {
     };
   }, []);
 
+  const filtered = filterByCategory(templates, category);
+
   async function handleUseTemplate(templateId: string) {
     setUsingId(templateId);
     setError(null);
@@ -60,107 +84,83 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="min-h-full bg-[#fafbfc]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            さあ、何を作成しますか?
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            テンプレートを選んで「テンプレートを使う」で新しいページを作成できます。
-          </p>
-        </header>
-
-        {error && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-              >
-                <div className="aspect-[5/3] animate-pulse rounded-xl bg-slate-100" />
-                <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
-                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
-              </div>
-            ))}
-          </div>
-        ) : templates.length === 0 ? (
-          <div className="rounded-2xl border border-ds-border border-dashed bg-ds-card p-12 text-center shadow-sm">
-            <p className="text-slate-500">テンプレートがまだありません。</p>
-            <p className="mt-1 text-sm text-slate-400">
-              管理者が Supabase の templates テーブルに登録するとここに表示されます。
-            </p>
-            <Link
-              href="/dashboard"
-              className="mt-4 inline-block text-sm font-medium text-ds-primary hover:underline"
-            >
-              ダッシュボードに戻る
-            </Link>
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((template) => (
-              <article
-                key={template.id}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-200 hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
-              >
-                <div className="relative aspect-[5/3] overflow-hidden bg-slate-100">
-                  {template.preview_image ? (
-                    <Image
-                      src={template.preview_image}
-                      alt=""
-                      fill
-                      className="object-cover transition duration-300 group-hover:scale-[1.02]"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      unoptimized={template.preview_image.startsWith("http")}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-4xl text-slate-300">
-                      📄
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <h2 className="text-lg font-semibold text-white drop-shadow-sm">
-                      {template.name}
-                    </h2>
-                  </div>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <p className="text-sm leading-relaxed text-slate-600 line-clamp-3">
-                    {template.description || "説明なし"}
-                  </p>
-                  <div className="mt-4 flex-1" />
-                  <button
-                    type="button"
-                    disabled={!!usingId}
-                    onClick={() => handleUseTemplate(template.id)}
-                    className="w-full rounded-xl bg-ds-primary py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-600 active:scale-[0.99] disabled:opacity-60"
-                  >
-                    {usingId === template.id ? "作成中…" : "テンプレートを使う"}
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-
-        <p className="mt-8 text-center text-sm text-slate-400">
-          <Link href="/dashboard" className="hover:text-slate-600">
-            ← ダッシュボードに戻る
-          </Link>
-          {" · "}
-          <Link href="/dashboard/pages" className="hover:text-slate-600">
-            ページ一覧
-          </Link>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">テンプレート</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          館内案内・WiFi・朝食など、そのまま使える型からQR用ページを作成
         </p>
+      </header>
+
+      {/* カテゴリ（将来 category カラム対応時はフィルタ有効） */}
+      <div className="flex flex-wrap gap-2">
+        {TEMPLATE_CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setCategory(c.id)}
+            className={
+              "rounded-lg px-3 py-1.5 text-sm font-medium transition " +
+              (category === c.id
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+            }
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm">
+              <div className="aspect-[5/3] animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
+              <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
+          <p className="text-slate-600">テンプレートがまだありません。</p>
+          <p className="mt-1 text-sm text-slate-500">
+            管理者が Supabase の templates テーブルに登録するとここに表示されます。
+          </p>
+          <Link
+            href="/dashboard"
+            className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            ダッシュボードに戻る
+          </Link>
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((template) => (
+            <TemplateCard
+              key={template.id}
+              id={template.id}
+              name={template.name}
+              description={template.description}
+              preview_image={template.preview_image}
+              onUse={() => handleUseTemplate(template.id)}
+              using={usingId === template.id}
+            />
+          ))}
+        </div>
+      )}
+
+      <p className="text-center text-sm text-slate-400">
+        <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
+        {" · "}
+        <Link href="/dashboard/pages" className="hover:text-slate-600">ページ一覧</Link>
+      </p>
     </div>
   );
 }

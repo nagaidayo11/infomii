@@ -17,6 +17,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import type { EditorCard } from "./types";
 
+/** Mobile preview canvas width (px). */
 const CANVAS_WIDTH = 375;
 
 type CanvasProps = {
@@ -26,14 +27,16 @@ type CanvasProps = {
   onReorder: (cards: EditorCard[]) => void;
 };
 
-function SortableCardRow({
+function SortableCardWrapper({
   card,
   isSelected,
   onSelect,
+  children,
 }: {
   card: EditorCard;
   isSelected: boolean;
   onSelect: () => void;
+  children: React.ReactNode;
 }) {
   const {
     attributes,
@@ -55,7 +58,7 @@ function SortableCardRow({
       <div className="flex items-stretch gap-0">
         <button
           type="button"
-          className="flex w-9 shrink-0 cursor-grab items-center justify-center rounded-l-xl border border-r-0 border-ds-border bg-ds-bg text-slate-400 opacity-0 transition-all duration-200 group-hover:opacity-100 active:cursor-grabbing"
+          className="flex w-9 shrink-0 cursor-grab items-center justify-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-400 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing"
           {...attributes}
           {...listeners}
           aria-label="並べ替え"
@@ -66,23 +69,27 @@ function SortableCardRow({
         </button>
         <div
           className={
-            "min-w-0 flex-1 rounded-r-xl border border-ds-border bg-ds-card shadow-[var(--shadow-ds-sm)] transition-all duration-200 " +
+            "min-w-0 flex-1 rounded-r-xl border border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition " +
             (isSelected
-              ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg"
-              : "hover:border-slate-300 hover:shadow-[var(--shadow-ds-md)]")
+              ? "ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50"
+              : "hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]")
           }
           onClick={(e) => {
             e.stopPropagation();
             onSelect();
           }}
         >
-          <CardRenderer card={card} isSelected={isSelected} />
+          {children}
         </div>
       </div>
     </div>
   );
 }
 
+/**
+ * Mobile preview canvas. Renders cards with cards.map() and CardRenderer.
+ * Drag-and-drop reorder via dnd-kit. Click to select; live preview updates from store.
+ */
 export function Canvas({
   cards,
   selectedCardId,
@@ -115,39 +122,44 @@ export function Canvas({
       >
         <div className="flex flex-1 justify-center overflow-y-auto p-6">
           <div
-            className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-ds-border bg-ds-card shadow-[var(--shadow-ds-md)]"
+            className="flex shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
             style={{ width: CANVAS_WIDTH }}
             data-mobile-preview
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 border-b border-ds-border bg-ds-bg px-4 py-2.5">
-              <p className="text-center text-[12px] font-medium uppercase tracking-wider text-slate-500">
+            <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
+              <p className="text-center text-xs font-medium uppercase tracking-wider text-slate-500">
                 プレビュー
               </p>
             </div>
-            <div className="min-h-[480px] flex-1 overflow-y-auto bg-ds-bg/50 p-4">
+            <div className="min-h-[480px] flex-1 overflow-y-auto bg-slate-50/50 p-4">
               <SortableContext
                 items={sortedCards.map((c) => c.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {sortedCards.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ds-border bg-slate-50/50 py-16 text-center">
+                  <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center">
                     <p className="text-sm font-medium text-slate-600">
                       左からカードを追加
                     </p>
                     <p className="mt-2 text-xs text-slate-400">
-                      ドラッグ＆ドロップで並べ替え。カードをクリックすると右で編集できます。
+                      ドラッグで並べ替え。カードをクリックすると右で編集できます。
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {sortedCards.map((card) => (
-                      <SortableCardRow
+                      <SortableCardWrapper
                         key={card.id}
                         card={card}
                         isSelected={selectedCardId === card.id}
                         onSelect={() => onSelectCard(card.id)}
-                      />
+                      >
+                        <CardRenderer
+                          card={card}
+                          isSelected={selectedCardId === card.id}
+                        />
+                      </SortableCardWrapper>
                     ))}
                   </div>
                 )}
