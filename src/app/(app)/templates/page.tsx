@@ -28,8 +28,8 @@ export default function TemplatesPage() {
             await fetch("/api/seed-templates");
             const again = await listTemplates();
             if (mounted) setTemplates(again);
-          } else {
-            setTemplates(list);
+          } catch {
+            if (mounted) setTemplates(list);
           }
         } else {
           setTemplates(list);

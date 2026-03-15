@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Editor2 } from "@/components/editor";
+import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
 import { getPageCards } from "@/lib/storage";
 
@@ -17,7 +18,7 @@ function Editor2WithPageId() {
     getPageCards(pageId).then((rows) => {
       const cards = rows.map((r) => ({
         id: r.id,
-        type: r.type,
+        type: r.type as CardType,
         content: r.content ?? {},
         order: r.order,
       }));
