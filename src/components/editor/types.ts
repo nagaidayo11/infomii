@@ -14,7 +14,11 @@ export type CardType =
   | "notice"
   | "button"
   | "schedule"
-  | "menu";
+  | "menu"
+  | "taxi"
+  | "restaurant"
+  | "laundry"
+  | "emergency";
 
 export type EditorCard = {
   id: string;
@@ -46,19 +50,27 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   button: "ボタン",
   schedule: "スケジュール",
   menu: "メニュー",
+  taxi: "タクシー",
+  restaurant: "レストラン",
+  laundry: "ランドリー",
+  emergency: "緊急連絡先",
 };
 
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
   { type: "text", label: "テキスト", description: "見出し・本文" },
   { type: "image", label: "画像", description: "写真" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード" },
-  { type: "breakfast", label: "朝食", description: "朝食時間・会場" },
+  { type: "breakfast", label: "朝食", description: "朝食時間・会場・メニュー" },
   { type: "checkout", label: "チェックアウト", description: "チェックアウト案内" },
   { type: "map", label: "地図", description: "住所・地図" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
   { type: "schedule", label: "スケジュール", description: "営業時間" },
   { type: "menu", label: "メニュー", description: "メニュー・価格" },
+  { type: "taxi", label: "タクシー", description: "タクシー呼び出し" },
+  { type: "restaurant", label: "レストラン", description: "レストラン・飲食" },
+  { type: "laundry", label: "ランドリー", description: "洗濯・クリーニング" },
+  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院" },
 ];
 
 function defaultContent(type: CardType): Record<string, unknown> {
@@ -68,9 +80,9 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "image":
       return { src: "", alt: "" };
     case "wifi":
-      return { title: "WiFi", ssid: "", password: "", description: "" };
+      return { ssid: "", password: "", description: "" };
     case "breakfast":
-      return { title: "朝食", time: "7:00–9:30", location: "1F ダイニング", description: "" };
+      return { time: "7:00–9:30", location: "1F ダイニング", menu: "" };
     case "checkout":
       return { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" };
     case "map":
@@ -83,6 +95,14 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "営業時間", items: [{ day: "月〜日", time: "7:00–22:00", label: "" }] };
     case "menu":
       return { title: "メニュー", items: [{ name: "", price: "", description: "" }] };
+    case "taxi":
+      return { title: "タクシー", phone: "", companyName: "", note: "" };
+    case "restaurant":
+      return { title: "レストラン", time: "", location: "", menu: "" };
+    case "laundry":
+      return { title: "ランドリー", hours: "", priceNote: "", contact: "" };
+    case "emergency":
+      return { title: "緊急連絡先", fire: "119", police: "110", hospital: "", note: "" };
     default:
       return { content: "" };
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import { getLocalizedContent } from "@/lib/localized-content";
+import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import type { EditorCard } from "./types";
 import { CARD_TYPE_LABELS } from "./types";
@@ -8,6 +10,15 @@ type SettingsPanelProps = {
   card: EditorCard | null;
   onUpdate: (id: string, content: Record<string, unknown>) => void;
 };
+
+function isLocalizedObject(v: unknown): v is Record<string, string> {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    !Array.isArray(v) &&
+    ("ja" in v || "en" in v || "zh" in v || "ko" in v)
+  );
+}
 
 export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   if (!card) {
@@ -29,6 +40,15 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { ...content, [key]: value });
   };
+  /** 多言語フィールドの表示値（日本語を優先） */
+  const display = (key: string) =>
+    getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
+  /** 多言語フィールドの更新（既存の他言語を保持し ja を更新） */
+  const updateLocalized = (key: string, value: string) => {
+    const cur = content[key];
+    const next = isLocalizedObject(cur) ? { ...cur, ja: value } : value;
+    update(key, next);
+  };
 
   return (
     <>
@@ -43,8 +63,8 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
             <>
               <Input
                 label="テキスト"
-                value={(content.content as string) ?? ""}
-                onChange={(e) => update("content", e.target.value)}
+                value={display("content")}
+                onChange={(e) => updateLocalized("content", e.target.value)}
                 placeholder="見出しや本文を入力"
               />
             </>
@@ -60,8 +80,8 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
               />
               <Input
                 label="代替テキスト"
-                value={(content.alt as string) ?? ""}
-                onChange={(e) => update("alt", e.target.value)}
+                value={display("alt")}
+                onChange={(e) => updateLocalized("alt", e.target.value)}
                 placeholder="画像の説明"
               />
             </>
@@ -70,27 +90,21 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "wifi" && (
             <>
               <Input
-                label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
-                placeholder="WiFi"
-              />
-              <Input
                 label="SSID"
-                value={(content.ssid as string) ?? ""}
-                onChange={(e) => update("ssid", e.target.value)}
+                value={display("ssid")}
+                onChange={(e) => updateLocalized("ssid", e.target.value)}
                 placeholder="ネットワーク名"
               />
               <Input
                 label="パスワード"
-                value={(content.password as string) ?? ""}
-                onChange={(e) => update("password", e.target.value)}
+                value={display("password")}
+                onChange={(e) => updateLocalized("password", e.target.value)}
                 placeholder="パスワード"
               />
               <Input
                 label="説明"
-                value={(content.description as string) ?? ""}
-                onChange={(e) => update("description", e.target.value)}
+                value={display("description")}
+                onChange={(e) => updateLocalized("description", e.target.value)}
                 placeholder="任意"
               />
             </>
@@ -99,28 +113,22 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "breakfast" && (
             <>
               <Input
-                label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
-                placeholder="朝食"
-              />
-              <Input
                 label="時間"
-                value={(content.time as string) ?? ""}
-                onChange={(e) => update("time", e.target.value)}
+                value={display("time")}
+                onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="7:00–9:30"
               />
               <Input
                 label="会場"
-                value={(content.location as string) ?? ""}
-                onChange={(e) => update("location", e.target.value)}
+                value={display("location")}
+                onChange={(e) => updateLocalized("location", e.target.value)}
                 placeholder="1F ダイニング"
               />
               <Input
-                label="説明"
-                value={(content.description as string) ?? ""}
-                onChange={(e) => update("description", e.target.value)}
-                placeholder="任意"
+                label="メニュー"
+                value={display("menu")}
+                onChange={(e) => updateLocalized("menu", e.target.value)}
+                placeholder="朝食メニュー・備考"
               />
             </>
           )}
@@ -129,20 +137,20 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
             <>
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="チェックアウト"
               />
               <Input
                 label="時刻"
-                value={(content.time as string) ?? ""}
-                onChange={(e) => update("time", e.target.value)}
+                value={display("time")}
+                onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="11:00"
               />
               <Input
                 label="補足"
-                value={(content.note as string) ?? ""}
-                onChange={(e) => update("note", e.target.value)}
+                value={display("note")}
+                onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
               <Input
@@ -153,9 +161,131 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
               />
               <Input
                 label="リンクラベル"
-                value={(content.linkLabel as string) ?? ""}
-                onChange={(e) => update("linkLabel", e.target.value)}
+                value={display("linkLabel")}
+                onChange={(e) => updateLocalized("linkLabel", e.target.value)}
                 placeholder="詳細"
+              />
+            </>
+          )}
+
+          {card.type === "taxi" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="タクシー"
+              />
+              <Input
+                label="電話番号"
+                value={(content.phone as string) ?? ""}
+                onChange={(e) => update("phone", e.target.value)}
+                placeholder="03-1234-5678"
+              />
+              <Input
+                label="会社名"
+                value={display("companyName")}
+                onChange={(e) => updateLocalized("companyName", e.target.value)}
+                placeholder="〇〇タクシー"
+              />
+              <Input
+                label="備考"
+                value={display("note")}
+                onChange={(e) => updateLocalized("note", e.target.value)}
+                placeholder="任意"
+              />
+            </>
+          )}
+
+          {card.type === "restaurant" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="レストラン"
+              />
+              <Input
+                label="時間"
+                value={display("time")}
+                onChange={(e) => updateLocalized("time", e.target.value)}
+                placeholder="7:00–22:00"
+              />
+              <Input
+                label="場所"
+                value={display("location")}
+                onChange={(e) => updateLocalized("location", e.target.value)}
+                placeholder="1F"
+              />
+              <Input
+                label="メニュー"
+                value={display("menu")}
+                onChange={(e) => updateLocalized("menu", e.target.value)}
+                placeholder="メニュー・備考"
+              />
+            </>
+          )}
+
+          {card.type === "laundry" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="ランドリー"
+              />
+              <Input
+                label="営業時間"
+                value={display("hours")}
+                onChange={(e) => updateLocalized("hours", e.target.value)}
+                placeholder="9:00–18:00"
+              />
+              <Input
+                label="料金・備考"
+                value={display("priceNote")}
+                onChange={(e) => updateLocalized("priceNote", e.target.value)}
+                placeholder="料金表・注意事項"
+              />
+              <Input
+                label="連絡先"
+                value={display("contact")}
+                onChange={(e) => updateLocalized("contact", e.target.value)}
+                placeholder="内線1234"
+              />
+            </>
+          )}
+
+          {card.type === "emergency" && (
+            <>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="緊急連絡先"
+              />
+              <Input
+                label="火災"
+                value={(content.fire as string) ?? ""}
+                onChange={(e) => update("fire", e.target.value)}
+                placeholder="119"
+              />
+              <Input
+                label="警察"
+                value={(content.police as string) ?? ""}
+                onChange={(e) => update("police", e.target.value)}
+                placeholder="110"
+              />
+              <Input
+                label="病院"
+                value={display("hospital")}
+                onChange={(e) => updateLocalized("hospital", e.target.value)}
+                placeholder="救急病院番号・住所"
+              />
+              <Input
+                label="備考"
+                value={display("note")}
+                onChange={(e) => updateLocalized("note", e.target.value)}
+                placeholder="任意"
               />
             </>
           )}
@@ -164,8 +294,8 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
             <>
               <Input
                 label="住所・施設名"
-                value={(content.address as string) ?? ""}
-                onChange={(e) => update("address", e.target.value)}
+                value={display("address")}
+                onChange={(e) => updateLocalized("address", e.target.value)}
                 placeholder="ホテル住所"
               />
             </>
@@ -175,15 +305,15 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
             <>
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="お知らせ"
               />
               <div className="w-full">
                 <label className="mb-1.5 block text-xs font-medium text-slate-500">本文</label>
                 <textarea
-                  value={(content.body as string) ?? ""}
-                  onChange={(e) => update("body", e.target.value)}
+                  value={display("body")}
+                  onChange={(e) => updateLocalized("body", e.target.value)}
                   placeholder="告知内容"
                   rows={3}
                   className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
@@ -207,8 +337,8 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
             <>
               <Input
                 label="ボタンラベル"
-                value={(content.label as string) ?? ""}
-                onChange={(e) => update("label", e.target.value)}
+                value={display("label")}
+                onChange={(e) => updateLocalized("label", e.target.value)}
                 placeholder="ボタンのテキスト"
               />
               <Input

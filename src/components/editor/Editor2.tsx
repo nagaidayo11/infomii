@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { LocaleProvider } from "@/components/locale-context";
 import { EditorLayout } from "./EditorLayout";
 import { CardLibrary } from "./CardLibrary";
 import { Canvas } from "./Canvas";
@@ -10,7 +11,7 @@ import { useEditor2Store } from "./store";
 /**
  * Infomii Editor 2.0 — Card-based CMS editor.
  * 3 columns: Card Library | Live Page Canvas (375px) | Card Settings Panel.
- * When card order changes, reorderCards() updates local state; persist to Supabase in your app (e.g. subscribe to store or pass onOrderChange).
+ * エディタでは常に日本語ロケールで表示。多言語データは content の { ja, en, zh, ko } で保存可能。
  */
 export function Editor2() {
   const cards = useEditor2Store((s) => s.cards);
@@ -26,7 +27,8 @@ export function Editor2() {
   );
 
   return (
-    <EditorLayout
+    <LocaleProvider value="ja">
+      <EditorLayout
       library={<CardLibrary onAddCard={addCard} />}
       canvas={
         <Canvas
@@ -40,5 +42,6 @@ export function Editor2() {
         <SettingsPanel card={selectedCard} onUpdate={updateCard} />
       }
     />
+    </LocaleProvider>
   );
 }

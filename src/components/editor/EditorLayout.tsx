@@ -16,7 +16,7 @@ type EditorLayoutProps = {
 export function EditorLayout({ library, canvas, settings }: EditorLayoutProps) {
   return (
     <div
-      className="flex h-[100vh] min-h-[640px] w-full overflow-hidden bg-ds-bg"
+      className="flex h-full min-h-[640px] w-full overflow-hidden bg-ds-bg"
       role="application"
       aria-label="ページエディタ"
       data-editor-version="2"

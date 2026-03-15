@@ -2,16 +2,19 @@
 
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { getLocalizedContent } from "@/lib/localized-content";
+import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 
 type ImageCardProps = {
   card: EditorCard;
   isSelected?: boolean;
+  locale?: string;
 };
 
-export function ImageCard({ card, isSelected }: ImageCardProps) {
+export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const src = (card.content?.src as string | undefined) ?? "";
-  const alt = (card.content?.alt as string | undefined) ?? "";
+  const alt = getLocalizedContent(card.content?.alt as LocalizedString | undefined, locale);
   return (
     <Card padding="none" className={isSelected ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg" : ""}>
       {src ? (

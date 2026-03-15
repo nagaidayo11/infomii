@@ -1787,6 +1787,71 @@ export function qrCodeImageUrl(dataUrl: string, size = 280): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(dataUrl)}`;
 }
 
+export type PageViewAnalytics = {
+  totalViews: number;
+  byCountry: Array<{ country: string; count: number }>;
+  byLanguage: Array<{ language: string; count: number }>;
+  byDay: Array<{ date: string; count: number }>;
+};
+
+/**
+ * QR analytics: page_views for current hotel's pages (last 30 days).
+ */
+export async function getPageViewAnalytics(): Promise<PageViewAnalytics> {
+  const empty: PageViewAnalytics = {
+    totalViews: 0,
+    byCountry: [],
+    byLanguage: [],
+    byDay: [],
+  };
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return empty;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return empty;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data: infoRows, error: infoError } = await supabase
+    .from("informations")
+    .select("id")
+    .eq("hotel_id", hotelId);
+  if (infoError || !infoRows?.length) return empty;
+  const pageIds = infoRows.map((r) => r.id);
+
+  const { data: views, error } = await supabase
+    .from("page_views")
+    .select("country, language, viewed_at, device")
+    .in("page_id", pageIds)
+    .gte("viewed_at", thirtyDaysAgo.toISOString());
+  if (error) throw toError(error, "ページビュー分析の取得に失敗しました");
+
+  const rows = views ?? [];
+  const totalViews = rows.length;
+  const countryCount = new Map<string, number>();
+  const languageCount = new Map<string, number>();
+  const dayCount = new Map<string, number>();
+  for (const r of rows) {
+    const c = (r.country as string) || "不明";
+    countryCount.set(c, (countryCount.get(c) ?? 0) + 1);
+    const lang = (r.language as string) || "不明";
+    languageCount.set(lang, (languageCount.get(lang) ?? 0) + 1);
+    const dateKey = (r.viewed_at as string).slice(0, 10);
+    dayCount.set(dateKey, (dayCount.get(dateKey) ?? 0) + 1);
+  }
+
+  const byCountry = Array.from(countryCount.entries())
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count);
+  const byLanguage = Array.from(languageCount.entries())
+    .map(([language, count]) => ({ language, count }))
+    .sort((a, b) => b.count - a.count);
+  const sortedDays = Array.from(dayCount.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const byDay = sortedDays.map(([date, count]) => ({ date, count }));
+
+  return { totalViews, byCountry, byLanguage, byDay };
+}
+
 export async function listCurrentHotelAuditLogs(limit = 20): Promise<HotelAuditLog[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {

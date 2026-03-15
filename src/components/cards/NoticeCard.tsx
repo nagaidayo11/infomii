@@ -1,18 +1,21 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getLocalizedContent } from "@/lib/localized-content";
+import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 
 type NoticeCardProps = {
   card: EditorCard;
   isSelected?: boolean;
+  locale?: string;
 };
 
-export function NoticeCard({ card, isSelected }: NoticeCardProps) {
-  const c = card.content as { title?: string; body?: string; variant?: string } | undefined;
-  const title = c?.title ?? "お知らせ";
-  const body = c?.body;
-  const variant = c?.variant ?? "info";
+export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps) {
+  const c = card.content as Record<string, unknown> | undefined;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "お知らせ";
+  const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
+  const variant = (c?.variant as string) ?? "info";
   const isWarning = variant === "warning";
   return (
     <Card

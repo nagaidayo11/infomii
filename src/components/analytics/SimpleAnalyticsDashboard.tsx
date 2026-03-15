@@ -250,6 +250,10 @@ export function SimpleAnalyticsDashboard() {
           </div>
 
           <p className="text-center text-xs text-slate-400">
+            <Link href="/dashboard/analytics/page-views" className="hover:text-slate-600">
+              QR分析（ページビュー）
+            </Link>
+            {" · "}
             <Link href="/dashboard/qr" className="hover:text-slate-600">
               QR管理へ
             </Link>

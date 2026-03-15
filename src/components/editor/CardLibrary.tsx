@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { AIGenerateFromUrl } from "./AIGenerateFromUrl";
 import { CARD_LIBRARY_ITEMS, type CardType } from "./types";
 
 type CardLibraryProps = {
@@ -58,9 +60,31 @@ const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   ),
+  taxi: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+    </svg>
+  ),
+  restaurant: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  ),
+  laundry: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  ),
+  emergency: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
 };
 
 export function CardLibrary({ onAddCard }: CardLibraryProps) {
+  const [showAi, setShowAi] = useState(false);
+
   return (
     <>
       <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-3">
@@ -68,7 +92,19 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
         <p className="mt-1 text-xs text-slate-500">
           クリックで追加、またはドラッグして並べ替え
         </p>
+        <button
+          type="button"
+          onClick={() => setShowAi((v) => !v)}
+          className="mt-2 w-full rounded-lg border border-ds-border bg-ds-bg px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+        >
+          {showAi ? "URL自動作成を閉じる" : "URLから自動作成"}
+        </button>
       </div>
+      {showAi && (
+        <div className="shrink-0 border-b border-ds-border bg-ds-card p-3">
+          <AIGenerateFromUrl onClose={() => setShowAi(false)} />
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-3">
         <div className="space-y-2">
           {CARD_LIBRARY_ITEMS.map((item) => (

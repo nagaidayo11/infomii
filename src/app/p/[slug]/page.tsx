@@ -14,6 +14,22 @@ type PublicPageProps = {
   searchParams: Promise<{ src?: string; embed?: string }>;
 };
 
+/** Derive device category from User-Agent. */
+function getDeviceFromUserAgent(ua: string | null): string {
+  if (!ua) return "desktop";
+  const lower = ua.toLowerCase();
+  if (/ipad|tablet|playbook|silk|(android(?!.*mobile))/.test(lower)) return "tablet";
+  if (/mobile|android|iphone|ipod|webos|blackberry|opera mini|iemobile/i.test(lower)) return "mobile";
+  return "desktop";
+}
+
+/** First preferred language from Accept-Language (e.g. "ja" or "en"). */
+function getLanguageFromAccept(acceptLanguage: string | null): string {
+  if (!acceptLanguage) return "";
+  const first = acceptLanguage.split(",")[0]?.trim().split("-")[0];
+  return first ?? "";
+}
+
 function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock[] {
   if (Array.isArray(value) && value.length > 0) {
     return value
@@ -871,6 +887,20 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     if (viewError) {
       console.error("failed to insert information_view", viewError.message);
     }
+  }
+
+  const country = requestHeaders.get("x-vercel-ip-country") ?? requestHeaders.get("cf-ipcountry") ?? "";
+  const language = getLanguageFromAccept(requestHeaders.get("accept-language"));
+  const device = getDeviceFromUserAgent(requestHeaders.get("user-agent"));
+  const { error: pageViewError } = await supabase.from("page_views").insert({
+    page_id: row.id,
+    country: country.slice(0, 10),
+    language: language.slice(0, 20),
+    viewed_at: new Date().toISOString(),
+    device,
+  });
+  if (pageViewError) {
+    console.error("failed to insert page_view", pageViewError.message);
   }
 
   return (

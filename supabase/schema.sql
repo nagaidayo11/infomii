@@ -107,6 +107,20 @@ alter table public.information_views
 add column if not exists user_agent text;
 alter table public.information_views
 add column if not exists created_at timestamptz not null default now();
+
+-- QR analytics: page views for public pages (/p/[slug])
+create table if not exists public.page_views (
+  id uuid primary key default gen_random_uuid(),
+  page_id uuid not null references public.informations(id) on delete cascade,
+  country text not null default '',
+  language text not null default '',
+  viewed_at timestamptz not null default now(),
+  device text not null default ''
+);
+create index if not exists page_views_page_id_idx on public.page_views (page_id);
+create index if not exists page_views_viewed_at_idx on public.page_views (viewed_at desc);
+alter table public.page_views enable row level security;
+
 alter table public.audit_logs
 add column if not exists hotel_id uuid references public.hotels(id) on delete cascade;
 alter table public.audit_logs
@@ -218,6 +232,8 @@ drop policy if exists "authenticated update own subscriptions" on public.subscri
 drop policy if exists "authenticated delete own subscriptions" on public.subscriptions;
 drop policy if exists "public insert published information views" on public.information_views;
 drop policy if exists "authenticated read own information views" on public.information_views;
+drop policy if exists "page_views anon insert published" on public.page_views;
+drop policy if exists "page_views authenticated read own hotel" on public.page_views;
 drop policy if exists "authenticated insert own audit logs" on public.audit_logs;
 drop policy if exists "authenticated read own audit logs" on public.audit_logs;
 
@@ -417,6 +433,34 @@ using (
     from public.hotel_memberships m
     where m.hotel_id = information_views.hotel_id
       and m.user_id = auth.uid()
+  )
+);
+
+create policy "page_views anon insert published"
+on public.page_views
+for insert
+to anon, authenticated
+with check (
+  exists (
+    select 1
+    from public.informations i
+    where i.id = page_views.page_id
+      and i.status = 'published'
+      and (i.publish_at is null or i.publish_at <= now())
+      and (i.unpublish_at is null or i.unpublish_at > now())
+  )
+);
+
+create policy "page_views authenticated read own hotel"
+on public.page_views
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.informations i
+    join public.hotel_memberships m on m.hotel_id = i.hotel_id and m.user_id = auth.uid()
+    where i.id = page_views.page_id
   )
 );
 

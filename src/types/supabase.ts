@@ -193,6 +193,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      page_views: {
+        Row: {
+          id: string;
+          page_id: string;
+          country: string;
+          language: string;
+          viewed_at: string;
+          device: string;
+        };
+        Insert: {
+          id?: string;
+          page_id: string;
+          country?: string;
+          language?: string;
+          viewed_at?: string;
+          device?: string;
+        };
+        Update: {
+          page_id?: string;
+          country?: string;
+          language?: string;
+          viewed_at?: string;
+          device?: string;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;

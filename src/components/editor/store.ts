@@ -5,10 +5,18 @@ import { nanoid } from "nanoid";
 import type { EditorCard, CardType } from "./types";
 import { createEmptyCard } from "./types";
 
+export type GeneratedCardInput = {
+  type: string;
+  content: Record<string, unknown>;
+  order: number;
+};
+
 export type Editor2State = {
   cards: EditorCard[];
   selectedCardId: string | null;
   setCards: (cards: EditorCard[]) => void;
+  /** Load cards from API (e.g. AI generate from URL). Adds id, normalizes order. */
+  loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
   addCard: (type: CardType) => void;
   updateCard: (id: string, content: Record<string, unknown>) => void;
   reorderCards: (cards: EditorCard[]) => void;
@@ -21,6 +29,20 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   selectedCardId: null,
 
   setCards: (cards) => set({ cards }),
+
+  loadGeneratedCards: (inputs) => {
+    const allowed: CardType[] = ["text", "image", "wifi", "breakfast", "checkout", "map", "notice", "button", "schedule", "menu", "taxi", "restaurant", "laundry", "emergency"];
+    const cards: EditorCard[] = inputs
+      .filter((c) => allowed.includes(c.type as CardType))
+      .sort((a, b) => a.order - b.order)
+      .map((c, i) => ({
+        id: nanoid(10),
+        type: c.type as CardType,
+        content: c.content ?? {},
+        order: i,
+      }));
+    set({ cards, selectedCardId: cards[0]?.id ?? null });
+  },
 
   addCard: (type) => {
     const cards = get().cards;
