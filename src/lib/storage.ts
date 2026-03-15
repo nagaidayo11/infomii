@@ -3377,3 +3377,79 @@ export async function createStripePortalSession(): Promise<string> {
 
   return payload.url;
 }
+
+// --- Template marketplace (templates + pages + cards) ---
+
+export type TemplateRow = {
+  id: string;
+  name: string;
+  description: string;
+  preview_image: string;
+  cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
+  created_at: string;
+};
+
+export async function listTemplates(): Promise<TemplateRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("templates")
+    .select("id,name,description,preview_image,cards,created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw toError(error, "テンプレート一覧の取得に失敗しました");
+  return (data ?? []) as TemplateRow[];
+}
+
+export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: template, error: tError } = await supabase
+    .from("templates")
+    .select("id,name,cards")
+    .eq("id", templateId)
+    .single();
+  if (tError || !template) throw toError(tError ?? new Error("Not found"), "テンプレートの取得に失敗しました");
+
+  const title = (template.name as string) ?? "無題のページ";
+  const baseSlug = createSlug(title);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+  const { data: newPage, error: pError } = await supabase
+    .from("pages")
+    .insert({ hotel_id: hotelId, title, slug })
+    .select("id")
+    .single();
+  if (pError || !newPage) throw toError(pError ?? new Error("Insert failed"), "ページの作成に失敗しました");
+  const pageId = newPage.id as string;
+
+  const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  if (cards.length > 0) {
+    const rows = cards.map((c, i) => ({
+      page_id: pageId,
+      type: c.type ?? "text",
+      content: c.content ?? {},
+      order: c.order ?? i,
+    }));
+    const { error: cError } = await supabase.from("cards").insert(rows);
+    if (cError) throw toError(cError, "カードの挿入に失敗しました");
+  }
+
+  return { pageId };
+}
+
+export type PageCardRow = { id: string; type: string; content: Record<string, unknown>; order: number };
+
+export async function getPageCards(pageId: string): Promise<PageCardRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("cards")
+    .select("id,type,content,order")
+    .eq("page_id", pageId)
+    .order("order", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as PageCardRow[];
+}

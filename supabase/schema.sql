@@ -464,6 +464,73 @@ using (
   )
 );
 
+-- Editor 2.0: pages (one page per hotel, slug unique per hotel)
+create table if not exists public.pages (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  title text not null,
+  slug text not null,
+  created_at timestamptz not null default now(),
+  unique(hotel_id, slug)
+);
+create index if not exists pages_hotel_id_idx on public.pages (hotel_id);
+alter table public.pages enable row level security;
+
+-- Editor 2.0: cards belong to a page
+create table if not exists public.cards (
+  id uuid primary key default gen_random_uuid(),
+  page_id uuid not null references public.pages(id) on delete cascade,
+  type text not null,
+  content jsonb not null default '{}'::jsonb,
+  "order" int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists cards_page_id_idx on public.cards (page_id);
+alter table public.cards enable row level security;
+
+-- Template marketplace: global templates (read by all authenticated)
+create table if not exists public.templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text not null default '',
+  preview_image text not null default '',
+  cards jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+alter table public.templates enable row level security;
+
+drop policy if exists "pages authenticated read write own hotel" on public.pages;
+create policy "pages authenticated read write own hotel"
+on public.pages for all to authenticated
+using (
+  exists (select 1 from public.hotel_memberships m where m.hotel_id = pages.hotel_id and m.user_id = auth.uid())
+)
+with check (
+  exists (select 1 from public.hotel_memberships m where m.hotel_id = pages.hotel_id and m.user_id = auth.uid())
+);
+
+drop policy if exists "cards authenticated read write via page" on public.cards;
+create policy "cards authenticated read write via page"
+on public.cards for all to authenticated
+using (
+  exists (
+    select 1 from public.pages p
+    join public.hotel_memberships m on m.hotel_id = p.hotel_id and m.user_id = auth.uid()
+    where p.id = cards.page_id
+  )
+)
+with check (
+  exists (
+    select 1 from public.pages p
+    join public.hotel_memberships m on m.hotel_id = p.hotel_id and m.user_id = auth.uid()
+    where p.id = cards.page_id
+  )
+);
+
+drop policy if exists "templates authenticated read" on public.templates;
+create policy "templates authenticated read"
+on public.templates for select to authenticated using (true);
+
 create policy "authenticated insert own audit logs"
 on public.audit_logs
 for insert

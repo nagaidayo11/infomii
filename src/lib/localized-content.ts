@@ -12,7 +12,8 @@ export type LocalizedString =
   | string
   | { ja?: string; en?: string; zh?: string; ko?: string };
 
-const FALLBACK_ORDER: SupportedLocale[] = ["ja", "en", "zh", "ko"];
+/** 言語が存在しない場合のフォールバック順（英語を優先） */
+const FALLBACK_ORDER: SupportedLocale[] = ["en", "ja", "zh", "ko"];
 
 /**
  * 言語コードを正規化（例: "en-US" → "en"）。
@@ -28,7 +29,7 @@ export function normalizeLocale(lang: string): SupportedLocale | null {
 
 /**
  * ローカル文字列または通常の文字列から、指定言語の表示用文字列を取得する。
- * - value がオブジェクトの場合: 指定 locale → ja → en → 先頭キー の順でフォールバック
+ * - value がオブジェクトの場合: 指定 locale → en → ja → zh → ko の順でフォールバック（英語優先）
  * - value が文字列の場合: そのまま返す（従来の単一言語データとの互換）
  */
 export function getLocalizedContent(

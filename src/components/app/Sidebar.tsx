@@ -26,7 +26,7 @@ const MENU_ITEMS: Array<{ href: string; label: string; icon: React.ReactNode }> 
     ),
   },
   {
-    href: "/dashboard/templates",
+    href: "/templates",
     label: "テンプレート",
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

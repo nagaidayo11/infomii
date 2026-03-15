@@ -1,10 +1,15 @@
 "use client";
 
+import { useRef, useCallback, useEffect } from "react";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import type { EditorCard } from "./types";
 import { CARD_TYPE_LABELS } from "./types";
+import { useEditor2Store } from "./store";
+
+const TRANSLATE_DEBOUNCE_MS = 1200;
+const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
 
 type SettingsPanelProps = {
   card: EditorCard | null;
@@ -20,7 +25,22 @@ function isLocalizedObject(v: unknown): v is Record<string, string> {
   );
 }
 
+async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: string; ko: string } | null> {
+  const res = await fetch("/api/ai/translate-content", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { en?: string; zh?: string; ko?: string };
+  if (typeof data.en !== "string" || typeof data.zh !== "string" || typeof data.ko !== "string") return null;
+  return { en: data.en, zh: data.zh, ko: data.ko };
+}
+
 export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
+  const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
+
   if (!card) {
     return (
       <>
@@ -43,12 +63,47 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   /** 多言語フィールドの表示値（日本語を優先） */
   const display = (key: string) =>
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
-  /** 多言語フィールドの更新（既存の他言語を保持し ja を更新） */
+
+  const flushTranslate = useCallback(() => {
+    if (translateTimeoutRef.current) {
+      clearTimeout(translateTimeoutRef.current);
+      translateTimeoutRef.current = null;
+    }
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    if (!pending) return;
+    const { cardId, key, ja } = pending;
+    translateJaToEnZhKo(ja).then((result) => {
+      if (!result) return;
+      const currentCard = useEditor2Store.getState().cards.find((c) => c.id === cardId);
+      if (!currentCard) return;
+      const curVal = (currentCard.content as Record<string, unknown>)?.[key];
+      const currentJa = getLocalizedContent(curVal as LocalizedString | undefined, "ja");
+      if (currentJa !== ja) return;
+      onUpdate(cardId, {
+        ...(currentCard.content as Record<string, unknown>),
+        [key]: { ja, en: result.en, zh: result.zh, ko: result.ko },
+      });
+    });
+  }, [onUpdate]);
+
+  /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。入力後に自動で en/zh/ko を翻訳。 */
   const updateLocalized = (key: string, value: string) => {
     const cur = content[key];
     const next = isLocalizedObject(cur) ? { ...cur, ja: value } : value;
     update(key, next);
+
+    if (value.length < MIN_TEXT_LENGTH_FOR_TRANSLATE) return;
+    if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
+    pendingRef.current = { cardId: card.id, key, ja: value };
+    translateTimeoutRef.current = setTimeout(flushTranslate, TRANSLATE_DEBOUNCE_MS);
   };
+
+  useEffect(() => {
+    return () => {
+      if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <>

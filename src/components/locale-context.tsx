@@ -26,14 +26,15 @@ export function useLocale(): string {
 /**
  * 訪問者のブラウザ言語を検出し、ロケールを提供する。
  * 公開ページでカードを表示する際にラップして使用する。
+ * 対応外の言語の場合は英語 (en) にフォールバック。
  */
 export function VisitorLocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<string>("ja");
+  const [locale, setLocale] = useState<string>("en");
 
   useEffect(() => {
     const raw = typeof navigator !== "undefined" ? navigator.language : "";
     const normalized = normalizeLocale(raw);
-    setLocale(normalized ?? "ja");
+    setLocale(normalized ?? "en");
   }, []);
 
   return (

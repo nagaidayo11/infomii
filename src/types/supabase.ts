@@ -219,6 +219,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      pages: {
+        Row: { id: string; hotel_id: string; title: string; slug: string; created_at: string };
+        Insert: { id?: string; hotel_id: string; title: string; slug: string; created_at?: string };
+        Update: { hotel_id?: string; title?: string; slug?: string; created_at?: string };
+        Relationships: [];
+      };
+      cards: {
+        Row: { id: string; page_id: string; type: string; content: Record<string, unknown>; order: number; created_at: string };
+        Insert: { id?: string; page_id: string; type: string; content?: Record<string, unknown>; order?: number; created_at?: string };
+        Update: { page_id?: string; type?: string; content?: Record<string, unknown>; order?: number; created_at?: string };
+        Relationships: [];
+      };
+      templates: {
+        Row: { id: string; name: string; description: string; preview_image: string; cards: unknown; created_at: string };
+        Insert: { id?: string; name: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string };
+        Update: { name?: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
