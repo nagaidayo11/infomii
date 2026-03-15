@@ -1,4 +1,5 @@
 export { Editor } from "./Editor";
+export { EditorLayout } from "./EditorLayout";
 /** Notion風ビジュアルエディタ（Editor と同一） */
 export { Editor as NotionVisualEditor } from "./Editor";
 export { BlockRenderer } from "./BlockRenderer";

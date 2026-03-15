@@ -99,6 +99,7 @@ function LibraryItem({
           ? "cursor-grabbing opacity-80 ring-2 ring-ds-primary/30"
           : "cursor-grab hover:border-slate-300 hover:shadow-[var(--shadow-ds-md)] active:scale-[0.99]")
       }
+      aria-label={`${label}を追加`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
         {CARD_ICONS[type]}
@@ -111,17 +112,24 @@ function LibraryItem({
   );
 }
 
+/** 左パネル表示順: Text, Image, WiFi, Breakfast, Checkout, Map, Notice, Button, Schedule */
 const MAIN_CARD_TYPES: PageBlockType[] = [
-  "wifi", "breakfast", "checkout", "map", "text", "image", "button", "schedule", "notice",
+  "text", "image", "wifi", "breakfast", "checkout", "map", "notice", "button", "schedule",
 ];
 
 export function BlockLibrary() {
-  const mainItems = BLOCK_LIBRARY_ITEMS.filter((item) => MAIN_CARD_TYPES.includes(item.type));
+  const byOrder = (a: (typeof BLOCK_LIBRARY_ITEMS)[0], b: (typeof BLOCK_LIBRARY_ITEMS)[0]) =>
+    MAIN_CARD_TYPES.indexOf(a.type) - MAIN_CARD_TYPES.indexOf(b.type);
+  const mainItems = BLOCK_LIBRARY_ITEMS.filter((item) => MAIN_CARD_TYPES.includes(item.type)).sort(byOrder);
   const moreItems = BLOCK_LIBRARY_ITEMS.filter((item) => !MAIN_CARD_TYPES.includes(item.type));
 
   return (
-    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-ds-border bg-ds-bg transition-colors">
-      <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-4 shadow-[var(--shadow-ds-xs)]">
+    <aside
+      className="flex h-full w-[280px] shrink-0 flex-col border-r border-ds-border bg-ds-bg transition-colors"
+      role="region"
+      aria-label="カードを追加"
+    >
+      <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-3">
         <h2 className="text-sm font-semibold text-slate-800">カードを追加</h2>
         <p className="mt-1 text-xs text-slate-500">
           クリックで追加、またはドラッグして並べ替え
