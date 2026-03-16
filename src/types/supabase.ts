@@ -232,9 +232,9 @@ export type Database = {
         Relationships: [];
       };
       templates: {
-        Row: { id: string; name: string; description: string; preview_image: string; cards: unknown; created_at: string };
-        Insert: { id?: string; name: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string };
-        Update: { name?: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string };
+        Row: { id: string; name: string; description: string; preview_image: string; cards: unknown; created_at: string; category: string | null };
+        Insert: { id?: string; name: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string; category?: string | null };
+        Update: { name?: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string; category?: string | null };
         Relationships: [];
       };
       audit_logs: {
