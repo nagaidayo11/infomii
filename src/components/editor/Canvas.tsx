@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -86,7 +86,7 @@ function SortableCardWrapper({
     isDragging,
   } = useSortable({ id: card.id });
 
-  const style = {
+  const style: CSSProperties = {
     transform: [
       CSS.Transform.toString(transform),
       isDragging ? "scale(0.98)" : "",
@@ -95,7 +95,7 @@ function SortableCardWrapper({
       .join(" ") || undefined,
     transition: transition ?? "transform 220ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 160ms ease-out",
     opacity: isDragging ? 0.5 : 1,
-    pointerEvents: isDragging ? "none" : undefined,
+    pointerEvents: isDragging ? ("none" as const) : undefined,
   };
 
   return (
