@@ -51,6 +51,65 @@ async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: stri
 }
 
 type NearbyItem = { name?: string; description?: string; link?: string };
+type GalleryImageItem = { src?: string; alt?: string };
+
+function GalleryItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : [{ src: "", alt: "" }]) as GalleryImageItem[];
+  const setItems = (next: GalleryImageItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof GalleryImageItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { src: "", alt: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">Images</span>
+        <button
+          type="button"
+          onClick={addItem}
+          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+        >
+          + Add
+        </button>
+      </div>
+      {items.slice(0, 6).map((_, i) => (
+        <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="text-xs text-slate-400 hover:text-red-600"
+            >
+              Remove
+            </button>
+          </div>
+          <Input
+            label={`Image ${i + 1} URL`}
+            value={items[i]?.src ?? ""}
+            onChange={(e) => updateItem(i, "src", e.target.value)}
+            placeholder="https://..."
+          />
+          <Input
+            label="Alt text"
+            value={items[i]?.alt ?? ""}
+            onChange={(e) => updateItem(i, "alt", e.target.value)}
+            placeholder="Optional"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function NearbyItemsEditor({
   content,
@@ -742,6 +801,32 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
                 </select>
               </div>
             </>
+          )}
+
+          {card.type === "gallery" && (
+            <>
+              <Input
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="Optional gallery title"
+              />
+              <GalleryItemsEditor content={content} onUpdate={update} />
+            </>
+          )}
+
+          {card.type === "divider" && (
+            <div className="w-full">
+              <label className={labelClass}>Style</label>
+              <select
+                value={(content.style as string) ?? "line"}
+                onChange={(e) => update("style", e.target.value)}
+                className={inputClass}
+              >
+                <option value="line">Line</option>
+                <option value="dotted">Dotted</option>
+              </select>
+            </div>
           )}
 
           {(card.type === "schedule" || card.type === "menu") && (

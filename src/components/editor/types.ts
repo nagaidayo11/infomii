@@ -24,7 +24,9 @@ export type CardType =
   | "image"
   | "button"
   | "schedule"
-  | "menu";
+  | "menu"
+  | "gallery"
+  | "divider";
 
 export type EditorCard = {
   id: string;
@@ -63,6 +65,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   button: "ボタン",
   schedule: "スケジュール",
   menu: "メニュー",
+  gallery: "ギャラリー",
+  divider: "区切り線",
 };
 
 /** Card types shown in the editor library (Notion-like canvas editor). */
@@ -74,6 +78,8 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "button",
   "image",
   "text",
+  "gallery",
+  "divider",
 ];
 
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
@@ -85,6 +91,8 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "button", label: "Button", description: "Link button" },
   { type: "image", label: "Image", description: "Photo or graphic" },
   { type: "text", label: "Text", description: "Heading and body" },
+  { type: "gallery", label: "Gallery", description: "Image grid" },
+  { type: "divider", label: "Divider", description: "Section separator" },
 ];
 
 /** Full list (all card types) — for backwards compatibility / migration. */
@@ -144,6 +152,10 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "営業時間", items: [{ day: "月〜日", time: "7:00–22:00", label: "" }] };
     case "menu":
       return { title: "メニュー", items: [{ name: "", price: "", description: "" }] };
+    case "gallery":
+      return { title: "", items: [{ src: "", alt: "" }] };
+    case "divider":
+      return { style: "line" };
     default:
       return { content: "" };
   }

@@ -29,10 +29,11 @@ export function AppLayout({
 }: AppLayoutProps) {
   const pathname = usePathname();
   const isEditor = pathname?.startsWith("/editor");
+  const showSidebar = !isEditor;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100/90">
-      <Sidebar />
+      {showSidebar && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar actions={topbarActions} />
         <main

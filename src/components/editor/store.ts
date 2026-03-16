@@ -36,7 +36,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   setCards: (cards) => set({ cards }),
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text"];
+    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
@@ -50,7 +50,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   addCard: (type) => {
-    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text"];
+    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider"];
     if (!allowed.includes(type)) return;
     const cards = get().cards;
     const order = cards.length; // append at bottom of page

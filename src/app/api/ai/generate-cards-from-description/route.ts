@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
-const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text"] as const;
+const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider"] as const;
 
 const CARD_SCHEMAS: Record<string, string> = {
   wifi: '{"ssid":"string","password":"string","description":"string"}',
@@ -12,6 +12,8 @@ const CARD_SCHEMAS: Record<string, string> = {
   button: '{"label":"string","href":"string"}',
   image: '{"src":"string","alt":"string"}',
   text: '{"content":"string"}',
+  gallery: '{"title":"string","items":[{"src":"string","alt":"string"}]}',
+  divider: '{"style":"line|dotted"}',
 };
 
 /** Generate cards from a natural-language description using AI. */

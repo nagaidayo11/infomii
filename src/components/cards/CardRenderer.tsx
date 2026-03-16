@@ -19,6 +19,8 @@ import { ImageCard } from "./ImageCard";
 import { ButtonCard } from "./ButtonCard";
 import { ScheduleCard } from "./ScheduleCard";
 import { MenuCard } from "./MenuCard";
+import { GalleryCard } from "./GalleryCard";
+import { DividerCard } from "./DividerCard";
 
 type CardRendererProps = {
   card: EditorCard;
@@ -66,6 +68,10 @@ export function CardRenderer({ card, isSelected = false }: CardRendererProps) {
       return <ScheduleCard card={card} isSelected={isSelected} locale={locale} />;
     case "menu":
       return <MenuCard card={card} isSelected={isSelected} locale={locale} />;
+    case "gallery":
+      return <GalleryCard card={card} isSelected={isSelected} locale={locale} />;
+    case "divider":
+      return <DividerCard card={card} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={card as EditorCard} isSelected={isSelected} locale={locale} />;
   }
