@@ -16,7 +16,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const src = (card.content?.src as string | undefined) ?? "";
   const alt = getLocalizedContent(card.content?.alt as LocalizedString | undefined, locale);
   return (
-    <Card padding="none" className={isSelected ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg" : ""}>
+    <Card padding="none" className="">
       {src ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100">
           <Image src={src} alt={alt} fill className="object-cover" unoptimized={src.startsWith("http")} />

@@ -11,6 +11,19 @@ import { useEditor2Store } from "./store";
 const TRANSLATE_DEBOUNCE_MS = 1200;
 const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
 
+const inputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
+const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
+
+const COLOR_PRESETS = [
+  { value: "", label: "Default" },
+  { value: "#2563eb", label: "Blue" },
+  { value: "#059669", label: "Green" },
+  { value: "#d97706", label: "Amber" },
+  { value: "#dc2626", label: "Red" },
+  { value: "#7c3aed", label: "Violet" },
+];
+
 type SettingsPanelProps = {
   card: EditorCard | null;
   onUpdate: (id: string, content: Record<string, unknown>) => void;
@@ -109,12 +122,12 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   if (!card) {
     return (
       <>
-        <div className="border-b border-ds-border bg-ds-card px-4 py-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            カード設定
+        <div className="border-b border-slate-200 bg-white px-4 py-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+            Card Settings
           </h2>
           <p className="mt-3 text-sm text-slate-500">
-            プレビューでカードを選択すると編集できます。左からカードを追加できます。
+            キャンバスでカードを1枚選択すると、ここで編集できます。
           </p>
         </div>
       </>
@@ -172,10 +185,14 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
 
   return (
     <>
-      <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-          {CARD_TYPE_LABELS[card.type]}
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+          Card Settings
         </h2>
+        <p className="mt-1 text-sm font-medium text-slate-800">
+          {CARD_TYPE_LABELS[card.type]}
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500">Changes update the canvas in real time.</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-4">
@@ -194,7 +211,7 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
                   onChange={(e) => updateLocalized("message", e.target.value)}
                   placeholder="おもてなしメッセージ"
                   rows={3}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
                 />
               </div>
             </>
@@ -203,74 +220,190 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "text" && (
             <>
               <Input
-                label="テキスト"
-                value={display("content")}
-                onChange={(e) => updateLocalized("content", e.target.value)}
-                placeholder="見出しや本文を入力"
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="Optional heading"
               />
+              <div className="w-full">
+                <label className={labelClass}>Text</label>
+                <textarea
+                  value={display("content")}
+                  onChange={(e) => updateLocalized("content", e.target.value)}
+                  placeholder="Heading or body text"
+                  rows={3}
+                  className={inputClass}
+                />
+              </div>
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
+              />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
           {card.type === "image" && (
             <>
               <Input
-                label="画像URL"
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="Optional caption"
+              />
+              <Input
+                label="Image URL"
                 value={(content.src as string) ?? ""}
                 onChange={(e) => update("src", e.target.value)}
                 placeholder="https://..."
               />
               <Input
-                label="代替テキスト"
+                label="Text (alt)"
                 value={display("alt")}
                 onChange={(e) => updateLocalized("alt", e.target.value)}
-                placeholder="画像の説明"
+                placeholder="Image description"
               />
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Optional emoji or icon"
+              />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
           {card.type === "wifi" && (
             <>
               <Input
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="e.g. Guest WiFi"
+              />
+              <Input
                 label="SSID"
                 value={display("ssid")}
                 onChange={(e) => updateLocalized("ssid", e.target.value)}
-                placeholder="ネットワーク名"
+                placeholder="Network name"
               />
               <Input
-                label="パスワード"
+                label="Password"
                 value={display("password")}
                 onChange={(e) => updateLocalized("password", e.target.value)}
-                placeholder="パスワード"
+                placeholder="Password"
               />
+              <div className="w-full">
+                <label className={labelClass}>Text</label>
+                <textarea
+                  value={display("description")}
+                  onChange={(e) => updateLocalized("description", e.target.value)}
+                  placeholder="Optional description"
+                  rows={2}
+                  className={inputClass}
+                />
+              </div>
               <Input
-                label="説明"
-                value={display("description")}
-                onChange={(e) => updateLocalized("description", e.target.value)}
-                placeholder="任意"
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
               />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
           {card.type === "breakfast" && (
             <>
               <Input
-                label="時間"
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="e.g. Breakfast"
+              />
+              <Input
+                label="Time"
                 value={display("time")}
                 onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="7:00–9:30"
               />
               <Input
-                label="会場"
+                label="Location"
                 value={display("location")}
                 onChange={(e) => updateLocalized("location", e.target.value)}
-                placeholder="1F ダイニング"
+                placeholder="1F Dining"
               />
+              <div className="w-full">
+                <label className={labelClass}>Text</label>
+                <textarea
+                  value={display("menu")}
+                  onChange={(e) => updateLocalized("menu", e.target.value)}
+                  placeholder="Menu or notes"
+                  rows={2}
+                  className={inputClass}
+                />
+              </div>
               <Input
-                label="メニュー"
-                value={display("menu")}
-                onChange={(e) => updateLocalized("menu", e.target.value)}
-                placeholder="朝食メニュー・備考"
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
               />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
@@ -434,11 +567,41 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "map" && (
             <>
               <Input
-                label="住所・施設名"
-                value={display("address")}
-                onChange={(e) => updateLocalized("address", e.target.value)}
-                placeholder="ホテル住所"
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="e.g. Location"
               />
+              <div className="w-full">
+                <label className={labelClass}>Text</label>
+                <textarea
+                  value={display("address")}
+                  onChange={(e) => updateLocalized("address", e.target.value)}
+                  placeholder="Address or place name"
+                  rows={2}
+                  className={inputClass}
+                />
+              </div>
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
+              />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
@@ -481,7 +644,7 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
                   onChange={(e) => updateLocalized("description", e.target.value)}
                   placeholder="施設の説明"
                   rows={2}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
                 />
               </div>
               <Input
@@ -496,30 +659,49 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "notice" && (
             <>
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="お知らせ"
+                placeholder="Notice"
               />
               <div className="w-full">
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">本文</label>
+                <label className={labelClass}>Text</label>
                 <textarea
                   value={display("body")}
                   onChange={(e) => updateLocalized("body", e.target.value)}
-                  placeholder="告知内容"
+                  placeholder="Announcement content"
                   rows={3}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                  className={inputClass}
                 />
               </div>
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
+              />
               <div className="w-full">
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">種類</label>
+                <label className={labelClass}>Color</label>
                 <select
-                  value={(content.variant as string) ?? "info"}
-                  onChange={(e) => update("variant", e.target.value)}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20"
+                  value={
+                    (content.color as string) ??
+                    (content.variant === "warning" ? "#d97706" : content.variant === "info" ? "#2563eb" : "")
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    onUpdate(card.id, {
+                      ...content,
+                      color: v,
+                      variant: v === "#d97706" ? "warning" : "info",
+                    });
+                  }}
+                  className={inputClass}
                 >
-                  <option value="info">お知らせ（青）</option>
-                  <option value="warning">注意（黄）</option>
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </>
@@ -528,17 +710,37 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
           {card.type === "button" && (
             <>
               <Input
-                label="ボタンラベル"
+                label="Title"
                 value={display("label")}
                 onChange={(e) => updateLocalized("label", e.target.value)}
-                placeholder="ボタンのテキスト"
+                placeholder="Button text"
               />
               <Input
-                label="リンクURL"
+                label="Button link"
                 value={(content.href as string) ?? ""}
                 onChange={(e) => update("href", e.target.value)}
                 placeholder="https://..."
               />
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="Emoji or icon name"
+              />
+              <div className="w-full">
+                <label className={labelClass}>Color</label>
+                <select
+                  value={(content.color as string) ?? ""}
+                  onChange={(e) => update("color", e.target.value)}
+                  className={inputClass}
+                >
+                  {COLOR_PRESETS.map((p) => (
+                    <option key={p.value || "default"} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 

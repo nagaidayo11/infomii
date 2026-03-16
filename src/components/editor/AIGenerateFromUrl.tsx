@@ -84,7 +84,7 @@ export function AIGenerateFromUrl({ onClose, className = "" }: AIGenerateFromUrl
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://..."
-          className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-ds-primary focus:outline-none focus:ring-2 focus:ring-ds-primary/20"
+          className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
           disabled={loading}
         />
         <div className="flex gap-2">

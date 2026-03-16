@@ -18,7 +18,7 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
   const menu = getLocalizedContent(c?.menu as LocalizedString | undefined, locale);
   return (
-    <Card padding="md" className={isSelected ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg" : ""}>
+    <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">🍽️ {title}</p>
       {time && <p className="mt-1 text-xs text-slate-600">時間: {time}</p>}
       {location && <p className="mt-0.5 text-xs text-slate-600">場所: {location}</p>}

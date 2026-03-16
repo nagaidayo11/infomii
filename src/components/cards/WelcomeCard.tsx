@@ -1,9 +1,11 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
+import { useEditor2Store } from "@/components/editor/store";
 
 type WelcomeCardProps = {
   card: EditorCard;
@@ -11,17 +13,45 @@ type WelcomeCardProps = {
   locale?: string;
 };
 
+function isLocalizedObj(v: unknown): v is Record<string, string> {
+  return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
+}
+
 export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProps) {
+  const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "ようこそ";
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
+
+  const updateKey = (key: string, nextValue: string) => {
+    const cur = c?.[key];
+    const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
+    updateCard(card.id, { ...c, [key]: next });
+  };
+
   return (
     <Card
       padding="lg"
-      className={isSelected ? "ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50" : ""}
+      className=""
     >
-      <p className="text-lg font-semibold text-slate-900">{title}</p>
-      {message && <p className="mt-2 text-sm leading-relaxed text-slate-600">{message}</p>}
+      <p className="text-lg font-semibold text-slate-900">
+        <InlineEditable
+          value={title}
+          onSave={(v) => updateKey("title", v)}
+          editable={isSelected}
+          className="text-lg font-semibold text-slate-900"
+        />
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        <InlineEditable
+          value={message}
+          onSave={(v) => updateKey("message", v)}
+          editable={isSelected}
+          multiline
+          className="block min-h-[1.5em] text-sm leading-relaxed text-slate-600"
+          placeholder="おもてなしメッセージ"
+        />
+      </p>
     </Card>
   );
 }

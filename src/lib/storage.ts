@@ -1617,6 +1617,12 @@ export function buildPublicQrUrl(slug: string): string {
   return `${window.location.origin}/p/${slug}?src=qr`;
 }
 
+/** Public URL for card-based page (guest view at /v/[slug]). */
+export function buildPublicUrlV(slug: string): string {
+  if (typeof window === "undefined") return `/v/${slug}`;
+  return `${window.location.origin}/v/${slug}`;
+}
+
 export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
   const empty: HotelViewMetrics = {
     totalViews7d: 0,
@@ -3444,6 +3450,25 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
 
 export type PageCardRow = { id: string; type: string; content: Record<string, unknown>; order: number };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isSupabaseId(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
+export type PageRow = { id: string; title: string; slug: string };
+
+export async function getPage(pageId: string): Promise<PageRow | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("pages")
+    .select("id,title,slug")
+    .eq("id", pageId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as PageRow;
+}
+
 export async function getPageCards(pageId: string): Promise<PageCardRow[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return [];
@@ -3454,4 +3479,51 @@ export async function getPageCards(pageId: string): Promise<PageCardRow[]> {
     .order("order", { ascending: true });
   if (error) return [];
   return (data ?? []) as PageCardRow[];
+}
+
+export type EditorCardForSave = { id: string; type: string; content: Record<string, unknown>; order: number };
+
+/**
+ * Persist cards to Supabase. Updates existing (by UUID id), inserts new (nanoid), deletes removed.
+ * Returns map of client id -> server id for newly inserted cards so the store can be updated.
+ */
+export async function savePageCards(
+  pageId: string,
+  cards: EditorCardForSave[]
+): Promise<{ updatedIds: Record<string, string> }> {
+  const supabase = getBrowserSupabaseClient();
+  const updatedIds: Record<string, string> = {};
+  if (!supabase) return { updatedIds };
+
+  const existing = await getPageCards(pageId);
+  const existingIds = new Set(existing.map((r) => r.id));
+  const storeIds = new Set(cards.map((c) => c.id));
+
+  for (const card of cards) {
+    if (isSupabaseId(card.id)) {
+      await supabase
+        .from("cards")
+        .update({ content: card.content, order: card.order })
+        .eq("id", card.id);
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("cards")
+        .insert({
+          page_id: pageId,
+          type: card.type,
+          content: card.content,
+          order: card.order,
+        })
+        .select("id")
+        .single();
+      if (!error && inserted?.id) updatedIds[card.id] = inserted.id as string;
+    }
+  }
+
+  const toDelete = existing.filter((r) => !storeIds.has(r.id));
+  for (const row of toDelete) {
+    await supabase.from("cards").delete().eq("id", row.id);
+  }
+
+  return { updatedIds };
 }

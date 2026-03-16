@@ -1,9 +1,11 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
+import { useEditor2Store } from "@/components/editor/store";
 
 type NearbyItem = { name?: string; description?: string; link?: string };
 
@@ -13,16 +15,31 @@ type NearbyCardProps = {
   locale?: string;
 };
 
+function isLocalizedObj(v: unknown): v is Record<string, string> {
+  return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
+}
+
 export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps) {
+  const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "周辺案内";
   const items = (Array.isArray(c?.items) ? c.items : []) as NearbyItem[];
+
+  const updateKey = (key: string, nextValue: string) => {
+    const cur = c?.[key];
+    const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
+    updateCard(card.id, { ...c, [key]: next });
+  };
+
   return (
     <Card
       padding="md"
-      className={isSelected ? "ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50" : ""}
+      className=""
     >
-      <p className="text-sm font-semibold text-slate-800">📍 {title}</p>
+      <p className="text-sm font-semibold text-slate-800">
+        📍{" "}
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} className="text-sm font-semibold text-slate-800" />
+      </p>
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {items.map((item, i) => (

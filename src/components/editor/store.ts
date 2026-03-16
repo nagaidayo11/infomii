@@ -14,6 +14,8 @@ export type GeneratedCardInput = {
 export type Editor2State = {
   cards: EditorCard[];
   selectedCardId: string | null;
+  /** Set by addCard, cleared after insertion animation (for UI micro-interaction). */
+  lastAddedCardId: string | null;
   setCards: (cards: EditorCard[]) => void;
   /** Load cards from API (e.g. AI generate from URL). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
@@ -24,14 +26,17 @@ export type Editor2State = {
   removeCard: (id: string) => void;
 };
 
+const INSERT_ANIMATION_MS = 320;
+
 export const useEditor2Store = create<Editor2State>((set, get) => ({
   cards: [],
   selectedCardId: null,
+  lastAddedCardId: null,
 
   setCards: (cards) => set({ cards }),
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["welcome", "wifi", "breakfast", "checkout", "nearby", "notice", "map", "restaurant", "taxi", "emergency", "laundry", "spa", "text", "image", "button", "schedule", "menu"];
+    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
@@ -45,11 +50,14 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   addCard: (type) => {
+    const allowed: CardType[] = ["wifi", "breakfast", "notice", "map", "button", "image", "text"];
+    if (!allowed.includes(type)) return;
     const cards = get().cards;
-    const order = cards.length;
+    const order = cards.length; // append at bottom of page
     const id = nanoid(10);
     const card = createEmptyCard(type, id, order);
-    set({ cards: [...cards, card], selectedCardId: id });
+    set({ cards: [...cards, card], selectedCardId: id, lastAddedCardId: id });
+    setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
   },
 
   updateCard: (id, content) =>

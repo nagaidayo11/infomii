@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Editor2 } from "@/components/editor";
+import { useAutoSaveCards } from "@/components/editor/useAutoSaveCards";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
 import { getPageCards } from "@/lib/storage";
@@ -12,6 +13,8 @@ function Editor2WithPageId() {
   const pageId = searchParams.get("pageId");
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
+
+  useAutoSaveCards(pageId);
 
   useEffect(() => {
     if (!pageId) return;
@@ -27,7 +30,7 @@ function Editor2WithPageId() {
     });
   }, [pageId, setCards, selectCard]);
 
-  return <Editor2 />;
+  return <Editor2 pageId={pageId} />;
 }
 
 /**

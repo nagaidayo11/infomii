@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { AIGenerateFromUrl } from "./AIGenerateFromUrl";
+import { AIGenerateFromDescription } from "./AIGenerateFromDescription";
 import { CARD_LIBRARY_ITEMS, type CardType } from "./types";
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
 };
 
-const CARD_ICONS: Record<CardType, React.ReactNode> = {
+export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   welcome: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -103,22 +104,27 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
 
   return (
     <>
-      <div className="shrink-0 border-b border-ds-border bg-ds-card px-4 py-3">
-        <h2 className="text-sm font-semibold text-slate-800">カードを追加</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          クリックで追加、またはドラッグして並べ替え
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+          Card Library
+        </h2>
+        <p className="mt-1.5 text-xs text-slate-500">
+          Click to insert at the bottom of the page
         </p>
         <button
           type="button"
           onClick={() => setShowAi((v) => !v)}
           className="mt-2 w-full rounded-lg border border-ds-border bg-ds-bg px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
         >
-          {showAi ? "URL自動作成を閉じる" : "URLから自動作成"}
+          {showAi ? "AI generation を閉じる" : "AI page generation"}
         </button>
       </div>
       {showAi && (
-        <div className="shrink-0 border-b border-ds-border bg-ds-card p-3">
-          <AIGenerateFromUrl onClose={() => setShowAi(false)} />
+        <div className="shrink-0 space-y-4 border-b border-slate-200 bg-white p-3">
+          <AIGenerateFromDescription onClose={() => setShowAi(false)} />
+          <div className="border-t border-slate-100 pt-3">
+            <AIGenerateFromUrl onClose={() => setShowAi(false)} />
+          </div>
         </div>
       )}
       <div className="flex-1 overflow-y-auto p-3">
@@ -129,7 +135,7 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
               type="button"
               onClick={() => onAddCard(item.type)}
               className="flex w-full items-center gap-3 rounded-xl border border-ds-border bg-ds-card p-3 text-left shadow-[var(--shadow-ds-sm)] transition-all duration-200 hover:border-slate-300 hover:shadow-[var(--shadow-ds-md)] active:scale-[0.99]"
-              aria-label={`${item.label}を追加`}
+              aria-label={`Add ${item.label}`}
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                 {CARD_ICONS[item.type]}

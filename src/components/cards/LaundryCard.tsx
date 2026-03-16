@@ -18,7 +18,7 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
   const priceNote = getLocalizedContent(c?.priceNote as LocalizedString | undefined, locale);
   const contact = getLocalizedContent(c?.contact as LocalizedString | undefined, locale);
   return (
-    <Card padding="md" className={isSelected ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg" : ""}>
+    <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">🧺 {title}</p>
       {hours && <p className="mt-1 text-xs text-slate-600">営業時間: {hours}</p>}
       {priceNote && <p className="mt-0.5 text-xs text-slate-500">{priceNote}</p>}

@@ -16,7 +16,7 @@ export function MenuCard({ card, isSelected, locale = "ja" }: MenuCardProps) {
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "メニュー";
   const items = (c?.items as unknown[]) ?? [];
   return (
-    <Card padding="md" className={isSelected ? "ring-2 ring-ds-primary ring-offset-2 ring-offset-ds-bg" : ""}>
+    <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">{title}</p>
       <p className="mt-1 text-xs text-slate-600">{items.length} 品</p>
     </Card>

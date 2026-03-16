@@ -65,8 +65,30 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   menu: "メニュー",
 };
 
-/** Hospitality-focused card library (display order). */
+/** Card types shown in the editor library (Notion-like canvas editor). */
+export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
+  "wifi",
+  "breakfast",
+  "notice",
+  "map",
+  "button",
+  "image",
+  "text",
+];
+
+/** Card library items for the canvas editor. Click inserts at bottom of page. */
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
+  { type: "wifi", label: "WiFi", description: "SSID, password, description" },
+  { type: "breakfast", label: "Breakfast", description: "Time, location, menu" },
+  { type: "notice", label: "Notice", description: "Announcements, notes" },
+  { type: "map", label: "Map", description: "Address, map link" },
+  { type: "button", label: "Button", description: "Link button" },
+  { type: "image", label: "Image", description: "Photo or graphic" },
+  { type: "text", label: "Text", description: "Heading and body" },
+];
+
+/** Full list (all card types) — for backwards compatibility / migration. */
+export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; description: string }> = [
   { type: "welcome", label: "ウェルカム", description: "おもてなしメッセージ" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード・説明" },
   { type: "breakfast", label: "朝食", description: "時間・会場・メニュー" },

@@ -21,7 +21,7 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
   return (
     <Card
       padding="md"
-      className={isSelected ? "ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50" : ""}
+      className=""
     >
       <p className="text-sm font-semibold text-slate-800">♨️ {title}</p>
       {hours && <p className="mt-1 text-xs text-slate-600">時間: {hours}</p>}
