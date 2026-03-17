@@ -7,7 +7,6 @@ import {
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
-  createBlankInformation,
   createBlankPage,
   type HotelViewMetrics,
   type PageViewAnalytics,
@@ -51,9 +50,10 @@ export function DashboardView() {
   async function handleCreatePage() {
     setCreating(true);
     try {
-      const id = await createBlankInformation("新規ページ");
-      if (id && typeof id === "string") {
-        router.push(`/editor/${id}`);
+      // Create a page (pages table) so the card editor can load it; getPage() queries pages, not informations.
+      const pageId = await createBlankPage("新規ページ");
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
       }
     } catch {
       setCreating(false);
