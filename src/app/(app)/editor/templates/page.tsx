@@ -1,29 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { TemplateGallery } from "@/components/template-gallery";
-import { Button, Card, Container } from "@/components/ui";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function TemplateGalleryPage() {
+/**
+ * Legacy /editor/templates: redirect to card-editor template gallery.
+ * Block-based editor UI has been removed; templates are at /templates.
+ */
+export default function EditorTemplatesRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/templates");
+  }, [router]);
+
   return (
-    <div className="min-h-screen bg-[#fafafa] py-8">
-      <Container>
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <Button href="/editor/builder" variant="ghost" size="md" className="rounded-lg">
-            ← エディタに戻る
-          </Button>
-        </div>
-        <Card padding="lg">
-          <TemplateGallery applyToEditor />
-          <p className="mt-6 text-center text-sm text-slate-500">
-            適用後は{" "}
-            <Link href="/editor/builder" className="font-medium text-emerald-700 hover:underline">
-              編集
-            </Link>
-            {" "}でプレビュー・編集できます。
-          </p>
-        </Card>
-      </Container>
+    <div className="flex min-h-screen items-center justify-center text-slate-500">
+      リダイレクト中…
     </div>
   );
 }

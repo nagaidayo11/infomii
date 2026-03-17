@@ -8,6 +8,7 @@ import {
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
   createBlankInformation,
+  createBlankPage,
   type HotelViewMetrics,
   type PageViewAnalytics,
 } from "@/lib/storage";
@@ -23,6 +24,7 @@ export function DashboardView() {
   const [pageViewAnalytics, setPageViewAnalytics] = useState<PageViewAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [creatingCardPage, setCreatingCardPage] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -50,9 +52,19 @@ export function DashboardView() {
     setCreating(true);
     try {
       const id = await createBlankInformation("新規ページ");
-      router.push(`/editor/${id}`);
+      router.push(`/editor/page/${id}`);
     } catch {
       setCreating(false);
+    }
+  }
+
+  async function handleCreateCardPage() {
+    setCreatingCardPage(true);
+    try {
+      const pageId = await createBlankPage("新規ページ");
+      router.push(`/editor/page/${pageId}`);
+    } catch {
+      setCreatingCardPage(false);
     }
   }
 
@@ -92,12 +104,14 @@ export function DashboardView() {
           >
             テンプレートから作成
           </Link>
-          <Link
-            href="/editor/v2"
-            className="text-sm font-medium text-slate-500 hover:text-slate-700"
+          <button
+            type="button"
+            onClick={() => void handleCreateCardPage()}
+            disabled={creatingCardPage}
+            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
           >
-            カードエディタで作成
-          </Link>
+            {creatingCardPage ? "作成中…" : "カードで新規ページ"}
+          </button>
         </div>
         <div className="mt-6 border-t border-slate-100 pt-6">
           <GeneratePageFromUrl />

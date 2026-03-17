@@ -8,6 +8,7 @@ type CardProps = {
   hover?: boolean;
 };
 
+/** Consistent card padding: none | sm (16px) | md (20px) | lg (24px). */
 const paddingClass = {
   none: "",
   sm: "p-4",
@@ -16,8 +17,7 @@ const paddingClass = {
 };
 
 /**
- * SaaS landing page–aligned card.
- * rounded-xl, light border, soft shadow. Optional hover elevation.
+ * Card container: rounded-xl, light border, soft shadow. Consistent with editor canvas cards.
  */
 export function Card({
   children,

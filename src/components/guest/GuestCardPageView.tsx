@@ -20,11 +20,7 @@ export function GuestCardPageView({ title, cards, initialLocale }: GuestCardPage
     <VisitorLocaleProvider initialLocale={initialLocale}>
       <PublicPageShell title={title}>
         <div className="space-y-4">
-          {cards
-            .sort((a, b) => a.order - b.order)
-            .map((card) => (
-              <CardRenderer key={card.id} card={card} isSelected={false} />
-            ))}
+          <CardRenderer cards={cards} />
         </div>
       </PublicPageShell>
     </VisitorLocaleProvider>

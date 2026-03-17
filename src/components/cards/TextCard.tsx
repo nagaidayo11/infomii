@@ -19,14 +19,17 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
+  const selectCard = useEditor2Store((s) => s.selectCard);
   const raw = card.content?.content;
   const content = getLocalizedContent(raw as LocalizedString | undefined, locale);
 
   const updateContent = (nextValue: string) => {
     const cur = raw;
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
-    updateCard(card.id, { ...card.content, content: next });
+    updateCard(card.id, { content: { ...card.content, content: next } });
   };
+
+  const onActivate = () => selectCard(card.id);
 
   return (
     <Card padding="md" className="">
@@ -35,6 +38,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
           value={content}
           onSave={updateContent}
           editable={isSelected}
+          onActivate={onActivate}
           multiline
           className="block min-h-[1.5em] text-base font-medium text-slate-800"
           placeholder="テキストを入力"

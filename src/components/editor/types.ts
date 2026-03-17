@@ -1,10 +1,10 @@
 /**
- * Infomii Editor 2.0 — Supabase-aligned types.
- * Table: pages (id, title, slug, user_id, created_at)
- * Table: cards (id, page_id, type, content, order, created_at)
+ * Infomii Editor 2.0 — Card-based page system.
+ * Table: pages (id, title, slug, ...)
+ * Table: cards (id, page_id, type, content, order, ...) — content may include _style for card style.
  *
- * Card content fields may be LocalizedString (string or { ja?, en?, zh?, ko? })
- * for multilingual support. Visitor locale is detected automatically; fallback is English.
+ * Page has id, title, cards[].
+ * Card has id, type, content, style, order. Cards are stored as an array and rendered in order.
  */
 
 export type CardType =
@@ -23,19 +23,36 @@ export type CardType =
   | "text"
   | "image"
   | "button"
+  | "faq"
   | "schedule"
   | "menu"
   | "gallery"
   | "divider";
 
-export type EditorCard = {
+/** Optional card appearance (e.g. background, padding). Stored with card. */
+export type CardStyle = Record<string, unknown>;
+
+/** Card structure: id, type, content, style, order. Rendered in order. */
+export type Card = {
   id: string;
-  page_id?: string;
   type: CardType;
-  /** Card-type-specific fields (shape depends on type). Stored as JSON in Supabase. */
   content: Record<string, unknown>;
+  style?: CardStyle;
   order: number;
+};
+
+/** Editor card (alias for Card; may include page_id, created_at from API). */
+export type EditorCard = Card & {
+  page_id?: string;
   created_at?: string;
+};
+
+/** Page structure: id, title, cards[]. Cards are stored as array and rendered in order. */
+export type Page = {
+  id: string;
+  title: string;
+  /** Cards in display order (sorted by order). */
+  cards: Card[];
 };
 
 export type EditorPage = {
@@ -63,6 +80,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   text: "テキスト",
   image: "画像",
   button: "ボタン",
+  faq: "よくある質問",
   schedule: "スケジュール",
   menu: "メニュー",
   gallery: "ギャラリー",
@@ -93,6 +111,15 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "text", label: "Text", description: "Heading and body" },
   { type: "gallery", label: "Gallery", description: "Image grid" },
   { type: "divider", label: "Divider", description: "Section separator" },
+];
+
+/** Card types used for new-page starter set (Welcome, WiFi, Breakfast, Checkout, Nearby). */
+export const STARTER_CARD_TYPES: CardType[] = [
+  "welcome",
+  "wifi",
+  "breakfast",
+  "checkout",
+  "nearby",
 ];
 
 /** Full list (all card types) — for backwards compatibility / migration. */
@@ -148,6 +175,8 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { src: "", alt: "" };
     case "button":
       return { label: "ボタン", href: "#" };
+    case "faq":
+      return { title: "よくある質問", items: [{ q: "", a: "" }] };
     case "schedule":
       return { title: "営業時間", items: [{ day: "月〜日", time: "7:00–22:00", label: "" }] };
     case "menu":
@@ -166,6 +195,7 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     id,
     type,
     content: defaultContent(type),
+    style: {},
     order,
   };
 }

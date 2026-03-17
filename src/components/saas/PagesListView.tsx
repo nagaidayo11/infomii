@@ -44,7 +44,7 @@ export function PagesListView() {
     setCreating(true);
     try {
       const id = await createBlankInformation("新規ページ");
-      router.push(`/editor/${id}`);
+      router.push(`/editor/page/${id}`);
     } catch {
       setCreating(false);
     }

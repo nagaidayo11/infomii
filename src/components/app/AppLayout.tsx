@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 
@@ -16,10 +15,8 @@ type AppLayoutProps = {
 };
 
 /**
- * Unified SaaS layout for the authenticated app (Next.js App Router).
- * Structure: Sidebar | Topbar + Main content.
- * Single sidebar only — icon + label, soft background, clean spacing.
- * Design: rounded-xl, soft shadows, Linear / Notion / Stripe inspired.
+ * Dashboard layout (sidebar + topbar + main). Used only for non-editor routes.
+ * Editor routes use no AppLayout; they use EditorLayout (Card Library | Canvas | Card Settings) only.
  */
 export function AppLayout({
   children,
@@ -27,23 +24,12 @@ export function AppLayout({
   subtitle: _subtitle,
   topbarActions,
 }: AppLayoutProps) {
-  const pathname = usePathname();
-  const isEditor = pathname?.startsWith("/editor");
-  const showSidebar = !isEditor;
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100/90">
-      {showSidebar && <Sidebar />}
+      <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar actions={topbarActions} />
-        <main
-          className={
-            "flex-1 overflow-y-auto " +
-            (isEditor
-              ? "flex flex-col p-0 overflow-hidden"
-              : "p-6")
-          }
-        >
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>

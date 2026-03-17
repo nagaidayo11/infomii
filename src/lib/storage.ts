@@ -3408,6 +3408,26 @@ export async function listTemplates(): Promise<TemplateRow[]> {
   return (data ?? []) as TemplateRow[];
 }
 
+/** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
+export async function createBlankPage(title = "新規ページ"): Promise<string> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const nextTitle = (title && title.trim()) || "新規ページ";
+  const baseSlug = createSlug(nextTitle);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+  const { data: newPage, error } = await supabase
+    .from("pages")
+    .insert({ hotel_id: hotelId, title: nextTitle, slug })
+    .select("id")
+    .single();
+  if (error || !newPage) throw toError(error ?? new Error("Insert failed"), "ページの作成に失敗しました");
+  return newPage.id as string;
+}
+
 export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
@@ -3450,6 +3470,23 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
 
 export type PageCardRow = { id: string; type: string; content: Record<string, unknown>; order: number };
 
+/** Key used inside content JSON to persist card style (no DB schema change). */
+const STYLE_KEY = "_style";
+
+/** Convert a DB row to Card: extract style from content._style, return content without it. */
+export function rowToCard(row: PageCardRow): { id: string; type: string; content: Record<string, unknown>; style?: Record<string, unknown>; order: number } {
+  const content = { ...row.content };
+  const style = content[STYLE_KEY] as Record<string, unknown> | undefined;
+  delete content[STYLE_KEY];
+  return {
+    id: row.id,
+    type: row.type,
+    content,
+    ...(style != null && typeof style === "object" && !Array.isArray(style) ? { style } : {}),
+    order: row.order,
+  };
+}
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isSupabaseId(id: string): boolean {
   return UUID_REGEX.test(id);
@@ -3481,7 +3518,23 @@ export async function getPageCards(pageId: string): Promise<PageCardRow[]> {
   return (data ?? []) as PageCardRow[];
 }
 
-export type EditorCardForSave = { id: string; type: string; content: Record<string, unknown>; order: number };
+/** Page with cards array in display order. Card-based page structure. */
+export type PageWithCards = { id: string; title: string; cards: ReturnType<typeof rowToCard>[] };
+
+export async function getPageWithCards(pageId: string): Promise<PageWithCards | null> {
+  const [page, rows] = await Promise.all([getPage(pageId), getPageCards(pageId)]);
+  if (!page) return null;
+  const cards = rows.map(rowToCard);
+  return { id: page.id, title: page.title, cards };
+}
+
+export type EditorCardForSave = {
+  id: string;
+  type: string;
+  content: Record<string, unknown>;
+  style?: Record<string, unknown>;
+  order: number;
+};
 
 /**
  * Persist cards to Supabase. Updates existing (by UUID id), inserts new (nanoid), deletes removed.
@@ -3500,10 +3553,15 @@ export async function savePageCards(
   const storeIds = new Set(cards.map((c) => c.id));
 
   for (const card of cards) {
+    const contentToSave =
+      card.style != null && Object.keys(card.style).length > 0
+        ? { ...card.content, [STYLE_KEY]: card.style }
+        : card.content;
+
     if (isSupabaseId(card.id)) {
       await supabase
         .from("cards")
-        .update({ content: card.content, order: card.order })
+        .update({ content: contentToSave, order: card.order })
         .eq("id", card.id);
     } else {
       const { data: inserted, error } = await supabase
@@ -3511,7 +3569,7 @@ export async function savePageCards(
         .insert({
           page_id: pageId,
           type: card.type,
-          content: card.content,
+          content: contentToSave,
           order: card.order,
         })
         .select("id")

@@ -4,26 +4,44 @@ import { useEffect, useRef } from "react";
 import { useEditor2Store } from "./store";
 import { savePageCards } from "@/lib/storage";
 
-const DEBOUNCE_MS = 600;
+const DEBOUNCE_MS = 500;
 
 async function saveAndMerge(
   pageId: string,
   isMounted: { current: boolean }
 ) {
-  const cards = useEditor2Store.getState().cards;
-  const { updatedIds } = await savePageCards(pageId, cards);
-  if (!isMounted.current) return;
-  const current = useEditor2Store.getState().cards;
-  const merged = current.map((c) => ({
-    ...c,
-    id: updatedIds[c.id] ?? c.id,
-  }));
-  useEditor2Store.getState().setCards(merged);
+  const store = useEditor2Store.getState();
+  const cards = store.cards;
+  store.setAutosaveStatus({ isSaving: true });
+  try {
+    const { updatedIds } = await savePageCards(pageId, cards);
+    if (!isMounted.current) return;
+    const current = useEditor2Store.getState().cards;
+    const merged = current.map((c) => ({
+      ...c,
+      id: updatedIds[c.id] ?? c.id,
+    }));
+    useEditor2Store.getState().setCards(merged);
+    if (isMounted.current) {
+      useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
+    }
+  } catch {
+    if (isMounted.current) {
+      useEditor2Store.getState().setAutosaveStatus({ isSaving: false });
+    }
+  }
 }
 
 async function flushSave(pageId: string) {
-  const cards = useEditor2Store.getState().cards;
-  await savePageCards(pageId, cards);
+  const store = useEditor2Store.getState();
+  const cards = store.cards;
+  store.setAutosaveStatus({ isSaving: true });
+  try {
+    await savePageCards(pageId, cards);
+    useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
+  } catch {
+    useEditor2Store.getState().setAutosaveStatus({ isSaving: false });
+  }
 }
 
 /**

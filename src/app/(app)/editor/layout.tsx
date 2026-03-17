@@ -1,17 +1,14 @@
 "use client";
 
-import { AuthGate } from "@/components/auth-gate";
-
 /**
- * Editor-only layout.
- * ダッシュボード用の AppLayout / Sidebar を使わず、
- * エディタ自身の EditorLayout（CardLibrary / Canvas / CardSettings）だけを表示する。
+ * Editor segment layout. No DashboardLayout — editor pages render
+ * the dedicated EditorLayout (EditorTopBar + CardLibrary | Canvas | CardSettings) only.
  */
 export default function EditorGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AuthGate>{children}</AuthGate>;
+  return <>{children}</>;
 }
 

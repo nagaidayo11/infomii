@@ -49,7 +49,7 @@ export function PageManagementPanel() {
     try {
       const id = await createBlankInformation("新規ページ");
       await load();
-      router.push(`/editor/${id}`);
+      router.push(`/editor/page/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
     } finally {
@@ -199,7 +199,7 @@ export function PageManagementPanel() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <Link
-                            href={`/editor/${item.id}`}
+                            href={`/editor/page/${item.id}`}
                             className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
                           >
                             編集

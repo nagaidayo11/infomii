@@ -14,5 +14,6 @@ export { SpaCard } from "./SpaCard";
 export { TextCard } from "./TextCard";
 export { ImageCard } from "./ImageCard";
 export { ButtonCard } from "./ButtonCard";
+export { FaqCard } from "./FaqCard";
 export { ScheduleCard } from "./ScheduleCard";
 export { MenuCard } from "./MenuCard";

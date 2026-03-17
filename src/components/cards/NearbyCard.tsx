@@ -21,6 +21,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
+  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "周辺案内";
   const items = (Array.isArray(c?.items) ? c.items : []) as NearbyItem[];
@@ -28,8 +29,10 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
-    updateCard(card.id, { ...c, [key]: next });
+    updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const onActivate = () => selectCard(card.id);
 
   return (
     <Card
@@ -38,7 +41,7 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
     >
       <p className="text-sm font-semibold text-slate-800">
         📍{" "}
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} className="text-sm font-semibold text-slate-800" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-semibold text-slate-800" />
       </p>
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2">
@@ -52,6 +55,8 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
                 <a
                   href={item.link}
                   className="mt-1 inline-block text-xs font-medium text-slate-600 underline"
+                  onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
+                  aria-disabled={isSelected !== undefined ? true : undefined}
                 >
                   詳細
                 </a>

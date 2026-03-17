@@ -15,6 +15,23 @@ const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
 
+function SettingsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        {title}
+      </h3>
+      <div className="space-y-2">{children}</div>
+    </div>
+  );
+}
+
 const COLOR_PRESETS = [
   { value: "", label: "Default" },
   { value: "#2563eb", label: "Blue" },
@@ -24,9 +41,24 @@ const COLOR_PRESETS = [
   { value: "#7c3aed", label: "Violet" },
 ];
 
-type SettingsPanelProps = {
+const BUTTON_STYLE_PRESETS = [
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+  { value: "outline", label: "Outline" },
+];
+
+const NOTICE_PRIORITY_PRESETS = [
+  { value: "info", label: "Info" },
+  { value: "warning", label: "Warning" },
+];
+
+type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
+
+export type CardSettingsProps = {
   card: EditorCard | null;
-  onUpdate: (id: string, content: Record<string, unknown>) => void;
+  onUpdate: (id: string, patch: CardUpdatePatch) => void;
+  /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
+  lastAddedCardId?: string | null;
 };
 
 function isLocalizedObject(v: unknown): v is Record<string, string> {
@@ -51,6 +83,7 @@ async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: stri
 }
 
 type NearbyItem = { name?: string; description?: string; link?: string };
+type FaqItem = { q?: string; a?: string };
 type GalleryImageItem = { src?: string; alt?: string };
 
 function GalleryItemsEditor({
@@ -83,7 +116,7 @@ function GalleryItemsEditor({
         </button>
       </div>
       {items.slice(0, 6).map((_, i) => (
-        <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
             <button
               type="button"
@@ -140,7 +173,7 @@ function NearbyItemsEditor({
         </button>
       </div>
       {items.map((item, i) => (
-        <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
             <button
               type="button"
@@ -174,19 +207,89 @@ function NearbyItemsEditor({
   );
 }
 
-export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
+function FaqItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as FaqItem[];
+  const setItems = (next: FaqItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof FaqItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { q: "", a: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">Q&A</span>
+        <button
+          type="button"
+          onClick={addItem}
+          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="text-xs text-slate-400 hover:text-red-600"
+            >
+              削除
+            </button>
+          </div>
+          <Input
+            label="質問"
+            value={item.q ?? ""}
+            onChange={(e) => updateItem(i, "q", e.target.value)}
+            placeholder="Q"
+          />
+          <div className="w-full">
+            <label className={labelClass}>回答</label>
+            <textarea
+              value={item.a ?? ""}
+              onChange={(e) => updateItem(i, "a", e.target.value)}
+              placeholder="A"
+              rows={2}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** CardSettings panel: shows Content, Appearance, and Behavior for the selected card. Updates the canvas in real time. */
+export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (card?.id) {
+      const isNewlyAdded = card.id === lastAddedCardId;
+      scrollRef.current?.scrollTo({ top: 0, behavior: isNewlyAdded ? "auto" : "smooth" });
+    }
+  }, [card?.id, lastAddedCardId]);
 
   if (!card) {
     return (
       <>
         <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Card Settings
           </h2>
           <p className="mt-3 text-sm text-slate-500">
-            キャンバスでカードを1枚選択すると、ここで編集できます。
+            Select a card on the canvas to edit its settings here. Changes update the canvas in real time.
           </p>
         </div>
       </>
@@ -195,7 +298,7 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
 
   const content = card.content as Record<string, unknown>;
   const update = (key: string, value: unknown) => {
-    onUpdate(card.id, { ...content, [key]: value });
+    onUpdate(card.id, { content: { ...content, [key]: value } });
   };
   /** 多言語フィールドの表示値（日本語を優先） */
   const display = (key: string) =>
@@ -218,8 +321,10 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
       const currentJa = getLocalizedContent(curVal as LocalizedString | undefined, "ja");
       if (currentJa !== ja) return;
       onUpdate(cardId, {
-        ...(currentCard.content as Record<string, unknown>),
-        [key]: { ja, en: result.en, zh: result.zh, ko: result.ko },
+        content: {
+          ...(currentCard.content as Record<string, unknown>),
+          [key]: { ja, en: result.en, zh: result.zh, ko: result.ko },
+        },
       });
     });
   }, [onUpdate]);
@@ -245,566 +350,604 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
   return (
     <>
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Card Settings
         </h2>
-        <p className="mt-1 text-sm font-medium text-slate-800">
+        <p className="mt-1.5 text-sm font-medium text-slate-800">
           {CARD_TYPE_LABELS[card.type]}
         </p>
         <p className="mt-0.5 text-xs text-slate-500">Changes update the canvas in real time.</p>
       </div>
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="space-y-6">
           {card.type === "welcome" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="ようこそ"
               />
               <div className="w-full">
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">メッセージ</label>
+                <label className={labelClass}>Message</label>
                 <textarea
                   value={display("message")}
                   onChange={(e) => updateLocalized("message", e.target.value)}
                   placeholder="おもてなしメッセージ"
                   rows={3}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
+                  className={inputClass}
                 />
               </div>
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "text" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="Optional heading"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Text</label>
-                <textarea
-                  value={display("content")}
-                  onChange={(e) => updateLocalized("content", e.target.value)}
-                  placeholder="Heading or body text"
-                  rows={3}
-                  className={inputClass}
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="Optional heading"
                 />
-              </div>
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="w-full">
+                  <label className={labelClass}>Text</label>
+                  <textarea
+                    value={display("content")}
+                    onChange={(e) => updateLocalized("content", e.target.value)}
+                    placeholder="Heading or body text"
+                    rows={3}
+                    className={inputClass}
+                  />
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Color</label>
+                  <select
+                    value={(content.color as string) ?? ""}
+                    onChange={(e) => update("color", e.target.value)}
+                    className={inputClass}
+                  >
+                    {COLOR_PRESETS.map((p) => (
+                      <option key={p.value || "default"} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "image" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="Optional caption"
-              />
-              <Input
-                label="Image URL"
-                value={(content.src as string) ?? ""}
-                onChange={(e) => update("src", e.target.value)}
-                placeholder="https://..."
-              />
-              <Input
-                label="Text (alt)"
-                value={display("alt")}
-                onChange={(e) => updateLocalized("alt", e.target.value)}
-                placeholder="Image description"
-              />
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Optional emoji or icon"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="Optional caption"
+                />
+                <Input
+                  label="Image URL"
+                  value={(content.src as string) ?? ""}
+                  onChange={(e) => update("src", e.target.value)}
+                  placeholder="https://..."
+                />
+                <Input
+                  label="Alt text"
+                  value={display("alt")}
+                  onChange={(e) => updateLocalized("alt", e.target.value)}
+                  placeholder="Image description"
+                />
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Optional emoji or icon"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Color</label>
+                  <select
+                    value={(content.color as string) ?? ""}
+                    onChange={(e) => update("color", e.target.value)}
+                    className={inputClass}
+                  >
+                    {COLOR_PRESETS.map((p) => (
+                      <option key={p.value || "default"} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "wifi" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="e.g. Guest WiFi"
-              />
-              <Input
-                label="SSID"
-                value={display("ssid")}
-                onChange={(e) => updateLocalized("ssid", e.target.value)}
-                placeholder="Network name"
-              />
-              <Input
-                label="Password"
-                value={display("password")}
-                onChange={(e) => updateLocalized("password", e.target.value)}
-                placeholder="Password"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Text</label>
-                <textarea
-                  value={display("description")}
-                  onChange={(e) => updateLocalized("description", e.target.value)}
-                  placeholder="Optional description"
-                  rows={2}
-                  className={inputClass}
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="e.g. Guest WiFi"
                 />
-              </div>
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <Input
+                  label="SSID"
+                  value={display("ssid")}
+                  onChange={(e) => updateLocalized("ssid", e.target.value)}
+                  placeholder="Network name"
+                />
+                <Input
+                  label="Password"
+                  value={display("password")}
+                  onChange={(e) => updateLocalized("password", e.target.value)}
+                  placeholder="Password"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Description</label>
+                  <textarea
+                    value={display("description")}
+                    onChange={(e) => updateLocalized("description", e.target.value)}
+                    placeholder="Optional description"
+                    rows={2}
+                    className={inputClass}
+                  />
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Color</label>
+                  <select
+                    value={(content.color as string) ?? ""}
+                    onChange={(e) => update("color", e.target.value)}
+                    className={inputClass}
+                  >
+                    {COLOR_PRESETS.map((p) => (
+                      <option key={p.value || "default"} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "breakfast" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="e.g. Breakfast"
-              />
-              <Input
-                label="Time"
-                value={display("time")}
-                onChange={(e) => updateLocalized("time", e.target.value)}
-                placeholder="7:00–9:30"
-              />
-              <Input
-                label="Location"
-                value={display("location")}
-                onChange={(e) => updateLocalized("location", e.target.value)}
-                placeholder="1F Dining"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Text</label>
-                <textarea
-                  value={display("menu")}
-                  onChange={(e) => updateLocalized("menu", e.target.value)}
-                  placeholder="Menu or notes"
-                  rows={2}
-                  className={inputClass}
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="e.g. Breakfast"
                 />
-              </div>
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <Input
+                  label="Time"
+                  value={display("time")}
+                  onChange={(e) => updateLocalized("time", e.target.value)}
+                  placeholder="7:00–9:30"
+                />
+                <Input
+                  label="Location"
+                  value={display("location")}
+                  onChange={(e) => updateLocalized("location", e.target.value)}
+                  placeholder="1F Dining"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Menu / notes</label>
+                  <textarea
+                    value={display("menu")}
+                    onChange={(e) => updateLocalized("menu", e.target.value)}
+                    placeholder="Menu or notes"
+                    rows={2}
+                    className={inputClass}
+                  />
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Color</label>
+                  <select
+                    value={(content.color as string) ?? ""}
+                    onChange={(e) => update("color", e.target.value)}
+                    className={inputClass}
+                  >
+                    {COLOR_PRESETS.map((p) => (
+                      <option key={p.value || "default"} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "checkout" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="チェックアウト"
               />
               <Input
-                label="時刻"
+                label="Time"
                 value={display("time")}
                 onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="11:00"
               />
               <Input
-                label="補足"
+                label="Note"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
               <Input
-                label="リンクURL"
+                label="Link URL"
                 value={(content.linkUrl as string) ?? ""}
                 onChange={(e) => update("linkUrl", e.target.value)}
                 placeholder="https://..."
               />
               <Input
-                label="リンクラベル"
+                label="Link label"
                 value={display("linkLabel")}
                 onChange={(e) => updateLocalized("linkLabel", e.target.value)}
                 placeholder="詳細"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "taxi" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="タクシー"
               />
               <Input
-                label="電話番号"
+                label="Phone"
                 value={(content.phone as string) ?? ""}
                 onChange={(e) => update("phone", e.target.value)}
                 placeholder="03-1234-5678"
               />
               <Input
-                label="会社名"
+                label="Company name"
                 value={display("companyName")}
                 onChange={(e) => updateLocalized("companyName", e.target.value)}
                 placeholder="〇〇タクシー"
               />
               <Input
-                label="備考"
+                label="Note"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "restaurant" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="レストラン"
               />
               <Input
-                label="時間"
+                label="Hours"
                 value={display("time")}
                 onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="7:00–22:00"
               />
               <Input
-                label="場所"
+                label="Location"
                 value={display("location")}
                 onChange={(e) => updateLocalized("location", e.target.value)}
                 placeholder="1F"
               />
               <Input
-                label="メニュー"
+                label="Menu / notes"
                 value={display("menu")}
                 onChange={(e) => updateLocalized("menu", e.target.value)}
                 placeholder="メニュー・備考"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "laundry" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="ランドリー"
               />
               <Input
-                label="営業時間"
+                label="Hours"
                 value={display("hours")}
                 onChange={(e) => updateLocalized("hours", e.target.value)}
                 placeholder="9:00–18:00"
               />
               <Input
-                label="料金・備考"
+                label="Price / notes"
                 value={display("priceNote")}
                 onChange={(e) => updateLocalized("priceNote", e.target.value)}
                 placeholder="料金表・注意事項"
               />
               <Input
-                label="連絡先"
+                label="Contact"
                 value={display("contact")}
                 onChange={(e) => updateLocalized("contact", e.target.value)}
                 placeholder="内線1234"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "emergency" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="緊急連絡先"
               />
               <Input
-                label="火災"
+                label="Fire"
                 value={(content.fire as string) ?? ""}
                 onChange={(e) => update("fire", e.target.value)}
                 placeholder="119"
               />
               <Input
-                label="警察"
+                label="Police"
                 value={(content.police as string) ?? ""}
                 onChange={(e) => update("police", e.target.value)}
                 placeholder="110"
               />
               <Input
-                label="病院"
+                label="Hospital"
                 value={display("hospital")}
                 onChange={(e) => updateLocalized("hospital", e.target.value)}
                 placeholder="救急病院番号・住所"
               />
               <Input
-                label="備考"
+                label="Note"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "map" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="e.g. Location"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Text</label>
-                <textarea
-                  value={display("address")}
-                  onChange={(e) => updateLocalized("address", e.target.value)}
-                  placeholder="Address or place name"
-                  rows={2}
-                  className={inputClass}
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="e.g. Location"
                 />
-              </div>
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="w-full">
+                  <label className={labelClass}>Address</label>
+                  <textarea
+                    value={display("address")}
+                    onChange={(e) => updateLocalized("address", e.target.value)}
+                    placeholder="Address or place name"
+                    rows={2}
+                    className={inputClass}
+                  />
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Color</label>
+                  <select
+                    value={(content.color as string) ?? ""}
+                    onChange={(e) => update("color", e.target.value)}
+                    className={inputClass}
+                  >
+                    {COLOR_PRESETS.map((p) => (
+                      <option key={p.value || "default"} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "nearby" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="周辺案内"
               />
               <NearbyItemsEditor content={content} onUpdate={update} />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "spa" && (
-            <>
+            <SettingsSection title="Content">
               <Input
-                label="タイトル"
+                label="Title"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="スパ・温泉"
               />
               <Input
-                label="営業時間"
+                label="Hours"
                 value={display("hours")}
                 onChange={(e) => updateLocalized("hours", e.target.value)}
                 placeholder="6:00–24:00"
               />
               <Input
-                label="場所"
+                label="Location"
                 value={display("location")}
                 onChange={(e) => updateLocalized("location", e.target.value)}
                 placeholder="B1F"
               />
               <div className="w-full">
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">説明</label>
+                <label className={labelClass}>Description</label>
                 <textarea
                   value={display("description")}
                   onChange={(e) => updateLocalized("description", e.target.value)}
                   placeholder="施設の説明"
                   rows={2}
-                  className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
+                  className={inputClass}
                 />
               </div>
               <Input
-                label="備考"
+                label="Note"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "notice" && (
             <>
-              <Input
-                label="Title"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="Notice"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Text</label>
-                <textarea
-                  value={display("body")}
-                  onChange={(e) => updateLocalized("body", e.target.value)}
-                  placeholder="Announcement content"
-                  rows={3}
-                  className={inputClass}
+              <SettingsSection title="Content">
+                <Input
+                  label="Title"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="Notice"
                 />
-              </div>
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={
-                    (content.color as string) ??
-                    (content.variant === "warning" ? "#d97706" : content.variant === "info" ? "#2563eb" : "")
-                  }
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    onUpdate(card.id, {
-                      ...content,
-                      color: v,
-                      variant: v === "#d97706" ? "warning" : "info",
-                    });
-                  }}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="w-full">
+                  <label className={labelClass}>Text</label>
+                  <textarea
+                    value={display("body")}
+                    onChange={(e) => updateLocalized("body", e.target.value)}
+                    placeholder="Announcement content"
+                    rows={3}
+                    className={inputClass}
+                  />
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <div className="w-full">
+                  <label className={labelClass}>Priority style</label>
+                  <select
+                    value={(content.variant as string) ?? "info"}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      onUpdate(card.id, {
+                        content: {
+                          ...content,
+                          variant: v,
+                          color: v === "warning" ? "#d97706" : "#2563eb",
+                        },
+                      });
+                    }}
+                    className={inputClass}
+                  >
+                    {NOTICE_PRIORITY_PRESETS.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+              </SettingsSection>
             </>
           )}
 
           {card.type === "button" && (
             <>
-              <Input
-                label="Title"
-                value={display("label")}
-                onChange={(e) => updateLocalized("label", e.target.value)}
-                placeholder="Button text"
-              />
-              <Input
-                label="Button link"
-                value={(content.href as string) ?? ""}
-                onChange={(e) => update("href", e.target.value)}
-                placeholder="https://..."
-              />
-              <Input
-                label="Icon"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="Emoji or icon name"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Color</label>
-                <select
-                  value={(content.color as string) ?? ""}
-                  onChange={(e) => update("color", e.target.value)}
-                  className={inputClass}
-                >
-                  {COLOR_PRESETS.map((p) => (
-                    <option key={p.value || "default"} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SettingsSection title="Content">
+                <Input
+                  label="Label"
+                  value={display("label")}
+                  onChange={(e) => updateLocalized("label", e.target.value)}
+                  placeholder="Button text"
+                />
+                <Input
+                  label="Link"
+                  value={(content.href as string) ?? ""}
+                  onChange={(e) => update("href", e.target.value)}
+                  placeholder="https://..."
+                />
+              </SettingsSection>
+              <SettingsSection title="Appearance">
+                <Input
+                  label="Icon"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(e) => update("icon", e.target.value)}
+                  placeholder="Emoji or icon name"
+                />
+                <div className="w-full">
+                  <label className={labelClass}>Style</label>
+                  <select
+                    value={(content.style as string) ?? "primary"}
+                    onChange={(e) => update("style", e.target.value)}
+                    className={inputClass}
+                  >
+                    {BUTTON_STYLE_PRESETS.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </SettingsSection>
+              <SettingsSection title="Behavior">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={content.openInNewTab === true}
+                    onChange={(e) => update("openInNewTab", e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+                  />
+                  <span className="text-sm text-slate-700">Open link in new tab</span>
+                </label>
+              </SettingsSection>
             </>
           )}
 
           {card.type === "gallery" && (
-            <>
+            <SettingsSection title="Content">
               <Input
                 label="Title"
                 value={display("title")}
@@ -812,21 +955,35 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
                 placeholder="Optional gallery title"
               />
               <GalleryItemsEditor content={content} onUpdate={update} />
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "divider" && (
-            <div className="w-full">
-              <label className={labelClass}>Style</label>
-              <select
-                value={(content.style as string) ?? "line"}
-                onChange={(e) => update("style", e.target.value)}
-                className={inputClass}
-              >
-                <option value="line">Line</option>
-                <option value="dotted">Dotted</option>
-              </select>
-            </div>
+            <SettingsSection title="Appearance">
+              <div className="w-full">
+                <label className={labelClass}>Style</label>
+                <select
+                  value={(content.style as string) ?? "line"}
+                  onChange={(e) => update("style", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="line">Line</option>
+                  <option value="dotted">Dotted</option>
+                </select>
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "faq" && (
+            <SettingsSection title="Content">
+              <Input
+                label="Title"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="よくある質問"
+              />
+              <FaqItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
           )}
 
           {(card.type === "schedule" || card.type === "menu") && (
@@ -839,3 +996,6 @@ export function SettingsPanel({ card, onUpdate }: SettingsPanelProps) {
     </>
   );
 }
+
+/** @deprecated Use CardSettings instead. */
+export const SettingsPanel = CardSettings;

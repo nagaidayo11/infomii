@@ -11,11 +11,13 @@ type InlineEditableProps = {
   multiline?: boolean;
   /** When true, clicking switches to edit mode. */
   editable?: boolean;
+  /** Called when user clicks to edit while not yet editable (e.g. to select card). Enables one-click inline edit from canvas. */
+  onActivate?: () => void;
 };
 
 /**
  * Inline text: click to edit, blur to save. No modal.
- * Use when editable && isSelected in the card editor.
+ * First click on text selects the card (onActivate) and enters edit mode so the canvas is the primary editing surface.
  */
 export function InlineEditable({
   value,
@@ -24,6 +26,7 @@ export function InlineEditable({
   className = "",
   multiline = false,
   editable = true,
+  onActivate,
 }: InlineEditableProps) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
@@ -34,8 +37,21 @@ export function InlineEditable({
   }, [value]);
 
   useEffect(() => {
-    if (editing && editable) inputRef.current?.focus();
-  }, [editing, editable]);
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const prevEditableRef = useRef(editable);
+  useEffect(() => {
+    if (prevEditableRef.current && !editable && editing) {
+      setEditing(false);
+      setLocal((prev) => {
+        const trimmed = prev.trim();
+        if (trimmed !== value) onSave(trimmed);
+        return value;
+      });
+    }
+    prevEditableRef.current = editable;
+  }, [editable, editing, value, onSave]);
 
   const commit = () => {
     setEditing(false);
@@ -44,9 +60,24 @@ export function InlineEditable({
     else setLocal(value);
   };
 
-  if (!editable) {
+  const startEditing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onActivate?.();
+    setEditing(true);
+  };
+
+  if (!editable && !editing) {
     return (
-      <span className={className}>
+      <span
+        role="button"
+        tabIndex={0}
+        className={
+          "cursor-text rounded px-0.5 py-px transition-colors duration-150 ease-out hover:bg-slate-100/80 " +
+          className
+        }
+        onClick={startEditing}
+        onFocus={startEditing}
+      >
         {value || placeholder || "\u00a0"}
       </span>
     );
@@ -102,11 +133,8 @@ export function InlineEditable({
         "cursor-text rounded px-0.5 py-px transition-colors duration-150 ease-out hover:bg-slate-100/80 " +
         className
       }
-      onClick={(e) => {
-        e.stopPropagation();
-        setEditing(true);
-      }}
-      onFocus={() => setEditing(true)}
+      onClick={startEditing}
+      onFocus={startEditing}
     >
       {value || placeholder || "\u00a0"}
     </span>

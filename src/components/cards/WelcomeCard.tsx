@@ -19,6 +19,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
+  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "ようこそ";
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
@@ -26,8 +27,10 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
-    updateCard(card.id, { ...c, [key]: next });
+    updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const onActivate = () => selectCard(card.id);
 
   return (
     <Card
@@ -39,6 +42,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
+          onActivate={onActivate}
           className="text-lg font-semibold text-slate-900"
         />
       </p>
@@ -47,6 +51,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           value={message}
           onSave={(v) => updateKey("message", v)}
           editable={isSelected}
+          onActivate={onActivate}
           multiline
           className="block min-h-[1.5em] text-sm leading-relaxed text-slate-600"
           placeholder="おもてなしメッセージ"

@@ -19,6 +19,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
+  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "お知らせ";
   const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
@@ -28,8 +29,10 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
-    updateCard(card.id, { ...c, [key]: next });
+    updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const onActivate = () => selectCard(card.id);
 
   return (
     <Card
@@ -44,6 +47,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
+          onActivate={onActivate}
           className="text-sm font-medium text-slate-800"
         />
       </p>
@@ -52,6 +56,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
           value={body}
           onSave={(v) => updateKey("body", v)}
           editable={isSelected}
+          onActivate={onActivate}
           multiline
           className="block min-h-[1em] text-xs text-slate-600"
           placeholder="本文"

@@ -3,7 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CARD_ICONS } from "./CardLibrary";
-import { CARD_LIBRARY_ITEMS, type CardType } from "./types";
+import type { CardType } from "./types";
+
+/** All card types available in slash menu — matches library order (Basic, Info, Actions, Media, Hospitality, then text/gallery/divider). */
+const SLASH_MENU_ITEMS: Array<{ type: CardType; label: string }> = [
+  { type: "welcome", label: "Welcome" },
+  { type: "wifi", label: "WiFi" },
+  { type: "breakfast", label: "Breakfast" },
+  { type: "checkout", label: "Checkout" },
+  { type: "notice", label: "Notice" },
+  { type: "nearby", label: "Nearby" },
+  { type: "map", label: "Map" },
+  { type: "emergency", label: "Emergency" },
+  { type: "faq", label: "FAQ" },
+  { type: "button", label: "Button" },
+  { type: "taxi", label: "Taxi" },
+  { type: "image", label: "Image" },
+  { type: "restaurant", label: "Restaurant" },
+  { type: "spa", label: "Spa" },
+  { type: "laundry", label: "Laundry" },
+  { type: "text", label: "Text" },
+  { type: "gallery", label: "Gallery" },
+  { type: "divider", label: "Divider" },
+];
 
 type SlashCommandMenuProps = {
   open: boolean;
@@ -22,7 +44,7 @@ export function SlashCommandMenu({
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const items = CARD_LIBRARY_ITEMS;
+  const items = SLASH_MENU_ITEMS;
 
   useEffect(() => {
     if (!open) return;
@@ -77,8 +99,9 @@ export function SlashCommandMenu({
       className="z-50 w-[320px] rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
       style={getMenuStyle(anchorRef)}
     >
-      <div className="border-b border-slate-100 px-3 py-2">
-        <p className="text-xs font-medium text-slate-500">/ でカードを挿入</p>
+      <div className="border-b border-slate-100 px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quick insert</p>
+        <p className="mt-1 text-xs text-slate-500">Type <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px]">/</kbd> in the canvas · Choose a card</p>
       </div>
       <div
         ref={listRef}
@@ -88,9 +111,9 @@ export function SlashCommandMenu({
           <button
             key={item.type}
             type="button"
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
+            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
               i === highlightIndex
-                ? "bg-slate-100 text-slate-900"
+                ? "bg-blue-50 text-slate-900"
                 : "text-slate-700 hover:bg-slate-50"
             }`}
             onMouseEnter={() => setHighlightIndex(i)}
@@ -99,13 +122,10 @@ export function SlashCommandMenu({
               onClose();
             }}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-              {CARD_ICONS[item.type]}
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm">
+              {CARD_ICONS[item.type] ?? CARD_ICONS.text}
             </span>
-            <div className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">{item.label}</span>
-              <span className="block text-xs text-slate-500">{item.description}</span>
-            </div>
+            <span className="text-sm font-medium">{item.label}</span>
           </button>
         ))}
       </div>

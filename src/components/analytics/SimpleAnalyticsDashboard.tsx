@@ -237,7 +237,7 @@ export function SimpleAnalyticsDashboard() {
                       <span>閲覧 {page.views}</span>
                       <span className="text-blue-600">QR {page.qrViews}</span>
                       <Link
-                        href={`/editor/${page.informationId}`}
+                        href={`/editor/page/${page.informationId}`}
                         className="rounded-lg border border-ds-border bg-white px-2 py-1 font-medium hover:bg-slate-50"
                       >
                         編集
