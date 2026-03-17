@@ -161,6 +161,8 @@ const BASIC_ITEMS: LibraryItem[] = [
   { type: "breakfast", label: "Breakfast", description: "朝食の時間・会場・メニュー" },
   { type: "checkout", label: "Checkout", description: "チェックアウト時刻・手順" },
   { type: "notice", label: "Notice", description: "重要なお知らせ・注意事項" },
+  { type: "schedule", label: "Schedule", description: "営業時間・スケジュール" },
+  { type: "menu", label: "Menu", description: "メニュー・価格表" },
 ];
 
 /** Information: nearby, map, FAQ, emergency */
@@ -190,13 +192,20 @@ const HOSPITALITY_ITEMS: LibraryItem[] = [
   { type: "laundry", label: "Laundry", description: "ランドリー・クリーニング" },
 ];
 
-const LIBRARY_SECTIONS: LibrarySection[] = [
+/** Layout: text, divider */
+const LAYOUT_ITEMS: LibraryItem[] = [
+  { type: "text", label: "Text", description: "テキスト・見出し" },
+  { type: "divider", label: "Divider", description: "区切り線" },
+];
+
+export const LIBRARY_SECTIONS: LibrarySection[] = [
   { id: "hero", title: "ヒーロー・ブロック", items: HERO_ITEMS },
   { id: "basic", title: "Basic", items: BASIC_ITEMS },
   { id: "information", title: "Information", items: INFORMATION_ITEMS },
   { id: "actions", title: "Actions", items: ACTIONS_ITEMS },
   { id: "media", title: "Media", items: MEDIA_ITEMS },
   { id: "hospitality", title: "Hospitality", items: HOSPITALITY_ITEMS },
+  { id: "layout", title: "レイアウト", items: LAYOUT_ITEMS },
 ];
 
 /**

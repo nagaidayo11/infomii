@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { FadeIn } from "@/components/motion";
 
 function LoginForm() {
   const router = useRouter();
@@ -68,7 +69,7 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="w-full max-w-sm">
+      <FadeIn className="w-full max-w-sm">
         {/* Logo / タイトル */}
         <div className="mb-8 text-center">
           <Link href="/" className="inline-block">
@@ -172,7 +173,7 @@ function LoginForm() {
             トップへ
           </Link>
         </p>
-      </div>
+      </FadeIn>
     </div>
   );
 }

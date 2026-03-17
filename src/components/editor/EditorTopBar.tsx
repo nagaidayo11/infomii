@@ -6,6 +6,8 @@ export type EditorTopBarProps = {
   pageTitle: string;
   saving: boolean;
   lastSavedAt: number | null;
+  saveError?: string | null;
+  onRetry?: () => void;
   status?: "draft" | "published";
   publicUrl: string | null;
   publishing?: boolean;
@@ -28,10 +30,30 @@ function formatSavedAt(ms: number): string {
 function AutosaveStatus({
   saving,
   lastSavedAt,
+  saveError,
+  onRetry,
 }: {
   saving: boolean;
   lastSavedAt: number | null;
+  saveError: string | null;
+  onRetry?: () => void;
 }) {
+  if (saveError) {
+    return (
+      <span className="flex items-center gap-2 text-xs">
+        <span className="text-red-600">{saveError}</span>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded px-2 py-0.5 font-medium text-red-700 underline hover:no-underline"
+          >
+            再試行
+          </button>
+        )}
+      </span>
+    );
+  }
   if (saving) {
     return (
       <span className="flex items-center gap-1.5 text-xs text-amber-600">
@@ -59,6 +81,8 @@ export function EditorTopBar({
   pageTitle,
   saving,
   lastSavedAt,
+  saveError = null,
+  onRetry,
   status = "draft",
   publicUrl,
   publishing = false,
@@ -109,7 +133,7 @@ export function EditorTopBar({
 
       {/* Autosave + draft/published */}
       <div className="flex items-center gap-3">
-        <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} />
+        <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
         <span
           className={
             status === "published"

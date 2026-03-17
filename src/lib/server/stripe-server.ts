@@ -32,6 +32,18 @@ export function getStripeProPriceId(): string {
   return value;
 }
 
+export function getStripeBusinessPriceId(): string {
+  const value = process.env.STRIPE_BUSINESS_PRICE_ID;
+  if (!value) {
+    throw new Error("STRIPE_BUSINESS_PRICE_ID が未設定です");
+  }
+  return value;
+}
+
+export function getStripePriceIdByPlan(plan: "pro" | "business"): string {
+  return plan === "business" ? getStripeBusinessPriceId() : getStripeProPriceId();
+}
+
 export function getAppBaseUrl(fallbackOrigin?: string | null): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;

@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useParams } from "next/navigation";
 import { nanoid } from "nanoid";
 import { Editor2 } from "@/components/editor";
-import { useAutoSaveCards } from "@/components/editor/useAutoSaveCards";
 import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
@@ -19,8 +18,6 @@ function EditorWithPageId() {
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
-
-  useAutoSaveCards(pageId);
 
   useEffect(() => {
     if (!pageId) return;

@@ -19,29 +19,37 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { BlockToolbar } from "./BlockToolbar";
 import type { EditorCard } from "./types";
 
-/** Guest viewport width (matches public page). */
-const CANVAS_WIDTH = 375;
+/** Guest viewport widths (matches public page). */
+const VIEWPORT_SIZES = [
+  { label: "375px", width: 375 },
+  { label: "414px", width: 414 },
+] as const;
 
-/** Mobile phone-style frame: 375px screen, rounded corners, light border, subtle shadow. Makes the mobile layout obvious. */
-function MobileCanvasFrame({ children }: { children: React.ReactNode }) {
+/** Mobile phone-style frame: rounded corners, light border, subtle shadow. */
+function MobileCanvasFrame({
+  children,
+  width = 375,
+}: {
+  children: React.ReactNode;
+  width?: number;
+}) {
+  const bezel = 12;
   return (
     <div
       className="flex shrink-0 flex-col items-center"
       aria-label="モバイルプレビュー（ゲスト表示）"
     >
-      {/* Phone frame: bezel + screen */}
       <div
         className="flex flex-col rounded-[2rem] border border-slate-200/90 bg-slate-100/80 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
-        style={{ width: CANVAS_WIDTH + 24 }}
+        style={{ width: width + bezel * 2 }}
       >
-        {/* Optional top notch/dynamic island hint */}
         <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
-        {/* Screen */}
         <div
           className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
-          style={{ width: CANVAS_WIDTH }}
+          style={{ width }}
         >
           {children}
         </div>
@@ -56,19 +64,124 @@ type CanvasProps = {
   lastAddedCardId?: string | null;
   onSelectCard: (id: string | null) => void;
   onReorder: (cards: EditorCard[]) => void;
+  onDuplicateCard?: (id: string) => void;
+  onRemoveCard?: (id: string) => void;
 };
+
+function CardContextMenu({
+  x,
+  y,
+  onClose,
+  onDuplicate,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+}: {
+  x: number;
+  y: number;
+  onClose: () => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+}) {
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40"
+        aria-hidden
+        onClick={onClose}
+      />
+      <div
+        className="fixed z-50 min-w-[160px] rounded-lg border border-slate-200 bg-white py-1 shadow-xl"
+        style={{ left: x, top: y }}
+        role="menu"
+      >
+        {onMoveUp && (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onMoveUp();
+              onClose();
+            }}
+            disabled={!canMoveUp}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+          >
+            上へ移動
+          </button>
+        )}
+        {onMoveDown && (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onMoveDown();
+              onClose();
+            }}
+            disabled={!canMoveDown}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+          >
+            下へ移動
+          </button>
+        )}
+        {(onMoveUp || onMoveDown) && <div className="my-1 border-t border-slate-100" />}
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onDuplicate();
+            onClose();
+          }}
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+        >
+          複製
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onRemove();
+            onClose();
+          }}
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+        >
+          削除
+        </button>
+      </div>
+    </>
+  );
+}
 
 function SortableCardWrapper({
   card,
   isSelected,
   isNewlyAdded,
   onSelect,
+  onDuplicate,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+  onContextMenuClick,
   children,
 }: {
   card: EditorCard;
   isSelected: boolean;
   isNewlyAdded: boolean;
   onSelect: () => void;
+  onDuplicate?: () => void;
+  onRemove?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onContextMenuClick?: (e: React.MouseEvent) => void;
   children: React.ReactNode;
 }) {
   const {
@@ -121,9 +234,10 @@ function SortableCardWrapper({
             role="button"
             tabIndex={0}
             aria-pressed={isSelected}
+            onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card min-w-0 flex-1 rounded-r-xl border bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+              "editor-card relative min-w-0 flex-1 rounded-r-xl border bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
               (isNewlyAdded ? "card-insert " : "") +
               (isSelected
                 ? "border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
@@ -140,6 +254,18 @@ function SortableCardWrapper({
               }
             }}
           >
+            {isSelected && onDuplicate && onRemove && (
+              <BlockToolbar
+                cardId={card.id}
+                cardType={card.type}
+                onDuplicate={onDuplicate}
+                onDelete={onRemove}
+                onMoveUp={onMoveUp}
+                onMoveDown={onMoveDown}
+                canMoveUp={canMoveUp}
+                canMoveDown={canMoveDown}
+              />
+            )}
             {children}
           </div>
         </div>
@@ -159,8 +285,16 @@ export function Canvas({
   lastAddedCardId = null,
   onSelectCard,
   onReorder,
+  onDuplicateCard,
+  onRemoveCard,
 }: CanvasProps) {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(375);
+  const [contextMenu, setContextMenu] = useState<{
+    cardId: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // When a card is added, scroll it into view after layout so the animation is visible. Double rAF ensures layout is done.
@@ -208,6 +342,18 @@ export function Canvas({
   const sortedCards = [...cards].sort((a, b) => a.order - b.order);
   const activeCard = activeCardId ? sortedCards.find((c) => c.id === activeCardId) ?? null : null;
 
+  const closeContextMenu = () => setContextMenu(null);
+
+  const moveCard = (cardId: string, direction: "up" | "down") => {
+    const idx = sortedCards.findIndex((c) => c.id === cardId);
+    if (idx < 0) return;
+    const newIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= sortedCards.length) return;
+    const next = arrayMove(sortedCards, idx, newIdx);
+    const withOrder = next.map((c, i) => ({ ...c, order: i }));
+    onReorder(withOrder);
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -220,8 +366,26 @@ export function Canvas({
         tabIndex={-1}
         onClick={() => onSelectCard(null)}
       >
-        <div className="flex flex-1 justify-center overflow-y-auto p-6">
-          <MobileCanvasFrame>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
+            <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
+            {VIEWPORT_SIZES.map(({ label, width }) => (
+              <button
+                key={width}
+                type="button"
+                onClick={() => setViewportWidth(width)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                  viewportWidth === width
+                    ? "bg-slate-900 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-1 justify-center overflow-y-auto p-6">
+          <MobileCanvasFrame width={viewportWidth}>
             <div
               className="flex min-h-[480px] flex-1 flex-col bg-white"
               data-mobile-preview
@@ -231,7 +395,7 @@ export function Canvas({
                 ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto bg-white px-4 py-4"
               >
-                <div className="mx-auto max-w-[420px]">
+                <div className="mx-auto" style={{ maxWidth: viewportWidth }}>
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
@@ -252,13 +416,28 @@ export function Canvas({
                         if (e.target === e.currentTarget) onSelectCard(null);
                       }}
                     >
-                      {sortedCards.map((card) => (
+                      {sortedCards.map((card, idx) => (
                         <SortableCardWrapper
                           key={card.id}
                           card={card}
                           isSelected={selectedCardId === card.id}
                           isNewlyAdded={card.id === lastAddedCardId}
                           onSelect={() => onSelectCard(card.id)}
+                          onDuplicate={onDuplicateCard ? () => onDuplicateCard(card.id) : undefined}
+                          onRemove={onRemoveCard ? () => onRemoveCard(card.id) : undefined}
+                          onMoveUp={idx > 0 ? () => moveCard(card.id, "up") : undefined}
+                          onMoveDown={idx < sortedCards.length - 1 ? () => moveCard(card.id, "down") : undefined}
+                          canMoveUp={idx > 0}
+                          canMoveDown={idx < sortedCards.length - 1}
+                          onContextMenuClick={
+                            onDuplicateCard && onRemoveCard
+                              ? (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setContextMenu({ cardId: card.id, x: e.clientX, y: e.clientY });
+                                }
+                              : undefined
+                          }
                         >
                           <CardRenderer
                             card={card}
@@ -273,6 +452,7 @@ export function Canvas({
               </div>
             </div>
           </MobileCanvasFrame>
+          </div>
         </div>
       </div>
 
@@ -298,6 +478,25 @@ export function Canvas({
           </div>
         ) : null}
       </DragOverlay>
+
+      {contextMenu && (() => {
+        const card = sortedCards.find((c) => c.id === contextMenu.cardId);
+        if (!card || !onDuplicateCard || !onRemoveCard) return null;
+        const idx = sortedCards.findIndex((c) => c.id === contextMenu.cardId);
+        return (
+          <CardContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={closeContextMenu}
+            onDuplicate={() => onDuplicateCard(card.id)}
+            onRemove={() => onRemoveCard(card.id)}
+            onMoveUp={idx > 0 ? () => moveCard(card.id, "up") : undefined}
+            onMoveDown={idx < sortedCards.length - 1 ? () => moveCard(card.id, "down") : undefined}
+            canMoveUp={idx > 0}
+            canMoveDown={idx < sortedCards.length - 1}
+          />
+        );
+      })()}
     </DndContext>
   );
 }

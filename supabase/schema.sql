@@ -31,9 +31,9 @@ create table if not exists public.informations (
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   hotel_id uuid not null unique references public.hotels(id) on delete cascade,
-  plan text not null default 'free' check (plan in ('free', 'pro')),
+  plan text not null default 'free' check (plan in ('free', 'pro', 'business')),
   status text not null default 'active' check (status in ('trialing', 'active', 'past_due', 'canceled')),
-  max_published_pages integer not null default 3 check (max_published_pages >= 0),
+  max_published_pages integer not null default 1 check (max_published_pages >= 0),
   stripe_customer_id text,
   stripe_subscription_id text,
   stripe_price_id text,
@@ -82,7 +82,7 @@ add column if not exists plan text not null default 'free';
 alter table public.subscriptions
 add column if not exists status text not null default 'active';
 alter table public.subscriptions
-add column if not exists max_published_pages integer not null default 3;
+add column if not exists max_published_pages integer not null default 1;
 alter table public.subscriptions
 add column if not exists updated_at timestamptz not null default now();
 alter table public.subscriptions
@@ -152,7 +152,7 @@ where h.owner_user_id is null
   and m.hotel_id = h.id;
 
 insert into public.subscriptions (hotel_id, plan, status, max_published_pages)
-select h.id, 'free', 'active', 3
+select h.id, 'free', 'active', 1
 from public.hotels h
 where not exists (
   select 1 from public.subscriptions s where s.hotel_id = h.id
@@ -198,7 +198,7 @@ begin
   end if;
 
   insert into public.subscriptions (hotel_id, plan, status, max_published_pages)
-  values (target_hotel_id, 'free', 'active', 3)
+  values (target_hotel_id, 'free', 'active', 1)
   returning id into sub_id;
 
   return sub_id;

@@ -1,25 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { SaasEditor } from "@/components/saas-editor";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function SaasEditorPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+/**
+ * 廃止: /editor/saas/[id] は /dashboard にリダイレクト。
+ * SaasEditor は別テーブル使用のため、メインエディタ（pages/cards）に統一。
+ */
+export default function SaasEditorRedirectPage() {
+  const router = useRouter();
+
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    router.replace("/dashboard");
+  }, [router]);
 
-  if (!resolvedParams) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
-        <p className="text-sm text-slate-600">読み込み中…</p>
-      </div>
-    );
-  }
-
-  return <SaasEditor pageId={resolvedParams.id} />;
+  return (
+    <div className="flex h-screen items-center justify-center bg-slate-100">
+      <p className="text-sm text-slate-600">リダイレクト中…</p>
+    </div>
+  );
 }

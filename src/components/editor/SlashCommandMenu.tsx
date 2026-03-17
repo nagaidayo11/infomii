@@ -1,41 +1,50 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { CARD_ICONS } from "./CardLibrary";
+import { CARD_ICONS, LIBRARY_SECTIONS } from "./CardLibrary";
 import type { CardType } from "./types";
 
-/** All card types available in slash menu — matches library order (Basic, Info, Actions, Media, Hospitality, then text/gallery/divider). */
-const SLASH_MENU_ITEMS: Array<{ type: CardType; label: string }> = [
-  { type: "hero", label: "ヒーロー" },
-  { type: "info", label: "情報" },
-  { type: "highlight", label: "ハイライト" },
-  { type: "action", label: "アクション" },
-  { type: "welcome", label: "Welcome" },
-  { type: "wifi", label: "WiFi" },
-  { type: "breakfast", label: "Breakfast" },
-  { type: "checkout", label: "Checkout" },
-  { type: "notice", label: "Notice" },
-  { type: "nearby", label: "Nearby" },
-  { type: "map", label: "Map" },
-  { type: "emergency", label: "Emergency" },
-  { type: "faq", label: "FAQ" },
-  { type: "button", label: "Button" },
-  { type: "taxi", label: "Taxi" },
-  { type: "image", label: "Image" },
-  { type: "restaurant", label: "Restaurant" },
-  { type: "spa", label: "Spa" },
-  { type: "laundry", label: "Laundry" },
-  { type: "text", label: "Text" },
-  { type: "gallery", label: "Gallery" },
-  { type: "divider", label: "Divider" },
-];
+const RECENT_STORAGE_KEY = "infomii-slash-recent";
+const RECENT_MAX = 5;
+
+function getRecentTypes(): CardType[] {
+  try {
+    const raw = localStorage.getItem(RECENT_STORAGE_KEY) || "[]";
+    return JSON.parse(raw) as CardType[];
+  } catch {
+    return [];
+  }
+}
+
+function persistRecent(type: CardType) {
+  try {
+    const prev = getRecentTypes();
+    const next = [type, ...prev.filter((t) => t !== type)].slice(0, RECENT_MAX);
+    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 全カードをフラット化（type, label, category） */
+type FlatItem = { type: CardType; label: string; category: string };
+function flattenItems(): FlatItem[] {
+  const out: FlatItem[] = [];
+  for (const section of LIBRARY_SECTIONS) {
+    for (const item of section.items) {
+      out.push({ type: item.type, label: item.label, category: section.title });
+    }
+  }
+  return out;
+}
+
+const ALL_ITEMS = flattenItems();
 
 type SlashCommandMenuProps = {
   open: boolean;
   onClose: () => void;
   onSelect: (type: CardType) => void;
-  /** Optional anchor element to position the menu below (e.g. canvas). */
   anchorRef?: React.RefObject<HTMLElement | null>;
 };
 
@@ -45,14 +54,35 @@ export function SlashCommandMenu({
   onSelect,
   anchorRef,
 }: SlashCommandMenuProps) {
+  const [search, setSearch] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const items = SLASH_MENU_ITEMS;
+  const recentTypes = getRecentTypes();
+  const recentItems = recentTypes
+    .map((t) => ALL_ITEMS.find((i) => i.type === t))
+    .filter((x): x is FlatItem => !!x);
+
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return ALL_ITEMS;
+    return ALL_ITEMS.filter(
+      (i) =>
+        i.label.toLowerCase().includes(q) ||
+        i.type.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q)
+    );
+  }, [search]);
+
+  const displayItems = search.trim() ? filteredItems : recentItems.length > 0 ? recentItems : ALL_ITEMS;
+  const showRecentLabel = !search.trim() && recentItems.length > 0;
 
   useEffect(() => {
     if (!open) return;
+    setSearch("");
     setHighlightIndex(0);
+    setTimeout(() => inputRef.current?.focus(), 50);
   }, [open]);
 
   useEffect(() => {
@@ -65,18 +95,19 @@ export function SlashCommandMenu({
       }
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setHighlightIndex((i) => (i + 1) % items.length);
+        setHighlightIndex((i) => (i + 1) % displayItems.length);
         return;
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setHighlightIndex((i) => (i - 1 + items.length) % items.length);
+        setHighlightIndex((i) => (i - 1 + displayItems.length) % displayItems.length);
         return;
       }
       if (e.key === "Enter") {
         e.preventDefault();
-        const item = items[highlightIndex];
+        const item = displayItems[highlightIndex];
         if (item) {
+          persistRecent(item.type);
           onSelect(item.type);
           onClose();
         }
@@ -85,14 +116,24 @@ export function SlashCommandMenu({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, onSelect, highlightIndex, items]);
+  }, [open, onClose, onSelect, highlightIndex, displayItems]);
+
+  useEffect(() => {
+    setHighlightIndex(0);
+  }, [displayItems.length]);
 
   useEffect(() => {
     const el = listRef.current;
     if (!el || !open) return;
-    const row = el.children[highlightIndex] as HTMLElement | undefined;
+    const row = el.querySelector(`[data-index="${highlightIndex}"]`) as HTMLElement | undefined;
     row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [highlightIndex, open]);
+
+  const handleSelect = (item: FlatItem) => {
+    persistRecent(item.type);
+    onSelect(item.type);
+    onClose();
+  };
 
   if (!open || typeof document === "undefined") return null;
 
@@ -100,38 +141,55 @@ export function SlashCommandMenu({
     <div
       role="dialog"
       aria-label="カードを挿入"
-      className="z-50 w-[320px] rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+      className="z-50 w-[340px] rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
       style={getMenuStyle(anchorRef)}
     >
-      <div className="border-b border-slate-100 px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quick insert</p>
-        <p className="mt-1 text-xs text-slate-500">Type <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px]">/</kbd> in the canvas · Choose a card</p>
+      <div className="border-b border-slate-100 px-3 py-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="検索… (例: wifi, 朝食)"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-1 focus:ring-blue-200"
+          aria-label="カードを検索"
+        />
       </div>
       <div
         ref={listRef}
-        className="max-h-[min(60vh,400px)] overflow-y-auto p-2"
+        className="max-h-[min(50vh,360px)] overflow-y-auto p-2"
       >
-        {items.map((item, i) => (
-          <button
-            key={item.type}
-            type="button"
-            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
-              i === highlightIndex
-                ? "bg-blue-50 text-slate-900"
-                : "text-slate-700 hover:bg-slate-50"
-            }`}
-            onMouseEnter={() => setHighlightIndex(i)}
-            onClick={() => {
-              onSelect(item.type);
-              onClose();
-            }}
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm">
-              {CARD_ICONS[item.type] ?? CARD_ICONS.text}
-            </span>
-            <span className="text-sm font-medium">{item.label}</span>
-          </button>
-        ))}
+        {showRecentLabel && (
+          <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            最近使った
+          </p>
+        )}
+        {displayItems.length === 0 ? (
+          <p className="px-3 py-4 text-center text-sm text-slate-500">該当なし</p>
+        ) : (
+          displayItems.map((item, i) => (
+            <button
+              key={item.type}
+              type="button"
+              data-index={i}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                i === highlightIndex ? "bg-blue-50 text-slate-900" : "text-slate-700 hover:bg-slate-50"
+              }`}
+              onMouseEnter={() => setHighlightIndex(i)}
+              onClick={() => handleSelect(item)}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm">
+                {CARD_ICONS[item.type] ?? CARD_ICONS.text}
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{item.label}</span>
+                {!showRecentLabel && (
+                  <span className="block truncate text-[11px] text-slate-500">{item.category}</span>
+                )}
+              </div>
+            </button>
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,11 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import { getStripeServerClient, getStripeWebhookSecret } from "@/lib/server/stripe-server";
+import {
+  getStripeServerClient,
+  getStripeWebhookSecret,
+  getStripeProPriceId,
+  getStripeBusinessPriceId,
+} from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 
@@ -19,11 +24,23 @@ function mapStripeStatus(status: Stripe.Subscription.Status): "trialing" | "acti
   return "canceled";
 }
 
-function mapPlanByStatus(status: Stripe.Subscription.Status): "free" | "pro" {
-  if (status === "active" || status === "trialing" || status === "past_due" || status === "unpaid") {
-    return "pro";
+type PlanType = "free" | "pro" | "business";
+
+function mapPlanByPriceId(priceId: string | null): PlanType {
+  if (!priceId) return "pro";
+  try {
+    if (priceId === getStripeBusinessPriceId()) return "business";
+    if (priceId === getStripeProPriceId()) return "pro";
+  } catch {
+    /* env not set, fallback to pro */
   }
-  return "free";
+  return "pro";
+}
+
+function resolveMaxPagesByPlan(plan: PlanType): number {
+  if (plan === "business") return 999;
+  if (plan === "pro") return 5;
+  return 1;
 }
 
 function toIsoOrNull(unixSeconds: number | null | undefined): string | null {
@@ -125,7 +142,7 @@ async function findHotelIdBySubscriptionId(subscriptionId: string): Promise<stri
 
 async function upsertStripeSubscription(params: {
   hotelId: string;
-  plan: "free" | "pro";
+  plan: "free" | "pro" | "business";
   status: "trialing" | "active" | "past_due" | "canceled";
   maxPublishedPages: number;
   stripeCustomerId?: string | null;
@@ -201,14 +218,15 @@ export async function POST(request: NextRequest) {
           const subscriptionId = typeof session.subscription === "string" ? session.subscription : null;
           let currentPeriodEndIso: string | null = null;
           let mappedStatus: "trialing" | "active" | "past_due" | "canceled" = "active";
-          let mappedPlan: "free" | "pro" = "pro";
+          let mappedPlan: PlanType = "pro";
           let stripePriceId: string | null = null;
 
           if (subscriptionId) {
             const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
             mappedStatus = mapStripeStatus(stripeSubscription.status);
-            mappedPlan = mapPlanByStatus(stripeSubscription.status);
             stripePriceId = stripeSubscription.items.data[0]?.price?.id ?? null;
+            mappedPlan =
+              mappedStatus === "canceled" ? "free" : mapPlanByPriceId(stripePriceId);
             currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, stripeSubscription);
           }
 
@@ -216,7 +234,7 @@ export async function POST(request: NextRequest) {
             hotelId,
             plan: mappedPlan,
             status: mappedStatus,
-            maxPublishedPages: mappedPlan === "pro" ? 1000 : 3,
+            maxPublishedPages: resolveMaxPagesByPlan(mappedPlan),
             stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
             stripeSubscriptionId: subscriptionId,
             stripePriceId,
@@ -242,15 +260,17 @@ export async function POST(request: NextRequest) {
 
       if (hotelId) {
         const mappedStatus = mapStripeStatus(subscription.status);
-        const mappedPlan = mapPlanByStatus(subscription.status);
         const firstItem = subscription.items.data[0];
+        const stripePriceId = firstItem?.price?.id ?? null;
+        const mappedPlan =
+          mappedStatus === "canceled" ? "free" : mapPlanByPriceId(stripePriceId);
         const currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, subscription);
 
         await upsertStripeSubscription({
           hotelId,
           plan: mappedPlan,
           status: mappedStatus,
-          maxPublishedPages: mappedPlan === "pro" ? 1000 : 3,
+          maxPublishedPages: resolveMaxPagesByPlan(mappedPlan),
           stripeCustomerId:
             typeof subscription.customer === "string" ? subscription.customer : null,
           stripeSubscriptionId: subscription.id,

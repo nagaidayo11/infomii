@@ -9,9 +9,11 @@ import {
   createBlankPage,
   deleteInformation,
   getDashboardBootstrapData,
+  PAGE_LIMIT_REACHED,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
 import { TemplateGallery } from "@/components/template-gallery-ui";
+import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AIPageGenerator } from "@/components/ai-page-generator";
 
 /**
@@ -25,6 +27,7 @@ export function PageManagementPanel() {
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,7 +56,12 @@ export function PageManagementPanel() {
         router.push(`/editor/${pageId}`);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "新規作成に失敗しました");
+      const err = e as Error & { code?: string };
+      if (err.code === PAGE_LIMIT_REACHED) {
+        setPlanLimitModalOpen(true);
+      } else {
+        setError(err instanceof Error ? err.message : "新規作成に失敗しました");
+      }
     } finally {
       setCreating(false);
     }
@@ -232,6 +240,7 @@ export function PageManagementPanel() {
           </p>
         </div>
       </div>
+      <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
     </AuthGate>
   );
 }

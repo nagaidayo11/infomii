@@ -6,9 +6,11 @@ import {
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
   createBlankPage,
+  PAGE_LIMIT_REACHED,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
+import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { PageCard } from "./PageCard";
 
 export function PagesListView() {
@@ -19,6 +21,7 @@ export function PagesListView() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -47,8 +50,9 @@ export function PagesListView() {
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
-    } catch {
-      setCreating(false);
+    } catch (e) {
+      const err = e as Error & { code?: string };
+      if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
     } finally {
       setCreating(false);
     }
@@ -75,6 +79,8 @@ export function PagesListView() {
           ページを作成
         </button>
       </header>
+
+      <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
 
       <div className="mt-6">
         <GeneratePageFromUrl />

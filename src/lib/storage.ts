@@ -510,7 +510,7 @@ function blocksToImages(blocks: InformationBlock[]): string[] {
     .slice(0, 3);
 }
 
-export type SubscriptionPlan = "free" | "pro";
+export type SubscriptionPlan = "free" | "pro" | "business";
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 
 export type HotelSubscription = {
@@ -763,7 +763,9 @@ function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBl
 }
 
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
-  return plan === "pro" ? 1000 : 3;
+  if (plan === "business") return 999;
+  if (plan === "pro") return 5;
+  return 1;
 }
 
 function bootstrapLocalData(): Information[] {
@@ -2079,6 +2081,7 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
 type CheckoutSessionOptions = {
   successPath?: string;
   cancelPath?: string;
+  plan?: "pro" | "business";
 };
 
 export type OpsHealthSnapshot = {
@@ -2593,7 +2596,9 @@ export async function runOpsAlertTest(): Promise<string> {
   return `${payload.message || "通知テストを送信しました"} / Slack: ${slack?.ok ? "OK" : "NG"} / Mail: ${email?.ok ? "OK" : "NG"}${email?.detail ? ` (${email.detail})` : ""}`;
 }
 
-export async function trackUpgradeClick(context: "dashboard" | "editor"): Promise<void> {
+export async function trackUpgradeClick(
+  context: "dashboard" | "editor" | "lp-pricing-pro" | "lp-pricing-business",
+): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     return;
@@ -3339,6 +3344,7 @@ export async function createStripeCheckoutSession(
     body: JSON.stringify({
       successPath: options?.successPath,
       cancelPath: options?.cancelPath,
+      plan: options?.plan ?? "pro",
     }),
   });
 
@@ -3423,12 +3429,30 @@ export async function listTemplates(): Promise<TemplateRow[]> {
   return (data ?? []) as TemplateRow[];
 }
 
+/** Error code when page limit is reached (for UI to show upgrade modal). */
+export const PAGE_LIMIT_REACHED = "PAGE_LIMIT_REACHED";
+
 /** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
 export async function createBlankPage(title = "新規ページ"): Promise<string> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) throw new Error("施設が選択されていません");
+
+  const sub = await getCurrentHotelSubscription();
+  if (sub) {
+    const { count, error } = await supabase
+      .from("pages")
+      .select("id", { count: "exact", head: true })
+      .eq("hotel_id", hotelId);
+    if (!error && (count ?? 0) >= sub.maxPublishedPages) {
+      const e = new Error(
+        `ページ数の上限に達しました（${sub.maxPublishedPages}件）。Proプランで5ページまで作成できます。`
+      ) as Error & { code?: string };
+      e.code = PAGE_LIMIT_REACHED;
+      throw e;
+    }
+  }
 
   const nextTitle = (title && title.trim()) || "新規ページ";
   const baseSlug = createSlug(nextTitle);

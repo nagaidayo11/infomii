@@ -8,11 +8,14 @@ import {
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
   createBlankPage,
+  PAGE_LIMIT_REACHED,
   type HotelViewMetrics,
   type PageViewAnalytics,
 } from "@/lib/storage";
 import type { DashboardBootstrapData } from "@/lib/storage";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
+import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
+import { FadeIn, ScrollReveal } from "@/components/motion";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
@@ -25,6 +28,7 @@ export function DashboardView() {
   const [creating, setCreating] = useState(false);
   const [creatingCardPage, setCreatingCardPage] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -57,8 +61,14 @@ export function DashboardView() {
         router.push(`/editor/${pageId}`);
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "ページの作成に失敗しました";
-      setCreateError(message);
+      const err = e as Error & { code?: string };
+      const message = err instanceof Error ? err.message : "ページの作成に失敗しました";
+      if (err.code === PAGE_LIMIT_REACHED) {
+        setPlanLimitModalOpen(true);
+        setCreateError(null);
+      } else {
+        setCreateError(message);
+      }
     } finally {
       setCreating(false);
     }
@@ -73,8 +83,14 @@ export function DashboardView() {
         router.push(`/editor/${pageId}`);
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "ページの作成に失敗しました";
-      setCreateError(message);
+      const err = e as Error & { code?: string };
+      const message = err instanceof Error ? err.message : "ページの作成に失敗しました";
+      if (err.code === PAGE_LIMIT_REACHED) {
+        setPlanLimitModalOpen(true);
+        setCreateError(null);
+      } else {
+        setCreateError(message);
+      }
     } finally {
       setCreatingCardPage(false);
     }
@@ -89,17 +105,20 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <header>
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-          {bootstrap?.hotelName ?? "施設"}
-        </p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">ダッシュボード</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          案内を1つ作って、QRでお客様に届けます
-        </p>
-      </header>
+      <FadeIn>
+        <header>
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+            {bootstrap?.hotelName ?? "施設"}
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">ダッシュボード</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            案内を1つ作って、QRでお客様に届けます
+          </p>
+        </header>
+      </FadeIn>
 
       {/* Primary action: create once, deliver via QR */}
+      <ScrollReveal>
       <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
         <div className="flex flex-wrap items-center gap-4">
           <button
@@ -137,8 +156,10 @@ export function DashboardView() {
           <GeneratePageFromUrl />
         </div>
       </section>
+      </ScrollReveal>
 
       {/* Analytics summary */}
+      <ScrollReveal>
       <section>
         <h2 className="text-sm font-semibold text-slate-700">分析サマリー</h2>
         {loading ? (
@@ -173,8 +194,10 @@ export function DashboardView() {
           </div>
         )}
       </section>
+      </ScrollReveal>
 
       {/* Recently edited */}
+      <ScrollReveal>
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">最近編集したページ</h2>
@@ -213,9 +236,11 @@ export function DashboardView() {
           </div>
         )}
       </section>
+      </ScrollReveal>
 
       {/* Published pages */}
       {!loading && published.length > 0 && (
+        <ScrollReveal>
         <section>
           <h2 className="text-sm font-semibold text-slate-700">公開中のページ</h2>
           <div className="mt-3 space-y-2">
@@ -244,7 +269,12 @@ export function DashboardView() {
             </Link>
           )}
         </section>
+        </ScrollReveal>
       )}
+      <PlanLimitModal
+        open={planLimitModalOpen}
+        onClose={() => setPlanLimitModalOpen(false)}
+      />
     </div>
   );
 }

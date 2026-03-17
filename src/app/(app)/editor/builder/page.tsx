@@ -1,11 +1,20 @@
 "use client";
 
-import { Editor2 } from "@/components/editor";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 /**
- * Infomii Editor 2.0 — カード型CMSエディタ
- * 3列: カードライブラリ | ライブプレビュー (375px) | カード設定
+ * LP「ページビルダーを開く」→ ダッシュボードへリダイレクト。
+ * ページ作成はダッシュボードの「ページを作成」から。
  */
-export default function PageBuilderPage() {
-  return <Editor2 />;
+export default function PageBuilderRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/dashboard");
+  }, [router]);
+  return (
+    <div className="flex h-screen items-center justify-center bg-slate-100">
+      <p className="text-sm text-slate-600">リダイレクト中…</p>
+    </div>
+  );
 }

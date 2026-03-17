@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button, Card, Container, Section } from "@/components/ui";
+import { CheckoutButton } from "@/components/lp/CheckoutButton";
+import { LpHero } from "@/components/lp/LpHero";
+import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -22,68 +25,6 @@ export const metadata: Metadata = {
     description: "WiFi・朝食・施設案内をQRでゲストに共有。",
   },
 };
-
-function HeroVisuals() {
-  return (
-    <div className="relative flex flex-wrap items-end justify-center gap-4 sm:gap-6 lg:gap-8">
-      <div
-        className="w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)] lg:max-w-[320px]"
-        aria-hidden
-      >
-        <div className="flex border-b border-slate-100 px-3 py-2">
-          <div className="flex gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-          </div>
-          <span className="ml-3 text-[10px] font-medium text-slate-400">
-            ページエディタ
-          </span>
-        </div>
-        <div className="flex gap-0 p-2">
-          <div className="w-8 shrink-0 rounded-l-lg bg-slate-50 py-2" />
-          <div className="min-h-[140px] flex-1 space-y-2 rounded-r-lg border border-slate-100 bg-white p-3">
-            <div className="h-4 w-3/4 rounded bg-slate-100" />
-            <div className="h-3 w-full rounded bg-slate-50" />
-            <div className="h-3 w-5/6 rounded bg-slate-50" />
-            <div className="mt-3 h-8 w-full rounded-lg bg-ds-primary/10" />
-          </div>
-        </div>
-      </div>
-      <div
-        className="relative w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px]"
-        aria-hidden
-      >
-        <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
-        <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-3">
-          <div className="mb-2 h-2.5 w-16 rounded bg-slate-200" />
-          <div className="h-3 w-full rounded bg-slate-100" />
-          <div className="mt-2 h-3 w-4/5 rounded bg-slate-100" />
-          <div className="mt-4 h-9 w-full rounded-xl bg-ds-primary/20" />
-        </div>
-      </div>
-      <div
-        className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border-2 border-slate-200 bg-white shadow-sm sm:h-28 sm:w-28"
-        aria-hidden
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className="h-12 w-12 text-slate-700 sm:h-14 sm:w-14"
-          fill="currentColor"
-        >
-          <rect x="2" y="2" width="5" height="5" />
-          <rect x="11" y="2" width="5" height="5" />
-          <rect x="2" y="11" width="5" height="5" />
-          <rect x="8" y="8" width="2" height="2" />
-          <rect x="14" y="8" width="2" height="2" />
-          <rect x="8" y="14" width="2" height="2" />
-          <rect x="11" y="11" width="5" height="5" />
-          <rect x="14" y="14" width="2" height="2" />
-        </svg>
-      </div>
-    </div>
-  );
-}
 
 export default function LpSaaSPage() {
   const loginHref = "/login?ref=lp-saas";
@@ -125,29 +66,7 @@ export default function LpSaaSPage() {
         </Container>
       </header>
 
-      <section className="border-b border-slate-200/80 bg-white">
-        <Container className="py-16 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              ホテル案内ページを3分で作成
-            </h1>
-            <p className="mt-6 text-lg leading-relaxed text-slate-600 sm:text-xl">
-              WiFi・朝食・施設案内を、1枚のQRページでゲストに共有。
-            </p>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Button href={ctaHref} size="lg">
-                無料でページを作成
-              </Button>
-              <Button href="#live-demo" variant="secondary" size="lg">
-                デモを見る
-              </Button>
-            </div>
-          </div>
-          <div className="mt-14 lg:mt-16">
-            <HeroVisuals />
-          </div>
-        </Container>
-      </section>
+      <LpHero ctaHref={ctaHref} />
 
       <Section
         kicker="こんな課題はありませんか"
@@ -155,7 +74,8 @@ export default function LpSaaSPage() {
         description="紙の案内はすぐ古くなる。フロントは同じWiFiや朝食の説明を何度も繰り返す。変更のたびに印刷し直し、周知も大変。"
         variant="muted"
       >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             "印刷した案内は内容が変わるたびにすぐ古くなる",
             "フロントが同じ質問に何度も答える時間がかかる",
@@ -171,7 +91,8 @@ export default function LpSaaSPage() {
               <span className="text-sm font-medium text-slate-700">{item}</span>
             </li>
           ))}
-        </ul>
+          </StaggerReveal>
+        </ScrollReveal>
       </Section>
 
       <Section
@@ -179,7 +100,8 @@ export default function LpSaaSPage() {
         title="1つのQRで1ページ。いつでも最新のまま。"
         description="Infomiiなら、スマホで見やすい案内ページを数分で作成。いつでも編集でき、ゲストは常に最新のWiFi・朝食・施設情報を確認できます。印刷し直しも、伝言の手間も不要です。"
       >
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             "1回更新すれば、リンクを持つ全ゲストに同じ内容が届く",
             "ロビーや客室に1枚のQR—WiFi・朝食・地図などをまとめて案内",
@@ -195,7 +117,8 @@ export default function LpSaaSPage() {
               <span className="text-sm font-medium text-slate-700">{item}</span>
             </li>
           ))}
-        </ul>
+          </StaggerReveal>
+        </ScrollReveal>
       </Section>
 
       <Section
@@ -205,14 +128,16 @@ export default function LpSaaSPage() {
         description="ページビルダーを開き、カードを追加して、ゲストのスマホでの見え方をプレビュー。登録なしで試せます。"
         variant="muted"
       >
-        <div className="flex flex-wrap gap-4 sm:gap-5">
-          <Button href="/editor/builder" size="lg">
+        <ScrollReveal>
+          <div className="flex flex-wrap gap-4 sm:gap-5">
+          <Button href="/dashboard" size="lg">
             ページビルダーを開く
           </Button>
           <Button href="/p/demo-hub-menu" variant="secondary" size="lg">
             サンプルゲストページを見る
           </Button>
         </div>
+        </ScrollReveal>
       </Section>
 
       <Section
@@ -221,7 +146,8 @@ export default function LpSaaSPage() {
         title="ゲスト案内に必要な機能をまとめて"
         description="ブロック形式のエディタ、スマホプレビュー、QR・共有URL。ホテルとフロント向けに設計しています。"
       >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
           {[
             {
               title: "ブロックエディタ",
@@ -253,7 +179,8 @@ export default function LpSaaSPage() {
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.desc}</p>
             </Card>
           ))}
-        </div>
+          </StaggerReveal>
+        </ScrollReveal>
       </Section>
 
       <Section
@@ -262,7 +189,8 @@ export default function LpSaaSPage() {
         title="3ステップで最初の1ページを"
         variant="muted"
       >
-        <div className="grid gap-8 sm:grid-cols-3">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-8 sm:grid-cols-3">
           {[
             {
               step: "1",
@@ -288,16 +216,18 @@ export default function LpSaaSPage() {
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.desc}</p>
             </div>
           ))}
-        </div>
+          </StaggerReveal>
+        </ScrollReveal>
       </Section>
 
       <Section
         id="pricing"
         kicker="料金"
         title="シンプルなプラン。無料から始められます。"
-        description="最初の1ページは無料で作成可能。ページ数や分析が必要になったらProへアップグレードできます。"
+        description="最初の1ページは無料で作成可能。ページ数や分析が必要になったらPro、10ページ以上ならBusinessへアップグレードできます。"
       >
-        <div className="grid gap-6 lg:grid-cols-2">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
           <Card padding="lg" className="rounded-2xl p-8">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Free
@@ -326,40 +256,62 @@ export default function LpSaaSPage() {
               ¥1,980
               <span className="text-base font-normal text-slate-600">/月</span>
             </p>
-            <p className="mt-1 text-sm text-slate-500">複数ページ・分析・サポート付き</p>
+            <p className="mt-1 text-sm text-slate-500">5ページまで・分析・サポート付き</p>
             <ul className="mt-6 space-y-3 text-sm text-slate-700">
-              <li className="flex items-center gap-2">✓ 複数ページ公開</li>
+              <li className="flex items-center gap-2">✓ 公開ページ5本まで</li>
               <li className="flex items-center gap-2">✓ ノードマップ・複数ページ連携</li>
               <li className="flex items-center gap-2">✓ 閲覧分析</li>
               <li className="flex items-center gap-2">✓ 優先サポート</li>
             </ul>
-            <Button href={ctaHref} className="mt-6">
+            <CheckoutButton plan="pro" className="mt-6">
               Proを申し込む
-            </Button>
+            </CheckoutButton>
           </div>
-        </div>
+          <Card padding="lg" className="rounded-2xl p-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Business
+            </p>
+            <p className="mt-3 text-4xl font-bold text-slate-900">
+              ¥4,980
+              <span className="text-base font-normal text-slate-600">/月</span>
+            </p>
+            <p className="mt-1 text-sm text-slate-500">10ページ以上・チーム・API対応</p>
+            <ul className="mt-6 space-y-3 text-sm text-slate-700">
+              <li className="flex items-center gap-2">✓ 公開ページ無制限</li>
+              <li className="flex items-center gap-2">✓ Proの全機能</li>
+              <li className="flex items-center gap-2">✓ チーム招待</li>
+              <li className="flex items-center gap-2">✓ API・ホワイトラベル</li>
+            </ul>
+            <CheckoutButton plan="business" variant="secondary" className="mt-6">
+              Businessを申し込む
+            </CheckoutButton>
+          </Card>
+          </StaggerReveal>
+        </ScrollReveal>
       </Section>
 
       <section className="bg-slate-900 py-16 sm:py-20">
-        <Container size="sm" className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            3分で無料の案内ページを作成
-          </h2>
-          <p className="mt-4 text-lg text-slate-300">
-            クレジットカード不要。テンプレートまたは白紙から始めて、すぐに公開・QR共有できます。
-          </p>
-          <div className="mt-8">
-            <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
-              無料でページを作成
-            </Button>
-          </div>
-          <p className="mt-4 text-sm text-slate-500">
-            すでにアカウントをお持ちの方は{" "}
-            <Link href={loginHref} className="font-medium text-white underline hover:no-underline">
-              ログイン
-            </Link>
-          </p>
-        </Container>
+        <ScrollReveal>
+          <Container size="sm" className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              3分で無料の案内ページを作成
+            </h2>
+            <p className="mt-4 text-lg text-slate-300">
+              クレジットカード不要。テンプレートまたは白紙から始めて、すぐに公開・QR共有できます。
+            </p>
+            <div className="mt-8">
+              <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
+                無料でページを作成
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-slate-500">
+              すでにアカウントをお持ちの方は{" "}
+              <Link href={loginHref} className="font-medium text-white underline hover:no-underline">
+                ログイン
+              </Link>
+            </p>
+          </Container>
+        </ScrollReveal>
       </section>
 
       <footer className="border-t border-slate-200/80 bg-white py-8 transition-colors duration-200">

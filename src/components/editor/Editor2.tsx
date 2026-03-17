@@ -8,6 +8,7 @@ import { CardLibrary } from "./CardLibrary";
 import { Canvas } from "./Canvas";
 import { CardSettings } from "./SettingsPanel";
 import { PublishModal } from "./PublishModal";
+import { SaveToast } from "./SaveToast";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
@@ -37,11 +38,16 @@ export function Editor2({ pageId }: Editor2Props) {
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);
   const isSaving = useEditor2Store((s) => s.isSaving);
   const lastSavedAt = useEditor2Store((s) => s.lastSavedAt);
+  const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
   const addCard = useEditor2Store((s) => s.addCard);
   const updateCard = useEditor2Store((s) => s.updateCard);
   const reorderCards = useEditor2Store((s) => s.reorderCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
+  const removeCard = useEditor2Store((s) => s.removeCard);
+  const duplicateCard = useEditor2Store((s) => s.duplicateCard);
+  const undo = useEditor2Store((s) => s.undo);
+  const redo = useEditor2Store((s) => s.redo);
   const setPageMeta = useEditor2Store((s) => s.setPageMeta);
 
   useEffect(() => {
@@ -61,8 +67,7 @@ export function Editor2({ pageId }: Editor2Props) {
     });
   }, [pageId, setPageMeta]);
 
-  // Auto-save: persist cards after changes (debounced). Status shown in top bar; no manual save button.
-  useAutoSaveCards(pageId ?? null);
+  const { retry } = useAutoSaveCards(pageId ?? null);
 
   const selectedCard = useMemo(
     () => cards.find((c) => c.id === selectedCardId) ?? null,
@@ -90,6 +95,73 @@ export function Editor2({ pageId }: Editor2Props) {
     document.addEventListener("keydown", handleSlashKey);
     return () => document.removeEventListener("keydown", handleSlashKey);
   }, [handleSlashKey]);
+
+  const handleGlobalKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (slashMenuOpen) return;
+      const root = rootRef.current;
+      const target = e.target as HTMLElement | null;
+      if (!root || !target || !root.contains(target)) return;
+      const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+      if (isInput) {
+        const isEmpty =
+          (target as HTMLInputElement | HTMLTextAreaElement).value?.trim() === "" ||
+          target.textContent?.trim() === "";
+        if (isEmpty) {
+          if (e.key === "Backspace" || e.key === "Delete") {
+            const cardEl = target.closest("[data-card-id]");
+            const cardId = cardEl?.getAttribute("data-card-id");
+            if (cardId && selectedCardId === cardId) {
+              e.preventDefault();
+              removeCard(cardId);
+              (target as HTMLElement).blur();
+            }
+            return;
+          }
+          if (e.key === "Enter" && !e.shiftKey) {
+            const cardEl = target.closest("[data-card-id]");
+            const cardId = cardEl?.getAttribute("data-card-id");
+            if (cardId) {
+              e.preventDefault();
+              const idx = cards.findIndex((c) => c.id === cardId);
+              if (idx >= 0) {
+                addCard("text", idx + 1);
+                (target as HTMLElement).blur();
+              }
+            }
+            return;
+          }
+        }
+        if (e.key === "Backspace" || e.key === "Delete") return;
+      }
+      const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+      if (mod && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (mod && e.key === "d") {
+        e.preventDefault();
+        if (selectedCardId) duplicateCard(selectedCardId);
+        return;
+      }
+      if ((e.key === "Backspace" || e.key === "Delete") && selectedCardId) {
+        const el = target as HTMLElement;
+        if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA" && !el.isContentEditable) {
+          e.preventDefault();
+          removeCard(selectedCardId);
+        }
+      }
+    },
+    [undo, redo, duplicateCard, removeCard, addCard, selectedCardId, slashMenuOpen, cards]
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [handleGlobalKeyDown]);
 
   const handleSlashSelect = useCallback(
     (type: CardType) => {
@@ -131,6 +203,8 @@ export function Editor2({ pageId }: Editor2Props) {
         pageTitle={pageMeta.title}
         saving={isSaving}
         lastSavedAt={lastSavedAt}
+        saveError={saveError}
+        onRetry={retry}
         status="draft"
         publicUrl={pageMeta.publicUrl}
         publishing={publishing}
@@ -155,6 +229,8 @@ export function Editor2({ pageId }: Editor2Props) {
                   lastAddedCardId={lastAddedCardId}
                   onSelectCard={selectCard}
                   onReorder={reorderCards}
+                  onDuplicateCard={duplicateCard}
+                  onRemoveCard={removeCard}
                 />
               </div>
             </div>
@@ -177,6 +253,7 @@ export function Editor2({ pageId }: Editor2Props) {
             onClose={() => setPublishState(null)}
           />
         )}
+        <SaveToast lastSavedAt={lastSavedAt} />
       </div>
     </LocaleProvider>
   );

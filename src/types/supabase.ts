@@ -7,7 +7,7 @@ export type Database = {
         Row: {
           id: string;
           hotel_id: string;
-          plan: "free" | "pro";
+          plan: "free" | "pro" | "business";
           status: "trialing" | "active" | "past_due" | "canceled";
           max_published_pages: number;
           stripe_customer_id: string | null;
@@ -20,7 +20,7 @@ export type Database = {
         Insert: {
           id?: string;
           hotel_id: string;
-          plan?: "free" | "pro";
+          plan?: "free" | "pro" | "business";
           status?: "trialing" | "active" | "past_due" | "canceled";
           max_published_pages?: number;
           stripe_customer_id?: string | null;
@@ -32,7 +32,7 @@ export type Database = {
         };
         Update: {
           hotel_id?: string;
-          plan?: "free" | "pro";
+          plan?: "free" | "pro" | "business";
           status?: "trialing" | "active" | "past_due" | "canceled";
           max_published_pages?: number;
           stripe_customer_id?: string | null;

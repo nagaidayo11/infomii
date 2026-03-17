@@ -22,6 +22,10 @@ export type EditorPageMeta = {
 export type Editor2State = {
   /** All cards for the current page, in display order. */
   cards: EditorCard[];
+  /** Undo history (past states). */
+  historyPast: EditorCard[][];
+  /** Redo stack (future states after undo). */
+  historyFuture: EditorCard[][];
   /** Currently selected card id, or null. */
   selectedCardId: string | null;
   /** Set by addCard, cleared after insertion animation (for UI micro-interaction). */
@@ -30,22 +34,29 @@ export type Editor2State = {
   isSaving: boolean;
   /** Timestamp of last successful save (ms), or null if never saved. */
   lastSavedAt: number | null;
+  /** Error message when save failed. */
+  saveError: string | null;
   /** Current page metadata (id, title, slug, publicUrl). */
   pageMeta: EditorPageMeta;
   setCards: (cards: EditorCard[]) => void;
-  setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null }) => void;
+  setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null; saveError?: string | null }) => void;
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
   /** Load cards from API (e.g. AI generate from URL). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
-  addCard: (type: CardType) => void;
+  addCard: (type: CardType, index?: number) => void;
   updateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   reorderCards: (cards: EditorCard[]) => void;
   selectCard: (id: string | null) => void;
   removeCard: (id: string) => void;
+  duplicateCard: (id: string) => void;
+  undo: () => void;
+  redo: () => void;
 };
 
 /** Matches .card-insert CSS animation (280ms) + small buffer so class is cleared after animation. */
 const INSERT_ANIMATION_MS = 320;
+
+const HISTORY_MAX = 50;
 
 const initialPageMeta: EditorPageMeta = {
   pageId: null,
@@ -54,12 +65,20 @@ const initialPageMeta: EditorPageMeta = {
   publicUrl: null,
 };
 
+function pushHistory(past: EditorCard[][], cards: EditorCard[]): EditorCard[][] {
+  const next = [...past, cards.map((c) => ({ ...c }))];
+  return next.slice(-HISTORY_MAX);
+}
+
 export const useEditor2Store = create<Editor2State>((set, get) => ({
   cards: [],
+  historyPast: [],
+  historyFuture: [],
   selectedCardId: null,
   lastAddedCardId: null,
   isSaving: false,
   lastSavedAt: null,
+  saveError: null,
   pageMeta: initialPageMeta,
 
   setCards: (cards) => set({ cards }),
@@ -68,6 +87,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     set((s) => ({
       ...(payload.isSaving !== undefined && { isSaving: payload.isSaving }),
       ...(payload.lastSavedAt !== undefined && { lastSavedAt: payload.lastSavedAt }),
+      ...(payload.saveError !== undefined && { saveError: payload.saveError }),
     })),
 
   setPageMeta: (meta) =>
@@ -76,7 +96,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     })),
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
@@ -89,14 +109,23 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     set({ cards, selectedCardId: cards[0]?.id ?? null });
   },
 
-  addCard: (type) => {
-    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
+  addCard: (type, index?: number) => {
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu"];
     if (!allowed.includes(type)) return;
-    const cards = get().cards;
-    const order = cards.length; // append at bottom of page
+    const { cards, historyPast } = get();
+    const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;
     const id = nanoid(10);
-    const card = createEmptyCard(type, id, order);
-    set({ cards: [...cards, card], selectedCardId: id, lastAddedCardId: id });
+    const card = createEmptyCard(type, id, insertAt);
+    const next = [...cards];
+    next.splice(insertAt, 0, card);
+    const withOrder = next.map((c, i) => ({ ...c, order: i }));
+    set({
+      cards: withOrder,
+      selectedCardId: id,
+      lastAddedCardId: id,
+      historyPast: pushHistory(historyPast, cards),
+      historyFuture: [],
+    });
     setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
   },
 
@@ -114,18 +143,65 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     })),
 
   reorderCards: (cards) => {
+    const { historyPast } = get();
     const withOrder = cards.map((c, i) => ({ ...c, order: i }));
-    set({ cards: withOrder });
-    // Caller can subscribe to store and persist order to Supabase when cards change.
+    set({ cards: withOrder, historyPast: pushHistory(historyPast, get().cards), historyFuture: [] });
   },
 
   selectCard: (id) => set({ selectedCardId: id }),
 
   removeCard: (id) =>
-    set((s) => ({
-      cards: s.cards
+    set((s) => {
+      const next = s.cards
         .filter((c) => c.id !== id)
-        .map((c, i) => ({ ...c, order: i })),
-      selectedCardId: s.selectedCardId === id ? null : s.selectedCardId,
-    })),
+        .map((c, i) => ({ ...c, order: i }));
+      return {
+        cards: next,
+        selectedCardId: s.selectedCardId === id ? null : s.selectedCardId,
+        historyPast: pushHistory(s.historyPast, s.cards),
+        historyFuture: [],
+      };
+    }),
+
+  duplicateCard: (id) => {
+    const { cards, historyPast } = get();
+    const idx = cards.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    const src = cards[idx];
+    const newId = nanoid(10);
+    const copy: EditorCard = {
+      ...src,
+      id: newId,
+      order: idx + 1,
+      content: { ...src.content },
+    };
+    const next = [...cards];
+    next.splice(idx + 1, 0, copy);
+    const withOrder = next.map((c, i) => ({ ...c, order: i }));
+    set({ cards: withOrder, selectedCardId: newId, historyPast: pushHistory(historyPast, cards), historyFuture: [] });
+    setTimeout(() => set({ lastAddedCardId: newId }), 0);
+    setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
+  },
+
+  undo: () => {
+    const { historyPast, cards, historyFuture } = get();
+    if (historyPast.length === 0) return;
+    const prev = historyPast[historyPast.length - 1];
+    set({
+      cards: prev.map((c, i) => ({ ...c, order: i })),
+      historyPast: historyPast.slice(0, -1),
+      historyFuture: [cards, ...historyFuture],
+    });
+  },
+
+  redo: () => {
+    const { historyPast, cards, historyFuture } = get();
+    if (historyFuture.length === 0) return;
+    const next = historyFuture[0];
+    set({
+      cards: next.map((c, i) => ({ ...c, order: i })),
+      historyPast: pushHistory(historyPast, cards),
+      historyFuture: historyFuture.slice(1),
+    });
+  },
 }));

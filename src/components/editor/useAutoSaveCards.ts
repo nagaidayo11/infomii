@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useEditor2Store } from "./store";
 import { savePageCards } from "@/lib/storage";
 
@@ -28,11 +28,12 @@ async function saveAndMerge(
     }));
     useEditor2Store.getState().setCards(merged);
     if (isMounted.current) {
-      useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
+      useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
     }
-  } catch {
+  } catch (err) {
     if (isMounted.current) {
-      useEditor2Store.getState().setAutosaveStatus({ isSaving: false });
+      const msg = err instanceof Error ? err.message : "保存に失敗しました";
+      useEditor2Store.getState().setAutosaveStatus({ isSaving: false, saveError: msg });
     }
   }
 }
@@ -40,21 +41,24 @@ async function saveAndMerge(
 async function flushSave(pageId: string) {
   const store = useEditor2Store.getState();
   const cards = store.cards;
-  store.setAutosaveStatus({ isSaving: true });
+  store.setAutosaveStatus({ isSaving: true, saveError: null });
   try {
     await savePageCards(pageId, cards);
-    useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
-  } catch {
-    useEditor2Store.getState().setAutosaveStatus({ isSaving: false });
+    useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "保存に失敗しました";
+    useEditor2Store.getState().setAutosaveStatus({ isSaving: false, saveError: msg });
   }
 }
 
 /**
- * Auto-save: persists cards to Supabase only when cards array actually changed
- * (by signature of id+order). Avoids flickering "Saving…" / "Saved" when other
- * store fields (e.g. selectedCardId) change.
+ * Auto-save: persists cards to Supabase only when cards array actually changed.
+ * Returns retry() to manually retry after a save error.
  */
 export function useAutoSaveCards(pageId: string | null) {
+  const retry = useCallback(() => {
+    if (pageId) void flushSave(pageId);
+  }, [pageId]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
   const pageIdRef = useRef(pageId);
@@ -107,4 +111,6 @@ export function useAutoSaveCards(pageId: string | null) {
       }
     };
   }, [pageId]);
+
+  return { retry };
 }

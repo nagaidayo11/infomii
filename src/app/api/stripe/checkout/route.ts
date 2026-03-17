@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStripeProPriceId, getStripeServerClient, getAppBaseUrl } from "@/lib/server/stripe-server";
+import { getStripeServerClient, getAppBaseUrl, getStripePriceIdByPlan } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 
@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 type CheckoutRequestBody = {
   successPath?: unknown;
   cancelPath?: unknown;
+  plan?: "pro" | "business";
 };
 
 function buildDefaultHotelName(email: string | null | undefined): string {
@@ -120,11 +121,14 @@ export async function POST(request: NextRequest) {
       .eq("hotel_id", hotelId)
       .maybeSingle();
 
-    if (sub?.plan === "pro" && (sub.status === "active" || sub.status === "trialing")) {
+    if (
+      (sub?.plan === "pro" || sub?.plan === "business") &&
+      (sub.status === "active" || sub.status === "trialing")
+    ) {
       if (auditHotelId) {
-        await appendBillingLog(auditHotelId, "billing.checkout_blocked", "Checkout中止: すでにProプランです");
+        await appendBillingLog(auditHotelId, "billing.checkout_blocked", "Checkout中止: すでに有料プランです");
       }
-      return NextResponse.json({ message: "すでにProプランです" }, { status: 400 });
+      return NextResponse.json({ message: "すでに有料プランです" }, { status: 400 });
     }
 
     let requestBody: CheckoutRequestBody = {};
@@ -142,13 +146,14 @@ export async function POST(request: NextRequest) {
       requestBody.cancelPath,
       "/dashboard?billing=cancel",
     );
+    const plan = requestBody.plan === "business" ? "business" : "pro";
 
     const origin = request.headers.get("origin");
     const baseUrl = getAppBaseUrl(origin);
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: getStripeProPriceId(), quantity: 1 }],
+      line_items: [{ price: getStripePriceIdByPlan(plan), quantity: 1 }],
       success_url: `${baseUrl}${successPath}`,
       cancel_url: `${baseUrl}${cancelPath}`,
       customer_email: user.email ?? undefined,
