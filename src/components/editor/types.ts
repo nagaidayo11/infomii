@@ -8,6 +8,10 @@
  */
 
 export type CardType =
+  | "hero"
+  | "info"
+  | "highlight"
+  | "action"
   | "welcome"
   | "wifi"
   | "breakfast"
@@ -65,6 +69,10 @@ export type EditorPage = {
 
 /** カードタイプのラベル（日本語・変更しない） */
 export const CARD_TYPE_LABELS: Record<CardType, string> = {
+  hero: "ヒーロー",
+  info: "情報",
+  highlight: "ハイライト",
+  action: "アクション",
   welcome: "ウェルカム",
   wifi: "WiFi",
   breakfast: "朝食",
@@ -87,13 +95,14 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   divider: "区切り線",
 };
 
-/** Card types shown in the editor library (Notion-like canvas editor). */
+/** Card types shown in the editor library (Canva-style). */
 export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
-  "wifi",
-  "breakfast",
+  "hero",
+  "info",
+  "highlight",
+  "action",
   "notice",
   "map",
-  "button",
   "image",
   "text",
   "gallery",
@@ -102,28 +111,33 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
 
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
-  { type: "wifi", label: "WiFi", description: "SSID, password, description" },
-  { type: "breakfast", label: "Breakfast", description: "Time, location, menu" },
-  { type: "notice", label: "Notice", description: "Announcements, notes" },
-  { type: "map", label: "Map", description: "Address, map link" },
-  { type: "button", label: "Button", description: "Link button" },
-  { type: "image", label: "Image", description: "Photo or graphic" },
-  { type: "text", label: "Text", description: "Heading and body" },
-  { type: "gallery", label: "Gallery", description: "Image grid" },
-  { type: "divider", label: "Divider", description: "Section separator" },
+  { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
+  { type: "info", label: "情報", description: "WiFi・構造化情報" },
+  { type: "highlight", label: "ハイライト", description: "強調ブロック" },
+  { type: "action", label: "アクション", description: "ボタン・CTA" },
+  { type: "notice", label: "お知らせ", description: "告知・注意" },
+  { type: "map", label: "地図", description: "住所・地図" },
+  { type: "image", label: "画像", description: "写真" },
+  { type: "text", label: "テキスト", description: "見出し・本文" },
+  { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
+  { type: "divider", label: "区切り", description: "セクション区切り" },
 ];
 
-/** Card types used for new-page starter set (Welcome, WiFi, Breakfast, Checkout, Nearby). */
+/** Card types used for new-page starter set (Hero first, then Info, Highlight, …). */
 export const STARTER_CARD_TYPES: CardType[] = [
-  "welcome",
-  "wifi",
-  "breakfast",
+  "hero",
+  "info",
+  "highlight",
   "checkout",
   "nearby",
 ];
 
 /** Full list (all card types) — for backwards compatibility / migration. */
 export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; description: string }> = [
+  { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
+  { type: "info", label: "情報", description: "構造化情報・WiFi" },
+  { type: "highlight", label: "ハイライト", description: "強調ブロック" },
+  { type: "action", label: "アクション", description: "ボタン・CTA" },
   { type: "welcome", label: "ウェルカム", description: "おもてなしメッセージ" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード・説明" },
   { type: "breakfast", label: "朝食", description: "時間・会場・メニュー" },
@@ -145,6 +159,14 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
 
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
+    case "hero":
+      return { title: "Infomii Hotel", image: "", subtitle: "" };
+    case "info":
+      return { title: "Wi-Fi", icon: "📶", rows: [{ label: "ネットワーク名", value: "" }, { label: "パスワード", value: "" }] };
+    case "highlight":
+      return { title: "重要なお知らせ", body: "", accent: "amber" };
+    case "action":
+      return { label: "詳しく見る", href: "#" };
     case "welcome":
       return { title: "ようこそ", message: "ご宿泊ありがとうございます。ごゆっくりお過ごしください。" };
     case "wifi":

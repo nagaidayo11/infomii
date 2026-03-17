@@ -231,6 +231,7 @@ export function Canvas({
                 ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto bg-white px-4 py-4"
               >
+                <div className="mx-auto max-w-[420px]">
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
@@ -246,7 +247,7 @@ export function Canvas({
                     </div>
                   ) : (
                     <div
-                      className="space-y-4"
+                      className="space-y-6"
                       onClick={(e) => {
                         if (e.target === e.currentTarget) onSelectCard(null);
                       }}
@@ -268,6 +269,7 @@ export function Canvas({
                     </div>
                   )}
                 </SortableContext>
+                </div>
               </div>
             </div>
           </MobileCanvasFrame>

@@ -2,6 +2,10 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
+import { HeroCard } from "./HeroCard";
+import { InfoCard } from "./InfoCard";
+import { HighlightCard } from "./HighlightCard";
+import { ActionCard } from "./ActionCard";
 import { WelcomeCard } from "./WelcomeCard";
 import { WifiCard } from "./WifiCard";
 import { BreakfastCard } from "./BreakfastCard";
@@ -35,12 +39,48 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
   const locale = useLocale();
 
   switch (card.type) {
+    case "hero":
+      return <HeroCard card={card} isSelected={isSelected} locale={locale} />;
+    case "info":
+      return <InfoCard card={card} isSelected={isSelected} locale={locale} />;
+    case "highlight":
+      return <HighlightCard card={card} isSelected={isSelected} locale={locale} />;
+    case "action":
+      return <ActionCard card={card} isSelected={isSelected} locale={locale} />;
     case "welcome":
       return <WelcomeCard card={card} isSelected={isSelected} locale={locale} />;
-    case "wifi":
-      return <WifiCard card={card} isSelected={isSelected} locale={locale} />;
-    case "breakfast":
-      return <BreakfastCard card={card} isSelected={isSelected} locale={locale} />;
+    case "wifi": {
+      const c = card.content as Record<string, unknown> | undefined;
+      const infoCard: EditorCard = {
+        ...card,
+        type: "info",
+        content: {
+          title: (c?.title as string) || "Wi-Fi",
+          icon: "📶",
+          rows: [
+            { label: "ネットワーク名", value: (c?.ssid as string) ?? "" },
+            { label: "パスワード", value: (c?.password as string) ?? "" },
+          ],
+        },
+      };
+      return <InfoCard card={infoCard} isSelected={isSelected} locale={locale} />;
+    }
+    case "breakfast": {
+      const c = card.content as Record<string, unknown> | undefined;
+      const time = (c?.time as string) ?? "";
+      const location = (c?.location as string) ?? "";
+      const menu = (c?.menu as string) ?? "";
+      const highlightCard: EditorCard = {
+        ...card,
+        type: "highlight",
+        content: {
+          title: (c?.title as string) || "朝食",
+          body: [time, location, menu].filter(Boolean).join(" · ") || "時間・会場・メニュー",
+          accent: "amber",
+        },
+      };
+      return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
+    }
     case "checkout":
       return <CheckoutCard card={card} isSelected={isSelected} locale={locale} />;
     case "notice":
@@ -98,8 +138,8 @@ function isListProps(props: CardRendererProps): props is CardRendererListProps {
 
 /**
  * CardRenderer: render a single card or a list of cards (using cards.map()).
- * Supports: welcome, wifi, breakfast, checkout, notice, nearby, map, button,
- * image, gallery, faq, emergency, laundry, taxi, restaurant, spa.
+ * Supports: hero, info, highlight, action, welcome, wifi→info, breakfast→highlight,
+ * checkout, notice, nearby, map, button, image, gallery, faq, emergency, laundry, taxi, restaurant, spa.
  */
 export function CardRenderer(props: CardRendererProps) {
   if (isListProps(props)) {

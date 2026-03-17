@@ -381,6 +381,97 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             </SettingsSection>
           )}
 
+          {card.type === "hero" && (
+            <SettingsSection title="Content">
+              <Input
+                label="Title"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="Infomii Hotel"
+              />
+              <Input
+                label="Image URL"
+                value={(content.image as string) ?? ""}
+                onChange={(e) => update("image", e.target.value)}
+                placeholder="https://... or /hotel.jpg"
+              />
+              <Input
+                label="Subtitle"
+                value={(content.subtitle as string) ?? ""}
+                onChange={(e) => update("subtitle", e.target.value)}
+                placeholder="Optional subtitle"
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "info" && (
+            <SettingsSection title="Content">
+              <Input
+                label="Title"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="Wi-Fi"
+              />
+              <Input
+                label="Icon"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="📶"
+              />
+              <p className="text-xs text-slate-500">行はコンテンツで編集してください。</p>
+            </SettingsSection>
+          )}
+
+          {card.type === "highlight" && (
+            <SettingsSection title="Content">
+              <Input
+                label="Title"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="重要なお知らせ"
+              />
+              <div className="w-full">
+                <label className={labelClass}>Body</label>
+                <textarea
+                  value={(content.body as string) ?? ""}
+                  onChange={(e) => update("body", e.target.value)}
+                  placeholder="強調したい内容"
+                  rows={3}
+                  className={inputClass}
+                />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>Accent</label>
+                <select
+                  value={(content.accent as string) ?? "amber"}
+                  onChange={(e) => update("accent", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="amber">Amber</option>
+                  <option value="blue">Blue</option>
+                  <option value="emerald">Emerald</option>
+                </select>
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "action" && (
+            <SettingsSection title="Content">
+              <Input
+                label="Label"
+                value={(content.label as string) ?? ""}
+                onChange={(e) => update("label", e.target.value)}
+                placeholder="詳しく見る"
+              />
+              <Input
+                label="Link URL"
+                value={(content.href as string) ?? ""}
+                onChange={(e) => update("href", e.target.value)}
+                placeholder="https://... or #"
+              />
+            </SettingsSection>
+          )}
+
           {card.type === "text" && (
             <>
               <SettingsSection title="Content">

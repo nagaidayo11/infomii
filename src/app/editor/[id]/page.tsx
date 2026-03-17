@@ -9,6 +9,7 @@ import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
 import { getPage, getPageCards, rowToCard, savePageCards } from "@/lib/storage";
+import { migrateCardsForEditor } from "@/lib/migrate-cards";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -29,10 +30,11 @@ function EditorWithPageId() {
         const card = rowToCard(r);
         return { ...card, type: card.type as CardType };
       });
+      const cards = migrateCardsForEditor(cardsFromDb);
 
-      if (cardsFromDb.length > 0) {
-        setCards(cardsFromDb);
-        selectCard(cardsFromDb[0]?.id ?? null);
+      if (cards.length > 0) {
+        setCards(cards);
+        selectCard(cards[0]?.id ?? null);
         setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
         setLoaded(true);
         return;

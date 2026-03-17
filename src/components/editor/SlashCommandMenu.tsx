@@ -7,6 +7,10 @@ import type { CardType } from "./types";
 
 /** All card types available in slash menu — matches library order (Basic, Info, Actions, Media, Hospitality, then text/gallery/divider). */
 const SLASH_MENU_ITEMS: Array<{ type: CardType; label: string }> = [
+  { type: "hero", label: "ヒーロー" },
+  { type: "info", label: "情報" },
+  { type: "highlight", label: "ハイライト" },
+  { type: "action", label: "アクション" },
   { type: "welcome", label: "Welcome" },
   { type: "wifi", label: "WiFi" },
   { type: "breakfast", label: "Breakfast" },

@@ -76,7 +76,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     })),
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
@@ -90,7 +90,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   addCard: (type) => {
-    const allowed: CardType[] = ["welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider"];
     if (!allowed.includes(type)) return;
     const cards = get().cards;
     const order = cards.length; // append at bottom of page
