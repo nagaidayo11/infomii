@@ -51,20 +51,21 @@ const SNAP_THRESHOLD = 8;
 type Position = { x: number; y: number; w?: number; h?: number };
 const POSITION_KEY = "_position";
 
-function getPosition(card: EditorCard, index: number): Position {
+const CANVAS_PADDING_X = 16;
+
+function getPosition(card: EditorCard, index: number, contentWidth: number): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
+  const w = typeof pos?.w === "number" ? pos.w : DEFAULT_W;
+  const h = typeof pos?.h === "number" ? pos.h : DEFAULT_H;
   if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
-    return {
-      x: pos.x,
-      y: pos.y,
-      w: typeof pos.w === "number" ? pos.w : DEFAULT_W,
-      h: typeof pos.h === "number" ? pos.h : DEFAULT_H,
-    };
+    return { x: pos.x, y: pos.y, w, h };
   }
+  const blockW = Math.min(w, contentWidth);
+  const defaultX = Math.round((contentWidth - blockW) / 2);
   return {
-    x: 24,
+    x: defaultX,
     y: 24 + index * (DEFAULT_H + 16),
-    w: DEFAULT_W,
+    w: blockW,
     h: DEFAULT_H,
   };
 }
@@ -76,7 +77,8 @@ function computeSnap(
   y: number,
   w: number,
   h: number,
-  cards: EditorCard[]
+  cards: EditorCard[],
+  canvasWidth: number
 ): { x: number; y: number; guides: { axis: "x" | "y"; value: number }[] } {
   const others = cards.filter((c) => c.id !== draggingId);
   const guides: { axis: "x" | "y"; value: number }[] = [];
@@ -84,7 +86,7 @@ function computeSnap(
   let snapY = y;
 
   for (const c of others) {
-    const pos = getPosition(c, 0);
+    const pos = getPosition(c, 0, canvasWidth);
     const ow = pos.w ?? DEFAULT_W;
     const oh = pos.h ?? DEFAULT_H;
 
@@ -143,6 +145,7 @@ export function FreeformCanvas({
   const showGrid = useEditor2Store((s) => s.showGrid);
   const pageTheme = useEditor2Store((s) => s.pageTheme);
   const [viewportWidth, setViewportWidth] = useState(375);
+  const contentWidth = viewportWidth - CANVAS_PADDING_X * 2;
   const [dragState, setDragState] = useState<{
     id: string;
     x: number;
@@ -156,13 +159,13 @@ export function FreeformCanvas({
     (id: string, _e: unknown, d: { x: number; y: number }) => {
       const card = cards.find((c) => c.id === id);
       if (!card) return;
-      const pos = getPosition(card, cards.findIndex((c) => c.id === id));
+      const pos = getPosition(card, cards.findIndex((c) => c.id === id), contentWidth);
       const w = pos.w ?? DEFAULT_W;
       const h = pos.h ?? DEFAULT_H;
-      const { x, y, guides } = computeSnap(id, d.x, d.y, w, h, cards);
+      const { x, y, guides } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
       setDragState({ id, x, y, w, h, guides });
     },
-    [cards]
+    [cards, contentWidth]
   );
 
   const handleDragStop = useCallback(
@@ -170,10 +173,10 @@ export function FreeformCanvas({
       setDragState(null);
       const card = cards.find((c) => c.id === id);
       if (!card) return;
-      const pos = getPosition(card, cards.findIndex((c) => c.id === id));
+      const pos = getPosition(card, cards.findIndex((c) => c.id === id), contentWidth);
       const w = pos.w ?? DEFAULT_W;
       const h = pos.h ?? DEFAULT_H;
-      const { x, y } = computeSnap(id, d.x, d.y, w, h, cards);
+      const { x, y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
       const snappedX = Math.round(x / GRID) * GRID;
       const snappedY = Math.round(y / GRID) * GRID;
       onUpdateCard(id, {
@@ -188,7 +191,7 @@ export function FreeformCanvas({
         },
       });
     },
-    [cards, onUpdateCard]
+    [cards, onUpdateCard, contentWidth]
   );
 
   const handleResizeStop = useCallback(
@@ -222,9 +225,8 @@ export function FreeformCanvas({
   const themeStyles = {
     light: { bg: "#eef0f3", canvas: "bg-white", grid: "#d1d5db" },
     dark: { bg: "#1e293b", canvas: "bg-slate-800", grid: "#475569" },
-    "hotel-amber": { bg: "#fef3c7", canvas: "bg-amber-50", grid: "#fcd34d" },
-  };
-  const theme = themeStyles[pageTheme];
+  } as const;
+  const theme = themeStyles[pageTheme] ?? themeStyles.light;
 
   const canvasW = viewportWidth;
   const canvasH = 800;
@@ -265,7 +267,7 @@ export function FreeformCanvas({
       >
         <MobileCanvasFrame width={viewportWidth}>
           <div
-            className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
+            className={`relative rounded-2xl px-4 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
             style={{ width: canvasW, height: canvasH, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
@@ -305,7 +307,7 @@ export function FreeformCanvas({
             </svg>
           )}
           {cards.map((card, idx) => {
-            const pos = getPosition(card, idx);
+            const pos = getPosition(card, idx, contentWidth);
             const w = pos.w ?? DEFAULT_W;
             const h = pos.h ?? DEFAULT_H;
             const isDragging = dragState?.id === card.id;
@@ -336,18 +338,23 @@ export function FreeformCanvas({
                   onSelectCard(card.id);
                 }}
               >
-                <div
-                  className={
-                    "h-full w-full overflow-hidden rounded-xl border transition-shadow " +
-                    (isSelected
-                      ? "border-blue-300 shadow-lg ring-2 ring-blue-200"
-                      : "border-slate-200 shadow-sm hover:border-slate-300")
-                  }
-                  style={{
-                    ...blockStyle,
-                    backgroundColor: blockStyle.backgroundColor ?? "white",
-                  }}
-                >
+                <div className="relative h-full w-full">
+                  <div
+                    className={
+                      "h-full w-full overflow-hidden rounded-xl border transition-shadow " +
+                      (isSelected
+                        ? "border-blue-300 shadow-lg ring-2 ring-blue-200"
+                        : "border-slate-200 shadow-sm hover:border-slate-300")
+                    }
+                    style={{
+                      ...blockStyle,
+                      backgroundColor: blockStyle.backgroundColor ?? "white",
+                    }}
+                  >
+                    <div className="overflow-auto p-2 h-full">
+                      <CardRenderer card={card} isSelected={isSelected} />
+                    </div>
+                  </div>
                   {isSelected && onDuplicateCard && onRemoveCard && (
                     <BlockToolbar
                       cardId={card.id}
@@ -358,11 +365,9 @@ export function FreeformCanvas({
                       onMoveDown={undefined}
                       canMoveUp={false}
                       canMoveDown={false}
+                      verticalPosition={displayPos.y < 80 ? "below" : "above"}
                     />
                   )}
-                  <div className="overflow-auto p-2" style={{ height: "calc(100% - 36px)" }}>
-                    <CardRenderer card={card} isSelected={isSelected} />
-                  </div>
                 </div>
               </Rnd>
             );

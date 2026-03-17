@@ -36,7 +36,6 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
   return (
     <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">
-        🍽️{" "}
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder="レストラン" />
       </p>
       <p className="mt-1 text-xs text-slate-600">

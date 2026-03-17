@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { ImageUpload } from "@/components/editor/ImageUpload";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
@@ -40,8 +41,8 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
           <Image src={src} alt={alt} fill className="object-cover" unoptimized={src.startsWith("http")} />
         </div>
       ) : (
-        <div className="flex aspect-video items-center justify-center rounded-xl bg-slate-100 px-3 text-sm text-slate-500">
-          <InlineEditable value="" onSave={updateSrc} editable={isSelected} onActivate={onActivate} className="text-slate-500" placeholder="画像URLを入力" />
+        <div className="aspect-video w-full rounded-xl">
+          <ImageUpload onUploaded={updateSrc} className="h-full min-h-[120px]" />
         </div>
       )}
       {(src || isSelected) && (

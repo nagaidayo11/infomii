@@ -38,7 +38,6 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
   return (
     <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">
-        🕐{" "}
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" />
       </p>
       <p className="mt-1 text-xs text-slate-600">

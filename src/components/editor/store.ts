@@ -40,16 +40,13 @@ export type Editor2State = {
   saveError: string | null;
   /** Current page metadata (id, title, slug, publicUrl). */
   pageMeta: EditorPageMeta;
-  /** Layout mode: list (Notion風) or freeform (Canva風). */
-  layoutMode: "list" | "freeform";
-  /** Freeform: show grid on canvas. */
+  /** Show grid on canvas. */
   showGrid: boolean;
-  /** Page theme: light | dark | hotel-amber. */
-  pageTheme: "light" | "dark" | "hotel-amber";
+  /** Page theme: light | dark. */
+  pageTheme: "light" | "dark";
   setCards: (cards: EditorCard[]) => void;
   setShowGrid: (show: boolean) => void;
-  setPageTheme: (theme: "light" | "dark" | "hotel-amber") => void;
-  setLayoutMode: (mode: "list" | "freeform") => void;
+  setPageTheme: (theme: "light" | "dark") => void;
   setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null; saveError?: string | null }) => void;
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
   /** Highlight cards (e.g. from template). Auto-clears after 3s. */
@@ -94,13 +91,11 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   lastSavedAt: null,
   saveError: null,
   pageMeta: initialPageMeta,
-  layoutMode: "list",
   showGrid: true,
   pageTheme: "light",
 
   setCards: (cards) => set({ cards }),
 
-  setLayoutMode: (mode) => set({ layoutMode: mode }),
   setShowGrid: (show) => set({ showGrid: show }),
   setPageTheme: (theme) => set({ pageTheme: theme }),
 

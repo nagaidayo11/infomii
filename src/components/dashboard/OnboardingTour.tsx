@@ -61,7 +61,7 @@ export function OnboardingTour() {
   const isLast = step === STEPS.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 p-4">
       <div
         className="relative max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
         role="dialog"
@@ -94,7 +94,7 @@ export function OnboardingTour() {
               <span
                 key={i}
                 className={`h-1.5 w-6 rounded-full transition ${
-                  i <= step ? "bg-slate-900" : "bg-slate-200"
+                  i <= step ? "bg-blue-600" : "bg-slate-200"
                 }`}
               />
             ))}
@@ -103,7 +103,7 @@ export function OnboardingTour() {
             {isLast ? (
               <Link
                 href="/templates"
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
                 onClick={handleComplete}
               >
                 テンプレートを見る
@@ -112,7 +112,7 @@ export function OnboardingTour() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
               >
                 次へ
               </button>

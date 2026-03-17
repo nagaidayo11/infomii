@@ -5,7 +5,6 @@ import { LocaleProvider } from "@/components/locale-context";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
-import { Canvas } from "./Canvas";
 import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
 import { PublishModal } from "./PublishModal";
@@ -38,8 +37,6 @@ export function Editor2({ pageId }: Editor2Props) {
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);
   const highlightedCardIds = useEditor2Store((s) => s.highlightedCardIds);
-  const layoutMode = useEditor2Store((s) => s.layoutMode);
-  const setLayoutMode = useEditor2Store((s) => s.setLayoutMode);
   const showGrid = useEditor2Store((s) => s.showGrid);
   const setShowGrid = useEditor2Store((s) => s.setShowGrid);
   const pageTheme = useEditor2Store((s) => s.pageTheme);
@@ -216,8 +213,6 @@ export function Editor2({ pageId }: Editor2Props) {
         status="draft"
         publicUrl={pageMeta.publicUrl}
         publishing={publishing}
-        layoutMode={layoutMode}
-        onLayoutModeChange={setLayoutMode}
         showGrid={showGrid}
         onShowGridChange={setShowGrid}
         pageTheme={pageTheme}
@@ -237,27 +232,14 @@ export function Editor2({ pageId }: Editor2Props) {
           canvas={
             <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
               <div className="min-h-0 flex-1 overflow-auto">
-                {layoutMode === "freeform" ? (
-                  <FreeformCanvas
-                    cards={cards}
-                    selectedCardId={selectedCardId}
-                    onSelectCard={selectCard}
-                    onUpdateCard={updateCard}
-                    onDuplicateCard={duplicateCard}
-                    onRemoveCard={removeCard}
-                  />
-                ) : (
-                  <Canvas
-                    cards={cards}
-                    selectedCardId={selectedCardId}
-                    lastAddedCardId={lastAddedCardId}
-                    highlightedCardIds={highlightedCardIds}
-                    onSelectCard={selectCard}
-                    onReorder={reorderCards}
-                    onDuplicateCard={duplicateCard}
-                    onRemoveCard={removeCard}
-                  />
-                )}
+                <FreeformCanvas
+                  cards={cards}
+                  selectedCardId={selectedCardId}
+                  onSelectCard={selectCard}
+                  onUpdateCard={updateCard}
+                  onDuplicateCard={duplicateCard}
+                  onRemoveCard={removeCard}
+                />
               </div>
             </div>
           }

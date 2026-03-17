@@ -12,6 +12,8 @@ type BlockToolbarProps = {
   onMoveDown?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  /** 上部ブロックは枠で隠れるため、下に表示 */
+  verticalPosition?: "above" | "below";
 };
 
 /**
@@ -26,10 +28,14 @@ export function BlockToolbar({
   onMoveDown,
   canMoveUp = false,
   canMoveDown = false,
+  verticalPosition = "above",
 }: BlockToolbarProps) {
   return (
     <div
-      className="absolute -top-10 left-0 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1 shadow-lg"
+      className={
+        "absolute left-0 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1 shadow-lg " +
+        (verticalPosition === "below" ? "-bottom-10" : "-top-10")
+      }
       role="toolbar"
       aria-label="ブロック操作"
     >

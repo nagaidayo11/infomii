@@ -11,12 +11,10 @@ export type EditorTopBarProps = {
   status?: "draft" | "published";
   publicUrl: string | null;
   publishing?: boolean;
-  layoutMode?: "list" | "freeform";
-  onLayoutModeChange?: (mode: "list" | "freeform") => void;
   showGrid?: boolean;
   onShowGridChange?: (show: boolean) => void;
-  pageTheme?: "light" | "dark" | "hotel-amber";
-  onPageThemeChange?: (theme: "light" | "dark" | "hotel-amber") => void;
+  pageTheme?: "light" | "dark";
+  onPageThemeChange?: (theme: "light" | "dark") => void;
   onPreview: () => void;
   onPublish: () => void;
   onQr: () => void;
@@ -92,8 +90,6 @@ export function EditorTopBar({
   status = "draft",
   publicUrl,
   publishing = false,
-  layoutMode = "list",
-  onLayoutModeChange,
   showGrid = true,
   onShowGridChange,
   pageTheme = "light",
@@ -157,36 +153,10 @@ export function EditorTopBar({
         </span>
       </div>
 
-      {/* Layout mode toggle */}
-      {onLayoutModeChange && (
+      {/* Canvas controls: grid, theme */}
+      {(onShowGridChange || onPageThemeChange) && (
         <div className="flex items-center gap-1.5">
-          <div className="flex rounded-lg border border-slate-200 bg-slate-50/80 p-0.5">
-            <button
-              type="button"
-              onClick={() => onLayoutModeChange("list")}
-              className={
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors " +
-                (layoutMode === "list"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-800")
-              }
-            >
-              リスト
-            </button>
-            <button
-              type="button"
-              onClick={() => onLayoutModeChange("freeform")}
-              className={
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors " +
-                (layoutMode === "freeform"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-800")
-              }
-            >
-              自由配置
-            </button>
-          </div>
-          {layoutMode === "freeform" && onShowGridChange && (
+          {onShowGridChange && (
             <button
               type="button"
               onClick={() => onShowGridChange(!showGrid)}
@@ -202,12 +172,11 @@ export function EditorTopBar({
           {onPageThemeChange && (
             <select
               value={pageTheme}
-              onChange={(e) => onPageThemeChange(e.target.value as "light" | "dark" | "hotel-amber")}
+              onChange={(e) => onPageThemeChange(e.target.value as "light" | "dark")}
               className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700"
             >
               <option value="light">ライト</option>
               <option value="dark">ダーク</option>
-              <option value="hotel-amber">ホテル</option>
             </select>
           )}
         </div>

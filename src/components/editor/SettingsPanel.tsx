@@ -397,12 +397,10 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 onChange={(e) => update("title", e.target.value)}
                 placeholder="Infomii Hotel"
               />
-              <Input
-                label="Image URL"
-                value={(content.image as string) ?? ""}
-                onChange={(e) => update("image", e.target.value)}
-                placeholder="https://... or /hotel.jpg"
-              />
+              <div className="w-full">
+                <label className={labelClass}>画像</label>
+                <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
+              </div>
               <Input
                 label="Subtitle"
                 value={(content.subtitle as string) ?? ""}
@@ -541,12 +539,6 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                     className="mt-1.5"
                   />
                 </div>
-                <Input
-                  label="Image URL"
-                  value={(content.src as string) ?? ""}
-                  onChange={(e) => update("src", e.target.value)}
-                  placeholder="https://... または上からアップロード"
-                />
                 <Input
                   label="Alt text"
                   value={display("alt")}

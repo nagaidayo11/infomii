@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { ImageUpload } from "@/components/editor/ImageUpload";
 import { useEditor2Store } from "@/components/editor/store";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -29,9 +30,7 @@ export function HeroCard({ card, isSelected = false }: HeroCardProps) {
         {image ? (
           <Image src={image} alt="" fill className="object-cover" unoptimized={image.startsWith("http")} sizes="420px" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 text-sm">
-            画像URLを追加
-          </div>
+          <ImageUpload onUploaded={(url) => update("image", url)} className="h-full min-h-[140px]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>

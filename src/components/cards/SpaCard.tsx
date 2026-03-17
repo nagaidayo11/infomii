@@ -37,7 +37,6 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
   return (
     <Card padding="md" className="">
       <p className="text-sm font-semibold text-slate-800">
-        ♨️{" "}
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-semibold text-slate-800" placeholder="スパ・温泉" />
       </p>
       <p className="mt-1 text-xs text-slate-600">
