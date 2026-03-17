@@ -47,7 +47,7 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
           {items.map((item, i) => (
-            <li key={i} className="border-t border-slate-100 pt-2 first:border-t-0 first:pt-0">
+            <li key={i} className="pt-2 first:pt-0">
               {item.name && <p className="font-medium text-slate-700">{item.name}</p>}
               {item.description && (
                 <p className="mt-0.5 text-slate-500">{item.description}</p>

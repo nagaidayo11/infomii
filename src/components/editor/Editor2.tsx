@@ -239,6 +239,7 @@ export function Editor2({ pageId }: Editor2Props) {
                   onUpdateCard={updateCard}
                   onDuplicateCard={duplicateCard}
                   onRemoveCard={removeCard}
+                  currentPageId={pageId}
                 />
               </div>
             </div>

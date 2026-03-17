@@ -59,7 +59,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
           <p className="text-slate-500">Q&Aを右のパネルで追加</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+            <div key={i} className="pb-3 last:pb-0">
               <dt className="font-medium text-slate-700">
                 <InlineEditable
                   value={item.q ?? ""}

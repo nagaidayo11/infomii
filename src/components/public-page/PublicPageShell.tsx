@@ -25,7 +25,7 @@ function PageContent({
 }: Omit<PublicPageShellProps, "isEmbed">) {
   return (
     <>
-      <header className="sticky top-0 z-20 border-b border-slate-200/90 bg-white/95 px-4 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm safe-area-inset-top">
+      <header className="sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
         <div className="mx-auto flex max-w-[420px] flex-col gap-3">
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
           <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
@@ -37,11 +37,11 @@ function PageContent({
         <div className="mx-auto max-w-[420px] space-y-5">{children}</div>
       </main>
       {contactActions ? (
-        <footer className="border-t border-slate-200/90 bg-white px-4 py-5 shadow-[0_-1px_2px_rgba(0,0,0,0.04)]">
+        <footer className="bg-white px-4 py-5">
           <div className="mx-auto max-w-[420px]">{contactActions}</div>
         </footer>
       ) : (
-        <footer className="border-t border-slate-200/80 bg-white px-4 py-5">
+        <footer className="bg-white px-4 py-5">
           <div className="mx-auto max-w-[420px]">
             <p className="text-sm leading-relaxed text-slate-600">
               ご不明な点はスタッフまでお声がけください。
@@ -71,7 +71,7 @@ export function PublicPageShell({
       <div className="min-h-full bg-[#f8fafc]">
         <main className="min-h-full pb-6">{children}</main>
         {contactActions ? (
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-5">
+          <footer className="bg-white px-4 py-5">
             {contactActions}
           </footer>
         ) : null}

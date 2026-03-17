@@ -23,10 +23,7 @@ export function HeroCard({ card, isSelected = false }: HeroCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-lg"
-      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
-    >
+    <div className="relative overflow-hidden rounded-2xl bg-slate-100">
       <div className="relative aspect-[2/1] min-h-[140px] w-full">
         {image ? (
           <Image src={image} alt="" fill className="object-cover" unoptimized={image.startsWith("http")} sizes="420px" />

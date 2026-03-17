@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
+import { PageListSidebar } from "./PageListSidebar";
 import { useEditor2Store } from "./store";
 import { getBlockStyle, type EditorCard } from "./types";
 
@@ -140,6 +141,8 @@ type FreeformCanvasProps = {
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
+  /** 現在編集中のページID。ページ一覧で他ページへの遷移に使用 */
+  currentPageId?: string | null;
 };
 
 export function FreeformCanvas({
@@ -149,6 +152,7 @@ export function FreeformCanvas({
   onUpdateCard,
   onDuplicateCard,
   onRemoveCard,
+  currentPageId = null,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const showGrid = useEditor2Store((s) => s.showGrid);
@@ -274,19 +278,30 @@ export function FreeformCanvas({
           backgroundSize: "24px 24px",
         }}
       >
-        <MobileCanvasFrame width={viewportWidth}>
+        <div className="flex items-start gap-4">
+          <PageListSidebar currentPageId={currentPageId} position="left" />
+          <MobileCanvasFrame width={viewportWidth}>
           <div
-            className={`relative rounded-2xl px-4 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
+            className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
             style={{ width: canvasW, height: canvasH, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
             }}
           >
-          {/* Guide lines during drag */}
+          {/* Content area: 左右均等の余白で中央に配置 */}
+          <div
+            className="absolute top-0"
+            style={{
+              left: CANVAS_PADDING_X,
+              width: contentWidth,
+              height: canvasH,
+            }}
+          >
+          {/* Guide lines during drag - コンテンツエリア座標系 */}
           {dragState && (
             <svg
               className="pointer-events-none absolute inset-0 z-20"
-              style={{ overflow: "visible", width: canvasW, height: canvasH }}
+              style={{ overflow: "visible", width: contentWidth, height: canvasH }}
             >
               {dragState.guides.map((g, i) =>
                 g.axis === "x" ? (
@@ -305,7 +320,7 @@ export function FreeformCanvas({
                     key={`y-${i}`}
                     x1={0}
                     y1={g.value}
-                    x2={canvasW}
+                    x2={contentWidth}
                     y2={g.value}
                     stroke="#3b82f6"
                     strokeWidth={1}
@@ -350,10 +365,8 @@ export function FreeformCanvas({
                 <div className="relative h-full w-full">
                   <div
                     className={
-                      "h-full w-full overflow-hidden rounded-xl border transition-shadow " +
-                      (isSelected
-                        ? "border-blue-300 shadow-lg ring-2 ring-blue-200"
-                        : "border-slate-200 shadow-sm hover:border-slate-300")
+                      "h-full w-full overflow-hidden rounded-xl transition-shadow " +
+                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2" : "")
                     }
                     style={{
                       ...blockStyle,
@@ -382,7 +395,9 @@ export function FreeformCanvas({
             );
           })}
           </div>
+          </div>
         </MobileCanvasFrame>
+        </div>
       </div>
     </div>
   );

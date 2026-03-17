@@ -20,7 +20,7 @@ export function ActionCard({ card, isSelected = false }: ActionCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div className="rounded-2xl" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+    <div className="rounded-2xl">
       <a
         href={href}
         className="flex w-full items-center justify-center rounded-2xl bg-slate-800 px-6 py-4 text-base font-semibold text-white transition hover:bg-slate-700"

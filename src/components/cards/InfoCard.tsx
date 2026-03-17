@@ -24,8 +24,8 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card padding="md" className="rounded-2xl border-slate-200/80 shadow-md">
-      <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+    <Card padding="md">
+      <div className="flex items-center gap-3 pb-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{icon}</span>
         <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder="タイトル" />

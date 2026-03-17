@@ -28,10 +28,7 @@ export function HighlightCard({ card, isSelected = false }: HighlightCardProps) 
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div
-      className={`rounded-2xl border-l-4 px-4 py-4 ${accentClass}`}
-      style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-    >
+    <div className={`rounded-2xl border-l-4 px-4 py-4 ${accentClass}`}>
       <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder="タイトル" />
       </h3>

@@ -65,7 +65,7 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
   };
 
   return (
-    <Card padding="md" className="rounded-2xl border-slate-200/80 shadow-md">
+    <Card padding="md">
       <h3 className="mb-4 font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
@@ -84,8 +84,8 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
             const href = getHref(item);
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
-              <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition hover:bg-slate-100">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-2xl shadow-sm">
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50/80 p-4 transition hover:bg-slate-100">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-2xl">
                   {iconDisplay}
                 </span>
                 <span className="text-center font-medium text-slate-700 line-clamp-2" style={getBodyFontSizeStyle()}>

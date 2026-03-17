@@ -86,8 +86,8 @@ export function ImageUpload({
   return (
     <div
       className={
-        "flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 transition-colors " +
-        (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-slate-300 hover:bg-slate-100/50") +
+        "flex flex-col items-center justify-center rounded-xl bg-slate-50/50 p-4 transition-colors " +
+        (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-slate-100/50") +
         " " +
         className
       }

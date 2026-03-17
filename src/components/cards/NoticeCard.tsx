@@ -38,10 +38,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   return (
     <Card
       padding="md"
-      className={
-        (isWarning ? "bg-amber-50 border-amber-200/80 " : "bg-sky-50/80 border-sky-200/80 ") +
-        ""
-      }
+      className={isWarning ? "bg-amber-50" : "bg-sky-50/80"}
     >
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
