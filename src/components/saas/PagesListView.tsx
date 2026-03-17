@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
-  createBlankInformation,
+  createBlankPage,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
@@ -43,11 +43,13 @@ export function PagesListView() {
   async function handleCreatePage() {
     setCreating(true);
     try {
-      const id = await createBlankInformation("新規ページ");
-      if (id && typeof id === "string") {
-        router.push(`/editor/${id}`);
+      const pageId = await createBlankPage("新規ページ");
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
       }
     } catch {
+      setCreating(false);
+    } finally {
       setCreating(false);
     }
   }

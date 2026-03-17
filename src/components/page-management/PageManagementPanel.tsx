@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
 import {
   buildPublicQrUrl,
-  createBlankInformation,
+  createBlankPage,
   deleteInformation,
   getDashboardBootstrapData,
 } from "@/lib/storage";
@@ -47,10 +47,10 @@ export function PageManagementPanel() {
     setCreating(true);
     setError(null);
     try {
-      const id = await createBlankInformation("新規ページ");
+      const pageId = await createBlankPage("新規ページ");
       await load();
-      if (id && typeof id === "string") {
-        router.push(`/editor/${id}`);
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "新規作成に失敗しました");
