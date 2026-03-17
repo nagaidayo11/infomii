@@ -281,29 +281,6 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     }
   }, [card?.id, lastAddedCardId]);
 
-  if (!card) {
-    return (
-      <>
-        <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Card Settings
-          </h2>
-          <p className="mt-3 text-sm text-slate-500">
-            Select a card on the canvas to edit its settings here. Changes update the canvas in real time.
-          </p>
-        </div>
-      </>
-    );
-  }
-
-  const content = card.content as Record<string, unknown>;
-  const update = (key: string, value: unknown) => {
-    onUpdate(card.id, { content: { ...content, [key]: value } });
-  };
-  /** 多言語フィールドの表示値（日本語を優先） */
-  const display = (key: string) =>
-    getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
-
   const flushTranslate = useCallback(() => {
     if (translateTimeoutRef.current) {
       clearTimeout(translateTimeoutRef.current);
@@ -329,6 +306,35 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     });
   }, [onUpdate]);
 
+  useEffect(() => {
+    return () => {
+      if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
+    };
+  }, []);
+
+  if (!card) {
+    return (
+      <>
+        <div className="border-b border-slate-200 bg-white px-4 py-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Card Settings
+          </h2>
+          <p className="mt-3 text-sm text-slate-500">
+            Select a card on the canvas to edit its settings here. Changes update the canvas in real time.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  const content = card.content as Record<string, unknown>;
+  const update = (key: string, value: unknown) => {
+    onUpdate(card.id, { content: { ...content, [key]: value } });
+  };
+  /** 多言語フィールドの表示値（日本語を優先） */
+  const display = (key: string) =>
+    getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
+
   /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。入力後に自動で en/zh/ko を翻訳。 */
   const updateLocalized = (key: string, value: string) => {
     const cur = content[key];
@@ -340,12 +346,6 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     pendingRef.current = { cardId: card.id, key, ja: value };
     translateTimeoutRef.current = setTimeout(flushTranslate, TRANSLATE_DEBOUNCE_MS);
   };
-
-  useEffect(() => {
-    return () => {
-      if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
-    };
-  }, []);
 
   return (
     <>

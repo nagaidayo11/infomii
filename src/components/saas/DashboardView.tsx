@@ -24,6 +24,7 @@ export function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [creatingCardPage, setCreatingCardPage] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -48,29 +49,32 @@ export function DashboardView() {
   }, []);
 
   async function handleCreatePage() {
+    setCreateError(null);
     setCreating(true);
     try {
-      // Create a page (pages table) so the card editor can load it; getPage() queries pages, not informations.
       const pageId = await createBlankPage("新規ページ");
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
-    } catch {
-      setCreating(false);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "ページの作成に失敗しました";
+      setCreateError(message);
     } finally {
       setCreating(false);
     }
   }
 
   async function handleCreateCardPage() {
+    setCreateError(null);
     setCreatingCardPage(true);
     try {
       const pageId = await createBlankPage("新規ページ");
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
-    } catch {
-      setCreatingCardPage(false);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "ページの作成に失敗しました";
+      setCreateError(message);
     } finally {
       setCreatingCardPage(false);
     }
@@ -121,6 +125,14 @@ export function DashboardView() {
             {creatingCardPage ? "作成中…" : "カードで新規ページ"}
           </button>
         </div>
+        {createError && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {createError}
+            <p className="mt-1 text-xs text-amber-700">
+              Supabase の設定と、施設（hotels）・施設所属（hotel_memberships）が作成されているか確認してください。
+            </p>
+          </div>
+        )}
         <div className="mt-6 border-t border-slate-100 pt-6">
           <GeneratePageFromUrl />
         </div>

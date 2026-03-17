@@ -3397,6 +3397,18 @@ export type TemplateRow = {
   category?: string | null;
 };
 
+/** Returns true if the error indicates the templates table does not exist (e.g. not yet created in Supabase). */
+function isTemplatesTableMissing(error: unknown): boolean {
+  const msg = error && typeof error === "object" && "message" in error
+    ? String((error as { message?: unknown }).message)
+    : "";
+  return (
+    /schema cache/i.test(msg) ||
+    /could not find the table.*templates/i.test(msg) ||
+    /relation "public\.templates" does not exist/i.test(msg)
+  );
+}
+
 export async function listTemplates(): Promise<TemplateRow[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return [];
@@ -3404,7 +3416,10 @@ export async function listTemplates(): Promise<TemplateRow[]> {
     .from("templates")
     .select("id,name,description,preview_image,cards,created_at,category")
     .order("created_at", { ascending: false });
-  if (error) throw toError(error, "テンプレート一覧の取得に失敗しました");
+  if (error) {
+    if (isTemplatesTableMissing(error)) return [];
+    throw toError(error, "テンプレート一覧の取得に失敗しました");
+  }
   return (data ?? []) as TemplateRow[];
 }
 

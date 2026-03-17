@@ -4,7 +4,12 @@ import { useEffect, useRef } from "react";
 import { useEditor2Store } from "./store";
 import { savePageCards } from "@/lib/storage";
 
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 800;
+
+/** カードの変更検知用。id・order・content・style が変わったときだけ保存する。 */
+function cardsSignature(cards: { id: string; order: number; content?: unknown; style?: unknown }[]): string {
+  return cards.map((c) => `${c.id}:${c.order}:${JSON.stringify(c.content)}:${JSON.stringify(c.style ?? {})}`).join("|");
+}
 
 async function saveAndMerge(
   pageId: string,
@@ -45,14 +50,15 @@ async function flushSave(pageId: string) {
 }
 
 /**
- * Auto-save: subscribes to editor cards and persists to Supabase after a short
- * debounce. No save button — changes save automatically after editing.
- * Flushes pending save on unmount so the last edit is not lost.
+ * Auto-save: persists cards to Supabase only when cards array actually changed
+ * (by signature of id+order). Avoids flickering "Saving…" / "Saved" when other
+ * store fields (e.g. selectedCardId) change.
  */
 export function useAutoSaveCards(pageId: string | null) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
   const pageIdRef = useRef(pageId);
+  const lastSignatureRef = useRef<string>("");
   pageIdRef.current = pageId;
 
   useEffect(() => {
@@ -69,14 +75,24 @@ export function useAutoSaveCards(pageId: string | null) {
   useEffect(() => {
     if (!pageId) return;
 
+    lastSignatureRef.current = cardsSignature(useEditor2Store.getState().cards);
+
     const unsubscribe = useEditor2Store.subscribe(() => {
+      const state = useEditor2Store.getState();
+      const sig = cardsSignature(state.cards);
+      if (sig === lastSignatureRef.current) return;
+      lastSignatureRef.current = sig;
+
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(async () => {
         timeoutRef.current = null;
         try {
           await saveAndMerge(pageId, isMountedRef);
+          if (isMountedRef.current) {
+            lastSignatureRef.current = cardsSignature(useEditor2Store.getState().cards);
+          }
         } catch {
-          // Silent fail; could toast later
+          // Silent fail
         }
       }, DEBOUNCE_MS);
     });
