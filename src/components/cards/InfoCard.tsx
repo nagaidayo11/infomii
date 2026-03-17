@@ -23,7 +23,7 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card padding="md" className="rounded-2xl border-slate-200/80" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+    <Card padding="md" className="rounded-2xl border-slate-200/80 shadow-md">
       <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{icon}</span>
         <h3 className="text-base font-semibold text-slate-800">
