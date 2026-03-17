@@ -34,7 +34,9 @@ function MobileCanvasFrame({
           className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
           style={{ width }}
         >
-          {children}
+          <div className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -238,7 +240,14 @@ export function FreeformCanvas({
   const theme = themeStyles[pageTheme] ?? themeStyles.light;
 
   const canvasW = viewportWidth;
-  const canvasH = 800;
+  const canvasH = Math.max(
+    800,
+    cards.reduce((max, card, idx) => {
+      const pos = getPosition(card, idx, contentWidth);
+      const h = pos.h ?? DEFAULT_H;
+      return Math.max(max, pos.y + h + 32);
+    }, 0)
+  );
 
   return (
     <div

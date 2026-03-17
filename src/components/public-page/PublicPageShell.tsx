@@ -93,8 +93,7 @@ export function PublicPageShell({
         >
           <div className="mx-auto mb-1 hidden h-2 w-16 shrink-0 rounded-full bg-slate-300/70 md:block" aria-hidden />
           <div
-            className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-b-[1.25rem] border-0 border-t-0 bg-white md:rounded-[1.25rem] md:border md:border-slate-200/80"
-            style={{ width: "100%", maxWidth: PHONE_WIDTH }}
+            className="flex min-h-[480px] w-full flex-1 flex-col overflow-hidden rounded-b-[1.25rem] border-0 border-t-0 bg-white md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
           >
             <div className="template-preview-scroll flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain">
               <PageContent
