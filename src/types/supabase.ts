@@ -272,6 +272,34 @@ export type Database = {
         };
         Relationships: [];
       };
+      saas_editor_pages: {
+        Row: {
+          id: string;
+          title: string;
+          slug: string | null;
+          user_id: string | null;
+          blocks: unknown;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title?: string;
+          slug?: string | null;
+          user_id?: string | null;
+          blocks?: unknown;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          slug?: string | null;
+          user_id?: string | null;
+          blocks?: unknown;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
