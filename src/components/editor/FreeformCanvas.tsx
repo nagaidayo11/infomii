@@ -4,7 +4,6 @@ import { useCallback, useRef, useState, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
-import { PageListSidebar } from "./PageListSidebar";
 import { useEditor2Store } from "./store";
 import { getBlockStyle, type EditorCard } from "./types";
 
@@ -141,8 +140,6 @@ type FreeformCanvasProps = {
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
-  /** 現在編集中のページID。ページ一覧で他ページへの遷移に使用 */
-  currentPageId?: string | null;
 };
 
 export function FreeformCanvas({
@@ -152,7 +149,6 @@ export function FreeformCanvas({
   onUpdateCard,
   onDuplicateCard,
   onRemoveCard,
-  currentPageId = null,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const showGrid = useEditor2Store((s) => s.showGrid);
@@ -278,9 +274,7 @@ export function FreeformCanvas({
           backgroundSize: "24px 24px",
         }}
       >
-        <div className="flex items-start gap-4">
-          <PageListSidebar currentPageId={currentPageId} position="left" />
-          <MobileCanvasFrame width={viewportWidth}>
+        <MobileCanvasFrame width={viewportWidth}>
           <div
             className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
             style={{ width: canvasW, height: canvasH, minHeight: canvasH }}
@@ -397,7 +391,6 @@ export function FreeformCanvas({
           </div>
           </div>
         </MobileCanvasFrame>
-        </div>
       </div>
     </div>
   );
