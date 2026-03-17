@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
@@ -17,8 +18,8 @@ export function MenuCard({ card, isSelected, locale = "ja" }: MenuCardProps) {
   const items = (c?.items as unknown[]) ?? [];
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800">{title}</p>
-      <p className="mt-1 text-xs text-slate-600">{items.length} 品</p>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>{items.length} 品</p>
     </Card>
   );
 }

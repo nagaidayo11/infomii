@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -36,22 +37,22 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-semibold text-slate-800">
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-semibold text-slate-800" placeholder="スパ・温泉" />
+      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" placeholder="スパ・温泉" />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
         時間:{" "}
-        <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="時間" />
+        <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="時間" />
       </p>
-      <p className="mt-0.5 text-xs text-slate-600">
+      <p className="mt-0.5 text-slate-600" style={getBodyFontSizeStyle()}>
         場所:{" "}
-        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="場所" />
+        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="場所" />
       </p>
-      <p className="mt-2 text-xs text-slate-500">
-        <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder="説明" />
+      <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="説明" />
       </p>
-      <p className="mt-1 text-xs text-slate-400">
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-400" placeholder="備考" />
+      <p className="mt-1 text-slate-400" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} className="text-slate-400" placeholder="備考" />
       </p>
     </Card>
   );

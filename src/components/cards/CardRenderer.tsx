@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getBlockStyle } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
 import { HeroCard } from "./HeroCard";
 import { InfoCard } from "./InfoCard";
@@ -26,6 +27,8 @@ import { ScheduleCard } from "./ScheduleCard";
 import { MenuCard } from "./MenuCard";
 import { GalleryCard } from "./GalleryCard";
 import { DividerCard } from "./DividerCard";
+import { ParkingCard } from "./ParkingCard";
+import { PageLinksCard } from "./PageLinksCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -89,6 +92,10 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       return <NearbyCard card={card} isSelected={isSelected} locale={locale} />;
     case "map":
       return <MapCard card={card} isSelected={isSelected} locale={locale} />;
+    case "parking":
+      return <ParkingCard card={card} isSelected={isSelected} locale={locale} />;
+    case "pageLinks":
+      return <PageLinksCard card={card} isSelected={isSelected} locale={locale} />;
     case "button":
       return <ButtonCard card={card} isSelected={isSelected} locale={locale} />;
     case "image":
@@ -147,13 +154,17 @@ export function CardRenderer(props: CardRendererProps) {
     const sorted = [...cards].sort((a, b) => a.order - b.order);
     return (
       <>
-        {sorted.map((card) => (
-          <SingleCardRenderer
-            key={card.id}
-            card={card}
-            isSelected={selectedCardId === card.id}
-          />
-        ))}
+        {sorted.map((card) => {
+          const blockStyle = getBlockStyle(card);
+          return (
+            <div key={card.id} style={blockStyle}>
+              <SingleCardRenderer
+                card={card}
+                isSelected={selectedCardId === card.id}
+              />
+            </div>
+          );
+        })}
       </>
     );
   }

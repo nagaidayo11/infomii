@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
@@ -26,16 +27,16 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
     <Card padding="md" className="rounded-2xl border-slate-200/80 shadow-md">
       <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{icon}</span>
-        <h3 className="text-base font-semibold text-slate-800">
+        <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder="タイトル" />
         </h3>
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {rows.length === 0 ? (
-          <p className="text-sm text-slate-500">ラベルと値を追加</p>
+          <p className="text-slate-500">ラベルと値を追加</p>
         ) : (
           rows.map((row, i) => (
-            <div key={i} className="flex justify-between gap-2 text-sm">
+            <div key={i} className="flex justify-between gap-2">
               <span className="text-slate-500">{row.label ?? "—"}</span>
               <span className="font-medium text-slate-800 truncate max-w-[60%]">
                 <InlineEditable

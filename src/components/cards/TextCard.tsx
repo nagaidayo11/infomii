@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -33,14 +34,14 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="min-h-[1.5em] text-base font-medium text-slate-800">
+      <p className="min-h-[1.5em] font-medium text-slate-800" style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={content}
           onSave={updateContent}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1.5em] text-base font-medium text-slate-800"
+          className="block min-h-[1.5em] font-medium text-slate-800"
           placeholder="テキストを入力"
         />
       </p>

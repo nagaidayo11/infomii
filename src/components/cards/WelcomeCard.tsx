@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -37,23 +38,23 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
       padding="lg"
       className=""
     >
-      <p className="text-lg font-semibold text-slate-900">
+      <p className="font-semibold text-slate-900" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="text-lg font-semibold text-slate-900"
+          className="font-semibold text-slate-900"
         />
       </p>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+      <p className="mt-2 leading-relaxed text-slate-600" style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={message}
           onSave={(v) => updateKey("message", v)}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1.5em] text-sm leading-relaxed text-slate-600"
+          className="block min-h-[1.5em] leading-relaxed text-slate-600"
           placeholder="おもてなしメッセージ"
         />
       </p>

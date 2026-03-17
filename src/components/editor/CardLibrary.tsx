@@ -144,6 +144,16 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" />
     </svg>
   ),
+  parking: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+    </svg>
+  ),
+  pageLinks: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+  ),
 };
 
 /** Hero & blocks (Canva-style) */
@@ -156,55 +166,57 @@ const HERO_ITEMS: LibraryItem[] = [
 
 /** Basic: welcome, stay info, checkout, notices */
 const BASIC_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "Welcome", description: "ウェルカムメッセージ・ご挨拶" },
+  { type: "welcome", label: "ウェルカム", description: "ウェルカムメッセージ・ご挨拶" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード・接続方法" },
-  { type: "breakfast", label: "Breakfast", description: "朝食の時間・会場・メニュー" },
-  { type: "checkout", label: "Checkout", description: "チェックアウト時刻・手順" },
-  { type: "notice", label: "Notice", description: "重要なお知らせ・注意事項" },
-  { type: "schedule", label: "Schedule", description: "営業時間・スケジュール" },
-  { type: "menu", label: "Menu", description: "メニュー・価格表" },
+  { type: "breakfast", label: "朝食", description: "朝食の時間・会場・メニュー" },
+  { type: "checkout", label: "チェックアウト", description: "チェックアウト時刻・手順" },
+  { type: "notice", label: "お知らせ", description: "重要なお知らせ・注意事項" },
+  { type: "schedule", label: "営業時間", description: "営業時間・スケジュール" },
+  { type: "menu", label: "メニュー", description: "メニュー・価格表" },
 ];
 
-/** Information: nearby, map, FAQ, emergency */
+/** Information: nearby, map, FAQ, emergency, parking */
 const INFORMATION_ITEMS: LibraryItem[] = [
-  { type: "nearby", label: "Nearby", description: "周辺スポット・観光案内" },
-  { type: "map", label: "Map", description: "住所・アクセスマップ" },
-  { type: "faq", label: "FAQ", description: "よくある質問と回答" },
-  { type: "emergency", label: "Emergency", description: "緊急連絡先・対応方法" },
+  { type: "nearby", label: "周辺案内", description: "周辺スポット・観光案内" },
+  { type: "map", label: "地図", description: "住所・アクセスマップ" },
+  { type: "parking", label: "駐車場", description: "台数・料金・場所" },
+  { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
+  { type: "faq", label: "よくある質問", description: "よくある質問と回答" },
+  { type: "emergency", label: "緊急連絡先", description: "緊急連絡先・対応方法" },
 ];
 
 /** Actions: button, taxi */
 const ACTIONS_ITEMS: LibraryItem[] = [
-  { type: "button", label: "Button", description: "予約・問い合わせ・外部リンク" },
-  { type: "taxi", label: "Taxi", description: "タクシー手配・連絡先" },
+  { type: "button", label: "ボタン", description: "予約・問い合わせ・外部リンク" },
+  { type: "taxi", label: "タクシー", description: "タクシー手配・連絡先" },
 ];
 
 /** Media: image, gallery */
 const MEDIA_ITEMS: LibraryItem[] = [
-  { type: "image", label: "Image", description: "客室や施設の写真" },
-  { type: "gallery", label: "Gallery", description: "画像ギャラリー" },
+  { type: "image", label: "画像", description: "客室や施設の写真" },
+  { type: "gallery", label: "ギャラリー", description: "画像ギャラリー" },
 ];
 
 /** Hospitality: restaurant, spa, laundry */
 const HOSPITALITY_ITEMS: LibraryItem[] = [
-  { type: "restaurant", label: "Restaurant", description: "館内レストランの案内" },
-  { type: "spa", label: "Spa", description: "スパ・大浴場・温泉の案内" },
-  { type: "laundry", label: "Laundry", description: "ランドリー・クリーニング" },
+  { type: "restaurant", label: "レストラン", description: "館内レストランの案内" },
+  { type: "spa", label: "スパ・温泉", description: "スパ・大浴場・温泉の案内" },
+  { type: "laundry", label: "ランドリー", description: "ランドリー・クリーニング" },
 ];
 
 /** Layout: text, divider */
 const LAYOUT_ITEMS: LibraryItem[] = [
-  { type: "text", label: "Text", description: "テキスト・見出し" },
-  { type: "divider", label: "Divider", description: "区切り線" },
+  { type: "text", label: "テキスト", description: "テキスト・見出し" },
+  { type: "divider", label: "区切り線", description: "区切り線" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
   { id: "hero", title: "ヒーロー・ブロック", items: HERO_ITEMS },
-  { id: "basic", title: "Basic", items: BASIC_ITEMS },
-  { id: "information", title: "Information", items: INFORMATION_ITEMS },
-  { id: "actions", title: "Actions", items: ACTIONS_ITEMS },
-  { id: "media", title: "Media", items: MEDIA_ITEMS },
-  { id: "hospitality", title: "Hospitality", items: HOSPITALITY_ITEMS },
+  { id: "basic", title: "基本", items: BASIC_ITEMS },
+  { id: "information", title: "情報", items: INFORMATION_ITEMS },
+  { id: "actions", title: "アクション", items: ACTIONS_ITEMS },
+  { id: "media", title: "メディア", items: MEDIA_ITEMS },
+  { id: "hospitality", title: "ホスピタリティ", items: HOSPITALITY_ITEMS },
   { id: "layout", title: "レイアウト", items: LAYOUT_ITEMS },
 ];
 
@@ -216,8 +228,8 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-200/80 px-4 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Card Library
+        <h2 className="text-sm font-semibold text-slate-700">
+          ブロックライブラリ
         </h2>
         <p className="mt-1 text-xs text-slate-500">
           クリックでキャンバスに追加
@@ -240,7 +252,7 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
                     key={`${section.id}-${item.type}`}
                     type="button"
                     onClick={() => onAddCard(item.type)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-100 active:bg-slate-200/80"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
                     aria-label={`${item.label}を追加`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">

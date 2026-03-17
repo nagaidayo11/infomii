@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -37,19 +38,20 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800">
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" />
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
-        <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="11:00" />
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="11:00" />
       </p>
-      <p className="mt-1 text-xs text-slate-500">
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder="補足" />
+      <p className="mt-1 text-slate-500" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="補足" />
       </p>
       {linkUrl && (
         <a
           href={linkUrl}
-          className="mt-2 inline-block text-xs font-medium text-ds-primary underline"
+          className="mt-2 inline-block font-medium text-ds-primary underline"
+          style={getBodyFontSizeStyle()}
           onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
           aria-disabled={isSelected !== undefined ? true : undefined}
         >

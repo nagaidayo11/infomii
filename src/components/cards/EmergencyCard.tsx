@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -37,11 +38,11 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800">
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         🆘{" "}
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
-      <ul className="mt-2 space-y-1 text-xs text-slate-600">
+      <ul className="mt-2 space-y-1 text-slate-600" style={getBodyFontSizeStyle()}>
         <li>
           火災:{" "}
           <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-red-600" placeholder="119" />
@@ -55,8 +56,8 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
           <InlineEditable value={hospital} onSave={(v) => updateKey("hospital", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="連絡先" />
         </li>
       </ul>
-      <p className="mt-2 text-xs text-slate-500">
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder="備考" />
+      <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="備考" />
       </p>
     </Card>
   );

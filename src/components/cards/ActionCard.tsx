@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -27,7 +28,9 @@ export function ActionCard({ card, isSelected = false }: ActionCardProps) {
         onClick={(e) => isSelected && e.preventDefault()}
         aria-disabled={isSelected ? true : undefined}
       >
-        <InlineEditable value={label} onSave={(v) => update("label", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder="ボタン" />
+        <span style={getTitleFontSizeStyle()}>
+          <InlineEditable value={label} onSave={(v) => update("label", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder="ボタン" />
+        </span>
       </a>
     </div>
   );

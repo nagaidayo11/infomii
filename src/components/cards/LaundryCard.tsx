@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -35,20 +36,20 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800">
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         🧺{" "}
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder="ランドリー" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="ランドリー" />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
         営業時間:{" "}
-        <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="9:00–18:00" />
+        <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="9:00–18:00" />
       </p>
-      <p className="mt-0.5 text-xs text-slate-500">
-        <InlineEditable value={priceNote} onSave={(v) => updateKey("priceNote", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-500" placeholder="料金・備考" />
+      <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={priceNote} onSave={(v) => updateKey("priceNote", v)} editable={isSelected} onActivate={onActivate} className="text-slate-500" placeholder="料金・備考" />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
         連絡先:{" "}
-        <InlineEditable value={contact} onSave={(v) => updateKey("contact", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="内線" />
+        <InlineEditable value={contact} onSave={(v) => updateKey("contact", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="内線" />
       </p>
     </Card>
   );

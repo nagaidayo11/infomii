@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -36,8 +37,8 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
 
   return (
     <Card padding="md" className="">
-      <p className="mb-3 text-sm font-medium text-slate-800">
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder="ギャラリー" />
+      <p className="mb-3 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="ギャラリー" />
       </p>
       <div className="grid grid-cols-2 gap-2">
         {items.slice(0, 6).map((item, i) => (
@@ -51,7 +52,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
                 unoptimized={item.src.startsWith("http")}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-slate-400">
+              <div className="flex h-full items-center justify-center text-slate-400" style={getBodyFontSizeStyle()}>
                 画像
               </div>
             )}

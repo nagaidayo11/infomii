@@ -117,7 +117,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu"];
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu", "parking", "pageLinks"];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
@@ -131,7 +131,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   addCard: (type, index?: number) => {
-    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu"];
+    const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu", "parking", "pageLinks"];
     if (!allowed.includes(type)) return;
     const { cards, historyPast } = get();
     const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;

@@ -53,17 +53,26 @@ const POSITION_KEY = "_position";
 
 const CANVAS_PADDING_X = 16;
 
+/** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
 function getPosition(card: EditorCard, index: number, contentWidth: number): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const w = typeof pos?.w === "number" ? pos.w : DEFAULT_W;
   const h = typeof pos?.h === "number" ? pos.h : DEFAULT_H;
-  if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
-    return { x: pos.x, y: pos.y, w, h };
-  }
   const blockW = Math.min(w, contentWidth);
-  const defaultX = Math.round((contentWidth - blockW) / 2);
+  const centeredX = Math.round((contentWidth - blockW) / 2);
+
+  if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
+    const savedX = pos.x;
+    const isLegacyLeftAligned = savedX <= 60;
+    return {
+      x: isLegacyLeftAligned ? centeredX : savedX,
+      y: pos.y,
+      w: blockW,
+      h,
+    };
+  }
   return {
-    x: defaultX,
+    x: centeredX,
     y: 24 + index * (DEFAULT_H + 16),
     w: blockW,
     h: DEFAULT_H,

@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -31,11 +32,11 @@ export function HighlightCard({ card, isSelected = false }: HighlightCardProps) 
       className={`rounded-2xl border-l-4 px-4 py-4 ${accentClass}`}
       style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
     >
-      <h3 className="font-bold leading-snug">
+      <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder="タイトル" />
       </h3>
-      <p className="mt-2 text-sm leading-relaxed opacity-95">
-        <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-sm" placeholder="内容" />
+      <p className="mt-2 leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em]" placeholder="内容" />
       </p>
     </div>
   );

@@ -27,7 +27,7 @@ export type EditorLayoutProps = {
 export function EditorLayout({ topBar, library, canvas, settings }: EditorLayoutProps) {
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden bg-slate-100"
+      className="flex h-full w-full flex-col overflow-hidden bg-slate-100/95"
       role="application"
       aria-label="エディタ"
       data-editor-layout
@@ -47,8 +47,8 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
       <div className="flex min-h-0 flex-1" role="main">
         <aside
           data-editor-column="library"
-          className="flex h-full w-[280px] shrink-0 flex-col border-r border-slate-200 bg-white"
-          aria-label="カードライブラリ"
+          className="flex h-full w-[280px] shrink-0 flex-col border-r border-slate-200/90 bg-white shadow-sm"
+          aria-label="ブロックライブラリ"
         >
           {library}
         </aside>
@@ -63,8 +63,8 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
 
         <aside
           data-editor-column="settings"
-          className="flex h-full w-[320px] shrink-0 flex-col border-l border-slate-200 bg-white"
-          aria-label="カード設定"
+          className="flex h-full w-[320px] shrink-0 flex-col border-l border-slate-200/90 bg-white shadow-sm"
+          aria-label="ブロック設定"
         >
           {settings}
         </aside>

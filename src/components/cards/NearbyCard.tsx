@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -39,22 +40,22 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
       padding="md"
       className=""
     >
-      <p className="text-sm font-semibold text-slate-800">
+      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         📍{" "}
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-semibold text-slate-800" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" />
       </p>
       {items.length > 0 ? (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
           {items.map((item, i) => (
             <li key={i} className="border-t border-slate-100 pt-2 first:border-t-0 first:pt-0">
-              {item.name && <p className="text-xs font-medium text-slate-700">{item.name}</p>}
+              {item.name && <p className="font-medium text-slate-700">{item.name}</p>}
               {item.description && (
-                <p className="mt-0.5 text-xs text-slate-500">{item.description}</p>
+                <p className="mt-0.5 text-slate-500">{item.description}</p>
               )}
               {item.link && (
                 <a
                   href={item.link}
-                  className="mt-1 inline-block text-xs font-medium text-slate-600 underline"
+                  className="mt-1 inline-block font-medium text-slate-600 underline"
                   onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
                   aria-disabled={isSelected !== undefined ? true : undefined}
                 >
@@ -65,7 +66,7 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-xs text-slate-500">周辺スポットを追加できます</p>
+        <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>周辺スポットを追加できます</p>
       )}
     </Card>
   );

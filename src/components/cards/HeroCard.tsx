@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { useEditor2Store } from "@/components/editor/store";
@@ -35,11 +36,11 @@ export function HeroCard({ card, isSelected = false }: HeroCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-        <h2 className="text-xl font-bold leading-tight">
+        <h2 className="font-bold leading-tight" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update("title", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder="タイトル" />
         </h2>
         {subtitle && (
-          <p className="mt-1 text-sm opacity-95">
+          <p className="mt-1 opacity-95" style={getBodyFontSizeStyle()}>
             <InlineEditable value={subtitle} onSave={(v) => update("subtitle", v)} editable={isSelected} onActivate={onActivate} className="text-white/95" placeholder="サブタイトル" />
           </p>
         )}

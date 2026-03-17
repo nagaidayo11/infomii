@@ -31,16 +31,50 @@ export type CardType =
   | "schedule"
   | "menu"
   | "gallery"
-  | "divider";
+  | "divider"
+  | "parking"
+  | "pageLinks";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
 
-/** Extract block style (borderRadius, boxShadow, backgroundColor) for rendering. */
+const FONT_SIZE_MAP: Record<string, string> = {
+  xs: "0.75rem",
+  sm: "0.875rem",
+  base: "1rem",
+  lg: "1.125rem",
+  xl: "1.25rem",
+  "2xl": "1.5rem",
+};
+
+/** CSS variable names for title/body font sizes (set on block wrapper, used by card components). */
+export const BLOCK_TITLE_FONT_SIZE_VAR = "--block-title-font-size";
+export const BLOCK_BODY_FONT_SIZE_VAR = "--block-body-font-size";
+
+/** Resolve font size key to CSS value. */
+export function resolveFontSize(key: string | undefined): string | undefined {
+  return key && FONT_SIZE_MAP[key] ? FONT_SIZE_MAP[key] : undefined;
+}
+
+/** Style for title elements - use var from block wrapper, fallback to block fontSize then 1rem. */
+export function getTitleFontSizeStyle(): import("react").CSSProperties {
+  return { fontSize: "var(--block-title-font-size, var(--block-font-size, 1rem))" };
+}
+
+/** Style for body elements - use var from block wrapper, fallback to block fontSize then 0.875rem. */
+export function getBodyFontSizeStyle(): import("react").CSSProperties {
+  return { fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))" };
+}
+
+/** Extract block style (borderRadius, boxShadow, backgroundColor, fontSize, titleFontSize, bodyFontSize) for rendering. */
 export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
   const s = card.style;
   if (!s || typeof s !== "object") return {};
-  return {
+  const fontSizeKey = s.fontSize as string | undefined;
+  const fontSize = resolveFontSize(fontSizeKey);
+  const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
+  const bodyFontSize = resolveFontSize(s.bodyFontSize as string | undefined);
+  const style: Record<string, string | number | undefined> = {
     borderRadius:
       typeof s.borderRadius === "string"
         ? s.borderRadius
@@ -49,7 +83,12 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
           : undefined,
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
     backgroundColor: typeof s.backgroundColor === "string" ? s.backgroundColor : undefined,
+    fontSize,
   };
+  if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
+  if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
+  if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;
+  return style as import("react").CSSProperties;
 }
 
 /** Card structure: id, type, content, style, order. Rendered in order. */
@@ -109,6 +148,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   menu: "メニュー",
   gallery: "ギャラリー",
   divider: "区切り線",
+  parking: "駐車場",
+  pageLinks: "ページリンク",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -171,6 +212,8 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "button", label: "ボタン", description: "リンクボタン" },
   { type: "schedule", label: "スケジュール", description: "営業時間" },
   { type: "menu", label: "メニュー", description: "メニュー・価格" },
+  { type: "parking", label: "駐車場", description: "台数・料金・場所" },
+  { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
 ];
 
 function defaultContent(type: CardType): Record<string, unknown> {
@@ -223,6 +266,17 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "", items: [{ src: "", alt: "" }] };
     case "divider":
       return { style: "line" };
+    case "parking":
+      return { title: "駐車場", capacity: "", fee: "", note: "", address: "" };
+    case "pageLinks":
+      return {
+        title: "メニュー",
+        items: [
+          { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
+          { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },
+          { label: "チェックアウト", icon: "checkout", linkType: "page" as const, pageSlug: "", link: "" },
+        ],
+      };
     default:
       return { content: "" };
   }

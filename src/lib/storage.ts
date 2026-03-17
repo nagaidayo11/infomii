@@ -3614,6 +3614,20 @@ function isSupabaseId(id: string): boolean {
 
 export type PageRow = { id: string; title: string; slug: string };
 
+/** List all pages for the current hotel (card-based pages). Used for pageLinks block. */
+export async function listPagesForHotel(): Promise<PageRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  const hotelId = await ensureUserHotelScope();
+  if (!supabase || !hotelId) return [];
+  const { data, error } = await supabase
+    .from("pages")
+    .select("id,title,slug")
+    .eq("hotel_id", hotelId)
+    .order("title", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as PageRow[];
+}
+
 export async function getPage(pageId: string): Promise<PageRow | null> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return null;

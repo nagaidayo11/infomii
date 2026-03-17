@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { getLocalizedContent } from "@/lib/localized-content";
+import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
@@ -34,23 +35,23 @@ function SettingsSection({
 }
 
 const COLOR_PRESETS = [
-  { value: "", label: "Default" },
-  { value: "#2563eb", label: "Blue" },
-  { value: "#059669", label: "Green" },
-  { value: "#d97706", label: "Amber" },
-  { value: "#dc2626", label: "Red" },
-  { value: "#7c3aed", label: "Violet" },
+  { value: "", label: "標準" },
+  { value: "#2563eb", label: "青" },
+  { value: "#059669", label: "緑" },
+  { value: "#d97706", label: "琥珀" },
+  { value: "#dc2626", label: "赤" },
+  { value: "#7c3aed", label: "紫" },
 ];
 
 const BUTTON_STYLE_PRESETS = [
-  { value: "primary", label: "Primary" },
-  { value: "secondary", label: "Secondary" },
-  { value: "outline", label: "Outline" },
+  { value: "primary", label: "メイン" },
+  { value: "secondary", label: "サブ" },
+  { value: "outline", label: "枠線" },
 ];
 
 const NOTICE_PRIORITY_PRESETS = [
-  { value: "info", label: "Info" },
-  { value: "warning", label: "Warning" },
+  { value: "info", label: "情報" },
+  { value: "warning", label: "警告" },
 ];
 
 type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
@@ -86,6 +87,7 @@ async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: stri
 type NearbyItem = { name?: string; description?: string; link?: string };
 type FaqItem = { q?: string; a?: string };
 type GalleryImageItem = { src?: string; alt?: string };
+type PageLinksItem = { label?: string; icon?: string; linkType?: "page" | "url"; pageSlug?: string; link?: string };
 
 function GalleryItemsEditor({
   content,
@@ -134,10 +136,10 @@ function GalleryItemsEditor({
             placeholder="https://..."
           />
           <Input
-            label="Alt text"
+            label="代替テキスト"
             value={items[i]?.alt ?? ""}
             onChange={(e) => updateItem(i, "alt", e.target.value)}
-            placeholder="Optional"
+            placeholder="任意"
           />
         </div>
       ))}
@@ -227,7 +229,7 @@ function FaqItemsEditor({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">Q&A</span>
+        <span className="text-xs font-medium text-slate-500">質問と回答</span>
         <button
           type="button"
           onClick={addItem}
@@ -263,6 +265,129 @@ function FaqItemsEditor({
               className={inputClass}
             />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const PAGE_LINKS_ICON_OPTIONS = [
+  { value: "wifi", label: "WiFi" },
+  { value: "breakfast", label: "朝食" },
+  { value: "checkout", label: "チェックアウト" },
+  { value: "restaurant", label: "レストラン" },
+  { value: "spa", label: "スパ・温泉" },
+  { value: "parking", label: "駐車場" },
+  { value: "map", label: "地図" },
+  { value: "nearby", label: "周辺" },
+  { value: "notice", label: "お知らせ" },
+  { value: "emergency", label: "緊急" },
+  { value: "laundry", label: "ランドリー" },
+  { value: "taxi", label: "タクシー" },
+  { value: "info", label: "情報" },
+];
+
+function PageLinksItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const [pages, setPages] = useState<PageRow[]>([]);
+  useEffect(() => {
+    listPagesForHotel().then(setPages);
+  }, []);
+
+  const items = (Array.isArray(content.items) ? content.items : []) as PageLinksItem[];
+  const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () =>
+    setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: "", link: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">リンク項目</span>
+        <button
+          type="button"
+          onClick={addItem}
+          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="text-xs text-slate-400 hover:text-red-600"
+            >
+              削除
+            </button>
+          </div>
+          <Input
+            label="ラベル"
+            value={item.label ?? ""}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder="WiFi"
+          />
+          <div className="w-full">
+            <label className={labelClass}>アイコン</label>
+            <select
+              value={item.icon ?? "info"}
+              onChange={(e) => updateItem(i, "icon", e.target.value)}
+              className={inputClass}
+            >
+              {PAGE_LINKS_ICON_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-full">
+            <label className={labelClass}>リンク先</label>
+            <select
+              value={item.linkType ?? "page"}
+              onChange={(e) => updateItem(i, "linkType", e.target.value as "page" | "url")}
+              className={inputClass}
+            >
+              <option value="page">この施設のページ</option>
+              <option value="url">外部URL</option>
+            </select>
+          </div>
+          {(item.linkType ?? "page") === "page" ? (
+            <div className="w-full">
+              <label className={labelClass}>ページを選択</label>
+              <select
+                value={item.pageSlug ?? ""}
+                onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
+                className={inputClass}
+              >
+                <option value="">— 選択 —</option>
+                {pages.map((p) => (
+                  <option key={p.id} value={p.slug}>
+                    {p.title || p.slug || "無題"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <Input
+              label="URL"
+              value={item.link ?? ""}
+              onChange={(e) => updateItem(i, "link", e.target.value)}
+              placeholder="https://..."
+            />
+          )}
         </div>
       ))}
     </div>
@@ -317,11 +442,11 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     return (
       <>
         <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Card Settings
+          <h2 className="text-sm font-semibold text-slate-700">
+            ブロック設定
           </h2>
           <p className="mt-3 text-sm text-slate-500">
-            Select a card on the canvas to edit its settings here. Changes update the canvas in real time.
+            キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。
           </p>
         </div>
       </>
@@ -358,26 +483,26 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
   return (
     <>
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Card Settings
+        <h2 className="text-sm font-semibold text-slate-700">
+          ブロック設定
         </h2>
         <p className="mt-1.5 text-sm font-medium text-slate-800">
           {CARD_TYPE_LABELS[card.type]}
         </p>
-        <p className="mt-0.5 text-xs text-slate-500">Changes update the canvas in real time.</p>
+        <p className="mt-0.5 text-xs text-slate-500">変更はリアルタイムで反映されます</p>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-6">
           {card.type === "welcome" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="ようこそ"
               />
               <div className="w-full">
-                <label className={labelClass}>Message</label>
+                <label className={labelClass}>メッセージ</label>
                 <textarea
                   value={display("message")}
                   onChange={(e) => updateLocalized("message", e.target.value)}
@@ -390,9 +515,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "hero" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={(content.title as string) ?? ""}
                 onChange={(e) => update("title", e.target.value)}
                 placeholder="Infomii Hotel"
@@ -402,24 +527,24 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
               </div>
               <Input
-                label="Subtitle"
+                label="サブタイトル"
                 value={(content.subtitle as string) ?? ""}
                 onChange={(e) => update("subtitle", e.target.value)}
-                placeholder="Optional subtitle"
+                placeholder="任意"
               />
             </SettingsSection>
           )}
 
           {card.type === "info" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={(content.title as string) ?? ""}
                 onChange={(e) => update("title", e.target.value)}
                 placeholder="Wi-Fi"
               />
               <Input
-                label="Icon"
+                label="アイコン"
                 value={(content.icon as string) ?? ""}
                 onChange={(e) => update("icon", e.target.value)}
                 placeholder="📶"
@@ -429,15 +554,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "highlight" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={(content.title as string) ?? ""}
                 onChange={(e) => update("title", e.target.value)}
                 placeholder="重要なお知らせ"
               />
               <div className="w-full">
-                <label className={labelClass}>Body</label>
+                <label className={labelClass}>本文</label>
                 <textarea
                   value={(content.body as string) ?? ""}
                   onChange={(e) => update("body", e.target.value)}
@@ -447,7 +572,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 />
               </div>
               <div className="w-full">
-                <label className={labelClass}>Accent</label>
+                <label className={labelClass}>アクセント</label>
                 <select
                   value={(content.accent as string) ?? "amber"}
                   onChange={(e) => update("accent", e.target.value)}
@@ -462,15 +587,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "action" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Label"
+                label="ラベル"
                 value={(content.label as string) ?? ""}
                 onChange={(e) => update("label", e.target.value)}
                 placeholder="詳しく見る"
               />
               <Input
-                label="Link URL"
+                label="リンクURL"
                 value={(content.href as string) ?? ""}
                 onChange={(e) => update("href", e.target.value)}
                 placeholder="https://... or #"
@@ -480,12 +605,12 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "text" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="Optional heading"
+                  placeholder="任意の見出し"
                 />
                 <div className="w-full">
                   <label className={labelClass}>Text</label>
@@ -498,15 +623,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Color</label>
+                  <label className={labelClass}>色</label>
                   <select
                     value={(content.color as string) ?? ""}
                     onChange={(e) => update("color", e.target.value)}
@@ -525,12 +650,12 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "image" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="Optional caption"
+                  placeholder="任意のキャプション"
                 />
                 <div className="w-full">
                   <label className={labelClass}>画像</label>
@@ -540,21 +665,21 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   />
                 </div>
                 <Input
-                  label="Alt text"
+                  label="代替テキスト"
                   value={display("alt")}
                   onChange={(e) => updateLocalized("alt", e.target.value)}
                   placeholder="Image description"
                 />
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Optional emoji or icon"
+                  placeholder="絵文字またはアイコン"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Color</label>
+                  <label className={labelClass}>色</label>
                   <select
                     value={(content.color as string) ?? ""}
                     onChange={(e) => update("color", e.target.value)}
@@ -573,9 +698,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "wifi" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="e.g. Guest WiFi"
@@ -587,7 +712,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   placeholder="Network name"
                 />
                 <Input
-                  label="Password"
+                  label="パスワード"
                   value={display("password")}
                   onChange={(e) => updateLocalized("password", e.target.value)}
                   placeholder="Password"
@@ -597,21 +722,21 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   <textarea
                     value={display("description")}
                     onChange={(e) => updateLocalized("description", e.target.value)}
-                    placeholder="Optional description"
+                    placeholder="任意の説明"
                     rows={2}
                     className={inputClass}
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Color</label>
+                  <label className={labelClass}>色</label>
                   <select
                     value={(content.color as string) ?? ""}
                     onChange={(e) => update("color", e.target.value)}
@@ -630,21 +755,21 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "breakfast" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="e.g. Breakfast"
                 />
                 <Input
-                  label="Time"
+                  label="時間"
                   value={display("time")}
                   onChange={(e) => updateLocalized("time", e.target.value)}
                   placeholder="7:00–9:30"
                 />
                 <Input
-                  label="Location"
+                  label="場所"
                   value={display("location")}
                   onChange={(e) => updateLocalized("location", e.target.value)}
                   placeholder="1F Dining"
@@ -660,15 +785,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Color</label>
+                  <label className={labelClass}>色</label>
                   <select
                     value={(content.color as string) ?? ""}
                     onChange={(e) => update("color", e.target.value)}
@@ -686,33 +811,33 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "checkout" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="チェックアウト"
               />
               <Input
-                label="Time"
+                label="時間"
                 value={display("time")}
                 onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="11:00"
               />
               <Input
-                label="Note"
+                label="補足"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
               />
               <Input
-                label="Link URL"
+                label="リンクURL"
                 value={(content.linkUrl as string) ?? ""}
                 onChange={(e) => update("linkUrl", e.target.value)}
                 placeholder="https://..."
               />
               <Input
-                label="Link label"
+                label="リンクラベル"
                 value={display("linkLabel")}
                 onChange={(e) => updateLocalized("linkLabel", e.target.value)}
                 placeholder="詳細"
@@ -721,27 +846,27 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "taxi" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="タクシー"
               />
               <Input
-                label="Phone"
+                label="電話番号"
                 value={(content.phone as string) ?? ""}
                 onChange={(e) => update("phone", e.target.value)}
                 placeholder="03-1234-5678"
               />
               <Input
-                label="Company name"
+                label="会社名"
                 value={display("companyName")}
                 onChange={(e) => updateLocalized("companyName", e.target.value)}
                 placeholder="〇〇タクシー"
               />
               <Input
-                label="Note"
+                label="補足"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
@@ -750,27 +875,27 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "restaurant" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="レストラン"
               />
               <Input
-                label="Hours"
+                label="営業時間"
                 value={display("time")}
                 onChange={(e) => updateLocalized("time", e.target.value)}
                 placeholder="7:00–22:00"
               />
               <Input
-                label="Location"
+                label="場所"
                 value={display("location")}
                 onChange={(e) => updateLocalized("location", e.target.value)}
                 placeholder="1F"
               />
               <Input
-                label="Menu / notes"
+                label="メニュー・備考"
                 value={display("menu")}
                 onChange={(e) => updateLocalized("menu", e.target.value)}
                 placeholder="メニュー・備考"
@@ -779,27 +904,27 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "laundry" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="ランドリー"
               />
               <Input
-                label="Hours"
+                label="営業時間"
                 value={display("hours")}
                 onChange={(e) => updateLocalized("hours", e.target.value)}
                 placeholder="9:00–18:00"
               />
               <Input
-                label="Price / notes"
+                label="料金・備考"
                 value={display("priceNote")}
                 onChange={(e) => updateLocalized("priceNote", e.target.value)}
                 placeholder="料金表・注意事項"
               />
               <Input
-                label="Contact"
+                label="連絡先"
                 value={display("contact")}
                 onChange={(e) => updateLocalized("contact", e.target.value)}
                 placeholder="内線1234"
@@ -807,34 +932,85 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             </SettingsSection>
           )}
 
-          {card.type === "emergency" && (
-            <SettingsSection title="Content">
+          {card.type === "parking" && (
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="駐車場"
+              />
+              <Input
+                label="台数"
+                value={display("capacity")}
+                onChange={(e) => updateLocalized("capacity", e.target.value)}
+                placeholder="50台"
+              />
+              <Input
+                label="料金"
+                value={display("fee")}
+                onChange={(e) => updateLocalized("fee", e.target.value)}
+                placeholder="無料"
+              />
+              <Input
+                label="場所"
+                value={display("address")}
+                onChange={(e) => updateLocalized("address", e.target.value)}
+                placeholder="敷地内"
+              />
+              <div className="w-full">
+                <label className={labelClass}>備考</label>
+                <textarea
+                  value={display("note")}
+                  onChange={(e) => updateLocalized("note", e.target.value)}
+                  placeholder="注意事項・利用時間"
+                  rows={2}
+                  className={inputClass}
+                />
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "pageLinks" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="メニュー"
+              />
+              <PageLinksItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "emergency" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="緊急連絡先"
               />
               <Input
-                label="Fire"
+                label="消防"
                 value={(content.fire as string) ?? ""}
                 onChange={(e) => update("fire", e.target.value)}
                 placeholder="119"
               />
               <Input
-                label="Police"
+                label="警察"
                 value={(content.police as string) ?? ""}
                 onChange={(e) => update("police", e.target.value)}
                 placeholder="110"
               />
               <Input
-                label="Hospital"
+                label="病院"
                 value={display("hospital")}
                 onChange={(e) => updateLocalized("hospital", e.target.value)}
                 placeholder="救急病院番号・住所"
               />
               <Input
-                label="Note"
+                label="補足"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
@@ -844,9 +1020,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "map" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="e.g. Location"
@@ -862,15 +1038,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Color</label>
+                  <label className={labelClass}>色</label>
                   <select
                     value={(content.color as string) ?? ""}
                     onChange={(e) => update("color", e.target.value)}
@@ -888,9 +1064,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "nearby" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="周辺案内"
@@ -900,21 +1076,21 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "spa" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="スパ・温泉"
               />
               <Input
-                label="Hours"
+                label="営業時間"
                 value={display("hours")}
                 onChange={(e) => updateLocalized("hours", e.target.value)}
                 placeholder="6:00–24:00"
               />
               <Input
-                label="Location"
+                label="場所"
                 value={display("location")}
                 onChange={(e) => updateLocalized("location", e.target.value)}
                 placeholder="B1F"
@@ -930,7 +1106,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 />
               </div>
               <Input
-                label="Note"
+                label="補足"
                 value={display("note")}
                 onChange={(e) => updateLocalized("note", e.target.value)}
                 placeholder="任意"
@@ -940,9 +1116,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "notice" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Title"
+                  label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="Notice"
@@ -958,7 +1134,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <div className="w-full">
                   <label className={labelClass}>Priority style</label>
                   <select
@@ -983,7 +1159,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   </select>
                 </div>
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
@@ -994,23 +1170,23 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           {card.type === "button" && (
             <>
-              <SettingsSection title="Content">
+              <SettingsSection title="コンテンツ">
                 <Input
-                  label="Label"
+                  label="ラベル"
                   value={display("label")}
                   onChange={(e) => updateLocalized("label", e.target.value)}
                   placeholder="Button text"
                 />
                 <Input
-                  label="Link"
+                  label="リンク"
                   value={(content.href as string) ?? ""}
                   onChange={(e) => update("href", e.target.value)}
                   placeholder="https://..."
                 />
               </SettingsSection>
-              <SettingsSection title="Appearance">
+              <SettingsSection title="表示">
                 <Input
-                  label="Icon"
+                  label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
                   placeholder="Emoji or icon name"
@@ -1045,19 +1221,19 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "gallery" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="Optional gallery title"
+                placeholder="任意のギャラリー名"
               />
               <GalleryItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
           {card.type === "divider" && (
-            <SettingsSection title="Appearance">
+            <SettingsSection title="表示">
               <div className="w-full">
                 <label className={labelClass}>Style</label>
                 <select
@@ -1073,9 +1249,9 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           {card.type === "faq" && (
-            <SettingsSection title="Content">
+            <SettingsSection title="コンテンツ">
               <Input
-                label="Title"
+                label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="よくある質問"
@@ -1091,6 +1267,54 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
           )}
 
           <SettingsSection title="ブロックスタイル">
+            <div className="w-full">
+              <label className={labelClass}>フォントサイズ（全体）</label>
+              <select
+                value={(style.fontSize as string) ?? ""}
+                onChange={(e) => updateStyle("fontSize", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">標準</option>
+                <option value="xs">極小 (12px)</option>
+                <option value="sm">小 (14px)</option>
+                <option value="base">標準 (16px)</option>
+                <option value="lg">大 (18px)</option>
+                <option value="xl">特大 (20px)</option>
+                <option value="2xl">最大 (24px)</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>タイトルサイズ</label>
+              <select
+                value={(style.titleFontSize as string) ?? ""}
+                onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">継承（上記に従う）</option>
+                <option value="xs">極小 (12px)</option>
+                <option value="sm">小 (14px)</option>
+                <option value="base">標準 (16px)</option>
+                <option value="lg">大 (18px)</option>
+                <option value="xl">特大 (20px)</option>
+                <option value="2xl">最大 (24px)</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>本文サイズ</label>
+              <select
+                value={(style.bodyFontSize as string) ?? ""}
+                onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">継承（上記に従う）</option>
+                <option value="xs">極小 (12px)</option>
+                <option value="sm">小 (14px)</option>
+                <option value="base">標準 (16px)</option>
+                <option value="lg">大 (18px)</option>
+                <option value="xl">特大 (20px)</option>
+                <option value="2xl">最大 (24px)</option>
+              </select>
+            </div>
             <div className="w-full">
               <label className={labelClass}>角丸 (px)</label>
               <input

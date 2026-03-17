@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -42,23 +43,23 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
         ""
       }
     >
-      <p className="text-sm font-medium text-slate-800">
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="text-sm font-medium text-slate-800"
+          className="font-medium text-slate-800"
         />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={body}
           onSave={(v) => updateKey("body", v)}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1em] text-xs text-slate-600"
+          className="block min-h-[1em] text-slate-600"
           placeholder="本文"
         />
       </p>

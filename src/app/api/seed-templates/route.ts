@@ -16,32 +16,33 @@ const BASE_CARDS = [
   { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 3 },
 ];
 
+/** テンプレート用のフリー画像（Unsplash） */
 const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・館内案内",
     description: "チェックイン・WiFi・朝食・チェックアウトの基本カード。ビジネス宿泊向け。",
-    preview_image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80",
     category: "business",
     cards: BASE_CARDS,
   },
   {
     name: "リゾートホテル・館内案内",
     description: "ウェルカム・WiFi・朝食・チェックアウト。リゾート施設向け。",
-    preview_image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
     category: "resort",
     cards: BASE_CARDS,
   },
   {
     name: "旅館・ご案内",
     description: "おもてなしメッセージ・WiFi・朝食・チェックアウト。旅館向け。",
-    preview_image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=80",
     category: "ryokan",
     cards: BASE_CARDS,
   },
   {
     name: "Airbnb・ゲスト向け案内",
     description: "ウェルカム・WiFi・チェックアウト。民泊・ゲストハウス向け。",
-    preview_image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
     category: "airbnb",
     cards: [
       { type: "welcome", content: { title: "ようこそ", message: "ご滞在のご案内です。" }, order: 0 },
@@ -52,7 +53,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "観光ガイド・スポット案内",
     description: "ウェルカム・周辺案内・地図・緊急連絡先。観光向け。",
-    preview_image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=600&q=80",
     category: "guide",
     cards: [
       { type: "welcome", content: { title: "観光のご案内", message: "" }, order: 0 },
@@ -64,7 +65,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "チェックイン・館内案内",
     description: "チェックイン手順と館内のご案内用。WiFi・朝食・チェックアウトを含みます。",
-    preview_image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&q=80",
     category: null,
     cards: [
       { type: "welcome", content: { title: "チェックイン・館内案内", message: "" }, order: 0 },
@@ -79,11 +80,15 @@ const PREVIEW_IMAGE_BY_NAME: Record<string, string> = Object.fromEntries(
 
 /**
  * GET: テンプレートが0件の場合のみシード。既存の空の preview_image は更新。
+ * ?update_images=1 で全テンプレートのプレビュー画像を強制更新。
  * Categories: business, resort, ryokan, airbnb, guide.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = getSupabaseAdminServerClient();
+    const { searchParams } = new URL(request.url);
+    const forceUpdateImages = searchParams.get("update_images") === "1";
+
     const { data: existing } = await supabase
       .from("templates")
       .select("id, name, preview_image")
@@ -103,7 +108,8 @@ export async function GET() {
     }
 
     const toUpdate = (existing ?? []).filter(
-      (t) => !t.preview_image || t.preview_image.trim() === ""
+      (t) =>
+        forceUpdateImages || !t.preview_image || t.preview_image.trim() === ""
     );
     let updated = 0;
     for (const t of toUpdate) {
@@ -118,7 +124,7 @@ export async function GET() {
     }
     return NextResponse.json({
       seeded: false,
-      message: "Already has templates",
+      message: forceUpdateImages ? "Preview images updated" : "Already has templates",
       updated,
     });
   } catch (e) {

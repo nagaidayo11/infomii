@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -36,8 +37,8 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
       <div className="flex items-center justify-center rounded-lg bg-slate-100 py-8">
         <span className="text-3xl" aria-hidden>📍</span>
       </div>
-      <p className="mt-2 text-sm text-slate-700">
-        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-sm text-slate-700" placeholder="住所" />
+      <p className="mt-2 text-slate-700" style={getBodyFontSizeStyle()}>
+        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-slate-700" placeholder="住所" />
       </p>
     </Card>
   );

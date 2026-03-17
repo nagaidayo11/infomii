@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -44,39 +45,39 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-semibold text-slate-800">
+      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="text-sm font-semibold text-slate-800"
+          className="font-semibold text-slate-800"
         />
       </p>
-      <dl className="mt-3 space-y-3">
+      <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <p className="text-xs text-slate-500">Q&Aを右のパネルで追加</p>
+          <p className="text-slate-500">Q&Aを右のパネルで追加</p>
         ) : (
           items.map((item, i) => (
             <div key={i} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-              <dt className="text-xs font-medium text-slate-700">
+              <dt className="font-medium text-slate-700">
                 <InlineEditable
                   value={item.q ?? ""}
                   onSave={(v) => updateItem(i, "q", v)}
                   editable={isSelected}
                   onActivate={onActivate}
-                  className="text-xs font-medium text-slate-700"
+                  className="font-medium text-slate-700"
                   placeholder="質問"
                 />
               </dt>
-              <dd className="mt-1 text-xs text-slate-600">
+              <dd className="mt-1 text-slate-600">
                 <InlineEditable
                   value={item.a ?? ""}
                   onSave={(v) => updateItem(i, "a", v)}
                   editable={isSelected}
                   onActivate={onActivate}
                   multiline
-                  className="block min-h-[1em] text-xs text-slate-600"
+                  className="block min-h-[1em] text-slate-600"
                   placeholder="回答"
                 />
               </dd>
