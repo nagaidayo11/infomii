@@ -8,8 +8,6 @@ import { InfoCard } from "./InfoCard";
 import { HighlightCard } from "./HighlightCard";
 import { ActionCard } from "./ActionCard";
 import { WelcomeCard } from "./WelcomeCard";
-import { WifiCard } from "./WifiCard";
-import { BreakfastCard } from "./BreakfastCard";
 import { CheckoutCard } from "./CheckoutCard";
 import { NearbyCard } from "./NearbyCard";
 import { NoticeCard } from "./NoticeCard";
@@ -29,6 +27,11 @@ import { GalleryCard } from "./GalleryCard";
 import { DividerCard } from "./DividerCard";
 import { ParkingCard } from "./ParkingCard";
 import { PageLinksCard } from "./PageLinksCard";
+import { QuoteCard } from "./QuoteCard";
+import { ChecklistCard } from "./ChecklistCard";
+import { StepsCard } from "./StepsCard";
+import { CompareCard } from "./CompareCard";
+import { KpiCard } from "./KpiCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -59,7 +62,7 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
         type: "info",
         content: {
           title: (c?.title as string) || "Wi-Fi",
-          icon: "📶",
+          icon: "wifi",
           rows: [
             { label: "ネットワーク名", value: (c?.ssid as string) ?? "" },
             { label: "パスワード", value: (c?.password as string) ?? "" },
@@ -122,6 +125,16 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       return <MenuCard card={card} isSelected={isSelected} locale={locale} />;
     case "divider":
       return <DividerCard card={card} isSelected={isSelected} locale={locale} />;
+    case "quote":
+      return <QuoteCard card={card} isSelected={isSelected} locale={locale} />;
+    case "checklist":
+      return <ChecklistCard card={card} isSelected={isSelected} locale={locale} />;
+    case "steps":
+      return <StepsCard card={card} isSelected={isSelected} locale={locale} />;
+    case "compare":
+      return <CompareCard card={card} isSelected={isSelected} locale={locale} />;
+    case "kpi":
+      return <KpiCard card={card} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={card as EditorCard} isSelected={isSelected} locale={locale} />;
   }
@@ -156,8 +169,23 @@ export function CardRenderer(props: CardRendererProps) {
       <>
         {sorted.map((card) => {
           const blockStyle = getBlockStyle(card);
+          const textColor =
+            card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
+              ? card.style.textColor
+              : undefined;
           return (
-            <div key={card.id} style={blockStyle}>
+            <div
+              key={card.id}
+              className={textColor ? "editor-card-colorized" : undefined}
+              style={{
+                ...blockStyle,
+                ...(textColor
+                  ? ({
+                      ["--editor-card-text-color"]: textColor,
+                    } as Record<string, string>)
+                  : {}),
+              }}
+            >
               <SingleCardRenderer
                 card={card}
                 isSelected={selectedCardId === card.id}

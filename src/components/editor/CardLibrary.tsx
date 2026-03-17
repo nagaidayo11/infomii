@@ -154,6 +154,39 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
     </svg>
   ),
+  quote: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8H6v4h3v4H5v-4c0-2.2 1.8-4 4-4zM19 8h-3v4h3v4h-4v-4c0-2.2 1.8-4 4-4z" />
+    </svg>
+  ),
+  checklist: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h11M4 12h11M4 17h11m3-10 1.5 1.5L22 6m-4 6 1.5 1.5L22 11m-4 6 1.5 1.5L22 16" />
+    </svg>
+  ),
+  steps: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="6" cy="6" r="2" strokeWidth={2} />
+      <circle cx="18" cy="12" r="2" strokeWidth={2} />
+      <circle cx="6" cy="18" r="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7.2 16 10.8M16 13.2 8 16.8" />
+    </svg>
+  ),
+  compare: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="8" height="14" rx="1.5" strokeWidth={2} />
+      <rect x="13" y="5" width="8" height="14" rx="1.5" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 9h.01M17 9h.01" />
+    </svg>
+  ),
+  kpi: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 18h16" />
+      <rect x="6" y="11" width="3" height="5" rx=".6" strokeWidth={2} />
+      <rect x="11" y="8" width="3" height="8" rx=".6" strokeWidth={2} />
+      <rect x="16" y="5" width="3" height="11" rx=".6" strokeWidth={2} />
+    </svg>
+  ),
 };
 
 /** Hero & blocks (Canva-style) */
@@ -207,6 +240,11 @@ const HOSPITALITY_ITEMS: LibraryItem[] = [
 /** Layout: text, divider */
 const LAYOUT_ITEMS: LibraryItem[] = [
   { type: "text", label: "テキスト", description: "テキスト・見出し" },
+  { type: "quote", label: "引用", description: "レビュー・引用文" },
+  { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
+  { type: "steps", label: "ステップ", description: "手順・流れ" },
+  { type: "compare", label: "比較", description: "2列の比較表示" },
+  { type: "kpi", label: "KPI", description: "数値を強調" },
   { type: "divider", label: "区切り線", description: "区切り線" },
 ];
 

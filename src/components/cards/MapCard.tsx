@@ -7,6 +7,7 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { LineIcon } from "./LineIcon";
 
 type MapCardProps = {
   card: EditorCard;
@@ -35,7 +36,9 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   return (
     <Card padding="md" className="">
       <div className="flex items-center justify-center rounded-lg bg-slate-100 py-8">
-        <span className="text-3xl" aria-hidden>📍</span>
+        <span className="text-slate-700" aria-hidden>
+          <LineIcon name="map" className="h-8 w-8" />
+        </span>
       </div>
       <p className="mt-2 text-slate-700" style={getBodyFontSizeStyle()}>
         <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-slate-700" placeholder="住所" />

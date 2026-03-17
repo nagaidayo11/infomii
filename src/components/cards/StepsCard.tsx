@@ -1,0 +1,61 @@
+"use client";
+
+import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
+import { Card } from "@/components/ui/Card";
+import { useEditor2Store } from "@/components/editor/store";
+
+type StepsItem = { title?: string; description?: string };
+
+type StepsCardProps = {
+  card: EditorCard;
+  isSelected?: boolean;
+  locale?: string;
+};
+
+export function StepsCard({ card, isSelected = false }: StepsCardProps) {
+  const updateCard = useEditor2Store((s) => s.updateCard);
+  const selectCard = useEditor2Store((s) => s.selectCard);
+  const c = card.content as Record<string, unknown> | undefined;
+  const title = (c?.title as string) ?? "ステップ";
+  const items = (Array.isArray(c?.items) ? c.items : []) as StepsItem[];
+
+  const update = (patch: Record<string, unknown>) => {
+    updateCard(card.id, { content: { ...c, ...patch } });
+  };
+
+  const onActivate = () => selectCard(card.id);
+
+  return (
+    <Card padding="md">
+      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable
+          value={title}
+          onSave={(v) => update({ title: v })}
+          editable={isSelected}
+          onActivate={onActivate}
+          className="font-semibold text-slate-800"
+          placeholder="ステップ"
+        />
+      </p>
+      <ol className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
+        {items.length === 0 ? (
+          <li className="text-slate-500">手順を追加してください</li>
+        ) : (
+          items.map((item, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="font-medium text-slate-800">{item.title ?? ""}</p>
+                <p className="mt-0.5 text-slate-600">{item.description ?? ""}</p>
+              </div>
+            </li>
+          ))
+        )}
+      </ol>
+    </Card>
+  );
+}

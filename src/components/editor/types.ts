@@ -33,7 +33,12 @@ export type CardType =
   | "gallery"
   | "divider"
   | "parking"
-  | "pageLinks";
+  | "pageLinks"
+  | "quote"
+  | "checklist"
+  | "steps"
+  | "compare"
+  | "kpi";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -83,6 +88,7 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
           : undefined,
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
     backgroundColor: typeof s.backgroundColor === "string" ? s.backgroundColor : undefined,
+    color: typeof s.textColor === "string" ? s.textColor : undefined,
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
@@ -150,6 +156,11 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   divider: "区切り線",
   parking: "駐車場",
   pageLinks: "ページリンク",
+  quote: "引用",
+  checklist: "チェックリスト",
+  steps: "ステップ",
+  compare: "比較",
+  kpi: "KPI",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -162,6 +173,11 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "map",
   "image",
   "text",
+  "quote",
+  "checklist",
+  "steps",
+  "compare",
+  "kpi",
   "gallery",
   "divider",
 ];
@@ -176,6 +192,11 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "map", label: "地図", description: "住所・地図" },
   { type: "image", label: "画像", description: "写真" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
+  { type: "quote", label: "引用", description: "引用文・レビュー" },
+  { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
+  { type: "steps", label: "ステップ", description: "手順を段階表示" },
+  { type: "compare", label: "比較", description: "2列比較・プラン比較" },
+  { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
 ];
@@ -214,6 +235,11 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "menu", label: "メニュー", description: "メニュー・価格" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
+  { type: "quote", label: "引用", description: "引用文・レビュー" },
+  { type: "checklist", label: "チェックリスト", description: "チェック項目" },
+  { type: "steps", label: "ステップ", description: "手順・導線" },
+  { type: "compare", label: "比較", description: "2カラム比較" },
+  { type: "kpi", label: "KPI", description: "指標・実績表示" },
 ];
 
 function defaultContent(type: CardType): Record<string, unknown> {
@@ -221,7 +247,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "hero":
       return { title: "Infomii Hotel", image: "", subtitle: "" };
     case "info":
-      return { title: "Wi-Fi", icon: "📶", rows: [{ label: "ネットワーク名", value: "" }, { label: "パスワード", value: "" }] };
+      return { title: "Wi-Fi", icon: "wifi", rows: [{ label: "ネットワーク名", value: "" }, { label: "パスワード", value: "" }] };
     case "highlight":
       return { title: "重要なお知らせ", body: "", accent: "amber" };
     case "action":
@@ -275,6 +301,43 @@ function defaultContent(type: CardType): Record<string, unknown> {
           { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "チェックアウト", icon: "checkout", linkType: "page" as const, pageSlug: "", link: "" },
+        ],
+      };
+    case "quote":
+      return { quote: "ご滞在を心地よくするためのご案内をこちらに記載します。", author: "フロント" };
+    case "checklist":
+      return {
+        title: "チェックリスト",
+        items: [
+          { text: "チェックイン時に本人確認書類を提示", checked: true },
+          { text: "Wi-Fiの接続完了", checked: false },
+          { text: "チェックアウト時刻を確認", checked: false },
+        ],
+      };
+    case "steps":
+      return {
+        title: "ご利用ステップ",
+        items: [
+          { title: "Step 1", description: "QRを読み取りページを開く" },
+          { title: "Step 2", description: "必要な案内を確認する" },
+          { title: "Step 3", description: "不明点はフロントへ連絡" },
+        ],
+      };
+    case "compare":
+      return {
+        title: "プラン比較",
+        leftTitle: "スタンダード",
+        leftBody: "朝食付き・通常チェックアウト",
+        rightTitle: "プレミアム",
+        rightBody: "朝食+レイトチェックアウト+特典",
+      };
+    case "kpi":
+      return {
+        title: "施設情報",
+        items: [
+          { label: "チェックイン", value: "15:00" },
+          { label: "チェックアウト", value: "11:00" },
+          { label: "フロント内線", value: "9" },
         ],
       };
     default:

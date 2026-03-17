@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { LineIcon, normalizeIconToken } from "./LineIcon";
 
 type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -15,7 +16,7 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "情報";
-  const icon = (c?.icon as string) ?? "📶";
+  const icon = normalizeIconToken(c?.icon, "info");
   const rows = (c?.rows as InfoRow[]) ?? [];
 
   const update = (patch: Record<string, unknown>) => {
@@ -26,7 +27,9 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
   return (
     <Card padding="md">
       <div className="flex items-center gap-3 pb-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">{icon}</span>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+          <LineIcon name={icon} className="h-5 w-5" />
+        </span>
         <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder="タイトル" />
         </h3>

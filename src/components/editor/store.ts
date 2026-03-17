@@ -44,9 +44,26 @@ export type Editor2State = {
   showGrid: boolean;
   /** Page theme: light | dark. */
   pageTheme: "light" | "dark";
+  /** Preview page background mode. */
+  pageBackgroundMode: "solid" | "gradient";
+  /** Solid background color (hex/css). */
+  pageBackgroundColor: string;
+  /** Gradient start color. */
+  pageGradientFrom: string;
+  /** Gradient end color. */
+  pageGradientTo: string;
+  /** Gradient angle (deg). */
+  pageGradientAngle: number;
   setCards: (cards: EditorCard[]) => void;
   setShowGrid: (show: boolean) => void;
   setPageTheme: (theme: "light" | "dark") => void;
+  setPageBackground: (patch: {
+    mode?: "solid" | "gradient";
+    color?: string;
+    from?: string;
+    to?: string;
+    angle?: number;
+  }) => void;
   setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null; saveError?: string | null }) => void;
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
   /** Highlight cards (e.g. from template). Auto-clears after 3s. */
@@ -93,14 +110,27 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   pageMeta: initialPageMeta,
   showGrid: true,
   pageTheme: "light",
+  pageBackgroundMode: "solid",
+  pageBackgroundColor: "#ffffff",
+  pageGradientFrom: "#f8fafc",
+  pageGradientTo: "#e2e8f0",
+  pageGradientAngle: 180,
 
   setCards: (cards) => set({ cards }),
 
   setShowGrid: (show) => set({ showGrid: show }),
   setPageTheme: (theme) => set({ pageTheme: theme }),
+  setPageBackground: (patch) =>
+    set(() => ({
+      ...(patch.mode !== undefined ? { pageBackgroundMode: patch.mode } : {}),
+      ...(patch.color !== undefined ? { pageBackgroundColor: patch.color } : {}),
+      ...(patch.from !== undefined ? { pageGradientFrom: patch.from } : {}),
+      ...(patch.to !== undefined ? { pageGradientTo: patch.to } : {}),
+      ...(patch.angle !== undefined ? { pageGradientAngle: patch.angle } : {}),
+    })),
 
   setAutosaveStatus: (payload) =>
-    set((s) => ({
+    set(() => ({
       ...(payload.isSaving !== undefined && { isSaving: payload.isSaving }),
       ...(payload.lastSavedAt !== undefined && { lastSavedAt: payload.lastSavedAt }),
       ...(payload.saveError !== undefined && { saveError: payload.saveError }),

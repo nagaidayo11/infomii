@@ -142,6 +142,13 @@ type FreeformCanvasProps = {
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
+  pageBackground?: {
+    mode: "solid" | "gradient";
+    color: string;
+    from: string;
+    to: string;
+    angle: number;
+  };
 };
 
 export function FreeformCanvas({
@@ -151,6 +158,7 @@ export function FreeformCanvas({
   onUpdateCard,
   onDuplicateCard,
   onRemoveCard,
+  pageBackground,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const showGrid = useEditor2Store((s) => s.showGrid);
@@ -238,6 +246,10 @@ export function FreeformCanvas({
     dark: { bg: "#1e293b", canvas: "bg-slate-800", grid: "#475569" },
   } as const;
   const theme = themeStyles[pageTheme] ?? themeStyles.light;
+  const pageBackgroundStyle =
+    pageBackground?.mode === "gradient"
+      ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
+      : pageBackground?.color ?? "#ffffff";
 
   const canvasW = viewportWidth;
   const canvasH = Math.max(
@@ -286,7 +298,7 @@ export function FreeformCanvas({
         <MobileCanvasFrame width={viewportWidth}>
           <div
             className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
-            style={{ width: canvasW, height: canvasH, minHeight: canvasH }}
+            style={{ width: canvasW, height: canvasH, minHeight: canvasH, background: pageBackgroundStyle }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
             }}
@@ -369,11 +381,17 @@ export function FreeformCanvas({
                   <div
                     className={
                       "h-full w-full overflow-hidden rounded-xl transition-shadow " +
-                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2" : "")
+                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
+                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "")
                     }
                     style={{
                       ...blockStyle,
                       backgroundColor: blockStyle.backgroundColor ?? "white",
+                      ...((card.style as Record<string, unknown> | undefined)?.textColor
+                        ? ({
+                            ["--editor-card-text-color"]: (card.style as Record<string, unknown>).textColor as string,
+                          } as Record<string, string>)
+                        : {}),
                     }}
                   >
                     <div className="overflow-auto p-2 h-full">

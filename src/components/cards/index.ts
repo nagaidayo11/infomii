@@ -17,3 +17,8 @@ export { ButtonCard } from "./ButtonCard";
 export { FaqCard } from "./FaqCard";
 export { ScheduleCard } from "./ScheduleCard";
 export { MenuCard } from "./MenuCard";
+export { QuoteCard } from "./QuoteCard";
+export { ChecklistCard } from "./ChecklistCard";
+export { StepsCard } from "./StepsCard";
+export { CompareCard } from "./CompareCard";
+export { KpiCard } from "./KpiCard";

@@ -37,7 +37,6 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
   return (
     <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">
-        📶{" "}
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}

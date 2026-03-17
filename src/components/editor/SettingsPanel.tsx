@@ -88,6 +88,9 @@ type NearbyItem = { name?: string; description?: string; link?: string };
 type FaqItem = { q?: string; a?: string };
 type GalleryImageItem = { src?: string; alt?: string };
 type PageLinksItem = { label?: string; icon?: string; linkType?: "page" | "url"; pageSlug?: string; link?: string };
+type ChecklistItem = { text?: string; checked?: boolean };
+type StepsItem = { title?: string; description?: string };
+type KpiItem = { label?: string; value?: string };
 
 function GalleryItemsEditor({
   content,
@@ -394,11 +397,174 @@ function PageLinksItemsEditor({
   );
 }
 
+function ChecklistItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as ChecklistItem[];
+  const setItems = (next: ChecklistItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof ChecklistItem, value: string | boolean) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { text: "", checked: false }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">チェック項目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input
+            label="項目"
+            value={item.text ?? ""}
+            onChange={(e) => updateItem(i, "text", e.target.value)}
+            placeholder="内容"
+          />
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={item.checked === true}
+              onChange={(e) => updateItem(i, "checked", e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+            />
+            <span className="text-sm text-slate-700">初期状態を完了にする</span>
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StepsItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as StepsItem[];
+  const setItems = (next: StepsItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof StepsItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { title: "", description: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">ステップ</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input
+            label={`Step ${i + 1} タイトル`}
+            value={item.title ?? ""}
+            onChange={(e) => updateItem(i, "title", e.target.value)}
+            placeholder="手順名"
+          />
+          <div className="w-full">
+            <label className={labelClass}>説明</label>
+            <textarea
+              value={item.description ?? ""}
+              onChange={(e) => updateItem(i, "description", e.target.value)}
+              placeholder="手順の説明"
+              rows={2}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KpiItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as KpiItem[];
+  const setItems = (next: KpiItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof KpiItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { label: "", value: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">数値項目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input
+            label="ラベル"
+            value={item.label ?? ""}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder="項目名"
+          />
+          <Input
+            label="値"
+            value={item.value ?? ""}
+            onChange={(e) => updateItem(i, "value", e.target.value)}
+            placeholder="15:00 / 120 / 95%"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** CardSettings panel: shows Content, Appearance, and Behavior for the selected card. Updates the canvas in real time. */
 export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
+  const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
+  const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
+  const pageGradientTo = useEditor2Store((s) => s.pageGradientTo);
+  const pageGradientAngle = useEditor2Store((s) => s.pageGradientAngle);
+  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
 
   useEffect(() => {
     if (card?.id) {
@@ -547,7 +713,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 label="アイコン"
                 value={(content.icon as string) ?? ""}
                 onChange={(e) => update("icon", e.target.value)}
-                placeholder="📶"
+                placeholder="wifi / map / info"
               />
               <p className="text-xs text-slate-500">行はコンテンツで編集してください。</p>
             </SettingsSection>
@@ -628,7 +794,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -676,7 +842,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="絵文字またはアイコン"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -733,7 +899,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -790,7 +956,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1043,7 +1209,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1162,7 +1328,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
               </SettingsSection>
             </>
@@ -1189,7 +1355,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
                   onChange={(e) => update("icon", e.target.value)}
-                  placeholder="Emoji or icon name"
+                  placeholder="icon name (wifi / map / info)"
                 />
                 <div className="w-full">
                   <label className={labelClass}>Style</label>
@@ -1257,6 +1423,98 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 placeholder="よくある質問"
               />
               <FaqItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "quote" && (
+            <SettingsSection title="コンテンツ">
+              <div className="w-full">
+                <label className={labelClass}>引用文</label>
+                <textarea
+                  value={display("quote")}
+                  onChange={(e) => updateLocalized("quote", e.target.value)}
+                  placeholder="引用文"
+                  rows={3}
+                  className={inputClass}
+                />
+              </div>
+              <Input
+                label="出典・著者"
+                value={display("author")}
+                onChange={(e) => updateLocalized("author", e.target.value)}
+                placeholder="フロント / レビュー投稿者"
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "checklist" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="チェックリスト"
+              />
+              <ChecklistItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "steps" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="ご利用ステップ"
+              />
+              <StepsItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "compare" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="比較"
+              />
+              <Input
+                label="左タイトル"
+                value={display("leftTitle")}
+                onChange={(e) => updateLocalized("leftTitle", e.target.value)}
+                placeholder="スタンダード"
+              />
+              <Input
+                label="左説明"
+                value={display("leftBody")}
+                onChange={(e) => updateLocalized("leftBody", e.target.value)}
+                placeholder="内容"
+              />
+              <Input
+                label="右タイトル"
+                value={display("rightTitle")}
+                onChange={(e) => updateLocalized("rightTitle", e.target.value)}
+                placeholder="プレミアム"
+              />
+              <Input
+                label="右説明"
+                value={display("rightBody")}
+                onChange={(e) => updateLocalized("rightBody", e.target.value)}
+                placeholder="内容"
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "kpi" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="KPI"
+              />
+              <KpiItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
@@ -1365,6 +1623,114 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 />
               </div>
             </div>
+            <div className="w-full">
+              <label className={labelClass}>フォント色</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={(() => {
+                    const v = (style.textColor as string) ?? "#0f172a";
+                    const hex = v.startsWith("#") ? v.slice(1) : v;
+                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
+                  })()}
+                  onChange={(e) => updateStyle("textColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+                <input
+                  type="text"
+                  value={(style.textColor as string) ?? ""}
+                  onChange={(e) => updateStyle("textColor", e.target.value || undefined)}
+                  placeholder="#0f172a"
+                  className={inputClass + " flex-1"}
+                />
+              </div>
+            </div>
+          </SettingsSection>
+          <SettingsSection title="ページ背景">
+            <div className="w-full">
+              <label className={labelClass}>背景タイプ</label>
+              <select
+                value={pageBackgroundMode}
+                onChange={(e) =>
+                  setPageBackground({ mode: e.target.value as "solid" | "gradient" })
+                }
+                className={inputClass}
+              >
+                <option value="solid">単色</option>
+                <option value="gradient">グラデーション</option>
+              </select>
+            </div>
+            {pageBackgroundMode === "solid" ? (
+              <div className="w-full">
+                <label className={labelClass}>背景色</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={pageBackgroundColor}
+                    onChange={(e) => setPageBackground({ color: e.target.value })}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={pageBackgroundColor}
+                    onChange={(e) => setPageBackground({ color: e.target.value || "#ffffff" })}
+                    placeholder="#ffffff"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="w-full">
+                  <label className={labelClass}>開始色</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={pageGradientFrom}
+                      onChange={(e) => setPageBackground({ from: e.target.value })}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={pageGradientFrom}
+                      onChange={(e) => setPageBackground({ from: e.target.value || "#f8fafc" })}
+                      placeholder="#f8fafc"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>終了色</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={pageGradientTo}
+                      onChange={(e) => setPageBackground({ to: e.target.value })}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={pageGradientTo}
+                      onChange={(e) => setPageBackground({ to: e.target.value || "#e2e8f0" })}
+                      placeholder="#e2e8f0"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>角度 ({pageGradientAngle}deg)</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={360}
+                    step={1}
+                    value={pageGradientAngle}
+                    onChange={(e) => setPageBackground({ angle: parseInt(e.target.value, 10) || 0 })}
+                    className="w-full"
+                  />
+                </div>
+              </>
+            )}
           </SettingsSection>
         </div>
       </div>

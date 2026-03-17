@@ -6,6 +6,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { LineIcon, normalizeIconToken } from "./LineIcon";
 
 type PageLinksItem = {
   label?: string;
@@ -15,27 +16,8 @@ type PageLinksItem = {
   link?: string;
 };
 
-const ICON_EMOJI_MAP: Record<string, string> = {
-  wifi: "📶",
-  breakfast: "🍳",
-  checkout: "🕐",
-  restaurant: "🍽️",
-  spa: "♨️",
-  parking: "🅿️",
-  map: "📍",
-  nearby: "🗺️",
-  notice: "📢",
-  emergency: "🚨",
-  laundry: "🧺",
-  taxi: "🚕",
-  info: "ℹ️",
-};
-
-function getIconDisplay(icon: string | undefined): string {
-  if (!icon) return "📌";
-  if (ICON_EMOJI_MAP[icon]) return ICON_EMOJI_MAP[icon];
-  if (/^[\p{Emoji}\p{Emoji_Presentation}]$/u.test(icon)) return icon;
-  return icon.length <= 2 ? icon : ICON_EMOJI_MAP.info;
+function getIconDisplay(icon: string | undefined) {
+  return normalizeIconToken(icon, "link");
 }
 
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -85,8 +67,8 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
               <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50/80 p-4 transition hover:bg-slate-100">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-2xl">
-                  {iconDisplay}
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
+                  <LineIcon name={iconDisplay} className="h-6 w-6" />
                 </span>
                 <span className="text-center font-medium text-slate-700 line-clamp-2" style={getBodyFontSizeStyle()}>
                   {isSelected ? (

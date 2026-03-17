@@ -38,7 +38,6 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
   return (
     <Card padding="md" className="">
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        🚕{" "}
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
       <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
