@@ -6,6 +6,7 @@ import type { MultiPageTemplate } from "@/lib/multi-page-templates/types";
 type TemplateGalleryCardProps = {
   template: MultiPageTemplate;
   onUse: (templateId: string) => void;
+  onPreview: (templateId: string) => void;
   isLoading?: boolean;
 };
 
@@ -15,6 +16,7 @@ type TemplateGalleryCardProps = {
 export function TemplateGalleryCard({
   template,
   onUse,
+  onPreview,
   isLoading = false,
 }: TemplateGalleryCardProps) {
   return (
@@ -50,14 +52,23 @@ export function TemplateGalleryCard({
           ))}
         </ul>
         <div className="mt-4 flex-1" />
-        <button
-          type="button"
-          disabled={isLoading}
-          onClick={() => onUse(template.id)}
-          className="w-full rounded-xl bg-ds-primary py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-600 active:scale-[0.99] disabled:opacity-60"
-        >
-          {isLoading ? "作成中…" : "テンプレートを使う"}
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={() => onUse(template.id)}
+            className="w-full rounded-xl bg-ds-primary py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-600 active:scale-[0.99] disabled:opacity-60"
+          >
+            {isLoading ? "作成中…" : "テンプレートを使う"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onPreview(template.id)}
+            className="w-full rounded-xl border border-slate-300 bg-white py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-[0.99]"
+          >
+            プレビュー
+          </button>
+        </div>
       </div>
     </article>
   );

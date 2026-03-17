@@ -1085,6 +1085,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     supabase
       .from("informations")
       .select("id,title,body,images,content_blocks,theme,status,publish_at,unpublish_at,slug,updated_at")
+      .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false }),
   ]);
 

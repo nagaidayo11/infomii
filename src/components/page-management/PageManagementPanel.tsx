@@ -14,6 +14,10 @@ import type { Information } from "@/types/information";
 import { TemplateGallery } from "@/components/template-gallery-ui";
 import { AIPageGenerator } from "@/components/ai-page-generator";
 
+function dedupeInformationsById(items: Information[]): Information[] {
+  return Array.from(new Map(items.map((item) => [item.id, item])).values());
+}
+
 /**
  * ページ管理 — ゲスト向け案内ページの一覧・新規・削除
  * UIは日本語のみ
@@ -31,7 +35,7 @@ export function PageManagementPanel() {
     setError(null);
     try {
       const boot = await getDashboardBootstrapData();
-      setItems(boot.informations);
+      setItems(dedupeInformationsById(boot.informations));
     } catch (e) {
       setError(e instanceof Error ? e.message : "一覧の取得に失敗しました");
     } finally {

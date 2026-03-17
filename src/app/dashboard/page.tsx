@@ -815,7 +815,7 @@ export default function DashboardPage() {
           setHotelName(boot.hotelName);
           setHotelNameDraft(boot.hotelName);
           setSubscription(boot.subscription);
-          setItems(boot.informations);
+          setItems(upsertItemsWithSort(boot.informations));
         }
       } catch (e) {
         if (mounted) {
