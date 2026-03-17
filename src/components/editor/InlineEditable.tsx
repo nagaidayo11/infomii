@@ -66,6 +66,11 @@ export function InlineEditable({
     setEditing(true);
   };
 
+  const handleFocus = () => {
+    onActivate?.();
+    setEditing(true);
+  };
+
   if (!editable && !editing) {
     return (
       <span
@@ -76,7 +81,7 @@ export function InlineEditable({
           className
         }
         onClick={startEditing}
-        onFocus={startEditing}
+        onFocus={handleFocus}
       >
         {value || placeholder || "\u00a0"}
       </span>
@@ -134,7 +139,7 @@ export function InlineEditable({
         className
       }
       onClick={startEditing}
-      onFocus={startEditing}
+      onFocus={handleFocus}
     >
       {value || placeholder || "\u00a0"}
     </span>
