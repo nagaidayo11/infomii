@@ -22,6 +22,7 @@ export function PagesListView() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+  const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -33,6 +34,7 @@ export function PagesListView() {
       .then(([bootstrap, metrics]) => {
         if (!mounted) return;
         setItems(bootstrap.informations ?? []);
+        setSubscription(bootstrap.subscription ? { plan: bootstrap.subscription.plan } : null);
         setPageStats(metrics?.pageStats ?? []);
       })
       .finally(() => {
@@ -80,7 +82,11 @@ export function PagesListView() {
         </button>
       </header>
 
-      <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
+      <PlanLimitModal
+        open={planLimitModalOpen}
+        onClose={() => setPlanLimitModalOpen(false)}
+        currentPlan={subscription?.plan}
+      />
 
       <div className="mt-6">
         <GeneratePageFromUrl />

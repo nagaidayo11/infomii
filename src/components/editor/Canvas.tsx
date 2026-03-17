@@ -20,7 +20,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
-import type { EditorCard } from "./types";
+import { getBlockStyle, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
 const VIEWPORT_SIZES = [
@@ -62,6 +62,7 @@ type CanvasProps = {
   cards: EditorCard[];
   selectedCardId: string | null;
   lastAddedCardId?: string | null;
+  highlightedCardIds?: Set<string>;
   onSelectCard: (id: string | null) => void;
   onReorder: (cards: EditorCard[]) => void;
   onDuplicateCard?: (id: string) => void;
@@ -161,6 +162,7 @@ function SortableCardWrapper({
   card,
   isSelected,
   isNewlyAdded,
+  isTemplateHighlighted,
   onSelect,
   onDuplicate,
   onRemove,
@@ -182,6 +184,7 @@ function SortableCardWrapper({
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   onContextMenuClick?: (e: React.MouseEvent) => void;
+  isTemplateHighlighted?: boolean;
   children: React.ReactNode;
 }) {
   const {
@@ -237,12 +240,14 @@ function SortableCardWrapper({
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card relative min-w-0 flex-1 rounded-r-xl border bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+              "editor-card relative min-w-0 flex-1 rounded-r-xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
               (isNewlyAdded ? "card-insert " : "") +
+              (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
               (isSelected
                 ? "border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
-                : "border-slate-200 hover:border-slate-300 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-[1.005]")
+                : "border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-slate-300 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-[1.005]")
             }
+            style={getBlockStyle(card)}
             onClick={(e) => {
               e.stopPropagation();
               onSelect();
@@ -283,6 +288,7 @@ export function Canvas({
   cards,
   selectedCardId,
   lastAddedCardId = null,
+  highlightedCardIds,
   onSelectCard,
   onReorder,
   onDuplicateCard,
@@ -422,6 +428,7 @@ export function Canvas({
                           card={card}
                           isSelected={selectedCardId === card.id}
                           isNewlyAdded={card.id === lastAddedCardId}
+                          isTemplateHighlighted={highlightedCardIds?.has(card.id)}
                           onSelect={() => onSelectCard(card.id)}
                           onDuplicate={onDuplicateCard ? () => onDuplicateCard(card.id) : undefined}
                           onRemove={onRemoveCard ? () => onRemoveCard(card.id) : undefined}

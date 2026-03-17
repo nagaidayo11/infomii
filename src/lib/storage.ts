@@ -2082,6 +2082,7 @@ type CheckoutSessionOptions = {
   successPath?: string;
   cancelPath?: string;
   plan?: "pro" | "business";
+  interval?: "monthly" | "yearly";
 };
 
 export type OpsHealthSnapshot = {
@@ -3345,6 +3346,7 @@ export async function createStripeCheckoutSession(
       successPath: options?.successPath,
       cancelPath: options?.cancelPath,
       plan: options?.plan ?? "pro",
+      interval: options?.interval ?? "monthly",
     }),
   });
 

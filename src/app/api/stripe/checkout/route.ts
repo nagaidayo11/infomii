@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStripeServerClient, getAppBaseUrl, getStripePriceIdByPlan } from "@/lib/server/stripe-server";
+import {
+  getStripeServerClient,
+  getAppBaseUrl,
+  getStripePriceIdByPlan,
+  getStripeProAnnualPriceId,
+  getStripeBusinessAnnualPriceId,
+} from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 
@@ -9,6 +15,7 @@ type CheckoutRequestBody = {
   successPath?: unknown;
   cancelPath?: unknown;
   plan?: "pro" | "business";
+  interval?: "monthly" | "yearly";
 };
 
 function buildDefaultHotelName(email: string | null | undefined): string {
@@ -147,13 +154,25 @@ export async function POST(request: NextRequest) {
       "/dashboard?billing=cancel",
     );
     const plan = requestBody.plan === "business" ? "business" : "pro";
+    const interval = requestBody.interval === "yearly" ? "yearly" : "monthly";
+
+    if (interval === "yearly") {
+      const hasAnnual =
+        plan === "business" ? getStripeBusinessAnnualPriceId() : getStripeProAnnualPriceId();
+      if (!hasAnnual) {
+        return NextResponse.json(
+          { message: "年払いプランは現在準備中です" },
+          { status: 400 },
+        );
+      }
+    }
 
     const origin = request.headers.get("origin");
     const baseUrl = getAppBaseUrl(origin);
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: getStripePriceIdByPlan(plan), quantity: 1 }],
+      line_items: [{ price: getStripePriceIdByPlan(plan, interval), quantity: 1 }],
       success_url: `${baseUrl}${successPath}`,
       cancel_url: `${baseUrl}${cancelPath}`,
       customer_email: user.email ?? undefined,

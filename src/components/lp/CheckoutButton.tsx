@@ -8,6 +8,7 @@ type Plan = "pro" | "business";
 
 type CheckoutButtonProps = {
   plan: Plan;
+  interval?: "monthly" | "yearly";
   variant?: "primary" | "secondary";
   className?: string;
   children: React.ReactNode;
@@ -21,6 +22,7 @@ const loginHref = "/login?ref=lp-saas&next=%2Flp%2Fsaas%23pricing";
  */
 export function CheckoutButton({
   plan,
+  interval = "monthly",
   variant = "primary",
   className = "",
   children,
@@ -34,6 +36,7 @@ export function CheckoutButton({
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
       const url = await createStripeCheckoutSession({
         plan,
+        interval,
         successPath: "/dashboard?billing=success",
         cancelPath: "/lp/saas#pricing",
       });

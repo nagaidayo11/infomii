@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect } from "react";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
+import { ImageUpload } from "./ImageUpload";
 import type { EditorCard } from "./types";
 import { CARD_TYPE_LABELS } from "./types";
 import { useEditor2Store } from "./store";
@@ -328,8 +329,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
   }
 
   const content = card.content as Record<string, unknown>;
+  const style = (card.style ?? {}) as Record<string, unknown>;
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
+  };
+  const updateStyle = (key: string, value: string | number | undefined) => {
+    const next = value === undefined || value === "" ? undefined : value;
+    const nextStyle = next != null ? { ...style, [key]: next } : { ...style };
+    if (next === undefined) delete nextStyle[key];
+    onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
   };
   /** 多言語フィールドの表示値（日本語を優先） */
   const display = (key: string) =>
@@ -526,11 +534,18 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="Optional caption"
                 />
+                <div className="w-full">
+                  <label className={labelClass}>画像</label>
+                  <ImageUpload
+                    onUploaded={(url) => update("src", url)}
+                    className="mt-1.5"
+                  />
+                </div>
                 <Input
                   label="Image URL"
                   value={(content.src as string) ?? ""}
                   onChange={(e) => update("src", e.target.value)}
-                  placeholder="https://..."
+                  placeholder="https://... または上からアップロード"
                 />
                 <Input
                   label="Alt text"
@@ -1082,6 +1097,59 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               {card.type === "schedule" ? "営業時間" : "メニュー"}の項目は今後追加できます。
             </p>
           )}
+
+          <SettingsSection title="ブロックスタイル">
+            <div className="w-full">
+              <label className={labelClass}>角丸 (px)</label>
+              <input
+                type="number"
+                min={0}
+                max={32}
+                value={(style.borderRadius as number | string) ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateStyle("borderRadius", v === "" ? undefined : parseInt(v, 10) || 0);
+                }}
+                placeholder="8"
+                className={inputClass}
+              />
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>影</label>
+              <select
+                value={(style.boxShadow as string) ?? ""}
+                onChange={(e) => updateStyle("boxShadow", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">なし</option>
+                <option value="0 1px 3px rgba(0,0,0,0.08)">軽い</option>
+                <option value="0 4px 12px rgba(0,0,0,0.1)">標準</option>
+                <option value="0 8px 24px rgba(0,0,0,0.12)">強め</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>背景色</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={(() => {
+                    const v = (style.backgroundColor as string) ?? "#ffffff";
+                    const hex = v.startsWith("#") ? v.slice(1) : v;
+                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#ffffff";
+                  })()}
+                  onChange={(e) => updateStyle("backgroundColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+                <input
+                  type="text"
+                  value={(style.backgroundColor as string) ?? ""}
+                  onChange={(e) => updateStyle("backgroundColor", e.target.value || undefined)}
+                  placeholder="#ffffff"
+                  className={inputClass + " flex-1"}
+                />
+              </div>
+            </div>
+          </SettingsSection>
         </div>
       </div>
     </>

@@ -27,7 +27,7 @@ const sizeClass: Record<ButtonSize, string> = {
 
 const variantClass: Record<ButtonVariant, string> = {
   primary:
-    "bg-slate-900 text-white border border-slate-900 hover:bg-slate-800 hover:shadow-[0_2px_8px_rgba(15,23,42,0.2)] motion-safe:hover:scale-[1.02]",
+    "bg-slate-900 !text-white border border-slate-900 hover:bg-slate-800 hover:shadow-[0_2px_8px_rgba(15,23,42,0.2)] motion-safe:hover:scale-[1.02]",
   secondary:
     "border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm motion-safe:hover:scale-[1.02]",
   ghost:

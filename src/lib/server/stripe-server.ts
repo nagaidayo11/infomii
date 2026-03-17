@@ -40,8 +40,31 @@ export function getStripeBusinessPriceId(): string {
   return value;
 }
 
-export function getStripePriceIdByPlan(plan: "pro" | "business"): string {
+export function getStripeProAnnualPriceId(): string | null {
+  return process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null;
+}
+
+export function getStripeBusinessAnnualPriceId(): string | null {
+  return process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID ?? null;
+}
+
+export function getStripePriceIdByPlan(plan: "pro" | "business", interval?: "monthly" | "yearly"): string {
+  if (interval === "yearly") {
+    if (plan === "business") {
+      const id = getStripeBusinessAnnualPriceId();
+      if (id) return id;
+    } else {
+      const id = getStripeProAnnualPriceId();
+      if (id) return id;
+    }
+  }
   return plan === "business" ? getStripeBusinessPriceId() : getStripeProPriceId();
+}
+
+export function hasAnnualOption(plan: "pro" | "business"): boolean {
+  return plan === "pro"
+    ? !!getStripeProAnnualPriceId()
+    : !!getStripeBusinessAnnualPriceId();
 }
 
 export function getAppBaseUrl(fallbackOrigin?: string | null): string {

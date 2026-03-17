@@ -76,7 +76,7 @@ export default function TemplatesPage() {
     try {
       const { pageId } = await createPageFromTemplate(templateId);
       if (pageId && typeof pageId === "string") {
-        router.push(`/editor/${pageId}`);
+        router.push(`/editor/${pageId}?from=template`);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "ページの作成に失敗しました");

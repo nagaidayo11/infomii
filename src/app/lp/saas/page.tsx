@@ -29,6 +29,8 @@ export const metadata: Metadata = {
 export default function LpSaaSPage() {
   const loginHref = "/login?ref=lp-saas";
   const ctaHref = "/login?ref=lp-saas&next=%2Fdashboard%3Ftab%3Dcreate";
+  const hasProAnnual = !!process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
+  const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
   return (
     <main className="min-h-screen bg-[#fafafa] text-slate-900 antialiased">
@@ -263,9 +265,16 @@ export default function LpSaaSPage() {
               <li className="flex items-center gap-2">✓ 閲覧分析</li>
               <li className="flex items-center gap-2">✓ 優先サポート</li>
             </ul>
-            <CheckoutButton plan="pro" className="mt-6">
-              Proを申し込む
-            </CheckoutButton>
+            <div className="mt-6 flex flex-col gap-2">
+              <CheckoutButton plan="pro" className="w-full">
+                Proを申し込む{hasProAnnual ? "（月払い）" : ""}
+              </CheckoutButton>
+              {hasProAnnual && (
+                <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full">
+                  年払い ¥19,800（2ヶ月分お得）
+                </CheckoutButton>
+              )}
+            </div>
           </div>
           <Card padding="lg" className="rounded-2xl p-8">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -282,9 +291,16 @@ export default function LpSaaSPage() {
               <li className="flex items-center gap-2">✓ チーム招待</li>
               <li className="flex items-center gap-2">✓ API・ホワイトラベル</li>
             </ul>
-            <CheckoutButton plan="business" variant="secondary" className="mt-6">
-              Businessを申し込む
-            </CheckoutButton>
+            <div className="mt-6 flex flex-col gap-2">
+              <CheckoutButton plan="business" variant="secondary" className="w-full">
+                Businessを申し込む{hasBusinessAnnual ? "（月払い）" : ""}
+              </CheckoutButton>
+              {hasBusinessAnnual && (
+                <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">
+                  年払い ¥49,800（2ヶ月分お得）
+                </CheckoutButton>
+              )}
+            </div>
           </Card>
           </StaggerReveal>
         </ScrollReveal>

@@ -34,9 +34,9 @@ export default function CommercePage() {
                 <tr className="border-b border-slate-200">
                   <th className="bg-slate-50 px-4 py-3 font-semibold text-slate-900">販売価格（税込）</th>
                   <td className="px-4 py-3">
-                    Freeプラン: 0円 / Proプラン: 月額1,980円
+                    Freeプラン: 0円 / Proプラン: 月額1,980円（年払い19,800円） / Businessプラン: 月額4,980円（年払い49,800円）
                     <br />
-                    最新の価格は <Link href="/" className="text-emerald-700 underline">トップページ</Link> に表示します。
+                    最新の価格は <Link href="/lp/saas#pricing" className="text-emerald-700 underline">料金ページ</Link> に表示します。
                   </td>
                 </tr>
                 <tr className="border-b border-slate-200">

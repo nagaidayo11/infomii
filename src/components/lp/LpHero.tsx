@@ -52,9 +52,9 @@ function HeroVisuals() {
       >
         <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
         <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-3">
-          <div className="mb-2 h-2.5 w-16 rounded bg-slate-200" />
           <div className="h-3 w-full rounded bg-slate-100" />
           <div className="mt-2 h-3 w-4/5 rounded bg-slate-100" />
+          <div className="mt-2 h-3 w-3/4 rounded bg-slate-50" />
           <div className="mt-4 h-9 w-full rounded-xl bg-ds-primary/20" />
         </div>
       </motion.div>

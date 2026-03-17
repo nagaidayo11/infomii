@@ -274,6 +274,7 @@ export function DashboardView() {
       <PlanLimitModal
         open={planLimitModalOpen}
         onClose={() => setPlanLimitModalOpen(false)}
+        currentPlan={bootstrap?.subscription?.plan}
       />
     </div>
   );

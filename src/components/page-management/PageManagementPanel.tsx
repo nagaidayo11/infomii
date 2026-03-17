@@ -28,6 +28,7 @@ export function PageManagementPanel() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+  const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,6 +36,7 @@ export function PageManagementPanel() {
     try {
       const boot = await getDashboardBootstrapData();
       setItems(boot.informations);
+      setSubscription(boot.subscription ? { plan: boot.subscription.plan } : null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "一覧の取得に失敗しました");
     } finally {
@@ -240,7 +242,11 @@ export function PageManagementPanel() {
           </p>
         </div>
       </div>
-      <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
+      <PlanLimitModal
+        open={planLimitModalOpen}
+        onClose={() => setPlanLimitModalOpen(false)}
+        currentPlan={subscription?.plan}
+      />
     </AuthGate>
   );
 }

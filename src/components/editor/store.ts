@@ -30,6 +30,8 @@ export type Editor2State = {
   selectedCardId: string | null;
   /** Set by addCard, cleared after insertion animation (for UI micro-interaction). */
   lastAddedCardId: string | null;
+  /** Card IDs to highlight (e.g. after template apply). Cleared after ~3s. */
+  highlightedCardIds: Set<string>;
   /** True while a save is in flight. */
   isSaving: boolean;
   /** Timestamp of last successful save (ms), or null if never saved. */
@@ -38,9 +40,20 @@ export type Editor2State = {
   saveError: string | null;
   /** Current page metadata (id, title, slug, publicUrl). */
   pageMeta: EditorPageMeta;
+  /** Layout mode: list (Notion風) or freeform (Canva風). */
+  layoutMode: "list" | "freeform";
+  /** Freeform: show grid on canvas. */
+  showGrid: boolean;
+  /** Page theme: light | dark | hotel-amber. */
+  pageTheme: "light" | "dark" | "hotel-amber";
   setCards: (cards: EditorCard[]) => void;
+  setShowGrid: (show: boolean) => void;
+  setPageTheme: (theme: "light" | "dark" | "hotel-amber") => void;
+  setLayoutMode: (mode: "list" | "freeform") => void;
   setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null; saveError?: string | null }) => void;
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
+  /** Highlight cards (e.g. from template). Auto-clears after 3s. */
+  highlightFromTemplate: (cardIds: string[]) => void;
   /** Load cards from API (e.g. AI generate from URL). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
   addCard: (type: CardType, index?: number) => void;
@@ -76,12 +89,20 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   historyFuture: [],
   selectedCardId: null,
   lastAddedCardId: null,
+  highlightedCardIds: new Set<string>(),
   isSaving: false,
   lastSavedAt: null,
   saveError: null,
   pageMeta: initialPageMeta,
+  layoutMode: "list",
+  showGrid: true,
+  pageTheme: "light",
 
   setCards: (cards) => set({ cards }),
+
+  setLayoutMode: (mode) => set({ layoutMode: mode }),
+  setShowGrid: (show) => set({ showGrid: show }),
+  setPageTheme: (theme) => set({ pageTheme: theme }),
 
   setAutosaveStatus: (payload) =>
     set((s) => ({
@@ -94,6 +115,11 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     set((s) => ({
       pageMeta: { ...s.pageMeta, ...meta },
     })),
+
+  highlightFromTemplate: (cardIds) => {
+    set({ highlightedCardIds: new Set(cardIds) });
+    setTimeout(() => set({ highlightedCardIds: new Set<string>() }), 3000);
+  },
 
   loadGeneratedCards: (inputs) => {
     const allowed: CardType[] = ["hero", "info", "highlight", "action", "welcome", "wifi", "breakfast", "checkout", "notice", "nearby", "map", "button", "image", "text", "faq", "emergency", "laundry", "taxi", "restaurant", "spa", "gallery", "divider", "schedule", "menu"];

@@ -36,6 +36,22 @@ export type CardType =
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
 
+/** Extract block style (borderRadius, boxShadow, backgroundColor) for rendering. */
+export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
+  const s = card.style;
+  if (!s || typeof s !== "object") return {};
+  return {
+    borderRadius:
+      typeof s.borderRadius === "string"
+        ? s.borderRadius
+        : typeof s.borderRadius === "number"
+          ? `${s.borderRadius}px`
+          : undefined,
+    boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
+    backgroundColor: typeof s.backgroundColor === "string" ? s.backgroundColor : undefined,
+  };
+}
+
 /** Card structure: id, type, content, style, order. Rendered in order. */
 export type Card = {
   id: string;

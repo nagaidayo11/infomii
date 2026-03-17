@@ -5,6 +5,8 @@ import {
   getStripeWebhookSecret,
   getStripeProPriceId,
   getStripeBusinessPriceId,
+  getStripeProAnnualPriceId,
+  getStripeBusinessAnnualPriceId,
 } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
@@ -30,7 +32,11 @@ function mapPlanByPriceId(priceId: string | null): PlanType {
   if (!priceId) return "pro";
   try {
     if (priceId === getStripeBusinessPriceId()) return "business";
+    const bizAnnual = getStripeBusinessAnnualPriceId();
+    if (bizAnnual && priceId === bizAnnual) return "business";
     if (priceId === getStripeProPriceId()) return "pro";
+    const proAnnual = getStripeProAnnualPriceId();
+    if (proAnnual && priceId === proAnnual) return "pro";
   } catch {
     /* env not set, fallback to pro */
   }

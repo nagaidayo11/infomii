@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { Editor2 } from "@/components/editor";
 import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
@@ -12,12 +12,16 @@ import { migrateCardsForEditor } from "@/lib/migrate-cards";
 
 function EditorWithPageId() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const pageId = typeof params.id === "string" ? params.id : null;
+  const fromTemplate = searchParams.get("from") === "template";
   const [pageFound, setPageFound] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
+  const highlightFromTemplate = useEditor2Store((s) => s.highlightFromTemplate);
 
   useEffect(() => {
     if (!pageId) return;
@@ -33,6 +37,10 @@ function EditorWithPageId() {
         setCards(cards);
         selectCard(cards[0]?.id ?? null);
         setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
+        if (fromTemplate) {
+          highlightFromTemplate(cards.map((c) => c.id));
+          router.replace(`/editor/${pageId}`, { scroll: false });
+        }
         setLoaded(true);
         return;
       }
@@ -57,7 +65,7 @@ function EditorWithPageId() {
       }
       setLoaded(true);
     });
-  }, [pageId, setCards, selectCard, setAutosaveStatus]);
+  }, [pageId, fromTemplate, setCards, selectCard, setAutosaveStatus, highlightFromTemplate]);
 
   if (!pageId) {
     return (
