@@ -19,10 +19,11 @@ export type TemplateCardProps = {
   description: string;
   preview_image: string;
   onUse: () => void;
+  onPreview?: () => void;
   using?: boolean;
 };
 
-export function TemplateCard({ name, description, preview_image, onUse, using }: TemplateCardProps) {
+export function TemplateCard({ name, description, preview_image, onUse, onPreview, using }: TemplateCardProps) {
   const imageSrc =
     preview_image?.trim() || FALLBACK_IMAGES_BY_NAME[name] || DEFAULT_FALLBACK;
   return (
@@ -49,16 +50,14 @@ export function TemplateCard({ name, description, preview_image, onUse, using }:
           >
             {using ? "作成中…" : "テンプレートを使う"}
           </button>
-          {imageSrc ? (
-            <a
-              href={imageSrc}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-            >
-              プレビュー
-            </a>
-          ) : null}
+          <button
+            type="button"
+            onClick={onPreview}
+            disabled={!onPreview}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            プレビュー
+          </button>
         </div>
       </div>
     </article>
