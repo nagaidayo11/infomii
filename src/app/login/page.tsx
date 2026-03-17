@@ -126,7 +126,9 @@ export default function LoginPage() {
         deviceType,
         keyword,
       });
-      router.replace(`/editor/page/${id}?guide=start`);
+      if (id && typeof id === "string") {
+        router.replace(`/editor/${id}?guide=start`);
+      }
       return true;
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "テンプレート複製に失敗しました");

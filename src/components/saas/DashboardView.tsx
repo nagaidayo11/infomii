@@ -52,8 +52,12 @@ export function DashboardView() {
     setCreating(true);
     try {
       const id = await createBlankInformation("新規ページ");
-      router.push(`/editor/page/${id}`);
+      if (id && typeof id === "string") {
+        router.push(`/editor/${id}`);
+      }
     } catch {
+      setCreating(false);
+    } finally {
       setCreating(false);
     }
   }
@@ -62,8 +66,12 @@ export function DashboardView() {
     setCreatingCardPage(true);
     try {
       const pageId = await createBlankPage("新規ページ");
-      router.push(`/editor/page/${pageId}`);
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
+      }
     } catch {
+      setCreatingCardPage(false);
+    } finally {
       setCreatingCardPage(false);
     }
   }

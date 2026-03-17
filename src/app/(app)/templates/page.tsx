@@ -75,7 +75,9 @@ export default function TemplatesPage() {
     setError(null);
     try {
       const { pageId } = await createPageFromTemplate(templateId);
-      router.push(`/editor/v2?pageId=${encodeURIComponent(pageId)}`);
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "ページの作成に失敗しました");
     } finally {

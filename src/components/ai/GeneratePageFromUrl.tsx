@@ -64,8 +64,8 @@ export function GeneratePageFromUrl({ className = "" }: { className?: string }) 
         return;
       }
       const pageId = data.page_id ?? data.pageId;
-      if (pageId) {
-        router.push(`/editor/v2?pageId=${encodeURIComponent(pageId)}`);
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/${pageId}`);
         return;
       }
       setError(data.dbError ?? data.message ?? "ページの作成に失敗しました");
