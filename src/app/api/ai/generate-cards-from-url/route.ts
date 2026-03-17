@@ -269,6 +269,22 @@ export async function POST(request: Request) {
       if (memberError || !membership?.hotel_id) {
         return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
       }
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("max_published_pages")
+        .eq("hotel_id", membership.hotel_id)
+        .maybeSingle();
+      const maxPages = sub?.max_published_pages ?? 1;
+      const { count } = await supabase
+        .from("pages")
+        .select("id", { count: "exact", head: true })
+        .eq("hotel_id", membership.hotel_id);
+      if ((count ?? 0) >= maxPages) {
+        return NextResponse.json(
+          { error: `ページ数の上限に達しました（${maxPages}件）。Proプランで5ページまで作成できます。` },
+          { status: 403 }
+        );
+      }
       const title = extracted.hotelName ? `${extracted.hotelName} 館内案内` : "館内案内";
       const slug = `${createSlug(extracted.hotelName || "info")}-${Date.now().toString(36)}`;
       const { data: newPage, error: pageError } = await supabase

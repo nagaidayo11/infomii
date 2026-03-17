@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
-import { getPageViewAnalytics, type PageViewAnalytics } from "@/lib/storage";
+import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
+import { getDashboardBootstrapData, getPageViewAnalytics, type PageViewAnalytics } from "@/lib/storage";
 
 function formatDayLabel(isoDate: string): string {
   const d = new Date(isoDate + "T12:00:00");
@@ -15,6 +16,7 @@ function formatDayLabel(isoDate: string): string {
  * 総ビュー数、国別・言語別・日別の内訳
  */
 export default function PageViewAnalyticsPage() {
+  const [bootstrap, setBootstrap] = useState<{ subscription: { plan: string } | null } | null>(null);
   const [data, setData] = useState<PageViewAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +24,11 @@ export default function PageViewAnalyticsPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    getPageViewAnalytics()
-      .then((d) => {
-        if (mounted) setData(d);
+    Promise.all([getDashboardBootstrapData(), getPageViewAnalytics()])
+      .then(([b, d]) => {
+        if (!mounted) return;
+        setBootstrap(b);
+        setData(d);
       })
       .catch((e) => {
         if (mounted) setError(e instanceof Error ? e.message : "読み込みに失敗しました");
@@ -38,9 +42,11 @@ export default function PageViewAnalyticsPage() {
   }, []);
 
   const maxDay = Math.max(1, ...(data?.byDay?.map((d) => d.count) ?? [0]));
+  const plan = (bootstrap?.subscription?.plan ?? "free") as "free" | "pro" | "business";
 
   return (
     <AuthGate>
+      <AnalyticsProGate plan={plan}>
       <div className="min-h-screen bg-ds-bg px-4 py-8">
         <div className="mx-auto max-w-4xl space-y-6">
           <header className="flex flex-wrap items-end justify-between gap-4">
@@ -178,6 +184,7 @@ export default function PageViewAnalyticsPage() {
           </p>
         </div>
       </div>
+      </AnalyticsProGate>
     </AuthGate>
   );
 }

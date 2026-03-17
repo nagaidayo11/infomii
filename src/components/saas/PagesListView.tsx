@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
   createBlankPage,
+  deleteInformation,
   PAGE_LIMIT_REACHED,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
+import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
+import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { PageCard } from "./PageCard";
 
 export function PagesListView() {
@@ -22,28 +25,51 @@ export function PagesListView() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
-  const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
+  const [subscription, setSubscription] = useState<{
+    plan: "free" | "pro" | "business";
+    maxPublishedPages: number;
+  } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [bootstrap, metrics] = await Promise.all([
+      getDashboardBootstrapData(),
+      getCurrentHotelViewMetrics().catch(() => null),
+    ]);
+    setItems(bootstrap.informations ?? []);
+    setSubscription(
+      bootstrap.subscription
+        ? {
+            plan: bootstrap.subscription.plan,
+            maxPublishedPages: bootstrap.subscription.maxPublishedPages,
+          }
+        : null
+    );
+    setPageStats(metrics?.pageStats ?? []);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    Promise.all([
-      getDashboardBootstrapData(),
-      getCurrentHotelViewMetrics().catch(() => null),
-    ])
-      .then(([bootstrap, metrics]) => {
-        if (!mounted) return;
-        setItems(bootstrap.informations ?? []);
-        setSubscription(bootstrap.subscription ? { plan: bootstrap.subscription.plan } : null);
-        setPageStats(metrics?.pageStats ?? []);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+    load().finally(() => {
+      if (mounted) setLoading(false);
+    });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [load]);
+
+  async function handleDeletePage(id: string) {
+    setDeletingId(id);
+    try {
+      await deleteInformation(id);
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function handleCreatePage() {
     setCreating(true);
@@ -88,8 +114,19 @@ export function PagesListView() {
         currentPlan={subscription?.plan}
       />
 
-      <div className="mt-6">
+      {!loading && subscription && (
+        <div className="mt-6">
+          <UpgradeCtaBanner
+            currentPlan={subscription.plan}
+            publishedCount={items.filter((i) => i.status === "published").length}
+            maxPublishedPages={subscription.maxPublishedPages}
+          />
+        </div>
+      )}
+
+      <div className="mt-6 space-y-6">
         <GeneratePageFromUrl />
+        <GeneratePageFromDescription />
       </div>
 
       {loading ? (
@@ -130,6 +167,7 @@ export function PagesListView() {
                   updatedAt={item.updatedAt}
                   views7d={stat?.views}
                   qrViews7d={stat?.qrViews}
+                  onDelete={deletingId ? undefined : handleDeletePage}
                 />
               </li>
             );

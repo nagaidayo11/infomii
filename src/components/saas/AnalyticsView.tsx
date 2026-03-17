@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
   type HotelViewMetrics,
   type PageViewAnalytics,
 } from "@/lib/storage";
+import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
 function formatDayLabel(isoDate: string): string {
@@ -53,6 +55,7 @@ function SimpleBarRow({
  * Simple charts, clear labels, guest engagement at a glance.
  */
 export function AnalyticsView() {
+  const [bootstrap, setBootstrap] = useState<{ subscription: { plan: string } | null } | null>(null);
   const [metrics, setMetrics] = useState<HotelViewMetrics | null>(null);
   const [pageViews, setPageViews] = useState<PageViewAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,11 +65,13 @@ export function AnalyticsView() {
     let mounted = true;
     setLoading(true);
     Promise.all([
+      getDashboardBootstrapData(),
       getCurrentHotelViewMetrics().catch(() => null),
       getPageViewAnalytics().catch(() => null),
     ])
-      .then(([m, p]) => {
+      .then(([b, m, p]) => {
         if (!mounted) return;
+        setBootstrap(b);
         setMetrics(m ?? null);
         setPageViews(p ?? null);
       })
@@ -91,7 +96,10 @@ export function AnalyticsView() {
   const maxCountry = Math.max(1, ...byCountry.map((c) => c.count));
   const maxLanguage = Math.max(1, ...byLanguage.map((l) => l.count));
 
+  const plan = (bootstrap?.subscription?.plan ?? "free") as "free" | "pro" | "business";
+
   return (
+    <AnalyticsProGate plan={plan}>
     <div className="mx-auto max-w-4xl space-y-8">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">分析ダッシュボード</h1>
@@ -280,5 +288,6 @@ export function AnalyticsView() {
         )}
       </section>
     </div>
+    </AnalyticsProGate>
   );
 }

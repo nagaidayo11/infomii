@@ -50,17 +50,20 @@ export type Database = {
           name: string;
           owner_user_id: string | null;
           created_at: string;
+          custom_domain: string | null;
         };
         Insert: {
           id?: string;
           name: string;
           owner_user_id?: string | null;
           created_at?: string;
+          custom_domain?: string | null;
         };
         Update: {
           name?: string;
           owner_user_id?: string | null;
           created_at?: string;
+          custom_domain?: string | null;
         };
         Relationships: [];
       };
@@ -68,16 +71,19 @@ export type Database = {
         Row: {
           user_id: string;
           hotel_id: string;
+          role: "editor" | "viewer";
           created_at: string;
         };
         Insert: {
           user_id: string;
           hotel_id: string;
+          role?: "editor" | "viewer";
           created_at?: string;
         };
         Update: {
           user_id?: string;
           hotel_id?: string;
+          role?: "editor" | "viewer";
           created_at?: string;
         };
         Relationships: [];
@@ -137,6 +143,7 @@ export type Database = {
           consumed_at: string | null;
           expires_at: string | null;
           created_at: string;
+          role: "editor" | "viewer";
         };
         Insert: {
           id?: string;
@@ -148,6 +155,7 @@ export type Database = {
           consumed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
+          role?: "editor" | "viewer";
         };
         Update: {
           hotel_id?: string;
@@ -158,6 +166,7 @@ export type Database = {
           consumed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
+          role?: "editor" | "viewer";
         };
         Relationships: [];
       };

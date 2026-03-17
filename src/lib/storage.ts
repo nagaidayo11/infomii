@@ -562,8 +562,16 @@ export type DashboardBootstrapData = {
 export type HotelInvite = {
   id: string;
   code: string;
+  role: "editor" | "viewer";
   isActive: boolean;
   consumedAt: string | null;
+  createdAt: string;
+};
+
+export type HotelMember = {
+  userId: string;
+  email: string | null;
+  role: "owner" | "editor" | "viewer";
   createdAt: string;
 };
 
@@ -847,7 +855,7 @@ export async function ensureUserHotelScope(): Promise<string | null> {
 
   const { data: membership, error: membershipError } = await supabase
     .from("hotel_memberships")
-    .select("hotel_id")
+    .select("hotel_id, role")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -906,6 +914,68 @@ export async function ensureUserHotelScope(): Promise<string | null> {
   }
 
   return hotelId;
+}
+
+export type HotelRole = "owner" | "editor" | "viewer";
+
+/** 現在のユーザーの施設内権限。owner/editor は編集可、viewer は閲覧のみ。 */
+export async function getCurrentUserHotelRole(): Promise<HotelRole | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return null;
+  const { data: membership } = await supabase
+    .from("hotel_memberships")
+    .select("hotel_id, role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership?.hotel_id) return null;
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("owner_user_id")
+    .eq("id", membership.hotel_id)
+    .maybeSingle();
+  if (hotel?.owner_user_id === user.id) return "owner";
+  return (membership.role === "viewer" ? "viewer" : "editor") as HotelRole;
+}
+
+/** 施設のカスタムドメイン取得（Business向け） */
+export async function getHotelCustomDomain(): Promise<string | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return null;
+  const { data } = await supabase
+    .from("hotels")
+    .select("custom_domain")
+    .eq("id", hotelId)
+    .maybeSingle();
+  const d = data?.custom_domain;
+  return typeof d === "string" && d.trim() ? d.trim() : null;
+}
+
+/** 施設のカスタムドメイン設定（Businessプランのみ、オーナーのみ） */
+export async function setHotelCustomDomain(domain: string | null): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+  const role = await getCurrentUserHotelRole();
+  if (role !== "owner") throw new Error("オーナーのみカスタムドメインを設定できます");
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") throw new Error("カスタムドメインは Business プランでご利用いただけます");
+  const value = domain && domain.trim() ? domain.trim().toLowerCase() : null;
+  if (value && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(value)) {
+    throw new Error("有効なドメインを入力してください（例: info.example.com）");
+  }
+  const { error } = await supabase
+    .from("hotels")
+    .update({ custom_domain: value })
+    .eq("id", hotelId);
+  if (error) throw toError(error, "カスタムドメインの更新に失敗しました");
 }
 
 export async function getCurrentHotelSubscription(): Promise<HotelSubscription | null> {
@@ -1902,7 +1972,7 @@ function makeInviteCode(length = 8): string {
   return code;
 }
 
-export async function createHotelInvite(): Promise<HotelInvite> {
+export async function createHotelInvite(role: "editor" | "viewer" = "editor"): Promise<HotelInvite> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");
@@ -1927,8 +1997,9 @@ export async function createHotelInvite(): Promise<HotelInvite> {
       code,
       created_by_user_id: user.id,
       is_active: true,
+      role,
     })
-    .select("id,code,is_active,consumed_at,created_at")
+    .select("id,code,role,is_active,consumed_at,created_at")
     .single();
 
   if (error || !data) {
@@ -1947,6 +2018,7 @@ export async function createHotelInvite(): Promise<HotelInvite> {
   return {
     id: data.id,
     code: data.code,
+    role: (data.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
     isActive: data.is_active,
     consumedAt: data.consumed_at,
     createdAt: data.created_at,
@@ -1965,7 +2037,7 @@ export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]
 
   const { data, error } = await supabase
     .from("hotel_invites")
-    .select("id,code,is_active,consumed_at,created_at")
+    .select("id,code,role,is_active,consumed_at,created_at")
     .eq("hotel_id", hotelId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -1977,6 +2049,7 @@ export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]
   return (data ?? []).map((row) => ({
     id: row.id,
     code: row.code,
+    role: (row.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
     isActive: row.is_active,
     consumedAt: row.consumed_at,
     createdAt: row.created_at,
@@ -2598,7 +2671,13 @@ export async function runOpsAlertTest(): Promise<string> {
 }
 
 export async function trackUpgradeClick(
-  context: "dashboard" | "editor" | "lp-pricing-pro" | "lp-pricing-business",
+  context:
+    | "dashboard"
+    | "dashboard-pro"
+    | "dashboard-business"
+    | "editor"
+    | "lp-pricing-pro"
+    | "lp-pricing-business",
 ): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {

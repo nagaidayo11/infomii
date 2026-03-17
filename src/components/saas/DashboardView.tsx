@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  getCurrentUserHotelRole,
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
   createBlankPage,
+  deleteInformation,
   PAGE_LIMIT_REACHED,
   type HotelViewMetrics,
   type PageViewAnalytics,
 } from "@/lib/storage";
 import type { DashboardBootstrapData } from "@/lib/storage";
+import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
+import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
+import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FadeIn, ScrollReveal } from "@/components/motion";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
@@ -29,28 +34,46 @@ export function DashboardView() {
   const [creatingCardPage, setCreatingCardPage] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
+  const canEdit = role === "owner" || role === "editor";
+
+  const loadBootstrap = useCallback(async () => {
     setLoading(true);
-    Promise.all([
+    const [b, v, p, r] = await Promise.all([
       getDashboardBootstrapData(),
       getCurrentHotelViewMetrics().catch(() => null),
       getPageViewAnalytics().catch(() => null),
-    ])
-      .then(([b, v, p]) => {
-        if (!mounted) return;
-        setBootstrap(b);
-        setViewMetrics(v);
-        setPageViewAnalytics(p);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+      getCurrentUserHotelRole().catch(() => null),
+    ]);
+    setBootstrap(b);
+    setViewMetrics(v);
+    setPageViewAnalytics(p);
+    setRole(r);
+  }, []);
+
+  async function handleDeletePage(id: string) {
+    setDeletingId(id);
+    try {
+      await deleteInformation(id);
+      await loadBootstrap();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+    loadBootstrap().finally(() => {
+      if (mounted) setLoading(false);
+    });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadBootstrap]);
 
   async function handleCreatePage() {
     setCreateError(null);
@@ -105,6 +128,7 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
+      <OnboardingTour />
       <FadeIn>
         <header>
           <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
@@ -117,32 +141,52 @@ export function DashboardView() {
         </header>
       </FadeIn>
 
+      {/* Upgrade CTA: Free → Pro, Pro（上限接近）→ Business */}
+      {!loading && bootstrap?.subscription && (
+        <ScrollReveal>
+          <UpgradeCtaBanner
+            currentPlan={bootstrap.subscription.plan as "free" | "pro" | "business"}
+            publishedCount={published.length}
+            maxPublishedPages={bootstrap.subscription.maxPublishedPages}
+          />
+        </ScrollReveal>
+      )}
+
       {/* Primary action: create once, deliver via QR */}
       <ScrollReveal>
       <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+        {!canEdit && (
+          <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={handleCreatePage}
-            disabled={creating}
-            className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
-          >
-            {creating ? "作成中…" : "ページを作成"}
-          </button>
-          <Link
-            href="/templates"
-            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            テンプレートから作成
-          </Link>
-          <button
-            type="button"
-            onClick={() => void handleCreateCardPage()}
-            disabled={creatingCardPage}
-            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
-          >
-            {creatingCardPage ? "作成中…" : "カードで新規ページ"}
-          </button>
+          {canEdit && (
+            <>
+              <button
+                type="button"
+                onClick={handleCreatePage}
+                disabled={creating}
+                className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+              >
+                {creating ? "作成中…" : "ページを作成"}
+              </button>
+              <Link
+                href="/templates"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                テンプレートから作成
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleCreateCardPage()}
+                disabled={creatingCardPage}
+                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                {creatingCardPage ? "作成中…" : "カードで新規ページ"}
+              </button>
+            </>
+          )}
         </div>
         {createError && (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -152,9 +196,12 @@ export function DashboardView() {
             </p>
           </div>
         )}
-        <div className="mt-6 border-t border-slate-100 pt-6">
+        {canEdit && (
+        <div className="mt-6 space-y-6 border-t border-slate-100 pt-6">
           <GeneratePageFromUrl />
+          <GeneratePageFromDescription />
         </div>
+        )}
       </section>
       </ScrollReveal>
 
@@ -212,9 +259,26 @@ export function DashboardView() {
             ))}
           </div>
         ) : recent.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-            <p className="text-slate-600">まだ案内ページがありません</p>
-            <p className="mt-1 text-sm text-slate-500">1つ作ると、QRでお客様に届けられます。「ページを作成」から始めてください。</p>
+          <div className="mt-4 space-y-4">
+            <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/80 p-6">
+              <h3 className="font-semibold text-emerald-900">テンプレートから始めましょう</h3>
+              <p className="mt-1 text-sm text-emerald-800">
+                館内案内・WiFi・朝食・チェックアウト・周辺観光の型が入ったテンプレートを使うと、編集するだけですぐ公開できます。
+              </p>
+              <Link
+                href="/templates"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+              >
+                テンプレートを選ぶ
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+              <p className="text-slate-600">まだ案内ページがありません</p>
+              <p className="mt-1 text-sm text-slate-500">1つ作ると、QRでお客様に届けられます。「ページを作成」から始めてください。</p>
+            </div>
           </div>
         ) : (
           <div className="mt-3 space-y-2">
@@ -230,6 +294,8 @@ export function DashboardView() {
                   updatedAt={item.updatedAt}
                   views7d={stat?.views}
                   qrViews7d={stat?.qrViews}
+                  onDelete={deletingId ? undefined : handleDeletePage}
+                  canEdit={canEdit}
                 />
               );
             })}
@@ -256,6 +322,8 @@ export function DashboardView() {
                   updatedAt={item.updatedAt}
                   views7d={stat?.views}
                   qrViews7d={stat?.qrViews}
+                  onDelete={deletingId ? undefined : handleDeletePage}
+                  canEdit={canEdit}
                 />
               );
             })}

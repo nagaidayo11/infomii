@@ -7,6 +7,40 @@ import { BlockToolbar } from "./BlockToolbar";
 import { useEditor2Store } from "./store";
 import { getBlockStyle, type EditorCard } from "./types";
 
+const VIEWPORT_SIZES = [
+  { label: "375px", width: 375 },
+  { label: "414px", width: 414 },
+] as const;
+
+function MobileCanvasFrame({
+  children,
+  width = 375,
+}: {
+  children: React.ReactNode;
+  width?: number;
+}) {
+  const bezel = 12;
+  return (
+    <div
+      className="flex shrink-0 flex-col items-center"
+      aria-label="モバイルプレビュー（ゲスト表示）"
+    >
+      <div
+        className="flex flex-col rounded-[2rem] border border-slate-200/90 bg-slate-100/80 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
+        style={{ width: width + bezel * 2 }}
+      >
+        <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
+        <div
+          className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
+          style={{ width }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_W = 280;
 const DEFAULT_H = 100;
 const MIN_W = 120;
@@ -108,6 +142,7 @@ export function FreeformCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const showGrid = useEditor2Store((s) => s.showGrid);
   const pageTheme = useEditor2Store((s) => s.pageTheme);
+  const [viewportWidth, setViewportWidth] = useState(375);
   const [dragState, setDragState] = useState<{
     id: string;
     x: number;
@@ -191,28 +226,57 @@ export function FreeformCanvas({
   };
   const theme = themeStyles[pageTheme];
 
+  const canvasW = viewportWidth;
+  const canvasH = 800;
+
   return (
     <div
       ref={canvasRef}
-      className="relative h-full w-full overflow-auto"
-      style={{
-        background: theme.bg,
-        backgroundImage: showGrid
-          ? `radial-gradient(circle at 1px 1px, ${theme.grid} 1px, transparent 0)`
-          : undefined,
-        backgroundSize: "24px 24px",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onSelectCard(null);
-      }}
+      className="flex flex-1 flex-col overflow-hidden outline-none"
+      tabIndex={-1}
+      onClick={() => onSelectCard(null)}
     >
-      <div className="min-h-[900px] min-w-[900px] p-6">
-        <div
-          className={`relative h-[800px] w-[800px] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
-        >
+      <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
+        <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
+        {VIEWPORT_SIZES.map(({ label, width }) => (
+          <button
+            key={width}
+            type="button"
+            onClick={() => setViewportWidth(width)}
+            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+              viewportWidth === width
+                ? "bg-slate-900 !text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div
+        className="flex flex-1 justify-center overflow-auto p-6"
+        style={{
+          background: theme.bg,
+          backgroundImage: showGrid
+            ? `radial-gradient(circle at 1px 1px, ${theme.grid} 1px, transparent 0)`
+            : undefined,
+          backgroundSize: "24px 24px",
+        }}
+      >
+        <MobileCanvasFrame width={viewportWidth}>
+          <div
+            className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
+            style={{ width: canvasW, height: canvasH, minHeight: canvasH }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) onSelectCard(null);
+            }}
+          >
           {/* Guide lines during drag */}
           {dragState && (
-            <svg className="pointer-events-none absolute inset-0 z-20" style={{ overflow: "visible" }}>
+            <svg
+              className="pointer-events-none absolute inset-0 z-20"
+              style={{ overflow: "visible", width: canvasW, height: canvasH }}
+            >
               {dragState.guides.map((g, i) =>
                 g.axis === "x" ? (
                   <line
@@ -220,7 +284,7 @@ export function FreeformCanvas({
                     x1={g.value}
                     y1={0}
                     x2={g.value}
-                    y2={800}
+                    y2={canvasH}
                     stroke="#3b82f6"
                     strokeWidth={1}
                     strokeDasharray="4 4"
@@ -230,7 +294,7 @@ export function FreeformCanvas({
                     key={`y-${i}`}
                     x1={0}
                     y1={g.value}
-                    x2={800}
+                    x2={canvasW}
                     y2={g.value}
                     stroke="#3b82f6"
                     strokeWidth={1}
@@ -303,7 +367,8 @@ export function FreeformCanvas({
               </Rnd>
             );
           })}
-        </div>
+          </div>
+        </MobileCanvasFrame>
       </div>
     </div>
   );

@@ -23,23 +23,18 @@ async function generateCardsFromDescription(
 ): Promise<Array<{ type: string; content: Record<string, unknown>; order: number }>> {
   const schemas = ALLOWED_TYPES.map((t) => `${t}: ${CARD_SCHEMAS[t]}`).join("\n");
 
-  const prompt = `You are generating a mobile guest-information page. The user described the page they want.
+  const prompt = `あなたは宿泊施設・店舗向けのモバイル案内ページを生成するAIです。ユーザーの説明に基づいて、適切なカードを生成してください。
 
-User description: "${description.slice(0, 800)}"
+ユーザーの説明: "${description.slice(0, 800)}"
 
-Generate a JSON array of cards for this page. Use ONLY these card types: ${ALLOWED_TYPES.join(", ")}.
-For each card, output: type, content (object matching the schema below), and order (0-based index).
+以下のカードタイプのみ使用: ${ALLOWED_TYPES.join(", ")}. 各カードは type, content（下記スキーマ）, order（0始まり）を含める。
 
-Content schemas (use only these field names; values should be short, useful placeholder or example text in the same language as the user's description):
+スキーマ:
 ${schemas}
 
-Examples of good output:
-- Hotel info page → text (welcome), wifi, breakfast, notice, map, button
-- Restaurant → text (title), notice (hours), text (menu), map, button (reservation link)
-- Event guide → text, notice, image, button
+出力例: ホテル→text(welcome), wifi, breakfast, notice, map, button / レストラン→text(タイトル), notice(営業時間), text(メニュー), map, button
 
-Output ONLY a valid JSON array. No markdown, no code fence, no explanation. Example:
-[{"type":"text","content":{"content":"Welcome to our hotel"},"order":0},{"type":"wifi","content":{"ssid":"GuestWiFi","password":"guest123","description":"Lobby and rooms"},"order":1}]`;
+JSON配列のみ出力。マークダウン・説明禁止。`;
 
   const res = await fetch(OPENAI_API_URL, {
     method: "POST",
