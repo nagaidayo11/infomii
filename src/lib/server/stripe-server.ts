@@ -32,6 +32,41 @@ export function getStripeProPriceId(): string {
   return value;
 }
 
+export function getStripeBusinessPriceId(): string {
+  const value = process.env.STRIPE_BUSINESS_PRICE_ID;
+  if (!value) {
+    throw new Error("STRIPE_BUSINESS_PRICE_ID が未設定です");
+  }
+  return value;
+}
+
+export function getStripeProAnnualPriceId(): string | null {
+  return process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null;
+}
+
+export function getStripeBusinessAnnualPriceId(): string | null {
+  return process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID ?? null;
+}
+
+export function getStripePriceIdByPlan(plan: "pro" | "business", interval?: "monthly" | "yearly"): string {
+  if (interval === "yearly") {
+    if (plan === "business") {
+      const id = getStripeBusinessAnnualPriceId();
+      if (id) return id;
+    } else {
+      const id = getStripeProAnnualPriceId();
+      if (id) return id;
+    }
+  }
+  return plan === "business" ? getStripeBusinessPriceId() : getStripeProPriceId();
+}
+
+export function hasAnnualOption(plan: "pro" | "business"): boolean {
+  return plan === "pro"
+    ? !!getStripeProAnnualPriceId()
+    : !!getStripeBusinessAnnualPriceId();
+}
+
 export function getAppBaseUrl(fallbackOrigin?: string | null): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;

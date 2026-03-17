@@ -22,8 +22,12 @@ export function CardSettings({ block }: CardSettingsProps) {
 
   if (!block) {
     return (
-      <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-card">
-        <div className="border-b border-ds-border px-4 py-4">
+      <aside
+        className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-bg"
+        role="region"
+        aria-label="カード設定"
+      >
+        <div className="border-b border-ds-border bg-ds-card px-4 py-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             カード設定
           </h2>
@@ -48,8 +52,12 @@ export function CardSettings({ block }: CardSettingsProps) {
   };
 
   return (
-    <aside className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-bg">
-      <div className="flex shrink-0 items-center justify-between border-b border-ds-border bg-ds-card px-4 py-3 shadow-[var(--shadow-ds-xs)]">
+    <aside
+      className="flex h-full w-[320px] shrink-0 flex-col border-l border-ds-border bg-ds-bg"
+      role="region"
+      aria-label="カード設定"
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-ds-border bg-ds-card px-4 py-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-600">
           {BLOCK_TYPE_LABELS[block.type]}
         </h2>

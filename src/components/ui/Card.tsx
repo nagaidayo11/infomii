@@ -8,6 +8,7 @@ type CardProps = {
   hover?: boolean;
 };
 
+/** Consistent card padding: none | sm (16px) | md (20px) | lg (24px). */
 const paddingClass = {
   none: "",
   sm: "p-4",
@@ -16,8 +17,7 @@ const paddingClass = {
 };
 
 /**
- * SaaS landing page–aligned card.
- * rounded-xl, light border, soft shadow. Optional hover elevation.
+ * Card container: 余白のみで区切り。外枠・影はなし。
  */
 export function Card({
   children,
@@ -28,13 +28,10 @@ export function Card({
   return (
     <div
       className={
-        "rounded-xl border border-slate-200/80 bg-white " +
-        "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.02)] " +
-        "transition-[box-shadow,border-color,transform] duration-200 ease-out " +
+        "rounded-xl bg-white " +
+        "transition-[transform] duration-200 ease-out " +
         paddingClass[padding] +
-        (hover
-          ? " hover:border-slate-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.03)] hover:-translate-y-0.5"
-          : "") +
+        (hover ? " hover:-translate-y-0.5" : "") +
         " " +
         className
       }

@@ -10,9 +10,18 @@ const inter = Inter({
 });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
+const metadataBase = (() => {
+  try {
+    const u = appUrl?.trim();
+    if (u && u.startsWith("http")) return new URL(u);
+  } catch {
+    /* fallback */
+  }
+  return new URL("https://infomii.com");
+})();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(appUrl),
+  metadataBase,
   title: {
     default: "Infomii | ホテル案内ページ作成SaaS",
     template: "%s | Infomii",

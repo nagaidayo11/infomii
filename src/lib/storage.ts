@@ -510,7 +510,7 @@ function blocksToImages(blocks: InformationBlock[]): string[] {
     .slice(0, 3);
 }
 
-export type SubscriptionPlan = "free" | "pro";
+export type SubscriptionPlan = "free" | "pro" | "business";
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 
 export type HotelSubscription = {
@@ -562,8 +562,16 @@ export type DashboardBootstrapData = {
 export type HotelInvite = {
   id: string;
   code: string;
+  role: "editor" | "viewer";
   isActive: boolean;
   consumedAt: string | null;
+  createdAt: string;
+};
+
+export type HotelMember = {
+  userId: string;
+  email: string | null;
+  role: "owner" | "editor" | "viewer";
   createdAt: string;
 };
 
@@ -763,7 +771,9 @@ function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBl
 }
 
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
-  return plan === "pro" ? 1000 : 3;
+  if (plan === "business") return 999;
+  if (plan === "pro") return 5;
+  return 1;
 }
 
 function bootstrapLocalData(): Information[] {
@@ -845,7 +855,7 @@ export async function ensureUserHotelScope(): Promise<string | null> {
 
   const { data: membership, error: membershipError } = await supabase
     .from("hotel_memberships")
-    .select("hotel_id")
+    .select("hotel_id, role")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -904,6 +914,68 @@ export async function ensureUserHotelScope(): Promise<string | null> {
   }
 
   return hotelId;
+}
+
+export type HotelRole = "owner" | "editor" | "viewer";
+
+/** 現在のユーザーの施設内権限。owner/editor は編集可、viewer は閲覧のみ。 */
+export async function getCurrentUserHotelRole(): Promise<HotelRole | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) return null;
+  const { data: membership } = await supabase
+    .from("hotel_memberships")
+    .select("hotel_id, role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership?.hotel_id) return null;
+  const { data: hotel } = await supabase
+    .from("hotels")
+    .select("owner_user_id")
+    .eq("id", membership.hotel_id)
+    .maybeSingle();
+  if (hotel?.owner_user_id === user.id) return "owner";
+  return (membership.role === "viewer" ? "viewer" : "editor") as HotelRole;
+}
+
+/** 施設のカスタムドメイン取得（Business向け） */
+export async function getHotelCustomDomain(): Promise<string | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return null;
+  const { data } = await supabase
+    .from("hotels")
+    .select("custom_domain")
+    .eq("id", hotelId)
+    .maybeSingle();
+  const d = data?.custom_domain;
+  return typeof d === "string" && d.trim() ? d.trim() : null;
+}
+
+/** 施設のカスタムドメイン設定（Businessプランのみ、オーナーのみ） */
+export async function setHotelCustomDomain(domain: string | null): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+  const role = await getCurrentUserHotelRole();
+  if (role !== "owner") throw new Error("オーナーのみカスタムドメインを設定できます");
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") throw new Error("カスタムドメインは Business プランでご利用いただけます");
+  const value = domain && domain.trim() ? domain.trim().toLowerCase() : null;
+  if (value && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(value)) {
+    throw new Error("有効なドメインを入力してください（例: info.example.com）");
+  }
+  const { error } = await supabase
+    .from("hotels")
+    .update({ custom_domain: value })
+    .eq("id", hotelId);
+  if (error) throw toError(error, "カスタムドメインの更新に失敗しました");
 }
 
 export async function getCurrentHotelSubscription(): Promise<HotelSubscription | null> {
@@ -1618,6 +1690,12 @@ export function buildPublicQrUrl(slug: string): string {
   return `${window.location.origin}/p/${slug}?src=qr`;
 }
 
+/** Public URL for card-based page (guest view at /v/[slug]). */
+export function buildPublicUrlV(slug: string): string {
+  if (typeof window === "undefined") return `/v/${slug}`;
+  return `${window.location.origin}/v/${slug}`;
+}
+
 export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
   const empty: HotelViewMetrics = {
     totalViews7d: 0,
@@ -1705,7 +1783,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
       const agg = aggregate.get(row.id) ?? { views: 0, qrViews: 0 };
       return {
         informationId: row.id,
-        title: row.title ?? "名称未設定",
+        title: row.title ?? "",
         views: agg.views,
         qrViews: agg.qrViews,
       };
@@ -1788,6 +1866,71 @@ export function qrCodeImageUrl(dataUrl: string, size = 280): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(dataUrl)}`;
 }
 
+export type PageViewAnalytics = {
+  totalViews: number;
+  byCountry: Array<{ country: string; count: number }>;
+  byLanguage: Array<{ language: string; count: number }>;
+  byDay: Array<{ date: string; count: number }>;
+};
+
+/**
+ * QR analytics: page_views for current hotel's pages (last 30 days).
+ */
+export async function getPageViewAnalytics(): Promise<PageViewAnalytics> {
+  const empty: PageViewAnalytics = {
+    totalViews: 0,
+    byCountry: [],
+    byLanguage: [],
+    byDay: [],
+  };
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return empty;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return empty;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data: infoRows, error: infoError } = await supabase
+    .from("informations")
+    .select("id")
+    .eq("hotel_id", hotelId);
+  if (infoError || !infoRows?.length) return empty;
+  const pageIds = infoRows.map((r) => r.id);
+
+  const { data: views, error } = await supabase
+    .from("page_views")
+    .select("country, language, viewed_at, device")
+    .in("page_id", pageIds)
+    .gte("viewed_at", thirtyDaysAgo.toISOString());
+  if (error) throw toError(error, "ページビュー分析の取得に失敗しました");
+
+  const rows = views ?? [];
+  const totalViews = rows.length;
+  const countryCount = new Map<string, number>();
+  const languageCount = new Map<string, number>();
+  const dayCount = new Map<string, number>();
+  for (const r of rows) {
+    const c = (r.country as string) || "不明";
+    countryCount.set(c, (countryCount.get(c) ?? 0) + 1);
+    const lang = (r.language as string) || "不明";
+    languageCount.set(lang, (languageCount.get(lang) ?? 0) + 1);
+    const dateKey = (r.viewed_at as string).slice(0, 10);
+    dayCount.set(dateKey, (dayCount.get(dateKey) ?? 0) + 1);
+  }
+
+  const byCountry = Array.from(countryCount.entries())
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count);
+  const byLanguage = Array.from(languageCount.entries())
+    .map(([language, count]) => ({ language, count }))
+    .sort((a, b) => b.count - a.count);
+  const sortedDays = Array.from(dayCount.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const byDay = sortedDays.map(([date, count]) => ({ date, count }));
+
+  return { totalViews, byCountry, byLanguage, byDay };
+}
+
 export async function listCurrentHotelAuditLogs(limit = 20): Promise<HotelAuditLog[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
@@ -1830,7 +1973,7 @@ function makeInviteCode(length = 8): string {
   return code;
 }
 
-export async function createHotelInvite(): Promise<HotelInvite> {
+export async function createHotelInvite(role: "editor" | "viewer" = "editor"): Promise<HotelInvite> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");
@@ -1855,8 +1998,9 @@ export async function createHotelInvite(): Promise<HotelInvite> {
       code,
       created_by_user_id: user.id,
       is_active: true,
+      role,
     })
-    .select("id,code,is_active,consumed_at,created_at")
+    .select("id,code,role,is_active,consumed_at,created_at")
     .single();
 
   if (error || !data) {
@@ -1875,6 +2019,7 @@ export async function createHotelInvite(): Promise<HotelInvite> {
   return {
     id: data.id,
     code: data.code,
+    role: (data.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
     isActive: data.is_active,
     consumedAt: data.consumed_at,
     createdAt: data.created_at,
@@ -1893,7 +2038,7 @@ export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]
 
   const { data, error } = await supabase
     .from("hotel_invites")
-    .select("id,code,is_active,consumed_at,created_at")
+    .select("id,code,role,is_active,consumed_at,created_at")
     .eq("hotel_id", hotelId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -1905,6 +2050,7 @@ export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]
   return (data ?? []).map((row) => ({
     id: row.id,
     code: row.code,
+    role: (row.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
     isActive: row.is_active,
     consumedAt: row.consumed_at,
     createdAt: row.created_at,
@@ -2009,6 +2155,8 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
 type CheckoutSessionOptions = {
   successPath?: string;
   cancelPath?: string;
+  plan?: "pro" | "business";
+  interval?: "monthly" | "yearly";
 };
 
 export type OpsHealthSnapshot = {
@@ -2523,7 +2671,15 @@ export async function runOpsAlertTest(): Promise<string> {
   return `${payload.message || "通知テストを送信しました"} / Slack: ${slack?.ok ? "OK" : "NG"} / Mail: ${email?.ok ? "OK" : "NG"}${email?.detail ? ` (${email.detail})` : ""}`;
 }
 
-export async function trackUpgradeClick(context: "dashboard" | "editor"): Promise<void> {
+export async function trackUpgradeClick(
+  context:
+    | "dashboard"
+    | "dashboard-pro"
+    | "dashboard-business"
+    | "editor"
+    | "lp-pricing-pro"
+    | "lp-pricing-business",
+): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     return;
@@ -3269,6 +3425,8 @@ export async function createStripeCheckoutSession(
     body: JSON.stringify({
       successPath: options?.successPath,
       cancelPath: options?.cancelPath,
+      plan: options?.plan ?? "pro",
+      interval: options?.interval ?? "monthly",
     }),
   });
 
@@ -3312,4 +3470,274 @@ export async function createStripePortalSession(): Promise<string> {
   }
 
   return payload.url;
+}
+
+// --- Template marketplace (templates + pages + cards) ---
+
+export type TemplateRow = {
+  id: string;
+  name: string;
+  description: string;
+  preview_image: string;
+  cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
+  created_at: string;
+  /** Category for marketplace filter: business | resort | ryokan | airbnb | guide */
+  category?: string | null;
+};
+
+/** Returns true if the error indicates the templates table does not exist (e.g. not yet created in Supabase). */
+function isTemplatesTableMissing(error: unknown): boolean {
+  const msg = error && typeof error === "object" && "message" in error
+    ? String((error as { message?: unknown }).message)
+    : "";
+  return (
+    /schema cache/i.test(msg) ||
+    /could not find the table.*templates/i.test(msg) ||
+    /relation "public\.templates" does not exist/i.test(msg)
+  );
+}
+
+export async function listTemplates(): Promise<TemplateRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("templates")
+    .select("id,name,description,preview_image,cards,created_at,category")
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (isTemplatesTableMissing(error)) return [];
+    throw toError(error, "テンプレート一覧の取得に失敗しました");
+  }
+  return (data ?? []) as TemplateRow[];
+}
+
+/** Error code when page limit is reached (for UI to show upgrade modal). */
+export const PAGE_LIMIT_REACHED = "PAGE_LIMIT_REACHED";
+
+/** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
+export async function createBlankPage(title = ""): Promise<string> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const sub = await getCurrentHotelSubscription();
+  if (sub) {
+    const { count, error } = await supabase
+      .from("pages")
+      .select("id", { count: "exact", head: true })
+      .eq("hotel_id", hotelId);
+    if (!error && (count ?? 0) >= sub.maxPublishedPages) {
+      const e = new Error(
+        `ページ数の上限に達しました（${sub.maxPublishedPages}件）。Proプランで5ページまで作成できます。`
+      ) as Error & { code?: string };
+      e.code = PAGE_LIMIT_REACHED;
+      throw e;
+    }
+  }
+
+  const nextTitle = (title && title.trim()) || "";
+  const baseSlug = createSlug(nextTitle);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+  const { data: newPage, error } = await supabase
+    .from("pages")
+    .insert({ hotel_id: hotelId, title: nextTitle, slug })
+    .select("id")
+    .single();
+  if (error || !newPage) throw toError(error ?? new Error("Insert failed"), "ページの作成に失敗しました");
+  return newPage.id as string;
+}
+
+export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: template, error: tError } = await supabase
+    .from("templates")
+    .select("id,name,cards")
+    .eq("id", templateId)
+    .single();
+  if (tError || !template) throw toError(tError ?? new Error("Not found"), "テンプレートの取得に失敗しました");
+
+  const title = (template.name as string) ?? "無題のページ";
+  const baseSlug = createSlug(title);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+  const { data: newPage, error: pError } = await supabase
+    .from("pages")
+    .insert({ hotel_id: hotelId, title, slug })
+    .select("id")
+    .single();
+  if (pError || !newPage) throw toError(pError ?? new Error("Insert failed"), "ページの作成に失敗しました");
+  const pageId = newPage.id as string;
+
+  const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  if (cards.length > 0) {
+    const rows = cards.map((c, i) => ({
+      page_id: pageId,
+      type: c.type ?? "text",
+      content: c.content ?? {},
+      order: c.order ?? i,
+    }));
+    const { error: cError } = await supabase.from("cards").insert(rows);
+    if (cError) throw toError(cError, "カードの挿入に失敗しました");
+  }
+
+  return { pageId };
+}
+
+export type PageCardRow = { id: string; type: string; content: Record<string, unknown>; order: number };
+
+/** Key used inside content JSON to persist card style (no DB schema change). */
+const STYLE_KEY = "_style";
+
+/** Convert a DB row to Card: extract style from content._style, return content without it. */
+export function rowToCard(row: PageCardRow): { id: string; type: string; content: Record<string, unknown>; style?: Record<string, unknown>; order: number } {
+  const content = { ...row.content };
+  const style = content[STYLE_KEY] as Record<string, unknown> | undefined;
+  delete content[STYLE_KEY];
+  return {
+    id: row.id,
+    type: row.type,
+    content,
+    ...(style != null && typeof style === "object" && !Array.isArray(style) ? { style } : {}),
+    order: row.order,
+  };
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isSupabaseId(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
+export type PageRow = { id: string; title: string; slug: string };
+
+/** List all pages for the current hotel (card-based pages). Used for pageLinks block. */
+export async function listPagesForHotel(): Promise<PageRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  const hotelId = await ensureUserHotelScope();
+  if (!supabase || !hotelId) return [];
+  const { data, error } = await supabase
+    .from("pages")
+    .select("id,title,slug")
+    .eq("hotel_id", hotelId)
+    .order("title", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as PageRow[];
+}
+
+/** Delete a card-based page and its cards. Fails if page is not in current hotel scope. */
+export async function deletePage(pageId: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: page, error: fetchError } = await supabase
+    .from("pages")
+    .select("id")
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId)
+    .maybeSingle();
+  if (fetchError || !page) throw toError(fetchError ?? new Error("Not found"), "ページが見つかりません");
+
+  const { error: cardsError } = await supabase.from("cards").delete().eq("page_id", pageId);
+  if (cardsError) throw toError(cardsError, "カードの削除に失敗しました");
+  const { error: pageError } = await supabase.from("pages").delete().eq("id", pageId);
+  if (pageError) throw toError(pageError, "ページの削除に失敗しました");
+}
+
+export async function getPage(pageId: string): Promise<PageRow | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("pages")
+    .select("id,title,slug")
+    .eq("id", pageId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as PageRow;
+}
+
+export async function getPageCards(pageId: string): Promise<PageCardRow[]> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("cards")
+    .select("id,type,content,order")
+    .eq("page_id", pageId)
+    .order("order", { ascending: true });
+  if (error) return [];
+  return (data ?? []) as PageCardRow[];
+}
+
+/** Page with cards array in display order. Card-based page structure. */
+export type PageWithCards = { id: string; title: string; cards: ReturnType<typeof rowToCard>[] };
+
+export async function getPageWithCards(pageId: string): Promise<PageWithCards | null> {
+  const [page, rows] = await Promise.all([getPage(pageId), getPageCards(pageId)]);
+  if (!page) return null;
+  const cards = rows.map(rowToCard);
+  return { id: page.id, title: page.title, cards };
+}
+
+export type EditorCardForSave = {
+  id: string;
+  type: string;
+  content: Record<string, unknown>;
+  style?: Record<string, unknown>;
+  order: number;
+};
+
+/**
+ * Persist cards to Supabase. Updates existing (by UUID id), inserts new (nanoid), deletes removed.
+ * Returns map of client id -> server id for newly inserted cards so the store can be updated.
+ */
+export async function savePageCards(
+  pageId: string,
+  cards: EditorCardForSave[]
+): Promise<{ updatedIds: Record<string, string> }> {
+  const supabase = getBrowserSupabaseClient();
+  const updatedIds: Record<string, string> = {};
+  if (!supabase) return { updatedIds };
+
+  const existing = await getPageCards(pageId);
+  const existingIds = new Set(existing.map((r) => r.id));
+  const storeIds = new Set(cards.map((c) => c.id));
+
+  for (const card of cards) {
+    const contentToSave =
+      card.style != null && Object.keys(card.style).length > 0
+        ? { ...card.content, [STYLE_KEY]: card.style }
+        : card.content;
+
+    if (isSupabaseId(card.id)) {
+      await supabase
+        .from("cards")
+        .update({ content: contentToSave, order: card.order })
+        .eq("id", card.id);
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("cards")
+        .insert({
+          page_id: pageId,
+          type: card.type,
+          content: contentToSave,
+          order: card.order,
+        })
+        .select("id")
+        .single();
+      if (!error && inserted?.id) updatedIds[card.id] = inserted.id as string;
+    }
+  }
+
+  const toDelete = existing.filter((r) => !storeIds.has(r.id));
+  for (const row of toDelete) {
+    await supabase.from("cards").delete().eq("id", row.id);
+  }
+
+  return { updatedIds };
 }

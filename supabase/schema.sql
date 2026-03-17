@@ -31,9 +31,9 @@ create table if not exists public.informations (
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   hotel_id uuid not null unique references public.hotels(id) on delete cascade,
-  plan text not null default 'free' check (plan in ('free', 'pro')),
+  plan text not null default 'free' check (plan in ('free', 'pro', 'business')),
   status text not null default 'active' check (status in ('trialing', 'active', 'past_due', 'canceled')),
-  max_published_pages integer not null default 3 check (max_published_pages >= 0),
+  max_published_pages integer not null default 1 check (max_published_pages >= 0),
   stripe_customer_id text,
   stripe_subscription_id text,
   stripe_price_id text,
@@ -82,7 +82,7 @@ add column if not exists plan text not null default 'free';
 alter table public.subscriptions
 add column if not exists status text not null default 'active';
 alter table public.subscriptions
-add column if not exists max_published_pages integer not null default 3;
+add column if not exists max_published_pages integer not null default 1;
 alter table public.subscriptions
 add column if not exists updated_at timestamptz not null default now();
 alter table public.subscriptions
@@ -107,6 +107,20 @@ alter table public.information_views
 add column if not exists user_agent text;
 alter table public.information_views
 add column if not exists created_at timestamptz not null default now();
+
+-- QR analytics: page views for public pages (/p/[slug])
+create table if not exists public.page_views (
+  id uuid primary key default gen_random_uuid(),
+  page_id uuid not null references public.informations(id) on delete cascade,
+  country text not null default '',
+  language text not null default '',
+  viewed_at timestamptz not null default now(),
+  device text not null default ''
+);
+create index if not exists page_views_page_id_idx on public.page_views (page_id);
+create index if not exists page_views_viewed_at_idx on public.page_views (viewed_at desc);
+alter table public.page_views enable row level security;
+
 alter table public.audit_logs
 add column if not exists hotel_id uuid references public.hotels(id) on delete cascade;
 alter table public.audit_logs
@@ -138,7 +152,7 @@ where h.owner_user_id is null
   and m.hotel_id = h.id;
 
 insert into public.subscriptions (hotel_id, plan, status, max_published_pages)
-select h.id, 'free', 'active', 3
+select h.id, 'free', 'active', 1
 from public.hotels h
 where not exists (
   select 1 from public.subscriptions s where s.hotel_id = h.id
@@ -184,7 +198,7 @@ begin
   end if;
 
   insert into public.subscriptions (hotel_id, plan, status, max_published_pages)
-  values (target_hotel_id, 'free', 'active', 3)
+  values (target_hotel_id, 'free', 'active', 1)
   returning id into sub_id;
 
   return sub_id;
@@ -218,6 +232,8 @@ drop policy if exists "authenticated update own subscriptions" on public.subscri
 drop policy if exists "authenticated delete own subscriptions" on public.subscriptions;
 drop policy if exists "public insert published information views" on public.information_views;
 drop policy if exists "authenticated read own information views" on public.information_views;
+drop policy if exists "page_views anon insert published" on public.page_views;
+drop policy if exists "page_views authenticated read own hotel" on public.page_views;
 drop policy if exists "authenticated insert own audit logs" on public.audit_logs;
 drop policy if exists "authenticated read own audit logs" on public.audit_logs;
 
@@ -419,6 +435,102 @@ using (
       and m.user_id = auth.uid()
   )
 );
+
+create policy "page_views anon insert published"
+on public.page_views
+for insert
+to anon, authenticated
+with check (
+  exists (
+    select 1
+    from public.informations i
+    where i.id = page_views.page_id
+      and i.status = 'published'
+      and (i.publish_at is null or i.publish_at <= now())
+      and (i.unpublish_at is null or i.unpublish_at > now())
+  )
+);
+
+create policy "page_views authenticated read own hotel"
+on public.page_views
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.informations i
+    join public.hotel_memberships m on m.hotel_id = i.hotel_id and m.user_id = auth.uid()
+    where i.id = page_views.page_id
+  )
+);
+
+-- Editor 2.0: pages (one page per hotel, slug unique per hotel)
+create table if not exists public.pages (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  title text not null,
+  slug text not null,
+  created_at timestamptz not null default now(),
+  unique(hotel_id, slug)
+);
+create index if not exists pages_hotel_id_idx on public.pages (hotel_id);
+alter table public.pages enable row level security;
+
+-- Editor 2.0: cards belong to a page
+create table if not exists public.cards (
+  id uuid primary key default gen_random_uuid(),
+  page_id uuid not null references public.pages(id) on delete cascade,
+  type text not null,
+  content jsonb not null default '{}'::jsonb,
+  "order" int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists cards_page_id_idx on public.cards (page_id);
+alter table public.cards enable row level security;
+
+-- Template marketplace: global templates (read by all authenticated)
+create table if not exists public.templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text not null default '',
+  preview_image text not null default '',
+  cards jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+alter table public.templates add column if not exists category text default null;
+alter table public.templates enable row level security;
+
+drop policy if exists "pages authenticated read write own hotel" on public.pages;
+create policy "pages authenticated read write own hotel"
+on public.pages for all to authenticated
+using (
+  exists (select 1 from public.hotel_memberships m where m.hotel_id = pages.hotel_id and m.user_id = auth.uid())
+)
+with check (
+  exists (select 1 from public.hotel_memberships m where m.hotel_id = pages.hotel_id and m.user_id = auth.uid())
+);
+
+drop policy if exists "cards authenticated read write via page" on public.cards;
+create policy "cards authenticated read write via page"
+on public.cards for all to authenticated
+using (
+  exists (
+    select 1 from public.pages p
+    join public.hotel_memberships m on m.hotel_id = p.hotel_id and m.user_id = auth.uid()
+    where p.id = cards.page_id
+  )
+)
+with check (
+  exists (
+    select 1 from public.pages p
+    join public.hotel_memberships m on m.hotel_id = p.hotel_id and m.user_id = auth.uid()
+    where p.id = cards.page_id
+  )
+);
+
+drop policy if exists "templates authenticated read" on public.templates;
+create policy "templates authenticated read"
+on public.templates for select to authenticated using (true);
 
 create policy "authenticated insert own audit logs"
 on public.audit_logs

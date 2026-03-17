@@ -1,10 +1,6 @@
-export { Editor } from "./Editor";
-/** Notion風ビジュアルエディタ（Editor と同一） */
-export { Editor as NotionVisualEditor } from "./Editor";
 export { BlockRenderer } from "./BlockRenderer";
 export { BlockToolbar } from "./BlockToolbar";
 export { MobilePreview } from "./MobilePreview";
-export { BlockLibrary } from "./BlockLibrary";
 export { usePageEditorStore } from "./store";
 export type { PageBlock, PageBlockType } from "./types";
 export {
