@@ -14,10 +14,11 @@ export function SaasQrBlock({ block }: { block: SaasBlock }) {
 
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-white p-2"
+      className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[16px] border border-slate-200/80 bg-white p-5"
       style={{
-        backgroundColor: style.backgroundColor,
+        backgroundColor: style.backgroundColor ?? undefined,
         borderRadius: style.borderRadius ? `${style.borderRadius}px` : undefined,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
       }}
     >
       {qrImageUrl ? (
@@ -32,8 +33,8 @@ export function SaasQrBlock({ block }: { block: SaasBlock }) {
           />
         </div>
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-xs text-slate-500">
-          <span className="text-2xl">▣</span>
+        <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-[16px] border-2 border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-500" style={{ margin: 8 }}>
+          <span className="text-3xl">▣</span>
           <span>URLを入力してQRを表示</span>
         </div>
       )}

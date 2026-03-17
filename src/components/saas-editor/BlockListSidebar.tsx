@@ -8,19 +8,24 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { useSaasEditorStore } from "./store";
 import { BLOCK_LIBRARY, BLOCK_TYPE_LABELS } from "./types";
 import type { SaasBlockType } from "./types";
+
+const BLOCK_GROUPS: { title: string; types: SaasBlockType[] }[] = [
+  { title: "ヒーロー", types: ["hero"] },
+  { title: "コンテンツ", types: ["highlight", "info", "text", "notice"] },
+  { title: "メディア", types: ["image", "gallery", "map"] },
+  { title: "アクション", types: ["button", "coupon", "qr"] },
+];
 
 function BlockLibraryItem({
   type,
@@ -37,12 +42,13 @@ function BlockLibraryItem({
     <button
       type="button"
       onClick={onAdd}
-      className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm text-slate-700 shadow-sm transition-all duration-200 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow"
+      className="flex w-full items-center gap-4 rounded-[16px] border border-slate-200/80 bg-white px-4 py-3.5 text-left transition-all duration-200 hover:border-slate-300 hover:bg-slate-50/80"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-sm">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-slate-100 text-lg">
         {icon}
       </span>
-      <span className="font-medium">{label}</span>
+      <span className="font-medium text-slate-800">{label}</span>
     </button>
   );
 }
@@ -67,22 +73,25 @@ function SortableBlockItem({
     isDragging,
   } = useSortable({ id: block.id });
 
-  const style = {
+  const transformStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
+    boxShadow: isSelected ? "0 2px 8px rgba(59,130,246,0.15)" : "0 1px 4px rgba(0,0,0,0.04)",
   };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm ${
-        isSelected ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"
-      } ${isDragging ? "opacity-80 shadow-lg" : ""}`}
+      style={transformStyle}
+      className={`flex items-center gap-2 rounded-[16px] border-2 px-4 py-3 text-sm transition-all ${
+        isSelected
+          ? "border-blue-400 bg-blue-50/90"
+          : "border-slate-200/80 bg-white hover:border-slate-300"
+      } ${isDragging ? "opacity-90" : ""}`}
     >
       <button
         type="button"
-        className="cursor-grab touch-none text-slate-400 hover:text-slate-600"
+        className="cursor-grab touch-none rounded-[12px] p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
         aria-label="並べ替え"
         {...attributes}
         {...listeners}
@@ -93,7 +102,7 @@ function SortableBlockItem({
       </button>
       <button
         type="button"
-        className="min-w-0 flex-1 truncate text-left font-medium"
+        className="min-w-0 flex-1 truncate text-left font-medium text-slate-800"
         onClick={onSelect}
       >
         {BLOCK_TYPE_LABELS[block.type as SaasBlockType] ?? block.type}
@@ -104,7 +113,7 @@ function SortableBlockItem({
           e.stopPropagation();
           onDelete();
         }}
-        className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
         aria-label="ブロックを削除"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +133,7 @@ export function BlockListSidebar() {
   const removeBlock = useSaasEditorStore((s) => s.removeBlock);
 
   const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
+  const libraryMap = new Map(BLOCK_LIBRARY.map((b) => [b.type, b]));
 
   const handleAddBlock = useCallback(
     (type: SaasBlockType) => {
@@ -148,27 +158,43 @@ export function BlockListSidebar() {
   );
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border-r border-slate-200 bg-white">
-      <div className="shrink-0 border-b border-slate-200 px-3 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          ブロック
+    <div className="flex h-full flex-col overflow-hidden bg-white">
+      <div className="shrink-0 border-b border-slate-200/60 bg-slate-50/50 px-6 py-5">
+        <h2 className="text-base font-semibold tracking-tight text-slate-800">
+          ブロックを追加
         </h2>
-        <div className="mt-2 space-y-1.5">
-          {BLOCK_LIBRARY.map((item) => (
-            <BlockLibraryItem
-              key={item.type}
-              type={item.type}
-              label={item.label}
-              icon={item.icon}
-              onAdd={() => handleAddBlock(item.type)}
-            />
-          ))}
-        </div>
+        <p className="mt-1 text-sm text-slate-500">
+          クリックでキャンバスに追加
+        </p>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        {BLOCK_GROUPS.map((group) => (
+          <section key={group.title} className="mb-6 last:mb-0">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              {group.title}
+            </h3>
+            <div className="space-y-3">
+              {group.types.map((type) => {
+                const item = libraryMap.get(type);
+                if (!item) return null;
+                return (
+                  <BlockLibraryItem
+                    key={item.type}
+                    type={item.type}
+                    label={item.label}
+                    icon={item.icon}
+                    onAdd={() => handleAddBlock(item.type)}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+      <div className="shrink-0 border-t border-slate-200/60 bg-slate-50/50 px-6 py-5">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           キャンバス上
-        </h2>
+        </h3>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -179,17 +205,19 @@ export function BlockListSidebar() {
             strategy={verticalListSortingStrategy}
           >
             <motion.ul
-              className="mt-2 space-y-1.5"
+              className="space-y-3"
               initial="hidden"
               animate="visible"
               variants={{
-                visible: { transition: { staggerChildren: 0.03 } },
+                visible: { transition: { staggerChildren: 0.02 } },
                 hidden: {},
               }}
             >
               {sortedBlocks.length === 0 ? (
-                <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-xs text-slate-500">
-                  ブロックがありません。上から追加してください。
+                <li className="rounded-[16px] border-2 border-dashed border-slate-200 bg-slate-50/80 px-6 py-8 text-center text-sm text-slate-500">
+                  ブロックがありません
+                  <br />
+                  <span className="text-xs">上から追加してください</span>
                 </li>
               ) : (
                 sortedBlocks.map((block) => (

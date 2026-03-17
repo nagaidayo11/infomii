@@ -1,6 +1,9 @@
 "use client";
 
 import type { SaasBlock } from "../types";
+import { SaasHeroBlock } from "./SaasHeroBlock";
+import { SaasHighlightBlock } from "./SaasHighlightBlock";
+import { SaasInfoBlock } from "./SaasInfoBlock";
 import { SaasTextBlock } from "./SaasTextBlock";
 import { SaasImageBlock } from "./SaasImageBlock";
 import { SaasButtonBlock } from "./SaasButtonBlock";
@@ -12,6 +15,12 @@ import { SaasQrBlock } from "./SaasQrBlock";
 
 export function SaasBlockRenderer({ block }: { block: SaasBlock }) {
   switch (block.type) {
+    case "hero":
+      return <SaasHeroBlock block={block} />;
+    case "highlight":
+      return <SaasHighlightBlock block={block} />;
+    case "info":
+      return <SaasInfoBlock block={block} />;
     case "text":
       return <SaasTextBlock block={block} />;
     case "image":

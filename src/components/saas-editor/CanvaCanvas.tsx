@@ -5,12 +5,27 @@ import { Rnd } from "react-rnd";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSaasEditorStore } from "./store";
 import { SaasBlockRenderer } from "./blocks/SaasBlockRenderer";
-import type { SaasBlock } from "./types";
+import type { SaasBlock, SaasBlockType } from "./types";
 
 const MIN_W = 80;
 const MIN_H = 40;
 const DEFAULT_W = 280;
 const DEFAULT_H = 120;
+
+function getSelectionRingClass(type: SaasBlockType, isSelected: boolean): string {
+  const base = "rounded-[16px]";
+  if (!isSelected) return `${base} transition-shadow`;
+  switch (type) {
+    case "hero":
+      return `${base} ring-2 ring-blue-400 ring-offset-2`;
+    case "highlight":
+      return `${base} ring-2 ring-amber-400 ring-offset-2`;
+    case "info":
+      return `${base} ring-2 ring-slate-400 ring-offset-2`;
+    default:
+      return `${base} ring-2 ring-blue-400 ring-offset-2`;
+  }
+}
 
 export function CanvaCanvas() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -39,16 +54,26 @@ export function CanvaCanvas() {
     [updateBlock]
   );
 
+  const canvasShadow = "0 8px 40px rgba(0,0,0,0.08)";
+
   return (
     <div
       ref={canvasRef}
-      className="relative h-full w-full overflow-auto bg-[#f5f5f5]"
+      className="relative h-full w-full overflow-auto"
+      style={{
+        background: "#eef0f3",
+        backgroundImage: "radial-gradient(circle at 1px 1px, #d1d5db 1px, transparent 0)",
+        backgroundSize: "24px 24px",
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) selectBlock(null);
       }}
     >
-      <div className="min-h-[800px] min-w-[800px] p-8">
-        <div className="relative h-[720px] w-[720px] rounded-xl bg-white shadow-sm">
+      <div className="min-h-[900px] min-w-[900px] p-6">
+        <div
+          className="relative h-[800px] w-[800px] rounded-[16px] bg-white"
+          style={{ boxShadow: canvasShadow }}
+        >
           <AnimatePresence>
             {sortedBlocks.map((block) => {
               const w = block.size?.width ?? DEFAULT_W;
@@ -84,14 +109,16 @@ export function CanvaCanvas() {
                     dragHandleClassName="drag-handle"
                   >
                     <div
-                      className={`group h-full w-full overflow-hidden rounded-lg transition-shadow duration-200 ${
+                      className={`group h-full w-full overflow-hidden ${getSelectionRingClass(
+                        block.type as SaasBlockType,
                         isSelected
-                          ? "ring-2 ring-blue-500 ring-offset-2 shadow-lg"
-                          : "shadow-md hover:shadow-lg"
-                      }`}
+                      )}`}
+                      style={{
+                        boxShadow: isSelected ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 12px rgba(0,0,0,0.06)",
+                      }}
                     >
-                      <div className="drag-handle absolute left-0 top-0 right-0 z-10 h-6 cursor-grab bg-slate-100/80 opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100" />
-                      <div className="flex h-full w-full flex-col pt-6">
+                      <div className="drag-handle absolute left-0 top-0 right-0 z-10 h-8 cursor-grab rounded-t-[16px] bg-slate-200/90 opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100" />
+                      <div className="flex h-full w-full flex-col pt-8">
                         <SaasBlockRenderer block={block} />
                       </div>
                     </div>

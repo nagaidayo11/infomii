@@ -5,7 +5,7 @@ import { useSaasEditorStore } from "./store";
 import { BLOCK_TYPE_LABELS } from "./types";
 import type { SaasBlockType } from "./types";
 
-type GalleryItem = { id: string; src: string; alt?: string };
+type GalleryItem = { id: string; src: string; alt?: string; caption?: string };
 
 export function StylePanel() {
   const blocks = useSaasEditorStore((s) => s.blocks);
@@ -15,14 +15,17 @@ export function StylePanel() {
   const selected = blocks.find((b) => b.id === selectedBlockId);
   if (!selected) {
     return (
-      <div className="flex h-full flex-col overflow-hidden border-l border-slate-200 bg-white">
-        <div className="shrink-0 border-b border-slate-200 px-4 py-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            スタイル
-          </h2>
+      <div className="flex h-full flex-col overflow-hidden bg-white">
+        <div className="shrink-0 border-b border-slate-200/60 bg-slate-50/50 px-6 py-5">
+          <h2 className="text-base font-semibold tracking-tight text-slate-800">プロパティ</h2>
         </div>
-        <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center text-sm text-slate-500">
-          キャンバスでブロックを選択すると、ここでスタイルと内容を編集できます。
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-[16px] bg-slate-100 text-3xl" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+            ✏️
+          </div>
+          <p className="max-w-[200px] text-sm font-medium text-slate-600">
+            キャンバスでブロックを選択すると、ここで内容とスタイルを編集できます
+          </p>
         </div>
       </div>
     );
@@ -45,31 +48,220 @@ export function StylePanel() {
     [selected.id, selected.content, updateBlock]
   );
 
-  const labelClass = "mb-1 block text-xs font-medium text-slate-600";
-  const inputClass = "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm";
+  const labelClass = "mb-2 block text-xs font-medium text-slate-600";
+  const inputClass = "w-full rounded-[16px] border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20";
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border-l border-slate-200 bg-white">
-      <div className="shrink-0 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          スタイルとコンテンツ
-        </h2>
-        <p className="mt-0.5 text-sm font-medium text-slate-700">
+    <div className="flex h-full flex-col overflow-hidden bg-white">
+      <div className="shrink-0 border-b border-slate-200/60 bg-slate-50/50 px-6 py-5">
+        <h2 className="text-base font-semibold tracking-tight text-slate-800">プロパティ</h2>
+        <p className="mt-1 text-sm font-medium text-slate-600">
           {BLOCK_TYPE_LABELS[selected.type as SaasBlockType]}
         </p>
       </div>
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-3">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
+        {selected.type === "hero" && (
+          <>
+            <div>
+              <label className={labelClass}>画像URL</label>
+              <input
+                type="url"
+                value={(content.imageSrc as string) ?? ""}
+                onChange={(e) => updateContent({ imageSrc: e.target.value })}
+                className={inputClass}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className={labelClass}>タイトル</label>
+              <input
+                type="text"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => updateContent({ title: e.target.value })}
+                className={inputClass}
+                placeholder="タイトル"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>サブタイトル</label>
+              <input
+                type="text"
+                value={(content.subtitle as string) ?? ""}
+                onChange={(e) => updateContent({ subtitle: e.target.value })}
+                className={inputClass}
+                placeholder="任意"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="hero-overlay"
+                checked={(content.overlay as boolean) !== false}
+                onChange={(e) => updateContent({ overlay: e.target.checked })}
+                className="rounded border-slate-300"
+              />
+              <label htmlFor="hero-overlay" className="text-sm text-slate-600">画像上にグラデーションオーバーレイ</label>
+            </div>
+          </>
+        )}
+        {selected.type === "highlight" && (
+          <>
+            <div>
+              <label className={labelClass}>アイコン（1文字）</label>
+              <input
+                type="text"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => updateContent({ icon: e.target.value })}
+                className={inputClass}
+                placeholder="★"
+                maxLength={2}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>タイトル</label>
+              <input
+                type="text"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => updateContent({ title: e.target.value })}
+                className={inputClass}
+                placeholder="重要なお知らせ"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>本文</label>
+              <textarea
+                value={(content.body as string) ?? ""}
+                onChange={(e) => updateContent({ body: e.target.value })}
+                className={inputClass}
+                rows={3}
+                placeholder="強調したい内容"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>アクセント色</label>
+              <select
+                value={(content.accent as string) ?? "amber"}
+                onChange={(e) => updateContent({ accent: e.target.value })}
+                className={inputClass}
+              >
+                <option value="amber">アンバー</option>
+                <option value="blue">ブルー</option>
+                <option value="emerald">エメラルド</option>
+                <option value="rose">ローズ</option>
+                <option value="violet">バイオレット</option>
+              </select>
+            </div>
+          </>
+        )}
+        {selected.type === "info" && (
+          <>
+            <div>
+              <label className={labelClass}>アイコン（1文字）</label>
+              <input
+                type="text"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => updateContent({ icon: e.target.value })}
+                className={inputClass}
+                placeholder="📶"
+                maxLength={2}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>タイトル（例: Wi-Fi）</label>
+              <input
+                type="text"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => updateContent({ title: e.target.value })}
+                className={inputClass}
+                placeholder="情報"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>行1 ラベル</label>
+              <input
+                type="text"
+                value={((content.rows as { label?: string; value?: string }[])?.[0]?.label as string) ?? ""}
+                onChange={(e) => {
+                  const rows = (content.rows as { label?: string; value?: string }[]) ?? [];
+                  const next = [...rows];
+                  next[0] = { ...(next[0] ?? {}), label: e.target.value };
+                  updateContent({ rows: next });
+                }}
+                className={inputClass}
+                placeholder="ネットワーク名"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>行1 値</label>
+              <input
+                type="text"
+                value={((content.rows as { label?: string; value?: string }[])?.[0]?.value as string) ?? ""}
+                onChange={(e) => {
+                  const rows = (content.rows as { label?: string; value?: string }[]) ?? [];
+                  const next = [...rows];
+                  next[0] = { ...(next[0] ?? {}), value: e.target.value };
+                  updateContent({ rows: next });
+                }}
+                className={inputClass}
+                placeholder="Hotel_Guest"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>行2 ラベル</label>
+              <input
+                type="text"
+                value={((content.rows as { label?: string; value?: string }[])?.[1]?.label as string) ?? ""}
+                onChange={(e) => {
+                  const rows = (content.rows as { label?: string; value?: string }[]) ?? [];
+                  const next = [...rows];
+                  next[1] = { ...(next[1] ?? {}), label: e.target.value };
+                  updateContent({ rows: next });
+                }}
+                className={inputClass}
+                placeholder="パスワード"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>行2 値</label>
+              <input
+                type="text"
+                value={((content.rows as { label?: string; value?: string }[])?.[1]?.value as string) ?? ""}
+                onChange={(e) => {
+                  const rows = (content.rows as { label?: string; value?: string }[]) ?? [];
+                  const next = [...rows];
+                  next[1] = { ...(next[1] ?? {}), value: e.target.value };
+                  updateContent({ rows: next });
+                }}
+                className={inputClass}
+                placeholder="guest1234"
+              />
+            </div>
+          </>
+        )}
         {selected.type === "text" && (
-          <div>
-            <label className={labelClass}>テキスト</label>
-            <textarea
-              value={(content.content as string) ?? ""}
-              onChange={(e) => updateContent({ content: e.target.value })}
-              className={inputClass}
-              rows={3}
-              placeholder="ここに入力..."
-            />
-          </div>
+          <>
+            <div>
+              <label className={labelClass}>テキスト</label>
+              <textarea
+                value={(content.content as string) ?? ""}
+                onChange={(e) => updateContent({ content: e.target.value })}
+                className={inputClass}
+                rows={3}
+                placeholder="ここに入力..."
+              />
+            </div>
+            <div>
+              <label className={labelClass}>表示</label>
+              <select
+                value={(content.variant as string) ?? "body"}
+                onChange={(e) => updateContent({ variant: e.target.value })}
+                className={inputClass}
+              >
+                <option value="body">本文</option>
+                <option value="heading">見出し</option>
+              </select>
+            </div>
+          </>
         )}
         {selected.type === "image" && (
           <>
@@ -91,6 +283,16 @@ export function StylePanel() {
                 onChange={(e) => updateContent({ alt: e.target.value })}
                 className={inputClass}
                 placeholder="説明"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>キャプション</label>
+              <input
+                type="text"
+                value={(content.caption as string) ?? ""}
+                onChange={(e) => updateContent({ caption: e.target.value })}
+                className={inputClass}
+                placeholder="任意"
               />
             </div>
           </>
@@ -140,6 +342,16 @@ export function StylePanel() {
                 placeholder="https://..."
               />
             </div>
+            <div>
+              <label className={labelClass}>ボタンラベル</label>
+              <input
+                type="text"
+                value={(content.buttonLabel as string) ?? "地図を開く"}
+                onChange={(e) => updateContent({ buttonLabel: e.target.value })}
+                className={inputClass}
+                placeholder="地図を開く"
+              />
+            </div>
           </>
         )}
         {selected.type === "gallery" && (
@@ -160,13 +372,28 @@ export function StylePanel() {
                 type="url"
                 value={((content.items as GalleryItem[])?.[0]?.src as string) ?? ""}
                 onChange={(e) => {
-                  const items = (content.items as GalleryItem[]) ?? [{ id: "1", src: "", alt: "" }];
+                  const items = (content.items as GalleryItem[]) ?? [{ id: "1", src: "", alt: "", caption: "" }];
                   const next = [...items];
-                  next[0] = { ...(next[0] ?? { id: "1", src: "", alt: "" }), src: e.target.value };
+                  next[0] = { ...(next[0] ?? { id: "1", src: "", alt: "", caption: "" }), src: e.target.value };
                   updateContent({ items: next });
                 }}
                 className={inputClass}
                 placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className={labelClass}>1枚目キャプション</label>
+              <input
+                type="text"
+                value={((content.items as GalleryItem[])?.[0]?.caption as string) ?? ""}
+                onChange={(e) => {
+                  const items = (content.items as GalleryItem[]) ?? [{ id: "1", src: "", alt: "", caption: "" }];
+                  const next = [...items];
+                  next[0] = { ...(next[0] ?? { id: "1", src: "", alt: "", caption: "" }), caption: e.target.value };
+                  updateContent({ items: next });
+                }}
+                className={inputClass}
+                placeholder="任意"
               />
             </div>
           </>
@@ -275,10 +502,11 @@ export function StylePanel() {
           </>
         )}
 
-        <hr className="border-slate-200" />
-        <div className="space-y-3">
-          <div>
-            <label className={labelClass}>背景色</label>
+        <div className="rounded-[16px] border border-slate-200/80 bg-slate-50/30 p-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">共通スタイル</h3>
+          <div className="space-y-3">
+            <div>
+              <label className={labelClass}>背景色</label>
             <input
               type="text"
               value={style.backgroundColor ?? ""}
@@ -326,6 +554,7 @@ export function StylePanel() {
               className={inputClass}
               placeholder="16"
             />
+          </div>
           </div>
         </div>
       </div>
