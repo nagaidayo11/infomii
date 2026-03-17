@@ -135,7 +135,7 @@ export function EditorTopBar({
           className="truncate text-sm font-semibold text-slate-900"
           title={pageTitle}
         >
-          {pageTitle || "無題のページ"}
+          {pageTitle || ""}
         </h1>
       </div>
 

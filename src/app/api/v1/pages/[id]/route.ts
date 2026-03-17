@@ -125,7 +125,7 @@ export async function PATCH(
   if (body.title !== undefined) {
     const { error: updateError } = await admin
       .from("pages")
-      .update({ title: String(body.title).trim() || "無題" })
+      .update({ title: String(body.title).trim() || "" })
       .eq("id", id);
     if (updateError) {
       return NextResponse.json({ error: "タイトルの更新に失敗しました" }, { status: 500 });

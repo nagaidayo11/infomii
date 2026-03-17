@@ -66,7 +66,7 @@ export function DashboardPageList({ rows, loading }: DashboardPageListProps) {
                   <td className="px-5 py-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="font-medium text-slate-900">
-                        {row.title || "名称未設定"}
+                        {row.title || ""}
                       </span>
                       <span
                         className={

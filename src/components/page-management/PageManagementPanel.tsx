@@ -6,11 +6,15 @@ import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
 import {
   buildPublicQrUrl,
+  buildPublicUrlV,
   createBlankPage,
   deleteInformation,
+  deletePage,
   getDashboardBootstrapData,
+  listPagesForHotel,
   PAGE_LIMIT_REACHED,
 } from "@/lib/storage";
+import type { PageRow } from "@/lib/storage";
 import type { Information } from "@/types/information";
 import { TemplateGallery } from "@/components/template-gallery-ui";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
@@ -23,9 +27,11 @@ import { AIPageGenerator } from "@/components/ai-page-generator";
 export function PageManagementPanel() {
   const router = useRouter();
   const [items, setItems] = useState<Information[]>([]);
+  const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
@@ -34,8 +40,12 @@ export function PageManagementPanel() {
     setLoading(true);
     setError(null);
     try {
-      const boot = await getDashboardBootstrapData();
+      const [boot, cards] = await Promise.all([
+        getDashboardBootstrapData(),
+        listPagesForHotel(),
+      ]);
       setItems(boot.informations);
+      setCardPages(cards);
       setSubscription(boot.subscription ? { plan: boot.subscription.plan } : null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "一覧の取得に失敗しました");
@@ -52,7 +62,7 @@ export function PageManagementPanel() {
     setCreating(true);
     setError(null);
     try {
-      const pageId = await createBlankPage("新規ページ");
+      const pageId = await createBlankPage();
       await load();
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
@@ -71,7 +81,7 @@ export function PageManagementPanel() {
 
   async function onDelete(item: Information) {
     const ok = window.confirm(
-      `「${item.title || "名称未設定"}」を削除しますか？\n取り消しはできません。`
+      `${item.title?.trim() ? `「${item.title}」を` : "このページを"}削除しますか？\n取り消しはできません。`
     );
     if (!ok) return;
     setDeletingId(item.id);
@@ -83,6 +93,23 @@ export function PageManagementPanel() {
       setError(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function onDeleteCardPage(page: PageRow) {
+    const ok = window.confirm(
+      `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\nQRで表示されているページが消え、取り消しはできません。`
+    );
+    if (!ok) return;
+    setDeletingCardPageId(page.id);
+    setError(null);
+    try {
+      await deletePage(page.id);
+      setCardPages((prev) => prev.filter((p) => p.id !== page.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "削除に失敗しました");
+    } finally {
+      setDeletingCardPageId(null);
     }
   }
 
@@ -107,7 +134,7 @@ export function PageManagementPanel() {
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
             >
               <span className="text-lg leading-none">+</span>
-              新規ページ
+              ページを追加
             </button>
           </div>
 
@@ -149,7 +176,7 @@ export function PageManagementPanel() {
                   まだページがありません
                 </p>
                 <p className="mt-2 text-xs text-slate-400">
-                  右上の「+ 新規ページ」から作成できます
+                  右上の「+ ページを追加」から作成できます
                 </p>
               </div>
             ) : (
@@ -182,7 +209,7 @@ export function PageManagementPanel() {
                       >
                         <td className="px-5 py-3">
                           <span className="font-medium text-slate-900">
-                            {item.title?.trim() || "名称未設定"}
+                            {item.title?.trim() || ""}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -225,6 +252,95 @@ export function PageManagementPanel() {
                             className="inline-flex rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                           >
                             {deletingId === item.id ? "削除中…" : "削除"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* カードで作ったページ（/v/ で表示・QRで開くページ） */}
+          <div className="mt-8 overflow-hidden rounded-xl border border-ds-border bg-ds-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
+            <div className="border-b border-ds-border px-5 py-4">
+              <h2 className="text-[15px] font-semibold text-slate-900">
+                カードで作ったページ
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                QRコード読み取り後に表示されるページです。編集・公開URL・削除がここから行えます
+              </p>
+            </div>
+            {loading ? (
+              <div className="px-5 py-8 text-center text-sm text-slate-500">
+                読み込み中…
+              </div>
+            ) : cardPages.length === 0 ? (
+              <div className="px-5 py-10 text-center">
+                <p className="text-sm text-slate-600">
+                  カードで作ったページはまだありません
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  右上の「+ ページを追加」で作成するとここに表示されます
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-ds-border bg-slate-50/80">
+                      <th className="px-5 py-3 text-xs font-semibold text-slate-600">
+                        ページ名
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-600">
+                        編集
+                      </th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-600">
+                        公開ページ
+                      </th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold text-slate-600">
+                        削除
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cardPages.map((page) => (
+                      <tr
+                        key={page.id}
+                        className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50/70"
+                      >
+                        <td className="px-5 py-3">
+                          <span className="font-medium text-slate-900">
+                            {page.title?.trim() || ""}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/editor/${page.id}`}
+                            className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                          >
+                            編集
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <a
+                            href={buildPublicUrlV(page.slug)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex rounded-lg border border-ds-border bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            開く
+                          </a>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <button
+                            type="button"
+                            disabled={deletingCardPageId === page.id}
+                            onClick={() => void onDeleteCardPage(page)}
+                            className="inline-flex rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {deletingCardPageId === page.id ? "削除中…" : "削除"}
                           </button>
                         </td>
                       </tr>

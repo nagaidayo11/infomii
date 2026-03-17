@@ -79,7 +79,7 @@ export function DashboardView() {
     setCreateError(null);
     setCreating(true);
     try {
-      const pageId = await createBlankPage("新規ページ");
+      const pageId = await createBlankPage();
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
@@ -101,7 +101,7 @@ export function DashboardView() {
     setCreateError(null);
     setCreatingCardPage(true);
     try {
-      const pageId = await createBlankPage("新規ページ");
+      const pageId = await createBlankPage();
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
@@ -183,7 +183,7 @@ export function DashboardView() {
                 disabled={creatingCardPage}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
               >
-                {creatingCardPage ? "作成中…" : "カードで新規ページ"}
+                {creatingCardPage ? "作成中…" : "カードでページを追加"}
               </button>
             </>
           )}

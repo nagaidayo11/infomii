@@ -375,7 +375,7 @@ function PageLinksItemsEditor({
                 <option value="">— 選択 —</option>
                 {pages.map((p) => (
                   <option key={p.id} value={p.slug}>
-                    {p.title || p.slug || "無題"}
+                    {p.title || p.slug || ""}
                   </option>
                 ))}
               </select>

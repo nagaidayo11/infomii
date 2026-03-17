@@ -33,7 +33,7 @@ export function SaasEditorTopBar({
               </svg>
             </div>
             <h1 className="truncate text-xl font-semibold tracking-tight text-slate-800">
-              {pageTitle || "無題のページ"}
+              {pageTitle || ""}
             </h1>
           </div>
           <motion.span
@@ -74,7 +74,7 @@ export function SaasEditorTopBar({
               className="rounded-[16px] bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
               style={{ boxShadow: "0 2px 8px rgba(15,23,42,0.2)" }}
             >
-              新規ページ
+              ページを追加
             </button>
           )}
         </div>

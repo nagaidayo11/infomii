@@ -40,7 +40,7 @@ export function PageListSidebar({ currentPageId, position }: PageListSidebarProp
             className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50/80"
           >
             <span className="truncate text-sm font-medium text-slate-800">
-              {page.title || page.slug || "無題"}
+              {page.title || page.slug || ""}
             </span>
             <span className="truncate text-xs text-slate-500">/v/{page.slug}</span>
           </Link>

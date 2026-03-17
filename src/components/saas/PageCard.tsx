@@ -53,7 +53,7 @@ export function PageCard({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
-            {title || "無題"}
+            {title || ""}
           </h3>
           <dl className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
             <div className="flex items-center gap-1.5">
@@ -99,7 +99,7 @@ export function PageCard({
             <button
               type="button"
               onClick={() => {
-                if (window.confirm(`「${title || "無題"}」を削除しますか？`)) onDelete(id);
+                if (window.confirm(`${title?.trim() ? `「${title}」を` : "このページを"}削除しますか？`)) onDelete(id);
               }}
               className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 hover:border-red-200"
               aria-label="削除"

@@ -1782,7 +1782,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
       const agg = aggregate.get(row.id) ?? { views: 0, qrViews: 0 };
       return {
         informationId: row.id,
-        title: row.title ?? "名称未設定",
+        title: row.title ?? "",
         views: agg.views,
         qrViews: agg.qrViews,
       };
@@ -3514,7 +3514,7 @@ export async function listTemplates(): Promise<TemplateRow[]> {
 export const PAGE_LIMIT_REACHED = "PAGE_LIMIT_REACHED";
 
 /** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
-export async function createBlankPage(title = "新規ページ"): Promise<string> {
+export async function createBlankPage(title = ""): Promise<string> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
@@ -3535,7 +3535,7 @@ export async function createBlankPage(title = "新規ページ"): Promise<string
     }
   }
 
-  const nextTitle = (title && title.trim()) || "新規ページ";
+  const nextTitle = (title && title.trim()) || "";
   const baseSlug = createSlug(nextTitle);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
@@ -3626,6 +3626,27 @@ export async function listPagesForHotel(): Promise<PageRow[]> {
     .order("title", { ascending: true });
   if (error) return [];
   return (data ?? []) as PageRow[];
+}
+
+/** Delete a card-based page and its cards. Fails if page is not in current hotel scope. */
+export async function deletePage(pageId: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: page, error: fetchError } = await supabase
+    .from("pages")
+    .select("id")
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId)
+    .maybeSingle();
+  if (fetchError || !page) throw toError(fetchError ?? new Error("Not found"), "ページが見つかりません");
+
+  const { error: cardsError } = await supabase.from("cards").delete().eq("page_id", pageId);
+  if (cardsError) throw toError(cardsError, "カードの削除に失敗しました");
+  const { error: pageError } = await supabase.from("pages").delete().eq("id", pageId);
+  if (pageError) throw toError(pageError, "ページの削除に失敗しました");
 }
 
 export async function getPage(pageId: string): Promise<PageRow | null> {

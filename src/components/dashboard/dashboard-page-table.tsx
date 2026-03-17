@@ -80,7 +80,7 @@ export function DashboardPageTable({ rows, loading }: DashboardPageTableProps) {
                 >
                   <td className="px-5 py-3">
                     <span className="font-medium text-slate-900">
-                      {row.title || "名称未設定"}
+                      {row.title || ""}
                     </span>
                     <span
                       className={

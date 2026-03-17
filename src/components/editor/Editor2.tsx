@@ -64,7 +64,7 @@ export function Editor2({ pageId }: Editor2Props) {
       if (page) {
         setPageMeta({
           pageId,
-          title: page.title || "無題のページ",
+          title: page.title ?? "",
           slug: page.slug,
           publicUrl: buildPublicUrlV(page.slug),
         });
@@ -190,7 +190,7 @@ export function Editor2({ pageId }: Editor2Props) {
       const publicUrl = buildPublicUrlV(page.slug);
       setPublishState({
         publicUrl,
-        pageTitle: page.title || "無題",
+        pageTitle: page.title ?? "",
         slug: page.slug,
       });
     } finally {

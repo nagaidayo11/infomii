@@ -28,9 +28,11 @@ function PageContent({
       <header className="sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
         <div className="mx-auto flex max-w-[420px] flex-col gap-3">
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
-          <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
-            {title}
-          </h1>
+          {title.trim() ? (
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+              {title}
+            </h1>
+          ) : null}
         </div>
       </header>
       <main className="flex-1 px-4 pb-8 pt-5">

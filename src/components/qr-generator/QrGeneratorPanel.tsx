@@ -126,8 +126,9 @@ export function QrGeneratorPanel() {
               >
                 {items.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.title?.trim() || "名称未設定"}（
-                    {item.status === "published" ? "公開中" : "下書き"}）
+                    {item.title?.trim()
+                      ? `${item.title}（${item.status === "published" ? "公開中" : "下書き"}）`
+                      : `（${item.status === "published" ? "公開中" : "下書き"}）`}
                   </option>
                 ))}
               </select>

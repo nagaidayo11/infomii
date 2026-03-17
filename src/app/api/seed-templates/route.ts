@@ -16,7 +16,10 @@ const BASE_CARDS = [
   { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 3 },
 ];
 
-/** テンプレート用のフリー画像（Unsplash） */
+/**
+ * テンプレート用のフリー画像（Unsplash）。各テンプレートで異なる画像を使用。
+ * 差し替え用の画像は管理画面や templates テーブルの preview_image で変更可能。
+ */
 const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・館内案内",
@@ -28,7 +31,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・館内案内",
     description: "ウェルカム・WiFi・朝食・チェックアウト。リゾート施設向け。",
-    preview_image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
+    preview_image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
     category: "resort",
     cards: BASE_CARDS,
   },
