@@ -4,9 +4,11 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
+import { InfoPageChat } from "@/components/info-chat/InfoPageChat";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
+import { blocksToContextText } from "@/lib/information-to-context";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
@@ -840,6 +842,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     updated_at: string;
   };
   const blocks = normalizeBlocks(row.content_blocks, row.body);
+  const contextText = blocksToContextText(row.title, row.body ?? "", blocks);
   const firstHeroImageBlockId =
     blocks.find((block) => block.type === "image" && typeof block.url === "string" && block.url.trim().length > 0)?.id ??
     null;
@@ -1418,6 +1421,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   return (
     <>
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
+      <InfoPageChat contextText={contextText} pageTitle={row.title} />
       {isEmbed ? (
         <main className="min-h-screen overflow-x-hidden bg-[#f8fafc] p-0 text-slate-900">
           <div className="mx-auto max-w-[420px] px-3 py-6" style={themeStyle}>

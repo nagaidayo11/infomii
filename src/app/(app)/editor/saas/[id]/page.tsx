@@ -16,7 +16,7 @@ export default function SaasEditorPage({
   if (!resolvedParams) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-100">
-        <p className="text-sm text-slate-600">Loading…</p>
+        <p className="text-sm text-slate-600">読み込み中…</p>
       </div>
     );
   }

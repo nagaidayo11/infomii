@@ -27,7 +27,7 @@ export function SaasEditor({ pageId: initialPageId }: SaasEditorProps) {
 
   useEffect(() => {
     if (!initialPageId) {
-      setPage(null, "Untitled");
+      setPage(null, "無題");
       setBlocks([]);
       setPageId(null);
       return;
@@ -42,7 +42,7 @@ export function SaasEditor({ pageId: initialPageId }: SaasEditorProps) {
   }, [initialPageId, setPage, setBlocks]);
 
   const handleNewPage = async () => {
-    const page = await createSaasPage("Untitled");
+    const page = await createSaasPage("無題");
     if (page) {
       router.push(`/editor/saas/${page.id}`);
     }

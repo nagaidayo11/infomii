@@ -26,7 +26,7 @@ export function SaasMapBlock({ block }: { block: SaasBlock }) {
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center text-sm text-slate-500">
           <span>📍</span>
-          <span>Add address or embed URL</span>
+          <span>住所または埋め込みURLを追加</span>
         </div>
       )}
     </div>

@@ -34,7 +34,7 @@ export function SaasVideoBlock({ block }: { block: SaasBlock }) {
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-          Add YouTube or Vimeo URL
+          YouTube / Vimeo URLを追加
         </div>
       )}
     </div>

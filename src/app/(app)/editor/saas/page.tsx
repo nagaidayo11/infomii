@@ -12,7 +12,7 @@ export default function SaasEditorNewPage() {
   const router = useRouter();
 
   useEffect(() => {
-    createSaasPage("Untitled").then((page) => {
+    createSaasPage("無題").then((page) => {
       if (page) {
         router.replace(`/editor/saas/${page.id}`);
       } else {
@@ -23,7 +23,7 @@ export default function SaasEditorNewPage() {
 
   return (
     <div className="flex h-screen items-center justify-center bg-slate-100">
-      <p className="text-sm text-slate-600">Creating page…</p>
+      <p className="text-sm text-slate-600">ページを作成中…</p>
     </div>
   );
 }

@@ -28,7 +28,7 @@ export function SaasImageBlock({ block }: { block: SaasBlock }) {
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
-          Add image URL
+          画像URLを追加
         </div>
       )}
     </div>

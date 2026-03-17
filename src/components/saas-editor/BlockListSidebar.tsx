@@ -19,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { useSaasEditorStore } from "./store";
-import { BLOCK_LIBRARY } from "./types";
+import { BLOCK_LIBRARY, BLOCK_TYPE_LABELS } from "./types";
 import type { SaasBlockType } from "./types";
 
 function BlockLibraryItem({
@@ -83,7 +83,7 @@ function SortableBlockItem({
       <button
         type="button"
         className="cursor-grab touch-none text-slate-400 hover:text-slate-600"
-        aria-label="Reorder"
+        aria-label="並べ替え"
         {...attributes}
         {...listeners}
       >
@@ -96,7 +96,7 @@ function SortableBlockItem({
         className="min-w-0 flex-1 truncate text-left font-medium"
         onClick={onSelect}
       >
-        {block.type}
+        {BLOCK_TYPE_LABELS[block.type as SaasBlockType] ?? block.type}
       </button>
       <button
         type="button"
@@ -105,7 +105,7 @@ function SortableBlockItem({
           onDelete();
         }}
         className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
-        aria-label="Delete block"
+        aria-label="ブロックを削除"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -151,7 +151,7 @@ export function BlockListSidebar() {
     <div className="flex h-full flex-col overflow-hidden border-r border-slate-200 bg-white">
       <div className="shrink-0 border-b border-slate-200 px-3 py-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Blocks
+          ブロック
         </h2>
         <div className="mt-2 space-y-1.5">
           {BLOCK_LIBRARY.map((item) => (
@@ -167,7 +167,7 @@ export function BlockListSidebar() {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          On canvas
+          キャンバス上
         </h2>
         <DndContext
           sensors={sensors}
@@ -189,7 +189,7 @@ export function BlockListSidebar() {
             >
               {sortedBlocks.length === 0 ? (
                 <li className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-6 text-center text-xs text-slate-500">
-                  No blocks yet. Add one above.
+                  ブロックがありません。上から追加してください。
                 </li>
               ) : (
                 sortedBlocks.map((block) => (

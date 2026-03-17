@@ -23,7 +23,7 @@ export function SaasEditorLayout({
     <div
       className="flex h-screen w-full flex-col overflow-hidden bg-slate-100"
       role="application"
-      aria-label="SaaS Editor"
+      aria-label="ビジュアルエディタ"
     >
       {topBar != null && (
         <header className="shrink-0 border-b border-slate-200 bg-white shadow-sm">
@@ -111,14 +111,14 @@ export function SaasEditorLayout({
             onClick={() => setMobileLeftOpen(true)}
             className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200"
           >
-            Blocks
+            ブロック
           </button>
           <button
             type="button"
             onClick={() => setMobileRightOpen(true)}
             className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200"
           >
-            Style
+            スタイル
           </button>
         </div>
       </div>

@@ -28,7 +28,7 @@ export type SaasEditorState = {
 
 export const useSaasEditorStore = create<SaasEditorState>((set, get) => ({
   pageId: null,
-  pageTitle: "Untitled",
+  pageTitle: "無題",
   blocks: [],
   selectedBlockId: null,
   isSaving: false,

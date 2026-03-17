@@ -17,8 +17,8 @@ export function SaasEditorTopBar({
 }: SaasEditorTopBarProps) {
   const savedText =
     lastSavedAt != null
-      ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}`
-      : "Unsaved";
+      ? `${new Date(lastSavedAt).toLocaleTimeString("ja-JP")} に保存`
+      : "未保存";
 
   return (
     <div className="flex h-12 items-center justify-between px-4">
@@ -33,7 +33,7 @@ export function SaasEditorTopBar({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
         >
-          {isSaving ? "Saving…" : savedText}
+          {isSaving ? "保存中…" : savedText}
         </motion.span>
       </div>
       <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export function SaasEditorTopBar({
             onClick={onNewPage}
             className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            New page
+            新規ページ
           </button>
         )}
       </div>

@@ -3,7 +3,7 @@
 import type { SaasBlock } from "../types";
 
 export function SaasTextBlock({ block }: { block: SaasBlock }) {
-  const content = (block.content.content as string) ?? "Type here...";
+  const content = (block.content.content as string) ?? "ここに入力...";
   const style = block.style || {};
   return (
     <div
