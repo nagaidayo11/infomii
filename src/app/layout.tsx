@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const metadataBase = (() => {
@@ -61,10 +54,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={inter.variable}>
-      <body
-        className={`lux-shell ds-app bg-ds-bg text-slate-900 antialiased ${inter.className}`}
-      >
+    <html lang="ja">
+      <body className="lux-shell ds-app bg-ds-bg text-slate-900 antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

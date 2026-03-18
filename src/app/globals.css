@@ -47,7 +47,7 @@ body {
   min-height: 100vh;
   background: var(--ds-bg);
   color: #111827;
-  font-family: var(--font-inter), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
 }
 
 /* App shell: minimal SaaS background (no gradient) */
