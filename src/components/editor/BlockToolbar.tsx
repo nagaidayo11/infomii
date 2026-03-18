@@ -33,7 +33,7 @@ export function BlockToolbar({
   return (
     <div
       className={
-        "absolute left-0 z-10 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1 shadow-lg " +
+        "absolute left-0 z-[120] flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1 shadow-lg " +
         (verticalPosition === "below" ? "-bottom-10" : "-top-10")
       }
       role="toolbar"

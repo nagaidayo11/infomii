@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
 import { useEditor2Store } from "./store";
-import { getBlockStyle, type EditorCard } from "./types";
+import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
 const VIEWPORT_SIZES = [
   { label: "375px", width: 375 },
@@ -34,7 +34,10 @@ function MobileCanvasFrame({
           className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
           style={{ width }}
         >
-          <div className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+          <div
+            className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-scroll"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {children}
           </div>
         </div>
@@ -44,22 +47,62 @@ function MobileCanvasFrame({
 }
 
 const DEFAULT_W = 280;
-const DEFAULT_H = 100;
+const DEFAULT_H = 180;
+const STACK_STEP = 260;
 const MIN_W = 120;
 const MIN_H = 48;
 const GRID = 8;
 const SNAP_THRESHOLD = 8;
 
-type Position = { x: number; y: number; w?: number; h?: number };
+type Position = { x: number; y: number; w?: number; h?: number; manualH?: boolean };
 const POSITION_KEY = "_position";
 
 const CANVAS_PADDING_X = 16;
 
+const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
+  hero: 240,
+  info: 170,
+  highlight: 150,
+  action: 120,
+  welcome: 160,
+  wifi: 160,
+  breakfast: 180,
+  checkout: 180,
+  nearby: 220,
+  notice: 150,
+  map: 220,
+  restaurant: 190,
+  taxi: 170,
+  emergency: 190,
+  laundry: 180,
+  spa: 210,
+  text: 140,
+  image: 220,
+  button: 120,
+  faq: 230,
+  schedule: 220,
+  menu: 220,
+  gallery: 240,
+  divider: 80,
+  parking: 190,
+  pageLinks: 220,
+  quote: 170,
+  checklist: 230,
+  steps: 230,
+  compare: 210,
+  kpi: 200,
+};
+
+function getCardDefaultHeight(card: EditorCard): number {
+  return DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+}
+
 /** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
 function getPosition(card: EditorCard, index: number, contentWidth: number): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
+  const initialH = getCardDefaultHeight(card);
   const w = typeof pos?.w === "number" ? pos.w : DEFAULT_W;
-  const h = typeof pos?.h === "number" ? pos.h : DEFAULT_H;
+  const h = typeof pos?.h === "number" ? pos.h : initialH;
   const blockW = Math.min(w, contentWidth);
   const centeredX = Math.round((contentWidth - blockW) / 2);
 
@@ -75,9 +118,9 @@ function getPosition(card: EditorCard, index: number, contentWidth: number): Pos
   }
   return {
     x: centeredX,
-    y: 24 + index * (DEFAULT_H + 16),
+    y: 24 + index * STACK_STEP,
     w: blockW,
-    h: DEFAULT_H,
+    h: initialH,
   };
 }
 
@@ -161,6 +204,8 @@ export function FreeformCanvas({
   pageBackground,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const contentRefs = useRef(new Map<string, HTMLDivElement>());
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const showGrid = useEditor2Store((s) => s.showGrid);
   const pageTheme = useEditor2Store((s) => s.pageTheme);
   const [viewportWidth, setViewportWidth] = useState(375);
@@ -173,18 +218,82 @@ export function FreeformCanvas({
     h: number;
     guides: { axis: "x" | "y"; value: number }[];
   } | null>(null);
+  const [autoHeights, setAutoHeights] = useState<Record<string, number>>({});
+
+  const setAutoHeightForCard = useCallback((id: string, measuredHeight: number) => {
+    if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
+    setAutoHeights((prev) => {
+      const next = Math.max(MIN_H, measuredHeight);
+      if (prev[id] === next) return prev;
+      return { ...prev, [id]: next };
+    });
+  }, []);
+
+  const setContentRef = useCallback(
+    (cardId: string) => (el: HTMLDivElement | null) => {
+      const map = contentRefs.current;
+      const prev = map.get(cardId);
+      if (prev && resizeObserverRef.current) {
+        resizeObserverRef.current.unobserve(prev);
+      }
+      if (!el) {
+        map.delete(cardId);
+        return;
+      }
+      map.set(cardId, el);
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.observe(el);
+      }
+      requestAnimationFrame(() => {
+        setAutoHeightForCard(cardId, Math.ceil(el.scrollHeight + 8));
+      });
+    },
+    [setAutoHeightForCard]
+  );
+
+  useEffect(() => {
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const el = entry.target as HTMLDivElement;
+        const id = el.dataset.cardContentId;
+        if (!id) continue;
+        setAutoHeightForCard(id, Math.ceil(el.scrollHeight + 8));
+      }
+    });
+    resizeObserverRef.current = observer;
+    contentRefs.current.forEach((el) => observer.observe(el));
+    return () => {
+      observer.disconnect();
+      resizeObserverRef.current = null;
+    };
+  }, [setAutoHeightForCard]);
+
+  const getRenderHeight = useCallback(
+    (card: EditorCard, index: number) => {
+      const pos = getPosition(card, index, contentWidth);
+      const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
+      if (saved?.manualH) {
+        return pos.h ?? getCardDefaultHeight(card);
+      }
+      const auto = autoHeights[card.id];
+      return Math.max(pos.h ?? getCardDefaultHeight(card), auto ?? 0);
+    },
+    [autoHeights, contentWidth]
+  );
 
   const handleDrag = useCallback(
     (id: string, _e: unknown, d: { x: number; y: number }) => {
       const card = cards.find((c) => c.id === id);
       if (!card) return;
-      const pos = getPosition(card, cards.findIndex((c) => c.id === id), contentWidth);
+      const index = cards.findIndex((c) => c.id === id);
+      const pos = getPosition(card, index, contentWidth);
       const w = pos.w ?? DEFAULT_W;
-      const h = pos.h ?? DEFAULT_H;
+      const h = getRenderHeight(card, index);
       const { x, y, guides } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
       setDragState({ id, x, y, w, h, guides });
     },
-    [cards, contentWidth]
+    [cards, contentWidth, getRenderHeight]
   );
 
   const handleDragStop = useCallback(
@@ -192,12 +301,14 @@ export function FreeformCanvas({
       setDragState(null);
       const card = cards.find((c) => c.id === id);
       if (!card) return;
-      const pos = getPosition(card, cards.findIndex((c) => c.id === id), contentWidth);
+      const index = cards.findIndex((c) => c.id === id);
+      const pos = getPosition(card, index, contentWidth);
       const w = pos.w ?? DEFAULT_W;
-      const h = pos.h ?? DEFAULT_H;
+      const h = getRenderHeight(card, index);
       const { x, y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
       const snappedX = Math.round(x / GRID) * GRID;
       const snappedY = Math.round(y / GRID) * GRID;
+      const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
       onUpdateCard(id, {
         style: {
           ...card.style,
@@ -206,11 +317,12 @@ export function FreeformCanvas({
             y: snappedY,
             w: pos.w,
             h: pos.h,
+            manualH: saved?.manualH === true,
           },
         },
       });
     },
-    [cards, onUpdateCard, contentWidth]
+    [cards, onUpdateCard, contentWidth, getRenderHeight]
   );
 
   const handleResizeStop = useCallback(
@@ -234,6 +346,7 @@ export function FreeformCanvas({
             y: Math.round(pos.y / GRID) * GRID,
             w,
             h,
+            manualH: true,
           },
         },
       });
@@ -256,7 +369,7 @@ export function FreeformCanvas({
     800,
     cards.reduce((max, card, idx) => {
       const pos = getPosition(card, idx, contentWidth);
-      const h = pos.h ?? DEFAULT_H;
+      const h = getRenderHeight(card, idx);
       return Math.max(max, pos.y + h + 32);
     }, 0)
   );
@@ -348,7 +461,7 @@ export function FreeformCanvas({
           {cards.map((card, idx) => {
             const pos = getPosition(card, idx, contentWidth);
             const w = pos.w ?? DEFAULT_W;
-            const h = pos.h ?? DEFAULT_H;
+            const h = getRenderHeight(card, idx);
             const isDragging = dragState?.id === card.id;
             const isSelected = selectedCardId === card.id;
             const blockStyle = getBlockStyle(card);
@@ -369,7 +482,7 @@ export function FreeformCanvas({
                 resizeGrid={[GRID, GRID]}
                 bounds="parent"
                 className="!cursor-move"
-                style={{ zIndex: isSelected || isDragging ? 10 : 1 }}
+                style={{ zIndex: isSelected || isDragging ? 60 : 1 }}
                 enableResizing={isSelected}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
@@ -393,7 +506,11 @@ export function FreeformCanvas({
                         : {}),
                     }}
                   >
-                    <div className="overflow-auto p-2 h-full">
+                    <div
+                      ref={setContentRef(card.id)}
+                      data-card-content-id={card.id}
+                      className="overflow-x-hidden overflow-y-visible p-2 h-full"
+                    >
                       <CardRenderer card={card} isSelected={isSelected} />
                     </div>
                   </div>
