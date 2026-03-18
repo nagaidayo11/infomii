@@ -350,7 +350,6 @@ export function FreeformCanvas({
             const w = pos.w ?? DEFAULT_W;
             const h = pos.h ?? DEFAULT_H;
             const isDragging = dragState?.id === card.id;
-            const displayPos = { x: pos.x, y: pos.y };
             const isSelected = selectedCardId === card.id;
             const blockStyle = getBlockStyle(card);
             return (
@@ -408,7 +407,7 @@ export function FreeformCanvas({
                       onMoveDown={undefined}
                       canMoveUp={false}
                       canMoveDown={false}
-                      verticalPosition={displayPos.y < 80 ? "below" : "above"}
+                      verticalPosition="above"
                     />
                   )}
                 </div>
