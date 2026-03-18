@@ -271,7 +271,7 @@ export function AnalyticsView() {
                   <div className="flex shrink-0 items-center gap-3 text-sm tabular-nums text-slate-600">
                     <span>{page.views} 回</span>
                     <Link
-                      href={`/editor/${page.informationId}`}
+                      href={`/editor/page/${page.informationId}`}
                       className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                     >
                       編集

@@ -242,7 +242,7 @@ export function PageManagementPanel() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <Link
-                            href={`/editor/${item.id}`}
+                            href={`/editor/page/${item.id}`}
                             className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
                           >
                             編集

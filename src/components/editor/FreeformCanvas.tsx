@@ -224,7 +224,8 @@ export function FreeformCanvas({
     if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
     setAutoHeights((prev) => {
       const next = Math.max(MIN_H, measuredHeight);
-      if (prev[id] === next) return prev;
+      const current = prev[id];
+      if (typeof current === "number" && Math.abs(current - next) < 2) return prev;
       return { ...prev, [id]: next };
     });
   }, []);
@@ -509,7 +510,7 @@ export function FreeformCanvas({
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="overflow-x-hidden overflow-y-visible p-2 h-full"
+                      className="overflow-x-hidden overflow-y-visible p-2"
                     >
                       <CardRenderer card={card} isSelected={isSelected} />
                     </div>
