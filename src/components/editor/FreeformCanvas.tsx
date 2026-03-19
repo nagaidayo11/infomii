@@ -47,8 +47,8 @@ function MobileCanvasFrame({
 }
 
 const DEFAULT_W = 280;
-const DEFAULT_H = 180;
-const STACK_STEP = 260;
+const DEFAULT_H = 96;
+const STACK_STEP = 190;
 const MIN_W = 120;
 const MIN_H = 48;
 const GRID = 8;
@@ -60,37 +60,37 @@ const POSITION_KEY = "_position";
 const CANVAS_PADDING_X = 16;
 
 const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
-  hero: 240,
-  info: 170,
-  highlight: 150,
-  action: 120,
-  welcome: 160,
-  wifi: 160,
-  breakfast: 180,
-  checkout: 180,
-  nearby: 220,
-  notice: 150,
-  map: 220,
-  restaurant: 190,
-  taxi: 170,
-  emergency: 190,
-  laundry: 180,
-  spa: 210,
-  text: 140,
-  image: 220,
-  button: 120,
-  faq: 230,
-  schedule: 220,
-  menu: 220,
-  gallery: 240,
-  divider: 80,
-  parking: 190,
-  pageLinks: 220,
-  quote: 170,
-  checklist: 230,
-  steps: 230,
-  compare: 210,
-  kpi: 200,
+  hero: 120,
+  info: 90,
+  highlight: 84,
+  action: 64,
+  welcome: 90,
+  wifi: 90,
+  breakfast: 96,
+  checkout: 96,
+  nearby: 104,
+  notice: 84,
+  map: 104,
+  restaurant: 96,
+  taxi: 90,
+  emergency: 96,
+  laundry: 96,
+  spa: 104,
+  text: 72,
+  image: 110,
+  button: 64,
+  faq: 104,
+  schedule: 96,
+  menu: 96,
+  gallery: 110,
+  divider: 52,
+  parking: 96,
+  pageLinks: 104,
+  quote: 84,
+  checklist: 104,
+  steps: 104,
+  compare: 96,
+  kpi: 96,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
@@ -278,7 +278,10 @@ export function FreeformCanvas({
         return pos.h ?? getCardDefaultHeight(card);
       }
       const auto = autoHeights[card.id];
-      return Math.max(pos.h ?? getCardDefaultHeight(card), auto ?? 0);
+      if (typeof auto === "number" && Number.isFinite(auto)) {
+        return Math.max(MIN_H, auto);
+      }
+      return pos.h ?? getCardDefaultHeight(card);
     },
     [autoHeights, contentWidth]
   );
@@ -483,7 +486,7 @@ export function FreeformCanvas({
                 resizeGrid={[GRID, GRID]}
                 bounds="parent"
                 className="!cursor-move"
-                style={{ zIndex: isSelected || isDragging ? 60 : 1 }}
+                style={{ zIndex: isSelected || isDragging ? 200 : 1 }}
                 enableResizing={isSelected}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
