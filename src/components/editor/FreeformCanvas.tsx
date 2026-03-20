@@ -44,11 +44,11 @@ function MobileCanvasFrame({
 
 const DEFAULT_W = 280;
 const DEFAULT_H = 96;
-const STACK_STEP = 190;
 const MIN_W = 120;
 const MIN_H = 48;
 const GRID = 8;
 const SNAP_THRESHOLD = 8;
+const STACK_GAP_Y = 12;
 
 type Position = { x: number; y: number; w?: number; h?: number; manualH?: boolean };
 const POSITION_KEY = "_position";
@@ -94,7 +94,17 @@ function getCardDefaultHeight(card: EditorCard): number {
 }
 
 /** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
-function getPosition(card: EditorCard, index: number, contentWidth: number): Position {
+function getInitialStackY(cards: EditorCard[], index: number): number {
+  if (index <= 0) return 24;
+  let y = 24;
+  for (let i = 0; i < index; i += 1) {
+    y += getCardDefaultHeight(cards[i] as EditorCard) + STACK_GAP_Y;
+  }
+  return y;
+}
+
+/** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
+function getPosition(card: EditorCard, index: number, contentWidth: number, cards: EditorCard[] = []): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
   // New cards (no saved width) should start full-width in the content area.
@@ -115,7 +125,7 @@ function getPosition(card: EditorCard, index: number, contentWidth: number): Pos
   }
   return {
     x: centeredX,
-    y: 24 + index * STACK_STEP,
+    y: getInitialStackY(cards, index),
     w: blockW,
     h: initialH,
   };
@@ -137,7 +147,8 @@ function computeSnap(
   let snapY = y;
 
   for (const c of others) {
-    const pos = getPosition(c, 0, canvasWidth);
+    const idx = cards.findIndex((row) => row.id === c.id);
+    const pos = getPosition(c, idx >= 0 ? idx : 0, canvasWidth, cards);
     const ow = pos.w ?? DEFAULT_W;
     const oh = pos.h ?? DEFAULT_H;
 
@@ -269,7 +280,7 @@ export function FreeformCanvas({
 
   const getRenderHeight = useCallback(
     (card: EditorCard, index: number) => {
-      const pos = getPosition(card, index, contentWidth);
+      const pos = getPosition(card, index, contentWidth, cards);
       const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
       if (saved?.manualH) {
         return pos.h ?? getCardDefaultHeight(card);
@@ -280,7 +291,7 @@ export function FreeformCanvas({
       }
       return pos.h ?? getCardDefaultHeight(card);
     },
-    [autoHeights, contentWidth]
+    [autoHeights, contentWidth, cards]
   );
 
   const handleDrag = useCallback(
@@ -288,7 +299,7 @@ export function FreeformCanvas({
       const card = cards.find((c) => c.id === id);
       if (!card) return;
       const index = cards.findIndex((c) => c.id === id);
-      const pos = getPosition(card, index, contentWidth);
+      const pos = getPosition(card, index, contentWidth, cards);
       const w = pos.w ?? DEFAULT_W;
       const h = getRenderHeight(card, index);
       const { x, y, guides } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
@@ -303,7 +314,7 @@ export function FreeformCanvas({
       const card = cards.find((c) => c.id === id);
       if (!card) return;
       const index = cards.findIndex((c) => c.id === id);
-      const pos = getPosition(card, index, contentWidth);
+      const pos = getPosition(card, index, contentWidth, cards);
       const w = pos.w ?? DEFAULT_W;
       const h = getRenderHeight(card, index);
       const { y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
@@ -320,7 +331,7 @@ export function FreeformCanvas({
       >();
       for (const c of cards) {
         const i = cards.findIndex((row) => row.id === c.id);
-        const p = getPosition(c, i, contentWidth);
+        const p = getPosition(c, i, contentWidth, cards);
         const savedPos = (c.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
         positions.set(c.id, {
           card: c,
@@ -335,7 +346,6 @@ export function FreeformCanvas({
       moved.y = snappedY;
 
       const sorted = [...positions.values()].sort((a, b) => a.y - b.y);
-      const GAP_Y = 12;
       let currentY = 24;
       const nextCards = sorted.map((entry, order) => {
         const centeredX = Math.round((contentWidth - entry.w) / 2);
@@ -353,7 +363,7 @@ export function FreeformCanvas({
             },
           },
         };
-        currentY += entry.h + GAP_Y;
+        currentY += entry.h + STACK_GAP_Y;
         return next;
       });
 
@@ -407,7 +417,7 @@ export function FreeformCanvas({
   const canvasH = Math.max(
     800,
     cards.reduce((max, card, idx) => {
-      const pos = getPosition(card, idx, contentWidth);
+      const pos = getPosition(card, idx, contentWidth, cards);
       const h = getRenderHeight(card, idx);
       return Math.max(max, pos.y + h + 32);
     }, 0)
@@ -477,7 +487,7 @@ export function FreeformCanvas({
             </svg>
           )}
           {cards.map((card, idx) => {
-            const pos = getPosition(card, idx, contentWidth);
+            const pos = getPosition(card, idx, contentWidth, cards);
             const w = pos.w ?? DEFAULT_W;
             const h = getRenderHeight(card, idx);
             const isDragging = dragState?.id === card.id;

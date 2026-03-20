@@ -27,7 +27,7 @@ export type EditorLayoutProps = {
 export function EditorLayout({ topBar, library, canvas, settings }: EditorLayoutProps) {
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden bg-slate-100/95"
+      className="app-ambient-bg flex h-full w-full flex-col overflow-hidden bg-slate-100/95"
       role="application"
       aria-label="エディタ"
       data-editor-layout
@@ -35,7 +35,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
       {/* EditorTopBar — full width */}
       {topBar != null ? (
         <header
-          className="shrink-0 border-b border-slate-200/80 bg-white"
+          className="app-page-enter shrink-0 border-b border-slate-200/80 bg-white"
           role="banner"
           data-editor-topbar
         >
@@ -47,24 +47,27 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
       <div className="flex min-h-0 flex-1" role="main">
         <aside
           data-editor-column="library"
-          className="flex h-full w-[280px] shrink-0 flex-col border-r border-slate-200/90 bg-white shadow-sm"
+          className="app-page-enter flex h-full w-[280px] shrink-0 flex-col border-r border-slate-200/90 bg-white shadow-sm"
           aria-label="ブロックライブラリ"
+          style={{ animationDelay: "40ms" }}
         >
           {library}
         </aside>
 
         <section
           data-editor-column="canvas"
-          className="flex min-w-0 flex-1 flex-col overflow-hidden bg-slate-100"
+          className="app-page-enter flex min-w-0 flex-1 flex-col overflow-hidden bg-slate-100"
           aria-label="キャンバス"
+          style={{ animationDelay: "90ms" }}
         >
           {canvas}
         </section>
 
         <aside
           data-editor-column="settings"
-          className="flex h-full w-[320px] shrink-0 flex-col border-l border-slate-200/90 bg-white shadow-sm"
+          className="app-page-enter flex h-full w-[320px] shrink-0 flex-col border-l border-slate-200/90 bg-white shadow-sm"
           aria-label="ブロック設定"
+          style={{ animationDelay: "140ms" }}
         >
           {settings}
         </aside>

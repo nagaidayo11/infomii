@@ -78,7 +78,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions }: TopbarPr
   const initials = getInitials(email);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <header className="app-page-enter flex h-14 shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="flex min-w-0 flex-1 items-center gap-4">
         <span className="truncate text-sm font-medium text-slate-700">
           {workspaceTitle || "—"}
@@ -116,7 +116,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions }: TopbarPr
               </div>
               <Link
                 href="/settings"
-                className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 role="menuitem"
                 onClick={() => setMenuOpen(false)}
               >

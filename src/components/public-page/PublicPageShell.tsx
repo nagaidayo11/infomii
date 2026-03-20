@@ -28,7 +28,7 @@ function PageContent({
 }: Omit<PublicPageShellProps, "isEmbed">) {
   return (
     <>
-      <header className="sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
+      <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
         <div className="mx-auto flex max-w-[420px] flex-col gap-3">
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
           {title.trim() ? (
@@ -39,14 +39,14 @@ function PageContent({
         </div>
       </header>
       <main className="flex-1 px-4 pb-8 pt-5">
-        <div className="mx-auto max-w-[420px] space-y-5">{children}</div>
+        <div className="app-stagger mx-auto max-w-[420px] space-y-5">{children}</div>
       </main>
       {contactActions ? (
-        <footer className="bg-white px-4 py-5">
+        <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
           <div className="mx-auto max-w-[420px]">{contactActions}</div>
         </footer>
       ) : (
-        <footer className="bg-white px-4 py-5">
+        <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
           <div className="mx-auto max-w-[420px]">
             <p className="text-sm leading-relaxed text-slate-600">
               ご不明な点はスタッフまでお声がけください。

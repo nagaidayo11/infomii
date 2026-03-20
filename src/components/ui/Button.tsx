@@ -13,7 +13,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const baseClass =
-  "inline-flex items-center justify-center rounded-xl font-semibold " +
+  "app-interactive inline-flex items-center justify-center rounded-xl font-semibold " +
   "transition-[transform,background-color,color,box-shadow,border-color] duration-200 ease-out " +
   "shadow-sm " +
   "active:scale-[0.98] " +

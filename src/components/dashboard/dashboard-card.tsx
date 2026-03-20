@@ -24,7 +24,7 @@ export function DashboardCard({
   return (
     <div
       className={
-        "rounded-xl border border-slate-200/80 bg-white " +
+        "app-interactive app-page-enter rounded-xl border border-slate-200/80 bg-white " +
         "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.02)] " +
         "transition-[box-shadow,border-color] duration-200 ease-out " +
         paddingClass[padding] +

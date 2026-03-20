@@ -25,11 +25,11 @@ export function AppLayout({
   topbarActions,
 }: AppLayoutProps) {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-100/90">
+    <div className="app-ambient-bg flex h-screen w-full overflow-hidden bg-slate-100/90">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar actions={topbarActions} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="app-page-enter flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>

@@ -85,7 +85,7 @@ export function Sidebar() {
           <p className="mt-0.5 text-[11px] font-normal text-slate-500">{PRODUCT_TAGLINE}</p>
         </Link>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      <nav className="app-stagger flex flex-1 flex-col gap-1 p-3">
         {MENU_ITEMS.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -95,7 +95,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors " +
+                "app-interactive flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors " +
                 (isActive
                   ? "bg-white text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
                   : "text-slate-600 hover:bg-white/80 hover:text-slate-900")
@@ -117,7 +117,7 @@ export function Sidebar() {
       <div className="border-t border-slate-200/60 p-3">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-700"
+          className="app-interactive flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-700"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

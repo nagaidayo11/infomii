@@ -29,7 +29,7 @@ export function Card({
     <div
       style={{ backgroundColor: "var(--editor-block-surface, #ffffff)" }}
       className={
-        "rounded-[inherit] " +
+        "app-interactive rounded-[inherit] " +
         "transition-[transform] duration-200 ease-out " +
         paddingClass[padding] +
         (hover ? " hover:-translate-y-0.5" : "") +
