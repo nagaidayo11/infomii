@@ -16,7 +16,6 @@ import { RestaurantCard } from "./RestaurantCard";
 import { TaxiCard } from "./TaxiCard";
 import { EmergencyCard } from "./EmergencyCard";
 import { LaundryCard } from "./LaundryCard";
-import { SpaCard } from "./SpaCard";
 import { TextCard } from "./TextCard";
 import { ImageCard } from "./ImageCard";
 import { ButtonCard } from "./ButtonCard";
@@ -87,6 +86,22 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       };
       return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
     }
+    case "spa": {
+      const c = card.content as Record<string, unknown> | undefined;
+      const time = ((c?.time as string) ?? (c?.hours as string) ?? "").trim();
+      const location = (c?.location as string) ?? "";
+      const menu = ((c?.menu as string) ?? (c?.description as string) ?? (c?.note as string) ?? "").trim();
+      const highlightCard: EditorCard = {
+        ...card,
+        type: "highlight",
+        content: {
+          title: (c?.title as string) || "スパ・温泉",
+          body: [time, location, menu].filter(Boolean).join(" · ") || "時間・場所・ご案内",
+          accent: "blue",
+        },
+      };
+      return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
+    }
     case "checkout":
       return <CheckoutCard card={card} isSelected={isSelected} locale={locale} />;
     case "notice":
@@ -115,8 +130,6 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       return <TaxiCard card={card} isSelected={isSelected} locale={locale} />;
     case "restaurant":
       return <RestaurantCard card={card} isSelected={isSelected} locale={locale} />;
-    case "spa":
-      return <SpaCard card={card} isSelected={isSelected} locale={locale} />;
     case "text":
       return <TextCard card={card} isSelected={isSelected} locale={locale} />;
     case "schedule":

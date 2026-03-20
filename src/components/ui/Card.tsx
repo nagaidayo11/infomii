@@ -27,8 +27,9 @@ export function Card({
 }: CardProps) {
   return (
     <div
+      style={{ backgroundColor: "var(--editor-block-surface, #ffffff)" }}
       className={
-        "rounded-[inherit] bg-white " +
+        "rounded-[inherit] " +
         "transition-[transform] duration-200 ease-out " +
         paddingClass[padding] +
         (hover ? " hover:-translate-y-0.5" : "") +

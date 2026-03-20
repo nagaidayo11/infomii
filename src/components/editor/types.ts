@@ -121,6 +121,9 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
+  if (typeof s.backgroundColor === "string") {
+    (style as Record<string, string>)["--editor-block-surface"] = s.backgroundColor;
+  }
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
   if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;
   return style as import("react").CSSProperties;
@@ -165,7 +168,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   action: "アクション",
   welcome: "ウェルカム",
   wifi: "WiFi",
-  breakfast: "朝食",
+  breakfast: "施設案内",
   checkout: "チェックアウト",
   nearby: "周辺案内",
   notice: "お知らせ",
@@ -286,7 +289,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "wifi":
       return { ssid: "", password: "", description: "" };
     case "breakfast":
-      return { time: "7:00–9:30", location: "1F ダイニング", menu: "" };
+      return { title: "施設案内", time: "7:00–9:30", location: "1F ダイニング", menu: "" };
     case "checkout":
       return { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" };
     case "nearby":

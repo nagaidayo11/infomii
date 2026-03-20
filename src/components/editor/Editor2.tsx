@@ -53,6 +53,9 @@ export function Editor2({ pageId }: Editor2Props) {
   const duplicateCard = useEditor2Store((s) => s.duplicateCard);
   const undo = useEditor2Store((s) => s.undo);
   const redo = useEditor2Store((s) => s.redo);
+  const clearCards = useEditor2Store((s) => s.clearCards);
+  const canUndo = useEditor2Store((s) => s.historyPast.length > 0);
+  const canRedo = useEditor2Store((s) => s.historyFuture.length > 0);
   const setPageMeta = useEditor2Store((s) => s.setPageMeta);
 
   useEffect(() => {
@@ -253,6 +256,13 @@ export function Editor2({ pageId }: Editor2Props) {
     [addCard]
   );
 
+  const handleClearAll = useCallback(() => {
+    if (cards.length === 0) return;
+    const ok = window.confirm("このページのブロックをすべて削除します。よろしいですか？");
+    if (!ok) return;
+    clearCards();
+  }, [cards.length, clearCards]);
+
   const topBar =
     pageId ? (
       <EditorTopBar
@@ -264,6 +274,12 @@ export function Editor2({ pageId }: Editor2Props) {
         status="draft"
         publicUrl={pageMeta.publicUrl}
         publishing={publishing}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        canClearAll={cards.length > 0}
+        onUndo={undo}
+        onRedo={redo}
+        onClearAll={handleClearAll}
         onEditPageBackground={() => selectCard(null)}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}

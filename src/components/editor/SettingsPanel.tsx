@@ -792,6 +792,13 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
   const display = (key: string) =>
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
 
+  const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
+  const facilityTime = card.type === "spa" ? display("time") || display("hours") : display("time");
+  const facilityDetail =
+    card.type === "spa"
+      ? display("menu") || display("description") || display("note")
+      : display("menu");
+
   /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。入力後に自動で en/zh/ko を翻訳。 */
   const updateLocalized = (key: string, value: string) => {
     const cur = content[key];
@@ -802,6 +809,24 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
     pendingRef.current = { cardId: card.id, key, ja: value };
     translateTimeoutRef.current = setTimeout(flushTranslate, TRANSLATE_DEBOUNCE_MS);
+  };
+
+  const updateFacilityLocalized = (key: "title" | "time" | "location" | "menu", value: string) => {
+    if (card.type !== "spa") {
+      updateLocalized(key, value);
+      return;
+    }
+    if (key === "time") {
+      updateLocalized("time", value);
+      updateLocalized("hours", value);
+      return;
+    }
+    if (key === "menu") {
+      updateLocalized("menu", value);
+      updateLocalized("description", value);
+      return;
+    }
+    updateLocalized(key, value);
   };
 
   return (
@@ -1077,33 +1102,33 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             </>
           )}
 
-          {card.type === "breakfast" && (
+          {isFacilityGuideBlock && (
             <>
               <SettingsSection title="コンテンツ">
                 <Input
                   label="タイトル"
                   value={display("title")}
-                  onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="e.g. Breakfast"
+                  onChange={(e) => updateFacilityLocalized("title", e.target.value)}
+                  placeholder="施設案内"
                 />
                 <Input
                   label="時間"
-                  value={display("time")}
-                  onChange={(e) => updateLocalized("time", e.target.value)}
+                  value={facilityTime}
+                  onChange={(e) => updateFacilityLocalized("time", e.target.value)}
                   placeholder="7:00–9:30"
                 />
                 <Input
                   label="場所"
                   value={display("location")}
-                  onChange={(e) => updateLocalized("location", e.target.value)}
+                  onChange={(e) => updateFacilityLocalized("location", e.target.value)}
                   placeholder="1F Dining"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Menu / notes</label>
+                  <label className={labelClass}>詳細</label>
                   <textarea
-                    value={display("menu")}
-                    onChange={(e) => updateLocalized("menu", e.target.value)}
-                    placeholder="Menu or notes"
+                    value={facilityDetail}
+                    onChange={(e) => updateFacilityLocalized("menu", e.target.value)}
+                    placeholder="メニュー・補足など"
                     rows={2}
                     className={inputClass}
                   />
@@ -1399,44 +1424,6 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             </SettingsSection>
           )}
 
-          {card.type === "spa" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="スパ・温泉"
-              />
-              <Input
-                label="営業時間"
-                value={display("hours")}
-                onChange={(e) => updateLocalized("hours", e.target.value)}
-                placeholder="6:00–24:00"
-              />
-              <Input
-                label="場所"
-                value={display("location")}
-                onChange={(e) => updateLocalized("location", e.target.value)}
-                placeholder="B1F"
-              />
-              <div className="w-full">
-                <label className={labelClass}>Description</label>
-                <textarea
-                  value={display("description")}
-                  onChange={(e) => updateLocalized("description", e.target.value)}
-                  placeholder="施設の説明"
-                  rows={2}
-                  className={inputClass}
-                />
-              </div>
-              <Input
-                label="補足"
-                value={display("note")}
-                onChange={(e) => updateLocalized("note", e.target.value)}
-                placeholder="任意"
-              />
-            </SettingsSection>
-          )}
 
           {card.type === "notice" && (
             <>
@@ -1817,7 +1804,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               </select>
             </div>
             <div className="w-full">
-              <label className={labelClass}>背景色</label>
+              <label className={labelClass}>ブロックカラー</label>
               <div className="flex gap-2">
                 <input
                   type="color"
@@ -1833,7 +1820,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   type="text"
                   value={(style.backgroundColor as string) ?? ""}
                   onChange={(e) => updateStyle("backgroundColor", e.target.value || undefined)}
-                  placeholder="#ffffff"
+                  placeholder="#ffffff（ブロック全体）"
                   className={inputClass + " flex-1"}
                 />
               </div>

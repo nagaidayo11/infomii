@@ -76,6 +76,7 @@ export type Editor2State = {
   selectCard: (id: string | null) => void;
   removeCard: (id: string) => void;
   duplicateCard: (id: string) => void;
+  clearCards: () => void;
   undo: () => void;
   redo: () => void;
 };
@@ -297,6 +298,17 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     setTimeout(() => set({ lastAddedCardId: newId }), 0);
     setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
   },
+
+  clearCards: () =>
+    set((s) => {
+      if (s.cards.length === 0) return s;
+      return {
+        cards: [],
+        selectedCardId: null,
+        historyPast: pushHistory(s.historyPast, s.cards),
+        historyFuture: [],
+      };
+    }),
 
   undo: () => {
     const { historyPast, cards, historyFuture } = get();

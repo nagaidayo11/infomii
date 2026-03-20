@@ -12,6 +12,12 @@ export type EditorTopBarProps = {
   publicUrl: string | null;
   publishing?: boolean;
   onEditPageBackground?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  canClearAll?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  onClearAll?: () => void;
   onPreview: () => void;
   onPublish: () => void;
   onQr: () => void;
@@ -88,6 +94,12 @@ export function EditorTopBar({
   publicUrl,
   publishing = false,
   onEditPageBackground,
+  canUndo = false,
+  canRedo = false,
+  canClearAll = false,
+  onUndo,
+  onRedo,
+  onClearAll,
   onPreview,
   onPublish,
   onQr,
@@ -148,6 +160,36 @@ export function EditorTopBar({
       </div>
 
       {/* Page controls */}
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onUndo}
+          disabled={!canUndo || !onUndo}
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          title="ひとつ前に戻す"
+        >
+          戻る
+        </button>
+        <button
+          type="button"
+          onClick={onRedo}
+          disabled={!canRedo || !onRedo}
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          title="ひとつ先に進む"
+        >
+          進む
+        </button>
+        <button
+          type="button"
+          onClick={onClearAll}
+          disabled={!canClearAll || !onClearAll}
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          title="ページ内ブロックを全削除"
+        >
+          全削除
+        </button>
+      </div>
+
       {onEditPageBackground && (
         <button
           type="button"

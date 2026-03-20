@@ -202,7 +202,7 @@ const HERO_ITEMS: LibraryItem[] = [
 const BASIC_ITEMS: LibraryItem[] = [
   { type: "welcome", label: "ウェルカム", description: "ウェルカムメッセージ・ご挨拶" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード・接続方法" },
-  { type: "breakfast", label: "朝食", description: "朝食の時間・会場・メニュー" },
+  { type: "breakfast", label: "施設案内", description: "時間・場所・詳細（汎用）" },
   { type: "checkout", label: "チェックアウト", description: "チェックアウト時刻・手順" },
   { type: "notice", label: "お知らせ", description: "重要なお知らせ・注意事項" },
   { type: "schedule", label: "営業時間", description: "営業時間・スケジュール" },
@@ -234,7 +234,6 @@ const MEDIA_ITEMS: LibraryItem[] = [
 /** Hospitality: restaurant, spa, laundry */
 const HOSPITALITY_ITEMS: LibraryItem[] = [
   { type: "restaurant", label: "レストラン", description: "館内レストランの案内" },
-  { type: "spa", label: "スパ・温泉", description: "スパ・大浴場・温泉の案内" },
   { type: "laundry", label: "ランドリー", description: "ランドリー・クリーニング" },
 ];
 
@@ -269,8 +268,8 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
   {
     id: "facility-guide",
     label: "施設案内セット",
-    description: "レストラン / スパ / ランドリー / 営業時間",
-    types: ["restaurant", "spa", "laundry", "schedule"],
+    description: "レストラン / 施設案内 / ランドリー / 営業時間",
+    types: ["restaurant", "breakfast", "laundry", "schedule"],
   },
   {
     id: "navigation-set",

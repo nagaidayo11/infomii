@@ -8,9 +8,9 @@ import { useEditor2Store } from "@/components/editor/store";
 type HighlightCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
 const ACCENT_CLASS: Record<string, string> = {
-  amber: "border-l-amber-500 bg-amber-50/90 text-amber-900",
-  blue: "border-l-blue-500 bg-blue-50/90 text-blue-900",
-  emerald: "border-l-emerald-500 bg-emerald-50/90 text-emerald-900",
+  amber: "border-l-amber-500 text-amber-900",
+  blue: "border-l-blue-500 text-blue-900",
+  emerald: "border-l-emerald-500 text-emerald-900",
 };
 
 export function HighlightCard({ card, isSelected = false }: HighlightCardProps) {
@@ -28,7 +28,10 @@ export function HighlightCard({ card, isSelected = false }: HighlightCardProps) 
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div className={`h-full rounded-[inherit] border-l-4 px-4 py-4 ${accentClass}`}>
+    <div
+      className={`h-full rounded-[inherit] border-l-4 px-4 py-4 ${accentClass}`}
+      style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
+    >
       <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder="タイトル" />
       </h3>
