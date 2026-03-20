@@ -120,7 +120,7 @@ export function DashboardQrAnalytics({
                     QR {page.qrViews}
                   </span>
                   <Link
-                    href={`/editor/page/${page.informationId}`}
+                    href={`/editor/${page.informationId}`}
                     className="rounded-md border border-slate-200 px-2 py-1 font-medium text-slate-700 hover:bg-white"
                   >
                     編集
