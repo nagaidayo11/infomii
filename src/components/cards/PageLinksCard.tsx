@@ -27,6 +27,8 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "メニュー";
+  const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
 
   const update = (patch: Record<string, unknown>) => {
@@ -58,7 +60,10 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
           placeholder="タイトル"
         />
       </h3>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <div
+        className="grid gap-3"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
         {items.length === 0 ? (
           <p className="col-span-full text-slate-500" style={getBodyFontSizeStyle()}>リンクを追加</p>
         ) : (
@@ -66,11 +71,14 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
             const href = getHref(item);
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
-              <div className="flex flex-col items-center gap-2 rounded-xl bg-slate-50/80 p-4 transition hover:bg-slate-100">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
+              <div className="flex min-h-[132px] flex-col items-center gap-2 rounded-xl bg-slate-50/80 p-3 transition hover:bg-slate-100">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
                   <LineIcon name={iconDisplay} className="h-6 w-6" />
                 </span>
-                <span className="text-center font-medium text-slate-700 line-clamp-2" style={getBodyFontSizeStyle()}>
+                <span
+                  className="w-full text-center font-medium leading-tight text-slate-700 break-words [word-break:keep-all]"
+                  style={getBodyFontSizeStyle()}
+                >
                   {isSelected ? (
                     <InlineEditable
                       value={item.label ?? ""}

@@ -101,7 +101,8 @@ function getCardDefaultHeight(card: EditorCard): number {
 function getPosition(card: EditorCard, index: number, contentWidth: number): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
-  const w = typeof pos?.w === "number" ? pos.w : DEFAULT_W;
+  // New cards (no saved width) should start full-width in the content area.
+  const w = typeof pos?.w === "number" ? pos.w : contentWidth;
   const h = typeof pos?.h === "number" ? pos.h : initialH;
   const blockW = Math.min(w, contentWidth);
   const centeredX = Math.round((contentWidth - blockW) / 2);

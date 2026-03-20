@@ -5,6 +5,8 @@ import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
+const STYLE_KEY = "_style";
+
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
@@ -33,9 +35,25 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
   if (cardsError) notFound();
 
   const cards: EditorCard[] = (rows ?? []).map((r) => ({
+    // Keep public rendering in sync with editor persistence:
+    // style is stored in content._style when saved from editor.
+    ...(typeof r.content === "object" &&
+    r.content &&
+    !Array.isArray(r.content) &&
+    STYLE_KEY in (r.content as Record<string, unknown>) &&
+    typeof (r.content as Record<string, unknown>)[STYLE_KEY] === "object"
+      ? {
+          style: (r.content as Record<string, unknown>)[STYLE_KEY] as Record<string, unknown>,
+        }
+      : {}),
     id: r.id,
     type: (r.type ?? "text") as CardType,
-    content: (r.content as Record<string, unknown>) ?? {},
+    content:
+      typeof r.content === "object" && r.content && !Array.isArray(r.content)
+        ? Object.fromEntries(
+            Object.entries(r.content as Record<string, unknown>).filter(([key]) => key !== STYLE_KEY)
+          )
+        : {},
     order: r.order ?? 0,
   }));
 

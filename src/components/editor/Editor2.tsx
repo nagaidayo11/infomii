@@ -244,9 +244,16 @@ export function Editor2({ pageId }: Editor2Props) {
     }
   }, [pageId]);
 
-  const handlePreviewClick = useCallback(() => {
-    if (pageMeta.publicUrl) window.open(pageMeta.publicUrl, "_blank", "noopener,noreferrer");
-  }, [pageMeta.publicUrl]);
+  const handlePreviewClick = useCallback(async () => {
+    if (!pageMeta.publicUrl || !pageId) return;
+    try {
+      const currentCards = useEditor2Store.getState().cards;
+      await savePageCards(pageId, currentCards);
+    } catch {
+      // Even if save fails, allow user to inspect current public page.
+    }
+    window.open(pageMeta.publicUrl, "_blank", "noopener,noreferrer");
+  }, [pageMeta.publicUrl, pageId]);
 
   const topBar =
     pageId ? (

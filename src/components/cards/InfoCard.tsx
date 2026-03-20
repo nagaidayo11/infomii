@@ -39,9 +39,9 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
           <p className="text-slate-500">ラベルと値を追加</p>
         ) : (
           rows.map((row, i) => (
-            <div key={i} className="flex justify-between gap-2">
-              <span className="text-slate-500">{row.label ?? "—"}</span>
-              <span className="font-medium text-slate-800 truncate max-w-[60%]">
+            <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2">
+              <span className="text-slate-500 break-words">{row.label ?? "—"}</span>
+              <span className="text-right font-medium text-slate-800 break-all leading-snug">
                 <InlineEditable
                   value={row.value ?? ""}
                   onSave={(v) => {

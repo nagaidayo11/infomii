@@ -297,6 +297,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "pageLinks":
       return {
         title: "メニュー",
+        columns: 3,
         items: [
           { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },

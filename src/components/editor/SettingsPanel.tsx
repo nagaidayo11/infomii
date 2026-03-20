@@ -303,6 +303,8 @@ function PageLinksItemsEditor({
   }, []);
 
   const items = (Array.isArray(content.items) ? content.items : []) as PageLinksItem[];
+  const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
@@ -315,6 +317,18 @@ function PageLinksItemsEditor({
 
   return (
     <div className="space-y-3">
+      <div className="w-full">
+        <label className={labelClass}>列数</label>
+        <select
+          value={String(columns)}
+          onChange={(e) => onUpdate("columns", Number(e.target.value))}
+          className={inputClass}
+        >
+          <option value="2">2列</option>
+          <option value="3">3列</option>
+          <option value="4">4列</option>
+        </select>
+      </div>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">リンク項目</span>
         <button
