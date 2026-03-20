@@ -39,6 +39,7 @@ export function PageManagementPanel() {
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
+  const cardPageIdBySlug = new Map(cardPages.map((page) => [page.slug, page.id]));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -241,12 +242,18 @@ export function PageManagementPanel() {
                           </a>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <Link
-                            href={`/editor/${item.id}`}
-                            className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
-                          >
-                            編集
-                          </Link>
+                          {cardPageIdBySlug.get(item.slug) ? (
+                            <Link
+                              href={`/editor/${cardPageIdBySlug.get(item.slug)}`}
+                              className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                            >
+                              編集
+                            </Link>
+                          ) : (
+                            <span className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
+                              未移行
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-3 text-right">
                           <button

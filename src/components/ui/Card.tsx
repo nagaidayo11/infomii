@@ -28,7 +28,7 @@ export function Card({
   return (
     <div
       className={
-        "rounded-xl bg-white " +
+        "rounded-[inherit] bg-white " +
         "transition-[transform] duration-200 ease-out " +
         paddingClass[padding] +
         (hover ? " hover:-translate-y-0.5" : "") +

@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
-import { useEditor2Store } from "./store";
 import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
 const VIEWPORT_SIZES = [
-  { label: "375px", width: 375 },
-  { label: "414px", width: 414 },
+  { device: "iPhone SE", label: "iPhone SE (375px)", width: 375 },
+  { device: "iPhone 15 Pro", label: "iPhone 15 Pro (393px)", width: 393 },
+  { device: "iPhone 15 Pro Max", label: "iPhone 15 Pro Max (430px)", width: 430 },
+  { device: "Pixel 7", label: "Pixel 7 (412px)", width: 412 },
+  { device: "Galaxy S20", label: "Galaxy S20 (360px)", width: 360 },
 ] as const;
 
 function MobileCanvasFrame({
@@ -184,6 +186,7 @@ type FreeformCanvasProps = {
   selectedCardId: string | null;
   onSelectCard: (id: string | null) => void;
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
+  onReorderCards?: (cards: EditorCard[]) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
   pageBackground?: {
@@ -200,6 +203,7 @@ export function FreeformCanvas({
   selectedCardId,
   onSelectCard,
   onUpdateCard,
+  onReorderCards,
   onDuplicateCard,
   onRemoveCard,
   pageBackground,
@@ -207,8 +211,6 @@ export function FreeformCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const showGrid = useEditor2Store((s) => s.showGrid);
-  const pageTheme = useEditor2Store((s) => s.pageTheme);
   const [viewportWidth, setViewportWidth] = useState(375);
   const contentWidth = viewportWidth - CANVAS_PADDING_X * 2;
   const [dragState, setDragState] = useState<{
@@ -310,24 +312,67 @@ export function FreeformCanvas({
       const pos = getPosition(card, index, contentWidth);
       const w = pos.w ?? DEFAULT_W;
       const h = getRenderHeight(card, index);
-      const { x, y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
-      const snappedX = Math.round(x / GRID) * GRID;
+      const { y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
       const snappedY = Math.round(y / GRID) * GRID;
-      const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
-      onUpdateCard(id, {
-        style: {
-          ...card.style,
-          [POSITION_KEY]: {
-            x: snappedX,
-            y: snappedY,
-            w: pos.w,
-            h: pos.h,
-            manualH: saved?.manualH === true,
+      const positions = new Map<
+        string,
+        {
+          card: EditorCard;
+          w: number;
+          h: number;
+          y: number;
+          manualH: boolean;
+        }
+      >();
+      for (const c of cards) {
+        const i = cards.findIndex((row) => row.id === c.id);
+        const p = getPosition(c, i, contentWidth);
+        const savedPos = (c.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
+        positions.set(c.id, {
+          card: c,
+          w: p.w ?? DEFAULT_W,
+          h: getRenderHeight(c, i),
+          y: p.y,
+          manualH: savedPos?.manualH === true,
+        });
+      }
+      const moved = positions.get(id);
+      if (!moved) return;
+      moved.y = snappedY;
+
+      const sorted = [...positions.values()].sort((a, b) => a.y - b.y);
+      const GAP_Y = 12;
+      let currentY = 24;
+      const nextCards = sorted.map((entry, order) => {
+        const centeredX = Math.round((contentWidth - entry.w) / 2);
+        const next = {
+          ...entry.card,
+          order,
+          style: {
+            ...(entry.card.style ?? {}),
+            [POSITION_KEY]: {
+              x: centeredX,
+              y: currentY,
+              w: entry.w,
+              h: entry.h,
+              manualH: entry.manualH,
+            },
           },
-        },
+        };
+        currentY += entry.h + GAP_Y;
+        return next;
       });
+
+      if (onReorderCards) {
+        onReorderCards(nextCards);
+        return;
+      }
+
+      const movedCard = nextCards.find((c) => c.id === id);
+      if (!movedCard) return;
+      onUpdateCard(id, { style: movedCard.style as Record<string, unknown> });
     },
-    [cards, onUpdateCard, contentWidth, getRenderHeight]
+    [cards, onUpdateCard, onReorderCards, contentWidth, getRenderHeight]
   );
 
   const handleResizeStop = useCallback(
@@ -359,11 +404,6 @@ export function FreeformCanvas({
     [cards, onUpdateCard]
   );
 
-  const themeStyles = {
-    light: { bg: "#eef0f3", canvas: "bg-white", grid: "#d1d5db" },
-    dark: { bg: "#1e293b", canvas: "bg-slate-800", grid: "#475569" },
-  } as const;
-  const theme = themeStyles[pageTheme] ?? themeStyles.light;
   const pageBackgroundStyle =
     pageBackground?.mode === "gradient"
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
@@ -388,34 +428,28 @@ export function FreeformCanvas({
     >
       <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
         <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
-        {VIEWPORT_SIZES.map(({ label, width }) => (
-          <button
-            key={width}
-            type="button"
-            onClick={() => setViewportWidth(width)}
-            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-              viewportWidth === width
-                ? "bg-slate-900 !text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        <select
+          value={String(viewportWidth)}
+          onChange={(e) => setViewportWidth(parseInt(e.target.value, 10) || 375)}
+          className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700"
+          aria-label="デバイス幅を選択"
+        >
+          {VIEWPORT_SIZES.map(({ label, width }) => (
+            <option key={width} value={width}>
+              {label}
+            </option>
+          ))}
+        </select>
       </div>
       <div
         className="flex flex-1 justify-center overflow-auto p-6"
         style={{
-          background: theme.bg,
-          backgroundImage: showGrid
-            ? `radial-gradient(circle at 1px 1px, ${theme.grid} 1px, transparent 0)`
-            : undefined,
-          backgroundSize: "24px 24px",
+          background: "#eef0f3",
         }}
       >
         <MobileCanvasFrame width={viewportWidth}>
           <div
-            className={`relative rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ${theme.canvas}`}
+            className="relative rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
             style={{ width: canvasW, height: canvasH, minHeight: canvasH, background: pageBackgroundStyle }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
@@ -503,7 +537,6 @@ export function FreeformCanvas({
                     }
                     style={{
                       ...blockStyle,
-                      backgroundColor: blockStyle.backgroundColor ?? "white",
                       ...((card.style as Record<string, unknown> | undefined)?.textColor
                         ? ({
                             ["--editor-card-text-color"]: (card.style as Record<string, unknown>).textColor as string,
@@ -514,7 +547,7 @@ export function FreeformCanvas({
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="overflow-x-hidden overflow-y-visible p-2"
+                      className="h-full overflow-x-hidden overflow-y-visible p-0"
                     >
                       <CardRenderer card={card} isSelected={isSelected} />
                     </div>

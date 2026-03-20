@@ -4,6 +4,7 @@ import Link from "next/link";
 
 export type PageCardProps = {
   id: string;
+  editHref?: string | null;
   title: string;
   slug: string;
   status: "draft" | "published";
@@ -36,6 +37,7 @@ function formatLastUpdated(dateStr: string): string {
  */
 export function PageCard({
   id,
+  editHref,
   title,
   slug,
   status,
@@ -47,6 +49,7 @@ export function PageCard({
 }: PageCardProps) {
   const publicUrl =
     typeof window !== "undefined" ? `${window.location.origin}/p/${slug}` : `/p/${slug}`;
+  const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
 
   return (
     <article className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:p-5">
@@ -87,9 +90,9 @@ export function PageCard({
           >
             公開ページ
           </Link>
-          {canEdit && (
+          {canEdit && resolvedEditHref && (
           <Link
-            href={`/editor/${id}`}
+            href={resolvedEditHref}
             className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition hover:bg-slate-800"
           >
             編集

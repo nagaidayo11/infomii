@@ -629,6 +629,96 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。
           </p>
         </div>
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="space-y-6">
+            <SettingsSection title="ページ背景">
+              <div className="w-full">
+                <label className={labelClass}>背景タイプ</label>
+                <select
+                  value={pageBackgroundMode}
+                  onChange={(e) =>
+                    setPageBackground({ mode: e.target.value as "solid" | "gradient" })
+                  }
+                  className={inputClass}
+                >
+                  <option value="solid">単色</option>
+                  <option value="gradient">グラデーション</option>
+                </select>
+              </div>
+              {pageBackgroundMode === "solid" ? (
+                <div className="w-full">
+                  <label className={labelClass}>背景色</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={pageBackgroundColor}
+                      onChange={(e) => setPageBackground({ color: e.target.value })}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={pageBackgroundColor}
+                      onChange={(e) => setPageBackground({ color: e.target.value || "#ffffff" })}
+                      placeholder="#ffffff"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="w-full">
+                    <label className={labelClass}>開始色</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={pageGradientFrom}
+                        onChange={(e) => setPageBackground({ from: e.target.value })}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                      />
+                      <input
+                        type="text"
+                        value={pageGradientFrom}
+                        onChange={(e) => setPageBackground({ from: e.target.value || "#f8fafc" })}
+                        placeholder="#f8fafc"
+                        className={inputClass + " flex-1"}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full">
+                    <label className={labelClass}>終了色</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={pageGradientTo}
+                        onChange={(e) => setPageBackground({ to: e.target.value })}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                      />
+                      <input
+                        type="text"
+                        value={pageGradientTo}
+                        onChange={(e) => setPageBackground({ to: e.target.value || "#e2e8f0" })}
+                        placeholder="#e2e8f0"
+                        className={inputClass + " flex-1"}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full">
+                    <label className={labelClass}>角度 ({pageGradientAngle}deg)</label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      step={1}
+                      value={pageGradientAngle}
+                      onChange={(e) => setPageBackground({ angle: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full"
+                    />
+                  </div>
+                </>
+              )}
+            </SettingsSection>
+          </div>
+        </div>
       </>
     );
   }

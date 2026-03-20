@@ -10,6 +10,7 @@ import {
   getPageViewAnalytics,
   createBlankPage,
   deleteInformation,
+  listPagesForHotel,
   PAGE_LIMIT_REACHED,
   type HotelViewMetrics,
   type PageViewAnalytics,
@@ -36,21 +37,24 @@ export function DashboardView() {
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
+  const [cardPages, setCardPages] = useState<Array<{ id: string; slug: string }>>([]);
 
   const canEdit = role === "owner" || role === "editor";
 
   const loadBootstrap = useCallback(async () => {
     setLoading(true);
-    const [b, v, p, r] = await Promise.all([
+    const [b, v, p, r, pages] = await Promise.all([
       getDashboardBootstrapData(),
       getCurrentHotelViewMetrics().catch(() => null),
       getPageViewAnalytics().catch(() => null),
       getCurrentUserHotelRole().catch(() => null),
+      listPagesForHotel().catch(() => []),
     ]);
     setBootstrap(b);
     setViewMetrics(v);
     setPageViewAnalytics(p);
     setRole(r);
+    setCardPages(pages.map((page) => ({ id: page.id, slug: page.slug })));
   }, []);
 
   async function handleDeletePage(id: string) {
@@ -125,6 +129,7 @@ export function DashboardView() {
   const totalViews = viewMetrics?.totalViews7d ?? pageViewAnalytics?.totalViews ?? 0;
   const todayViews = viewMetrics?.totalViewsToday ?? 0;
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
+  const cardPageIdBySlug = new Map(cardPages.map((p) => [p.slug, p.id]));
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -288,6 +293,7 @@ export function DashboardView() {
                 <PageCard
                   key={item.id}
                   id={item.id}
+                  editHref={cardPageIdBySlug.get(item.slug) ? `/editor/${cardPageIdBySlug.get(item.slug)}` : null}
                   title={item.title}
                   slug={item.slug}
                   status={item.status}
@@ -316,6 +322,7 @@ export function DashboardView() {
                 <PageCard
                   key={item.id}
                   id={item.id}
+                  editHref={cardPageIdBySlug.get(item.slug) ? `/editor/${cardPageIdBySlug.get(item.slug)}` : null}
                   title={item.title}
                   slug={item.slug}
                   status="published"

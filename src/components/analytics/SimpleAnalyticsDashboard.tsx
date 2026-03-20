@@ -27,7 +27,6 @@ export function SimpleAnalyticsDashboard() {
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     Promise.all([getCurrentHotelViewMetrics(), getQrScansLast7Days()])
       .then(([m, d]) => {
         if (!mounted) return;
@@ -237,10 +236,10 @@ export function SimpleAnalyticsDashboard() {
                       <span>閲覧 {page.views}</span>
                       <span className="text-blue-600">QR {page.qrViews}</span>
                       <Link
-                        href={`/editor/${page.informationId}`}
+                        href="/dashboard/pages"
                         className="rounded-lg border border-ds-border bg-white px-2 py-1 font-medium hover:bg-slate-50"
                       >
-                        編集
+                        ページ一覧
                       </Link>
                     </div>
                   </li>

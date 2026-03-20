@@ -36,6 +36,7 @@ export function PagesListView() {
   } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
+  const cardPageIdBySlug = new Map(cardPages.map((p) => [p.slug, p.id]));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -189,6 +190,7 @@ export function PagesListView() {
                 <li key={item.id}>
                   <PageCard
                     id={item.id}
+                    editHref={cardPageIdBySlug.get(item.slug) ? `/editor/${cardPageIdBySlug.get(item.slug)}` : null}
                     title={item.title}
                     slug={item.slug}
                     status={item.status}

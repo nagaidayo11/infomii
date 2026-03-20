@@ -11,10 +11,7 @@ export type EditorTopBarProps = {
   status?: "draft" | "published";
   publicUrl: string | null;
   publishing?: boolean;
-  showGrid?: boolean;
-  onShowGridChange?: (show: boolean) => void;
-  pageTheme?: "light" | "dark";
-  onPageThemeChange?: (theme: "light" | "dark") => void;
+  onEditPageBackground?: () => void;
   onPreview: () => void;
   onPublish: () => void;
   onQr: () => void;
@@ -90,10 +87,7 @@ export function EditorTopBar({
   status = "draft",
   publicUrl,
   publishing = false,
-  showGrid = true,
-  onShowGridChange,
-  pageTheme = "light",
-  onPageThemeChange,
+  onEditPageBackground,
   onPreview,
   onPublish,
   onQr,
@@ -153,33 +147,16 @@ export function EditorTopBar({
         </span>
       </div>
 
-      {/* Canvas controls: grid, theme */}
-      {(onShowGridChange || onPageThemeChange) && (
-        <div className="flex items-center gap-1.5">
-          {onShowGridChange && (
-            <button
-              type="button"
-              onClick={() => onShowGridChange(!showGrid)}
-              className={
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors " +
-                (showGrid ? "bg-slate-200 text-slate-800" : "text-slate-500 hover:text-slate-700")
-              }
-              title={showGrid ? "グリッド非表示" : "グリッド表示"}
-            >
-              グリッド
-            </button>
-          )}
-          {onPageThemeChange && (
-            <select
-              value={pageTheme}
-              onChange={(e) => onPageThemeChange(e.target.value as "light" | "dark")}
-              className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700"
-            >
-              <option value="light">ライト</option>
-              <option value="dark">ダーク</option>
-            </select>
-          )}
-        </div>
+      {/* Page controls */}
+      {onEditPageBackground && (
+        <button
+          type="button"
+          onClick={onEditPageBackground}
+          className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+          title="ページ背景を編集"
+        >
+          背景
+        </button>
       )}
 
       {/* Actions: Preview, Publish, QR */}

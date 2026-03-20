@@ -7,7 +7,15 @@ import { Editor2 } from "@/components/editor";
 import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
-import { getPage, getPageCards, getPageStyleFromRows, rowToCard, savePageCards } from "@/lib/storage";
+import {
+  getInformation,
+  getPage,
+  getPageCards,
+  getPageStyleFromRows,
+  listPagesForHotel,
+  rowToCard,
+  savePageCards,
+} from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
 
 function EditorWithPageId() {
@@ -27,6 +35,19 @@ function EditorWithPageId() {
   useEffect(() => {
     if (!pageId) return;
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
+      if (!page) {
+        const legacy = await getInformation(pageId).catch(() => null);
+        if (legacy) {
+          const pages = await listPagesForHotel().catch(() => []);
+          const resolved =
+            pages.find((p) => p.slug === legacy.slug) ??
+            pages.find((p) => p.title.trim() && p.title.trim() === legacy.title.trim());
+          if (resolved) {
+            router.replace(`/editor/${resolved.id}`);
+            return;
+          }
+        }
+      }
       setPageFound(!!page);
       const pageStyle = getPageStyleFromRows(rows);
       if (pageStyle?.background) {
@@ -84,7 +105,7 @@ function EditorWithPageId() {
       }
       setLoaded(true);
     });
-  }, [pageId, fromTemplate, setCards, selectCard, setAutosaveStatus, setPageBackground, highlightFromTemplate]);
+  }, [pageId, fromTemplate, router, setCards, selectCard, setAutosaveStatus, setPageBackground, highlightFromTemplate]);
 
   if (!pageId) {
     return (

@@ -36,11 +36,6 @@ export function Editor2({ pageId }: Editor2Props) {
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);
-  const highlightedCardIds = useEditor2Store((s) => s.highlightedCardIds);
-  const showGrid = useEditor2Store((s) => s.showGrid);
-  const setShowGrid = useEditor2Store((s) => s.setShowGrid);
-  const pageTheme = useEditor2Store((s) => s.pageTheme);
-  const setPageTheme = useEditor2Store((s) => s.setPageTheme);
   const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
   const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
@@ -260,10 +255,7 @@ export function Editor2({ pageId }: Editor2Props) {
         status="draft"
         publicUrl={pageMeta.publicUrl}
         publishing={publishing}
-        showGrid={showGrid}
-        onShowGridChange={setShowGrid}
-        pageTheme={pageTheme}
-        onPageThemeChange={setPageTheme}
+        onEditPageBackground={() => selectCard(null)}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
@@ -284,6 +276,7 @@ export function Editor2({ pageId }: Editor2Props) {
                   selectedCardId={selectedCardId}
                   onSelectCard={selectCard}
                   onUpdateCard={updateCard}
+                  onReorderCards={reorderCards}
                   onDuplicateCard={duplicateCard}
                   onRemoveCard={removeCard}
                   pageBackground={{
