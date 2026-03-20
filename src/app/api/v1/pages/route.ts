@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 
 /**
  * GET /api/v1/pages — 施設のページ一覧（Business プランのみ）
@@ -33,7 +34,8 @@ export async function GET(request: Request) {
     .select("plan")
     .eq("hotel_id", membership.hotel_id)
     .maybeSingle();
-  if (sub?.plan !== "business") {
+  const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
+  if (!isBusinessAccessible) {
     return NextResponse.json(
       { error: "API は Business プランでご利用いただけます" },
       { status: 403 }

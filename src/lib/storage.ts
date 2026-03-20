@@ -9,6 +9,7 @@ import { starterTemplates, type StarterTemplate } from "@/lib/templates";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -776,6 +777,30 @@ function resolveLimitByPlan(plan: SubscriptionPlan): number {
   return 1;
 }
 
+function applyDevBusinessOverrideToSubscription(
+  subscription: HotelSubscription,
+): HotelSubscription {
+  return {
+    ...subscription,
+    plan: "business",
+    status: subscription.status === "canceled" ? "active" : subscription.status,
+    maxPublishedPages: Math.max(subscription.maxPublishedPages, resolveLimitByPlan("business")),
+  };
+}
+
+async function getIsDevBusinessOverrideEnabledForCurrentUser(): Promise<boolean> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return false;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return canUseDevBusinessOverride(user);
+}
+
 function bootstrapLocalData(): Information[] {
   const now = new Date().toISOString();
   return starterTemplates.map((template, i) => {
@@ -1003,7 +1028,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     return null;
   }
 
-  return {
+  const subscription: HotelSubscription = {
     id: data.id,
     plan: data.plan,
     status: data.status,
@@ -1012,6 +1037,12 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     hasStripeCustomer: Boolean(data.stripe_customer_id),
     updatedAt: data.updated_at,
   };
+
+  if (await getIsDevBusinessOverrideEnabledForCurrentUser()) {
+    return applyDevBusinessOverrideToSubscription(subscription);
+  }
+
+  return subscription;
 }
 
 export async function updateCurrentHotelSubscription(
@@ -1183,9 +1214,14 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     }
     : null;
 
+  const overrideEnabled = await getIsDevBusinessOverrideEnabledForCurrentUser();
+  const normalizedSubscription = subscription && overrideEnabled
+    ? applyDevBusinessOverrideToSubscription(subscription)
+    : subscription;
+
   return {
     hotelName: hotelRes.data?.name ?? "Infomii",
-    subscription,
+    subscription: normalizedSubscription,
     informations: (infoRes.data ?? []).map((row) => mapRow(row as SupabaseInformationRow)),
   };
 }
@@ -1541,6 +1577,7 @@ export async function updateInformation(
       }
 
       if (current.status !== "published") {
+        const overrideEnabled = await getIsDevBusinessOverrideEnabledForCurrentUser();
         if (!current.hotel_id) {
           throw new Error("施設情報が紐づいていないため公開できません");
         }
@@ -1557,7 +1594,7 @@ export async function updateInformation(
         if (!sub) {
           throw new Error("サブスクリプション情報が見つかりません");
         }
-        if (sub.status !== "active" && sub.status !== "trialing") {
+        if (!overrideEnabled && sub.status !== "active" && sub.status !== "trialing") {
           throw new Error("現在の契約ステータスでは公開できません");
         }
 
@@ -1572,7 +1609,7 @@ export async function updateInformation(
         }
 
         const publishedCount = count ?? 0;
-        if (publishedCount >= sub.max_published_pages) {
+        if (!overrideEnabled && publishedCount >= sub.max_published_pages) {
           throw new Error(
             `無料枠の上限に達しました（公開上限: ${sub.max_published_pages}件）。プラン変更をご検討ください。`,
           );

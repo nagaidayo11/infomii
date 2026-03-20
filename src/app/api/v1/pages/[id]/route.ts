@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 
 async function resolveHotelId(token: string): Promise<{ hotelId: string; plan: string } | null> {
   const anon = getSupabaseAnonServerClient();
@@ -19,7 +20,8 @@ async function resolveHotelId(token: string): Promise<{ hotelId: string; plan: s
     .select("plan")
     .eq("hotel_id", membership.hotel_id)
     .maybeSingle();
-  if (sub?.plan !== "business") return null;
+  const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
+  if (!isBusinessAccessible) return null;
 
   return { hotelId: membership.hotel_id, plan: sub.plan };
 }
