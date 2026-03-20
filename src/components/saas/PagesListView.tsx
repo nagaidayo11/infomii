@@ -11,6 +11,7 @@ import {
   type PageConnectionSet,
   type PageRow,
   deletePage,
+  deleteAllPagesForHotel,
 } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
@@ -24,6 +25,7 @@ function modeLabel(mode: PageConnectionSet["mode"]): string {
 export function PagesListView() {
   const router = useRouter();
   const [sets, setSets] = useState<PageConnectionSet[]>([]);
+  const [viewMode, setViewMode] = useState<"table" | "nodes">("nodes");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
@@ -33,6 +35,7 @@ export function PagesListView() {
   } | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
+  const [deletingAllPages, setDeletingAllPages] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,9 +94,145 @@ export function PagesListView() {
     }
   }
 
+  async function handleDeleteAllPages() {
+    if (deletingAllPages) return;
+    if (
+      !window.confirm(
+        "この施設のページをすべて削除しますか？\nこの操作は取り消せません。"
+      )
+    ) {
+      return;
+    }
+    setDeletingAllPages(true);
+    try {
+      const result = await deleteAllPagesForHotel();
+      await load();
+      if (result.deletedPages > 0) {
+        alert(`${result.deletedPages}ページを削除しました`);
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "全削除に失敗しました");
+    } finally {
+      setDeletingAllPages(false);
+    }
+  }
+
   const linkedCount = useMemo(() => sets.filter((set) => set.mode === "linked").length, [sets]);
   const singleCount = useMemo(() => sets.filter((set) => set.mode === "single").length, [sets]);
   const pageCount = useMemo(() => sets.reduce((acc, set) => acc + set.pageCount, 0), [sets]);
+
+  function renderNodeSet(set: PageConnectionSet) {
+    const root = set.pages.find((page) => page.id === set.rootPageId) ?? set.pages[0];
+    const children = set.pages.filter((page) => page.id !== root?.id);
+    const childCols = Math.min(3, Math.max(1, children.length));
+    const childRows = children.length > 0 ? Math.ceil(children.length / childCols) : 0;
+    const canvasHeight = children.length === 0 ? 140 : 180 + childRows * 88;
+
+    const rootNode = { x: 50, y: 18 };
+    const childNodes = children.map((page, index) => {
+      const col = index % childCols;
+      const row = Math.floor(index / childCols);
+      const x = childCols === 1 ? 50 : 16 + (col * 68) / Math.max(1, childCols - 1);
+      const y = 52 + row * 30;
+      return { page, x, y };
+    });
+
+    return (
+      <article key={set.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-semibold text-slate-900">{set.name}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{set.pageCount}ページ</p>
+          </div>
+          <span
+            className={
+              "rounded-full px-2.5 py-1 text-xs font-medium " +
+              (set.mode === "linked" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700")
+            }
+          >
+            {modeLabel(set.mode)}
+          </span>
+        </div>
+
+        <div className="px-4 py-4">
+          <div
+            className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50"
+            style={{ height: `${canvasHeight}px` }}
+          >
+            <svg className="absolute inset-0 h-full w-full" aria-hidden>
+              {root &&
+                childNodes.map((node) => (
+                  <line
+                    key={`${root.id}-${node.page.id}`}
+                    x1={`${rootNode.x}%`}
+                    y1={`${rootNode.y + 10}%`}
+                    x2={`${node.x}%`}
+                    y2={`${node.y - 6}%`}
+                    stroke="#94a3b8"
+                    strokeWidth={1.5}
+                  />
+                ))}
+            </svg>
+
+            {root && (
+              <button
+                type="button"
+                onClick={() => router.push(`/editor/${root.id}`)}
+                className="absolute w-[170px] -translate-x-1/2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+                style={{ left: `${rootNode.x}%`, top: `${rootNode.y}%` }}
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">ルート</div>
+                <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-900">
+                  {root.title || "(無題)"}
+                </div>
+              </button>
+            )}
+
+            {childNodes.map((node) => (
+              <button
+                key={node.page.id}
+                type="button"
+                onClick={() => router.push(`/editor/${node.page.id}`)}
+                className="absolute w-[150px] -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                style={{ left: `${node.x}%`, top: `${node.y}%` }}
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">子ページ</div>
+                <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-800">
+                  {node.page.title || "(無題)"}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {set.pages.map((page) => (
+              <div
+                key={`${set.id}-${page.id}-actions`}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1"
+              >
+                <span className="max-w-[200px] truncate text-xs text-slate-700">{page.title || "(無題)"}</span>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/editor/${page.id}`)}
+                  className="rounded px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  編集
+                </button>
+                <button
+                  type="button"
+                  disabled={deletingPageId === page.id}
+                  onClick={() => void handleDeleteCardPage(page)}
+                  className="rounded px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  削除
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -104,18 +243,51 @@ export function PagesListView() {
             単発ページとページ連携をセット単位で管理できます。
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDeleteAllPages}
+            disabled={deletingAllPages || pageCount === 0}
+            className="inline-flex shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {deletingAllPages ? "全削除中…" : "全ページ削除"}
+          </button>
+          <button
+            type="button"
+            onClick={handleCreatePage}
+            disabled={creating}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
+              +
+            </span>
+            ページを作成
+          </button>
+        </div>
+      </header>
+
+      <div className="mt-4 inline-flex rounded-lg border border-slate-200 bg-white p-1">
         <button
           type="button"
-          onClick={handleCreatePage}
-          disabled={creating}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+          onClick={() => setViewMode("nodes")}
+          className={
+            "rounded-md px-3 py-1.5 text-xs font-medium transition " +
+            (viewMode === "nodes" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
+          }
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
-            +
-          </span>
-          ページを作成
+          ノード表示
         </button>
-      </header>
+        <button
+          type="button"
+          onClick={() => setViewMode("table")}
+          className={
+            "rounded-md px-3 py-1.5 text-xs font-medium transition " +
+            (viewMode === "table" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
+          }
+        >
+          テーブル表示
+        </button>
+      </div>
 
       <PlanLimitModal
         open={planLimitModalOpen}
@@ -149,6 +321,16 @@ export function PagesListView() {
           <p className="text-slate-600">まだページがありません</p>
           <p className="mt-1 text-sm text-slate-500">ページを作成すると、ここで単発/ページ連携として管理できます。</p>
         </div>
+      ) : viewMode === "nodes" ? (
+        <section className="mt-8 space-y-4">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">セット {sets.length}</span>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700">ページ連携 {linkedCount}</span>
+            <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">単発 {singleCount}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
+          </div>
+          {sets.map((set) => renderNodeSet(set))}
+        </section>
       ) : (
         <section className="mt-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">

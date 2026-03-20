@@ -3798,6 +3798,41 @@ export async function deletePage(pageId: string): Promise<void> {
   if (pageError) throw toError(pageError, "ページの削除に失敗しました");
 }
 
+/** Delete all pages (and cards) in current hotel scope. */
+export async function deleteAllPagesForHotel(): Promise<{ deletedPages: number }> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: rows, error: fetchError } = await supabase
+    .from("pages")
+    .select("id")
+    .eq("hotel_id", hotelId);
+  if (fetchError) throw toError(fetchError, "ページ一覧の取得に失敗しました");
+
+  const pageIds = (rows ?? []).map((row) => row.id as string).filter(Boolean);
+  if (pageIds.length === 0) {
+    return { deletedPages: 0 };
+  }
+
+  const { error: cardsError } = await supabase.from("cards").delete().in("page_id", pageIds);
+  if (cardsError) throw toError(cardsError, "カードの全削除に失敗しました");
+
+  const { error: pageError } = await supabase.from("pages").delete().eq("hotel_id", hotelId);
+  if (pageError) throw toError(pageError, "ページの全削除に失敗しました");
+
+  await appendAuditLog({
+    hotelId,
+    action: "page.deleted_all",
+    message: `ページを全削除しました（${pageIds.length}件）`,
+    targetType: "page",
+    metadata: { deletedCount: pageIds.length },
+  });
+
+  return { deletedPages: pageIds.length };
+}
+
 export async function getPage(pageId: string): Promise<PageRow | null> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return null;
