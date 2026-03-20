@@ -54,6 +54,49 @@ const NOTICE_PRIORITY_PRESETS = [
   { value: "warning", label: "警告" },
 ];
 
+const BLOCK_STYLE_PRESETS: Array<{
+  id: string;
+  label: string;
+  style: Record<string, string | number | undefined>;
+}> = [
+  {
+    id: "clean",
+    label: "クリーン",
+    style: {
+      backgroundColor: "#ffffff",
+      borderWidth: 1,
+      borderColor: "#e2e8f0",
+      borderRadius: 12,
+      boxShadow: "",
+      padding: 0,
+    },
+  },
+  {
+    id: "soft",
+    label: "ソフト",
+    style: {
+      backgroundColor: "#f8fafc",
+      borderWidth: 0,
+      borderColor: "",
+      borderRadius: 14,
+      boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
+      padding: 0,
+    },
+  },
+  {
+    id: "emphasis",
+    label: "強調",
+    style: {
+      backgroundColor: "#fff7ed",
+      borderWidth: 1,
+      borderColor: "#fdba74",
+      borderRadius: 12,
+      boxShadow: "0 8px 24px rgba(249,115,22,0.12)",
+      padding: 0,
+    },
+  },
+];
+
 type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
 
 export type CardSettingsProps = {
@@ -732,6 +775,17 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
     const next = value === undefined || value === "" ? undefined : value;
     const nextStyle = next != null ? { ...style, [key]: next } : { ...style };
     if (next === undefined) delete nextStyle[key];
+    onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
+  };
+  const applyStylePreset = (preset: Record<string, string | number | undefined>) => {
+    const nextStyle = { ...style } as Record<string, unknown>;
+    for (const [key, value] of Object.entries(preset)) {
+      if (value === undefined || value === "") {
+        delete nextStyle[key];
+      } else {
+        nextStyle[key] = value;
+      }
+    }
     onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
   };
   /** 多言語フィールドの表示値（日本語を優先） */
@@ -1630,6 +1684,21 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           <SettingsSection title="ブロックスタイル">
             <div className="w-full">
+              <label className={labelClass}>プリセット</label>
+              <div className="grid grid-cols-3 gap-2">
+                {BLOCK_STYLE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyStylePreset(preset.style)}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="w-full">
               <label className={labelClass}>フォントサイズ（全体）</label>
               <select
                 value={(style.fontSize as string) ?? ""}
@@ -1706,6 +1775,48 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               </select>
             </div>
             <div className="w-full">
+              <label className={labelClass}>余白 (px)</label>
+              <input
+                type="number"
+                min={0}
+                max={40}
+                value={(style.padding as number | string) ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateStyle("padding", v === "" ? undefined : parseInt(v, 10) || 0);
+                }}
+                placeholder="0"
+                className={inputClass}
+              />
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>寄せ</label>
+              <select
+                value={(style.textAlign as string) ?? ""}
+                onChange={(e) => updateStyle("textAlign", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">標準</option>
+                <option value="left">左寄せ</option>
+                <option value="center">中央寄せ</option>
+                <option value="right">右寄せ</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>行間</label>
+              <select
+                value={(style.lineHeight as string) ?? ""}
+                onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">標準</option>
+                <option value="1.3">狭め</option>
+                <option value="1.5">標準</option>
+                <option value="1.7">広め</option>
+                <option value="2">広い</option>
+              </select>
+            </div>
+            <div className="w-full">
               <label className={labelClass}>背景色</label>
               <div className="flex gap-2">
                 <input
@@ -1723,6 +1834,43 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                   value={(style.backgroundColor as string) ?? ""}
                   onChange={(e) => updateStyle("backgroundColor", e.target.value || undefined)}
                   placeholder="#ffffff"
+                  className={inputClass + " flex-1"}
+                />
+              </div>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>枠線 (px)</label>
+              <input
+                type="number"
+                min={0}
+                max={8}
+                value={(style.borderWidth as number | string) ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateStyle("borderWidth", v === "" ? undefined : parseInt(v, 10) || 0);
+                }}
+                placeholder="0"
+                className={inputClass}
+              />
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>枠線色</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={(() => {
+                    const v = (style.borderColor as string) ?? "#e2e8f0";
+                    const hex = v.startsWith("#") ? v.slice(1) : v;
+                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#e2e8f0";
+                  })()}
+                  onChange={(e) => updateStyle("borderColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+                <input
+                  type="text"
+                  value={(style.borderColor as string) ?? ""}
+                  onChange={(e) => updateStyle("borderColor", e.target.value || undefined)}
+                  placeholder="#e2e8f0"
                   className={inputClass + " flex-1"}
                 />
               </div>
@@ -1749,92 +1897,6 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 />
               </div>
             </div>
-          </SettingsSection>
-          <SettingsSection title="ページ背景">
-            <div className="w-full">
-              <label className={labelClass}>背景タイプ</label>
-              <select
-                value={pageBackgroundMode}
-                onChange={(e) =>
-                  setPageBackground({ mode: e.target.value as "solid" | "gradient" })
-                }
-                className={inputClass}
-              >
-                <option value="solid">単色</option>
-                <option value="gradient">グラデーション</option>
-              </select>
-            </div>
-            {pageBackgroundMode === "solid" ? (
-              <div className="w-full">
-                <label className={labelClass}>背景色</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={pageBackgroundColor}
-                    onChange={(e) => setPageBackground({ color: e.target.value })}
-                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                  />
-                  <input
-                    type="text"
-                    value={pageBackgroundColor}
-                    onChange={(e) => setPageBackground({ color: e.target.value || "#ffffff" })}
-                    placeholder="#ffffff"
-                    className={inputClass + " flex-1"}
-                  />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="w-full">
-                  <label className={labelClass}>開始色</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={pageGradientFrom}
-                      onChange={(e) => setPageBackground({ from: e.target.value })}
-                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                    />
-                    <input
-                      type="text"
-                      value={pageGradientFrom}
-                      onChange={(e) => setPageBackground({ from: e.target.value || "#f8fafc" })}
-                      placeholder="#f8fafc"
-                      className={inputClass + " flex-1"}
-                    />
-                  </div>
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>終了色</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={pageGradientTo}
-                      onChange={(e) => setPageBackground({ to: e.target.value })}
-                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                    />
-                    <input
-                      type="text"
-                      value={pageGradientTo}
-                      onChange={(e) => setPageBackground({ to: e.target.value || "#e2e8f0" })}
-                      placeholder="#e2e8f0"
-                      className={inputClass + " flex-1"}
-                    />
-                  </div>
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>角度 ({pageGradientAngle}deg)</label>
-                  <input
-                    type="range"
-                    min={0}
-                    max={360}
-                    step={1}
-                    value={pageGradientAngle}
-                    onChange={(e) => setPageBackground({ angle: parseInt(e.target.value, 10) || 0 })}
-                    className="w-full"
-                  />
-                </div>
-              </>
-            )}
           </SettingsSection>
         </div>
       </div>

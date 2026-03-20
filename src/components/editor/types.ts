@@ -87,8 +87,37 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
           ? `${s.borderRadius}px`
           : undefined,
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
+    borderWidth:
+      typeof s.borderWidth === "number"
+        ? `${s.borderWidth}px`
+        : typeof s.borderWidth === "string"
+          ? s.borderWidth
+          : undefined,
+    borderColor: typeof s.borderColor === "string" ? s.borderColor : undefined,
+    borderStyle:
+      typeof s.borderWidth === "number" && s.borderWidth > 0
+        ? "solid"
+        : typeof s.borderStyle === "string"
+          ? s.borderStyle
+          : undefined,
+    padding:
+      typeof s.padding === "number"
+        ? `${s.padding}px`
+        : typeof s.padding === "string"
+          ? s.padding
+          : undefined,
     backgroundColor: typeof s.backgroundColor === "string" ? s.backgroundColor : undefined,
     color: typeof s.textColor === "string" ? s.textColor : undefined,
+    textAlign:
+      s.textAlign === "left" || s.textAlign === "center" || s.textAlign === "right"
+        ? s.textAlign
+        : undefined,
+    lineHeight:
+      typeof s.lineHeight === "number"
+        ? String(s.lineHeight)
+        : typeof s.lineHeight === "string"
+          ? s.lineHeight
+          : undefined,
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;

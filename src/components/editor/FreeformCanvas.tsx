@@ -7,7 +7,6 @@ import { BlockToolbar } from "./BlockToolbar";
 import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
 const FIXED_VIEWPORT_WIDTH = 375;
-const FIXED_VIEWPORT_LABEL = "iPhone SE (375px)";
 
 function MobileCanvasFrame({
   children,
@@ -421,12 +420,6 @@ export function FreeformCanvas({
       tabIndex={-1}
       onClick={() => onSelectCard(null)}
     >
-      <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
-        <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
-        <span className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700">
-          {FIXED_VIEWPORT_LABEL}
-        </span>
-      </div>
       <div
         className="flex flex-1 justify-center overflow-auto p-6"
         style={{

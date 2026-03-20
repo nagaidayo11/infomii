@@ -244,6 +244,15 @@ export function Editor2({ pageId }: Editor2Props) {
     window.open(pageMeta.publicUrl, "_blank", "noopener,noreferrer");
   }, [pageMeta.publicUrl, pageId]);
 
+  const handleAddPreset = useCallback(
+    (types: CardType[]) => {
+      for (const type of types) {
+        addCard(type);
+      }
+    },
+    [addCard]
+  );
+
   const topBar =
     pageId ? (
       <EditorTopBar
@@ -267,7 +276,7 @@ export function Editor2({ pageId }: Editor2Props) {
       <div ref={rootRef} className="h-screen w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
-          library={<CardLibrary onAddCard={addCard} />}
+          library={<CardLibrary onAddCard={addCard} onAddPreset={handleAddPreset} />}
           canvas={
             <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
               <div className="min-h-0 flex-1 overflow-auto">

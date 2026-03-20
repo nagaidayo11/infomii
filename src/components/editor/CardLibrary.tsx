@@ -4,6 +4,7 @@ import type { CardType } from "./types";
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
+  onAddPreset?: (types: CardType[]) => void;
 };
 
 type LibraryItem = {
@@ -258,11 +259,32 @@ export const LIBRARY_SECTIONS: LibrarySection[] = [
   { id: "layout", title: "レイアウト", items: LAYOUT_ITEMS },
 ];
 
+const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
+  {
+    id: "basic-guide",
+    label: "基本案内セット",
+    description: "ウェルカム / WiFi / チェックアウト / お知らせ",
+    types: ["welcome", "wifi", "checkout", "notice"],
+  },
+  {
+    id: "facility-guide",
+    label: "施設案内セット",
+    description: "レストラン / スパ / ランドリー / 営業時間",
+    types: ["restaurant", "spa", "laundry", "schedule"],
+  },
+  {
+    id: "navigation-set",
+    label: "導線セット",
+    description: "地図 / ページリンク / FAQ / 緊急連絡先",
+    types: ["map", "pageLinks", "faq", "emergency"],
+  },
+];
+
 /**
  * Left panel: Card Library. Sections (Basic, Information, Actions, Media, Hospitality)
  * with cards (icon + label + description). Click inserts card into canvas.
  */
-export function CardLibrary({ onAddCard }: CardLibraryProps) {
+export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-200/80 px-4 py-4">
@@ -275,6 +297,27 @@ export function CardLibrary({ onAddCard }: CardLibraryProps) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-5">
+          {onAddPreset && (
+            <section aria-label="おすすめセット" className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                おすすめセット
+              </h3>
+              <div className="space-y-1.5">
+                {QUICK_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => onAddPreset(preset.types)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all hover:border-slate-300 hover:bg-slate-50"
+                    aria-label={`${preset.label}を追加`}
+                  >
+                    <span className="block text-sm font-medium text-slate-800">{preset.label}</span>
+                    <span className="mt-0.5 block text-xs text-slate-500">{preset.description}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
           {LIBRARY_SECTIONS.map((section) => (
             <section
               key={section.id}
