@@ -6,13 +6,8 @@ import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BlockToolbar } from "./BlockToolbar";
 import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
-const VIEWPORT_SIZES = [
-  { device: "iPhone SE", label: "iPhone SE (375px)", width: 375 },
-  { device: "iPhone 15 Pro", label: "iPhone 15 Pro (393px)", width: 393 },
-  { device: "iPhone 15 Pro Max", label: "iPhone 15 Pro Max (430px)", width: 430 },
-  { device: "Pixel 7", label: "Pixel 7 (412px)", width: 412 },
-  { device: "Galaxy S20", label: "Galaxy S20 (360px)", width: 360 },
-] as const;
+const FIXED_VIEWPORT_WIDTH = 375;
+const FIXED_VIEWPORT_LABEL = "iPhone SE (375px)";
 
 function MobileCanvasFrame({
   children,
@@ -211,7 +206,7 @@ export function FreeformCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const [viewportWidth, setViewportWidth] = useState(375);
+  const viewportWidth = FIXED_VIEWPORT_WIDTH;
   const contentWidth = viewportWidth - CANVAS_PADDING_X * 2;
   const [dragState, setDragState] = useState<{
     id: string;
@@ -428,18 +423,9 @@ export function FreeformCanvas({
     >
       <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
         <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
-        <select
-          value={String(viewportWidth)}
-          onChange={(e) => setViewportWidth(parseInt(e.target.value, 10) || 375)}
-          className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700"
-          aria-label="デバイス幅を選択"
-        >
-          {VIEWPORT_SIZES.map(({ label, width }) => (
-            <option key={width} value={width}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <span className="rounded-md border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-medium text-slate-700">
+          {FIXED_VIEWPORT_LABEL}
+        </span>
       </div>
       <div
         className="flex flex-1 justify-center overflow-auto p-6"
@@ -547,7 +533,7 @@ export function FreeformCanvas({
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="h-full overflow-x-hidden overflow-y-visible p-0"
+                      className="overflow-x-hidden overflow-y-visible p-0"
                     >
                       <CardRenderer card={card} isSelected={isSelected} />
                     </div>

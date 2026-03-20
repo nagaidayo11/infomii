@@ -90,7 +90,7 @@ export function LpHero({ ctaHref }: LpHeroProps) {
   return (
     <section className="border-b border-slate-200/80 bg-white">
       <Container className="py-16 sm:py-20 lg:py-24">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-5xl text-center">
           <FadeIn>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
               ホテル案内ページを3分で作成

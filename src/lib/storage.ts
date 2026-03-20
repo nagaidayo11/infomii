@@ -3668,6 +3668,115 @@ export async function listPagesForHotel(): Promise<PageRow[]> {
   return (data ?? []) as PageRow[];
 }
 
+export type PageConnectionSet = {
+  id: string;
+  name: string;
+  mode: "single" | "linked";
+  pageCount: number;
+  rootPageId: string;
+  pages: PageRow[];
+};
+
+type CardLinkRow = {
+  page_id: string;
+  content: Record<string, unknown>;
+};
+
+type PageLinkItem = {
+  linkType?: "page" | "url";
+  pageSlug?: string;
+};
+
+/**
+ * Build connected page sets from pageLinks cards.
+ * - 1 page: single
+ * - 2+ pages connected by internal links: linked (UI label: ページ連携)
+ */
+export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSet[]> {
+  const supabase = getBrowserSupabaseClient();
+  const hotelId = await ensureUserHotelScope();
+  if (!supabase || !hotelId) return [];
+
+  const { data: pagesData, error: pagesError } = await supabase
+    .from("pages")
+    .select("id,title,slug")
+    .eq("hotel_id", hotelId)
+    .order("title", { ascending: true });
+  if (pagesError) return [];
+  const pages = (pagesData ?? []) as PageRow[];
+  if (pages.length === 0) return [];
+
+  const pageIds = pages.map((p) => p.id);
+  const slugToId = new Map(pages.map((p) => [p.slug, p.id]));
+  const idToPage = new Map(pages.map((p) => [p.id, p]));
+  const adjacency = new Map<string, Set<string>>();
+  for (const p of pages) adjacency.set(p.id, new Set<string>());
+
+  const { data: linkCards, error: cardsError } = await supabase
+    .from("cards")
+    .select("page_id,content")
+    .eq("type", "pageLinks")
+    .in("page_id", pageIds);
+  if (!cardsError) {
+    for (const row of ((linkCards ?? []) as CardLinkRow[])) {
+      const items = (Array.isArray(row.content?.items) ? row.content.items : []) as PageLinkItem[];
+      for (const item of items) {
+        if ((item.linkType ?? "page") !== "page") continue;
+        const slug = typeof item.pageSlug === "string" ? item.pageSlug : "";
+        if (!slug) continue;
+        const targetId = slugToId.get(slug);
+        if (!targetId || targetId === row.page_id) continue;
+        adjacency.get(row.page_id)?.add(targetId);
+        adjacency.get(targetId)?.add(row.page_id);
+      }
+    }
+  }
+
+  const visited = new Set<string>();
+  const sets: PageConnectionSet[] = [];
+  const sortedIds = [...pageIds].sort((a, b) => {
+    const ta = idToPage.get(a)?.title ?? "";
+    const tb = idToPage.get(b)?.title ?? "";
+    return ta.localeCompare(tb, "ja");
+  });
+
+  for (const startId of sortedIds) {
+    if (visited.has(startId)) continue;
+    const stack = [startId];
+    const groupIds: string[] = [];
+    visited.add(startId);
+    while (stack.length > 0) {
+      const cur = stack.pop() as string;
+      groupIds.push(cur);
+      for (const next of adjacency.get(cur) ?? []) {
+        if (visited.has(next)) continue;
+        visited.add(next);
+        stack.push(next);
+      }
+    }
+    const groupPages = groupIds
+      .map((id) => idToPage.get(id))
+      .filter((p): p is PageRow => Boolean(p))
+      .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? "", "ja"));
+    if (groupPages.length === 0) continue;
+    const root = groupPages[0];
+    const isLinked = groupPages.length > 1;
+    sets.push({
+      id: `set-${root.id}`,
+      name: isLinked ? `${root.title || "ページ連携"} セット` : (root.title || "単発ページ"),
+      mode: isLinked ? "linked" : "single",
+      pageCount: groupPages.length,
+      rootPageId: root.id,
+      pages: groupPages,
+    });
+  }
+
+  return sets.sort((a, b) => {
+    if (a.mode !== b.mode) return a.mode === "linked" ? -1 : 1;
+    return a.name.localeCompare(b.name, "ja");
+  });
+}
+
 /** Delete a card-based page and its cards. Fails if page is not in current hotel scope. */
 export async function deletePage(pageId: string): Promise<void> {
   const supabase = getBrowserSupabaseClient();
