@@ -6,10 +6,37 @@ import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 const STYLE_KEY = "_style";
+const PAGE_STYLE_KEY = "_pageStyle";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): {
+  mode: "solid" | "gradient";
+  color: string;
+  from: string;
+  to: string;
+  angle: number;
+} | null {
+  const first = rows[0];
+  if (!first || typeof first.content !== "object" || !first.content || Array.isArray(first.content)) {
+    return null;
+  }
+  const raw = (first.content as Record<string, unknown>)[PAGE_STYLE_KEY];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const obj = raw as Record<string, unknown>;
+  const bg = obj.background;
+  if (!bg || typeof bg !== "object" || Array.isArray(bg)) return null;
+  const background = bg as Record<string, unknown>;
+  return {
+    mode: background.mode === "gradient" ? "gradient" : "solid",
+    color: typeof background.color === "string" ? background.color : "#ffffff",
+    from: typeof background.from === "string" ? background.from : "#f8fafc",
+    to: typeof background.to === "string" ? background.to : "#e2e8f0",
+    angle: typeof background.angle === "number" ? background.angle : 180,
+  };
+}
 
 export default async function PublicCardPageBySlug({ params }: PageProps) {
   const { slug } = await params;
@@ -33,6 +60,7 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
     .order("order", { ascending: true });
 
   if (cardsError) notFound();
+  const pageBackground = readPageBackground((rows ?? []) as Array<{ content: Record<string, unknown> }>);
 
   const cards: EditorCard[] = (rows ?? []).map((r) => ({
     // Keep public rendering in sync with editor persistence:
@@ -52,6 +80,7 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
       typeof r.content === "object" && r.content && !Array.isArray(r.content)
         ? Object.fromEntries(
             Object.entries(r.content as Record<string, unknown>).filter(([key]) => key !== STYLE_KEY)
+              .filter(([key]) => key !== PAGE_STYLE_KEY)
           )
         : {},
     order: r.order ?? 0,
@@ -62,6 +91,7 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
       title={page.title}
       cards={cards}
       initialLocale={initialLocale}
+      pageBackground={pageBackground}
     />
   );
 }

@@ -7,7 +7,7 @@ import { Editor2 } from "@/components/editor";
 import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
-import { getPage, getPageCards, rowToCard, savePageCards } from "@/lib/storage";
+import { getPage, getPageCards, getPageStyleFromRows, rowToCard, savePageCards } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
 
 function EditorWithPageId() {
@@ -21,12 +21,31 @@ function EditorWithPageId() {
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
+  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
   const highlightFromTemplate = useEditor2Store((s) => s.highlightFromTemplate);
 
   useEffect(() => {
     if (!pageId) return;
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
       setPageFound(!!page);
+      const pageStyle = getPageStyleFromRows(rows);
+      if (pageStyle?.background) {
+        setPageBackground({
+          mode: pageStyle.background.mode,
+          color: pageStyle.background.color,
+          from: pageStyle.background.from,
+          to: pageStyle.background.to,
+          angle: pageStyle.background.angle,
+        });
+      } else {
+        setPageBackground({
+          mode: "solid",
+          color: "#ffffff",
+          from: "#f8fafc",
+          to: "#e2e8f0",
+          angle: 180,
+        });
+      }
       const cardsFromDb = rows.map((r) => {
         const card = rowToCard(r);
         return { ...card, type: card.type as CardType };
@@ -65,7 +84,7 @@ function EditorWithPageId() {
       }
       setLoaded(true);
     });
-  }, [pageId, fromTemplate, setCards, selectCard, setAutosaveStatus, highlightFromTemplate]);
+  }, [pageId, fromTemplate, setCards, selectCard, setAutosaveStatus, setPageBackground, highlightFromTemplate]);
 
   if (!pageId) {
     return (

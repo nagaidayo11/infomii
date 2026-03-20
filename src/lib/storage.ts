@@ -3593,12 +3593,51 @@ export type PageCardRow = { id: string; type: string; content: Record<string, un
 
 /** Key used inside content JSON to persist card style (no DB schema change). */
 const STYLE_KEY = "_style";
+/** Key used inside first card content JSON to persist page-level style (background etc.). */
+const PAGE_STYLE_KEY = "_pageStyle";
+
+export type PageBackgroundStyle = {
+  mode: "solid" | "gradient";
+  color: string;
+  from: string;
+  to: string;
+  angle: number;
+};
+
+export type PageStyleForSave = {
+  background?: PageBackgroundStyle;
+};
+
+/** Read page-level style (stored in first card content._pageStyle). */
+export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | null {
+  const first = rows[0];
+  if (!first || typeof first.content !== "object" || !first.content || Array.isArray(first.content)) {
+    return null;
+  }
+  const raw = (first.content as Record<string, unknown>)[PAGE_STYLE_KEY];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const obj = raw as Record<string, unknown>;
+  const bg = obj.background;
+  if (!bg || typeof bg !== "object" || Array.isArray(bg)) return null;
+  const background = bg as Record<string, unknown>;
+  const mode = background.mode === "gradient" ? "gradient" : "solid";
+  return {
+    background: {
+      mode,
+      color: typeof background.color === "string" ? background.color : "#ffffff",
+      from: typeof background.from === "string" ? background.from : "#f8fafc",
+      to: typeof background.to === "string" ? background.to : "#e2e8f0",
+      angle: typeof background.angle === "number" ? background.angle : 180,
+    },
+  };
+}
 
 /** Convert a DB row to Card: extract style from content._style, return content without it. */
 export function rowToCard(row: PageCardRow): { id: string; type: string; content: Record<string, unknown>; style?: Record<string, unknown>; order: number } {
   const content = { ...row.content };
   const style = content[STYLE_KEY] as Record<string, unknown> | undefined;
   delete content[STYLE_KEY];
+  delete content[PAGE_STYLE_KEY];
   return {
     id: row.id,
     type: row.type,
@@ -3698,7 +3737,8 @@ export type EditorCardForSave = {
  */
 export async function savePageCards(
   pageId: string,
-  cards: EditorCardForSave[]
+  cards: EditorCardForSave[],
+  options?: { pageStyle?: PageStyleForSave | null }
 ): Promise<{ updatedIds: Record<string, string> }> {
   const supabase = getBrowserSupabaseClient();
   const updatedIds: Record<string, string> = {};
@@ -3708,11 +3748,25 @@ export async function savePageCards(
   const existingIds = new Set(existing.map((r) => r.id));
   const storeIds = new Set(cards.map((c) => c.id));
 
-  for (const card of cards) {
+  const pageStyle = options?.pageStyle;
+  const hasPageStyle =
+    !!pageStyle &&
+    typeof pageStyle === "object" &&
+    !Array.isArray(pageStyle) &&
+    pageStyle.background != null;
+
+  for (let index = 0; index < cards.length; index += 1) {
+    const card = cards[index];
+    const contentBase = { ...card.content };
+    delete contentBase[PAGE_STYLE_KEY];
+    const contentWithPageStyle =
+      hasPageStyle && index === 0
+        ? { ...contentBase, [PAGE_STYLE_KEY]: pageStyle }
+        : contentBase;
     const contentToSave =
       card.style != null && Object.keys(card.style).length > 0
-        ? { ...card.content, [STYLE_KEY]: card.style }
-        : card.content;
+        ? { ...contentWithPageStyle, [STYLE_KEY]: card.style }
+        : contentWithPageStyle;
 
     if (isSupabaseId(card.id)) {
       await supabase

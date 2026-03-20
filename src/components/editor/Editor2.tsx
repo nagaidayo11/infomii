@@ -46,7 +46,6 @@ export function Editor2({ pageId }: Editor2Props) {
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
   const pageGradientTo = useEditor2Store((s) => s.pageGradientTo);
   const pageGradientAngle = useEditor2Store((s) => s.pageGradientAngle);
-  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
   const isSaving = useEditor2Store((s) => s.isSaving);
   const lastSavedAt = useEditor2Store((s) => s.lastSavedAt);
   const saveError = useEditor2Store((s) => s.saveError);
@@ -77,31 +76,6 @@ export function Editor2({ pageId }: Editor2Props) {
       }
     });
   }, [pageId, setPageMeta]);
-
-  useEffect(() => {
-    if (!pageId || typeof window === "undefined") return;
-    const key = `editor-page-background:${pageId}`;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        mode?: "solid" | "gradient";
-        color?: string;
-        from?: string;
-        to?: string;
-        angle?: number;
-      };
-      setPageBackground({
-        ...(parsed.mode ? { mode: parsed.mode } : {}),
-        ...(typeof parsed.color === "string" ? { color: parsed.color } : {}),
-        ...(typeof parsed.from === "string" ? { from: parsed.from } : {}),
-        ...(typeof parsed.to === "string" ? { to: parsed.to } : {}),
-        ...(typeof parsed.angle === "number" ? { angle: parsed.angle } : {}),
-      });
-    } catch {
-      // ignore parse errors
-    }
-  }, [pageId, setPageBackground]);
 
   useEffect(() => {
     if (!pageId || typeof window === "undefined") return;
@@ -226,8 +200,18 @@ export function Editor2({ pageId }: Editor2Props) {
     if (!pageId) return;
     setPublishing(true);
     try {
-      const { cards } = useEditor2Store.getState();
-      await savePageCards(pageId, cards);
+      const state = useEditor2Store.getState();
+      await savePageCards(pageId, state.cards, {
+        pageStyle: {
+          background: {
+            mode: state.pageBackgroundMode,
+            color: state.pageBackgroundColor,
+            from: state.pageGradientFrom,
+            to: state.pageGradientTo,
+            angle: state.pageGradientAngle,
+          },
+        },
+      });
       const page = await getPage(pageId);
       if (!page?.slug) {
         setPublishing(false);
@@ -247,8 +231,18 @@ export function Editor2({ pageId }: Editor2Props) {
   const handlePreviewClick = useCallback(async () => {
     if (!pageMeta.publicUrl || !pageId) return;
     try {
-      const currentCards = useEditor2Store.getState().cards;
-      await savePageCards(pageId, currentCards);
+      const state = useEditor2Store.getState();
+      await savePageCards(pageId, state.cards, {
+        pageStyle: {
+          background: {
+            mode: state.pageBackgroundMode,
+            color: state.pageBackgroundColor,
+            from: state.pageGradientFrom,
+            to: state.pageGradientTo,
+            angle: state.pageGradientAngle,
+          },
+        },
+      });
     } catch {
       // Even if save fails, allow user to inspect current public page.
     }
