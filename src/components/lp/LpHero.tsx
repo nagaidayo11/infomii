@@ -84,28 +84,51 @@ function HeroVisuals() {
 
 type LpHeroProps = {
   ctaHref: string;
+  /** 登録なしで触れるサンプル（公開ゲストページ） */
+  samplePageHref: string;
 };
 
-export function LpHero({ ctaHref }: LpHeroProps) {
+export function LpHero({ ctaHref, samplePageHref }: LpHeroProps) {
   return (
     <section className="border-b border-slate-200/80 bg-white">
       <Container className="py-16 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-5xl text-center">
           <FadeIn>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              ホテル案内ページを3分で作成
+            <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
+              ビジネスホテル・少人数運営・外国人対応に強い
+            </p>
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+              <span className="block text-2xl sm:text-3xl lg:text-4xl">
+                フロント対応、まだ口頭でやってますか？
+              </span>
+              <span className="mt-5 block">
+                QRひとつで
+                <span className="text-emerald-600">「全部伝わる館内案内」</span>
+                を3分で。
+              </span>
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600 sm:text-xl">
-              WiFi・朝食・施設案内を、1枚のQRページでゲストに共有。
+              WiFi・朝食・設備案内を1ページに集約。
+              <br className="hidden sm:block" />
+              説明・紙・更新の手間をゼロに近づけます。
             </p>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Button href={ctaHref} size="lg">
-                無料でページを作成
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              <Button href={samplePageHref} size="lg">
+                30秒で試す（登録なし）
               </Button>
               <Button href="#live-demo" variant="secondary" size="lg">
-                デモを見る
+                実際の画面を見る
               </Button>
             </div>
+            <p className="mt-4 text-sm text-slate-500">
+              すぐに作成するなら{" "}
+              <a
+                href={ctaHref}
+                className="font-semibold text-emerald-700 underline decoration-emerald-300/80 underline-offset-2 hover:text-emerald-800"
+              >
+                無料でページを作成
+              </a>
+            </p>
           </FadeIn>
         </div>
         <div className="mt-14 lg:mt-16">
