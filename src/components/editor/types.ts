@@ -25,6 +25,7 @@ export type CardType =
   | "laundry"
   | "spa"
   | "text"
+  | "icon"
   | "image"
   | "button"
   | "faq"
@@ -179,6 +180,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   laundry: "ランドリー",
   spa: "スパ・温泉",
   text: "テキスト",
+  icon: "アイコン",
   image: "画像",
   button: "ボタン",
   faq: "よくある質問",
@@ -224,6 +226,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "map", label: "地図", description: "住所・地図" },
   { type: "image", label: "画像", description: "写真" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
+  { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
@@ -261,6 +264,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "laundry", label: "ランドリー", description: "営業時間・料金・連絡先" },
   { type: "spa", label: "スパ・温泉", description: "時間・場所・説明" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
+  { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
   { type: "image", label: "画像", description: "写真" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
   { type: "schedule", label: "スケジュール", description: "営業時間" },
@@ -297,7 +301,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "notice":
       return { title: "お知らせ", body: "", variant: "info" };
     case "map":
-      return { address: "ホテル住所" };
+      return { title: "地図", address: "ホテル住所", mapEmbedUrl: "" };
     case "restaurant":
       return { title: "レストラン", time: "", location: "", menu: "" };
     case "taxi":
@@ -310,6 +314,8 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "スパ・温泉", hours: "", location: "", description: "", note: "" };
     case "text":
       return { content: "テキストを入力" };
+    case "icon":
+      return { icon: "📍", label: "ラベル", description: "" };
     case "image":
       return { src: "", alt: "" };
     case "button":
@@ -321,7 +327,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "menu":
       return { title: "メニュー", items: [{ name: "", price: "", description: "" }] };
     case "gallery":
-      return { title: "", items: [{ src: "", alt: "" }] };
+      return { title: "", columns: 2, items: [{ src: "", alt: "" }] };
     case "divider":
       return { style: "line" };
     case "parking":

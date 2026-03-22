@@ -27,6 +27,8 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
   const content = card.content as Record<string, unknown>;
   const title = getLocalizedContent(content?.title as LocalizedString | undefined, locale);
   const items = (Array.isArray(content?.items) ? content.items : [{ src: "", alt: "" }]) as GalleryItem[];
+  const rawColumns = typeof content?.columns === "number" ? content.columns : Number(content?.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = content?.[key];
@@ -40,8 +42,11 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
       <p className="mb-3 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="ギャラリー" />
       </p>
-      <div className="grid grid-cols-2 gap-2">
-        {items.slice(0, 6).map((item, i) => (
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
+        {items.slice(0, 12).map((item, i) => (
           <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
             {item?.src ? (
               <Image

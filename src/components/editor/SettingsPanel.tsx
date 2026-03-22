@@ -143,6 +143,8 @@ function GalleryItemsEditor({
   onUpdate: (key: string, value: unknown) => void;
 }) {
   const items = (Array.isArray(content.items) ? content.items : [{ src: "", alt: "" }]) as GalleryImageItem[];
+  const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const setItems = (next: GalleryImageItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof GalleryImageItem, value: string) => {
     const next = [...items];
@@ -154,17 +156,29 @@ function GalleryItemsEditor({
 
   return (
     <div className="space-y-3">
+      <div className="w-full">
+        <label className={labelClass}>列数</label>
+        <select
+          value={String(columns)}
+          onChange={(e) => onUpdate("columns", Number(e.target.value))}
+          className={inputClass}
+        >
+          <option value="2">2列</option>
+          <option value="3">3列</option>
+          <option value="4">4列</option>
+        </select>
+      </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">Images</span>
+        <span className="text-xs font-medium text-slate-500">画像</span>
         <button
           type="button"
           onClick={addItem}
           className="text-xs font-medium text-slate-600 hover:text-slate-800"
         >
-          + Add
+          + 追加
         </button>
       </div>
-      {items.slice(0, 6).map((_, i) => (
+      {items.slice(0, 12).map((_, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
             <button
@@ -172,11 +186,15 @@ function GalleryItemsEditor({
               onClick={() => removeItem(i)}
               className="text-xs text-slate-400 hover:text-red-600"
             >
-              Remove
+              削除
             </button>
           </div>
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "src", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
           <Input
-            label={`Image ${i + 1} URL`}
+            label={`画像 ${i + 1} URL`}
             value={items[i]?.src ?? ""}
             onChange={(e) => updateItem(i, "src", e.target.value)}
             placeholder="https://..."
@@ -1045,6 +1063,29 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
             </>
           )}
 
+          {card.type === "icon" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="アイコン"
+                value={(content.icon as string) ?? ""}
+                onChange={(e) => update("icon", e.target.value)}
+                placeholder="📍"
+              />
+              <Input
+                label="ラベル"
+                value={display("label")}
+                onChange={(e) => updateLocalized("label", e.target.value)}
+                placeholder="ラベル"
+              />
+              <Input
+                label="補足"
+                value={display("description")}
+                onChange={(e) => updateLocalized("description", e.target.value)}
+                placeholder="任意"
+              />
+            </SettingsSection>
+          )}
+
           {card.type === "wifi" && (
             <>
               <SettingsSection title="コンテンツ">
@@ -1385,6 +1426,19 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                     rows={2}
                     className={inputClass}
                   />
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>Googleマップ埋め込み</label>
+                  <textarea
+                    value={(content.mapEmbedUrl as string) ?? ""}
+                    onChange={(e) => update("mapEmbedUrl", e.target.value)}
+                    placeholder="Googleマップの共有URL または iframe埋め込みコードを貼り付け"
+                    rows={3}
+                    className={inputClass}
+                  />
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
+                  </p>
                 </div>
               </SettingsSection>
               <SettingsSection title="表示">

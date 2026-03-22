@@ -73,6 +73,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   laundry: 96,
   spa: 104,
   text: 72,
+  icon: 72,
   image: 110,
   button: 64,
   faq: 104,

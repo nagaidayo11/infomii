@@ -17,6 +17,7 @@ import { TaxiCard } from "./TaxiCard";
 import { EmergencyCard } from "./EmergencyCard";
 import { LaundryCard } from "./LaundryCard";
 import { TextCard } from "./TextCard";
+import { IconCard } from "./IconCard";
 import { ImageCard } from "./ImageCard";
 import { ButtonCard } from "./ButtonCard";
 import { FaqCard } from "./FaqCard";
@@ -132,6 +133,8 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       return <RestaurantCard card={card} isSelected={isSelected} locale={locale} />;
     case "text":
       return <TextCard card={card} isSelected={isSelected} locale={locale} />;
+    case "icon":
+      return <IconCard card={card} isSelected={isSelected} locale={locale} />;
     case "schedule":
       return <ScheduleCard card={card} isSelected={isSelected} locale={locale} />;
     case "menu":

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useEditor2Store } from "./store";
 import { nanoid } from "nanoid";
@@ -31,6 +31,7 @@ export function ImageUpload({
   className?: string;
 }) {
   const pageId = useEditor2Store((s) => s.pageMeta.pageId);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState("");
@@ -115,10 +116,10 @@ export function ImageUpload({
       }
       onDrop={onDrop}
       onDragOver={onDragOver}
-      onClick={() => !disabled && !uploading && document.getElementById("image-upload-input")?.click()}
+      onClick={() => !disabled && !uploading && inputRef.current?.click()}
     >
       <input
-        id="image-upload-input"
+        ref={inputRef}
         type="file"
         accept={ALLOWED_TYPES.join(",")}
         className="hidden"

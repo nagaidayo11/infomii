@@ -130,6 +130,7 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
     </svg>
   ),
+  icon: <span className="text-sm">◇</span>,
   schedule: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -240,6 +241,7 @@ const HOSPITALITY_ITEMS: LibraryItem[] = [
 /** Layout: text, divider */
 const LAYOUT_ITEMS: LibraryItem[] = [
   { type: "text", label: "テキスト", description: "テキスト・見出し" },
+  { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
   { type: "quote", label: "引用", description: "レビュー・引用文" },
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順・流れ" },
