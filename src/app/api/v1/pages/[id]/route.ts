@@ -23,7 +23,7 @@ async function resolveHotelId(token: string): Promise<{ hotelId: string; plan: s
   const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
   if (!isBusinessAccessible) return null;
 
-  return { hotelId: membership.hotel_id, plan: sub.plan };
+  return { hotelId: membership.hotel_id, plan: sub?.plan ?? "business" };
 }
 
 /**

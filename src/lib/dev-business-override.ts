@@ -1,7 +1,7 @@
 type AuthLikeUser = {
   email?: string | null;
-  app_metadata?: { role?: unknown } | null;
-  user_metadata?: { role?: unknown } | null;
+  app_metadata?: unknown;
+  user_metadata?: unknown;
 };
 
 const DEV_ROLES = new Set(["developer", "dev", "admin"]);
@@ -29,10 +29,15 @@ function isProductionLocked(): boolean {
 }
 
 function resolveUserRole(user: AuthLikeUser): string {
-  const role =
-    user.app_metadata?.role ??
-    user.user_metadata?.role ??
-    "";
+  const appMetadata =
+    user.app_metadata && typeof user.app_metadata === "object"
+      ? (user.app_metadata as Record<string, unknown>)
+      : null;
+  const userMetadata =
+    user.user_metadata && typeof user.user_metadata === "object"
+      ? (user.user_metadata as Record<string, unknown>)
+      : null;
+  const role = appMetadata?.role ?? userMetadata?.role ?? "";
   return typeof role === "string" ? role.trim().toLowerCase() : "";
 }
 
