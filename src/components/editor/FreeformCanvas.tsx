@@ -98,7 +98,10 @@ function getInitialStackY(cards: EditorCard[], index: number): number {
   if (index <= 0) return 24;
   let y = 24;
   for (let i = 0; i < index; i += 1) {
-    y += getCardDefaultHeight(cards[i] as EditorCard) + STACK_GAP_Y;
+    const prev = cards[i] as EditorCard;
+    const saved = prev.style?.[POSITION_KEY] as Position | undefined;
+    const prevH = typeof saved?.h === "number" ? saved.h : getCardDefaultHeight(prev);
+    y += prevH + STACK_GAP_Y;
   }
   return y;
 }
@@ -293,6 +296,57 @@ export function FreeformCanvas({
     },
     [autoHeights, contentWidth, cards]
   );
+
+  useEffect(() => {
+    if (dragState || cards.length === 0) return;
+
+    let currentY = 24;
+    const updates: Array<{ id: string; style: Record<string, unknown> }> = [];
+
+    for (let idx = 0; idx < cards.length; idx += 1) {
+      const card = cards[idx] as EditorCard;
+      const pos = getPosition(card, idx, contentWidth, cards);
+      const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
+      const manualH = saved?.manualH === true;
+      const width = Math.min(pos.w ?? DEFAULT_W, contentWidth);
+      const centeredX = Math.round((contentWidth - width) / 2);
+      const renderH = getRenderHeight(card, idx);
+      const nextH = manualH ? (typeof saved?.h === "number" ? saved.h : renderH) : renderH;
+      const nextPos: Position = {
+        x: centeredX,
+        y: currentY,
+        w: width,
+        h: nextH,
+        manualH,
+      };
+
+      const changed =
+        !saved ||
+        Math.abs((saved.x ?? 0) - nextPos.x) > 1 ||
+        Math.abs((saved.y ?? 0) - nextPos.y) > 1 ||
+        Math.abs((saved.w ?? 0) - (nextPos.w ?? 0)) > 1 ||
+        Math.abs((saved.h ?? 0) - (nextPos.h ?? 0)) > 1 ||
+        (saved.manualH === true) !== manualH;
+
+      if (changed) {
+        updates.push({
+          id: card.id,
+          style: {
+            ...(card.style ?? {}),
+            [POSITION_KEY]: nextPos,
+          },
+        });
+      }
+
+      currentY += nextH + STACK_GAP_Y;
+    }
+
+    if (updates.length > 0) {
+      updates.forEach((entry) => {
+        onUpdateCard(entry.id, { style: entry.style });
+      });
+    }
+  }, [cards, contentWidth, dragState, getRenderHeight, onUpdateCard]);
 
   const handleDrag = useCallback(
     (id: string, _e: unknown, d: { x: number; y: number }) => {
