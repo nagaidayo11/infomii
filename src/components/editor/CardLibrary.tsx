@@ -262,22 +262,40 @@ export const LIBRARY_SECTIONS: LibrarySection[] = [
 
 const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
   {
-    id: "basic-guide",
-    label: "基本案内セット",
-    description: "ウェルカム / WiFi / チェックアウト / お知らせ",
-    types: ["welcome", "wifi", "checkout", "notice"],
+    id: "quick-checkin",
+    label: "チェックイン即戦力セット",
+    description: "ウェルカム / Wi-Fi / FAQ / 緊急連絡",
+    types: ["welcome", "wifi", "faq", "emergency"],
   },
   {
-    id: "facility-guide",
-    label: "施設案内セット",
-    description: "レストラン / 施設案内 / ランドリー / 営業時間",
-    types: ["restaurant", "breakfast", "laundry", "schedule"],
+    id: "front-ops",
+    label: "フロント業務削減セット",
+    description: "チェックアウト / 駐車場 / タクシー / ページリンク",
+    types: ["checkout", "parking", "taxi", "pageLinks"],
   },
   {
-    id: "navigation-set",
-    label: "導線セット",
-    description: "地図 / ページリンク / FAQ / 緊急連絡先",
-    types: ["map", "pageLinks", "faq", "emergency"],
+    id: "upsell-set",
+    label: "館内売上アップセット",
+    description: "メニュー / ギャラリー / 強調 / 行動ボタン",
+    types: ["menu", "gallery", "highlight", "action"],
+  },
+  {
+    id: "inbound-set",
+    label: "インバウンド対応セット",
+    description: "アイコン / 比較 / ステップ / お知らせ",
+    types: ["icon", "compare", "steps", "notice"],
+  },
+  {
+    id: "resort-ryokan-set",
+    label: "旅館・リゾート体験セット",
+    description: "スパ / レストラン / 周辺 / 地図",
+    types: ["spa", "restaurant", "nearby", "map"],
+  },
+  {
+    id: "kpi-improve-set",
+    label: "改善運用セット",
+    description: "KPI / チェックリスト / 導線 / FAQ",
+    types: ["kpi", "checklist", "pageLinks", "faq"],
   },
 ];
 

@@ -22,6 +22,57 @@ import { getPage, buildPublicUrlV, savePageCards } from "@/lib/storage";
  */
 type Editor2Props = { pageId?: string | null };
 
+function buildChecklistItemsForPreset(types: CardType[]): Array<{ text: string; checked: boolean }> {
+  const base: Array<{ text: string; checked: boolean }> = [
+    { text: "施設名・連絡先を最新化", checked: false },
+    { text: "プレースホルダ文言を削除", checked: false },
+    { text: "公開前チェックを実行", checked: false },
+  ];
+  const byType: Partial<Record<CardType, Array<{ text: string; checked: boolean }>>> = {
+    wifi: [
+      { text: "Wi-Fi SSID / パスワードを入力", checked: false },
+      { text: "接続不可時の案内を入力", checked: false },
+    ],
+    breakfast: [
+      { text: "朝食時間・会場を入力", checked: false },
+    ],
+    checkout: [
+      { text: "チェックアウト時刻を入力", checked: false },
+    ],
+    parking: [
+      { text: "駐車場の料金・台数を入力", checked: false },
+    ],
+    taxi: [
+      { text: "タクシー連絡先を入力", checked: false },
+    ],
+    emergency: [
+      { text: "緊急連絡先を入力", checked: false },
+    ],
+    map: [
+      { text: "地図・住所を入力", checked: false },
+    ],
+    pageLinks: [
+      { text: "ページリンク先を設定", checked: false },
+    ],
+    menu: [
+      { text: "メニュー名・価格を入力", checked: false },
+    ],
+    gallery: [
+      { text: "画像を差し替え", checked: false },
+    ],
+    faq: [
+      { text: "FAQの質問・回答を入力", checked: false },
+    ],
+  };
+  const merged = [...base];
+  types.forEach((t) => {
+    (byType[t] ?? []).forEach((item) => {
+      if (!merged.some((m) => m.text === item.text)) merged.push(item);
+    });
+  });
+  return merged.slice(0, 10);
+}
+
 export function Editor2({ pageId }: Editor2Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -32,6 +83,11 @@ export function Editor2({ pageId }: Editor2Props) {
     slug: string;
   } | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [prepublishState, setPrepublishState] = useState<{
+    errors: string[];
+    warnings: string[];
+    allowContinue: boolean;
+  } | null>(null);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -54,9 +110,37 @@ export function Editor2({ pageId }: Editor2Props) {
   const undo = useEditor2Store((s) => s.undo);
   const redo = useEditor2Store((s) => s.redo);
   const clearCards = useEditor2Store((s) => s.clearCards);
+  const replaceTextAll = useEditor2Store((s) => s.replaceTextAll);
   const canUndo = useEditor2Store((s) => s.historyPast.length > 0);
   const canRedo = useEditor2Store((s) => s.historyFuture.length > 0);
   const setPageMeta = useEditor2Store((s) => s.setPageMeta);
+
+  const runPrepublishChecks = useCallback(() => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    if (cards.length === 0) {
+      errors.push("ブロックが1つもありません。最低1ブロック追加してください。");
+    }
+    const hasWifi = cards.some((c) => c.type === "wifi");
+    const hasCheckout = cards.some((c) => c.type === "checkout");
+    if (!hasWifi) warnings.push("Wi-Fi案内ブロックがありません。");
+    if (!hasCheckout) warnings.push("チェックアウト案内ブロックがありません。");
+    const placeholderPattern = /\[[^\]]+\]|ここに|入力してください|記載してください/;
+    const emptyOrAnchorHrefPattern = /^#?$|^\s*$/;
+    cards.forEach((card) => {
+      const raw = JSON.stringify(card.content ?? {});
+      if (placeholderPattern.test(raw)) {
+        warnings.push(`「${card.type}」にプレースホルダ文言が残っています。`);
+      }
+      if (card.type === "button") {
+        const href = String((card.content as Record<string, unknown>).href ?? "");
+        if (emptyOrAnchorHrefPattern.test(href)) {
+          warnings.push("ボタンリンク未設定のブロックがあります。");
+        }
+      }
+    });
+    return { errors, warnings };
+  }, [cards]);
 
   useEffect(() => {
     if (!pageId) {
@@ -194,7 +278,7 @@ export function Editor2({ pageId }: Editor2Props) {
     [addCard]
   );
 
-  const handlePublishClick = useCallback(async () => {
+  const publishNow = useCallback(async () => {
     if (!pageId) return;
     setPublishing(true);
     try {
@@ -226,6 +310,19 @@ export function Editor2({ pageId }: Editor2Props) {
     }
   }, [pageId]);
 
+  const handlePublishClick = useCallback(async () => {
+    const report = runPrepublishChecks();
+    if (report.errors.length > 0 || report.warnings.length > 0) {
+      setPrepublishState({
+        errors: report.errors,
+        warnings: report.warnings,
+        allowContinue: report.errors.length === 0,
+      });
+      return;
+    }
+    await publishNow();
+  }, [publishNow, runPrepublishChecks]);
+
   const handlePreviewClick = useCallback(async () => {
     if (!pageMeta.publicUrl || !pageId) return;
     try {
@@ -252,8 +349,21 @@ export function Editor2({ pageId }: Editor2Props) {
       for (const type of types) {
         addCard(type);
       }
+      addCard("checklist");
+      const checklistId = useEditor2Store.getState().selectedCardId;
+      if (checklistId) {
+        updateCard(checklistId, {
+          content: {
+            title: "即運用チェックリスト",
+            items: buildChecklistItemsForPreset(types),
+          },
+          style: {
+            deleteProtected: true,
+          },
+        });
+      }
     },
-    [addCard]
+    [addCard, updateCard]
   );
 
   const handleClearAll = useCallback(() => {
@@ -262,6 +372,15 @@ export function Editor2({ pageId }: Editor2Props) {
     if (!ok) return;
     clearCards();
   }, [cards.length, clearCards]);
+
+  const handleRunPrepublishCheck = useCallback(() => {
+    const report = runPrepublishChecks();
+    setPrepublishState({
+      errors: report.errors,
+      warnings: report.warnings,
+      allowContinue: false,
+    });
+  }, [runPrepublishChecks]);
 
   const topBar =
     pageId ? (
@@ -316,7 +435,13 @@ export function Editor2({ pageId }: Editor2Props) {
             </div>
           }
           settings={
-            <CardSettings card={selectedCard} onUpdate={updateCard} lastAddedCardId={lastAddedCardId} />
+            <CardSettings
+              card={selectedCard}
+              onUpdate={updateCard}
+              onBulkReplace={replaceTextAll}
+              onRunPrepublishCheck={handleRunPrepublishCheck}
+              lastAddedCardId={lastAddedCardId}
+            />
           }
         />
         <SlashCommandMenu
@@ -332,6 +457,60 @@ export function Editor2({ pageId }: Editor2Props) {
             slug={publishState.slug}
             onClose={() => setPublishState(null)}
           />
+        )}
+        {prepublishState && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">公開前チェック</h3>
+              {prepublishState.errors.length === 0 && prepublishState.warnings.length === 0 ? (
+                <p className="mt-3 text-sm text-emerald-700">問題は見つかりませんでした。</p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {prepublishState.errors.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-rose-700">修正が必要</p>
+                      <ul className="mt-1 space-y-1 text-sm text-rose-700">
+                        {prepublishState.errors.map((item) => (
+                          <li key={item}>・{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {prepublishState.warnings.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-amber-700">確認推奨</p>
+                      <ul className="mt-1 max-h-44 space-y-1 overflow-auto text-sm text-amber-700">
+                        {prepublishState.warnings.map((item, idx) => (
+                          <li key={`${item}-${idx}`}>・{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPrepublishState(null)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  閉じる
+                </button>
+                {prepublishState.allowContinue && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setPrepublishState(null);
+                      await publishNow();
+                    }}
+                    className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                  >
+                    このまま公開
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
         <SaveToast lastSavedAt={lastSavedAt} />
       </div>

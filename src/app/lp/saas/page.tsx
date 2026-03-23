@@ -258,7 +258,7 @@ export default function LpSaaSPage() {
       <Section
         id="benefits"
         kicker="数字で見るベネフィット"
-        title="で、俺の現場がどう楽になるの？"
+        title="で、私の現場がどう楽になるの？"
         description="※ 数値は導入施設ヒアリングに基づく目安です。稼働人数・客層・更新頻度で変動します。"
       >
         <ScrollReveal>
@@ -317,7 +317,7 @@ export default function LpSaaSPage() {
         id="features"
         kicker="だから現場が楽になる"
         title="機能の羅列ではなく、成果で選んでいます"
-        description="「で、俺の何が楽になるの？」に答えるために、Infomiiは次の価値に寄せて設計しています。"
+        description="「で、現場の何が楽になるの？」に答えるために、Infomiiは次の価値に寄せて設計しています。"
       >
         <ScrollReveal>
           <StaggerReveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>

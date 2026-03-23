@@ -75,7 +75,10 @@ export function getBodyFontSizeStyle(): import("react").CSSProperties {
 /** Extract block style (borderRadius, boxShadow, backgroundColor, fontSize, titleFontSize, bodyFontSize) for rendering. */
 export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
   const s = card.style;
-  if (!s || typeof s !== "object") return {};
+  if (!s || typeof s !== "object") return { borderRadius: "8px" };
+  const transparentOn = Boolean((s as Record<string, unknown>).backgroundTransparent);
+  const borderEnabledRaw = (s as Record<string, unknown>).borderEnabled;
+  const borderEnabled = borderEnabledRaw === undefined ? true : Boolean(borderEnabledRaw);
   const fontSizeKey = s.fontSize as string | undefined;
   const fontSize = resolveFontSize(fontSizeKey);
   const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
@@ -86,14 +89,17 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
         ? s.borderRadius
         : typeof s.borderRadius === "number"
           ? `${s.borderRadius}px`
-          : undefined,
+          : "8px",
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
-    borderWidth:
+    borderWidth: borderEnabled
+      ? (
       typeof s.borderWidth === "number"
         ? `${s.borderWidth}px`
         : typeof s.borderWidth === "string"
           ? s.borderWidth
-          : undefined,
+          : undefined
+        )
+      : "0px",
     borderColor: typeof s.borderColor === "string" ? s.borderColor : undefined,
     borderStyle:
       typeof s.borderWidth === "number" && s.borderWidth > 0
@@ -107,7 +113,11 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
         : typeof s.padding === "string"
           ? s.padding
           : undefined,
-    backgroundColor: typeof s.backgroundColor === "string" ? s.backgroundColor : undefined,
+    backgroundColor: transparentOn
+      ? "transparent"
+      : typeof s.backgroundColor === "string"
+        ? s.backgroundColor
+        : undefined,
     color: typeof s.textColor === "string" ? s.textColor : undefined,
     textAlign:
       s.textAlign === "left" || s.textAlign === "center" || s.textAlign === "right"
@@ -122,7 +132,9 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
-  if (typeof s.backgroundColor === "string") {
+  if (transparentOn) {
+    (style as Record<string, string>)["--editor-block-surface"] = "transparent";
+  } else if (typeof s.backgroundColor === "string") {
     (style as Record<string, string>)["--editor-block-surface"] = s.backgroundColor;
   }
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
@@ -389,7 +401,7 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     id,
     type,
     content: defaultContent(type),
-    style: {},
+    style: { borderRadius: 8 },
     order,
   };
 }

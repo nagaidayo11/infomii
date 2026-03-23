@@ -66,7 +66,7 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#ffffff",
       borderWidth: 1,
       borderColor: "#e2e8f0",
-      borderRadius: 12,
+      borderRadius: 8,
       boxShadow: "",
       padding: 0,
     },
@@ -78,7 +78,7 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#f8fafc",
       borderWidth: 0,
       borderColor: "",
-      borderRadius: 14,
+      borderRadius: 8,
       boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
       padding: 0,
     },
@@ -90,18 +90,22 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#fff7ed",
       borderWidth: 1,
       borderColor: "#fdba74",
-      borderRadius: 12,
+      borderRadius: 8,
       boxShadow: "0 8px 24px rgba(249,115,22,0.12)",
       padding: 0,
     },
   },
 ];
 
+const CUSTOM_PRESET_STORAGE_KEY = "editor:block-style-custom-presets:v1";
+
 type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
 
 export type CardSettingsProps = {
   card: EditorCard | null;
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
+  onBulkReplace?: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
+  onRunPrepublishCheck?: () => void;
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
   lastAddedCardId?: string | null;
 };
@@ -630,10 +634,23 @@ function KpiItemsEditor({
 }
 
 /** CardSettings panel: shows Content, Appearance, and Behavior for the selected card. Updates the canvas in real time. */
-export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSettingsProps) {
+export function CardSettings({
+  card,
+  onUpdate,
+  onBulkReplace,
+  onRunPrepublishCheck,
+  lastAddedCardId = null,
+}: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [styleMode, setStyleMode] = useState<"standard" | "advanced">("standard");
+  const [bulkFind, setBulkFind] = useState("");
+  const [bulkReplaceTo, setBulkReplaceTo] = useState("");
+  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const [customPresets, setCustomPresets] = useState<
+    Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
+  >([]);
   const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
   const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
@@ -678,6 +695,61 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
       if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(CUSTOM_PRESET_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>;
+      if (Array.isArray(parsed)) setCustomPresets(parsed.slice(0, 5));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistCustomPresets = useCallback(
+    (next: Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>) => {
+      setCustomPresets(next);
+      if (typeof window === "undefined") return;
+      window.localStorage.setItem(CUSTOM_PRESET_STORAGE_KEY, JSON.stringify(next));
+    },
+    []
+  );
+
+  const saveCurrentStyleAsPreset = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const label = window.prompt("プリセット名を入力してください", "マイプリセット");
+    if (!label) return;
+    const styleSnapshot = { ...((card?.style ?? {}) as Record<string, string | number | undefined>) };
+    const next = [
+      { id: `custom-${Date.now()}`, label: label.slice(0, 20), style: styleSnapshot },
+      ...customPresets,
+    ].slice(0, 5);
+    persistCustomPresets(next);
+  }, [card?.style, customPresets, persistCustomPresets]);
+
+  const removeCustomPreset = useCallback(
+    (id: string) => {
+      persistCustomPresets(customPresets.filter((p) => p.id !== id));
+    },
+    [customPresets, persistCustomPresets]
+  );
+
+  const handleBulkReplace = useCallback(() => {
+    if (!onBulkReplace) return;
+    const needle = bulkFind.trim();
+    if (!needle) {
+      setBulkStatus("検索文字を入力してください。");
+      return;
+    }
+    const result = onBulkReplace(needle, bulkReplaceTo);
+    if (result.occurrences === 0) {
+      setBulkStatus("一致する文字が見つかりませんでした。");
+      return;
+    }
+    setBulkStatus(`置換完了: ${result.cardsUpdated}ブロック / ${result.occurrences}箇所`);
+  }, [onBulkReplace, bulkFind, bulkReplaceTo]);
 
   if (!card) {
     return (
@@ -778,6 +850,42 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 </>
               )}
             </SettingsSection>
+            <SettingsSection title="一括置換（このページ内）">
+              <Input
+                label="検索文字"
+                value={bulkFind}
+                onChange={(e) => setBulkFind(e.target.value)}
+                placeholder="例: フロント内線 [番号]"
+              />
+              <Input
+                label="置換後"
+                value={bulkReplaceTo}
+                onChange={(e) => setBulkReplaceTo(e.target.value)}
+                placeholder="例: フロント内線 9"
+              />
+              <button
+                type="button"
+                onClick={handleBulkReplace}
+                disabled={!onBulkReplace}
+                className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                一括置換を実行
+              </button>
+              {bulkStatus ? <p className="text-xs text-slate-500">{bulkStatus}</p> : null}
+            </SettingsSection>
+            <SettingsSection title="公開前チェック">
+              <p className="text-sm text-slate-500">
+                公開前に未入力やプレースホルダをチェックします。
+              </p>
+              <button
+                type="button"
+                onClick={onRunPrepublishCheck}
+                disabled={!onRunPrepublishCheck}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                チェックを実行
+              </button>
+            </SettingsSection>
           </div>
         </div>
       </>
@@ -789,7 +897,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
   };
-  const updateStyle = (key: string, value: string | number | undefined) => {
+  const updateStyle = (key: string, value: unknown) => {
     const next = value === undefined || value === "" ? undefined : value;
     const nextStyle = next != null ? { ...style, [key]: next } : { ...style };
     if (next === undefined) delete nextStyle[key];
@@ -1725,6 +1833,33 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
 
           <SettingsSection title="ブロックスタイル">
             <div className="w-full">
+              <label className={labelClass}>編集モード</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStyleMode("standard")}
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                    styleMode === "standard"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  標準
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStyleMode("advanced")}
+                  className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                    styleMode === "advanced"
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  詳細
+                </button>
+              </div>
+            </div>
+            <div className="w-full">
               <label className={labelClass}>プリセット</label>
               <div className="grid grid-cols-3 gap-2">
                 {BLOCK_STYLE_PRESETS.map((preset) => (
@@ -1740,53 +1875,40 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               </div>
             </div>
             <div className="w-full">
-              <label className={labelClass}>フォントサイズ（全体）</label>
-              <select
-                value={(style.fontSize as string) ?? ""}
-                onChange={(e) => updateStyle("fontSize", e.target.value || undefined)}
-                className={inputClass}
+              <button
+                type="button"
+                onClick={saveCurrentStyleAsPreset}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                <option value="">標準</option>
-                <option value="xs">極小 (12px)</option>
-                <option value="sm">小 (14px)</option>
-                <option value="base">標準 (16px)</option>
-                <option value="lg">大 (18px)</option>
-                <option value="xl">特大 (20px)</option>
-                <option value="2xl">最大 (24px)</option>
-              </select>
+                現在の見た目をマイプリセット保存
+              </button>
             </div>
-            <div className="w-full">
-              <label className={labelClass}>タイトルサイズ</label>
-              <select
-                value={(style.titleFontSize as string) ?? ""}
-                onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
-                className={inputClass}
-              >
-                <option value="">継承（上記に従う）</option>
-                <option value="xs">極小 (12px)</option>
-                <option value="sm">小 (14px)</option>
-                <option value="base">標準 (16px)</option>
-                <option value="lg">大 (18px)</option>
-                <option value="xl">特大 (20px)</option>
-                <option value="2xl">最大 (24px)</option>
-              </select>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>本文サイズ</label>
-              <select
-                value={(style.bodyFontSize as string) ?? ""}
-                onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
-                className={inputClass}
-              >
-                <option value="">継承（上記に従う）</option>
-                <option value="xs">極小 (12px)</option>
-                <option value="sm">小 (14px)</option>
-                <option value="base">標準 (16px)</option>
-                <option value="lg">大 (18px)</option>
-                <option value="xl">特大 (20px)</option>
-                <option value="2xl">最大 (24px)</option>
-              </select>
-            </div>
+            {customPresets.length > 0 && (
+              <div className="w-full">
+                <label className={labelClass}>マイプリセット</label>
+                <div className="space-y-2">
+                  {customPresets.map((preset) => (
+                    <div key={preset.id} className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => applyStylePreset(preset.style)}
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        {preset.label}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeCustomPreset(preset.id)}
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-500 hover:bg-slate-50 hover:text-rose-600"
+                        aria-label={`${preset.label}を削除`}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="w-full">
               <label className={labelClass}>角丸 (px)</label>
               <input
@@ -1803,59 +1925,15 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               />
             </div>
             <div className="w-full">
-              <label className={labelClass}>影</label>
-              <select
-                value={(style.boxShadow as string) ?? ""}
-                onChange={(e) => updateStyle("boxShadow", e.target.value || undefined)}
-                className={inputClass}
-              >
-                <option value="">なし</option>
-                <option value="0 1px 3px rgba(0,0,0,0.08)">軽い</option>
-                <option value="0 4px 12px rgba(0,0,0,0.1)">標準</option>
-                <option value="0 8px 24px rgba(0,0,0,0.12)">強め</option>
-              </select>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>余白 (px)</label>
-              <input
-                type="number"
-                min={0}
-                max={40}
-                value={(style.padding as number | string) ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  updateStyle("padding", v === "" ? undefined : parseInt(v, 10) || 0);
-                }}
-                placeholder="0"
-                className={inputClass}
-              />
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>寄せ</label>
-              <select
-                value={(style.textAlign as string) ?? ""}
-                onChange={(e) => updateStyle("textAlign", e.target.value || undefined)}
-                className={inputClass}
-              >
-                <option value="">標準</option>
-                <option value="left">左寄せ</option>
-                <option value="center">中央寄せ</option>
-                <option value="right">右寄せ</option>
-              </select>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>行間</label>
-              <select
-                value={(style.lineHeight as string) ?? ""}
-                onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
-                className={inputClass}
-              >
-                <option value="">標準</option>
-                <option value="1.3">狭め</option>
-                <option value="1.5">標準</option>
-                <option value="1.7">広め</option>
-                <option value="2">広い</option>
-              </select>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={Boolean(style.backgroundTransparent)}
+                  onChange={(e) => updateStyle("backgroundTransparent", e.target.checked ? true : undefined)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                ブロック透過
+              </label>
             </div>
             <div className="w-full">
               <label className={labelClass}>ブロックカラー</label>
@@ -1867,17 +1945,34 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                     const hex = v.startsWith("#") ? v.slice(1) : v;
                     return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#ffffff";
                   })()}
-                  onChange={(e) => updateStyle("backgroundColor", e.target.value)}
+                  onChange={(e) => {
+                    updateStyle("backgroundTransparent", undefined);
+                    updateStyle("backgroundColor", e.target.value);
+                  }}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
                 />
                 <input
                   type="text"
                   value={(style.backgroundColor as string) ?? ""}
-                  onChange={(e) => updateStyle("backgroundColor", e.target.value || undefined)}
+                  onChange={(e) => {
+                    updateStyle("backgroundTransparent", undefined);
+                    updateStyle("backgroundColor", e.target.value || undefined);
+                  }}
                   placeholder="#ffffff（ブロック全体）"
                   className={inputClass + " flex-1"}
                 />
               </div>
+            </div>
+            <div className="w-full">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={(style.borderEnabled as boolean | undefined) ?? true}
+                  onChange={(e) => updateStyle("borderEnabled", e.target.checked ? true : false)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                枠線を表示
+              </label>
             </div>
             <div className="w-full">
               <label className={labelClass}>枠線 (px)</label>
@@ -1888,6 +1983,7 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 value={(style.borderWidth as number | string) ?? ""}
                 onChange={(e) => {
                   const v = e.target.value;
+                  updateStyle("borderEnabled", true);
                   updateStyle("borderWidth", v === "" ? undefined : parseInt(v, 10) || 0);
                 }}
                 placeholder="0"
@@ -1917,6 +2013,17 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
               </div>
             </div>
             <div className="w-full">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={Boolean(style.deleteProtected)}
+                  onChange={(e) => updateStyle("deleteProtected", e.target.checked ? true : undefined)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                削除保護（全削除/削除キー対象外）
+              </label>
+            </div>
+            <div className="w-full">
               <label className={labelClass}>フォント色</label>
               <div className="flex gap-2">
                 <input
@@ -1938,6 +2045,113 @@ export function CardSettings({ card, onUpdate, lastAddedCardId = null }: CardSet
                 />
               </div>
             </div>
+            {styleMode === "advanced" && (
+              <>
+                <div className="w-full">
+                  <label className={labelClass}>フォントサイズ（全体）</label>
+                  <select
+                    value={(style.fontSize as string) ?? ""}
+                    onChange={(e) => updateStyle("fontSize", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">標準</option>
+                    <option value="xs">極小 (12px)</option>
+                    <option value="sm">小 (14px)</option>
+                    <option value="base">標準 (16px)</option>
+                    <option value="lg">大 (18px)</option>
+                    <option value="xl">特大 (20px)</option>
+                    <option value="2xl">最大 (24px)</option>
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>タイトルサイズ</label>
+                  <select
+                    value={(style.titleFontSize as string) ?? ""}
+                    onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">継承（上記に従う）</option>
+                    <option value="xs">極小 (12px)</option>
+                    <option value="sm">小 (14px)</option>
+                    <option value="base">標準 (16px)</option>
+                    <option value="lg">大 (18px)</option>
+                    <option value="xl">特大 (20px)</option>
+                    <option value="2xl">最大 (24px)</option>
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>本文サイズ</label>
+                  <select
+                    value={(style.bodyFontSize as string) ?? ""}
+                    onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">継承（上記に従う）</option>
+                    <option value="xs">極小 (12px)</option>
+                    <option value="sm">小 (14px)</option>
+                    <option value="base">標準 (16px)</option>
+                    <option value="lg">大 (18px)</option>
+                    <option value="xl">特大 (20px)</option>
+                    <option value="2xl">最大 (24px)</option>
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>影</label>
+                  <select
+                    value={(style.boxShadow as string) ?? ""}
+                    onChange={(e) => updateStyle("boxShadow", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">なし</option>
+                    <option value="0 1px 3px rgba(0,0,0,0.08)">軽い</option>
+                    <option value="0 4px 12px rgba(0,0,0,0.1)">標準</option>
+                    <option value="0 8px 24px rgba(0,0,0,0.12)">強め</option>
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>余白 (px)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={40}
+                    value={(style.padding as number | string) ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateStyle("padding", v === "" ? undefined : parseInt(v, 10) || 0);
+                    }}
+                    placeholder="0"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>寄せ</label>
+                  <select
+                    value={(style.textAlign as string) ?? ""}
+                    onChange={(e) => updateStyle("textAlign", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">標準</option>
+                    <option value="left">左寄せ</option>
+                    <option value="center">中央寄せ</option>
+                    <option value="right">右寄せ</option>
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>行間</label>
+                  <select
+                    value={(style.lineHeight as string) ?? ""}
+                    onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
+                    className={inputClass}
+                  >
+                    <option value="">標準</option>
+                    <option value="1.3">狭め</option>
+                    <option value="1.5">標準</option>
+                    <option value="1.7">広め</option>
+                    <option value="2">広い</option>
+                  </select>
+                </div>
+              </>
+            )}
           </SettingsSection>
         </div>
       </div>

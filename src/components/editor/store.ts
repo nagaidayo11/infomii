@@ -77,6 +77,8 @@ export type Editor2State = {
   removeCard: (id: string) => void;
   duplicateCard: (id: string) => void;
   clearCards: () => void;
+  /** Replace text in all card contents on current page. */
+  replaceTextAll: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
   undo: () => void;
   redo: () => void;
 };
@@ -96,6 +98,46 @@ const initialPageMeta: EditorPageMeta = {
 function pushHistory(past: EditorCard[][], cards: EditorCard[]): EditorCard[][] {
   const next = [...past, cards.map((c) => ({ ...c }))];
   return next.slice(-HISTORY_MAX);
+}
+
+function replaceInUnknown(
+  value: unknown,
+  find: string,
+  replaceTo: string
+): { value: unknown; occurrences: number } {
+  if (!find) return { value, occurrences: 0 };
+  if (typeof value === "string") {
+    const occurrences = value.split(find).length - 1;
+    return {
+      value: occurrences > 0 ? value.split(find).join(replaceTo) : value,
+      occurrences,
+    };
+  }
+  if (Array.isArray(value)) {
+    let total = 0;
+    const next = value.map((item) => {
+      const r = replaceInUnknown(item, find, replaceTo);
+      total += r.occurrences;
+      return r.value;
+    });
+    return { value: next, occurrences: total };
+  }
+  if (value && typeof value === "object") {
+    let total = 0;
+    const next: Record<string, unknown> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([k, v]) => {
+      const r = replaceInUnknown(v, find, replaceTo);
+      total += r.occurrences;
+      next[k] = r.value;
+    });
+    return { value: next, occurrences: total };
+  }
+  return { value, occurrences: 0 };
+}
+
+function isDeleteProtected(card: EditorCard): boolean {
+  const s = (card.style ?? {}) as Record<string, unknown>;
+  return Boolean(s.deleteProtected);
 }
 
 export const useEditor2Store = create<Editor2State>((set, get) => ({
@@ -270,6 +312,8 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
 
   removeCard: (id) =>
     set((s) => {
+      const target = s.cards.find((c) => c.id === id);
+      if (!target || isDeleteProtected(target)) return s;
       const next = s.cards
         .filter((c) => c.id !== id)
         .map((c, i) => ({ ...c, order: i }));
@@ -304,13 +348,40 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   clearCards: () =>
     set((s) => {
       if (s.cards.length === 0) return s;
+      const keep = s.cards.filter((c) => isDeleteProtected(c));
+      if (keep.length === s.cards.length) return s;
       return {
-        cards: [],
+        cards: keep.map((c, i) => ({ ...c, order: i })),
         selectedCardId: null,
         historyPast: pushHistory(s.historyPast, s.cards),
         historyFuture: [],
       };
     }),
+
+  replaceTextAll: (find, replaceTo) => {
+    const needle = find.trim();
+    if (!needle) return { cardsUpdated: 0, occurrences: 0 };
+    const { cards, historyPast } = get();
+    let cardsUpdated = 0;
+    let occurrences = 0;
+    const next = cards.map((c) => {
+      const r = replaceInUnknown(c.content, needle, replaceTo);
+      occurrences += r.occurrences;
+      if (r.occurrences > 0) {
+        cardsUpdated += 1;
+        return { ...c, content: r.value as Record<string, unknown> };
+      }
+      return c;
+    });
+    if (occurrences > 0) {
+      set({
+        cards: next,
+        historyPast: pushHistory(historyPast, cards),
+        historyFuture: [],
+      });
+    }
+    return { cardsUpdated, occurrences };
+  },
 
   undo: () => {
     const { historyPast, cards, historyFuture } = get();

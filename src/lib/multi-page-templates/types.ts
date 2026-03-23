@@ -33,4 +33,5 @@ export type MultiPageTemplateId =
   | "hotel-basic"
   | "business-hotel"
   | "ryokan"
-  | "minpaku";
+  | "minpaku"
+  | "hotel-kurekake";
