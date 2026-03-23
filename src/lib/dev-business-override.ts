@@ -60,7 +60,9 @@ export function canUseDevBusinessOverride(user: AuthLikeUser | null | undefined)
 
   const allowEmails = resolveAllowEmails();
   if (allowEmails.length === 0) {
-    return false;
+    // Fallback for client-side checks where non-public env vars are not readable.
+    // If override feature is explicitly enabled, allow the signed-in user.
+    return true;
   }
 
   const email = user.email?.trim().toLowerCase() ?? "";
