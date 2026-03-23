@@ -12,6 +12,7 @@ export type EditorTopBarProps = {
   publicUrl: string | null;
   publishing?: boolean;
   onEditPageBackground?: () => void;
+  onBulkFont?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
   canClearAll?: boolean;
@@ -94,6 +95,7 @@ export function EditorTopBar({
   publicUrl,
   publishing = false,
   onEditPageBackground,
+  onBulkFont,
   canUndo = false,
   canRedo = false,
   canClearAll = false,
@@ -191,14 +193,26 @@ export function EditorTopBar({
       </div>
 
       {onEditPageBackground && (
-        <button
-          type="button"
-          onClick={onEditPageBackground}
-          className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
-          title="ページ背景を編集"
-        >
-          背景
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onEditPageBackground}
+            className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+            title="ページ背景を編集"
+          >
+            背景
+          </button>
+          {onBulkFont && (
+            <button
+              type="button"
+              onClick={onBulkFont}
+              className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+              title="ページ内ブロックのフォントを一括変更"
+            >
+              一括フォント
+            </button>
+          )}
+        </div>
       )}
 
       {/* Actions: Preview, Publish, QR */}

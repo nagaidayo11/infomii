@@ -79,6 +79,8 @@ export type Editor2State = {
   clearCards: () => void;
   /** Replace text in all card contents on current page. */
   replaceTextAll: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
+  /** Apply same font family to all blocks on current page. */
+  applyFontFamilyAll: (fontFamily?: string) => { cardsUpdated: number };
   undo: () => void;
   redo: () => void;
 };
@@ -381,6 +383,27 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       });
     }
     return { cardsUpdated, occurrences };
+  },
+
+  applyFontFamilyAll: (fontFamily) => {
+    const { cards, historyPast } = get();
+    if (cards.length === 0) return { cardsUpdated: 0 };
+    const next = cards.map((c) => {
+      const prevStyle = (c.style ?? {}) as Record<string, unknown>;
+      const style = { ...prevStyle };
+      if (!fontFamily) {
+        delete style.fontFamily;
+      } else {
+        style.fontFamily = fontFamily;
+      }
+      return { ...c, style };
+    });
+    set({
+      cards: next,
+      historyPast: pushHistory(historyPast, cards),
+      historyFuture: [],
+    });
+    return { cardsUpdated: cards.length };
   },
 
   undo: () => {

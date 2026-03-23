@@ -22,57 +22,6 @@ import { getPage, buildPublicUrlV, savePageCards } from "@/lib/storage";
  */
 type Editor2Props = { pageId?: string | null };
 
-function buildChecklistItemsForPreset(types: CardType[]): Array<{ text: string; checked: boolean }> {
-  const base: Array<{ text: string; checked: boolean }> = [
-    { text: "施設名・連絡先を最新化", checked: false },
-    { text: "プレースホルダ文言を削除", checked: false },
-    { text: "公開前チェックを実行", checked: false },
-  ];
-  const byType: Partial<Record<CardType, Array<{ text: string; checked: boolean }>>> = {
-    wifi: [
-      { text: "Wi-Fi SSID / パスワードを入力", checked: false },
-      { text: "接続不可時の案内を入力", checked: false },
-    ],
-    breakfast: [
-      { text: "朝食時間・会場を入力", checked: false },
-    ],
-    checkout: [
-      { text: "チェックアウト時刻を入力", checked: false },
-    ],
-    parking: [
-      { text: "駐車場の料金・台数を入力", checked: false },
-    ],
-    taxi: [
-      { text: "タクシー連絡先を入力", checked: false },
-    ],
-    emergency: [
-      { text: "緊急連絡先を入力", checked: false },
-    ],
-    map: [
-      { text: "地図・住所を入力", checked: false },
-    ],
-    pageLinks: [
-      { text: "ページリンク先を設定", checked: false },
-    ],
-    menu: [
-      { text: "メニュー名・価格を入力", checked: false },
-    ],
-    gallery: [
-      { text: "画像を差し替え", checked: false },
-    ],
-    faq: [
-      { text: "FAQの質問・回答を入力", checked: false },
-    ],
-  };
-  const merged = [...base];
-  types.forEach((t) => {
-    (byType[t] ?? []).forEach((item) => {
-      if (!merged.some((m) => m.text === item.text)) merged.push(item);
-    });
-  });
-  return merged.slice(0, 10);
-}
-
 export function Editor2({ pageId }: Editor2Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -88,6 +37,8 @@ export function Editor2({ pageId }: Editor2Props) {
     warnings: string[];
     allowContinue: boolean;
   } | null>(null);
+  const [bulkFontOpen, setBulkFontOpen] = useState(false);
+  const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -111,6 +62,7 @@ export function Editor2({ pageId }: Editor2Props) {
   const redo = useEditor2Store((s) => s.redo);
   const clearCards = useEditor2Store((s) => s.clearCards);
   const replaceTextAll = useEditor2Store((s) => s.replaceTextAll);
+  const applyFontFamilyAll = useEditor2Store((s) => s.applyFontFamilyAll);
   const canUndo = useEditor2Store((s) => s.historyPast.length > 0);
   const canRedo = useEditor2Store((s) => s.historyFuture.length > 0);
   const setPageMeta = useEditor2Store((s) => s.setPageMeta);
@@ -349,21 +301,8 @@ export function Editor2({ pageId }: Editor2Props) {
       for (const type of types) {
         addCard(type);
       }
-      addCard("checklist");
-      const checklistId = useEditor2Store.getState().selectedCardId;
-      if (checklistId) {
-        updateCard(checklistId, {
-          content: {
-            title: "即運用チェックリスト",
-            items: buildChecklistItemsForPreset(types),
-          },
-          style: {
-            deleteProtected: true,
-          },
-        });
-      }
     },
-    [addCard, updateCard]
+    [addCard]
   );
 
   const handleClearAll = useCallback(() => {
@@ -400,6 +339,7 @@ export function Editor2({ pageId }: Editor2Props) {
         onRedo={redo}
         onClearAll={handleClearAll}
         onEditPageBackground={() => selectCard(null)}
+        onBulkFont={() => setBulkFontOpen(true)}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
@@ -508,6 +448,49 @@ export function Editor2({ pageId }: Editor2Props) {
                     このまま公開
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+        {bulkFontOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">フォント一括変更</h3>
+              <p className="mt-1 text-sm text-slate-500">ページ内すべてのブロックに同じフォントを適用します。</p>
+              <div className="mt-4">
+                <label className="mb-1.5 block text-xs font-medium text-slate-500">フォント</label>
+                <select
+                  value={bulkFontFamily}
+                  onChange={(e) => setBulkFontFamily(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none"
+                >
+                  <option value="">標準（システム）</option>
+                  <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+                  <option value="'Hiragino Kaku Gothic ProN', sans-serif">ヒラギノ角ゴ</option>
+                  <option value="'Yu Gothic', 'YuGothic', sans-serif">Yu Gothic</option>
+                  <option value="'Noto Serif JP', serif">Noto Serif JP</option>
+                  <option value="serif">Serif</option>
+                  <option value="sans-serif">Sans Serif</option>
+                </select>
+              </div>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkFontOpen(false)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  閉じる
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    applyFontFamilyAll(bulkFontFamily || undefined);
+                    setBulkFontOpen(false);
+                  }}
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
+                  一括適用
+                </button>
               </div>
             </div>
           </div>

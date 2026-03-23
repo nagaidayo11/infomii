@@ -1925,6 +1925,22 @@ export function CardSettings({
               />
             </div>
             <div className="w-full">
+              <label className={labelClass}>フォント</label>
+              <select
+                value={(style.fontFamily as string) ?? ""}
+                onChange={(e) => updateStyle("fontFamily", e.target.value || undefined)}
+                className={inputClass}
+              >
+                <option value="">標準（システム）</option>
+                <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+                <option value="'Hiragino Kaku Gothic ProN', sans-serif">ヒラギノ角ゴ</option>
+                <option value="'Yu Gothic', 'YuGothic', sans-serif">Yu Gothic</option>
+                <option value="'Noto Serif JP', serif">Noto Serif JP</option>
+                <option value="serif">Serif</option>
+                <option value="sans-serif">Sans Serif</option>
+              </select>
+            </div>
+            <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"

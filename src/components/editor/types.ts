@@ -129,6 +129,7 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
         : typeof s.lineHeight === "string"
           ? s.lineHeight
           : undefined,
+    fontFamily: typeof s.fontFamily === "string" ? s.fontFamily : undefined,
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
