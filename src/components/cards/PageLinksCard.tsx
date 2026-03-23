@@ -61,7 +61,7 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
         />
       </h3>
       <div
-        className="grid gap-3"
+        className="grid auto-rows-min gap-2.5"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.length === 0 ? (
@@ -71,12 +71,12 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
             const href = getHref(item);
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
-              <div className="flex min-h-[132px] flex-col items-center gap-2 rounded-xl bg-slate-50/80 p-3 transition hover:bg-slate-100">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
-                  <LineIcon name={iconDisplay} className="h-6 w-6" />
+              <div className="flex items-center gap-2.5 rounded-xl bg-slate-50/80 px-3 py-2.5 transition hover:bg-slate-100">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
+                  <LineIcon name={iconDisplay} className="h-5 w-5" />
                 </span>
                 <span
-                  className="w-full text-center font-medium leading-tight text-slate-700 break-words [word-break:keep-all]"
+                  className="min-w-0 flex-1 text-left font-medium leading-tight text-slate-700 break-words [word-break:keep-all]"
                   style={getBodyFontSizeStyle()}
                 >
                   {isSelected ? (

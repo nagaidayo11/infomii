@@ -788,6 +788,18 @@ function applyDevBusinessOverrideToSubscription(
   };
 }
 
+function createDevBusinessOverrideSubscriptionFallback(): HotelSubscription {
+  return {
+    id: "dev-business-override",
+    plan: "business",
+    status: "active",
+    maxPublishedPages: resolveLimitByPlan("business"),
+    currentPeriodEnd: null,
+    hasStripeCustomer: false,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 async function getIsDevBusinessOverrideEnabledForCurrentUser(): Promise<boolean> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
@@ -1025,6 +1037,9 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
   }
 
   if (!data) {
+    if (await getIsDevBusinessOverrideEnabledForCurrentUser()) {
+      return createDevBusinessOverrideSubscriptionFallback();
+    }
     return null;
   }
 
@@ -1217,7 +1232,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   const overrideEnabled = await getIsDevBusinessOverrideEnabledForCurrentUser();
   const normalizedSubscription = subscription && overrideEnabled
     ? applyDevBusinessOverrideToSubscription(subscription)
-    : subscription;
+    : subscription ?? (overrideEnabled ? createDevBusinessOverrideSubscriptionFallback() : null);
 
   return {
     hotelName: hotelRes.data?.name ?? "Infomii",
@@ -1591,10 +1606,10 @@ export async function updateInformation(
         if (subError) {
           throw toError(subError, "プラン情報の確認に失敗しました");
         }
-        if (!sub) {
+        if (!sub && !overrideEnabled) {
           throw new Error("サブスクリプション情報が見つかりません");
         }
-        if (!overrideEnabled && sub.status !== "active" && sub.status !== "trialing") {
+        if (!overrideEnabled && sub && sub.status !== "active" && sub.status !== "trialing") {
           throw new Error("現在の契約ステータスでは公開できません");
         }
 
@@ -1609,7 +1624,7 @@ export async function updateInformation(
         }
 
         const publishedCount = count ?? 0;
-        if (!overrideEnabled && publishedCount >= sub.max_published_pages) {
+        if (!overrideEnabled && sub && publishedCount >= sub.max_published_pages) {
           throw new Error(
             `無料枠の上限に達しました（公開上限: ${sub.max_published_pages}件）。プラン変更をご検討ください。`,
           );

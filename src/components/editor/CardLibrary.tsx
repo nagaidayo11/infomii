@@ -241,7 +241,6 @@ const HOSPITALITY_ITEMS: LibraryItem[] = [
 /** Layout: text, divider */
 const LAYOUT_ITEMS: LibraryItem[] = [
   { type: "text", label: "テキスト", description: "テキスト・見出し" },
-  { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
   { type: "quote", label: "引用", description: "レビュー・引用文" },
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順・流れ" },
@@ -282,8 +281,8 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
   {
     id: "inbound-set",
     label: "インバウンド対応セット",
-    description: "アイコン / 比較 / ステップ / お知らせ",
-    types: ["icon", "compare", "steps", "notice"],
+    description: "比較 / ステップ / お知らせ / FAQ",
+    types: ["compare", "steps", "notice", "faq"],
   },
   {
     id: "resort-ryokan-set",
