@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
-function HeroVisuals() {
+function HeroVisuals({ samplePageHref }: { samplePageHref: string }) {
   return (
     <motion.div
-      className="relative flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8"
+      className="relative mx-auto grid w-fit grid-cols-2 items-center justify-items-center gap-4 sm:gap-6 lg:gap-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -32,32 +32,12 @@ function HeroVisuals() {
           </span>
         </div>
         <div className="p-2">
-          <div className="h-[170px] rounded-lg border border-slate-100 bg-white p-3">
-            <div className="flex h-full gap-2">
-              <div className="w-14 rounded-md bg-slate-50 p-1.5">
-                <div className="h-2.5 w-full rounded bg-slate-200" />
-                <div className="mt-1 h-2 w-4/5 rounded bg-slate-100" />
-                <div className="mt-3 h-2.5 w-full rounded bg-slate-200" />
-                <div className="mt-1 h-2 w-3/4 rounded bg-slate-100" />
-              </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-3.5 w-2/3 rounded bg-slate-200" />
-                <div className="h-2.5 w-full rounded bg-slate-100" />
-                <div className="h-2.5 w-4/5 rounded bg-slate-100" />
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="rounded-md bg-emerald-50 p-1.5 ring-1 ring-emerald-100">
-                    <div className="h-2.5 w-2/3 rounded bg-emerald-200/80" />
-                    <div className="mt-1 h-2 w-full rounded bg-emerald-100" />
-                  </div>
-                  <div className="rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
-                    <div className="h-2.5 w-2/3 rounded bg-slate-200" />
-                    <div className="mt-1 h-2 w-full rounded bg-slate-100" />
-                  </div>
-                </div>
-                <div className="h-7 w-full rounded-lg bg-slate-900/90" />
-              </div>
-            </div>
-          </div>
+          <iframe
+            src={samplePageHref}
+            title="Infomii sample page desktop preview"
+            className="h-[170px] w-full rounded-lg border border-slate-100"
+            loading="lazy"
+          />
         </div>
       </motion.div>
       <motion.div
@@ -71,30 +51,16 @@ function HeroVisuals() {
       >
         <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
         <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-1.5">
-          <div className="h-[200px] rounded-[0.8rem] border border-slate-200 bg-white p-2.5">
-            <p className="text-[9px] font-semibold text-slate-500">ゲストのスマホ表示</p>
-            <div className="mt-1.5 h-2.5 w-2/3 rounded bg-slate-200" />
-            <div className="mt-1 h-2 w-full rounded bg-slate-100" />
-            <div className="mt-2 grid grid-cols-2 gap-1.5">
-              <div className="rounded-md bg-emerald-50 p-1.5 ring-1 ring-emerald-100">
-                <div className="h-2 w-3/4 rounded bg-emerald-200/80" />
-                <div className="mt-1 h-1.5 w-full rounded bg-emerald-100" />
-              </div>
-              <div className="rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
-                <div className="h-2 w-3/4 rounded bg-slate-200" />
-                <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
-              </div>
-            </div>
-            <div className="mt-2 rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
-              <div className="h-2 w-1/2 rounded bg-slate-200" />
-              <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
-            </div>
-            <div className="mt-2 h-6 w-full rounded-md bg-slate-900/90" />
-          </div>
+          <iframe
+            src={samplePageHref}
+            title="Infomii sample page mobile preview"
+            className="h-[200px] w-full rounded-[0.8rem] border border-slate-200"
+            loading="lazy"
+          />
         </div>
       </motion.div>
       <motion.div
-        className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white shadow-sm sm:h-32 sm:w-32"
+        className="col-span-2 mx-auto flex h-32 w-32 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white shadow-sm sm:h-36 sm:w-36"
         aria-hidden
         whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
       >
@@ -167,7 +133,7 @@ export function LpHero({ ctaHref, samplePageHref }: LpHeroProps) {
           </FadeIn>
         </div>
         <div className="mt-14 lg:mt-16">
-          <HeroVisuals />
+          <HeroVisuals samplePageHref={samplePageHref} />
         </div>
       </Container>
     </section>
