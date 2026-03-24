@@ -4,6 +4,13 @@ import { motion } from "framer-motion";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
+const HERO_VISUAL_IMAGES = {
+  dashboard:
+    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
+  phone:
+    "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80",
+};
+
 function HeroVisuals() {
   return (
     <motion.div
@@ -21,7 +28,7 @@ function HeroVisuals() {
           transition: { duration: 0.2 },
         }}
       >
-        <div className="flex border-b border-slate-100 px-3 py-2">
+        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
           <div className="flex gap-1.5">
             <span className="h-2 w-2 rounded-full bg-slate-300" />
             <span className="h-2 w-2 rounded-full bg-slate-300" />
@@ -31,14 +38,13 @@ function HeroVisuals() {
             ページエディタ
           </span>
         </div>
-        <div className="flex gap-0 p-2">
-          <div className="w-8 shrink-0 rounded-l-lg bg-slate-50 py-2" />
-          <div className="min-h-[140px] flex-1 space-y-2 rounded-r-lg border border-slate-100 bg-white p-3">
-            <div className="h-4 w-3/4 rounded bg-slate-100" />
-            <div className="h-3 w-full rounded bg-slate-50" />
-            <div className="h-3 w-5/6 rounded bg-slate-50" />
-            <div className="mt-3 h-8 w-full rounded-lg bg-ds-primary/10" />
-          </div>
+        <div className="p-2">
+          <img
+            src={HERO_VISUAL_IMAGES.dashboard}
+            alt="ホテルフロントのイメージ"
+            className="h-[170px] w-full rounded-lg object-cover"
+            loading="lazy"
+          />
         </div>
       </motion.div>
       <motion.div
@@ -51,11 +57,13 @@ function HeroVisuals() {
         }}
       >
         <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
-        <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-3">
-          <div className="h-3 w-full rounded bg-slate-100" />
-          <div className="mt-2 h-3 w-4/5 rounded bg-slate-100" />
-          <div className="mt-2 h-3 w-3/4 rounded bg-slate-50" />
-          <div className="mt-4 h-9 w-full rounded-xl bg-ds-primary/20" />
+        <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-1.5">
+          <img
+            src={HERO_VISUAL_IMAGES.phone}
+            alt="スマホでの案内閲覧イメージ"
+            className="h-[200px] w-full rounded-[0.8rem] object-cover"
+            loading="lazy"
+          />
         </div>
       </motion.div>
       <motion.div

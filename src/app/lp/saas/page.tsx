@@ -7,7 +7,6 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/p/demo-hub-menu";
-
 export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
   description:
@@ -65,20 +64,34 @@ function LpSolutionPhoneMock() {
       aria-hidden
     >
       <div className="absolute left-1/2 top-2.5 h-5 w-16 -translate-x-1/2 rounded-full bg-slate-900" />
-      <div className="mt-8 min-h-[280px] bg-[#fafaf9] px-4 pb-6 pt-2">
+      <div className="mt-8 min-h-[280px] bg-[#fafaf9] px-3 pb-4 pt-2">
         <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           ゲストのスマホ表示
         </p>
-        <div className="mt-3 space-y-2 rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100">
-          <div className="h-2.5 w-2/3 rounded bg-slate-200" />
-          <div className="h-2 w-full rounded bg-slate-100" />
-          <div className="h-2 w-5/6 rounded bg-slate-100" />
+        <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+          <p className="text-[11px] font-semibold text-slate-800">Infomii Hotel</p>
+          <p className="mt-0.5 text-[10px] text-slate-500">チェックイン後のご案内</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="rounded-lg bg-emerald-50 p-2 ring-1 ring-emerald-100">
+              <p className="text-[10px] font-semibold text-emerald-800">WiFi</p>
+              <p className="mt-0.5 text-[9px] text-emerald-700">Guest / welcome2026</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
+              <p className="text-[10px] font-semibold text-slate-800">朝食</p>
+              <p className="mt-0.5 text-[9px] text-slate-600">6:30-9:30 / 1F</p>
+            </div>
+          </div>
+          <div className="mt-2 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
+            <p className="text-[10px] font-semibold text-slate-800">チェックアウト</p>
+            <p className="mt-0.5 text-[9px] text-slate-600">11:00 / 延長はフロントへ</p>
+          </div>
+          <button
+            type="button"
+            className="mt-2 w-full rounded-lg bg-slate-900 py-1.5 text-[10px] font-semibold text-white"
+          >
+            フロントに連絡する
+          </button>
         </div>
-        <div className="mt-3 flex gap-2">
-          <div className="h-14 flex-1 rounded-lg bg-emerald-100/80 ring-1 ring-emerald-200/60" />
-          <div className="h-14 flex-1 rounded-lg bg-slate-100 ring-1 ring-slate-200/80" />
-        </div>
-        <div className="mt-3 h-10 w-full rounded-xl bg-slate-900/90" />
         <p className="mt-2 text-center text-[9px] text-slate-400">WiFi · 朝食 · 館内案内</p>
       </div>
     </div>
