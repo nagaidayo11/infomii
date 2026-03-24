@@ -52,18 +52,18 @@ export const BLOCK_TYPE_LABELS: Record<SaasBlockType, string> = {
   qr: "QRコード",
 };
 
-export const BLOCK_LIBRARY: Array<{ type: SaasBlockType; label: string; icon: string }> = [
-  { type: "hero", label: "ヒーロー", icon: "🖼" },
-  { type: "highlight", label: "ハイライト", icon: "✨" },
-  { type: "info", label: "情報", icon: "ℹ️" },
-  { type: "text", label: "テキスト", icon: "T" },
-  { type: "image", label: "画像", icon: "🖼" },
-  { type: "button", label: "ボタン", icon: "▢" },
-  { type: "map", label: "地図", icon: "📍" },
-  { type: "gallery", label: "ギャラリー", icon: "🖼️" },
-  { type: "notice", label: "お知らせ", icon: "📢" },
-  { type: "coupon", label: "クーポン", icon: "🎫" },
-  { type: "qr", label: "QRコード", icon: "▣" },
+export const BLOCK_LIBRARY: Array<{ type: SaasBlockType; label: string }> = [
+  { type: "hero", label: "ヒーロー" },
+  { type: "highlight", label: "ハイライト" },
+  { type: "info", label: "情報" },
+  { type: "text", label: "テキスト" },
+  { type: "image", label: "画像" },
+  { type: "button", label: "ボタン" },
+  { type: "map", label: "地図" },
+  { type: "gallery", label: "ギャラリー" },
+  { type: "notice", label: "お知らせ" },
+  { type: "coupon", label: "クーポン" },
+  { type: "qr", label: "QRコード" },
 ];
 
 const defaultContent: Record<SaasBlockType, Record<string, unknown>> = {
@@ -74,13 +74,13 @@ const defaultContent: Record<SaasBlockType, Record<string, unknown>> = {
     overlay: true,
   },
   highlight: {
-    icon: "★",
+    icon: "info",
     title: "重要なお知らせ",
     body: "ここに強調したい内容を入力します。",
     accent: "amber",
   },
   info: {
-    icon: "📶",
+    icon: "wifi",
     title: "Wi-Fi",
     rows: [
       { label: "ネットワーク名", value: "Hotel_Guest" },

@@ -197,8 +197,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   image: "画像",
   button: "ボタン",
   faq: "よくある質問",
-  schedule: "スケジュール",
-  menu: "メニュー",
+  schedule: "営業時間一覧",
+  menu: "メニュー一覧",
   gallery: "ギャラリー",
   divider: "区切り線",
   parking: "駐車場",
@@ -278,8 +278,8 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "text", label: "テキスト", description: "見出し・本文" },
   { type: "image", label: "画像", description: "写真" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
-  { type: "schedule", label: "スケジュール", description: "営業時間" },
-  { type: "menu", label: "メニュー", description: "メニュー・価格" },
+  { type: "schedule", label: "営業時間一覧", description: "曜日・時間・補足を一覧化" },
+  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
@@ -292,57 +292,76 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
     case "hero":
-      return { title: "Infomii Hotel", image: "", subtitle: "" };
+      return { title: "Infomii Hotel", image: "", subtitle: "館内案内をスマートにまとめました" };
     case "info":
-      return { title: "Wi-Fi", icon: "wifi", rows: [{ label: "ネットワーク名", value: "" }, { label: "パスワード", value: "" }] };
+      return {
+        title: "Wi-Fi",
+        icon: "wifi",
+        rows: [
+          { label: "ネットワーク名", value: "Infomii-Guest" },
+          { label: "パスワード", value: "welcome2026" },
+        ],
+      };
     case "highlight":
-      return { title: "重要なお知らせ", body: "", accent: "amber" };
+      return { title: "重要なお知らせ", body: "22:00以降は客室フロアでお静かにお過ごしください。", accent: "amber" };
     case "action":
-      return { label: "詳しく見る", href: "#" };
+      return { label: "詳細を見る", href: "#" };
     case "welcome":
       return { title: "ようこそ", message: "ご宿泊ありがとうございます。ごゆっくりお過ごしください。" };
     case "wifi":
-      return { ssid: "", password: "", description: "" };
+      return { title: "WiFi案内", ssid: "Infomii-Guest", password: "welcome2026", description: "接続できない場合はフロントまでお声がけください。" };
     case "breakfast":
-      return { title: "施設案内", time: "7:00–9:30", location: "1F ダイニング", menu: "" };
+      return { title: "施設案内", time: "7:00-9:30", location: "1F ダイニング", menu: "和洋ビュッフェ / 最終入場 9:00" };
     case "checkout":
-      return { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" };
+      return { title: "チェックアウト", time: "11:00", note: "延長希望はフロントへご相談ください。", linkUrl: "", linkLabel: "チェックアウト手順" };
     case "nearby":
-      return { title: "周辺案内", items: [{ name: "", description: "", link: "" }] };
+      return { title: "周辺案内", items: [{ name: "コンビニ", description: "徒歩2分 / 24時間営業", link: "" }] };
     case "notice":
-      return { title: "お知らせ", body: "", variant: "info" };
+      return { title: "お知らせ", body: "客室清掃は10:00-14:00に実施します。", variant: "info" };
     case "map":
-      return { title: "地図", address: "ホテル住所", mapEmbedUrl: "" };
+      return { title: "地図", address: "東京都港区○○ 1-2-3", mapEmbedUrl: "" };
     case "restaurant":
-      return { title: "レストラン", time: "", location: "", menu: "" };
+      return { title: "レストラン", time: "7:00-22:00", location: "1F", menu: "朝食ビュッフェ / ディナーコース" };
     case "taxi":
-      return { title: "タクシー", phone: "", companyName: "", note: "" };
+      return { title: "タクシー", phone: "03-1234-5678", companyName: "○○タクシー", note: "フロントで手配可能です。" };
     case "emergency":
-      return { title: "緊急連絡先", fire: "119", police: "110", hospital: "", note: "" };
+      return { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○総合病院 03-1111-2222", note: "体調不良時はフロントへご連絡ください。" };
     case "laundry":
-      return { title: "ランドリー", hours: "", priceNote: "", contact: "" };
+      return { title: "ランドリー", hours: "6:00-24:00", priceNote: "洗濯 300円 / 乾燥 100円(30分)", contact: "内線 9" };
     case "spa":
-      return { title: "スパ・温泉", hours: "", location: "", description: "", note: "" };
+      return { title: "スパ・温泉", hours: "15:00-24:00 / 6:00-10:00", location: "2F", description: "タオルは客室からご持参ください。", note: "" };
     case "text":
-      return { content: "テキストを入力" };
+      return { title: "ご案内", content: "こちらに自由にテキストを入力できます。" };
     case "icon":
-      return { icon: "📍", label: "ラベル", description: "" };
+      return { icon: "info", label: "ラベル", description: "" };
     case "image":
-      return { src: "", alt: "" };
+      return { src: "", alt: "施設イメージ" };
     case "button":
-      return { label: "ボタン", href: "#" };
+      return { label: "予約サイトへ", href: "#" };
     case "faq":
       return { title: "よくある質問", items: [{ q: "", a: "" }] };
     case "schedule":
-      return { title: "営業時間", items: [{ day: "月〜日", time: "7:00–22:00", label: "" }] };
+      return {
+        title: "営業時間",
+        items: [
+          { day: "レストラン", time: "7:00-22:00", label: "ラストオーダー 21:30" },
+          { day: "大浴場", time: "15:00-24:00", label: "朝 6:00-10:00 も利用可" },
+        ],
+      };
     case "menu":
-      return { title: "メニュー", items: [{ name: "", price: "", description: "" }] };
+      return {
+        title: "メニュー",
+        items: [
+          { name: "朝食ビュッフェ", price: "1,800円", description: "和洋30種以上" },
+          { name: "ルームサービス", price: "900円〜", description: "22:00まで注文可能" },
+        ],
+      };
     case "gallery":
       return { title: "", columns: 2, items: [{ src: "", alt: "" }] };
     case "divider":
       return { style: "line" };
     case "parking":
-      return { title: "駐車場", capacity: "", fee: "", note: "", address: "" };
+      return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };
     case "pageLinks":
       return {
         title: "メニュー",

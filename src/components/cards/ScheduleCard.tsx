@@ -15,11 +15,23 @@ type ScheduleCardProps = {
 export function ScheduleCard({ card, isSelected, locale = "ja" }: ScheduleCardProps) {
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "営業時間";
-  const items = (c?.items as unknown[]) ?? [];
+  const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   return (
     <Card padding="md" className="">
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
-      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>{items.length} 件</p>
+      <div className="mt-2 space-y-1.5">
+        {items.slice(0, 5).map((item, index) => {
+          const day = getLocalizedContent(item.day as LocalizedString | undefined, locale) || "区分";
+          const time = getLocalizedContent(item.time as LocalizedString | undefined, locale) || "-";
+          const label = getLocalizedContent(item.label as LocalizedString | undefined, locale);
+          return (
+            <div key={index} className="rounded-lg bg-slate-50 px-2.5 py-2">
+              <p className="font-medium text-slate-700" style={getBodyFontSizeStyle()}>{day}: {time}</p>
+              {label ? <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>{label}</p> : null}
+            </div>
+          );
+        })}
+      </div>
     </Card>
   );
 }

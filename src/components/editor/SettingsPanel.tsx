@@ -138,6 +138,8 @@ type PageLinksItem = { label?: string; icon?: string; linkType?: "page" | "url";
 type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
+type ScheduleItem = { day?: string; time?: string; label?: string };
+type MenuItem = { name?: string; price?: string; description?: string };
 
 function GalleryItemsEditor({
   content,
@@ -626,6 +628,118 @@ function KpiItemsEditor({
             value={item.value ?? ""}
             onChange={(e) => updateItem(i, "value", e.target.value)}
             placeholder="15:00 / 120 / 95%"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScheduleItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as ScheduleItem[];
+  const setItems = (next: ScheduleItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof ScheduleItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { day: "", time: "", label: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">営業時間項目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input
+            label="曜日・区分"
+            value={item.day ?? ""}
+            onChange={(e) => updateItem(i, "day", e.target.value)}
+            placeholder="毎日 / 平日 / 土日"
+          />
+          <Input
+            label="時間"
+            value={item.time ?? ""}
+            onChange={(e) => updateItem(i, "time", e.target.value)}
+            placeholder="7:00-22:00"
+          />
+          <Input
+            label="補足"
+            value={item.label ?? ""}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder="最終入場 21:30"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MenuItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as MenuItem[];
+  const setItems = (next: MenuItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof MenuItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { name: "", price: "", description: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">メニュー項目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input
+            label="メニュー名"
+            value={item.name ?? ""}
+            onChange={(e) => updateItem(i, "name", e.target.value)}
+            placeholder="朝食ビュッフェ"
+          />
+          <Input
+            label="価格"
+            value={item.price ?? ""}
+            onChange={(e) => updateItem(i, "price", e.target.value)}
+            placeholder="1,800円"
+          />
+          <Input
+            label="説明"
+            value={item.description ?? ""}
+            onChange={(e) => updateItem(i, "description", e.target.value)}
+            placeholder="任意"
           />
         </div>
       ))}
@@ -1825,10 +1939,28 @@ export function CardSettings({
             </SettingsSection>
           )}
 
-          {(card.type === "schedule" || card.type === "menu") && (
-            <p className="text-sm text-slate-500">
-              {card.type === "schedule" ? "営業時間" : "メニュー"}の項目は今後追加できます。
-            </p>
+          {card.type === "schedule" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="営業時間"
+              />
+              <ScheduleItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "menu" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="メニュー"
+              />
+              <MenuItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
           )}
 
           <SettingsSection title="ブロックスタイル">

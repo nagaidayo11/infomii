@@ -130,7 +130,12 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
     </svg>
   ),
-  icon: <span className="text-sm">◇</span>,
+  icon: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v4m0 4h.01" />
+    </svg>
+  ),
   schedule: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -191,110 +196,99 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   ),
 };
 
-/** Hero & blocks (Canva-style) */
-const HERO_ITEMS: LibraryItem[] = [
-  { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
-  { type: "info", label: "情報", description: "WiFi・構造化情報" },
-  { type: "highlight", label: "ハイライト", description: "強調ブロック" },
-  { type: "action", label: "アクション", description: "ボタン・CTA" },
+/** Role-based: promotion blocks */
+const PROMOTION_ITEMS: LibraryItem[] = [
+  { type: "hero", label: "ヒーロー", description: "最上部の主メッセージ（1ページ1つ推奨）" },
+  { type: "highlight", label: "強調ブロック", description: "注意事項・訴求を強く見せる" },
+  { type: "button", label: "リンクボタン", description: "予約・問い合わせへ誘導する" },
 ];
 
-/** Basic: welcome, stay info, checkout, notices */
-const BASIC_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "ウェルカム", description: "ウェルカムメッセージ・ご挨拶" },
-  { type: "wifi", label: "WiFi", description: "SSID・パスワード・接続方法" },
-  { type: "breakfast", label: "施設案内", description: "時間・場所・詳細（汎用）" },
-  { type: "checkout", label: "チェックアウト", description: "チェックアウト時刻・手順" },
-  { type: "notice", label: "お知らせ", description: "重要なお知らせ・注意事項" },
-  { type: "schedule", label: "営業時間", description: "営業時間・スケジュール" },
-  { type: "menu", label: "メニュー", description: "メニュー・価格表" },
+/** Role-based: guide blocks */
+const GUIDE_ITEMS: LibraryItem[] = [
+  { type: "welcome", label: "ウェルカム", description: "最初の挨拶・使い方を案内" },
+  { type: "wifi", label: "WiFi案内", description: "SSID/パスワードの案内に特化" },
+  { type: "checkout", label: "チェックアウト", description: "退館時刻・手順を明記" },
+  { type: "breakfast", label: "施設案内（汎用）", description: "時間/場所/詳細を1ブロックで案内" },
+  { type: "schedule", label: "営業時間一覧", description: "曜日・区分ごとに営業時間を表示" },
+  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
+  { type: "notice", label: "重要なお知らせ", description: "必読の連絡事項を表示" },
+  { type: "faq", label: "よくある質問", description: "問い合わせを減らす定番Q&A" },
+  { type: "emergency", label: "緊急連絡先", description: "トラブル時の連絡導線をまとめる" },
 ];
 
-/** Information: nearby, map, FAQ, emergency, parking */
-const INFORMATION_ITEMS: LibraryItem[] = [
-  { type: "nearby", label: "周辺案内", description: "周辺スポット・観光案内" },
-  { type: "map", label: "地図", description: "住所・アクセスマップ" },
-  { type: "parking", label: "駐車場", description: "台数・料金・場所" },
-  { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
-  { type: "faq", label: "よくある質問", description: "よくある質問と回答" },
-  { type: "emergency", label: "緊急連絡先", description: "緊急連絡先・対応方法" },
+/** Role-based: navigation blocks */
+const NAV_ITEMS: LibraryItem[] = [
+  { type: "pageLinks", label: "ページリンク", description: "子ページへの導線メニュー" },
+  { type: "map", label: "地図", description: "アクセス情報を表示" },
+  { type: "nearby", label: "周辺案内", description: "観光/飲食スポットを紹介" },
+  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
+  { type: "taxi", label: "タクシー案内", description: "配車連絡先をまとめる" },
 ];
 
-/** Actions: button, taxi */
-const ACTIONS_ITEMS: LibraryItem[] = [
-  { type: "button", label: "ボタン", description: "予約・問い合わせ・外部リンク" },
-  { type: "taxi", label: "タクシー", description: "タクシー手配・連絡先" },
+/** Role-based: evidence/trust blocks */
+const TRUST_ITEMS: LibraryItem[] = [
+  { type: "compare", label: "比較", description: "2案を比較して伝える" },
+  { type: "kpi", label: "数字強調", description: "時間/件数などを強調表示" },
+  { type: "quote", label: "引用", description: "レビューやコメント掲載" },
 ];
 
-/** Media: image, gallery */
-const MEDIA_ITEMS: LibraryItem[] = [
-  { type: "image", label: "画像", description: "客室や施設の写真" },
-  { type: "gallery", label: "ギャラリー", description: "画像ギャラリー" },
+/** Industry-specific blocks (optional) */
+const INDUSTRY_ITEMS: LibraryItem[] = [
+  { type: "restaurant", label: "レストラン案内", description: "館内レストラン向けの案内" },
+  { type: "laundry", label: "ランドリー案内", description: "洗濯設備・料金の案内" },
+  { type: "spa", label: "スパ・温泉案内", description: "温浴施設の案内に特化" },
 ];
 
-/** Hospitality: restaurant, spa, laundry */
-const HOSPITALITY_ITEMS: LibraryItem[] = [
-  { type: "restaurant", label: "レストラン", description: "館内レストランの案内" },
-  { type: "laundry", label: "ランドリー", description: "ランドリー・クリーニング" },
-];
-
-/** Layout: text, divider */
+/** Free layout blocks */
 const LAYOUT_ITEMS: LibraryItem[] = [
-  { type: "text", label: "テキスト", description: "テキスト・見出し" },
-  { type: "quote", label: "引用", description: "レビュー・引用文" },
+  { type: "image", label: "画像", description: "1枚画像を配置" },
+  { type: "gallery", label: "ギャラリー", description: "複数写真を一覧表示" },
+  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順・流れ" },
-  { type: "compare", label: "比較", description: "2列の比較表示" },
-  { type: "kpi", label: "KPI", description: "数値を強調" },
   { type: "divider", label: "区切り線", description: "区切り線" },
+  { type: "info", label: "情報", description: "汎用の情報行を並べる" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
-  { id: "hero", title: "ヒーロー・ブロック", items: HERO_ITEMS },
-  { id: "basic", title: "基本", items: BASIC_ITEMS },
-  { id: "information", title: "情報", items: INFORMATION_ITEMS },
-  { id: "actions", title: "アクション", items: ACTIONS_ITEMS },
-  { id: "media", title: "メディア", items: MEDIA_ITEMS },
-  { id: "hospitality", title: "ホスピタリティ", items: HOSPITALITY_ITEMS },
-  { id: "layout", title: "レイアウト", items: LAYOUT_ITEMS },
+  { id: "promotion", title: "訴求系", items: PROMOTION_ITEMS },
+  { id: "guide", title: "案内系", items: GUIDE_ITEMS },
+  { id: "nav", title: "導線系", items: NAV_ITEMS },
+  { id: "trust", title: "証拠系", items: TRUST_ITEMS },
+  { id: "industry", title: "業種専用（任意）", items: INDUSTRY_ITEMS },
+  { id: "layout", title: "レイアウト補助", items: LAYOUT_ITEMS },
 ];
 
 const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
   {
-    id: "quick-checkin",
-    label: "チェックイン即戦力セット",
-    description: "ウェルカム / Wi-Fi / FAQ / 緊急連絡",
-    types: ["welcome", "wifi", "faq", "emergency"],
+    id: "checkin-basic",
+    label: "ホテル基本セット（完成済み）",
+    description: "ウェルカム / WiFi案内 / チェックアウト / FAQ",
+    types: ["welcome", "wifi", "checkout", "faq"],
   },
   {
-    id: "front-ops",
-    label: "フロント業務削減セット",
-    description: "チェックアウト / 駐車場 / タクシー / ページリンク",
-    types: ["checkout", "parking", "taxi", "pageLinks"],
+    id: "frontdesk-reduction",
+    label: "フロント時短セット（完成済み）",
+    description: "お知らせ / FAQ / 緊急連絡先 / ページリンク",
+    types: ["notice", "faq", "emergency", "pageLinks"],
   },
   {
-    id: "upsell-set",
-    label: "館内売上アップセット",
-    description: "メニュー / ギャラリー / 強調 / 行動ボタン",
-    types: ["menu", "gallery", "highlight", "action"],
+    id: "facility-guide-complete",
+    label: "館内施設セット（完成済み）",
+    description: "施設案内 / 営業時間一覧 / メニュー一覧 / 地図",
+    types: ["breakfast", "schedule", "menu", "map"],
   },
   {
-    id: "inbound-set",
-    label: "インバウンド対応セット",
-    description: "比較 / ステップ / お知らせ / FAQ",
-    types: ["compare", "steps", "notice", "faq"],
+    id: "promo-conversion",
+    label: "訴求強化セット（CV重視）",
+    description: "ヒーロー / 強調 / 比較 / ボタン",
+    types: ["hero", "highlight", "compare", "button"],
   },
   {
-    id: "resort-ryokan-set",
-    label: "旅館・リゾート体験セット",
-    description: "スパ / レストラン / 周辺 / 地図",
+    id: "resort-experience",
+    label: "旅館・体験訴求セット",
+    description: "スパ / レストラン / 周辺案内 / 地図",
     types: ["spa", "restaurant", "nearby", "map"],
-  },
-  {
-    id: "kpi-improve-set",
-    label: "改善運用セット",
-    description: "KPI / チェックリスト / 導線 / FAQ",
-    types: ["kpi", "checklist", "pageLinks", "faq"],
   },
 ];
 
@@ -354,7 +348,7 @@ export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
                     aria-label={`${item.label}を追加`}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round">
                       {CARD_ICONS[item.type] ?? CARD_ICONS.text}
                     </span>
                     <div className="min-w-0 flex-1">

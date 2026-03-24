@@ -46,7 +46,7 @@ export type ButtonBlock = {
 export type IconBlock = {
   id: string;
   type: "icon";
-  icon: string; // emoji or short name e.g. "wifi"
+  icon: string; // short name e.g. "wifi"
   label?: string;
 };
 
@@ -153,7 +153,7 @@ export const BLOCK_LIBRARY_ITEMS: Array<{
   { type: "schedule", label: "スケジュール", description: "営業時間" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
   { type: "menu", label: "メニュー", description: "メニュー・価格" },
-  { type: "icon", label: "アイコン", description: "絵文字＋ラベル" },
+  { type: "icon", label: "アイコン", description: "アイコン名＋ラベル" },
   { type: "divider", label: "区切り線", description: "セクションの区切り" },
   { type: "gallery", label: "ギャラリー", description: "複数画像" },
 ];
@@ -184,7 +184,7 @@ export function createEmptyBlock(type: PageBlockType, id: string): PageBlock {
     case "button":
       return { id, type: "button", label: "ボタン", href: "#" };
     case "icon":
-      return { id, type: "icon", icon: "📍", label: "ラベル" };
+      return { id, type: "icon", icon: "info", label: "ラベル" };
     case "divider":
       return { id, type: "divider" };
     case "map":

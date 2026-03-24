@@ -49,7 +49,7 @@ export function templatePageToInformationBlocks(page: TemplatePage): Information
         blocks.push({
           id: blockId(),
           type: "icon",
-          icon: b.icon,
+          icon: "info",
           description: b.label ?? "",
           iconSize: "lg",
         });

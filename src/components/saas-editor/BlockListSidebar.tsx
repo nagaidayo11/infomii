@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import {
   DndContext,
   closestCenter,
@@ -35,7 +35,7 @@ function BlockLibraryItem({
 }: {
   type: SaasBlockType;
   label: string;
-  icon: string;
+  icon: ReactNode;
   onAdd: () => void;
 }) {
   return (
@@ -51,6 +51,94 @@ function BlockLibraryItem({
       <span className="font-medium text-slate-800">{label}</span>
     </button>
   );
+}
+
+function BlockTypeIcon({ type }: { type: SaasBlockType }) {
+  const cls = "h-5 w-5 text-slate-600";
+  switch (type) {
+    case "hero":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="5" width="16" height="14" rx="2" strokeWidth={2} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14l2.5-2.5L13 14l3-3 2 2" />
+        </svg>
+      );
+    case "highlight":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 3z" />
+        </svg>
+      );
+    case "info":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={2} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0-9h.01" />
+        </svg>
+      );
+    case "text":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h9" />
+        </svg>
+      );
+    case "image":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="5" width="16" height="14" rx="2" strokeWidth={2} />
+          <circle cx="9" cy="10" r="1.5" strokeWidth={2} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l3.5-3.5L14 16l3-3 2 2" />
+        </svg>
+      );
+    case "button":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="7" width="16" height="10" rx="3" strokeWidth={2} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6" />
+        </svg>
+      );
+    case "map":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21s6-5.1 6-10a6 6 0 10-12 0c0 4.9 6 10 6 10z" />
+          <circle cx="12" cy="11" r="2" strokeWidth={2} />
+        </svg>
+      );
+    case "gallery":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="5" width="6" height="6" rx="1" strokeWidth={2} />
+          <rect x="14" y="5" width="6" height="6" rx="1" strokeWidth={2} />
+          <rect x="4" y="13" width="6" height="6" rx="1" strokeWidth={2} />
+          <rect x="14" y="13" width="6" height="6" rx="1" strokeWidth={2} />
+        </svg>
+      );
+    case "notice":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4l8 14H4L12 4z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v4m0 2h.01" />
+        </svg>
+      );
+    case "coupon":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14v8H5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8v8m6-8v8" />
+        </svg>
+      );
+    case "qr":
+      return (
+        <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="6" height="6" rx="1" strokeWidth={2} />
+          <rect x="14" y="4" width="6" height="6" rx="1" strokeWidth={2} />
+          <rect x="4" y="14" width="6" height="6" rx="1" strokeWidth={2} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 14h4v4h-4zM14 18h2M18 14v2" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 function SortableBlockItem({
@@ -182,7 +270,7 @@ export function BlockListSidebar() {
                     key={item.type}
                     type={item.type}
                     label={item.label}
-                    icon={item.icon}
+                    icon={<BlockTypeIcon type={item.type} />}
                     onAdd={() => handleAddBlock(item.type)}
                   />
                 );
