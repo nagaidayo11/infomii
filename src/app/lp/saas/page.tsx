@@ -7,6 +7,7 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/p/demo-hub-menu";
+const DEMO_EDITOR_HREF = "/demo/editor";
 export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
   description:
@@ -144,7 +145,7 @@ export default function LpSaaSPage() {
         </Container>
       </header>
 
-      <LpHero ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} />
+      <LpHero ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} demoEditorHref={DEMO_EDITOR_HREF} />
 
       <Section
         id="pain"
@@ -176,7 +177,7 @@ export default function LpSaaSPage() {
 
       <LpMidCta
         ctaHref={ctaHref}
-        sampleHref={SAMPLE_PAGE_HREF}
+        sampleHref={DEMO_EDITOR_HREF}
         headline="まずはサンプルを触る。登録は後でいい。"
         sub="ゲストに見える画面を、そのまま体験できます。"
       />
@@ -303,7 +304,7 @@ export default function LpSaaSPage() {
       >
         <ScrollReveal>
           <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button href={SAMPLE_PAGE_HREF} size="lg">
+            <Button href={DEMO_EDITOR_HREF} size="lg">
               デモを触る
             </Button>
             <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
@@ -321,7 +322,7 @@ export default function LpSaaSPage() {
 
       <LpMidCta
         ctaHref={ctaHref}
-        sampleHref={SAMPLE_PAGE_HREF}
+        sampleHref={DEMO_EDITOR_HREF}
         headline="3分で、フロント業務を減らす準備ができる"
         sub="クレカ不要で始められます。まずは無料プランで1ページ。"
       />
@@ -546,7 +547,7 @@ export default function LpSaaSPage() {
               <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
                 今すぐ無料で作成
               </Button>
-              <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg" className="border-slate-600 bg-transparent text-white hover:bg-white/10">
+              <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="border-slate-600 bg-transparent text-white hover:bg-white/10">
                 30秒で試す（登録なし）
               </Button>
             </div>

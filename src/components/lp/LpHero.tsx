@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
-function HeroVisuals({ samplePageHref }: { samplePageHref: string }) {
+function HeroVisuals() {
   return (
     <motion.div
       className="relative mx-auto grid w-fit grid-cols-2 items-center justify-items-center gap-4 sm:gap-6 lg:gap-8"
@@ -32,12 +32,23 @@ function HeroVisuals({ samplePageHref }: { samplePageHref: string }) {
           </span>
         </div>
         <div className="p-2">
-          <iframe
-            src={samplePageHref}
-            title="Infomii sample page desktop preview"
-            className="h-[170px] w-full rounded-lg border border-slate-100"
-            loading="lazy"
-          />
+          <div className="h-[170px] rounded-lg border border-slate-100 bg-white p-3">
+            <p className="text-[10px] font-semibold text-slate-400">ご案内ページ（編集側）</p>
+            <div className="mt-2 h-2.5 w-2/3 rounded bg-slate-200" />
+            <div className="mt-1 h-2 w-full rounded bg-slate-100" />
+            <div className="mt-1 h-2 w-4/5 rounded bg-slate-100" />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="rounded-md bg-emerald-50 p-2 ring-1 ring-emerald-100">
+                <p className="text-[10px] font-semibold text-emerald-800">WiFi</p>
+                <p className="mt-0.5 text-[9px] text-emerald-700">Guest / welcome2026</p>
+              </div>
+              <div className="rounded-md bg-slate-50 p-2 ring-1 ring-slate-200">
+                <p className="text-[10px] font-semibold text-slate-800">朝食</p>
+                <p className="mt-0.5 text-[9px] text-slate-600">6:30-9:30 / 1F</p>
+              </div>
+            </div>
+            <div className="mt-2 h-7 w-full rounded-lg bg-slate-900/90" />
+          </div>
         </div>
       </motion.div>
       <motion.div
@@ -51,12 +62,26 @@ function HeroVisuals({ samplePageHref }: { samplePageHref: string }) {
       >
         <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
         <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-1.5">
-          <iframe
-            src={samplePageHref}
-            title="Infomii sample page mobile preview"
-            className="h-[200px] w-full rounded-[0.8rem] border border-slate-200"
-            loading="lazy"
-          />
+          <div className="h-[200px] rounded-[0.8rem] border border-slate-200 bg-white p-2.5">
+            <p className="text-[9px] font-semibold text-slate-500">ゲストのスマホ表示</p>
+            <p className="mt-1 text-[9px] font-semibold text-slate-800">Infomii Hotel</p>
+            <p className="text-[8px] text-slate-500">チェックイン後のご案内</p>
+            <div className="mt-2 grid grid-cols-2 gap-1.5">
+              <div className="rounded-md bg-emerald-50 p-1.5 ring-1 ring-emerald-100">
+                <div className="h-2 w-3/4 rounded bg-emerald-200/80" />
+                <div className="mt-1 h-1.5 w-full rounded bg-emerald-100" />
+              </div>
+              <div className="rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
+                <div className="h-2 w-3/4 rounded bg-slate-200" />
+                <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
+              </div>
+            </div>
+            <div className="mt-2 rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
+              <div className="h-2 w-1/2 rounded bg-slate-200" />
+              <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
+            </div>
+            <div className="mt-2 h-6 w-full rounded-md bg-slate-900/90" />
+          </div>
         </div>
       </motion.div>
       <motion.div
@@ -87,9 +112,11 @@ type LpHeroProps = {
   ctaHref: string;
   /** 登録なしで触れるサンプル（公開ゲストページ） */
   samplePageHref: string;
+  /** 登録なしで触れるデモエディタ */
+  demoEditorHref?: string;
 };
 
-export function LpHero({ ctaHref, samplePageHref }: LpHeroProps) {
+export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor" }: LpHeroProps) {
   return (
     <section className="border-b border-slate-200/80 bg-white">
       <Container className="py-16 sm:py-20 lg:py-24">
@@ -114,7 +141,7 @@ export function LpHero({ ctaHref, samplePageHref }: LpHeroProps) {
               説明・紙・更新の手間をゼロに近づけます。
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Button href={samplePageHref} size="lg">
+              <Button href={demoEditorHref} size="lg">
                 30秒で試す（登録なし）
               </Button>
               <Button href="#live-demo" variant="secondary" size="lg">
@@ -133,7 +160,7 @@ export function LpHero({ ctaHref, samplePageHref }: LpHeroProps) {
           </FadeIn>
         </div>
         <div className="mt-14 lg:mt-16">
-          <HeroVisuals samplePageHref={samplePageHref} />
+          <HeroVisuals />
         </div>
       </Container>
     </section>

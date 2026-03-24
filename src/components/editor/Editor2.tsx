@@ -13,6 +13,7 @@ import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import type { CardType } from "./types";
+import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
 import { getPage, buildPublicUrlV, savePageCards } from "@/lib/storage";
 
 /**
@@ -20,9 +21,16 @@ import { getPage, buildPublicUrlV, savePageCards } from "@/lib/storage";
  * State is centralized in useEditor2Store (cards, selectedCardId, isSaving, pageMeta).
  * Canvas, library and settings all use the same store.
  */
-type Editor2Props = { pageId?: string | null };
+type Editor2Props = {
+  pageId?: string | null;
+  mode?: "full" | "demo";
+  demoPreviewUrl?: string;
+};
 
-export function Editor2({ pageId }: Editor2Props) {
+const DEMO_STORAGE_KEY = "editor2:demo-state:v1";
+
+export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-menu" }: Editor2Props) {
+  const isDemoMode = mode === "demo";
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
@@ -39,6 +47,7 @@ export function Editor2({ pageId }: Editor2Props) {
   } | null>(null);
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
+  const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -66,6 +75,9 @@ export function Editor2({ pageId }: Editor2Props) {
   const canUndo = useEditor2Store((s) => s.historyPast.length > 0);
   const canRedo = useEditor2Store((s) => s.historyFuture.length > 0);
   const setPageMeta = useEditor2Store((s) => s.setPageMeta);
+  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
+  const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
+  const setCards = useEditor2Store((s) => s.setCards);
 
   const runPrepublishChecks = useCallback(() => {
     const errors: string[] = [];
@@ -95,6 +107,92 @@ export function Editor2({ pageId }: Editor2Props) {
   }, [cards]);
 
   useEffect(() => {
+    if (!isDemoMode) return;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(DEMO_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as {
+            cards?: typeof cards;
+            background?: {
+              mode?: "solid" | "gradient";
+              color?: string;
+              from?: string;
+              to?: string;
+              angle?: number;
+            };
+          };
+          if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
+            setCards(parsed.cards);
+            selectCard(parsed.cards[0]?.id ?? null);
+            if (parsed.background) {
+              setPageBackground({
+                mode: parsed.background.mode,
+                color: parsed.background.color,
+                from: parsed.background.from,
+                to: parsed.background.to,
+                angle: parsed.background.angle,
+              });
+            }
+            setPageMeta({
+              pageId: null,
+              title: "デモ編集画面",
+              slug: "demo-preview",
+              publicUrl: demoPreviewUrl,
+            });
+            return;
+          }
+        }
+      } catch {
+        // ignore malformed localStorage and fall back to starter cards
+      }
+    }
+    const starterCards = STARTER_CARD_TYPES.map((type, i) =>
+      createEmptyCard(type, `demo-${i}-${Math.random().toString(36).slice(2, 8)}`, i)
+    );
+    setCards(starterCards);
+    selectCard(starterCards[0]?.id ?? null);
+    setPageMeta({
+      pageId: null,
+      title: "デモ編集画面",
+      slug: "demo-preview",
+      publicUrl: demoPreviewUrl,
+    });
+  }, [isDemoMode, demoPreviewUrl, setCards, selectCard, setPageMeta, setPageBackground]);
+
+  useEffect(() => {
+    if (!isDemoMode || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        DEMO_STORAGE_KEY,
+        JSON.stringify({
+          cards,
+          background: {
+            mode: pageBackgroundMode,
+            color: pageBackgroundColor,
+            from: pageGradientFrom,
+            to: pageGradientTo,
+            angle: pageGradientAngle,
+          },
+        })
+      );
+      setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
+    } catch {
+      // ignore localStorage quota errors in demo mode
+    }
+  }, [
+    isDemoMode,
+    cards,
+    pageBackgroundMode,
+    pageBackgroundColor,
+    pageGradientFrom,
+    pageGradientTo,
+    pageGradientAngle,
+    setAutosaveStatus,
+  ]);
+
+  useEffect(() => {
+    if (isDemoMode) return;
     if (!pageId) {
       setPageMeta({ pageId: null, title: "", slug: "", publicUrl: null });
       return;
@@ -109,10 +207,10 @@ export function Editor2({ pageId }: Editor2Props) {
         });
       }
     });
-  }, [pageId, setPageMeta]);
+  }, [isDemoMode, pageId, setPageMeta]);
 
   useEffect(() => {
-    if (!pageId || typeof window === "undefined") return;
+    if (!pageId || typeof window === "undefined" || isDemoMode) return;
     const key = `editor-page-background:${pageId}`;
     window.localStorage.setItem(
       key,
@@ -124,7 +222,7 @@ export function Editor2({ pageId }: Editor2Props) {
         angle: pageGradientAngle,
       })
     );
-  }, [pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]);
+  }, [isDemoMode, pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]);
 
   const { retry } = useAutoSaveCards(pageId ?? null);
 
@@ -231,6 +329,10 @@ export function Editor2({ pageId }: Editor2Props) {
   );
 
   const publishNow = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
     if (!pageId) return;
     setPublishing(true);
     try {
@@ -260,9 +362,13 @@ export function Editor2({ pageId }: Editor2Props) {
     } finally {
       setPublishing(false);
     }
-  }, [pageId]);
+  }, [isDemoMode, pageId]);
 
   const handlePublishClick = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
     const report = runPrepublishChecks();
     if (report.errors.length > 0 || report.warnings.length > 0) {
       setPrepublishState({
@@ -273,9 +379,13 @@ export function Editor2({ pageId }: Editor2Props) {
       return;
     }
     await publishNow();
-  }, [publishNow, runPrepublishChecks]);
+  }, [isDemoMode, publishNow, runPrepublishChecks]);
 
   const handlePreviewClick = useCallback(async () => {
+    if (isDemoMode) {
+      window.open(demoPreviewUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (!pageMeta.publicUrl || !pageId) return;
     try {
       const state = useEditor2Store.getState();
@@ -294,7 +404,7 @@ export function Editor2({ pageId }: Editor2Props) {
       // Even if save fails, allow user to inspect current public page.
     }
     window.open(pageMeta.publicUrl, "_blank", "noopener,noreferrer");
-  }, [pageMeta.publicUrl, pageId]);
+  }, [isDemoMode, demoPreviewUrl, pageMeta.publicUrl, pageId]);
 
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
@@ -313,24 +423,30 @@ export function Editor2({ pageId }: Editor2Props) {
   }, [cards.length, clearCards]);
 
   const handleRunPrepublishCheck = useCallback(() => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開前チェックは利用できません。無料登録で解放されます。");
+      return;
+    }
     const report = runPrepublishChecks();
     setPrepublishState({
       errors: report.errors,
       warnings: report.warnings,
       allowContinue: false,
     });
-  }, [runPrepublishChecks]);
+  }, [isDemoMode, runPrepublishChecks]);
 
   const topBar =
-    pageId ? (
+    pageId || isDemoMode ? (
       <EditorTopBar
-        pageTitle={pageMeta.title}
+        backHref={isDemoMode ? "/lp/saas" : "/dashboard"}
+        demoMode={isDemoMode}
+        pageTitle={isDemoMode ? "デモ編集画面" : pageMeta.title}
         saving={isSaving}
         lastSavedAt={lastSavedAt}
         saveError={saveError}
         onRetry={retry}
         status="draft"
-        publicUrl={pageMeta.publicUrl}
+        publicUrl={isDemoMode ? demoPreviewUrl : pageMeta.publicUrl}
         publishing={publishing}
         canUndo={canUndo}
         canRedo={canRedo}
@@ -338,8 +454,20 @@ export function Editor2({ pageId }: Editor2Props) {
         onUndo={undo}
         onRedo={redo}
         onClearAll={handleClearAll}
-        onEditPageBackground={() => selectCard(null)}
-        onBulkFont={() => setBulkFontOpen(true)}
+        onEditPageBackground={() => {
+          if (isDemoMode) {
+            setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
+            return;
+          }
+          selectCard(null);
+        }}
+        onBulkFont={() => {
+          if (isDemoMode) {
+            setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
+            return;
+          }
+          setBulkFontOpen(true);
+        }}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
@@ -378,9 +506,11 @@ export function Editor2({ pageId }: Editor2Props) {
             <CardSettings
               card={selectedCard}
               onUpdate={updateCard}
-              onBulkReplace={replaceTextAll}
-              onRunPrepublishCheck={handleRunPrepublishCheck}
+              onBulkReplace={isDemoMode ? undefined : replaceTextAll}
+              onRunPrepublishCheck={isDemoMode ? undefined : handleRunPrepublishCheck}
               lastAddedCardId={lastAddedCardId}
+              demoMode={isDemoMode}
+              onLockedAction={(message) => setDemoLockMessage(message)}
             />
           }
         />
@@ -448,6 +578,29 @@ export function Editor2({ pageId }: Editor2Props) {
                     このまま公開
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+        {demoLockMessage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">デモモード制限</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{demoLockMessage}</p>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDemoLockMessage(null)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  閉じる
+                </button>
+                <a
+                  href="/login?ref=demo-editor&next=%2Fdashboard%3Ftab%3Dcreate"
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
+                  無料登録して続ける
+                </a>
               </div>
             </div>
           </div>

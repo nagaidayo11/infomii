@@ -3,6 +3,8 @@
 import Link from "next/link";
 
 export type EditorTopBarProps = {
+  backHref?: string;
+  demoMode?: boolean;
   pageTitle: string;
   saving: boolean;
   lastSavedAt: number | null;
@@ -86,6 +88,8 @@ function AutosaveStatus({
  * Back | Title | Autosave + Status | Preview | Publish | QR
  */
 export function EditorTopBar({
+  backHref = "/dashboard",
+  demoMode = false,
   pageTitle,
   saving,
   lastSavedAt,
@@ -114,7 +118,7 @@ export function EditorTopBar({
     >
       {/* Back to dashboard */}
       <Link
-        href="/dashboard"
+        href={backHref}
         className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
         aria-label="ダッシュボードに戻る"
       >
@@ -132,19 +136,26 @@ export function EditorTopBar({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        <span className="hidden sm:inline">ダッシュボード</span>
+        <span className="hidden sm:inline">{backHref === "/dashboard" ? "ダッシュボード" : "戻る"}</span>
       </Link>
 
       <div className="h-4 w-px shrink-0 bg-slate-200/80" aria-hidden />
 
       {/* Page title */}
       <div className="min-w-0 flex-1">
-        <h1
-          className="truncate text-sm font-semibold text-slate-900"
-          title={pageTitle}
-        >
-          {pageTitle || ""}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1
+            className="truncate text-sm font-semibold text-slate-900"
+            title={pageTitle}
+          >
+            {pageTitle || ""}
+          </h1>
+          {demoMode && (
+            <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+              デモ
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Autosave + draft/published */}

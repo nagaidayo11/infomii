@@ -106,6 +106,8 @@ export type CardSettingsProps = {
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
   onBulkReplace?: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
   onRunPrepublishCheck?: () => void;
+  demoMode?: boolean;
+  onLockedAction?: (message: string) => void;
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
   lastAddedCardId?: string | null;
 };
@@ -753,6 +755,8 @@ export function CardSettings({
   onUpdate,
   onBulkReplace,
   onRunPrepublishCheck,
+  demoMode = false,
+  onLockedAction,
   lastAddedCardId = null,
 }: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -963,8 +967,20 @@ export function CardSettings({
                   </div>
                 </>
               )}
+              {demoMode && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onLockedAction?.("デモモードでは詳細設定は利用できません。無料登録で解放されます。")
+                  }
+                  className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100"
+                >
+                  デモでは背景の詳細設定は利用できません
+                </button>
+              )}
             </SettingsSection>
-            <SettingsSection title="一括置換（このページ内）">
+            {!demoMode && (
+              <SettingsSection title="一括置換（このページ内）">
               <Input
                 label="検索文字"
                 value={bulkFind}
@@ -986,8 +1002,10 @@ export function CardSettings({
                 一括置換を実行
               </button>
               {bulkStatus ? <p className="text-xs text-slate-500">{bulkStatus}</p> : null}
-            </SettingsSection>
-            <SettingsSection title="公開前チェック">
+              </SettingsSection>
+            )}
+            {!demoMode && (
+              <SettingsSection title="公開前チェック">
               <p className="text-sm text-slate-500">
                 公開前に未入力やプレースホルダをチェックします。
               </p>
@@ -999,7 +1017,8 @@ export function CardSettings({
               >
                 チェックを実行
               </button>
-            </SettingsSection>
+              </SettingsSection>
+            )}
           </div>
         </div>
       </>
@@ -1964,6 +1983,18 @@ export function CardSettings({
           )}
 
           <SettingsSection title="ブロックスタイル">
+            {demoMode ? (
+              <button
+                type="button"
+                onClick={() =>
+                  onLockedAction?.("デモモードでは詳細設定は利用できません。無料登録で解放されます。")
+                }
+                className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100"
+              >
+                デモではブロックスタイル詳細設定は利用できません
+              </button>
+            ) : (
+              <>
             <div className="w-full">
               <label className={labelClass}>編集モード</label>
               <div className="grid grid-cols-2 gap-2">
@@ -2298,6 +2329,8 @@ export function CardSettings({
                     <option value="2">広い</option>
                   </select>
                 </div>
+              </>
+            )}
               </>
             )}
           </SettingsSection>
