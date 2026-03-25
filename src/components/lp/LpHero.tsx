@@ -97,7 +97,7 @@ function GuestPhoneScreen() {
       </div>
 
       {/* Icon labels (2 rows x 2 columns) */}
-      <div className="mt-1 grid grid-cols-2 gap-1.5">
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
         {[
           { label: "WiFi", icon: <IconWifi className="h-4 w-4 text-slate-700" /> },
           { label: "朝食", icon: <IconForkKnife className="h-4 w-4 text-slate-700" /> },
@@ -115,7 +115,7 @@ function GuestPhoneScreen() {
       </div>
 
       {/* Breakfast block */}
-      <div className="mt-1 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
+      <div className="mt-2 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
         <p className="text-[9px] font-semibold text-slate-800">朝食バイキング</p>
         <p className="mt-0.5 text-[8.5px] text-slate-600">時間：6:00-9:00</p>
         <p className="mt-0.5 text-[8.5px] text-slate-600">場所：1F</p>
