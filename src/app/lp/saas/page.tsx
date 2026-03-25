@@ -61,41 +61,133 @@ function LpMidCta({
 }
 
 function LpSolutionPhoneMock() {
+  function IconWifi({ className }: { className?: string }) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M5 12.55c4.7-4.15 9.3-4.15 14 0" />
+        <path d="M8.5 16c2.4-2.1 4.6-2.1 7 0" />
+        <path d="M12 20h.01" />
+      </svg>
+    );
+  }
+
+  function IconForkKnife({ className }: { className?: string }) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M7 3v9a4 4 0 0 0 4 4v5" />
+        <path d="M17 3v7" />
+        <path d="M20 3v5c0 2-1 3-3 3h-1" />
+      </svg>
+    );
+  }
+
+  function IconClock({ className }: { className?: string }) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v6l4 2" />
+      </svg>
+    );
+  }
+
+  function IconInfo({ className }: { className?: string }) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        className={className}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 10v6" />
+        <path d="M12 7h.01" />
+      </svg>
+    );
+  }
+
+  function GuestPhoneScreenMock() {
+    return (
+      <div className="flex h-full flex-col px-3 pt-3">
+        {/* Hero block (top) */}
+        <div>
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
+          <div className="mt-2 w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative aspect-[16/9]">
+            <div className="absolute inset-0 bg-black/25" />
+            <div className="absolute left-3 bottom-3">
+              <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
+              <p className="mt-0.5 text-[8.5px] text-white/80">館内案内をスマートにまとめました</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Icon labels (2 rows x 2 columns) */}
+        <div className="mt-3 grid grid-cols-2 gap-1.5">
+          {[
+            { label: "WiFi", icon: <IconWifi className="h-4 w-4 text-slate-700" /> },
+            { label: "朝食", icon: <IconForkKnife className="h-4 w-4 text-slate-700" /> },
+            { label: "チェックアウト", icon: <IconClock className="h-4 w-4 text-slate-700" /> },
+            { label: "お知らせ", icon: <IconInfo className="h-4 w-4 text-slate-700" /> },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-200/80 text-center"
+            >
+              <div className="flex items-center justify-center">{item.icon}</div>
+              <p className="mt-1 text-[8.5px] font-semibold text-slate-800">{item.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Breakfast block */}
+        <div className="mt-3 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
+          <p className="text-[9px] font-semibold text-slate-800">朝食バイキング</p>
+          <p className="mt-0.5 text-[8.5px] text-slate-600">時間：6:00-9:00</p>
+          <p className="mt-0.5 text-[8.5px] text-slate-600">場所：1F</p>
+          <p className="mt-1 text-[8.5px] font-semibold text-slate-700">朝食ビュッフェ</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="relative mx-auto w-full max-w-[260px] overflow-hidden rounded-[1.75rem] border-[7px] border-slate-800 bg-slate-800 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)]"
       aria-hidden
     >
       <div className="absolute left-1/2 top-2.5 h-5 w-16 -translate-x-1/2 rounded-full bg-slate-900" />
-      <div className="mt-8 min-h-[280px] bg-[#fafaf9] px-3 pb-4 pt-2">
-        <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          ゲストのスマホ表示
-        </p>
-        <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <p className="text-[11px] font-semibold text-slate-800">Infomii Hotel</p>
-          <p className="mt-0.5 text-[10px] text-slate-500">チェックイン後のご案内</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-emerald-50 p-2 ring-1 ring-emerald-100">
-              <p className="text-[10px] font-semibold text-emerald-800">WiFi</p>
-              <p className="mt-0.5 text-[9px] text-emerald-700">Guest / welcome2026</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
-              <p className="text-[10px] font-semibold text-slate-800">朝食</p>
-              <p className="mt-0.5 text-[9px] text-slate-600">6:30-9:30 / 1F</p>
-            </div>
-          </div>
-          <div className="mt-2 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
-            <p className="text-[10px] font-semibold text-slate-800">チェックアウト</p>
-            <p className="mt-0.5 text-[9px] text-slate-600">11:00 / 延長はフロントへ</p>
-          </div>
-          <button
-            type="button"
-            className="mt-2 w-full rounded-lg bg-slate-900 py-1.5 text-[10px] font-semibold text-white"
-          >
-            フロントに連絡する
-          </button>
-        </div>
-        <p className="mt-2 text-center text-[9px] text-slate-400">WiFi · 朝食 · 館内案内</p>
+      <div className="mt-8 h-[280px] bg-[#fafaf9]">
+        <GuestPhoneScreenMock />
       </div>
     </div>
   );
