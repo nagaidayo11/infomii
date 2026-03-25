@@ -172,7 +172,7 @@ function HeroVisuals() {
       {/* Middle: guest phone */}
       <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
         <motion.div
-          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-auto lg:max-w-full lg:aspect-auto xl:h-[560px]"
+          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-full lg:aspect-auto xl:h-[560px]"
           whileHover={{
             scale: 1.03,
             rotate: -1.5,
