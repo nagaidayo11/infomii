@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1600px] grid-cols-1 items-start gap-10 sm:gap-12 lg:grid-cols-[minmax(0,9fr)_minmax(0,11fr)] lg:items-stretch lg:gap-8 xl:gap-10"
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)] lg:gap-10 xl:gap-14"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* 左（約45%）：ページエディタ — 行の高さの基準（列内で最大幅を抑える） */}
-      <div className="flex min-h-0 min-w-0 flex-col items-center gap-3 lg:max-w-[min(100%,800px)] lg:justify-self-center">
+      {/* Left: large editor visual */}
+      <div className="flex min-w-0 flex-col items-center gap-3">
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
           whileHover={{
@@ -32,11 +32,11 @@ function HeroVisuals() {
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </div>
 
-      {/* 右（約55%）：ゲストを大きく（上＝ゲスト / 下＝QR） */}
-      <div className="flex min-h-0 w-full flex-col items-center justify-between gap-4 lg:h-full lg:max-h-full lg:overflow-hidden">
-        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-2 lg:min-h-0 lg:basis-0">
+      {/* Right: guest phone + QR */}
+      <div className="flex w-full flex-col items-center gap-6 lg:gap-8">
+        <div className="flex w-full flex-col items-center gap-2">
           <motion.div
-            className="relative mx-auto aspect-[9/16] w-[min(380px,100%)] max-w-full shrink-0 overflow-hidden rounded-[1.85rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(420px,100%)] lg:h-full lg:max-h-[min(100%,calc(100%-5.5rem))] lg:w-auto lg:min-w-[min(100%,28rem)]"
+            className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:w-[min(100%,360px)]"
             whileHover={{
               scale: 1.03,
               rotate: -1.5,
@@ -50,12 +50,12 @@ function HeroVisuals() {
               loading="eager"
             />
           </motion.div>
-          <p className="shrink-0 text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
+          <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
         </div>
 
-        <div className="flex shrink-0 flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2">
           <motion.div
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24 lg:h-[4.5rem] lg:w-[4.5rem]"
+            className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
             whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
           >
             <svg
