@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-fit grid-cols-2 items-center justify-items-center gap-4 sm:gap-6 lg:gap-8"
+      className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-8 sm:gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-6 xl:gap-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div
-        className="w-full max-w-[280px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[320px]"
+        className="order-1 w-full max-w-[280px] shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[300px] xl:max-w-[320px]"
         aria-hidden
         whileHover={{
           scale: 1.02,
@@ -21,38 +21,15 @@ function HeroVisuals() {
           transition: { duration: 0.2 },
         }}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-          <div className="flex gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-            <span className="h-2 w-2 rounded-full bg-slate-300" />
-          </div>
-          <span className="ml-3 text-[10px] font-medium text-slate-400">
-            ページエディタ
-          </span>
-        </div>
-        <div className="p-2">
-          <div className="h-[170px] rounded-lg border border-slate-100 bg-white p-3">
-            <p className="text-[10px] font-semibold text-slate-400">ご案内ページ（編集側）</p>
-            <div className="mt-2 h-2.5 w-2/3 rounded bg-slate-200" />
-            <div className="mt-1 h-2 w-full rounded bg-slate-100" />
-            <div className="mt-1 h-2 w-4/5 rounded bg-slate-100" />
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <div className="rounded-md bg-emerald-50 p-2 ring-1 ring-emerald-100">
-                <p className="text-[10px] font-semibold text-emerald-800">WiFi</p>
-                <p className="mt-0.5 text-[9px] text-emerald-700">Guest / welcome2026</p>
-              </div>
-              <div className="rounded-md bg-slate-50 p-2 ring-1 ring-slate-200">
-                <p className="text-[10px] font-semibold text-slate-800">朝食</p>
-                <p className="mt-0.5 text-[9px] text-slate-600">6:30-9:30 / 1F</p>
-              </div>
-            </div>
-            <div className="mt-2 h-7 w-full rounded-lg bg-slate-900/90" />
-          </div>
-        </div>
+        <img
+          src="/lp-editor-screenshot.png"
+          alt="ページエディタ画面"
+          className="block h-auto w-full object-cover"
+          loading="eager"
+        />
       </motion.div>
       <motion.div
-        className="relative w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px]"
+        className="relative order-2 w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px] lg:order-3"
         aria-hidden
         whileHover={{
           scale: 1.03,
@@ -61,37 +38,24 @@ function HeroVisuals() {
         }}
       >
         <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
-        <div className="mt-6 min-h-[200px] bg-[#fafaf9] p-1.5">
-          <div className="h-[200px] rounded-[0.8rem] border border-slate-200 bg-white p-2.5">
-            <p className="text-[9px] font-semibold text-slate-500">ゲストのスマホ表示</p>
-            <p className="mt-1 text-[9px] font-semibold text-slate-800">Infomii Hotel</p>
-            <p className="text-[8px] text-slate-500">チェックイン後のご案内</p>
-            <div className="mt-2 grid grid-cols-2 gap-1.5">
-              <div className="rounded-md bg-emerald-50 p-1.5 ring-1 ring-emerald-100">
-                <div className="h-2 w-3/4 rounded bg-emerald-200/80" />
-                <div className="mt-1 h-1.5 w-full rounded bg-emerald-100" />
-              </div>
-              <div className="rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
-                <div className="h-2 w-3/4 rounded bg-slate-200" />
-                <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
-              </div>
-            </div>
-            <div className="mt-2 rounded-md bg-slate-50 p-1.5 ring-1 ring-slate-200">
-              <div className="h-2 w-1/2 rounded bg-slate-200" />
-              <div className="mt-1 h-1.5 w-full rounded bg-slate-100" />
-            </div>
-            <div className="mt-2 h-6 w-full rounded-md bg-slate-900/90" />
-          </div>
+        <div className="mt-6 bg-[#fafaf9] p-1.5">
+          <img
+            src="/lp-guest-phone-screenshot.png"
+            alt="ゲストのスマホ表示"
+            className="block h-auto w-full rounded-[0.8rem] border border-slate-200 object-cover"
+            loading="eager"
+          />
         </div>
       </motion.div>
       <motion.div
-        className="col-span-2 mx-auto flex h-32 w-32 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white shadow-sm sm:h-36 sm:w-36"
+        className="order-3 grid h-44 w-44 shrink-0 place-items-center place-content-center self-center rounded-2xl border-2 border-slate-200 bg-white p-3 shadow-md sm:h-52 sm:w-52 sm:p-3.5 lg:order-2 lg:h-56 lg:w-56 lg:p-4 xl:h-60 xl:w-60 xl:p-4"
         aria-hidden
         whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
       >
         <svg
           viewBox="0 0 24 24"
-          className="h-14 w-14 text-slate-700 sm:h-16 sm:w-16"
+          preserveAspectRatio="xMidYMid meet"
+          className="block aspect-square h-auto w-[72%] max-h-full min-h-0 min-w-0 shrink-0 text-slate-700"
           fill="currentColor"
         >
           <rect x="2" y="2" width="5" height="5" />

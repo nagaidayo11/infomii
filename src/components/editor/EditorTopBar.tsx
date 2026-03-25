@@ -240,7 +240,7 @@ export function EditorTopBar({
           type="button"
           onClick={onPublish}
           disabled={publishing}
-          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {publishing ? "公開中…" : "公開"}
         </button>
@@ -248,14 +248,14 @@ export function EditorTopBar({
           type="button"
           onClick={onQr}
           disabled={publishing}
-          className="flex items-center gap-1.5 rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="QRコード"
         >
           {publishing ? (
             <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent" />
           ) : (
             <svg
-              className="h-3.5 w-3.5"
+              className="h-3.5 w-3.5 shrink-0 text-white"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
