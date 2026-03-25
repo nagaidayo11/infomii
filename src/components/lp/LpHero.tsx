@@ -82,16 +82,17 @@ function IconInfo({ className }: { className?: string }) {
 function GuestPhoneScreen() {
   return (
     <div className="flex h-full flex-col px-3 pt-3">
-      {/* Hero header */}
-      <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-
-      <div className="mt-2 w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative aspect-[16/9]">
-        <div className="absolute inset-0 bg-black/25" />
-        <div className="absolute left-3 bottom-3">
-          <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
-          <p className="mt-0.5 text-[8.5px] text-white/80">
-            館内案内をスマートにまとめました
-          </p>
+      {/* Hero block (top) */}
+      <div>
+        <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
+        <div className="mt-2 w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative aspect-[16/9]">
+          <div className="absolute inset-0 bg-black/25" />
+          <div className="absolute left-3 bottom-3">
+            <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
+            <p className="mt-0.5 text-[8.5px] text-white/80">
+              館内案内をスマートにまとめました
+            </p>
+          </div>
         </div>
       </div>
 
@@ -175,8 +176,9 @@ function HeroVisuals() {
                   <div className="p-4">
                     <div className="h-3 w-24 rounded bg-slate-200" />
                       {/* Preview: guest phone mock (same wrapper behavior as the guest) */}
-                      <div className="mt-3 aspect-[9/18] overflow-hidden rounded-xl bg-slate-50">
-                        <div className="relative h-full w-full overflow-hidden rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/80">
+                      <div className="mt-3 relative mx-auto aspect-[9/18] w-[min(375px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80">
+                        <div className="absolute inset-0 bg-[#dbe3ed]" />
+                        <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">
                           <GuestPhoneScreen />
                         </div>
                       </div>
