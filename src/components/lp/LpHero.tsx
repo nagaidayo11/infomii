@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-8 sm:gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-6 xl:gap-10"
+      className="relative mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-8 sm:gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-8 xl:gap-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div
-        className="order-1 w-full max-w-[280px] shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[300px] xl:max-w-[320px]"
+        className="order-1 w-full max-w-[320px] shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[440px] xl:max-w-[500px]"
         aria-hidden
         whileHover={{
           scale: 1.02,
@@ -29,7 +29,7 @@ function HeroVisuals() {
         />
       </motion.div>
       <motion.div
-        className="relative order-2 w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px] lg:order-3"
+        className="relative order-2 w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px] lg:order-2"
         aria-hidden
         whileHover={{
           scale: 1.03,
@@ -48,25 +48,27 @@ function HeroVisuals() {
         </div>
       </motion.div>
       <motion.div
-        className="order-3 grid h-44 w-44 shrink-0 place-items-center place-content-center self-center rounded-2xl border-2 border-slate-200 bg-white p-3 shadow-md sm:h-52 sm:w-52 sm:p-3.5 lg:order-2 lg:h-56 lg:w-56 lg:p-4 xl:h-60 xl:w-60 xl:p-4"
+        className="order-3 flex h-28 w-28 shrink-0 items-center justify-center self-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-32 sm:w-32 sm:p-2.5 lg:order-3 lg:h-36 lg:w-36 lg:p-3 xl:h-40 xl:w-40 xl:p-3.5"
         aria-hidden
         whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
       >
-        <svg
-          viewBox="0 0 24 24"
-          preserveAspectRatio="xMidYMid meet"
-          className="block aspect-square h-auto w-[72%] max-h-full min-h-0 min-w-0 shrink-0 text-slate-700"
-          fill="currentColor"
-        >
-          <rect x="2" y="2" width="5" height="5" />
-          <rect x="11" y="2" width="5" height="5" />
-          <rect x="2" y="11" width="5" height="5" />
-          <rect x="8" y="8" width="2" height="2" />
-          <rect x="14" y="8" width="2" height="2" />
-          <rect x="8" y="14" width="2" height="2" />
-          <rect x="11" y="11" width="5" height="5" />
-          <rect x="14" y="14" width="2" height="2" />
-        </svg>
+        <span className="flex h-full w-full items-center justify-center">
+          <svg
+            viewBox="0 0 24 24"
+            preserveAspectRatio="xMidYMid meet"
+            className="block h-[64%] w-[64%] shrink-0 text-slate-700"
+            fill="currentColor"
+          >
+            <rect x="2" y="2" width="5" height="5" />
+            <rect x="11" y="2" width="5" height="5" />
+            <rect x="2" y="11" width="5" height="5" />
+            <rect x="8" y="8" width="2" height="2" />
+            <rect x="14" y="8" width="2" height="2" />
+            <rect x="8" y="14" width="2" height="2" />
+            <rect x="11" y="11" width="5" height="5" />
+            <rect x="14" y="14" width="2" height="2" />
+          </svg>
+        </span>
       </motion.div>
     </motion.div>
   );
