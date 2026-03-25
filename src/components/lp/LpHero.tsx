@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)] lg:gap-10 xl:gap-14"
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1.65fr)_minmax(0,0.9fr)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       {/* Left: large editor visual */}
-      <div className="flex min-w-0 flex-col items-center gap-3">
+      <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
           whileHover={{
@@ -32,51 +32,50 @@ function HeroVisuals() {
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </div>
 
-      {/* Right: guest phone + QR */}
-      <div className="flex w-full flex-col items-center gap-6 lg:gap-8">
-        <div className="flex w-full flex-col items-center gap-2">
-          <motion.div
-            className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:w-[min(100%,360px)]"
-            whileHover={{
-              scale: 1.03,
-              rotate: -1.5,
-              transition: { duration: 0.2 },
-            }}
-          >
-            <img
-              src="/lp-guest-phone-screenshot.png"
-              alt="ゲストのスマホ画面"
-              className="h-full w-full object-cover object-[center_45%]"
-              loading="eager"
-            />
-          </motion.div>
-          <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
-        </div>
+      {/* Middle: guest phone */}
+      <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
+        <motion.div
+          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:w-[min(100%,360px)]"
+          whileHover={{
+            scale: 1.03,
+            rotate: -1.5,
+            transition: { duration: 0.2 },
+          }}
+        >
+          <img
+            src="/lp-guest-phone-screenshot.png"
+            alt="ゲストのスマホ画面"
+            className="h-full w-full object-cover object-[center_45%]"
+            loading="eager"
+          />
+        </motion.div>
+        <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
+      </div>
 
-        <div className="flex flex-col items-center gap-2">
-          <motion.div
-            className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
-            whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
+      {/* Right: QR (smaller) */}
+      <div className="flex min-w-0 flex-col items-center justify-center gap-3 lg:h-full lg:justify-self-center">
+        <motion.div
+          className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
+          whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[70%] w-[70%] shrink-0 text-slate-700"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-[70%] w-[70%] shrink-0 text-slate-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <path d="M14 14h1v4h4v-4" />
-              <path d="M14 17h4" />
-            </svg>
-          </motion.div>
-          <p className="text-center text-sm font-semibold text-slate-700">QRコード</p>
-        </div>
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <path d="M14 14h1v4h4v-4" />
+            <path d="M14 17h4" />
+          </svg>
+        </motion.div>
+        <p className="text-center text-sm font-semibold text-slate-700">QRコード</p>
       </div>
     </motion.div>
   );
