@@ -186,7 +186,7 @@ function LpSolutionPhoneMock() {
       aria-hidden
     >
       <div className="absolute left-1/2 top-2.5 h-5 w-16 -translate-x-1/2 rounded-full bg-slate-900" />
-      <div className="mt-8 h-[280px] bg-[#fafaf9]">
+      <div className="mt-8 h-[280px] overflow-y-auto bg-[#fafaf9] pr-1">
         <GuestPhoneScreenMock />
       </div>
     </div>
