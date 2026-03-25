@@ -36,7 +36,7 @@ function HeroVisuals() {
       <div className="flex min-h-0 w-full flex-col items-center justify-between gap-4 lg:h-full lg:max-h-full lg:overflow-hidden">
         <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-2 lg:min-h-0 lg:basis-0">
           <motion.div
-            className="flex w-full max-w-[280px] items-center justify-center overflow-hidden rounded-2xl shadow-md ring-1 ring-slate-200/80 sm:max-w-[min(100%,320px)] lg:max-h-full lg:max-w-full"
+            className="relative mx-auto aspect-[9/19] w-[min(240px,100%)] max-w-full shrink-0 overflow-hidden rounded-[1.85rem] shadow-md ring-1 ring-slate-200/80 lg:h-full lg:max-h-[min(100%,calc(100%-5.5rem))] lg:w-auto lg:min-w-0"
             whileHover={{
               scale: 1.03,
               rotate: -1.5,
@@ -46,7 +46,7 @@ function HeroVisuals() {
             <img
               src="/lp-guest-phone-screenshot.png"
               alt="ゲストのスマホ画面"
-              className="block h-auto max-h-[min(100%,52vh)] w-full object-contain lg:max-h-full"
+              className="h-full w-full object-cover object-center"
               loading="eager"
             />
           </motion.div>
