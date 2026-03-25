@@ -159,7 +159,8 @@ function HeroVisuals() {
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:h-[520px] xl:h-[560px]"
           whileHover={{
-            scale: 1.01,
+            scale: 1.03,
+            rotate: -1.5,
             boxShadow: "0 12px 40px rgba(0,0,0,0.1)",
             transition: { duration: 0.2 },
           }}
