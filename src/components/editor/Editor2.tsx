@@ -383,6 +383,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
 
   const handlePreviewClick = useCallback(async () => {
     if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
       window.open(demoPreviewUrl, "_blank", "noopener,noreferrer");
       return;
     }
