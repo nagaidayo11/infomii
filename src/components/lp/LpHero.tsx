@@ -79,6 +79,70 @@ function IconInfo({ className }: { className?: string }) {
   );
 }
 
+function GuestPhoneScreen({ variant }: { variant: "hero" | "preview" }) {
+  const isPreview = variant === "preview";
+  return (
+    <div
+      className={[
+        "flex h-full flex-col",
+        isPreview ? "px-3 pt-3" : "px-4 pt-4",
+      ].join(" ")}
+    >
+      <div className={isPreview ? "mx-auto h-1.5 w-12 rounded-full bg-slate-200" : "mx-auto h-2 w-20 rounded-full bg-slate-200"} />
+
+      <div
+        className={
+          isPreview
+            ? "mt-2 overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative"
+            : "mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 to-slate-300 relative"
+        }
+      >
+        <div className="absolute inset-0 bg-black/25" />
+        <div className={isPreview ? "absolute left-3 bottom-3" : "absolute left-4 bottom-4"}>
+          <p className={isPreview ? "text-[10px] font-bold text-white/95" : "text-sm font-bold text-white/95"}>Infomii Hotel</p>
+          <p className={isPreview ? "mt-0.5 text-[8.5px] text-white/80" : "mt-0.5 text-[10px] text-white/80"}>館内案内をスマートにまとめました</p>
+        </div>
+      </div>
+
+      <div className={isPreview ? "mt-2 text-center" : "mt-4 text-center"}>
+        <p className={isPreview ? "text-[8.5px] font-semibold uppercase tracking-wider text-slate-400" : "text-[10px] font-semibold uppercase tracking-wider text-slate-400"}>メニュー</p>
+      </div>
+
+      <div className={isPreview ? "mt-1 grid grid-cols-2 gap-1.5" : "mt-2 grid grid-cols-2 gap-2"}>
+        {[
+          { label: "WiFi", icon: <IconWifi className={isPreview ? "h-4 w-4 text-slate-700" : "h-5 w-5 text-slate-700"} /> },
+          { label: "朝食", icon: <IconForkKnife className={isPreview ? "h-4 w-4 text-slate-700" : "h-5 w-5 text-slate-700"} /> },
+          { label: "チェックアウト", icon: <IconClock className={isPreview ? "h-4 w-4 text-slate-700" : "h-5 w-5 text-slate-700"} /> },
+          { label: "お知らせ", icon: <IconInfo className={isPreview ? "h-4 w-4 text-slate-700" : "h-5 w-5 text-slate-700"} /> },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className={[
+              "rounded-xl bg-slate-50 ring-1 ring-slate-200/80",
+              isPreview ? "p-1.5" : "p-3",
+              isPreview ? "text-center" : "",
+            ].join(" ")}
+          >
+            <div className="flex items-center justify-center">{item.icon}</div>
+            <p className={isPreview ? "mt-1 text-[8.5px] font-semibold text-slate-800" : "mt-1 text-[10px] font-semibold text-slate-800"}>{item.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className={isPreview ? "mt-1 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1" : "mt-4 rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2"}>
+        <p className={isPreview ? "text-[9px] font-semibold text-slate-800" : "text-[11px] font-semibold text-slate-800"}>朝食バイキング</p>
+        <p className={isPreview ? "mt-0.5 text-[8.5px] text-slate-600" : "mt-1 text-[10px] text-slate-600"}>時間：6:00-9:00</p>
+        <p className={isPreview ? "mt-0.5 text-[8.5px] text-slate-600" : "mt-1 text-[10px] text-slate-600"}>場所：1F</p>
+        <p className={isPreview ? "mt-1 text-[8.5px] font-semibold text-slate-700" : "mt-2 text-[10px] font-semibold text-slate-700"}>朝食ビュッフェ</p>
+      </div>
+
+      <div className={isPreview ? "mt-auto pb-1" : "mt-auto pb-3"}>
+        <p className={isPreview ? "text-center text-[8px] font-semibold text-slate-400" : "text-center text-[9px] font-semibold text-slate-400"}>地図</p>
+      </div>
+    </div>
+  );
+}
+
 function HeroVisuals() {
   return (
     <motion.div
@@ -132,49 +196,7 @@ function HeroVisuals() {
                       {/* Preview: guest phone mock (same content as the guest screen) */}
                       <div className="mt-3 aspect-[16/9] overflow-hidden rounded-xl bg-slate-50">
                         <div className="mx-auto mt-3 h-[92%] w-[70%] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
-                          <div className="flex h-full flex-col px-3 pt-3">
-                            <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-
-                            <div className="mt-2 overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
-                              <div className="absolute inset-0 bg-black/25" />
-                              <div className="absolute left-3 bottom-3">
-                                <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
-                                <p className="mt-0.5 text-[8.5px] text-white/80">館内案内をスマートにまとめました</p>
-                              </div>
-                            </div>
-
-                            <div className="mt-2 text-center">
-                              <p className="text-[8.5px] font-semibold uppercase tracking-wider text-slate-400">メニュー</p>
-                            </div>
-
-                            <div className="mt-1 grid grid-cols-2 gap-1.5">
-                              {[
-                                { label: "WiFi", icon: <IconWifi className="h-4 w-4 text-slate-700" /> },
-                                { label: "朝食", icon: <IconForkKnife className="h-4 w-4 text-slate-700" /> },
-                                { label: "チェックアウト", icon: <IconClock className="h-4 w-4 text-slate-700" /> },
-                                { label: "お知らせ", icon: <IconInfo className="h-4 w-4 text-slate-700" /> },
-                              ].map((item) => (
-                                <div
-                                  key={item.label}
-                                  className="rounded-lg bg-slate-50 p-1.5 ring-1 ring-slate-200/80 text-center"
-                                >
-                                  <div className="flex items-center justify-center">{item.icon}</div>
-                                  <p className="mt-1 text-[8.5px] font-semibold text-slate-800">{item.label}</p>
-                                </div>
-                              ))}
-                            </div>
-
-                            <div className="mt-1 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
-                              <p className="text-[9px] font-semibold text-slate-800">朝食バイキング</p>
-                              <p className="mt-0.5 text-[8.5px] text-slate-600">時間：6:00-9:00</p>
-                              <p className="mt-0.5 text-[8.5px] text-slate-600">場所：1F</p>
-                              <p className="mt-1 text-[8.5px] font-semibold text-slate-700">朝食ビュッフェ</p>
-                            </div>
-
-                            <div className="mt-auto pb-1">
-                              <p className="text-center text-[8px] font-semibold text-slate-400">地図</p>
-                            </div>
-                          </div>
+                          <GuestPhoneScreen variant="preview" />
                         </div>
                       </div>
 
@@ -234,46 +256,7 @@ function HeroVisuals() {
         >
           <div className="absolute inset-0 bg-[#dbe3ed]" />
           <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">
-            <div className="flex h-full flex-col px-4 pt-4">
-              <div className="mx-auto h-2 w-20 rounded-full bg-slate-200" />
-
-              <div className="mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
-                <div className="absolute inset-0 bg-black/25" />
-                <div className="absolute left-4 bottom-4">
-                  <p className="text-sm font-bold text-white/95">Infomii Hotel</p>
-                  <p className="mt-0.5 text-[10px] text-white/80">館内案内をスマートにまとめました</p>
-                </div>
-              </div>
-
-              <div className="mt-4 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">メニュー</p>
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {[
-                  { label: "WiFi", icon: <IconWifi className="h-5 w-5 text-slate-700" /> },
-                  { label: "朝食", icon: <IconForkKnife className="h-5 w-5 text-slate-700" /> },
-                  { label: "チェックアウト", icon: <IconClock className="h-5 w-5 text-slate-700" /> },
-                  { label: "お知らせ", icon: <IconInfo className="h-5 w-5 text-slate-700" /> },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-xl bg-slate-50 ring-1 ring-slate-200/80 p-3">
-                    <div className="flex items-center justify-center">{item.icon}</div>
-                    <p className="mt-1 text-[10px] font-semibold text-slate-800">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2">
-                <p className="text-[11px] font-semibold text-slate-800">朝食バイキング</p>
-                <p className="mt-1 text-[10px] text-slate-600">時間：6:00-9:00</p>
-                <p className="mt-1 text-[10px] text-slate-600">場所：1F</p>
-                <p className="mt-2 text-[10px] font-semibold text-slate-700">朝食ビュッフェ</p>
-              </div>
-
-              <div className="mt-auto pb-3">
-                <p className="text-center text-[9px] font-semibold text-slate-400">地図</p>
-              </div>
-            </div>
+            <GuestPhoneScreen variant="hero" />
           </div>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
