@@ -4,10 +4,85 @@ import { motion } from "framer-motion";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
+function IconWifi({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M5 12.55c4.7-4.15 9.3-4.15 14 0" />
+      <path d="M8.5 16c2.4-2.1 4.6-2.1 7 0" />
+      <path d="M12 20h.01" />
+    </svg>
+  );
+}
+
+function IconForkKnife({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 3v9a4 4 0 0 0 4 4v5" />
+      <path d="M17 3v7" />
+      <path d="M20 3v5c0 2-1 3-3 3h-1" />
+    </svg>
+  );
+}
+
+function IconClock({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v6l4 2" />
+    </svg>
+  );
+}
+
+function IconInfo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 10v6" />
+      <path d="M12 7h.01" />
+    </svg>
+  );
+}
+
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -22,12 +97,74 @@ function HeroVisuals() {
             transition: { duration: 0.2 },
           }}
         >
-          <img
-            src="/lp-editor-screenshot.png"
-            alt="ページエディタ画面"
-            className="block h-auto w-full object-cover object-top lg:h-full"
-            loading="eager"
-          />
+          <div className="flex h-full w-full flex-col">
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/70">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-10 rounded-full bg-slate-200" />
+                <div className="h-2.5 w-16 rounded-full bg-slate-100" />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-14 rounded-full bg-slate-100" />
+                <div className="h-2.5 w-8 rounded-full bg-slate-100" />
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              {/* Sidebar */}
+              <aside className="w-24 shrink-0 border-r border-slate-200/70 bg-slate-50 px-3 py-4">
+                <div className="h-2 w-full rounded bg-slate-200" />
+                <div className="mt-3 h-2 w-full rounded bg-slate-200" />
+                <div className="mt-3 h-2 w-[70%] rounded bg-slate-200" />
+                <div className="mt-6 space-y-3">
+                  <div className="h-2 w-full rounded bg-slate-200" />
+                  <div className="h-2 w-[85%] rounded bg-slate-200" />
+                  <div className="h-2 w-[60%] rounded bg-slate-200" />
+                </div>
+              </aside>
+
+              {/* Editor canvas */}
+              <main className="min-w-0 flex-1 bg-white p-5">
+                <div className="h-full overflow-hidden rounded-lg border border-slate-200/70 bg-slate-50">
+                  <div className="p-4">
+                    <div className="h-3 w-24 rounded bg-slate-200" />
+                    <div className="mt-3 aspect-[16/9] overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
+                      <div className="absolute inset-0 bg-black/25" />
+                      <div className="absolute left-4 bottom-4">
+                        <p className="text-sm font-bold text-white/95">Infomii Hotel</p>
+                        <p className="mt-0.5 text-[11px] text-white/80">館内案内をスマートにまとめました</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      {[
+                        { label: "WiFi", icon: <IconWifi className="h-6 w-6 text-slate-700" /> },
+                        { label: "朝食", icon: <IconForkKnife className="h-6 w-6 text-slate-700" /> },
+                        { label: "チェックアウト", icon: <IconClock className="h-6 w-6 text-slate-700" /> },
+                        { label: "お知らせ", icon: <IconInfo className="h-6 w-6 text-slate-700" /> },
+                      ].map((item) => (
+                        <div key={item.label} className="rounded-xl bg-white/70 ring-1 ring-slate-200/80 p-3 text-center">
+                          <div className="flex items-center justify-center">{item.icon}</div>
+                          <p className="mt-2 text-[11px] font-semibold text-slate-800">{item.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 rounded-xl bg-white/70 ring-1 ring-slate-200/80 p-3">
+                      <p className="text-[11px] font-semibold text-slate-800">朝食バイキング</p>
+                      <p className="mt-1 text-[10px] text-slate-600">時間：6:00-9:00</p>
+                      <p className="mt-1 text-[10px] text-slate-600">場所：1F</p>
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="h-2 w-16 rounded bg-slate-200" />
+                        <div className="h-2 w-10 rounded bg-slate-200" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </main>
+            </div>
+          </div>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </div>
@@ -35,19 +172,56 @@ function HeroVisuals() {
       {/* Middle: guest phone */}
       <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
         <motion.div
-          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-auto lg:max-w-full xl:h-[560px]"
+          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-auto lg:max-w-full lg:aspect-auto xl:h-[560px]"
           whileHover={{
             scale: 1.03,
             rotate: -1.5,
             transition: { duration: 0.2 },
           }}
         >
-          <img
-            src="/lp-guest-phone-screenshot.png"
-            alt="ゲストのスマホ画面"
-            className="h-full w-full object-cover object-[center_45%]"
-            loading="eager"
-          />
+          <div className="absolute inset-0 bg-[#dbe3ed]" />
+          <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">
+            <div className="flex h-full flex-col px-4 pt-4">
+              <div className="mx-auto h-2 w-20 rounded-full bg-slate-200" />
+
+              <div className="mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
+                <div className="absolute inset-0 bg-black/25" />
+                <div className="absolute left-4 bottom-4">
+                  <p className="text-sm font-bold text-white/95">Infomii Hotel</p>
+                  <p className="mt-0.5 text-[10px] text-white/80">館内案内をスマートにまとめました</p>
+                </div>
+              </div>
+
+              <div className="mt-4 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">メニュー</p>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {[
+                  { label: "WiFi", icon: <IconWifi className="h-5 w-5 text-slate-700" /> },
+                  { label: "朝食", icon: <IconForkKnife className="h-5 w-5 text-slate-700" /> },
+                  { label: "チェックアウト", icon: <IconClock className="h-5 w-5 text-slate-700" /> },
+                  { label: "お知らせ", icon: <IconInfo className="h-5 w-5 text-slate-700" /> },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl bg-slate-50 ring-1 ring-slate-200/80 p-3">
+                    <div className="flex items-center justify-center">{item.icon}</div>
+                    <p className="mt-1 text-[10px] font-semibold text-slate-800">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2">
+                <p className="text-[11px] font-semibold text-slate-800">朝食バイキング</p>
+                <p className="mt-1 text-[10px] text-slate-600">時間：6:00-9:00</p>
+                <p className="mt-1 text-[10px] text-slate-600">場所：1F</p>
+                <p className="mt-2 text-[10px] font-semibold text-slate-700">朝食ビュッフェ</p>
+              </div>
+
+              <div className="mt-auto pb-3">
+                <p className="text-center text-[9px] font-semibold text-slate-400">地図</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
       </div>
@@ -142,6 +316,7 @@ export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor
       >
         <div className="mx-auto w-[90%] max-w-[100%] px-4 sm:px-6">
           <HeroVisuals />
+          <p className="mt-3 text-center text-xs text-slate-500">※イメージです</p>
         </div>
       </div>
     </section>
