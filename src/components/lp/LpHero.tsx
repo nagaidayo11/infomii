@@ -146,7 +146,7 @@ function GuestPhoneScreen() {
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_48px_375px_48px_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_48px_minmax(0,0.45fr)_48px_375px] lg:gap-8 xl:gap-10"
       initial={false}
     >
       {/* Left: large editor visual */}
@@ -249,7 +249,7 @@ function HeroVisuals() {
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </motion.div>
 
-      {/* Arrow (editor -> guest) */}
+      {/* Arrow (editor -> QR) */}
       <motion.div
         className="hidden lg:flex items-center justify-center"
         initial={{ opacity: 0, y: 10 }}
@@ -259,45 +259,12 @@ function HeroVisuals() {
         <IconArrowRight className="h-10 w-10 text-slate-300" />
       </motion.div>
 
-      {/* Middle: guest phone */}
-      <motion.div
-        className="flex min-w-0 flex-col items-center gap-3 lg:h-full"
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.35 }}
-      >
-        <motion.div
-          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-[375px] lg:max-w-full lg:aspect-auto xl:h-[560px]"
-          whileHover={{
-            scale: 1.03,
-            rotate: -1.5,
-            transition: { duration: 0.2 },
-          }}
-        >
-          <div className="absolute inset-0 bg-[#dbe3ed]" />
-          <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">
-            <GuestPhoneScreen />
-          </div>
-        </motion.div>
-        <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
-      </motion.div>
-
-      {/* Arrow (guest -> QR) */}
-      <motion.div
-        className="hidden lg:flex items-center justify-center"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.55 }}
-      >
-        <IconArrowRight className="h-10 w-10 text-slate-300" />
-      </motion.div>
-
-      {/* Right: QR (smaller) */}
+      {/* Middle: QR */}
       <motion.div
         className="flex min-w-0 flex-col items-center justify-center gap-3 lg:h-full lg:justify-self-center"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.75 }}
+        transition={{ duration: 0.45, delay: 0.35 }}
       >
         <motion.div
           className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
@@ -321,6 +288,39 @@ function HeroVisuals() {
           </svg>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">QRコード</p>
+      </motion.div>
+
+      {/* Arrow (QR -> guest) */}
+      <motion.div
+        className="hidden lg:flex items-center justify-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.55 }}
+      >
+        <IconArrowRight className="h-10 w-10 text-slate-300" />
+      </motion.div>
+
+      {/* Right: guest phone */}
+      <motion.div
+        className="flex min-w-0 flex-col items-center gap-3 lg:h-full"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.75 }}
+      >
+        <motion.div
+          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-[375px] lg:max-w-full lg:aspect-auto xl:h-[560px]"
+          whileHover={{
+            scale: 1.03,
+            rotate: -1.5,
+            transition: { duration: 0.2 },
+          }}
+        >
+          <div className="absolute inset-0 bg-[#dbe3ed]" />
+          <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">
+            <GuestPhoneScreen />
+          </div>
+        </motion.div>
+        <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
       </motion.div>
     </motion.div>
   );
