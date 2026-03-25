@@ -174,9 +174,9 @@ function HeroVisuals() {
                 <div className="h-full overflow-hidden rounded-lg border border-slate-200/70 bg-slate-50">
                   <div className="p-4">
                     <div className="h-3 w-24 rounded bg-slate-200" />
-                      {/* Preview: guest phone mock (same content as the guest screen) */}
-                      <div className="mt-3 aspect-[16/9] overflow-hidden rounded-xl bg-slate-50">
-                        <div className="mx-auto mt-3 h-[92%] w-[70%] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
+                      {/* Preview: guest phone mock (same wrapper behavior as the guest) */}
+                      <div className="mt-3 aspect-[9/18] overflow-hidden rounded-xl bg-slate-50">
+                        <div className="relative h-full w-full overflow-hidden rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/80">
                           <GuestPhoneScreen />
                         </div>
                       </div>
