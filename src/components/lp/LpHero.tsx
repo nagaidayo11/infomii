@@ -85,7 +85,7 @@ function GuestPhoneScreen() {
       {/* Hero header */}
       <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
 
-      <div className="mt-2 overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
+      <div className="mt-2 w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative aspect-[16/9]">
         <div className="absolute inset-0 bg-black/25" />
         <div className="absolute left-3 bottom-3">
           <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
