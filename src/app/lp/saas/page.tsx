@@ -40,20 +40,22 @@ function LpMidCta({
 }) {
   return (
     <section className="border-b border-slate-200/80 bg-emerald-50/50 py-12 sm:py-14">
-      <Container className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
-        <div className="max-w-xl">
-          <p className="text-lg font-bold text-slate-900 sm:text-xl">{headline}</p>
-          <p className="mt-1 text-sm text-slate-600">{sub}</p>
-        </div>
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button href={sampleHref} size="lg" className="w-full sm:w-auto">
-            30秒で試す（登録なし）
-          </Button>
-          <Button href={ctaHref} variant="secondary" size="lg" className="w-full sm:w-auto">
-            無料で作成する
-          </Button>
-        </div>
-      </Container>
+      <ScrollReveal intensity="subtle">
+        <Container className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div className="max-w-xl">
+            <p className="text-lg font-bold text-slate-900 sm:text-xl">{headline}</p>
+            <p className="mt-1 text-sm text-slate-600">{sub}</p>
+          </div>
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button href={sampleHref} size="lg" className="w-full sm:w-auto">
+              30秒で試す（登録なし）
+            </Button>
+            <Button href={ctaHref} variant="secondary" size="lg" className="w-full sm:w-auto">
+              無料で作成する
+            </Button>
+          </div>
+        </Container>
+      </ScrollReveal>
     </section>
   );
 }
@@ -187,13 +189,17 @@ export default function LpSaaSPage() {
         className="border-b border-slate-200/80 bg-white py-16 sm:py-20 transition-colors duration-200"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">解決策</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Infomiiなら、すべて1つのQRで完結
-          </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
-            チェックイン案内・WiFi・朝食・館内設備。ゲストが迷う情報を、スマホ1画面に集約。あなたは更新だけ。説明の繰り返しから解放されます。
-          </p>
+          <ScrollReveal intensity="subtle">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">解決策</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                Infomiiなら、すべて1つのQRで完結
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
+                チェックイン案内・WiFi・朝食・館内設備。ゲストが迷う情報を、スマホ1画面に集約。あなたは更新だけ。説明の繰り返しから解放されます。
+              </p>
+            </div>
+          </ScrollReveal>
           <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1fr_280px] lg:gap-14">
             <ScrollReveal>
               <StaggerReveal className="grid gap-4 sm:grid-cols-2">
@@ -230,7 +236,7 @@ export default function LpSaaSPage() {
         variant="muted"
       >
         <ScrollReveal>
-          <div className="grid gap-6 lg:grid-cols-2">
+          <StaggerReveal className="grid gap-6 lg:grid-cols-2" staggerDelay={0.12}>
             <Card padding="lg" className="border-rose-200/80 bg-rose-50/30">
               <p className="text-xs font-bold uppercase tracking-wider text-rose-700">導入前</p>
               <ul className="mt-4 space-y-3 text-sm font-medium text-slate-800">
@@ -265,7 +271,7 @@ export default function LpSaaSPage() {
                 </li>
               </ul>
             </Card>
-          </div>
+          </StaggerReveal>
         </ScrollReveal>
       </Section>
 
@@ -276,7 +282,7 @@ export default function LpSaaSPage() {
         description="※ 数値は導入施設ヒアリングに基づく目安です。稼働人数・客層・更新頻度で変動します。"
       >
         <ScrollReveal>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <StaggerReveal className="grid gap-4 sm:grid-cols-3" staggerDelay={0.08}>
             {[
               { label: "フロント対応時間", value: "最大50%削減", sub: "繰り返し案内・紙対応の削減イメージ" },
               { label: "案内の更新", value: "約1分", sub: "テキスト差し替え〜再公開までの目安" },
@@ -291,7 +297,7 @@ export default function LpSaaSPage() {
                 <p className="mt-2 text-xs leading-relaxed text-slate-600">{row.sub}</p>
               </div>
             ))}
-          </div>
+          </StaggerReveal>
         </ScrollReveal>
       </Section>
 
@@ -303,20 +309,22 @@ export default function LpSaaSPage() {
         variant="muted"
       >
         <ScrollReveal>
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-            <Button href={DEMO_EDITOR_HREF} size="lg">
-              デモを触る
-            </Button>
-            <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
-              サンプルページを見る
-            </Button>
-            <Button href={ctaHref} variant="secondary" size="lg">
-              無料アカウントでビルダーを開く
-            </Button>
+          <div>
+            <StaggerReveal className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center" staggerDelay={0.1}>
+              <Button href={DEMO_EDITOR_HREF} size="lg">
+                デモを触る
+              </Button>
+              <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
+                サンプルページを見る
+              </Button>
+              <Button href={ctaHref} variant="secondary" size="lg">
+                無料アカウントでビルダーを開く
+              </Button>
+            </StaggerReveal>
+            <p className="mt-4 text-sm text-slate-500">
+              サンプルは同一の公開ページです。まず触って「これなら現場で回る」を確認してください。
+            </p>
           </div>
-          <p className="mt-4 text-sm text-slate-500">
-            サンプルは同一の公開ページです。まず触って「これなら現場で回る」を確認してください。
-          </p>
         </ScrollReveal>
       </Section>
 
@@ -377,7 +385,7 @@ export default function LpSaaSPage() {
         variant="muted"
       >
         <ScrollReveal>
-          <StaggerReveal className="grid gap-8 sm:grid-cols-3">
+          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={1}>
             {[
               {
                 step: "1",
@@ -414,7 +422,7 @@ export default function LpSaaSPage() {
         description="実名事例・画面キャプチャは順次公開予定です。まずは業態別の活用イメージとしてご覧ください。"
       >
         <ScrollReveal>
-          <div className="grid gap-6 md:grid-cols-3">
+          <StaggerReveal className="grid gap-6 md:grid-cols-3" staggerDelay={0.1}>
             {[
               {
                 tag: "ビジネスホテル",
@@ -438,7 +446,7 @@ export default function LpSaaSPage() {
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{c.body}</p>
               </Card>
             ))}
-          </div>
+          </StaggerReveal>
         </ScrollReveal>
       </Section>
 
@@ -449,7 +457,7 @@ export default function LpSaaSPage() {
         description="1ページで十分ならFree。複数ページや分析が要るならPro。チーム運用や本数が増えるならBusiness。"
       >
         <ScrollReveal>
-          <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <StaggerReveal className="mb-8 grid gap-4 md:grid-cols-2" staggerDelay={0.12}>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
               <p className="text-sm font-bold text-slate-900">こんな人は Free</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
@@ -462,7 +470,7 @@ export default function LpSaaSPage() {
                 客室タイプ別・フロア別など複数ページに分けたい。閲覧分析で改善ループを回したい。
               </p>
             </div>
-          </div>
+          </StaggerReveal>
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
             <Card padding="lg" className="rounded-2xl p-8">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
@@ -535,7 +543,7 @@ export default function LpSaaSPage() {
       </Section>
 
       <section className="bg-slate-900 py-16 sm:py-20">
-        <ScrollReveal>
+        <ScrollReveal intensity="subtle">
           <Container size="sm" className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
               3分で、フロント業務を減らす

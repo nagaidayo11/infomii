@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { ScrollReveal } from "@/components/motion";
 
 type SectionProps = {
   children: ReactNode;
@@ -42,13 +45,17 @@ export function Section({
   return (
     <section id={id} className={sectionClass}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {kicker != null && kicker !== "" && (
-          <p className={kickerClass}>{kicker}</p>
-        )}
-        <h2 className={titleClass}>{title}</h2>
-        {description != null && description !== "" && (
-          <p className={descriptionClass}>{description}</p>
-        )}
+        <ScrollReveal intensity="subtle">
+          <div>
+            {kicker != null && kicker !== "" && (
+              <p className={kickerClass}>{kicker}</p>
+            )}
+            <h2 className={titleClass}>{title}</h2>
+            {description != null && description !== "" && (
+              <p className={descriptionClass}>{description}</p>
+            )}
+          </div>
+        </ScrollReveal>
         <div className="mt-10 sm:mt-12">{children}</div>
       </div>
     </section>

@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-8 sm:gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-8 xl:gap-12"
+      className="relative mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-8 sm:gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-8 xl:gap-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div
-        className="order-1 w-full max-w-[320px] shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[440px] xl:max-w-[500px]"
+        className="order-1 w-full max-w-[340px] shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:max-w-[520px] xl:max-w-[600px]"
         aria-hidden
         whileHover={{
           scale: 1.02,
@@ -29,46 +29,41 @@ function HeroVisuals() {
         />
       </motion.div>
       <motion.div
-        className="relative order-2 w-[160px] shrink-0 overflow-hidden rounded-[1.25rem] border-[6px] border-slate-800 bg-slate-800 shadow-xl sm:w-[180px] lg:order-2"
+        className="order-2 w-[170px] shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-md sm:w-[190px] lg:order-2 lg:w-[210px]"
         aria-hidden
         whileHover={{
           scale: 1.03,
-          rotate: -2,
+          rotate: -1.5,
           transition: { duration: 0.2 },
         }}
       >
-        <div className="absolute left-1/2 top-2 h-5 w-14 -translate-x-1/2 rounded-full bg-slate-900" />
-        <div className="mt-6 bg-[#fafaf9] p-1.5">
-          <img
-            src="/lp-guest-phone-screenshot.png"
-            alt="ゲストのスマホ表示"
-            className="block h-auto w-full rounded-[0.8rem] border border-slate-200 object-cover"
-            loading="eager"
-          />
-        </div>
+        <img
+          src="/lp-guest-phone-screenshot.png"
+          alt="ゲストのスマホ表示"
+          className="block h-auto w-full rounded-[0.85rem] object-cover"
+          loading="eager"
+        />
       </motion.div>
       <motion.div
-        className="order-3 flex h-28 w-28 shrink-0 items-center justify-center self-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-32 sm:w-32 sm:p-2.5 lg:order-3 lg:h-36 lg:w-36 lg:p-3 xl:h-40 xl:w-40 xl:p-3.5"
+        className="order-3 relative flex h-24 w-24 shrink-0 items-center justify-center self-center rounded-2xl border-2 border-slate-200 bg-white shadow-md sm:h-28 sm:w-28 lg:order-3 lg:h-32 lg:w-32 xl:h-32 xl:w-32"
         aria-hidden
         whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
       >
-        <span className="flex h-full w-full items-center justify-center">
-          <svg
-            viewBox="0 0 24 24"
-            preserveAspectRatio="xMidYMid meet"
-            className="block h-[64%] w-[64%] shrink-0 text-slate-700"
-            fill="currentColor"
-          >
-            <rect x="2" y="2" width="5" height="5" />
-            <rect x="11" y="2" width="5" height="5" />
-            <rect x="2" y="11" width="5" height="5" />
-            <rect x="8" y="8" width="2" height="2" />
-            <rect x="14" y="8" width="2" height="2" />
-            <rect x="8" y="14" width="2" height="2" />
-            <rect x="11" y="11" width="5" height="5" />
-            <rect x="14" y="14" width="2" height="2" />
-          </svg>
-        </span>
+        <svg
+          viewBox="0 0 24 24"
+          className="absolute inset-0 m-auto h-[58%] w-[58%] text-slate-700"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <path d="M14 14h1v4h4v-4" />
+          <path d="M14 17h4" />
+        </svg>
       </motion.div>
     </motion.div>
   );
