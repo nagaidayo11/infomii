@@ -7,13 +7,13 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1600px] grid-cols-1 items-start gap-10 sm:gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,4fr)] lg:items-stretch lg:gap-8 xl:gap-10"
+      className="relative mx-auto grid w-full max-w-[1600px] grid-cols-1 items-start gap-10 sm:gap-12 lg:grid-cols-[minmax(0,9fr)_minmax(0,11fr)] lg:items-stretch lg:gap-8 xl:gap-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* 左（約60%）：ページエディタ — 行の高さの基準 */}
-      <div className="flex min-h-0 min-w-0 flex-col items-center gap-3">
+      {/* 左（約45%）：ページエディタ — 行の高さの基準（列内で最大幅を抑える） */}
+      <div className="flex min-h-0 min-w-0 flex-col items-center gap-3 lg:max-w-[min(100%,800px)] lg:justify-self-center">
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
           whileHover={{
@@ -32,11 +32,11 @@ function HeroVisuals() {
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </div>
 
-      {/* 右（約40%）：左の高さに収まるよう縮小可能（上＝ゲスト / 下＝QR） */}
+      {/* 右（約55%）：ゲストを大きく（上＝ゲスト / 下＝QR） */}
       <div className="flex min-h-0 w-full flex-col items-center justify-between gap-4 lg:h-full lg:max-h-full lg:overflow-hidden">
         <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-2 lg:min-h-0 lg:basis-0">
           <motion.div
-            className="relative mx-auto aspect-[9/17] w-[min(280px,100%)] max-w-full shrink-0 overflow-hidden rounded-[1.85rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(300px,100%)] lg:h-full lg:max-h-[min(100%,calc(100%-5.5rem))] lg:w-auto lg:min-w-0"
+            className="relative mx-auto aspect-[9/16] w-[min(380px,100%)] max-w-full shrink-0 overflow-hidden rounded-[1.85rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(420px,100%)] lg:h-full lg:max-h-[min(100%,calc(100%-5.5rem))] lg:w-auto lg:min-w-[min(100%,28rem)]"
             whileHover={{
               scale: 1.03,
               rotate: -1.5,
@@ -46,7 +46,7 @@ function HeroVisuals() {
             <img
               src="/lp-guest-phone-screenshot.png"
               alt="ゲストのスマホ画面"
-              className="h-full w-full object-cover object-[center_47%]"
+              className="h-full w-full object-cover object-[center_45%]"
               loading="eager"
             />
           </motion.div>
