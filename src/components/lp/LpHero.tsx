@@ -82,7 +82,7 @@ function IconInfo({ className }: { className?: string }) {
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_minmax(0,375px)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -163,6 +163,18 @@ function HeroVisuals() {
                   </div>
                 </div>
               </main>
+
+              {/* Right side tabs (visual balance) */}
+              <aside className="w-24 shrink-0 border-l border-slate-200/70 bg-slate-50 px-3 py-4">
+                <div className="h-2 w-full rounded bg-slate-200" />
+                <div className="mt-3 h-2 w-full rounded bg-slate-200" />
+                <div className="mt-3 h-2 w-[65%] rounded bg-slate-200" />
+                <div className="mt-6 space-y-3">
+                  <div className="h-2 w-[85%] rounded bg-slate-200" />
+                  <div className="h-2 w-full rounded bg-slate-200" />
+                  <div className="h-2 w-[60%] rounded bg-slate-200" />
+                </div>
+              </aside>
             </div>
           </div>
         </motion.div>
@@ -172,7 +184,7 @@ function HeroVisuals() {
       {/* Middle: guest phone */}
       <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
         <motion.div
-          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-full lg:aspect-auto xl:h-[560px]"
+          className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-[375px] lg:max-w-full lg:aspect-auto xl:h-[560px]"
           whileHover={{
             scale: 1.03,
             rotate: -1.5,
