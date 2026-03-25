@@ -7,17 +7,17 @@ import { FadeIn } from "@/components/motion";
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto flex w-full max-w-[1820px] flex-col items-center justify-center gap-10 sm:gap-12 lg:flex-row lg:items-end lg:justify-center lg:gap-8 xl:gap-10"
+      className="relative mx-auto flex w-full flex-col items-center gap-12 sm:gap-14"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* ページエディタ（表示幅を従来比おおよそ2倍） */}
-      <div className="order-1 flex w-full flex-col items-center gap-3 lg:max-w-[min(1200px,100%)]">
+      {/* ページエディタ：コンテナ幅いっぱい（横並び解除で最大化） */}
+      <div className="flex w-full flex-col items-center gap-3">
         <motion.div
-          className="w-full shrink-0 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+          className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
           whileHover={{
-            scale: 1.02,
+            scale: 1.01,
             boxShadow: "0 12px 40px rgba(0,0,0,0.1)",
             transition: { duration: 0.2 },
           }}
@@ -32,8 +32,8 @@ function HeroVisuals() {
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
       </div>
 
-      {/* ゲストのスマホ画面（二重枠なし・画像のみ） */}
-      <div className="order-2 flex w-full max-w-[220px] flex-col items-center gap-3 sm:max-w-[240px] lg:order-2 lg:w-[240px] lg:max-w-none lg:shrink-0">
+      {/* ゲストのスマホ画面 */}
+      <div className="flex w-full max-w-[280px] flex-col items-center gap-3 sm:max-w-[300px]">
         <motion.div
           className="w-full overflow-hidden rounded-2xl shadow-md ring-1 ring-slate-200/80"
           whileHover={{
@@ -53,9 +53,9 @@ function HeroVisuals() {
       </div>
 
       {/* QRコード */}
-      <div className="order-3 flex flex-col items-center gap-3 lg:order-3">
+      <div className="flex flex-col items-center gap-3">
         <motion.div
-          className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-3 shadow-md sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+          className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-3 shadow-md sm:h-28 sm:w-28"
           whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
         >
           <svg
@@ -91,8 +91,9 @@ type LpHeroProps = {
 
 export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor" }: LpHeroProps) {
   return (
-    <section className="border-b border-slate-200/80 bg-white">
-      <Container className="py-16 sm:py-20 lg:py-24">
+    <section className="border-b border-slate-200/80 bg-white overflow-x-hidden">
+      {/* コピー・CTAは従来どおりコンテナ幅 */}
+      <Container className="pt-16 sm:pt-20 lg:pt-24">
         <div className="mx-auto max-w-5xl text-center">
           <FadeIn>
             <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
@@ -132,10 +133,15 @@ export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor
             </p>
           </FadeIn>
         </div>
-        <div className="mt-14 lg:mt-16">
-          <HeroVisuals />
-        </div>
       </Container>
+
+      {/* ビジュアル：ビューポート幅いっぱい（フルブリード） */}
+      <div
+        className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen max-w-[100vw] px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-12 lg:pb-24 lg:pt-14"
+        aria-label="プロダクト画面の例"
+      >
+        <HeroVisuals />
+      </div>
     </section>
   );
 }
