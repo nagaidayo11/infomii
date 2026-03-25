@@ -79,6 +79,24 @@ function IconInfo({ className }: { className?: string }) {
   );
 }
 
+function IconArrowRight({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M5 12h12" />
+      <path d="M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 function GuestPhoneScreen() {
   return (
     <div className="flex h-full flex-col px-3 pt-3">
@@ -128,13 +146,16 @@ function GuestPhoneScreen() {
 function HeroVisuals() {
   return (
     <motion.div
-      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_minmax(0,375px)_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_48px_375px_48px_minmax(0,0.45fr)] lg:gap-8 xl:gap-10"
+      initial={false}
     >
       {/* Left: large editor visual */}
-      <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
+      <motion.div
+        className="flex min-w-0 flex-col items-center gap-3 lg:h-full"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.05 }}
+      >
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:h-[520px] xl:h-[560px]"
           whileHover={{
@@ -225,10 +246,25 @@ function HeroVisuals() {
           </div>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">ページエディタ</p>
-      </div>
+      </motion.div>
+
+      {/* Arrow (editor -> guest) */}
+      <motion.div
+        className="hidden lg:flex items-center justify-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.25 }}
+      >
+        <IconArrowRight className="h-10 w-10 text-slate-300" />
+      </motion.div>
 
       {/* Middle: guest phone */}
-      <div className="flex min-w-0 flex-col items-center gap-3 lg:h-full">
+      <motion.div
+        className="flex min-w-0 flex-col items-center gap-3 lg:h-full"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.35 }}
+      >
         <motion.div
           className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-[375px] lg:max-w-full lg:aspect-auto xl:h-[560px]"
           whileHover={{
@@ -243,10 +279,25 @@ function HeroVisuals() {
           </div>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">ゲストのスマホ画面</p>
-      </div>
+      </motion.div>
+
+      {/* Arrow (guest -> QR) */}
+      <motion.div
+        className="hidden lg:flex items-center justify-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.55 }}
+      >
+        <IconArrowRight className="h-10 w-10 text-slate-300" />
+      </motion.div>
 
       {/* Right: QR (smaller) */}
-      <div className="flex min-w-0 flex-col items-center justify-center gap-3 lg:h-full lg:justify-self-center">
+      <motion.div
+        className="flex min-w-0 flex-col items-center justify-center gap-3 lg:h-full lg:justify-self-center"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.75 }}
+      >
         <motion.div
           className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
           whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
@@ -269,7 +320,7 @@ function HeroVisuals() {
           </svg>
         </motion.div>
         <p className="text-center text-sm font-semibold text-slate-700">QRコード</p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
