@@ -129,13 +129,54 @@ function HeroVisuals() {
                 <div className="h-full overflow-hidden rounded-lg border border-slate-200/70 bg-slate-50">
                   <div className="p-4">
                     <div className="h-3 w-24 rounded bg-slate-200" />
-                    <div className="mt-3 aspect-[16/9] overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
-                      <div className="absolute inset-0 bg-black/25" />
-                      <div className="absolute left-4 bottom-4">
-                        <p className="text-sm font-bold text-white/95">Infomii Hotel</p>
-                        <p className="mt-0.5 text-[11px] text-white/80">館内案内をスマートにまとめました</p>
+                      {/* Preview: guest phone mock (same content as the guest screen) */}
+                      <div className="mt-3 aspect-[16/9] overflow-hidden rounded-xl bg-slate-50">
+                        <div className="mx-auto mt-3 h-[92%] w-[70%] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
+                          <div className="flex h-full flex-col px-3 pt-3">
+                            <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
+
+                            <div className="mt-2 overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative">
+                              <div className="absolute inset-0 bg-black/25" />
+                              <div className="absolute left-3 bottom-3">
+                                <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
+                                <p className="mt-0.5 text-[8.5px] text-white/80">館内案内をスマートにまとめました</p>
+                              </div>
+                            </div>
+
+                            <div className="mt-2 text-center">
+                              <p className="text-[8.5px] font-semibold uppercase tracking-wider text-slate-400">メニュー</p>
+                            </div>
+
+                            <div className="mt-1 grid grid-cols-2 gap-1.5">
+                              {[
+                                { label: "WiFi", icon: <IconWifi className="h-4 w-4 text-slate-700" /> },
+                                { label: "朝食", icon: <IconForkKnife className="h-4 w-4 text-slate-700" /> },
+                                { label: "チェックアウト", icon: <IconClock className="h-4 w-4 text-slate-700" /> },
+                                { label: "お知らせ", icon: <IconInfo className="h-4 w-4 text-slate-700" /> },
+                              ].map((item) => (
+                                <div
+                                  key={item.label}
+                                  className="rounded-lg bg-slate-50 p-1.5 ring-1 ring-slate-200/80 text-center"
+                                >
+                                  <div className="flex items-center justify-center">{item.icon}</div>
+                                  <p className="mt-1 text-[8.5px] font-semibold text-slate-800">{item.label}</p>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-1 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
+                              <p className="text-[9px] font-semibold text-slate-800">朝食バイキング</p>
+                              <p className="mt-0.5 text-[8.5px] text-slate-600">時間：6:00-9:00</p>
+                              <p className="mt-0.5 text-[8.5px] text-slate-600">場所：1F</p>
+                              <p className="mt-1 text-[8.5px] font-semibold text-slate-700">朝食ビュッフェ</p>
+                            </div>
+
+                            <div className="mt-auto pb-1">
+                              <p className="text-center text-[8px] font-semibold text-slate-400">地図</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       {[
