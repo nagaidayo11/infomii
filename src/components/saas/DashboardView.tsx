@@ -48,21 +48,25 @@ export function DashboardView() {
 
   const loadBootstrap = useCallback(async () => {
     setLoading(true);
-    const [b, v, p, r, pagesResult] = await Promise.all([
-      getDashboardBootstrapData(),
-      getCurrentHotelViewMetrics().catch(() => null),
-      getPageViewAnalytics().catch(() => null),
-      getCurrentUserHotelRole().catch(() => null),
-      listPagesForHotel()
-        .then((pages) => ({ ok: true as const, pages }))
-        .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
-    ]);
-    setBootstrap(b);
-    setViewMetrics(v);
-    setPageViewAnalytics(p);
-    setRole(r);
-    if (pagesResult.ok) {
-      setCardPages(pagesResult.pages);
+    try {
+      const [b, v, p, r, pagesResult] = await Promise.all([
+        getDashboardBootstrapData(),
+        getCurrentHotelViewMetrics().catch(() => null),
+        getPageViewAnalytics().catch(() => null),
+        getCurrentUserHotelRole().catch(() => null),
+        listPagesForHotel()
+          .then((pages) => ({ ok: true as const, pages }))
+          .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
+      ]);
+      setBootstrap(b);
+      setViewMetrics(v);
+      setPageViewAnalytics(p);
+      setRole(r);
+      if (pagesResult.ok) {
+        setCardPages(pagesResult.pages);
+      }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -108,13 +112,7 @@ export function DashboardView() {
   }
 
   useEffect(() => {
-    let mounted = true;
-    loadBootstrap().finally(() => {
-      if (mounted) setLoading(false);
-    });
-    return () => {
-      mounted = false;
-    };
+    void loadBootstrap();
   }, [loadBootstrap]);
 
   async function handleCreatePage() {
