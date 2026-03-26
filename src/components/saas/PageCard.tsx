@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 export type PageCardProps = {
   id: string;
@@ -12,6 +13,7 @@ export type PageCardProps = {
   views7d?: number;
   qrViews7d?: number;
   onDelete?: (id: string) => void;
+  onRename?: (id: string, nextTitle: string) => Promise<void> | void;
   /** false のとき編集・削除を非表示（閲覧権限） */
   canEdit?: boolean;
 };
@@ -45,19 +47,64 @@ export function PageCard({
   views7d = 0,
   qrViews7d = 0,
   onDelete,
+  onRename,
   canEdit = true,
 }: PageCardProps) {
   const publicUrl =
     typeof window !== "undefined" ? `${window.location.origin}/p/${slug}` : `/p/${slug}`;
   const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(title ?? "");
+
+  async function commitTitle() {
+    const next = titleValue.trim();
+    const prev = (title ?? "").trim();
+    setEditingTitle(false);
+    if (!onRename || next === prev) return;
+    await onRename(id, next);
+  }
 
   return (
     <article className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
-            {title || ""}
-          </h3>
+          <div className="flex items-center gap-2">
+            {editingTitle ? (
+              <input
+                value={titleValue}
+                onChange={(e) => setTitleValue(e.target.value)}
+                onBlur={() => void commitTitle()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void commitTitle();
+                  }
+                  if (e.key === "Escape") {
+                    setTitleValue(title ?? "");
+                    setEditingTitle(false);
+                  }
+                }}
+                autoFocus
+                className="w-full max-w-md rounded-md border border-slate-300 px-2.5 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400"
+              />
+            ) : (
+              <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
+                {title || ""}
+              </h3>
+            )}
+            {canEdit && onRename && !editingTitle && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTitleValue(title ?? "");
+                  setEditingTitle(true);
+                }}
+                className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                名前変更
+              </button>
+            )}
+          </div>
           <dl className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
             <div className="flex items-center gap-1.5">
               <span

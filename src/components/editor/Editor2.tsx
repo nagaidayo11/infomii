@@ -14,7 +14,7 @@ import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import type { CardType } from "./types";
 import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
-import { getPage, buildPublicUrlV, savePageCards } from "@/lib/storage";
+import { getPage, buildPublicUrlV, savePageCards, updatePageTitle } from "@/lib/storage";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -423,6 +423,18 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     clearCards();
   }, [cards.length, clearCards]);
 
+  const handleRenamePageTitle = useCallback(
+    async (nextTitle: string) => {
+      if (isDemoMode || !pageId) return;
+      await updatePageTitle(pageId, nextTitle);
+      setPageMeta({
+        ...pageMeta,
+        title: nextTitle,
+      });
+    },
+    [isDemoMode, pageId, pageMeta, setPageMeta]
+  );
+
   const handleRunPrepublishCheck = useCallback(() => {
     if (isDemoMode) {
       setDemoLockMessage("デモモードでは公開前チェックは利用できません。無料登録で解放されます。");
@@ -472,6 +484,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
+        onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
       />
     ) : null;
 

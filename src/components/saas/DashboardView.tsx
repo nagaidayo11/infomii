@@ -9,9 +9,11 @@ import {
   getCurrentHotelViewMetrics,
   getPageViewAnalytics,
   createBlankPage,
-  deleteInformation,
+  deletePage,
   listPagesForHotel,
+  updatePageTitle,
   PAGE_LIMIT_REACHED,
+  type PageRow,
   type HotelViewMetrics,
   type PageViewAnalytics,
 } from "@/lib/storage";
@@ -33,11 +35,12 @@ export function DashboardView() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [creatingCardPage, setCreatingCardPage] = useState(false);
+  const [newPageTitle, setNewPageTitle] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
-  const [cardPages, setCardPages] = useState<Array<{ id: string; slug: string }>>([]);
+  const [cardPages, setCardPages] = useState<PageRow[]>([]);
 
   const canEdit = role === "owner" || role === "editor";
 
@@ -54,18 +57,30 @@ export function DashboardView() {
     setViewMetrics(v);
     setPageViewAnalytics(p);
     setRole(r);
-    setCardPages(pages.map((page) => ({ id: page.id, slug: page.slug })));
+    setCardPages(pages);
   }, []);
 
   async function handleDeletePage(id: string) {
     setDeletingId(id);
     try {
-      await deleteInformation(id);
+      await deletePage(id);
+      setCardPages((prev) => prev.filter((p) => p.id !== id));
       await loadBootstrap();
     } catch (e) {
       alert(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleRenamePage(id: string, nextTitle: string) {
+    try {
+      await updatePageTitle(id, nextTitle);
+      setCardPages((prev) =>
+        prev.map((page) => (page.id === id ? { ...page, title: nextTitle } : page))
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "ページ名の更新に失敗しました");
     }
   }
 
@@ -80,10 +95,15 @@ export function DashboardView() {
   }, [loadBootstrap]);
 
   async function handleCreatePage() {
+    const normalizedTitle = newPageTitle.trim();
+    if (!normalizedTitle) {
+      setCreateError("ページ名を入力してください。");
+      return;
+    }
     setCreateError(null);
     setCreating(true);
     try {
-      const pageId = await createBlankPage();
+      const pageId = await createBlankPage(normalizedTitle);
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
@@ -102,10 +122,15 @@ export function DashboardView() {
   }
 
   async function handleCreateCardPage() {
+    const normalizedTitle = newPageTitle.trim();
+    if (!normalizedTitle) {
+      setCreateError("ページ名を入力してください。");
+      return;
+    }
     setCreateError(null);
     setCreatingCardPage(true);
     try {
-      const pageId = await createBlankPage();
+      const pageId = await createBlankPage(normalizedTitle);
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
       }
@@ -123,13 +148,13 @@ export function DashboardView() {
     }
   }
 
-  const items = bootstrap?.informations ?? [];
+  const items = cardPages;
   const recent = items.slice(0, 5);
-  const published = items.filter((i) => i.status === "published");
+  const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
+  const published = items.filter((i) => infoBySlug.get(i.slug)?.status === "published");
   const totalViews = viewMetrics?.totalViews7d ?? pageViewAnalytics?.totalViews ?? 0;
   const todayViews = viewMetrics?.totalViewsToday ?? 0;
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
-  const cardPageIdBySlug = new Map(cardPages.map((p) => [p.slug, p.id]));
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -166,6 +191,27 @@ export function DashboardView() {
           </p>
         )}
         <div className="flex flex-wrap items-center gap-4">
+          {canEdit && (
+            <div className="w-full sm:w-auto">
+              <label htmlFor="new-page-title" className="mb-1 block text-xs font-medium text-slate-600">
+                新規ページ名（必須）
+              </label>
+              <input
+                id="new-page-title"
+                type="text"
+                value={newPageTitle}
+                onChange={(e) => setNewPageTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !creating) {
+                    e.preventDefault();
+                    void handleCreatePage();
+                  }
+                }}
+                placeholder="例: 館内案内"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 sm:min-w-[220px]"
+              />
+            </div>
+          )}
           {canEdit && (
             <>
               <button
@@ -293,14 +339,15 @@ export function DashboardView() {
                 <PageCard
                   key={item.id}
                   id={item.id}
-                  editHref={cardPageIdBySlug.get(item.slug) ? `/editor/${cardPageIdBySlug.get(item.slug)}` : null}
+                  editHref={`/editor/${item.id}`}
                   title={item.title}
                   slug={item.slug}
-                  status={item.status}
-                  updatedAt={item.updatedAt}
+                  status={infoBySlug.get(item.slug)?.status === "published" ? "published" : "draft"}
+                  updatedAt={infoBySlug.get(item.slug)?.updatedAt ?? new Date().toISOString()}
                   views7d={stat?.views}
                   qrViews7d={stat?.qrViews}
                   onDelete={deletingId ? undefined : handleDeletePage}
+                  onRename={canEdit ? handleRenamePage : undefined}
                   canEdit={canEdit}
                 />
               );
@@ -322,14 +369,15 @@ export function DashboardView() {
                 <PageCard
                   key={item.id}
                   id={item.id}
-                  editHref={cardPageIdBySlug.get(item.slug) ? `/editor/${cardPageIdBySlug.get(item.slug)}` : null}
+                  editHref={`/editor/${item.id}`}
                   title={item.title}
                   slug={item.slug}
                   status="published"
-                  updatedAt={item.updatedAt}
+                  updatedAt={infoBySlug.get(item.slug)?.updatedAt ?? new Date().toISOString()}
                   views7d={stat?.views}
                   qrViews7d={stat?.qrViews}
                   onDelete={deletingId ? undefined : handleDeletePage}
+                  onRename={canEdit ? handleRenamePage : undefined}
                   canEdit={canEdit}
                 />
               );

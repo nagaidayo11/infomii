@@ -3850,6 +3850,23 @@ export async function deletePage(pageId: string): Promise<void> {
   if (pageError) throw toError(pageError, "ページの削除に失敗しました");
 }
 
+/** Update title of a card-based page in current hotel scope. */
+export async function updatePageTitle(pageId: string, title: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const normalizedTitle = title.trim();
+  const { error } = await supabase
+    .from("pages")
+    .update({ title: normalizedTitle })
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId);
+
+  if (error) throw toError(error, "ページ名の更新に失敗しました");
+}
+
 /** Delete all pages (and cards) in current hotel scope. */
 export async function deleteAllPagesForHotel(): Promise<{ deletedPages: number }> {
   const supabase = getBrowserSupabaseClient();

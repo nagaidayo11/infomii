@@ -34,6 +34,7 @@ export function PageManagementPanel() {
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [newPageTitle, setNewPageTitle] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,10 +65,15 @@ export function PageManagementPanel() {
   }, [load]);
 
   async function onNewPage() {
+    const normalizedTitle = newPageTitle.trim();
+    if (!normalizedTitle) {
+      setError("ページ名を入力してください。");
+      return;
+    }
     setCreating(true);
     setError(null);
     try {
-      const pageId = await createBlankPage();
+      const pageId = await createBlankPage(normalizedTitle);
       await load();
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
@@ -141,6 +147,25 @@ export function PageManagementPanel() {
               <span className="text-lg leading-none">+</span>
               ページを追加
             </button>
+          </div>
+          <div className="mb-4 max-w-sm">
+            <label htmlFor="management-new-page-title" className="mb-1 block text-xs font-medium text-slate-600">
+              新規ページ名（必須）
+            </label>
+            <input
+              id="management-new-page-title"
+              type="text"
+              value={newPageTitle}
+              onChange={(e) => setNewPageTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !creating) {
+                  e.preventDefault();
+                  void onNewPage();
+                }
+              }}
+              placeholder="例: 朝食案内"
+              className="w-full rounded-xl border border-ds-border bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400"
+            />
           </div>
 
           {error && (

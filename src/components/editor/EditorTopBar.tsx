@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 export type EditorTopBarProps = {
   backHref?: string;
@@ -24,6 +25,7 @@ export type EditorTopBarProps = {
   onPreview: () => void;
   onPublish: () => void;
   onQr: () => void;
+  onRenamePageTitle?: (nextTitle: string) => Promise<void> | void;
 };
 
 function formatSavedAt(ms: number): string {
@@ -109,7 +111,19 @@ export function EditorTopBar({
   onPreview,
   onPublish,
   onQr,
+  onRenamePageTitle,
 }: EditorTopBarProps) {
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(pageTitle ?? "");
+
+  async function commitTitle() {
+    const next = titleValue.trim();
+    const prev = (pageTitle ?? "").trim();
+    setEditingTitle(false);
+    if (!onRenamePageTitle || next === prev) return;
+    await onRenamePageTitle(next);
+  }
+
   return (
     <header
       className="flex h-12 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4"
@@ -144,12 +158,44 @@ export function EditorTopBar({
       {/* Page title */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h1
-            className="truncate text-sm font-semibold text-slate-900"
-            title={pageTitle}
-          >
-            {pageTitle || ""}
-          </h1>
+          {editingTitle ? (
+            <input
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={() => void commitTitle()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void commitTitle();
+                }
+                if (e.key === "Escape") {
+                  setTitleValue(pageTitle ?? "");
+                  setEditingTitle(false);
+                }
+              }}
+              autoFocus
+              className="w-full max-w-[280px] rounded-md border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400"
+            />
+          ) : (
+            <h1
+              className="truncate text-sm font-semibold text-slate-900"
+              title={pageTitle}
+            >
+              {pageTitle || ""}
+            </h1>
+          )}
+          {!demoMode && onRenamePageTitle && !editingTitle && (
+            <button
+              type="button"
+              onClick={() => {
+                setTitleValue(pageTitle ?? "");
+                setEditingTitle(true);
+              }}
+              className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+            >
+              名前変更
+            </button>
+          )}
           {demoMode && (
             <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
               デモ
