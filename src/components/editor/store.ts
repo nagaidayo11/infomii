@@ -224,6 +224,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "steps",
       "compare",
       "kpi",
+      "space",
     ];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
@@ -270,6 +271,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "steps",
       "compare",
       "kpi",
+      "space",
     ];
     if (!allowed.includes(type)) return;
     const { cards, historyPast } = get();
