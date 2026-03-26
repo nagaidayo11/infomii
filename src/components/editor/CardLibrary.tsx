@@ -267,25 +267,25 @@ export const LIBRARY_SECTIONS: LibrarySection[] = [
 const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
   {
     id: "checkin-basic",
-    label: "ホテル基本セット（完成済み）",
+    label: "ホテル基本セット",
     description: "ヒーロー / ウェルカム / WiFi案内 / チェックアウト / FAQ",
     types: ["hero", "welcome", "wifi", "checkout", "faq"],
   },
   {
     id: "frontdesk-reduction",
-    label: "フロント時短セット（完成済み）",
+    label: "フロント時短セット",
     description: "ヒーロー / お知らせ / ページリンク / FAQ / 緊急連絡先",
     types: ["hero", "notice", "pageLinks", "faq", "emergency"],
   },
   {
     id: "facility-guide-complete",
-    label: "館内施設セット（完成済み）",
+    label: "館内施設セット",
     description: "ヒーロー / 施設案内 / 営業時間一覧 / メニュー一覧 / 地図",
     types: ["hero", "breakfast", "schedule", "menu", "map"],
   },
   {
     id: "promo-conversion",
-    label: "訴求強化セット（CV重視）",
+    label: "訴求強化セット",
     description: "ヒーロー / 強調 / 比較 / 数字強調 / 引用 / ボタン",
     types: ["hero", "highlight", "compare", "kpi", "quote", "button"],
   },
