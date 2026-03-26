@@ -8,7 +8,6 @@ import {
   buildPublicQrUrl,
   buildPublicUrlV,
   createBlankPage,
-  deleteInformation,
   deletePage,
   getDashboardBootstrapData,
   listPagesForHotel,
@@ -34,7 +33,6 @@ export function PageManagementPanel() {
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [newPageTitle, setNewPageTitle] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +63,9 @@ export function PageManagementPanel() {
   }, [load]);
 
   async function onNewPage() {
-    const normalizedTitle = newPageTitle.trim();
+    const entered = window.prompt("新規ページ名を入力してください");
+    if (entered == null) return;
+    const normalizedTitle = entered.trim();
     if (!normalizedTitle) {
       setError("ページ名を入力してください。");
       return;
@@ -98,8 +98,13 @@ export function PageManagementPanel() {
     setDeletingId(item.id);
     setError(null);
     try {
-      await deleteInformation(item.id);
+      const pageId = cardPageIdBySlug.get(item.slug);
+      if (!pageId) {
+        throw new Error("対応するページIDが見つかりません。ページ一覧から削除してください。");
+      }
+      await deletePage(pageId);
       setItems((prev) => prev.filter((i) => i.id !== item.id));
+      setCardPages((prev) => prev.filter((p) => p.id !== pageId));
     } catch (e) {
       setError(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
@@ -147,25 +152,6 @@ export function PageManagementPanel() {
               <span className="text-lg leading-none">+</span>
               ページを追加
             </button>
-          </div>
-          <div className="mb-4 max-w-sm">
-            <label htmlFor="management-new-page-title" className="mb-1 block text-xs font-medium text-slate-600">
-              新規ページ名（必須）
-            </label>
-            <input
-              id="management-new-page-title"
-              type="text"
-              value={newPageTitle}
-              onChange={(e) => setNewPageTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !creating) {
-                  e.preventDefault();
-                  void onNewPage();
-                }
-              }}
-              placeholder="例: 朝食案内"
-              className="w-full rounded-xl border border-ds-border bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400"
-            />
           </div>
 
           {error && (

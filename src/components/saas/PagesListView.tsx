@@ -29,7 +29,6 @@ export function PagesListView() {
   const [viewMode, setViewMode] = useState<"table" | "nodes">("nodes");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [newPageTitle, setNewPageTitle] = useState("");
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [subscription, setSubscription] = useState<{
     plan: "free" | "pro" | "business";
@@ -63,7 +62,9 @@ export function PagesListView() {
   }, [load]);
 
   async function handleCreatePage() {
-    const normalizedTitle = newPageTitle.trim();
+    const entered = window.prompt("新規ページ名を入力してください");
+    if (entered == null) return;
+    const normalizedTitle = entered.trim();
     if (!normalizedTitle) {
       alert("ページ名を入力してください。");
       return;
@@ -272,25 +273,6 @@ export function PagesListView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="w-full sm:w-auto">
-            <label htmlFor="pages-new-title" className="mb-1 block text-xs font-medium text-slate-600">
-              新規ページ名（必須）
-            </label>
-            <input
-              id="pages-new-title"
-              type="text"
-              value={newPageTitle}
-              onChange={(e) => setNewPageTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !creating) {
-                  e.preventDefault();
-                  void handleCreatePage();
-                }
-              }}
-              placeholder="例: チェックアウト"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 sm:min-w-[220px]"
-            />
-          </div>
           <button
             type="button"
             onClick={handleDeleteAllPages}
