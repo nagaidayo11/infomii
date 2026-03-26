@@ -1027,6 +1027,9 @@ export function CardSettings({
 
   const content = card.content as Record<string, unknown>;
   const style = (card.style ?? {}) as Record<string, unknown>;
+  const position = (style._position ?? {}) as Record<string, unknown>;
+  const rawSpaceHeight = Number(position.h ?? content.height ?? 24);
+  const spaceHeight = Number.isFinite(rawSpaceHeight) ? Math.max(0, Math.min(480, rawSpaceHeight)) : 24;
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
   };
@@ -1857,21 +1860,17 @@ export function CardSettings({
           {card.type === "space" && (
             <SettingsSection title="コンテンツ">
               <div className="w-full">
-                <label className={labelClass}>余白 (px)</label>
+                <label className={labelClass}>現在の余白 (px)</label>
                 <input
                   type="number"
-                  min={0}
-                  max={480}
-                  value={typeof content.height === "number" ? content.height : Number(content.height ?? 24)}
-                  onChange={(e) => {
-                    const raw = Number(e.target.value);
-                    const next = Number.isFinite(raw) ? Math.max(0, Math.min(480, raw)) : 24;
-                    update("height", next);
-                  }}
+                  value={spaceHeight}
+                  readOnly
                   className={inputClass}
                 />
               </div>
-              <p className="text-xs text-slate-500">このブロックは余白だけを追加します。</p>
+              <p className="text-xs text-slate-500">
+                青枠を上下にドラッグすると余白が変わり、ここに現在のpxが表示されます。
+              </p>
             </SettingsSection>
           )}
 

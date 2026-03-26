@@ -449,6 +449,14 @@ export function FreeformCanvas({
       const w = ref.offsetWidth;
       const h = ref.offsetHeight;
       onUpdateCard(id, {
+        ...(card.type === "space"
+          ? {
+              content: {
+                ...(card.content as Record<string, unknown>),
+                height: h,
+              },
+            }
+          : {}),
         style: {
           ...card.style,
           [POSITION_KEY]: {

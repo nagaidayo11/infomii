@@ -8,12 +8,14 @@ type SpaceCardProps = {
 };
 
 export function SpaceCard({ card, isSelected = false }: SpaceCardProps) {
-  const rawHeight = Number((card.content as Record<string, unknown>)?.height ?? 24);
+  const style = (card.style ?? {}) as Record<string, unknown>;
+  const position = (style._position ?? {}) as Record<string, unknown>;
+  const rawHeight = Number(position.h ?? (card.content as Record<string, unknown>)?.height ?? 24);
   const height = Number.isFinite(rawHeight) ? Math.max(0, Math.min(480, rawHeight)) : 24;
 
   return (
     <div
-      className="w-full rounded-lg border border-dashed border-slate-200/90 bg-transparent"
+      className="w-full rounded-lg bg-transparent"
       style={{ height }}
       aria-label={`スペース ${height}px`}
     >
