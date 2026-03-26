@@ -416,6 +416,35 @@ export default function LpSaaSPage() {
             <p className="mt-4 text-sm text-slate-500">
               サンプルは同一の公開ページです。まず触って「これなら現場で回る」を確認してください。
             </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                <p className="text-sm font-semibold text-slate-900">デモでできること</p>
+                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                  <li className="flex gap-2">
+                    <span className="text-emerald-600">✓</span>
+                    ブロック追加・並べ替え・文言調整（雰囲気を体験）
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-emerald-600">✓</span>
+                    ゲスト画面の見え方を確認（公開ページのイメージ）
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                <p className="text-sm font-semibold text-slate-900">デモの制限（次の一歩）</p>
+                <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                  <li className="flex gap-2">
+                    <span className="text-slate-400">-</span>
+                    公開・QR発行・詳細設定は無料登録で解放されます
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-slate-400">-</span>
+                    「まずは1ページ」なら Free で十分です
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </ScrollReveal>
       </Section>
@@ -563,6 +592,39 @@ export default function LpSaaSPage() {
               </p>
             </div>
           </StaggerReveal>
+
+          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <p className="text-sm font-semibold text-slate-900">迷ったら、この選び方</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {[
+                {
+                  title: "まず1ページで回したい",
+                  desc: "WiFi・朝食・チェックアウトなど基本の案内を集約。",
+                  plan: "Free",
+                },
+                {
+                  title: "客室/フロア別に分けたい",
+                  desc: "複数ページ＋改善ループを回したい。",
+                  plan: "Pro",
+                },
+                {
+                  title: "ページ数が増える/チーム運用",
+                  desc: "館内設備・多施設・運用者が複数。",
+                  plan: "Business",
+                },
+              ].map((row) => (
+                <div key={row.plan} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{row.plan}</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900">{row.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{row.desc}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-slate-500">
+              ※ まず Free で作って、必要になったタイミングでアップグレードするのが一番スムーズです。
+            </p>
+          </div>
+
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
             <Card padding="lg" className="rounded-2xl p-8">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
@@ -631,6 +693,67 @@ export default function LpSaaSPage() {
               </div>
             </Card>
           </StaggerReveal>
+        </ScrollReveal>
+      </Section>
+
+      <Section
+        id="faq"
+        kicker="FAQ"
+        title="導入前によくある質問"
+        description="現場で止まりやすい不安を先回りで解消します。"
+        variant="muted"
+      >
+        <ScrollReveal>
+          <div className="mx-auto max-w-3xl">
+            <div className="space-y-3">
+              {[
+                {
+                  q: "デモで作った内容は、そのまま本番に引き継げますか？",
+                  a: "デモは体験用のため、公開・QR発行などは制限されています。実運用は無料登録後にダッシュボードで作成してください（同じ感覚で編集できます）。",
+                },
+                {
+                  q: "現場では誰が更新しますか？ITに詳しくなくても大丈夫？",
+                  a: "フロント担当者でも更新できるよう、ブロック追加と文章の差し替え中心の設計です。紙の差し替えより軽く、必要なところだけ更新できます。",
+                },
+                {
+                  q: "外国語対応はできますか？",
+                  a: "ページ内に多言語テキストを併記して補助できます。まずは英語だけでも「伝わる確率」を上げる運用から始めるのがおすすめです。",
+                },
+                {
+                  q: "QRはどこに置くのが良い？",
+                  a: "フロント、客室内、卓上（レストラン）、エレベーター前など「聞かれやすい場所」に置くのが効果的です。URLは1つなので、更新してもQRは差し替え不要です。",
+                },
+                {
+                  q: "どのプランを選べばいいですか？",
+                  a: "まずは Free で1ページを作って運用に乗せるのが最短です。客室タイプ別などでページを増やしたくなったら Pro、チーム運用や本数が増えるなら Business が目安です。",
+                },
+              ].map((row) => (
+                <details
+                  key={row.q}
+                  className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100"
+                >
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
+                    <span className="inline-flex w-full items-center justify-between gap-4">
+                      <span>{row.q}</span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{row.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
         </ScrollReveal>
       </Section>
 
