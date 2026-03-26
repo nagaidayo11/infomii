@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
@@ -32,6 +32,8 @@ export function PageManagementPanel() {
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
+  const createBusyRef = useRef(false);
+  const deleteBusyRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,6 +62,7 @@ export function PageManagementPanel() {
   }, [load]);
 
   async function onNewPage() {
+    if (createBusyRef.current) return;
     const entered = window.prompt("新規ページ名を入力してください");
     if (entered == null) return;
     const normalizedTitle = entered.trim();
@@ -67,6 +70,7 @@ export function PageManagementPanel() {
       setError("ページ名を入力してください。");
       return;
     }
+    createBusyRef.current = true;
     setCreating(true);
     setError(null);
     try {
@@ -84,14 +88,17 @@ export function PageManagementPanel() {
       }
     } finally {
       setCreating(false);
+      createBusyRef.current = false;
     }
   }
 
   async function onDeleteCardPage(page: PageRow) {
+    if (deleteBusyRef.current) return;
     const ok = window.confirm(
       `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n取り消しはできません。`
     );
     if (!ok) return;
+    deleteBusyRef.current = true;
     setDeletingCardPageId(page.id);
     setError(null);
     try {
@@ -106,6 +113,7 @@ export function PageManagementPanel() {
       setError(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
       setDeletingCardPageId(null);
+      deleteBusyRef.current = false;
     }
   }
 

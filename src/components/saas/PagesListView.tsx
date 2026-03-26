@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   buildPublicUrlV,
@@ -35,6 +35,8 @@ export function PagesListView() {
   } | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
+  const createBusyRef = useRef(false);
+  const deleteBusyRef = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,6 +62,7 @@ export function PagesListView() {
   }, [load]);
 
   async function handleCreatePage() {
+    if (createBusyRef.current) return;
     const entered = window.prompt("新規ページ名を入力してください");
     if (entered == null) return;
     const normalizedTitle = entered.trim();
@@ -67,6 +70,7 @@ export function PagesListView() {
       alert("ページ名を入力してください。");
       return;
     }
+    createBusyRef.current = true;
     setCreating(true);
     try {
       const pageId = await createBlankPage(normalizedTitle);
@@ -78,10 +82,12 @@ export function PagesListView() {
       if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
     } finally {
       setCreating(false);
+      createBusyRef.current = false;
     }
   }
 
   async function handleDeleteCardPage(page: PageRow) {
+    if (deleteBusyRef.current) return;
     if (
       !window.confirm(
         `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\nページ連携に含まれている場合は構成が変わります。`
@@ -89,6 +95,7 @@ export function PagesListView() {
     ) {
       return;
     }
+    deleteBusyRef.current = true;
     setDeletingPageId(page.id);
     try {
       await deletePage(page.id);
@@ -97,6 +104,7 @@ export function PagesListView() {
       alert(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
       setDeletingPageId(null);
+      deleteBusyRef.current = false;
     }
   }
 

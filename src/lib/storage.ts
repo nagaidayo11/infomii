@@ -3566,8 +3566,28 @@ export async function listTemplates(): Promise<TemplateRow[]> {
 /** Error code when page limit is reached (for UI to show upgrade modal). */
 export const PAGE_LIMIT_REACHED = "PAGE_LIMIT_REACHED";
 
+let createPageInFlight: Promise<string> | null = null;
+let createPageSnapshot: { title: string; id: string; at: number } | null = null;
+const CREATE_PAGE_DEDUPE_MS = 2500;
+
+const deletePageInFlight = new Map<string, Promise<void>>();
+
 /** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
 export async function createBlankPage(title = ""): Promise<string> {
+  const normalizedTitle = (title ?? "").trim();
+  const now = Date.now();
+  if (
+    createPageSnapshot &&
+    createPageSnapshot.title === normalizedTitle &&
+    now - createPageSnapshot.at < CREATE_PAGE_DEDUPE_MS
+  ) {
+    return createPageSnapshot.id;
+  }
+  if (createPageInFlight) {
+    return createPageInFlight;
+  }
+
+  const run = async (): Promise<string> => {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
@@ -3588,7 +3608,7 @@ export async function createBlankPage(title = ""): Promise<string> {
     }
   }
 
-  const nextTitle = (title && title.trim()) || "";
+  const nextTitle = normalizedTitle;
   const baseSlug = createSlug(nextTitle);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
@@ -3598,7 +3618,17 @@ export async function createBlankPage(title = ""): Promise<string> {
     .select("id")
     .single();
   if (error || !newPage) throw toError(error ?? new Error("Insert failed"), "ページの作成に失敗しました");
-  return newPage.id as string;
+  const pageId = newPage.id as string;
+  createPageSnapshot = { title: normalizedTitle, id: pageId, at: Date.now() };
+  return pageId;
+  };
+
+  createPageInFlight = run();
+  try {
+    return await createPageInFlight;
+  } finally {
+    createPageInFlight = null;
+  }
 }
 
 export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
@@ -3831,6 +3861,12 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
 
 /** Delete a card-based page and its cards. Fails if page is not in current hotel scope. */
 export async function deletePage(pageId: string): Promise<void> {
+  const inflight = deletePageInFlight.get(pageId);
+  if (inflight) {
+    return inflight;
+  }
+
+  const run = async (): Promise<void> => {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
@@ -3859,6 +3895,13 @@ export async function deletePage(pageId: string): Promise<void> {
   if (!deletedPages || deletedPages.length !== 1) {
     throw new Error("削除対象ページの特定に失敗しました。再読み込みして再試行してください。");
   }
+  };
+
+  const promise = run().finally(() => {
+    deletePageInFlight.delete(pageId);
+  });
+  deletePageInFlight.set(pageId, promise);
+  return promise;
 }
 
 /** Update title of a card-based page in current hotel scope. */

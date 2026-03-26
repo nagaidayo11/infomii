@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -40,6 +40,8 @@ export function DashboardView() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
+  const createBusyRef = useRef(false);
+  const deleteBusyRef = useRef(false);
 
   const canEdit = role === "owner" || role === "editor";
 
@@ -60,6 +62,8 @@ export function DashboardView() {
   }, []);
 
   async function handleDeletePage(id: string) {
+    if (deleteBusyRef.current) return;
+    deleteBusyRef.current = true;
     setDeletingId(id);
     try {
       await deletePage(id);
@@ -69,6 +73,7 @@ export function DashboardView() {
       alert(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
       setDeletingId(null);
+      deleteBusyRef.current = false;
     }
   }
 
@@ -94,6 +99,7 @@ export function DashboardView() {
   }, [loadBootstrap]);
 
   async function handleCreatePage() {
+    if (createBusyRef.current) return;
     const entered = window.prompt("新規ページ名を入力してください");
     if (entered == null) return;
     const normalizedTitle = entered.trim();
@@ -102,6 +108,7 @@ export function DashboardView() {
       return;
     }
     setCreateError(null);
+    createBusyRef.current = true;
     setCreating(true);
     try {
       const pageId = await createBlankPage(normalizedTitle);
@@ -119,10 +126,12 @@ export function DashboardView() {
       }
     } finally {
       setCreating(false);
+      createBusyRef.current = false;
     }
   }
 
   async function handleCreateCardPage() {
+    if (createBusyRef.current) return;
     const entered = window.prompt("新規ページ名を入力してください");
     if (entered == null) return;
     const normalizedTitle = entered.trim();
@@ -131,6 +140,7 @@ export function DashboardView() {
       return;
     }
     setCreateError(null);
+    createBusyRef.current = true;
     setCreatingCardPage(true);
     try {
       const pageId = await createBlankPage(normalizedTitle);
@@ -148,6 +158,7 @@ export function DashboardView() {
       }
     } finally {
       setCreatingCardPage(false);
+      createBusyRef.current = false;
     }
   }
 
