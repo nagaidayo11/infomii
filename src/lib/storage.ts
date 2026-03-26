@@ -3835,6 +3835,9 @@ export async function deletePage(pageId: string): Promise<void> {
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) throw new Error("施設が選択されていません");
+  if (!pageId || typeof pageId !== "string" || !isSupabaseId(pageId)) {
+    throw new Error("不正なページIDです");
+  }
 
   const { data: page, error: fetchError } = await supabase
     .from("pages")
@@ -3846,8 +3849,16 @@ export async function deletePage(pageId: string): Promise<void> {
 
   const { error: cardsError } = await supabase.from("cards").delete().eq("page_id", pageId);
   if (cardsError) throw toError(cardsError, "カードの削除に失敗しました");
-  const { error: pageError } = await supabase.from("pages").delete().eq("id", pageId);
+  const { data: deletedPages, error: pageError } = await supabase
+    .from("pages")
+    .delete()
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId)
+    .select("id");
   if (pageError) throw toError(pageError, "ページの削除に失敗しました");
+  if (!deletedPages || deletedPages.length !== 1) {
+    throw new Error("削除対象ページの特定に失敗しました。再読み込みして再試行してください。");
+  }
 }
 
 /** Update title of a card-based page in current hotel scope. */

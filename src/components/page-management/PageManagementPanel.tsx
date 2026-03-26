@@ -14,14 +14,9 @@ import {
   PAGE_LIMIT_REACHED,
 } from "@/lib/storage";
 import type { PageRow } from "@/lib/storage";
-import type { Information } from "@/types/information";
 import { TemplateGallery } from "@/components/template-gallery-ui";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AIPageGenerator } from "@/components/ai-page-generator";
-
-function dedupeInformationsById(items: Information[]): Information[] {
-  return Array.from(new Map(items.map((item) => [item.id, item])).values());
-}
 
 /**
  * ページ管理 — ゲスト向け案内ページの一覧・新規・削除
@@ -29,16 +24,14 @@ function dedupeInformationsById(items: Information[]): Information[] {
  */
 export function PageManagementPanel() {
   const router = useRouter();
-  const [items, setItems] = useState<Information[]>([]);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
+  const [statusBySlug, setStatusBySlug] = useState<Record<string, "draft" | "published">>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
-  const cardPageIdBySlug = new Map(cardPages.map((page) => [page.slug, page.id]));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,9 +41,13 @@ export function PageManagementPanel() {
         getDashboardBootstrapData(),
         listPagesForHotel(),
       ]);
-      setItems(dedupeInformationsById(boot.informations));
       setCardPages(cards);
       setSubscription(boot.subscription ? { plan: boot.subscription.plan } : null);
+      setStatusBySlug(
+        Object.fromEntries(
+          (boot.informations ?? []).map((info) => [info.slug, info.status === "published" ? "published" : "draft"])
+        )
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "一覧の取得に失敗しました");
     } finally {
@@ -90,31 +87,9 @@ export function PageManagementPanel() {
     }
   }
 
-  async function onDelete(item: Information) {
-    const ok = window.confirm(
-      `${item.title?.trim() ? `「${item.title}」を` : "このページを"}削除しますか？\n取り消しはできません。`
-    );
-    if (!ok) return;
-    setDeletingId(item.id);
-    setError(null);
-    try {
-      const pageId = cardPageIdBySlug.get(item.slug);
-      if (!pageId) {
-        throw new Error("対応するページIDが見つかりません。ページ一覧から削除してください。");
-      }
-      await deletePage(pageId);
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
-      setCardPages((prev) => prev.filter((p) => p.id !== pageId));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "削除に失敗しました");
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
   async function onDeleteCardPage(page: PageRow) {
     const ok = window.confirm(
-      `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\nQRで表示されているページが消え、取り消しはできません。`
+      `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n取り消しはできません。`
     );
     if (!ok) return;
     setDeletingCardPageId(page.id);
@@ -122,6 +97,11 @@ export function PageManagementPanel() {
     try {
       await deletePage(page.id);
       setCardPages((prev) => prev.filter((p) => p.id !== page.id));
+      setStatusBySlug((prev) => {
+        const next = { ...prev };
+        delete next[page.slug];
+        return next;
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "削除に失敗しました");
     } finally {
@@ -171,14 +151,14 @@ export function PageManagementPanel() {
             />
           </div>
 
-          {/* カード内テーブル — 一覧しやすい1枚カード */}
+          {/* ページ一覧（pages テーブル基準） */}
           <div className="overflow-hidden rounded-xl border border-ds-border bg-ds-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
             <div className="border-b border-ds-border px-5 py-4">
               <h2 className="text-[15px] font-semibold text-slate-900">
                 ページ一覧
               </h2>
               <p className="mt-0.5 text-xs text-slate-500">
-                公開状態・QR・編集・削除がここから行えます
+                作成・編集・公開・削除を1ページ単位で管理します
               </p>
             </div>
 
@@ -186,7 +166,7 @@ export function PageManagementPanel() {
               <div className="px-5 py-12 text-center text-sm text-slate-500">
                 読み込み中…
               </div>
-            ) : items.length === 0 ? (
+            ) : cardPages.length === 0 ? (
               <div className="px-5 py-14 text-center">
                 <p className="text-sm text-slate-600">
                   まだページがありません
@@ -218,115 +198,6 @@ export function PageManagementPanel() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
-                      <tr
-                        key={item.id}
-                        className="border-b border-slate-100 transition last:border-0 hover:bg-slate-50/70"
-                      >
-                        <td className="px-5 py-3">
-                          <span className="font-medium text-slate-900">
-                            {item.title?.trim() || ""}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={
-                              "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " +
-                              (item.status === "published"
-                                ? "bg-emerald-50 text-emerald-800"
-                                : "bg-amber-50 text-amber-800")
-                            }
-                          >
-                            {item.status === "published"
-                              ? "公開中"
-                              : "下書き"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <a
-                            href={buildPublicQrUrl(item.slug)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex rounded-lg border border-ds-border bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                          >
-                            QRコード
-                          </a>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {cardPageIdBySlug.get(item.slug) ? (
-                            <Link
-                              href={`/editor/${cardPageIdBySlug.get(item.slug)}`}
-                              className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
-                            >
-                              編集
-                            </Link>
-                          ) : (
-                            <span className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
-                              未移行
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3 text-right">
-                          <button
-                            type="button"
-                            disabled={deletingId === item.id}
-                            onClick={() => void onDelete(item)}
-                            className="inline-flex rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            {deletingId === item.id ? "削除中…" : "削除"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* カードで作ったページ（/v/ で表示・QRで開くページ） */}
-          <div className="mt-8 overflow-hidden rounded-xl border border-ds-border bg-ds-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
-            <div className="border-b border-ds-border px-5 py-4">
-              <h2 className="text-[15px] font-semibold text-slate-900">
-                カードで作ったページ
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                QRコード読み取り後に表示されるページです。編集・公開URL・削除がここから行えます
-              </p>
-            </div>
-            {loading ? (
-              <div className="px-5 py-8 text-center text-sm text-slate-500">
-                読み込み中…
-              </div>
-            ) : cardPages.length === 0 ? (
-              <div className="px-5 py-10 text-center">
-                <p className="text-sm text-slate-600">
-                  カードで作ったページはまだありません
-                </p>
-                <p className="mt-2 text-xs text-slate-400">
-                  右上の「+ ページを追加」で作成するとここに表示されます
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-ds-border bg-slate-50/80">
-                      <th className="px-5 py-3 text-xs font-semibold text-slate-600">
-                        ページ名
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-600">
-                        編集
-                      </th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-600">
-                        公開ページ
-                      </th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold text-slate-600">
-                        削除
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
                     {cardPages.map((page) => (
                       <tr
                         key={page.id}
@@ -338,22 +209,36 @@ export function PageManagementPanel() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
+                          <span
+                            className={
+                              "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " +
+                              (statusBySlug[page.slug] === "published"
+                                ? "bg-emerald-50 text-emerald-800"
+                                : "bg-amber-50 text-amber-800")
+                            }
+                          >
+                            {statusBySlug[page.slug] === "published"
+                              ? "公開中"
+                              : "下書き"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <a
+                            href={buildPublicQrUrl(page.slug)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex rounded-lg border border-ds-border bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            QRコード
+                          </a>
+                        </td>
+                        <td className="px-4 py-3 text-center">
                           <Link
                             href={`/editor/${page.id}`}
                             className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
                           >
                             編集
                           </Link>
-                        </td>
-                        <td className="px-4 py-3">
-                          <a
-                            href={buildPublicUrlV(page.slug)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex rounded-lg border border-ds-border bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                          >
-                            開く
-                          </a>
                         </td>
                         <td className="px-5 py-3 text-right">
                           <button

@@ -11,7 +11,6 @@ import {
   type PageConnectionSet,
   type PageRow,
   deletePage,
-  deleteAllPagesForHotel,
   updatePageTitle,
 } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
@@ -36,7 +35,6 @@ export function PagesListView() {
   } | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
-  const [deletingAllPages, setDeletingAllPages] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,29 +111,6 @@ export function PagesListView() {
       await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "ページ名の更新に失敗しました");
-    }
-  }
-
-  async function handleDeleteAllPages() {
-    if (deletingAllPages) return;
-    if (
-      !window.confirm(
-        "この施設のページをすべて削除しますか？\nこの操作は取り消せません。"
-      )
-    ) {
-      return;
-    }
-    setDeletingAllPages(true);
-    try {
-      const result = await deleteAllPagesForHotel();
-      await load();
-      if (result.deletedPages > 0) {
-        alert(`${result.deletedPages}ページを削除しました`);
-      }
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "全削除に失敗しました");
-    } finally {
-      setDeletingAllPages(false);
     }
   }
 
@@ -273,14 +248,6 @@ export function PagesListView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleDeleteAllPages}
-            disabled={deletingAllPages || pageCount === 0}
-            className="inline-flex shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {deletingAllPages ? "全削除中…" : "全ページ削除"}
-          </button>
           <button
             type="button"
             onClick={handleCreatePage}
