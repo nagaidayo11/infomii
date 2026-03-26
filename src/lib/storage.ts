@@ -1362,6 +1362,42 @@ export async function getInformation(id: string): Promise<Information | null> {
   return found ?? null;
 }
 
+export async function getInformationBySlug(slug: string): Promise<Information | null> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return null;
+  const supabase = getBrowserSupabaseClient();
+  if (supabase) {
+    const hotelId = await ensureUserHotelScope();
+    if (!hotelId) return null;
+    const { data, error } = await supabase
+      .from("informations")
+      .select("id,title,body,images,content_blocks,theme,status,publish_at,unpublish_at,slug,updated_at")
+      .eq("hotel_id", hotelId)
+      .eq("slug", normalizedSlug)
+      .maybeSingle();
+    if (error || !data) return null;
+    return mapRow(data as SupabaseInformationRow);
+  }
+  return getLocalData().find((item) => item.slug === normalizedSlug) ?? null;
+}
+
+export async function setInformationStatusBySlug(
+  slug: string,
+  status: InformationStatus
+): Promise<InformationStatus> {
+  const info = await getInformationBySlug(slug);
+  if (!info) {
+    throw new Error("公開状態を変更する対象ページが見つかりません");
+  }
+  const now = new Date().toISOString();
+  await updateInformation(info.id, {
+    status,
+    publishAt: status === "published" ? now : null,
+    unpublishAt: status === "draft" ? now : null,
+  });
+  return status;
+}
+
 export async function createInformationFromTemplate(
   templateIndex = 0,
 ): Promise<string> {
@@ -3571,16 +3607,13 @@ let createPageSnapshot: { title: string; id: string; at: number } | null = null;
 const CREATE_PAGE_DEDUPE_MS = 2500;
 
 const deletePageInFlight = new Map<string, Promise<void>>();
+let deletePageGlobalLockUntil = 0;
 
 /** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
 export async function createBlankPage(title = ""): Promise<string> {
   const normalizedTitle = (title ?? "").trim();
   const now = Date.now();
-  if (
-    createPageSnapshot &&
-    createPageSnapshot.title === normalizedTitle &&
-    now - createPageSnapshot.at < CREATE_PAGE_DEDUPE_MS
-  ) {
+  if (createPageSnapshot && now - createPageSnapshot.at < CREATE_PAGE_DEDUPE_MS) {
     return createPageSnapshot.id;
   }
   if (createPageInFlight) {
@@ -3861,6 +3894,11 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
 
 /** Delete a card-based page and its cards. Fails if page is not in current hotel scope. */
 export async function deletePage(pageId: string): Promise<void> {
+  const now = Date.now();
+  if (deletePageGlobalLockUntil > now) {
+    // Ignore duplicated delete operations fired almost simultaneously.
+    return;
+  }
   const inflight = deletePageInFlight.get(pageId);
   if (inflight) {
     return inflight;
@@ -3899,6 +3937,7 @@ export async function deletePage(pageId: string): Promise<void> {
 
   const promise = run().finally(() => {
     deletePageInFlight.delete(pageId);
+    deletePageGlobalLockUntil = Date.now() + 1500;
   });
   deletePageInFlight.set(pageId, promise);
   return promise;

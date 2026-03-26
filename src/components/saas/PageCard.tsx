@@ -14,6 +14,8 @@ export type PageCardProps = {
   qrViews7d?: number;
   onDelete?: (id: string) => void;
   onRename?: (id: string, nextTitle: string) => Promise<void> | void;
+  onTogglePublish?: (id: string, nextStatus: "draft" | "published") => Promise<void> | void;
+  publishToggling?: boolean;
   /** false のとき編集・削除を非表示（閲覧権限） */
   canEdit?: boolean;
 };
@@ -48,6 +50,8 @@ export function PageCard({
   qrViews7d = 0,
   onDelete,
   onRename,
+  onTogglePublish,
+  publishToggling = false,
   canEdit = true,
 }: PageCardProps) {
   const publicUrl =
@@ -117,6 +121,22 @@ export function PageCard({
               >
                 {status === "published" ? "公開中" : "下書き"}
               </span>
+              {canEdit && onTogglePublish && (
+                <button
+                  type="button"
+                  disabled={publishToggling}
+                  onClick={() => void onTogglePublish(id, status === "published" ? "draft" : "published")}
+                  className={
+                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium transition " +
+                    (status === "published"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-600") +
+                    " disabled:opacity-50"
+                  }
+                >
+                  {publishToggling ? "切替中…" : status === "published" ? "公開ON" : "公開OFF"}
+                </button>
+              )}
             </div>
             <div>
               <span className="sr-only">最終更新</span>

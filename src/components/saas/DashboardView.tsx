@@ -11,6 +11,7 @@ import {
   createBlankPage,
   deletePage,
   listPagesForHotel,
+  setInformationStatusBySlug,
   updatePageTitle,
   PAGE_LIMIT_REACHED,
   type PageRow,
@@ -34,10 +35,10 @@ export function DashboardView() {
   const [pageViewAnalytics, setPageViewAnalytics] = useState<PageViewAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [creatingCardPage, setCreatingCardPage] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const createBusyRef = useRef(false);
@@ -88,6 +89,20 @@ export function DashboardView() {
     }
   }
 
+  async function handleTogglePublish(id: string, nextStatus: "draft" | "published") {
+    const target = cardPages.find((p) => p.id === id);
+    if (!target) return;
+    setTogglingPublishId(id);
+    try {
+      await setInformationStatusBySlug(target.slug, nextStatus);
+      await loadBootstrap();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "公開状態の変更に失敗しました");
+    } finally {
+      setTogglingPublishId(null);
+    }
+  }
+
   useEffect(() => {
     let mounted = true;
     loadBootstrap().finally(() => {
@@ -104,7 +119,7 @@ export function DashboardView() {
     if (entered == null) return;
     const normalizedTitle = entered.trim();
     if (!normalizedTitle) {
-      setCreateError("ページ名を入力してください。");
+      setCreateError("タイトルを入力して下さい。");
       return;
     }
     setCreateError(null);
@@ -126,38 +141,6 @@ export function DashboardView() {
       }
     } finally {
       setCreating(false);
-      createBusyRef.current = false;
-    }
-  }
-
-  async function handleCreateCardPage() {
-    if (createBusyRef.current) return;
-    const entered = window.prompt("新規ページ名を入力してください");
-    if (entered == null) return;
-    const normalizedTitle = entered.trim();
-    if (!normalizedTitle) {
-      setCreateError("ページ名を入力してください。");
-      return;
-    }
-    setCreateError(null);
-    createBusyRef.current = true;
-    setCreatingCardPage(true);
-    try {
-      const pageId = await createBlankPage(normalizedTitle);
-      if (pageId && typeof pageId === "string") {
-        router.push(`/editor/${pageId}`);
-      }
-    } catch (e) {
-      const err = e as Error & { code?: string };
-      const message = err instanceof Error ? err.message : "ページの作成に失敗しました";
-      if (err.code === PAGE_LIMIT_REACHED) {
-        setPlanLimitModalOpen(true);
-        setCreateError(null);
-      } else {
-        setCreateError(message);
-      }
-    } finally {
-      setCreatingCardPage(false);
       createBusyRef.current = false;
     }
   }
@@ -221,23 +204,12 @@ export function DashboardView() {
               >
                 テンプレートから作成
               </Link>
-              <button
-                type="button"
-                onClick={() => void handleCreateCardPage()}
-                disabled={creatingCardPage}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
-              >
-                {creatingCardPage ? "作成中…" : "カードでページを追加"}
-              </button>
             </>
           )}
         </div>
         {createError && (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {createError}
-            <p className="mt-1 text-xs text-amber-700">
-              Supabase の設定と、施設（hotels）・施設所属（hotel_memberships）が作成されているか確認してください。
-            </p>
           </div>
         )}
         {canEdit && (
@@ -341,6 +313,8 @@ export function DashboardView() {
                   qrViews7d={stat?.qrViews}
                   onDelete={deletingId ? undefined : handleDeletePage}
                   onRename={canEdit ? handleRenamePage : undefined}
+                  onTogglePublish={canEdit ? handleTogglePublish : undefined}
+                  publishToggling={togglingPublishId === item.id}
                   canEdit={canEdit}
                 />
               );
@@ -371,6 +345,8 @@ export function DashboardView() {
                   qrViews7d={stat?.qrViews}
                   onDelete={deletingId ? undefined : handleDeletePage}
                   onRename={canEdit ? handleRenamePage : undefined}
+                  onTogglePublish={canEdit ? handleTogglePublish : undefined}
+                  publishToggling={togglingPublishId === item.id}
                   canEdit={canEdit}
                 />
               );

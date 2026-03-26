@@ -14,7 +14,14 @@ import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import type { CardType } from "./types";
 import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
-import { getPage, buildPublicUrlV, savePageCards, updatePageTitle } from "@/lib/storage";
+import {
+  getInformationBySlug,
+  getPage,
+  buildPublicUrlV,
+  savePageCards,
+  setInformationStatusBySlug,
+  updatePageTitle,
+} from "@/lib/storage";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -48,6 +55,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
+  const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
+  const [publishToggleLoading, setPublishToggleLoading] = useState(false);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -205,6 +214,13 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           slug: page.slug,
           publicUrl: buildPublicUrlV(page.slug),
         });
+        getInformationBySlug(page.slug)
+          .then((info) => {
+            setPublishStatus(info?.status === "published" ? "published" : "draft");
+          })
+          .catch(() => {
+            setPublishStatus("draft");
+          });
       }
     });
   }, [isDemoMode, pageId, setPageMeta]);
@@ -448,6 +464,24 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     });
   }, [isDemoMode, runPrepublishChecks]);
 
+  const handleTogglePublished = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開状態の変更は利用できません。無料登録で解放されます。");
+      return;
+    }
+    if (!pageMeta.slug || publishToggleLoading) return;
+    const nextStatus = publishStatus === "published" ? "draft" : "published";
+    setPublishToggleLoading(true);
+    try {
+      await setInformationStatusBySlug(pageMeta.slug, nextStatus);
+      setPublishStatus(nextStatus);
+    } catch (e) {
+      setDemoLockMessage(e instanceof Error ? e.message : "公開状態の変更に失敗しました。");
+    } finally {
+      setPublishToggleLoading(false);
+    }
+  }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading]);
+
   const topBar =
     pageId || isDemoMode ? (
       <EditorTopBar
@@ -458,7 +492,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         lastSavedAt={lastSavedAt}
         saveError={saveError}
         onRetry={retry}
-        status="draft"
+        status={publishStatus}
         publicUrl={isDemoMode ? demoPreviewUrl : pageMeta.publicUrl}
         publishing={publishing}
         canUndo={canUndo}
@@ -484,6 +518,9 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
+        onTogglePublished={isDemoMode ? undefined : handleTogglePublished}
+        publishToggleLoading={publishToggleLoading}
+        publishToggleChecked={publishStatus === "published"}
         onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
       />
     ) : null;

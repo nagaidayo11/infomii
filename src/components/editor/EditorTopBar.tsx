@@ -25,6 +25,9 @@ export type EditorTopBarProps = {
   onPreview: () => void;
   onPublish: () => void;
   onQr: () => void;
+  onTogglePublished?: () => void;
+  publishToggleLoading?: boolean;
+  publishToggleChecked?: boolean;
   onRenamePageTitle?: (nextTitle: string) => Promise<void> | void;
 };
 
@@ -111,6 +114,9 @@ export function EditorTopBar({
   onPreview,
   onPublish,
   onQr,
+  onTogglePublished,
+  publishToggleLoading = false,
+  publishToggleChecked = false,
   onRenamePageTitle,
 }: EditorTopBarProps) {
   const [editingTitle, setEditingTitle] = useState(false);
@@ -216,6 +222,22 @@ export function EditorTopBar({
         >
           {status === "published" ? "公開済み" : "下書き"}
         </span>
+        {!demoMode && onTogglePublished && (
+          <button
+            type="button"
+            onClick={onTogglePublished}
+            disabled={publishToggleLoading}
+            className={
+              "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
+              (publishToggleChecked
+                ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                : "border-slate-200 bg-white text-slate-600") +
+              " disabled:opacity-50"
+            }
+          >
+            {publishToggleLoading ? "切替中…" : publishToggleChecked ? "公開ON" : "公開OFF"}
+          </button>
+        )}
       </div>
 
       {/* Page controls */}
