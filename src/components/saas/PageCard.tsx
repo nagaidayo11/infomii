@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { buildPublicUrlV } from "@/lib/storage";
 
 export type PageCardProps = {
   id: string;
@@ -54,8 +55,7 @@ export function PageCard({
   publishToggling = false,
   canEdit = true,
 }: PageCardProps) {
-  const publicUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/p/${slug}` : `/p/${slug}`;
+  const publicUrl = buildPublicUrlV(slug);
   const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(title ?? "");

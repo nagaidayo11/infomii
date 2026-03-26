@@ -1385,9 +1385,41 @@ export async function setInformationStatusBySlug(
   slug: string,
   status: InformationStatus
 ): Promise<InformationStatus> {
-  const info = await getInformationBySlug(slug);
+  let info = await getInformationBySlug(slug);
   if (!info) {
-    throw new Error("公開状態を変更する対象ページが見つかりません");
+    const supabase = getBrowserSupabaseClient();
+    const hotelId = await ensureUserHotelScope();
+    if (!supabase || !hotelId) {
+      throw new Error("公開状態を変更する対象ページが見つかりません");
+    }
+    const { data: page, error: pageError } = await supabase
+      .from("pages")
+      .select("title,slug")
+      .eq("hotel_id", hotelId)
+      .eq("slug", slug)
+      .maybeSingle();
+    if (pageError || !page) {
+      throw new Error("公開状態を変更する対象ページが見つかりません");
+    }
+    const { error: insertError } = await supabase.from("informations").insert({
+      hotel_id: hotelId,
+      title: page.title ?? "",
+      body: "",
+      images: [],
+      content_blocks: [],
+      theme: {},
+      status: "draft",
+      publish_at: null,
+      unpublish_at: null,
+      slug: page.slug,
+    });
+    if (insertError) {
+      throw toError(insertError, "公開状態の初期化に失敗しました");
+    }
+    info = await getInformationBySlug(slug);
+    if (!info) {
+      throw new Error("公開状態を変更する対象ページが見つかりません");
+    }
   }
   const now = new Date().toISOString();
   await updateInformation(info.id, {

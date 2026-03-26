@@ -30,7 +30,7 @@ export function QuoteCard({ card, isSelected = false }: QuoteCardProps) {
     <Card padding="md">
       <div className="flex items-center gap-2 text-slate-500">
         <LineIcon name="quote" className="h-4 w-4" />
-        <span className="text-xs font-medium uppercase tracking-wide">Quote</span>
+        <span className="text-xs font-medium tracking-wide">引用</span>
       </div>
       <blockquote className="mt-2 border-l-2 border-slate-200 pl-3 text-slate-800" style={getBodyFontSizeStyle()}>
         <InlineEditable

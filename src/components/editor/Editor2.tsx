@@ -476,7 +476,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       await setInformationStatusBySlug(pageMeta.slug, nextStatus);
       setPublishStatus(nextStatus);
     } catch (e) {
-      setDemoLockMessage(e instanceof Error ? e.message : "公開状態の変更に失敗しました。");
+      alert(e instanceof Error ? e.message : "公開状態の変更に失敗しました。");
     } finally {
       setPublishToggleLoading(false);
     }

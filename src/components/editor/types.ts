@@ -39,7 +39,8 @@ export type CardType =
   | "checklist"
   | "steps"
   | "compare"
-  | "kpi";
+  | "kpi"
+  | "space";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -208,6 +209,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   steps: "ステップ",
   compare: "比較",
   kpi: "KPI",
+  space: "スペース",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -227,6 +229,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "kpi",
   "gallery",
   "divider",
+  "space",
 ];
 
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
@@ -246,6 +249,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
+  { type: "space", label: "スペース", description: "余白を追加" },
 ];
 
 /** Card types used for new-page starter set (Hero first, then Info, Highlight, …). */
@@ -287,12 +291,13 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "steps", label: "ステップ", description: "手順・導線" },
   { type: "compare", label: "比較", description: "2カラム比較" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
+  { type: "space", label: "スペース", description: "余白" },
 ];
 
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
     case "hero":
-      return { title: "Infomii Hotel", image: "", subtitle: "館内案内をスマートにまとめました" };
+      return { title: "Infomii Hotel", image: "/preset-hero-sample.png", subtitle: "館内案内をスマートにまとめました" };
     case "info":
       return {
         title: "Wi-Fi",
@@ -360,6 +365,8 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "", columns: 2, items: [{ src: "", alt: "" }] };
     case "divider":
       return { style: "line" };
+    case "space":
+      return { height: 24 };
     case "parking":
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };
     case "pageLinks":
@@ -419,7 +426,10 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     id,
     type,
     content: defaultContent(type),
-    style: { borderRadius: 8 },
+    style:
+      type === "space"
+        ? { borderRadius: 8, backgroundTransparent: true, borderEnabled: false, padding: 0 }
+        : { borderRadius: 8 },
     order,
   };
 }

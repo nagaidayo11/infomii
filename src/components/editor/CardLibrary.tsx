@@ -151,6 +151,11 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" />
     </svg>
   ),
+  space: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 16h14M8 12h8" />
+    </svg>
+  ),
   parking: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -247,7 +252,7 @@ const LAYOUT_ITEMS: LibraryItem[] = [
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順・流れ" },
   { type: "divider", label: "区切り線", description: "区切り線" },
-  { type: "info", label: "情報", description: "汎用の情報行を並べる" },
+  { type: "space", label: "スペース", description: "余白を追加" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
@@ -263,32 +268,32 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
   {
     id: "checkin-basic",
     label: "ホテル基本セット（完成済み）",
-    description: "ウェルカム / WiFi案内 / チェックアウト / FAQ",
-    types: ["welcome", "wifi", "checkout", "faq"],
+    description: "ヒーロー / ウェルカム / WiFi案内 / チェックアウト / FAQ",
+    types: ["hero", "welcome", "wifi", "checkout", "faq"],
   },
   {
     id: "frontdesk-reduction",
     label: "フロント時短セット（完成済み）",
-    description: "お知らせ / FAQ / 緊急連絡先 / ページリンク",
-    types: ["notice", "faq", "emergency", "pageLinks"],
+    description: "ヒーロー / お知らせ / ページリンク / FAQ / 緊急連絡先",
+    types: ["hero", "notice", "pageLinks", "faq", "emergency"],
   },
   {
     id: "facility-guide-complete",
     label: "館内施設セット（完成済み）",
-    description: "施設案内 / 営業時間一覧 / メニュー一覧 / 地図",
-    types: ["breakfast", "schedule", "menu", "map"],
+    description: "ヒーロー / 施設案内 / 営業時間一覧 / メニュー一覧 / 地図",
+    types: ["hero", "breakfast", "schedule", "menu", "map"],
   },
   {
     id: "promo-conversion",
     label: "訴求強化セット（CV重視）",
-    description: "ヒーロー / 強調 / 比較 / ボタン",
-    types: ["hero", "highlight", "compare", "button"],
+    description: "ヒーロー / 強調 / 比較 / 数字強調 / 引用 / ボタン",
+    types: ["hero", "highlight", "compare", "kpi", "quote", "button"],
   },
   {
     id: "resort-experience",
     label: "旅館・体験訴求セット",
-    description: "スパ / レストラン / 周辺案内 / 地図",
-    types: ["spa", "restaurant", "nearby", "map"],
+    description: "ヒーロー / ギャラリー / スパ / レストラン / 周辺案内 / 地図",
+    types: ["hero", "gallery", "spa", "restaurant", "nearby", "map"],
   },
 ];
 

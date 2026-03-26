@@ -32,6 +32,7 @@ import { ChecklistCard } from "./ChecklistCard";
 import { StepsCard } from "./StepsCard";
 import { CompareCard } from "./CompareCard";
 import { KpiCard } from "./KpiCard";
+import { SpaceCard } from "./SpaceCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -151,6 +152,8 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
       return <CompareCard card={card} isSelected={isSelected} locale={locale} />;
     case "kpi":
       return <KpiCard card={card} isSelected={isSelected} locale={locale} />;
+    case "space":
+      return <SpaceCard card={card} isSelected={isSelected} />;
     default:
       return <TextCard card={card as EditorCard} isSelected={isSelected} locale={locale} />;
   }

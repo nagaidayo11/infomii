@@ -1854,6 +1854,27 @@ export function CardSettings({
             </SettingsSection>
           )}
 
+          {card.type === "space" && (
+            <SettingsSection title="コンテンツ">
+              <div className="w-full">
+                <label className={labelClass}>余白 (px)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={480}
+                  value={typeof content.height === "number" ? content.height : Number(content.height ?? 24)}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value);
+                    const next = Number.isFinite(raw) ? Math.max(0, Math.min(480, raw)) : 24;
+                    update("height", next);
+                  }}
+                  className={inputClass}
+                />
+              </div>
+              <p className="text-xs text-slate-500">このブロックは余白だけを追加します。</p>
+            </SettingsSection>
+          )}
+
           {card.type === "faq" && (
             <SettingsSection title="コンテンツ">
               <Input
