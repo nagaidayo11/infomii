@@ -88,7 +88,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   steps: 104,
   compare: 96,
   kpi: 96,
-  space: 32,
+  space: 48,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
@@ -287,6 +287,17 @@ export function FreeformCanvas({
     (card: EditorCard, index: number) => {
       const pos = getPosition(card, index, contentWidth, cards);
       const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
+      if (card.type === "space") {
+        const rawContentHeight = Number((card.content as Record<string, unknown>)?.height ?? 48);
+        const contentHeight = Number.isFinite(rawContentHeight) ? rawContentHeight : 48;
+        if (saved?.manualH) {
+          return pos.h ?? Math.max(MIN_H, contentHeight);
+        }
+        if (typeof pos.h === "number" && Number.isFinite(pos.h)) {
+          return Math.max(MIN_H, pos.h);
+        }
+        return Math.max(MIN_H, contentHeight);
+      }
       if (saved?.manualH) {
         return pos.h ?? getCardDefaultHeight(card);
       }
@@ -602,7 +613,7 @@ export function FreeformCanvas({
                       data-card-content-id={card.id}
                       className="overflow-x-hidden overflow-y-visible p-0"
                     >
-                      <CardRenderer card={card} isSelected={isSelected} />
+                      <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
                     </div>
                   </div>
                   {isSelected && onDuplicateCard && onRemoveCard && (

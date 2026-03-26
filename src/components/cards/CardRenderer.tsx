@@ -37,12 +37,13 @@ import { SpaceCard } from "./SpaceCard";
 type SingleCardRendererProps = {
   card: EditorCard;
   isSelected?: boolean;
+  showSpaceLabel?: boolean;
 };
 
 /**
  * Renders a single card by type. Used by CardRenderer for both single and list modes.
  */
-function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProps) {
+function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }: SingleCardRendererProps) {
   const locale = useLocale();
 
   switch (card.type) {
@@ -153,7 +154,7 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
     case "kpi":
       return <KpiCard card={card} isSelected={isSelected} locale={locale} />;
     case "space":
-      return <SpaceCard card={card} isSelected={isSelected} />;
+      return <SpaceCard card={card} isSelected={isSelected} showLabel={showSpaceLabel} />;
     default:
       return <TextCard card={card as EditorCard} isSelected={isSelected} locale={locale} />;
   }
@@ -162,11 +163,13 @@ function SingleCardRenderer({ card, isSelected = false }: SingleCardRendererProp
 export type CardRendererSingleProps = {
   card: EditorCard;
   isSelected?: boolean;
+  showSpaceLabel?: boolean;
 };
 
 export type CardRendererListProps = {
   cards: EditorCard[];
   selectedCardId?: string | null;
+  showSpaceLabel?: boolean;
 };
 
 export type CardRendererProps = CardRendererSingleProps | CardRendererListProps;
@@ -182,7 +185,7 @@ function isListProps(props: CardRendererProps): props is CardRendererListProps {
  */
 export function CardRenderer(props: CardRendererProps) {
   if (isListProps(props)) {
-    const { cards, selectedCardId = null } = props;
+    const { cards, selectedCardId = null, showSpaceLabel = false } = props;
     const sorted = [...cards].sort((a, b) => a.order - b.order);
     return (
       <>
@@ -208,6 +211,7 @@ export function CardRenderer(props: CardRendererProps) {
               <SingleCardRenderer
                 card={card}
                 isSelected={selectedCardId === card.id}
+                showSpaceLabel={showSpaceLabel}
               />
             </div>
           );
@@ -216,6 +220,6 @@ export function CardRenderer(props: CardRendererProps) {
     );
   }
 
-  const { card, isSelected = false } = props;
-  return <SingleCardRenderer card={card} isSelected={isSelected} />;
+  const { card, isSelected = false, showSpaceLabel = false } = props;
+  return <SingleCardRenderer card={card} isSelected={isSelected} showSpaceLabel={showSpaceLabel} />;
 }

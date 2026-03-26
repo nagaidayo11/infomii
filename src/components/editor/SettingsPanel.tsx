@@ -1028,8 +1028,8 @@ export function CardSettings({
   const content = card.content as Record<string, unknown>;
   const style = (card.style ?? {}) as Record<string, unknown>;
   const position = (style._position ?? {}) as Record<string, unknown>;
-  const rawSpaceHeight = Number(position.h ?? content.height ?? 24);
-  const spaceHeight = Number.isFinite(rawSpaceHeight) ? Math.max(0, Math.min(480, rawSpaceHeight)) : 24;
+  const rawSpaceHeight = Number(position.h ?? content.height ?? 48);
+  const spaceHeight = Number.isFinite(rawSpaceHeight) ? Math.max(0, Math.min(480, rawSpaceHeight)) : 48;
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
   };

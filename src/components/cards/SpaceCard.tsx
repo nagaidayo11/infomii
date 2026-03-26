@@ -5,13 +5,14 @@ import type { EditorCard } from "@/components/editor/types";
 type SpaceCardProps = {
   card: EditorCard;
   isSelected?: boolean;
+  showLabel?: boolean;
 };
 
-export function SpaceCard({ card, isSelected = false }: SpaceCardProps) {
+export function SpaceCard({ card, isSelected = false, showLabel = false }: SpaceCardProps) {
   const style = (card.style ?? {}) as Record<string, unknown>;
   const position = (style._position ?? {}) as Record<string, unknown>;
-  const rawHeight = Number(position.h ?? (card.content as Record<string, unknown>)?.height ?? 24);
-  const height = Number.isFinite(rawHeight) ? Math.max(0, Math.min(480, rawHeight)) : 24;
+  const rawHeight = Number(position.h ?? (card.content as Record<string, unknown>)?.height ?? 48);
+  const height = Number.isFinite(rawHeight) ? Math.max(0, Math.min(480, rawHeight)) : 48;
 
   return (
     <div
@@ -19,9 +20,9 @@ export function SpaceCard({ card, isSelected = false }: SpaceCardProps) {
       style={{ height }}
       aria-label={`スペース ${height}px`}
     >
-      {isSelected && (
+      {(showLabel || isSelected) && (
         <div className="flex h-full items-center justify-center text-xs text-slate-400">
-          スペース ({height}px)
+          スペース {height}px
         </div>
       )}
     </div>

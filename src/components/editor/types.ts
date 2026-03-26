@@ -366,7 +366,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "divider":
       return { style: "line" };
     case "space":
-      return { height: 24 };
+      return { height: 48 };
     case "parking":
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };
     case "pageLinks":
