@@ -39,6 +39,7 @@ export function DashboardView() {
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null);
+  const [navigating, setNavigating] = useState(false);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const createBusyRef = useRef(false);
@@ -202,6 +203,7 @@ export function DashboardView() {
               </button>
               <Link
                 href="/templates"
+                onClick={() => setNavigating(true)}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 テンプレートから作成
@@ -266,7 +268,11 @@ export function DashboardView() {
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-700">最近編集したページ</h2>
-          <Link href="/dashboard/pages" className="text-xs font-medium text-slate-500 hover:text-slate-700">
+          <Link
+            href="/dashboard/pages"
+            onClick={() => setNavigating(true)}
+            className="text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
             すべて見る
           </Link>
         </div>
@@ -285,6 +291,7 @@ export function DashboardView() {
               </p>
               <Link
                 href="/templates"
+                onClick={() => setNavigating(true)}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
               >
                 テンプレートを選ぶ
@@ -357,6 +364,7 @@ export function DashboardView() {
           {published.length > 5 && (
             <Link
               href="/dashboard/pages"
+              onClick={() => setNavigating(true)}
               className="mt-2 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
             >
               他 {published.length - 5} 件
@@ -370,6 +378,14 @@ export function DashboardView() {
         onClose={() => setPlanLimitModalOpen(false)}
         currentPlan={bootstrap?.subscription?.plan}
       />
+      {(loading || navigating) && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+            {loading ? "読み込み中…" : "ページ遷移中…"}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

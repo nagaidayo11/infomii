@@ -59,6 +59,7 @@ export function PageCard({
   const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(title ?? "");
+  const [navigating, setNavigating] = useState(false);
 
   async function commitTitle() {
     const next = titleValue.trim();
@@ -160,6 +161,7 @@ export function PageCard({
           {canEdit && resolvedEditHref && (
           <Link
             href={resolvedEditHref}
+            onClick={() => setNavigating(true)}
             className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition hover:bg-slate-800"
           >
             編集
@@ -181,6 +183,12 @@ export function PageCard({
           )}
         </div>
       </div>
+      {navigating && (
+        <div className="mt-3 inline-flex items-center gap-2 text-xs text-slate-500">
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          ページへ移動中…
+        </div>
+      )}
     </article>
   );
 }
