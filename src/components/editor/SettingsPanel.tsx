@@ -374,6 +374,8 @@ function PageLinksItemsEditor({
   const items = (Array.isArray(content.items) ? content.items : []) as PageLinksItem[];
   const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
+  const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
+  const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
@@ -383,6 +385,12 @@ function PageLinksItemsEditor({
   const addItem = () =>
     setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: "", link: "" }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const openLinkedPageEditor = (slug: string) => {
+    if (typeof window === "undefined") return;
+    const target = pages.find((p) => p.slug === slug);
+    if (!target?.id) return;
+    window.open(`/editor/saas/${target.id}`, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="space-y-3">
@@ -396,6 +404,18 @@ function PageLinksItemsEditor({
           <option value="2">2列</option>
           <option value="3">3列</option>
           <option value="4">4列</option>
+        </select>
+      </div>
+      <div className="w-full">
+        <label className={labelClass}>アイコンサイズ</label>
+        <select
+          value={iconSize}
+          onChange={(e) => onUpdate("iconSize", e.target.value)}
+          className={inputClass}
+        >
+          <option value="sm">小</option>
+          <option value="md">標準</option>
+          <option value="lg">大</option>
         </select>
       </div>
       <div className="flex items-center justify-between">
@@ -465,6 +485,14 @@ function PageLinksItemsEditor({
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => openLinkedPageEditor(item.pageSlug ?? "")}
+                disabled={!item.pageSlug}
+                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                リンク先ページを編集する
+              </button>
             </div>
           ) : (
             <Input

@@ -29,6 +29,8 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
   const title = (c?.title as string) ?? "メニュー";
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
+  const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
+  const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
 
   const update = (patch: Record<string, unknown>) => {
@@ -47,6 +49,9 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
     const href = getHref(item);
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
+
+  const iconWrapClass = iconSize === "sm" ? "h-8 w-8" : iconSize === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const iconClass = iconSize === "sm" ? "h-4.5 w-4.5" : iconSize === "lg" ? "h-6 w-6" : "h-5.5 w-5.5";
 
   return (
     <Card padding="md">
@@ -72,8 +77,8 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
               <div className="flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-xl bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-700">
-                  <LineIcon name={iconDisplay} className="h-4.5 w-4.5" />
+                <span className={`flex shrink-0 items-center justify-center rounded-full bg-white text-slate-700 ${iconWrapClass}`}>
+                  <LineIcon name={iconDisplay} className={iconClass} />
                 </span>
                 <span
                   className="w-full text-center font-medium leading-tight text-slate-700 break-words [word-break:keep-all]"

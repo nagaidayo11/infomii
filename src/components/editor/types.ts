@@ -373,6 +373,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return {
         title: "メニュー",
         columns: 3,
+        iconSize: "md",
         items: [
           { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },

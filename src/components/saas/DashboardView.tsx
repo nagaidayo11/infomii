@@ -48,18 +48,22 @@ export function DashboardView() {
 
   const loadBootstrap = useCallback(async () => {
     setLoading(true);
-    const [b, v, p, r, pages] = await Promise.all([
+    const [b, v, p, r, pagesResult] = await Promise.all([
       getDashboardBootstrapData(),
       getCurrentHotelViewMetrics().catch(() => null),
       getPageViewAnalytics().catch(() => null),
       getCurrentUserHotelRole().catch(() => null),
-      listPagesForHotel().catch(() => []),
+      listPagesForHotel()
+        .then((pages) => ({ ok: true as const, pages }))
+        .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
     ]);
     setBootstrap(b);
     setViewMetrics(v);
     setPageViewAnalytics(p);
     setRole(r);
-    setCardPages(pages);
+    if (pagesResult.ok) {
+      setCardPages(pagesResult.pages);
+    }
   }, []);
 
   async function handleDeletePage(id: string) {
