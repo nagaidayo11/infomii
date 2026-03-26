@@ -420,7 +420,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     } catch {
       // Even if save fails, allow user to inspect current public page.
     }
-    window.open(pageMeta.publicUrl, "_blank", "noopener,noreferrer");
+    const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
+    window.open(previewUrl, "_blank", "noopener,noreferrer");
   }, [isDemoMode, demoPreviewUrl, pageMeta.publicUrl, pageId]);
 
   const handleAddPreset = useCallback(
@@ -533,6 +534,11 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           library={<CardLibrary onAddCard={addCard} onAddPreset={handleAddPreset} />}
           canvas={
             <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
+              {!isDemoMode && publishStatus !== "published" && (
+                <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。
+                </div>
+              )}
               <div className="min-h-0 flex-1 overflow-auto">
                 <FreeformCanvas
                   cards={cards}

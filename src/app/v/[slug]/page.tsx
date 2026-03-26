@@ -10,6 +10,7 @@ const PAGE_STYLE_KEY = "_pageStyle";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 };
 
 function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): {
@@ -38,8 +39,10 @@ function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): 
   };
 }
 
-export default async function PublicCardPageBySlug({ params }: PageProps) {
+export default async function PublicCardPageBySlug({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const query = await searchParams;
+  const isPreviewRequest = query.preview === "1";
   const requestHeaders = await headers();
   const acceptLanguage = requestHeaders.get("accept-language");
   const initialLocale = getVisitorLocaleFromHeader(acceptLanguage);
@@ -52,6 +55,23 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
     .maybeSingle();
 
   if (pageError || !page) notFound();
+
+  const { data: infoRow } = await supabase
+    .from("informations")
+    .select("status")
+    .eq("slug", slug)
+    .maybeSingle();
+  const isPublished = infoRow?.status === "published";
+  if (!isPublished && !isPreviewRequest) {
+    return (
+      <main className="mx-auto min-h-screen w-full max-w-[420px] overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-6 sm:py-12">
+        <h1 className="mb-4 text-xl font-semibold text-slate-900">公開OFFエラー</h1>
+        <p className="text-sm leading-relaxed text-slate-600">
+          現在公開OFFになっています。公開ONにしてから、QRコードまたは公開URLをご利用ください。
+        </p>
+      </main>
+    );
+  }
 
   const { data: rows, error: cardsError } = await supabase
     .from("cards")
@@ -92,6 +112,7 @@ export default async function PublicCardPageBySlug({ params }: PageProps) {
       cards={cards}
       initialLocale={initialLocale}
       pageBackground={pageBackground}
+      unpublishedPreview={!isPublished && isPreviewRequest}
     />
   );
 }
