@@ -88,6 +88,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   steps: 104,
   compare: 96,
   kpi: 96,
+  space: 32,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
