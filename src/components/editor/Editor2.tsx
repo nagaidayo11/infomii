@@ -596,15 +596,11 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
     setLocaleTranslating(true);
     try {
-      const translatedCount = await translateAllCardsToMultilingual();
-      const hasLocalized = JSON.stringify(useEditor2Store.getState().cards).includes("\"en\"");
-      if (translatedCount === 0 && !hasLocalized) {
-        alert("翻訳に必要な設定が不足しているか、翻訳対象テキストが見つかりませんでした。");
-        return;
-      }
+      await translateAllCardsToMultilingual();
       setEditorLocale(nextLocale);
     } catch {
-      alert("翻訳に失敗しました。時間をおいて再試行してください。");
+      // Even when translation API fails, switch locale and rely on existing localized/fallback text.
+      setEditorLocale(nextLocale);
     } finally {
       setLocaleTranslating(false);
     }

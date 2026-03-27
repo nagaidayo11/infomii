@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const IS_DEV = process.env.NODE_ENV !== "production";
+
+function logTranslateError(stage: string, payload: Record<string, unknown>) {
+  const base = {
+    scope: "api/ai/translate-content",
+    stage,
+    at: new Date().toISOString(),
+  };
+  // Keep verbose details in dev only.
+  if (IS_DEV) {
+    console.error("[translate-content]", { ...base, ...payload });
+    return;
+  }
+  console.error("[translate-content]", base);
+}
 
 /**
  * POST: 日本語テキストを英語・中国語・韓国語に翻訳する。
@@ -8,8 +23,10 @@ const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
  * Returns: { en: string, zh: string, ko: string }
  */
 export async function POST(request: Request) {
+  const requestId = Math.random().toString(36).slice(2, 10);
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    logTranslateError("missing_api_key", { requestId });
     return NextResponse.json(
       { error: "OPENAI_API_KEY is not configured" },
       { status: 503 }
@@ -19,7 +36,11 @@ export async function POST(request: Request) {
   let body: { text?: string };
   try {
     body = await request.json();
-  } catch {
+  } catch (e) {
+    logTranslateError("invalid_json_body", {
+      requestId,
+      message: e instanceof Error ? e.message : "unknown",
+    });
     return NextResponse.json(
       { error: "Invalid JSON body" },
       { status: 400 }
@@ -28,12 +49,14 @@ export async function POST(request: Request) {
 
   const text = typeof body.text === "string" ? body.text.trim() : "";
   if (!text) {
+    logTranslateError("missing_text", { requestId });
     return NextResponse.json(
       { error: "text is required" },
       { status: 400 }
     );
   }
   if (text.length > 4000) {
+    logTranslateError("text_too_long", { requestId, textLength: text.length });
     return NextResponse.json(
       { error: "text too long" },
       { status: 400 }
@@ -69,6 +92,12 @@ ${text}
 
     if (!res.ok) {
       const err = await res.text();
+      logTranslateError("openai_non_200", {
+        requestId,
+        status: res.status,
+        statusText: res.statusText,
+        detailPreview: err.slice(0, 1000),
+      });
       return NextResponse.json(
         { error: "Translation failed", detail: err },
         { status: 502 }
@@ -81,6 +110,11 @@ ${text}
     const raw = data.choices?.[0]?.message?.content?.trim() ?? "";
     const parsed = parseJsonBlock(raw);
     if (!parsed || typeof parsed.en !== "string" || typeof parsed.zh !== "string" || typeof parsed.ko !== "string") {
+      logTranslateError("invalid_translation_response", {
+        requestId,
+        hasChoices: Array.isArray(data.choices),
+        rawPreview: raw.slice(0, 1000),
+      });
       return NextResponse.json(
         { error: "Invalid translation response" },
         { status: 502 }
@@ -93,7 +127,11 @@ ${text}
       ko: String(parsed.ko).trim(),
     });
   } catch (e) {
-    console.error("translate-content error", e);
+    logTranslateError("unexpected_exception", {
+      requestId,
+      message: e instanceof Error ? e.message : "unknown",
+      stack: e instanceof Error ? e.stack : undefined,
+    });
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Translation failed" },
       { status: 500 }
