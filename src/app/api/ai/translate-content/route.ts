@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const IS_DEV = process.env.NODE_ENV !== "production";
+const MODEL_CANDIDATES = ["gpt-4o-mini", "gpt-4.1-mini"] as const;
 
 function logTranslateError(stage: string, payload: Record<string, unknown>) {
   const base = {
@@ -15,6 +16,19 @@ function logTranslateError(stage: string, payload: Record<string, unknown>) {
     return;
   }
   console.error("[translate-content]", base);
+}
+
+function parseOpenAiError(raw: string): { code?: string; message?: string; type?: string } {
+  try {
+    const parsed = JSON.parse(raw) as { error?: { code?: string; message?: string; type?: string } };
+    return {
+      code: parsed?.error?.code,
+      message: parsed?.error?.message,
+      type: parsed?.error?.type,
+    };
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -77,36 +91,59 @@ ${text}
 }`;
 
   try {
-    const res = await fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-      }),
-    });
+    let data: { choices?: Array<{ message?: { content?: string } }> } | null = null;
+    let lastError: { status?: number; statusText?: string; detail?: string; model?: string } | null = null;
 
-    if (!res.ok) {
-      const err = await res.text();
-      logTranslateError("openai_non_200", {
-        requestId,
-        status: res.status,
-        statusText: res.statusText,
-        detailPreview: err.slice(0, 1000),
+    for (const model of MODEL_CANDIDATES) {
+      const res = await fetch(OPENAI_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.3,
+        }),
       });
+
+      if (!res.ok) {
+        const err = await res.text();
+        const parsedErr = parseOpenAiError(err);
+        logTranslateError("openai_non_200", {
+          requestId,
+          model,
+          status: res.status,
+          statusText: res.statusText,
+          openaiCode: parsedErr.code,
+          openaiType: parsedErr.type,
+          openaiMessage: parsedErr.message?.slice(0, 300),
+          detailPreview: err.slice(0, 600),
+        });
+        lastError = { status: res.status, statusText: res.statusText, detail: err, model };
+        continue;
+      }
+
+      data = (await res.json()) as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      lastError = null;
+      break;
+    }
+
+    if (!data) {
       return NextResponse.json(
-        { error: "Translation failed", detail: err },
+        {
+          error: "Translation failed",
+          reason: "openai_non_200",
+          model: lastError?.model,
+          status: lastError?.status,
+        },
         { status: 502 }
       );
     }
 
-    const data = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
     const raw = data.choices?.[0]?.message?.content?.trim() ?? "";
     const parsed = parseJsonBlock(raw);
     if (!parsed || typeof parsed.en !== "string" || typeof parsed.zh !== "string" || typeof parsed.ko !== "string") {
