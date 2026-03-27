@@ -2,17 +2,47 @@
  * Multi-page template system for infomii.
  * Templates are stored as JSON; selecting one creates multiple pages with predefined blocks.
  *
- * Block types: Title, Text, Image, Button, Icon (map to page-editor blocks).
+ * Block types map to public InformationBlock variants.
  */
 
-export type TemplateBlockType = "title" | "text" | "image" | "button" | "icon";
+export type TemplateBlockType =
+  | "title"
+  | "heading"
+  | "text"
+  | "image"
+  | "button"
+  | "icon"
+  | "section"
+  | "iconRow"
+  | "checklist"
+  | "hours"
+  | "pricing"
+  | "quote";
+
+export type TemplateIconRowItem = {
+  icon: string;
+  label: string;
+  link?: string;
+};
+
+export type TemplateKeyValueItem = {
+  label: string;
+  value: string;
+};
 
 export type TemplateBlock =
   | { type: "title"; content: string }
+  | { type: "heading"; content: string }
   | { type: "text"; content: string }
   | { type: "image"; src: string; alt?: string }
   | { type: "button"; label: string; href?: string }
-  | { type: "icon"; icon: string; label?: string };
+  | { type: "icon"; icon: string; label?: string }
+  | { type: "section"; title: string; body: string }
+  | { type: "iconRow"; items: TemplateIconRowItem[] }
+  | { type: "checklist"; items: string[] }
+  | { type: "hours"; items: TemplateKeyValueItem[] }
+  | { type: "pricing"; items: TemplateKeyValueItem[] }
+  | { type: "quote"; text: string; author?: string };
 
 export type TemplatePage = {
   title: string;

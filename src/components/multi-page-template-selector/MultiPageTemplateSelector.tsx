@@ -13,7 +13,7 @@ export type MultiPageTemplateSelectorProps = {
 
 /**
  * Renders multi-page templates. When user selects one, creates multiple
- * Information pages with predefined blocks (Title, Text, Image, Button, Icon).
+ * Information pages with predefined high-quality blocks.
  */
 export function MultiPageTemplateSelector({
   onCreated,

@@ -3,16 +3,35 @@ import type { CSSProperties } from "react";
 export type LineIconName =
   | "wifi"
   | "breakfast"
+  | "utensils"
   | "checkout"
+  | "clock"
   | "restaurant"
   | "spa"
+  | "bath"
   | "parking"
+  | "car"
   | "map"
+  | "map-pin"
   | "nearby"
   | "notice"
+  | "bell"
   | "emergency"
+  | "phone"
   | "laundry"
+  | "washing-machine"
   | "taxi"
+  | "train"
+  | "bus"
+  | "credit-card"
+  | "key"
+  | "toothbrush"
+  | "hanger"
+  | "broom"
+  | "microwave"
+  | "package"
+  | "bed"
+  | "ticket"
   | "info"
   | "link"
   | "quote"
@@ -28,23 +47,62 @@ const ICON_ALIASES: Record<string, LineIconName> = {
   "wi-fi": "wifi",
   internet: "wifi",
   breakfast: "breakfast",
+  utensils: "utensils",
+  "svg:utensils": "utensils",
   morning: "breakfast",
   checkout: "checkout",
+  clock: "clock",
+  "svg:clock": "clock",
   "check-out": "checkout",
   restaurant: "restaurant",
   dining: "restaurant",
   spa: "spa",
+  bath: "bath",
+  "svg:bath": "bath",
   onsen: "spa",
   parking: "parking",
+  car: "car",
+  "svg:car": "car",
   map: "map",
+  "map-pin": "map-pin",
+  "svg:map-pin": "map-pin",
   nearby: "nearby",
   location: "nearby",
   notice: "notice",
+  bell: "bell",
+  "svg:bell": "bell",
   alert: "notice",
   emergency: "emergency",
+  phone: "phone",
+  "svg:phone": "phone",
   laundry: "laundry",
+  "washing-machine": "washing-machine",
+  "svg:washing-machine": "washing-machine",
   taxi: "taxi",
+  train: "train",
+  "svg:train": "train",
+  bus: "bus",
+  "svg:bus": "bus",
+  "credit-card": "credit-card",
+  "svg:credit-card": "credit-card",
+  key: "key",
+  "svg:key": "key",
+  toothbrush: "toothbrush",
+  "svg:toothbrush": "toothbrush",
+  hanger: "hanger",
+  "svg:hanger": "hanger",
+  broom: "broom",
+  "svg:broom": "broom",
+  microwave: "microwave",
+  "svg:microwave": "microwave",
+  package: "package",
+  "svg:package": "package",
+  bed: "bed",
+  "svg:bed": "bed",
+  ticket: "ticket",
+  "svg:ticket": "ticket",
   info: "info",
+  "svg:info": "info",
   link: "link",
   quote: "quote",
   checklist: "checklist",
@@ -111,6 +169,7 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         </svg>
       );
     case "breakfast":
+    case "utensils":
       return (
         <svg {...base}>
           <path d="M7 4v8" />
@@ -121,6 +180,7 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         </svg>
       );
     case "checkout":
+    case "clock":
       return (
         <svg {...base}>
           <path d="M12 8v4l3 2" />
@@ -139,6 +199,7 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         </svg>
       );
     case "spa":
+    case "bath":
       return (
         <svg {...base}>
           <path d="M7 19h10" />
@@ -149,13 +210,18 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         </svg>
       );
     case "parking":
+    case "car":
       return (
         <svg {...base}>
-          <rect x="4" y="3" width="16" height="18" rx="2" />
-          <path d="M10 16V8h4a3 3 0 1 1 0 6h-4" />
+          <path d="M4 13h16l-1.5-4h-13L4 13Z" />
+          <path d="M5 13v4h2" />
+          <path d="M17 17h2v-4" />
+          <circle cx="8" cy="17" r="1.6" />
+          <circle cx="16" cy="17" r="1.6" />
         </svg>
       );
     case "map":
+    case "map-pin":
     case "nearby":
       return (
         <svg {...base}>
@@ -164,22 +230,22 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         </svg>
       );
     case "notice":
+    case "bell":
       return (
         <svg {...base}>
-          <path d="M12 9v4" />
-          <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" />
-          <path d="M12 3 22 20H2L12 3Z" />
+          <path d="M8 17h8l-1-2v-4a3 3 0 1 0-6 0v4l-1 2Z" />
+          <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
         </svg>
       );
     case "emergency":
+    case "phone":
       return (
         <svg {...base}>
-          <circle cx="12" cy="12" r="8" />
-          <path d="M12 8v5" />
-          <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
+          <path d="M6 3h4l1 4-2 1.5a14 14 0 0 0 6 6L16.5 12l4 1v4l-2 2a3 3 0 0 1-3 .7A18 18 0 0 1 4.3 8.5 3 3 0 0 1 5 5.5L6 3Z" />
         </svg>
       );
     case "laundry":
+    case "washing-machine":
       return (
         <svg {...base}>
           <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -196,6 +262,91 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
           <path d="M17 17h2v-4" />
           <circle cx="8" cy="17" r="1.6" />
           <circle cx="16" cy="17" r="1.6" />
+        </svg>
+      );
+    case "train":
+      return (
+        <svg {...base}>
+          <rect x="6" y="3.5" width="12" height="14" rx="2" />
+          <path d="M9 7h2M13 7h2M8 12h8M10 17l-2 3M14 17l2 3" />
+        </svg>
+      );
+    case "bus":
+      return (
+        <svg {...base}>
+          <rect x="5" y="4" width="14" height="13" rx="2" />
+          <path d="M5 10h14M8 17v3M16 17v3" />
+          <circle cx="9" cy="18" r="1.2" />
+          <circle cx="15" cy="18" r="1.2" />
+        </svg>
+      );
+    case "credit-card":
+      return (
+        <svg {...base}>
+          <rect x="3" y="6" width="18" height="12" rx="2" />
+          <path d="M3 10h18M7 14h4" />
+        </svg>
+      );
+    case "key":
+      return (
+        <svg {...base}>
+          <circle cx="8.5" cy="12" r="3.2" />
+          <path d="M11.7 12H20" />
+          <path d="M16 12v2" />
+          <path d="M18 12v1.5" />
+        </svg>
+      );
+    case "toothbrush":
+      return (
+        <svg {...base}>
+          <path d="M4 18.5h6.5a2.5 2.5 0 0 0 2.3-1.5L20 4.5" />
+          <path d="M17.8 3.8 20.2 6.2" />
+          <path d="M5.5 16.5h3.5" />
+        </svg>
+      );
+    case "hanger":
+      return (
+        <svg {...base}>
+          <path d="M12 7a2 2 0 1 0-2-2" />
+          <path d="M10 7.2 4.5 14a2 2 0 0 0 1.6 3.3h11.8a2 2 0 0 0 1.6-3.3L14 7.2" />
+        </svg>
+      );
+    case "broom":
+      return (
+        <svg {...base}>
+          <path d="M4 19h9" />
+          <path d="M14 5 9 10" />
+          <path d="m8 11 4.5 4.5a2 2 0 0 1 0 2.8L11.8 19H6.5" />
+        </svg>
+      );
+    case "microwave":
+      return (
+        <svg {...base}>
+          <rect x="3.5" y="5" width="17" height="14" rx="2" />
+          <rect x="6.5" y="8" width="9" height="8" rx="1" />
+          <path d="M18 8v8M19 9v.01M19 12v.01M19 15v.01" />
+        </svg>
+      );
+    case "package":
+      return (
+        <svg {...base}>
+          <path d="M4.5 8.5 12 4l7.5 4.5v7L12 20l-7.5-4.5v-7Z" />
+          <path d="M12 20v-7.5M4.5 8.5 12 13l7.5-4.5" />
+        </svg>
+      );
+    case "bed":
+      return (
+        <svg {...base}>
+          <path d="M3.5 18.5h17" />
+          <path d="M5 18.5V9.5h14v9" />
+          <rect x="6.5" y="11" width="4.5" height="3" rx="1" />
+        </svg>
+      );
+    case "ticket":
+      return (
+        <svg {...base}>
+          <path d="M4 8a2 2 0 0 0 2-2h12v4a2 2 0 1 1 0 4v4H6a2 2 0 0 0-2-2V8Z" />
+          <path d="M12 7v10" />
         </svg>
       );
     case "link":

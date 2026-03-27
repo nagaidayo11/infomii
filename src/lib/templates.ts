@@ -241,9 +241,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
-        { icon: "📶", label: "Wi-Fi", link: "/p/wifi" },
-        { icon: "🧺", label: "ランドリー", link: "/p/laundry" },
-        { icon: "🍳", label: "朝食", link: "/p/breakfast" },
+        { icon: "svg:wifi", label: "Wi-Fi", link: "/p/wifi" },
+        { icon: "svg:washing-machine", label: "ランドリー", link: "/p/laundry" },
+        { icon: "svg:utensils", label: "朝食", link: "/p/breakfast" },
       ],
       hours: [
         ["チェックイン", "15:00〜24:00"],
@@ -281,9 +281,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "timeline",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
-        { icon: "🪪", label: "本人確認" },
-        { icon: "🔑", label: "ルームキー" },
-        { icon: "🅿️", label: "駐車場案内", link: "/p/parking" },
+        { icon: "svg:info", label: "本人確認" },
+        { icon: "svg:key", label: "ルームキー" },
+        { icon: "svg:car", label: "駐車場案内", link: "/p/parking" },
       ],
       sections: [
         { title: "チェックイン手順", body: "1. タブレットで予約名入力\n2. 本人確認書類を読み取り\n3. ルームキーを受け取り客室へ" },
@@ -305,9 +305,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "hero",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
-        { icon: "🛎️", label: "Front / フロント" },
-        { icon: "📶", label: "Wi-Fi" },
-        { icon: "🚕", label: "Taxi / タクシー" },
+        { icon: "svg:bell", label: "Front / フロント" },
+        { icon: "svg:wifi", label: "Wi-Fi" },
+        { icon: "svg:taxi", label: "Taxi / タクシー" },
       ],
       hours: [
         ["チェックイン / Check-in", "15:00〜24:00 / 3:00 PM - 12:00 AM"],
@@ -480,9 +480,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "catalog",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
-        { icon: "🧘", label: "朝ヨガ", link: "https://example.com/reserve/yoga" },
-        { icon: "⛵", label: "クルーズ", link: "https://example.com/reserve/cruise" },
-        { icon: "🧒", label: "キッズ", link: "https://example.com/reserve/kids" },
+        { icon: "svg:clock", label: "朝ヨガ", link: "https://example.com/reserve/yoga" },
+        { icon: "svg:ticket", label: "クルーズ", link: "https://example.com/reserve/cruise" },
+        { icon: "svg:info", label: "キッズ", link: "https://example.com/reserve/kids" },
       ],
       hours: [
         ["朝ヨガ", "7:00〜7:40（ガーデン）"],
@@ -513,9 +513,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "story",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
-        { icon: "♨️", label: "Bath / 温浴" },
-        { icon: "🏊", label: "Pool / プール" },
-        { icon: "📱", label: "Reserve / 予約" },
+        { icon: "svg:bath", label: "Bath / 温浴" },
+        { icon: "svg:bath", label: "Pool / プール" },
+        { icon: "svg:phone", label: "Reserve / 予約" },
       ],
       hours: [
         ["大浴場 / Public Bath", "15:00〜24:00 / 5:00〜9:30"],
@@ -540,9 +540,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "story",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
-        { icon: "🏊", label: "プール" },
-        { icon: "♨️", label: "スパ" },
-        { icon: "🛟", label: "注意事項" },
+        { icon: "svg:bath", label: "プール" },
+        { icon: "svg:bath", label: "スパ" },
+        { icon: "svg:info", label: "注意事項" },
       ],
       hours: [
         ["屋外プール", "9:00〜18:00"],
@@ -566,9 +566,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "timeline",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
-        { icon: "🍱", label: "夕食会場" },
-        { icon: "🍚", label: "朝食会場" },
-        { icon: "📞", label: "アレルギー連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:utensils", label: "夕食会場" },
+        { icon: "svg:utensils", label: "朝食会場" },
+        { icon: "svg:phone", label: "アレルギー連絡", link: "tel:+81-00-0000-0000" },
       ],
       hours: [
         ["ご夕食", "18:00 / 18:30 / 19:00"],
@@ -594,9 +594,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "compact",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
-        { icon: "🛁", label: "大浴場" },
-        { icon: "🚿", label: "貸切風呂" },
-        { icon: "🔒", label: "貴重品管理" },
+        { icon: "svg:bath", label: "大浴場" },
+        { icon: "svg:bath", label: "貸切風呂" },
+        { icon: "svg:key", label: "貴重品管理" },
       ],
       hours: [
         ["大浴場", "15:00〜24:00 / 5:00〜9:30"],
@@ -620,9 +620,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "timeline",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
-        { icon: "🍳", label: "朝食時間" },
-        { icon: "📍", label: "会場案内" },
-        { icon: "☎️", label: "会場へ連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:utensils", label: "朝食時間" },
+        { icon: "svg:map-pin", label: "会場案内" },
+        { icon: "svg:phone", label: "会場へ連絡", link: "tel:+81-00-0000-0000" },
       ],
       hours: [["営業時間", "6:30〜9:30（最終 9:00）"]],
       sections: [
@@ -645,9 +645,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/hotel-business.svg",
       quickLinks: [
-        { icon: "📶", label: "Wi-Fi" },
-        { icon: "🧺", label: "ランドリー", link: "/p/laundry" },
-        { icon: "🛎️", label: "貸出申込" },
+        { icon: "svg:wifi", label: "Wi-Fi" },
+        { icon: "svg:washing-machine", label: "ランドリー", link: "/p/laundry" },
+        { icon: "svg:bell", label: "貸出申込" },
       ],
       sections: [
         { title: "客室設備", body: "Wi-Fi / 冷蔵庫 / ドライヤー / 加湿空気清浄機" },
@@ -669,9 +669,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "story",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
-        { icon: "🌧️", label: "変更対象" },
-        { icon: "🏨", label: "屋内プログラム" },
-        { icon: "📞", label: "問い合わせ", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:info", label: "変更対象" },
+        { icon: "svg:bed", label: "屋内プログラム" },
+        { icon: "svg:phone", label: "問い合わせ", link: "tel:+81-00-0000-0000" },
       ],
       sections: [
         { title: "変更対象", body: "屋外ヨガ / クルーズ / ガーデンイベント" },
@@ -693,9 +693,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "timeline",
       heroImageUrl: "/templates/hotel-resort.svg",
       quickLinks: [
-        { icon: "🚌", label: "送迎時刻" },
-        { icon: "📍", label: "乗り場" },
-        { icon: "📱", label: "予約連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:bus", label: "送迎時刻" },
+        { icon: "svg:map-pin", label: "乗り場" },
+        { icon: "svg:phone", label: "予約連絡", link: "tel:+81-00-0000-0000" },
       ],
       hours: [
         ["駅発", "14:30 / 15:30 / 16:30"],
@@ -721,9 +721,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "compact",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
-        { icon: "🧳", label: "預かり時間" },
-        { icon: "🏯", label: "観光案内" },
-        { icon: "📞", label: "フロント連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:package", label: "預かり時間" },
+        { icon: "svg:map-pin", label: "観光案内" },
+        { icon: "svg:phone", label: "フロント連絡", link: "tel:+81-00-0000-0000" },
       ],
       hours: [
         ["チェックイン前", "当日朝から可能"],
@@ -748,9 +748,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/ryokan.svg",
       quickLinks: [
-        { icon: "🌙", label: "静粛時間" },
-        { icon: "♨️", label: "大浴場" },
-        { icon: "☎️", label: "連絡先", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:clock", label: "静粛時間" },
+        { icon: "svg:bath", label: "大浴場" },
+        { icon: "svg:phone", label: "連絡先", link: "tel:+81-00-0000-0000" },
       ],
       hours: [
         ["静粛時間", "22:00〜7:00"],
@@ -775,9 +775,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "catalog",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
-        { icon: "📋", label: "メニュー一覧", link: "/p/menu" },
-        { icon: "📍", label: "アクセス", link: "/p/access" },
-        { icon: "☎️", label: "予約電話", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:ticket", label: "メニュー一覧", link: "/p/menu" },
+        { icon: "svg:map-pin", label: "アクセス", link: "/p/access" },
+        { icon: "svg:phone", label: "予約電話", link: "tel:+81-00-0000-0000" },
       ],
       hours: [["ラストオーダー", "フード 22:00 / ドリンク 22:30"]],
       pricing: [
@@ -807,9 +807,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
-        { icon: "📅", label: "予約", link: "https://example.com/restaurant-reserve" },
-        { icon: "🕒", label: "営業時間" },
-        { icon: "💳", label: "支払い方法" },
+        { icon: "svg:ticket", label: "予約", link: "https://example.com/restaurant-reserve" },
+        { icon: "svg:clock", label: "営業時間" },
+        { icon: "svg:credit-card", label: "支払い方法" },
       ],
       hours: [
         ["ランチ", "11:30〜14:30"],
@@ -835,9 +835,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "story",
       heroImageUrl: "/templates/restaurant.svg",
       quickLinks: [
-        { icon: "🍽️", label: "コース一覧" },
-        { icon: "🍻", label: "飲み放題" },
-        { icon: "🏢", label: "貸切条件" },
+        { icon: "svg:utensils", label: "コース一覧" },
+        { icon: "svg:ticket", label: "飲み放題" },
+        { icon: "svg:map-pin", label: "貸切条件" },
       ],
       pricing: [
         ["スタンダード", "[料金] 円"],
@@ -864,9 +864,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "catalog",
       heroImageUrl: "/templates/cafe.svg",
       quickLinks: [
-        { icon: "🥤", label: "限定ドリンク", link: "/p/seasonal" },
-        { icon: "📦", label: "テイクアウト", link: "/p/takeout" },
-        { icon: "🗺️", label: "店舗情報", link: "/p/store" },
+        { icon: "svg:ticket", label: "限定ドリンク", link: "/p/seasonal" },
+        { icon: "svg:package", label: "テイクアウト", link: "/p/takeout" },
+        { icon: "svg:map-pin", label: "店舗情報", link: "/p/store" },
       ],
       hours: [["販売期間", "3月1日〜4月30日"]],
       pricing: [
@@ -893,9 +893,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/cafe.svg",
       quickLinks: [
-        { icon: "📶", label: "Wi-Fi情報" },
-        { icon: "🔌", label: "電源席" },
-        { icon: "🔇", label: "通話ルール" },
+        { icon: "svg:wifi", label: "Wi-Fi情報" },
+        { icon: "svg:info", label: "電源席" },
+        { icon: "svg:bell", label: "通話ルール" },
       ],
       hours: [["ラストオーダー", "閉店30分前"]],
       columns: {
@@ -920,9 +920,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "timeline",
       heroImageUrl: "/templates/salon.svg",
       quickLinks: [
-        { icon: "🧴", label: "施術前準備" },
-        { icon: "📅", label: "予約変更", link: "https://example.com/salon-reserve" },
-        { icon: "📞", label: "遅刻連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:info", label: "施術前準備" },
+        { icon: "svg:ticket", label: "予約変更", link: "https://example.com/salon-reserve" },
+        { icon: "svg:phone", label: "遅刻連絡", link: "tel:+81-00-0000-0000" },
       ],
       hours: [
         ["ご来店目安", "予約時間の5分前"],
@@ -947,9 +947,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "catalog",
       heroImageUrl: "/templates/salon.svg",
       quickLinks: [
-        { icon: "✂️", label: "基本メニュー" },
-        { icon: "👤", label: "指名料金" },
-        { icon: "✨", label: "オプション" },
+        { icon: "svg:ticket", label: "基本メニュー" },
+        { icon: "svg:credit-card", label: "指名料金" },
+        { icon: "svg:info", label: "オプション" },
       ],
       pricing: [
         ["カット", "[料金] 円"],
@@ -976,9 +976,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "practical",
       heroImageUrl: "/templates/clinic.svg",
       quickLinks: [
-        { icon: "🧾", label: "持ち物確認" },
-        { icon: "🌡️", label: "発熱時連絡", link: "tel:+81-00-0000-0000" },
-        { icon: "🗓️", label: "Web予約", link: "https://example.com/clinic-reserve" },
+        { icon: "svg:ticket", label: "持ち物確認" },
+        { icon: "svg:phone", label: "発熱時連絡", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:ticket", label: "Web予約", link: "https://example.com/clinic-reserve" },
       ],
       hours: [
         ["午前受付", "9:00〜12:00"],
@@ -1005,9 +1005,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "story",
       heroImageUrl: "/templates/clinic.svg",
       quickLinks: [
-        { icon: "💉", label: "接種案内" },
-        { icon: "📄", label: "問診票" },
-        { icon: "🗓️", label: "予約ページ", link: "https://example.com/clinic-reserve" },
+        { icon: "svg:info", label: "接種案内" },
+        { icon: "svg:ticket", label: "問診票" },
+        { icon: "svg:ticket", label: "予約ページ", link: "https://example.com/clinic-reserve" },
       ],
       sections: [
         { title: "予約方法", body: "電話: [電話番号]\nWeb: [予約URL]" },
@@ -1029,9 +1029,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "catalog",
       heroImageUrl: "/templates/retail.svg",
       quickLinks: [
-        { icon: "🛍️", label: "対象商品", link: "https://example.com/retail-campaign" },
-        { icon: "🎫", label: "会員特典" },
-        { icon: "📦", label: "在庫確認" },
+        { icon: "svg:package", label: "対象商品", link: "https://example.com/retail-campaign" },
+        { icon: "svg:ticket", label: "会員特典" },
+        { icon: "svg:package", label: "在庫確認" },
       ],
       hours: [["期間", "[開始日]〜[終了日]"]],
       sections: [
@@ -1054,9 +1054,9 @@ export const starterTemplates: StarterTemplate[] = [
       variant: "compact",
       heroImageUrl: "/templates/retail.svg",
       quickLinks: [
-        { icon: "🔁", label: "返品条件" },
-        { icon: "🧾", label: "必要書類" },
-        { icon: "📞", label: "問い合わせ", link: "tel:+81-00-0000-0000" },
+        { icon: "svg:info", label: "返品条件" },
+        { icon: "svg:ticket", label: "必要書類" },
+        { icon: "svg:phone", label: "問い合わせ", link: "tel:+81-00-0000-0000" },
       ],
       sections: [
         { title: "返品可能期間", body: "購入日より [日数] 日以内" },
