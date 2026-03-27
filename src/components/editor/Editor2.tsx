@@ -488,7 +488,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
 
   const translateAllCardsToMultilingual = useCallback(async (): Promise<number> => {
     if (cards.length === 0) return 0;
-    const cache = new Map<string, { en: string; zh: string; ko: string } | null>();
+    const cache = new Map<string, { en: string; zh: string; ko: string }>();
     const nonTranslatable = new Set([
       "href",
       "link",
@@ -503,37 +503,55 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       "accent",
     ]);
 
-    const translateJaToEnZhKo = async (text: string): Promise<{ en: string; zh: string; ko: string } | null> => {
-      const ja = text.trim();
-      if (ja.length < 2 || /^https?:\/\//i.test(ja)) return null;
-      if (cache.has(ja)) return cache.get(ja) ?? null;
-      try {
-        const res = await fetch("/api/ai/translate-content", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: ja }),
-        });
-        if (!res.ok) {
-          cache.set(ja, null);
-          return null;
+    const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
+      if (typeof value === "string") {
+        const ja = value.trim();
+        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return out;
+        out.add(ja);
+        return out;
+      }
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const localized = value as Record<string, unknown>;
+        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
+          const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
+          if (ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
+          return out;
         }
-        const data = (await res.json()) as { en?: string; zh?: string; ko?: string };
-        const valid =
-          typeof data.en === "string" && typeof data.zh === "string" && typeof data.ko === "string"
-            ? { en: data.en, zh: data.zh, ko: data.ko }
-            : null;
-        cache.set(ja, valid);
-        return valid;
-      } catch {
-        cache.set(ja, null);
-        return null;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((v) => collectTargets(v, key, out));
+        return out;
+      }
+      if (value && typeof value === "object") {
+        Object.entries(value as Record<string, unknown>).forEach(([k, v]) => collectTargets(v, k, out));
+      }
+      return out;
+    };
+
+    const translateBatch = async (targets: string[]) => {
+      if (targets.length === 0) return;
+      const res = await fetch("/api/ai/translate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texts: targets }),
+      });
+      if (!res.ok) throw new Error("batch translate failed");
+      const data = (await res.json()) as { items?: Array<{ i: number; en: string; zh: string; ko: string }> };
+      const items = Array.isArray(data.items) ? data.items : [];
+      for (const item of items) {
+        const source = targets[item.i];
+        if (!source) continue;
+        if (typeof item.en === "string" && typeof item.zh === "string" && typeof item.ko === "string") {
+          cache.set(source, { en: item.en, zh: item.zh, ko: item.ko });
+        }
       }
     };
 
     const walk = async (value: unknown, key?: string): Promise<{ value: unknown; count: number }> => {
       if (typeof value === "string") {
-        if (key && nonTranslatable.has(key)) return { value, count: 0 };
-        const translated = await translateJaToEnZhKo(value);
+        const ja = value.trim();
+        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return { value, count: 0 };
+        const translated = cache.get(ja);
         if (!translated) return { value, count: 0 };
         return { value: { ja: value, en: translated.en, zh: translated.zh, ko: translated.ko }, count: 1 };
       }
@@ -541,7 +559,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         const localized = value as Record<string, unknown>;
         if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
           const ja = getLocalizedContent(localized as LocalizedString, "ja");
-          const translated = await translateJaToEnZhKo(ja);
+          const translated = cache.get(ja.trim());
           if (!translated) return { value, count: 0 };
           return {
             value: { ...localized, ja, en: translated.en, zh: translated.zh, ko: translated.ko },
@@ -571,6 +589,9 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       }
       return { value, count: 0 };
     };
+
+    const targets = Array.from(cards.reduce((set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set), new Set<string>()));
+    await translateBatch(targets);
 
     const nextCards = [...cards];
     let translatedCount = 0;

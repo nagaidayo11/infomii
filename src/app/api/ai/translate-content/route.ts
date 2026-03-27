@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { text?: string };
+  let body: { text?: string; texts?: string[] };
   try {
     body = await request.json();
   } catch (e) {
@@ -71,10 +71,14 @@ export async function POST(request: Request) {
   }
 
   const text = typeof body.text === "string" ? body.text.trim() : "";
-  if (!text) {
+  const texts =
+    Array.isArray(body.texts)
+      ? body.texts.filter((t): t is string => typeof t === "string").map((t) => t.trim()).filter(Boolean)
+      : [];
+  if (!text && texts.length === 0) {
     logTranslateError("missing_text", { requestId });
     return NextResponse.json(
-      { error: "text is required" },
+      { error: "text or texts is required" },
       { status: 400 }
     );
   }
@@ -85,8 +89,16 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  const totalTextsLength = texts.reduce((acc, t) => acc + t.length, 0);
+  if (texts.length > 120 || totalTextsLength > 12000) {
+    logTranslateError("texts_too_large", { requestId, count: texts.length, totalTextsLength });
+    return NextResponse.json(
+      { error: "texts too large" },
+      { status: 400 }
+    );
+  }
 
-  const prompt = `次の日本語のテキストを、英語・中国語（簡体字）・韓国語に翻訳してください。
+  const singlePrompt = `次の日本語のテキストを、英語・中国語（簡体字）・韓国語に翻訳してください。
 自然で読みやすい表現にしてください。JSONのみを返し、説明やマークダウンは含めないでください。
 
 日本語:
@@ -97,6 +109,20 @@ ${text}
   "en": "英語訳",
   "zh": "中文翻译",
   "ko": "한국어 번역"
+}`;
+
+  const batchPrompt = `次の日本語テキスト一覧を、英語・中国語（簡体字）・韓国語に翻訳してください。
+自然で読みやすい表現にしてください。必ずJSONのみを返し、説明やマークダウンは出力しないでください。
+入力のiをそのまま維持し、件数を減らしたり並びを変えたりしないでください。
+
+入力:
+${JSON.stringify(texts.map((t, i) => ({ i, ja: t })))}
+
+出力形式（このJSONのみ）:
+{
+  "items": [
+    { "i": 0, "en": "English", "zh": "中文", "ko": "한국어" }
+  ]
 }`;
 
   try {
@@ -120,7 +146,7 @@ ${text}
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: texts.length > 0 ? batchPrompt : singlePrompt }],
           temperature: 0.3,
         }),
       });
@@ -173,6 +199,32 @@ ${text}
     }
 
     const raw = data.choices?.[0]?.message?.content?.trim() ?? "";
+    if (texts.length > 0) {
+      const parsed = parseJsonBlock(raw) as { items?: Array<{ i?: number; en?: string; zh?: string; ko?: string }> } | null;
+      const items = Array.isArray(parsed?.items) ? parsed!.items : [];
+      const normalized = items
+        .filter((it) => typeof it.i === "number" && typeof it.en === "string" && typeof it.zh === "string" && typeof it.ko === "string")
+        .map((it) => ({
+          i: Number(it.i),
+          en: String(it.en).trim(),
+          zh: String(it.zh).trim(),
+          ko: String(it.ko).trim(),
+        }));
+      if (normalized.length !== texts.length) {
+        logTranslateError("invalid_batch_translation_response", {
+          requestId,
+          expected: texts.length,
+          actual: normalized.length,
+          rawPreview: raw.slice(0, 1000),
+        });
+        return NextResponse.json(
+          { error: "Invalid batch translation response" },
+          { status: 502 }
+        );
+      }
+      return NextResponse.json({ items: normalized });
+    }
+
     const parsed = parseJsonBlock(raw);
     if (!parsed || typeof parsed.en !== "string" || typeof parsed.zh !== "string" || typeof parsed.ko !== "string") {
       logTranslateError("invalid_translation_response", {
