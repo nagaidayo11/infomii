@@ -56,7 +56,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
   const [editorLocale, setEditorLocale] = useState<SupportedLocale>("ja");
-  const [bulkTranslateRunning, setBulkTranslateRunning] = useState(false);
+  const [localeTranslating, setLocaleTranslating] = useState(false);
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
@@ -486,13 +486,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
   }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading]);
 
-  const handleBulkTranslateAll = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは翻訳機能は利用できません。無料登録で解放されます。");
-      return;
-    }
-    if (cards.length === 0 || bulkTranslateRunning) return;
-    setBulkTranslateRunning(true);
+  const translateAllCardsToMultilingual = useCallback(async (): Promise<number> => {
+    if (cards.length === 0) return 0;
     const cache = new Map<string, { en: string; zh: string; ko: string } | null>();
     const nonTranslatable = new Set([
       "href",
@@ -577,28 +572,38 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       return { value, count: 0 };
     };
 
-    try {
-      const nextCards = [...cards];
-      let translatedCount = 0;
-      for (let i = 0; i < nextCards.length; i += 1) {
-        const card = nextCards[i];
-        const result = await walk(card.content as Record<string, unknown>);
-        translatedCount += result.count;
-        nextCards[i] = { ...card, content: result.value as Record<string, unknown> };
-      }
-      if (translatedCount === 0) {
-        alert("翻訳対象のテキストが見つかりませんでした。");
-        return;
-      }
-      setCards(nextCards);
-      setEditorLocale("en");
-      alert(`${translatedCount}項目を翻訳しました。`);
-    } catch {
-      alert("一括翻訳に失敗しました。時間をおいて再試行してください。");
-    } finally {
-      setBulkTranslateRunning(false);
+    const nextCards = [...cards];
+    let translatedCount = 0;
+    for (let i = 0; i < nextCards.length; i += 1) {
+      const card = nextCards[i];
+      const result = await walk(card.content as Record<string, unknown>);
+      translatedCount += result.count;
+      nextCards[i] = { ...card, content: result.value as Record<string, unknown> };
     }
-  }, [isDemoMode, cards, bulkTranslateRunning, setCards]);
+    if (translatedCount > 0) setCards(nextCards);
+    return translatedCount;
+  }, [cards, setCards]);
+
+  const handleChangeEditorLocale = useCallback(async (nextLocale: SupportedLocale) => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは翻訳機能は利用できません。無料登録で解放されます。");
+      return;
+    }
+    if (localeTranslating || editorLocale === nextLocale) return;
+    if (nextLocale === "ja") {
+      setEditorLocale("ja");
+      return;
+    }
+    setLocaleTranslating(true);
+    try {
+      await translateAllCardsToMultilingual();
+      setEditorLocale(nextLocale);
+    } catch {
+      alert("翻訳に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setLocaleTranslating(false);
+    }
+  }, [isDemoMode, localeTranslating, editorLocale, translateAllCardsToMultilingual]);
 
   const topBar =
     pageId || isDemoMode ? (
@@ -634,9 +639,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           setBulkFontOpen(true);
         }}
         locale={editorLocale}
-        onChangeLocale={setEditorLocale}
-        onBulkTranslateAll={isDemoMode ? undefined : handleBulkTranslateAll}
-        bulkTranslateRunning={bulkTranslateRunning}
+        onChangeLocale={handleChangeEditorLocale}
+        localeTranslating={localeTranslating}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
