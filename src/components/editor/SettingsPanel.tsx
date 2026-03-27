@@ -12,6 +12,19 @@ import { useEditor2Store } from "./store";
 
 const TRANSLATE_DEBOUNCE_MS = 1200;
 const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
+const NON_TRANSLATABLE_KEYS = new Set([
+  "href",
+  "link",
+  "linkUrl",
+  "src",
+  "mapEmbedUrl",
+  "pageSlug",
+  "icon",
+  "variant",
+  "style",
+  "color",
+  "accent",
+]);
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
@@ -813,6 +826,8 @@ export function CardSettings({
   const [bulkFind, setBulkFind] = useState("");
   const [bulkReplaceTo, setBulkReplaceTo] = useState("");
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const [cardTranslateRunning, setCardTranslateRunning] = useState(false);
+  const [cardTranslateStatus, setCardTranslateStatus] = useState<string | null>(null);
   const [customPresets, setCustomPresets] = useState<
     Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
   >([]);
@@ -915,6 +930,97 @@ export function CardSettings({
     }
     setBulkStatus(`置換完了: ${result.cardsUpdated}ブロック / ${result.occurrences}箇所`);
   }, [onBulkReplace, bulkFind, bulkReplaceTo]);
+
+  const translateCardContent = useCallback(
+    async (source: Record<string, unknown>) => {
+      const cache = new Map<string, { en: string; zh: string; ko: string } | null>();
+
+      const translateText = async (text: string) => {
+        const ja = text.trim();
+        if (ja.length < MIN_TEXT_LENGTH_FOR_TRANSLATE) return null;
+        if (/^https?:\/\//i.test(ja)) return null;
+        if (cache.has(ja)) return cache.get(ja) ?? null;
+        const result = await translateJaToEnZhKo(ja);
+        cache.set(ja, result);
+        return result;
+      };
+
+      const walk = async (
+        value: unknown,
+        key?: string
+      ): Promise<{ value: unknown; count: number }> => {
+        if (typeof value === "string") {
+          if (key && NON_TRANSLATABLE_KEYS.has(key)) return { value, count: 0 };
+          const translated = await translateText(value);
+          if (!translated) return { value, count: 0 };
+          return {
+            value: { ja: value, en: translated.en, zh: translated.zh, ko: translated.ko },
+            count: 1,
+          };
+        }
+        if (isLocalizedObject(value)) {
+          const ja = getLocalizedContent(value, "ja");
+          const translated = await translateText(ja);
+          if (!translated) return { value, count: 0 };
+          return {
+            value: { ...value, ja, en: translated.en, zh: translated.zh, ko: translated.ko },
+            count: 1,
+          };
+        }
+        if (Array.isArray(value)) {
+          let total = 0;
+          const next: unknown[] = [];
+          for (const item of value) {
+            const result = await walk(item, key);
+            next.push(result.value);
+            total += result.count;
+          }
+          return { value: next, count: total };
+        }
+        if (value && typeof value === "object") {
+          let total = 0;
+          const next: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+            const result = await walk(v, k);
+            next[k] = result.value;
+            total += result.count;
+          }
+          return { value: next, count: total };
+        }
+        return { value, count: 0 };
+      };
+
+      const result = await walk(source);
+      return { content: result.value as Record<string, unknown>, translatedCount: result.count };
+    },
+    []
+  );
+
+  const handleTranslateCard = useCallback(async () => {
+    if (!card) return;
+    setCardTranslateRunning(true);
+    setCardTranslateStatus(null);
+    try {
+      const current = useEditor2Store.getState().cards.find((c) => c.id === card.id);
+      if (!current) {
+        setCardTranslateStatus("カードが見つかりませんでした。");
+        return;
+      }
+      const { content: nextContent, translatedCount } = await translateCardContent(
+        (current.content ?? {}) as Record<string, unknown>
+      );
+      if (translatedCount === 0) {
+        setCardTranslateStatus("翻訳対象のテキストが見つかりませんでした。");
+        return;
+      }
+      onUpdate(card.id, { content: nextContent });
+      setCardTranslateStatus(`${translatedCount}項目を翻訳しました。`);
+    } catch {
+      setCardTranslateStatus("翻訳に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setCardTranslateRunning(false);
+    }
+  }, [card, onUpdate, translateCardContent]);
 
   if (!card) {
     return (
@@ -1151,6 +1257,23 @@ export function CardSettings({
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-6">
+          {!demoMode && (
+            <SettingsSection title="多言語">
+              <button
+                type="button"
+                onClick={handleTranslateCard}
+                disabled={cardTranslateRunning}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {cardTranslateRunning ? "翻訳中..." : "このカードを翻訳（EN/中文/한국어）"}
+              </button>
+              <p className="text-xs text-slate-500">
+                入力済みの日本語を基準に、このカード内のテキストを一括翻訳します。
+              </p>
+              {cardTranslateStatus ? <p className="text-xs text-slate-500">{cardTranslateStatus}</p> : null}
+            </SettingsSection>
+          )}
+
           {card.type === "welcome" && (
             <SettingsSection title="コンテンツ">
               <Input

@@ -17,6 +17,7 @@ const TEMPLATE_CATEGORIES = [
   { id: "ryokan", label: "旅館" },
   { id: "airbnb", label: "Airbnb" },
   { id: "guide", label: "観光ガイド" },
+  { id: "inbound", label: "インバウンド" },
 ] as const;
 
 function filterByCategory(
@@ -46,7 +47,9 @@ export default function TemplatesPage() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    listTemplates()
+    fetch("/api/seed-templates?sync=1")
+      .catch(() => null)
+      .then(() => listTemplates())
       .then(async (list) => {
         if (!mounted) return;
         if (list.length === 0) {
