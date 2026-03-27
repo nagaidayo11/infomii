@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getBlockStyle } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
+import { getLocalizedContent } from "@/lib/localized-content";
 import { HeroCard } from "./HeroCard";
 import { InfoCard } from "./InfoCard";
 import { HighlightCard } from "./HighlightCard";
@@ -40,27 +41,60 @@ type SingleCardRendererProps = {
   showSpaceLabel?: boolean;
 };
 
+function isLocalizedObject(value: unknown): value is Record<string, unknown> {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    ("ja" in (value as Record<string, unknown>) ||
+      "en" in (value as Record<string, unknown>) ||
+      "zh" in (value as Record<string, unknown>) ||
+      "ko" in (value as Record<string, unknown>))
+  );
+}
+
+function resolveContentByLocale(value: unknown, locale: string): unknown {
+  if (isLocalizedObject(value)) {
+    return getLocalizedContent(value as { ja?: string; en?: string; zh?: string; ko?: string }, locale);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveContentByLocale(item, locale));
+  }
+  if (value && typeof value === "object") {
+    const next: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      next[k] = resolveContentByLocale(v, locale);
+    }
+    return next;
+  }
+  return value;
+}
+
 /**
  * Renders a single card by type. Used by CardRenderer for both single and list modes.
  */
 function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }: SingleCardRendererProps) {
   const locale = useLocale();
+  const resolvedCard: EditorCard = {
+    ...card,
+    content: resolveContentByLocale(card.content, locale) as Record<string, unknown>,
+  };
 
-  switch (card.type) {
+  switch (resolvedCard.type) {
     case "hero":
-      return <HeroCard card={card} isSelected={isSelected} locale={locale} />;
+      return <HeroCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "info":
-      return <InfoCard card={card} isSelected={isSelected} locale={locale} />;
+      return <InfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "highlight":
-      return <HighlightCard card={card} isSelected={isSelected} locale={locale} />;
+      return <HighlightCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "action":
-      return <ActionCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ActionCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "welcome":
-      return <WelcomeCard card={card} isSelected={isSelected} locale={locale} />;
+      return <WelcomeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "wifi": {
-      const c = card.content as Record<string, unknown> | undefined;
+      const c = resolvedCard.content as Record<string, unknown> | undefined;
       const infoCard: EditorCard = {
-        ...card,
+        ...resolvedCard,
         type: "info",
         content: {
           title: (c?.title as string) || "Wi-Fi",
@@ -74,12 +108,12 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <InfoCard card={infoCard} isSelected={isSelected} locale={locale} />;
     }
     case "breakfast": {
-      const c = card.content as Record<string, unknown> | undefined;
+      const c = resolvedCard.content as Record<string, unknown> | undefined;
       const time = (c?.time as string) ?? "";
       const location = (c?.location as string) ?? "";
       const menu = (c?.menu as string) ?? "";
       const highlightCard: EditorCard = {
-        ...card,
+        ...resolvedCard,
         type: "highlight",
         content: {
           title: (c?.title as string) || "朝食",
@@ -90,12 +124,12 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
     }
     case "spa": {
-      const c = card.content as Record<string, unknown> | undefined;
+      const c = resolvedCard.content as Record<string, unknown> | undefined;
       const time = ((c?.time as string) ?? (c?.hours as string) ?? "").trim();
       const location = (c?.location as string) ?? "";
       const menu = ((c?.menu as string) ?? (c?.description as string) ?? (c?.note as string) ?? "").trim();
       const highlightCard: EditorCard = {
-        ...card,
+        ...resolvedCard,
         type: "highlight",
         content: {
           title: (c?.title as string) || "スパ・温泉",
@@ -106,57 +140,57 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
     }
     case "checkout":
-      return <CheckoutCard card={card} isSelected={isSelected} locale={locale} />;
+      return <CheckoutCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "notice":
-      return <NoticeCard card={card} isSelected={isSelected} locale={locale} />;
+      return <NoticeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "nearby":
-      return <NearbyCard card={card} isSelected={isSelected} locale={locale} />;
+      return <NearbyCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "map":
-      return <MapCard card={card} isSelected={isSelected} locale={locale} />;
+      return <MapCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "parking":
-      return <ParkingCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ParkingCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "pageLinks":
-      return <PageLinksCard card={card} isSelected={isSelected} locale={locale} />;
+      return <PageLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "button":
-      return <ButtonCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ButtonCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image":
-      return <ImageCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ImageCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "gallery":
-      return <GalleryCard card={card} isSelected={isSelected} locale={locale} />;
+      return <GalleryCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "faq":
-      return <FaqCard card={card} isSelected={isSelected} locale={locale} />;
+      return <FaqCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "emergency":
-      return <EmergencyCard card={card} isSelected={isSelected} locale={locale} />;
+      return <EmergencyCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "laundry":
-      return <LaundryCard card={card} isSelected={isSelected} locale={locale} />;
+      return <LaundryCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "taxi":
-      return <TaxiCard card={card} isSelected={isSelected} locale={locale} />;
+      return <TaxiCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "restaurant":
-      return <RestaurantCard card={card} isSelected={isSelected} locale={locale} />;
+      return <RestaurantCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "text":
-      return <TextCard card={card} isSelected={isSelected} locale={locale} />;
+      return <TextCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "icon":
-      return <IconCard card={card} isSelected={isSelected} locale={locale} />;
+      return <IconCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "schedule":
-      return <ScheduleCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ScheduleCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "menu":
-      return <MenuCard card={card} isSelected={isSelected} locale={locale} />;
+      return <MenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "divider":
-      return <DividerCard card={card} isSelected={isSelected} locale={locale} />;
+      return <DividerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "quote":
-      return <QuoteCard card={card} isSelected={isSelected} locale={locale} />;
+      return <QuoteCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "checklist":
-      return <ChecklistCard card={card} isSelected={isSelected} locale={locale} />;
+      return <ChecklistCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "steps":
-      return <StepsCard card={card} isSelected={isSelected} locale={locale} />;
+      return <StepsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "compare":
-      return <CompareCard card={card} isSelected={isSelected} locale={locale} />;
+      return <CompareCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "kpi":
-      return <KpiCard card={card} isSelected={isSelected} locale={locale} />;
+      return <KpiCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "space":
-      return <SpaceCard card={card} isSelected={isSelected} showLabel={showSpaceLabel} />;
+      return <SpaceCard card={resolvedCard} isSelected={isSelected} showLabel={showSpaceLabel} />;
     default:
-      return <TextCard card={card as EditorCard} isSelected={isSelected} locale={locale} />;
+      return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }
 }
 

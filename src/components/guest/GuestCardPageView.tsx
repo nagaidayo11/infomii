@@ -115,6 +115,15 @@ export function GuestCardPageView({
         if (locale === "ko") return translated.ko;
         return value;
       }
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const localized = value as Record<string, unknown>;
+        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
+          const pick = (localized[locale] as string | undefined) || (localized.en as string | undefined) || (localized.ja as string | undefined);
+          if (typeof pick === "string" && pick.trim() !== "") {
+            return pick;
+          }
+        }
+      }
       if (Array.isArray(value)) {
         return Promise.all(value.map((item) => walk(item, key)));
       }
