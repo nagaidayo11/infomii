@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const IS_DEV = process.env.NODE_ENV !== "production";
-const MODEL_CANDIDATES = ["gpt-4o-mini", "gpt-4.1-mini"] as const;
+const MODEL_CANDIDATES = ["gpt-4o-mini", "gpt-4.1-mini", "gpt-4.1-nano"] as const;
 
 function logTranslateError(stage: string, payload: Record<string, unknown>) {
   const base = {
@@ -10,12 +10,21 @@ function logTranslateError(stage: string, payload: Record<string, unknown>) {
     stage,
     at: new Date().toISOString(),
   };
-  // Keep verbose details in dev only.
+  const safePayload = {
+    requestId: payload.requestId,
+    model: payload.model,
+    status: payload.status,
+    statusText: payload.statusText,
+    openaiCode: payload.openaiCode,
+    openaiType: payload.openaiType,
+    openaiMessage: payload.openaiMessage,
+  };
+  // Keep verbose details in dev only, but always include safe summary in production.
   if (IS_DEV) {
     console.error("[translate-content]", { ...base, ...payload });
     return;
   }
-  console.error("[translate-content]", base);
+  console.error("[translate-content]", { ...base, ...safePayload });
 }
 
 function parseOpenAiError(raw: string): { code?: string; message?: string; type?: string } {
@@ -92,7 +101,15 @@ ${text}
 
   try {
     let data: { choices?: Array<{ message?: { content?: string } }> } | null = null;
-    let lastError: { status?: number; statusText?: string; detail?: string; model?: string } | null = null;
+    let lastError: {
+      status?: number;
+      statusText?: string;
+      detail?: string;
+      model?: string;
+      openaiCode?: string;
+      openaiType?: string;
+      openaiMessage?: string;
+    } | null = null;
 
     for (const model of MODEL_CANDIDATES) {
       const res = await fetch(OPENAI_API_URL, {
@@ -121,7 +138,15 @@ ${text}
           openaiMessage: parsedErr.message?.slice(0, 300),
           detailPreview: err.slice(0, 600),
         });
-        lastError = { status: res.status, statusText: res.statusText, detail: err, model };
+        lastError = {
+          status: res.status,
+          statusText: res.statusText,
+          detail: err,
+          model,
+          openaiCode: parsedErr.code,
+          openaiType: parsedErr.type,
+          openaiMessage: parsedErr.message,
+        };
         continue;
       }
 
@@ -139,6 +164,9 @@ ${text}
           reason: "openai_non_200",
           model: lastError?.model,
           status: lastError?.status,
+          openaiCode: lastError?.openaiCode,
+          openaiType: lastError?.openaiType,
+          openaiMessage: lastError?.openaiMessage,
         },
         { status: 502 }
       );
