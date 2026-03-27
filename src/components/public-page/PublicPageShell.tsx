@@ -12,6 +12,8 @@ type PublicPageShellProps = {
   children: ReactNode;
   /** Optional contact/CTA section at bottom */
   contactActions?: ReactNode;
+  /** Optional actions rendered on the same row as title (e.g. language toggle) */
+  headerActions?: ReactNode;
   /** Embed mode: no outer padding, no header chrome */
   isEmbed?: boolean;
   /** Page background style configured in editor */
@@ -25,17 +27,25 @@ function PageContent({
   backButton,
   children,
   contactActions,
+  headerActions,
 }: Omit<PublicPageShellProps, "isEmbed">) {
   return (
     <>
       <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
         <div className="mx-auto flex max-w-[420px] flex-col gap-3">
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
-          {title.trim() ? (
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
-              {title}
-            </h1>
-          ) : null}
+          {(title.trim() || headerActions) && (
+            <div className="flex items-center justify-between gap-2">
+              {title.trim() ? (
+                <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+                  {title}
+                </h1>
+              ) : (
+                <div />
+              )}
+              {headerActions}
+            </div>
+          )}
         </div>
       </header>
       <main className="flex-1 px-4 pb-8 pt-5">
@@ -69,6 +79,7 @@ export function PublicPageShell({
   backButton,
   children,
   contactActions,
+  headerActions,
   isEmbed = false,
   pageBackground = null,
 }: PublicPageShellProps) {
@@ -112,6 +123,7 @@ export function PublicPageShell({
                 title={title}
                 backButton={backButton}
                 contactActions={contactActions}
+                headerActions={headerActions}
               >
                 {children}
               </PageContent>

@@ -16,6 +16,10 @@ export type EditorTopBarProps = {
   publishing?: boolean;
   onEditPageBackground?: () => void;
   onBulkFont?: () => void;
+  locale?: "ja" | "en" | "zh" | "ko";
+  onChangeLocale?: (locale: "ja" | "en" | "zh" | "ko") => void;
+  onBulkTranslateAll?: () => void;
+  bulkTranslateRunning?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   canClearAll?: boolean;
@@ -105,6 +109,10 @@ export function EditorTopBar({
   publishing = false,
   onEditPageBackground,
   onBulkFont,
+  locale = "ja",
+  onChangeLocale,
+  onBulkTranslateAll,
+  bulkTranslateRunning = false,
   canUndo = false,
   canRedo = false,
   canClearAll = false,
@@ -289,6 +297,45 @@ export function EditorTopBar({
               title="ページ内ブロックのフォントを一括変更"
             >
               一括フォント
+            </button>
+          )}
+          {onChangeLocale && (
+            <div className="ml-1 flex items-center gap-1">
+              {[
+                { code: "ja", label: "JA" },
+                { code: "en", label: "EN" },
+                { code: "zh", label: "中文" },
+                { code: "ko", label: "한국어" },
+              ].map((item) => {
+                const active = locale === item.code;
+                return (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => onChangeLocale(item.code as "ja" | "en" | "zh" | "ko")}
+                    className={
+                      "rounded-md border px-2 py-1 text-[11px] font-medium transition " +
+                      (active
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
+                    }
+                    title={`表示言語: ${item.label}`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {onBulkTranslateAll && (
+            <button
+              type="button"
+              onClick={onBulkTranslateAll}
+              disabled={bulkTranslateRunning}
+              className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+              title="ページ内の文言を一括翻訳"
+            >
+              {bulkTranslateRunning ? "翻訳中…" : "一括翻訳"}
             </button>
           )}
         </div>

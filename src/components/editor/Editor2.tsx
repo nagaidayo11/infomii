@@ -14,6 +14,7 @@ import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import type { CardType } from "./types";
 import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
+import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
 import {
   getInformationBySlug,
   getPage,
@@ -54,6 +55,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   } | null>(null);
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
+  const [editorLocale, setEditorLocale] = useState<SupportedLocale>("ja");
+  const [bulkTranslateRunning, setBulkTranslateRunning] = useState(false);
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
@@ -483,6 +486,120 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
   }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading]);
 
+  const handleBulkTranslateAll = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは翻訳機能は利用できません。無料登録で解放されます。");
+      return;
+    }
+    if (cards.length === 0 || bulkTranslateRunning) return;
+    setBulkTranslateRunning(true);
+    const cache = new Map<string, { en: string; zh: string; ko: string } | null>();
+    const nonTranslatable = new Set([
+      "href",
+      "link",
+      "linkUrl",
+      "src",
+      "mapEmbedUrl",
+      "pageSlug",
+      "icon",
+      "variant",
+      "style",
+      "color",
+      "accent",
+    ]);
+
+    const translateJaToEnZhKo = async (text: string): Promise<{ en: string; zh: string; ko: string } | null> => {
+      const ja = text.trim();
+      if (ja.length < 2 || /^https?:\/\//i.test(ja)) return null;
+      if (cache.has(ja)) return cache.get(ja) ?? null;
+      try {
+        const res = await fetch("/api/ai/translate-content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: ja }),
+        });
+        if (!res.ok) {
+          cache.set(ja, null);
+          return null;
+        }
+        const data = (await res.json()) as { en?: string; zh?: string; ko?: string };
+        const valid =
+          typeof data.en === "string" && typeof data.zh === "string" && typeof data.ko === "string"
+            ? { en: data.en, zh: data.zh, ko: data.ko }
+            : null;
+        cache.set(ja, valid);
+        return valid;
+      } catch {
+        cache.set(ja, null);
+        return null;
+      }
+    };
+
+    const walk = async (value: unknown, key?: string): Promise<{ value: unknown; count: number }> => {
+      if (typeof value === "string") {
+        if (key && nonTranslatable.has(key)) return { value, count: 0 };
+        const translated = await translateJaToEnZhKo(value);
+        if (!translated) return { value, count: 0 };
+        return { value: { ja: value, en: translated.en, zh: translated.zh, ko: translated.ko }, count: 1 };
+      }
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const localized = value as Record<string, unknown>;
+        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
+          const ja = getLocalizedContent(localized as LocalizedString, "ja");
+          const translated = await translateJaToEnZhKo(ja);
+          if (!translated) return { value, count: 0 };
+          return {
+            value: { ...localized, ja, en: translated.en, zh: translated.zh, ko: translated.ko },
+            count: 1,
+          };
+        }
+      }
+      if (Array.isArray(value)) {
+        const next: unknown[] = [];
+        let total = 0;
+        for (const item of value) {
+          const result = await walk(item, key);
+          next.push(result.value);
+          total += result.count;
+        }
+        return { value: next, count: total };
+      }
+      if (value && typeof value === "object") {
+        const next: Record<string, unknown> = {};
+        let total = 0;
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+          const result = await walk(v, k);
+          next[k] = result.value;
+          total += result.count;
+        }
+        return { value: next, count: total };
+      }
+      return { value, count: 0 };
+    };
+
+    try {
+      const nextCards = [...cards];
+      let translatedCount = 0;
+      for (let i = 0; i < nextCards.length; i += 1) {
+        const card = nextCards[i];
+        const result = await walk(card.content as Record<string, unknown>);
+        translatedCount += result.count;
+        nextCards[i] = { ...card, content: result.value as Record<string, unknown> };
+      }
+      if (translatedCount === 0) {
+        alert("翻訳対象のテキストが見つかりませんでした。");
+        return;
+      }
+      setCards(nextCards);
+      setEditorLocale("en");
+      alert(`${translatedCount}項目を翻訳しました。`);
+    } catch {
+      alert("一括翻訳に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setBulkTranslateRunning(false);
+    }
+  }, [isDemoMode, cards, bulkTranslateRunning, setCards]);
+
   const topBar =
     pageId || isDemoMode ? (
       <EditorTopBar
@@ -516,6 +633,10 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           }
           setBulkFontOpen(true);
         }}
+        locale={editorLocale}
+        onChangeLocale={setEditorLocale}
+        onBulkTranslateAll={isDemoMode ? undefined : handleBulkTranslateAll}
+        bulkTranslateRunning={bulkTranslateRunning}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
@@ -527,7 +648,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     ) : null;
 
   return (
-    <LocaleProvider value="ja">
+    <LocaleProvider value={editorLocale}>
       <div ref={rootRef} className="h-screen w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
