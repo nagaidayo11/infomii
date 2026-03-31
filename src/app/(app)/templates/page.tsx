@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { listTemplates, createPageFromTemplate, type TemplateRow } from "@/lib/storage";
 import { TEMPLATE_THEMES, type TemplateThemeId } from "@/lib/template-themes";
 import { applyThemeToTemplateCards } from "@/lib/template-themes";
+import { TEMPLATE_IMAGE_TONES, type TemplateImageToneId } from "@/lib/template-image-tone";
+import { applyImageToneToTemplateCards } from "@/lib/template-image-tone";
 import {
   resolveTemplateMeta,
   TEMPLATE_AUDIENCE_TAGS,
   type TemplateMeta,
-  type TemplateDifficulty,
 } from "@/lib/template-meta";
 import { TemplateCard } from "@/components/saas/TemplateCard";
 import type { CardType, EditorCard } from "@/components/editor/types";
@@ -57,6 +58,7 @@ export default function TemplatesPage() {
   const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
   const [runtimeMetaOverrides, setRuntimeMetaOverrides] = useState<Record<string, TemplateMeta>>({});
   const [selectedTheme, setSelectedTheme] = useState<TemplateThemeId>("classic");
+  const [selectedImageTone, setSelectedImageTone] = useState<TemplateImageToneId>("balanced");
 
   const BADGE_META_STORAGE_KEY = "infomii.template-meta-overrides.v1";
 
@@ -138,7 +140,10 @@ export default function TemplatesPage() {
     setUsingId(templateId);
     setError(null);
     try {
-      const { pageId } = await createPageFromTemplate(templateId, { themeId: selectedTheme });
+      const { pageId } = await createPageFromTemplate(templateId, {
+        themeId: selectedTheme,
+        imageToneId: selectedImageTone,
+      });
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}?from=template`);
       }
@@ -150,7 +155,8 @@ export default function TemplatesPage() {
   }
 
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
-    const themedCards = applyThemeToTemplateCards(template.cards ?? [], selectedTheme);
+    const tonedCards = applyImageToneToTemplateCards(template.cards ?? [], selectedImageTone);
+    const themedCards = applyThemeToTemplateCards(tonedCards, selectedTheme);
     return themedCards.map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
@@ -213,6 +219,28 @@ export default function TemplatesPage() {
         </p>
       </div>
 
+      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+        <p className="text-xs font-semibold text-slate-600">画像トーン</p>
+        <div className="flex flex-wrap gap-2">
+          {TEMPLATE_IMAGE_TONES.map((tone) => (
+            <button
+              key={tone.id}
+              type="button"
+              onClick={() => setSelectedImageTone(tone.id)}
+              className={
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition " +
+                (selectedImageTone === tone.id
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100")
+              }
+            >
+              {tone.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500">ヒーロー画像とギャラリー画像に反映されます。</p>
+      </div>
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -253,7 +281,6 @@ export default function TemplatesPage() {
               name={template.name}
               description={template.description}
               preview_image={template.preview_image}
-              difficulty={meta.difficulty}
               audienceTags={meta.audienceTags}
               onUse={() => handleUseTemplate(template.id)}
               onPreview={() => setPreviewTemplate(template)}
@@ -294,7 +321,6 @@ export default function TemplatesPage() {
                       name={template.name}
                       description={template.description}
                       preview_image={template.preview_image}
-                      difficulty={meta.difficulty}
                       audienceTags={meta.audienceTags}
                       onUse={() => handleUseTemplate(template.id)}
                       onPreview={() => setPreviewTemplate(template)}
@@ -342,14 +368,53 @@ export default function TemplatesPage() {
                   <p className="text-xs text-slate-500">
                     テンプレート適用時の実プレビュー（{TEMPLATE_THEMES.find((t) => t.id === selectedTheme)?.label ?? "クラシック"}）
                   </p>
+                  <p className="text-xs text-slate-500">
+                    画像トーン: {TEMPLATE_IMAGE_TONES.find((t) => t.id === selectedImageTone)?.label ?? "バランス"}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setPreviewTemplate(null)}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  閉じる
-                </button>
+                <div className="flex items-center gap-2">
+                  <div className="hidden flex-wrap gap-1.5 sm:flex">
+                    {TEMPLATE_THEMES.map((theme) => (
+                      <button
+                        key={`preview-${theme.id}`}
+                        type="button"
+                        onClick={() => setSelectedTheme(theme.id)}
+                        className={
+                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
+                          (selectedTheme === theme.id
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                        }
+                      >
+                        {theme.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="hidden flex-wrap gap-1.5 sm:flex">
+                    {TEMPLATE_IMAGE_TONES.map((tone) => (
+                      <button
+                        key={`preview-tone-${tone.id}`}
+                        type="button"
+                        onClick={() => setSelectedImageTone(tone.id)}
+                        className={
+                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
+                          (selectedImageTone === tone.id
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                        }
+                      >
+                        {tone.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTemplate(null)}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    閉じる
+                  </button>
+                </div>
               </div>
               <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-5">
                 <div className="mx-auto w-full max-w-[420px] rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
@@ -424,64 +489,40 @@ export default function TemplatesPage() {
                           <p className="text-sm font-semibold text-slate-900">{template.name}</p>
                           <p className="text-xs text-slate-500">{template.description}</p>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
-                          <div>
-                            <label className="mb-1 block text-xs font-medium text-slate-600">難易度</label>
-                            <select
-                              value={meta.difficulty}
-                              onChange={(e) => {
-                                const nextDifficulty = e.target.value as TemplateDifficulty;
-                                const next = {
-                                  ...runtimeMetaOverrides,
-                                  [template.name]: {
-                                    difficulty: nextDifficulty,
-                                    audienceTags: current?.audienceTags ?? meta.audienceTags,
-                                  },
-                                };
-                                saveRuntimeOverrides(next);
-                              }}
-                              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700"
-                            >
-                              <option value="初級">初級</option>
-                              <option value="中級">中級</option>
-                              <option value="上級">上級</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-xs font-medium text-slate-600">想定ゲスト</label>
-                            <div className="flex flex-wrap gap-1.5">
-                              {TEMPLATE_AUDIENCE_TAGS.map((tag) => {
-                                const selected = (current?.audienceTags ?? meta.audienceTags).includes(tag);
-                                return (
-                                  <button
-                                    key={`${template.id}-${tag}`}
-                                    type="button"
-                                    onClick={() => {
-                                      const base = current?.audienceTags ?? meta.audienceTags;
-                                      const updated = selected
-                                        ? base.filter((t) => t !== tag)
-                                        : [...base, tag].slice(0, 3);
-                                      const next = {
-                                        ...runtimeMetaOverrides,
-                                        [template.name]: {
-                                          difficulty: current?.difficulty ?? meta.difficulty,
-                                          audienceTags: updated,
-                                        },
-                                      };
-                                      saveRuntimeOverrides(next);
-                                    }}
-                                    className={
-                                      "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
-                                      (selected
-                                        ? "border-blue-200 bg-blue-50 text-blue-700"
-                                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
-                                    }
-                                  >
-                                    {tag}
-                                  </button>
-                                );
-                              })}
-                            </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-slate-600">想定ゲスト</label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {TEMPLATE_AUDIENCE_TAGS.map((tag) => {
+                              const selected = (current?.audienceTags ?? meta.audienceTags).includes(tag);
+                              return (
+                                <button
+                                  key={`${template.id}-${tag}`}
+                                  type="button"
+                                  onClick={() => {
+                                    const base = current?.audienceTags ?? meta.audienceTags;
+                                    const updated = selected
+                                      ? base.filter((t) => t !== tag)
+                                      : [...base, tag].slice(0, 3);
+                                    const next = {
+                                      ...runtimeMetaOverrides,
+                                      [template.name]: {
+                                        difficulty: current?.difficulty ?? meta.difficulty,
+                                        audienceTags: updated,
+                                      },
+                                    };
+                                    saveRuntimeOverrides(next);
+                                  }}
+                                  className={
+                                    "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
+                                    (selected
+                                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                                  }
+                                >
+                                  {tag}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>

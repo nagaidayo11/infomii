@@ -11,6 +11,7 @@ import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import { applyThemeToTemplateCards, type TemplateThemeId } from "@/lib/template-themes";
+import { applyImageToneToTemplateCards, type TemplateImageToneId } from "@/lib/template-image-tone";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -3772,7 +3773,7 @@ export async function createBlankPage(title = ""): Promise<string> {
 
 export async function createPageFromTemplate(
   templateId: string,
-  options?: { themeId?: TemplateThemeId }
+  options?: { themeId?: TemplateThemeId; imageToneId?: TemplateImageToneId }
 ): Promise<{ pageId: string }> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
@@ -3800,7 +3801,10 @@ export async function createPageFromTemplate(
 
   const rawCards =
     (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
-  const cards = options?.themeId ? applyThemeToTemplateCards(rawCards, options.themeId) : rawCards;
+  const tonedCards = options?.imageToneId
+    ? applyImageToneToTemplateCards(rawCards, options.imageToneId)
+    : rawCards;
+  const cards = options?.themeId ? applyThemeToTemplateCards(tonedCards, options.themeId) : tonedCards;
   if (cards.length > 0) {
     const rows = cards.map((c, i) => ({
       page_id: pageId,

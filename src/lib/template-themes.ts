@@ -19,88 +19,78 @@ type ThemePalette = {
   heroText: string;
   neutralBg: string;
   neutralBorder: string;
-  blueBg: string;
-  blueBorder: string;
-  warmBg: string;
-  warmBorder: string;
-  mintBg: string;
-  mintBorder: string;
-  alertBg: string;
-  alertBorder: string;
+  infoBg: string;
+  infoBorder: string;
+  guideBg: string;
+  guideBorder: string;
+  cautionBg: string;
+  cautionBorder: string;
 };
 
 const PALETTES: Record<TemplateThemeId, ThemePalette> = {
   classic: {
     pageFrom: "#f8fafc",
-    pageTo: "#e2e8f0",
+    pageTo: "#eef2f7",
     pageAngle: 180,
     heroBg: "#0f172a",
     heroBorder: "#0f172a",
     heroText: "#ffffff",
     neutralBg: "#ffffff",
     neutralBorder: "#e2e8f0",
-    blueBg: "#eff6ff",
-    blueBorder: "#bfdbfe",
-    warmBg: "#fefce8",
-    warmBorder: "#fde68a",
-    mintBg: "#ecfeff",
-    mintBorder: "#a5f3fc",
-    alertBg: "#fff7ed",
-    alertBorder: "#fdba74",
+    infoBg: "#f7fbff",
+    infoBorder: "#cfe2ff",
+    guideBg: "#f3fbf8",
+    guideBorder: "#c7eadf",
+    cautionBg: "#fffaf3",
+    cautionBorder: "#f8d9ac",
   },
   cool: {
-    pageFrom: "#eff6ff",
-    pageTo: "#dbeafe",
+    pageFrom: "#f3f8ff",
+    pageTo: "#e9f2ff",
     pageAngle: 170,
-    heroBg: "#1e3a8a",
+    heroBg: "#1e40af",
     heroBorder: "#1d4ed8",
     heroText: "#eff6ff",
-    neutralBg: "#f8fafc",
-    neutralBorder: "#cbd5e1",
-    blueBg: "#e0f2fe",
-    blueBorder: "#7dd3fc",
-    warmBg: "#f1f5f9",
-    warmBorder: "#cbd5e1",
-    mintBg: "#e0f7fa",
-    mintBorder: "#67e8f9",
-    alertBg: "#fef2f2",
-    alertBorder: "#fca5a5",
+    neutralBg: "#ffffff",
+    neutralBorder: "#dbe4f0",
+    infoBg: "#f2f8ff",
+    infoBorder: "#bfd8ff",
+    guideBg: "#f2fbff",
+    guideBorder: "#bde6f7",
+    cautionBg: "#fafbff",
+    cautionBorder: "#d6dff5",
   },
   warm: {
-    pageFrom: "#fff7ed",
-    pageTo: "#ffedd5",
+    pageFrom: "#fff9f3",
+    pageTo: "#fff2e5",
     pageAngle: 165,
-    heroBg: "#7c2d12",
-    heroBorder: "#9a3412",
+    heroBg: "#92400e",
+    heroBorder: "#b45309",
     heroText: "#fff7ed",
-    neutralBg: "#fffbeb",
-    neutralBorder: "#fed7aa",
-    blueBg: "#fffbeb",
-    blueBorder: "#fdba74",
-    warmBg: "#fef3c7",
-    warmBorder: "#f59e0b",
-    mintBg: "#fef9c3",
-    mintBorder: "#facc15",
-    alertBg: "#ffedd5",
-    alertBorder: "#fb923c",
+    neutralBg: "#fffefb",
+    neutralBorder: "#f0dcc4",
+    infoBg: "#fff8ef",
+    infoBorder: "#f3d5b5",
+    guideBg: "#fffdf7",
+    guideBorder: "#f2e4c6",
+    cautionBg: "#fff4e8",
+    cautionBorder: "#f2c89a",
   },
   luxury: {
-    pageFrom: "#111827",
-    pageTo: "#1f2937",
-    pageAngle: 175,
-    heroBg: "#111827",
-    heroBorder: "#374151",
-    heroText: "#f8fafc",
-    neutralBg: "#1f2937",
-    neutralBorder: "#475569",
-    blueBg: "#1e293b",
-    blueBorder: "#334155",
-    warmBg: "#27272a",
-    warmBorder: "#52525b",
-    mintBg: "#1f2937",
-    mintBorder: "#4b5563",
-    alertBg: "#3f3f46",
-    alertBorder: "#71717a",
+    pageFrom: "#f7f6f3",
+    pageTo: "#ece8df",
+    pageAngle: 170,
+    heroBg: "#262626",
+    heroBorder: "#3f3f46",
+    heroText: "#fafaf9",
+    neutralBg: "#ffffff",
+    neutralBorder: "#ddd6c8",
+    infoBg: "#f7f5ef",
+    infoBorder: "#ddd3bf",
+    guideBg: "#f4f3ee",
+    guideBorder: "#d9d5ca",
+    cautionBg: "#fbf6ef",
+    cautionBorder: "#e2cfb8",
   },
 };
 
@@ -108,17 +98,15 @@ function colorSetForType(type: string, palette: ThemePalette): { backgroundColor
   if (type === "hero") {
     return { backgroundColor: palette.heroBg, borderColor: palette.heroBorder, textColor: palette.heroText };
   }
+  // Only a subset of blocks gets accent tint; others stay neutral for natural look.
   if (["notice", "emergency"].includes(type)) {
-    return { backgroundColor: palette.alertBg, borderColor: palette.alertBorder };
+    return { backgroundColor: palette.cautionBg, borderColor: palette.cautionBorder };
   }
-  if (["wifi", "checklist", "steps", "kpi", "schedule"].includes(type)) {
-    return { backgroundColor: palette.blueBg, borderColor: palette.blueBorder };
+  if (["wifi", "checklist", "steps"].includes(type)) {
+    return { backgroundColor: palette.infoBg, borderColor: palette.infoBorder };
   }
-  if (["breakfast", "menu", "restaurant", "spa"].includes(type)) {
-    return { backgroundColor: palette.warmBg, borderColor: palette.warmBorder };
-  }
-  if (["nearby", "map", "pageLinks", "taxi"].includes(type)) {
-    return { backgroundColor: palette.mintBg, borderColor: palette.mintBorder };
+  if (["nearby", "map", "pageLinks"].includes(type)) {
+    return { backgroundColor: palette.guideBg, borderColor: palette.guideBorder };
   }
   return { backgroundColor: palette.neutralBg, borderColor: palette.neutralBorder };
 }
@@ -140,7 +128,11 @@ export function applyThemeToTemplateCards(
       backgroundColor: colorSet.backgroundColor,
       borderColor: colorSet.borderColor,
     };
-    if (colorSet.textColor) nextStyle.textColor = colorSet.textColor;
+    if (colorSet.textColor) {
+      nextStyle.textColor = colorSet.textColor;
+    } else {
+      delete nextStyle.textColor;
+    }
     const nextContent: Record<string, unknown> = {
       ...content,
       [STYLE_KEY]: nextStyle,
