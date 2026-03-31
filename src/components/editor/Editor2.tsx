@@ -639,7 +639,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       const translatedCount = await translateAllCardsToMultilingual();
       if (translatedCount > 0) {
         await trackCurrentHotelTranslationRun({
-          locale: nextLocale === "ja" ? undefined : nextLocale,
+          locale: nextLocale,
           translatedItems: translatedCount,
         });
       }
