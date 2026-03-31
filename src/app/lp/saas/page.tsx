@@ -679,6 +679,7 @@ export default function LpSaaSPage() {
                 <li className="flex items-center gap-2">✓ 公開ページ無制限</li>
                 <li className="flex items-center gap-2">✓ Proの全機能</li>
                 <li className="flex items-center gap-2">✓ チーム招待</li>
+                <li className="flex items-center gap-2">✓ 公開時の多言語自動翻訳（Business限定）</li>
                 <li className="flex items-center gap-2">✓ API・ホワイトラベル</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
@@ -717,7 +718,7 @@ export default function LpSaaSPage() {
                 },
                 {
                   q: "外国語対応はできますか？",
-                  a: "ページ内に多言語テキストを併記して補助できます。まずは英語だけでも「伝わる確率」を上げる運用から始めるのがおすすめです。",
+                  a: "対応できます。Businessプランでは公開時に多言語へ自動翻訳してから保存・公開できます。Free/Proは手動での多言語運用が基本です。",
                 },
                 {
                   q: "QRはどこに置くのが良い？",

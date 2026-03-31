@@ -5,10 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { listTemplates, createPageFromTemplate, type TemplateRow } from "@/lib/storage";
-import { TEMPLATE_THEMES, type TemplateThemeId } from "@/lib/template-themes";
-import { applyThemeToTemplateCards } from "@/lib/template-themes";
-import { TEMPLATE_IMAGE_TONES, type TemplateImageToneId } from "@/lib/template-image-tone";
-import { applyImageToneToTemplateCards } from "@/lib/template-image-tone";
 import {
   resolveTemplateMeta,
   TEMPLATE_AUDIENCE_TAGS,
@@ -57,8 +53,6 @@ export default function TemplatesPage() {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
   const [runtimeMetaOverrides, setRuntimeMetaOverrides] = useState<Record<string, TemplateMeta>>({});
-  const [selectedTheme, setSelectedTheme] = useState<TemplateThemeId>("classic");
-  const [selectedImageTone, setSelectedImageTone] = useState<TemplateImageToneId>("balanced");
 
   const BADGE_META_STORAGE_KEY = "infomii.template-meta-overrides.v1";
 
@@ -140,10 +134,7 @@ export default function TemplatesPage() {
     setUsingId(templateId);
     setError(null);
     try {
-      const { pageId } = await createPageFromTemplate(templateId, {
-        themeId: selectedTheme,
-        imageToneId: selectedImageTone,
-      });
+      const { pageId } = await createPageFromTemplate(templateId);
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}?from=template`);
       }
@@ -155,9 +146,7 @@ export default function TemplatesPage() {
   }
 
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
-    const tonedCards = applyImageToneToTemplateCards(template.cards ?? [], selectedImageTone);
-    const themedCards = applyThemeToTemplateCards(tonedCards, selectedTheme);
-    return themedCards.map((card, index) => ({
+    return (template.cards ?? []).map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
       content: card.content ?? {},
@@ -193,52 +182,6 @@ export default function TemplatesPage() {
             {c.label}
           </button>
         ))}
-      </div>
-
-      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
-        <p className="text-xs font-semibold text-slate-600">テンプレートテーマ</p>
-        <div className="flex flex-wrap gap-2">
-          {TEMPLATE_THEMES.map((theme) => (
-            <button
-              key={theme.id}
-              type="button"
-              onClick={() => setSelectedTheme(theme.id)}
-              className={
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition " +
-                (selectedTheme === theme.id
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100")
-              }
-            >
-              {theme.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-slate-500">
-          テーマはテンプレート適用時に、ブロック配色・背景グラデーションへ反映されます。
-        </p>
-      </div>
-
-      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
-        <p className="text-xs font-semibold text-slate-600">画像トーン</p>
-        <div className="flex flex-wrap gap-2">
-          {TEMPLATE_IMAGE_TONES.map((tone) => (
-            <button
-              key={tone.id}
-              type="button"
-              onClick={() => setSelectedImageTone(tone.id)}
-              className={
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition " +
-                (selectedImageTone === tone.id
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100")
-              }
-            >
-              {tone.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-slate-500">ヒーロー画像とギャラリー画像に反映されます。</p>
       </div>
 
       {error && (
@@ -365,48 +308,9 @@ export default function TemplatesPage() {
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                 <div>
                   <h3 className="text-base font-semibold text-slate-900">{previewTemplate.name}</h3>
-                  <p className="text-xs text-slate-500">
-                    テンプレート適用時の実プレビュー（{TEMPLATE_THEMES.find((t) => t.id === selectedTheme)?.label ?? "クラシック"}）
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    画像トーン: {TEMPLATE_IMAGE_TONES.find((t) => t.id === selectedImageTone)?.label ?? "バランス"}
-                  </p>
+                  <p className="text-xs text-slate-500">テンプレート適用時の実プレビュー</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="hidden flex-wrap gap-1.5 sm:flex">
-                    {TEMPLATE_THEMES.map((theme) => (
-                      <button
-                        key={`preview-${theme.id}`}
-                        type="button"
-                        onClick={() => setSelectedTheme(theme.id)}
-                        className={
-                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
-                          (selectedTheme === theme.id
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
-                        }
-                      >
-                        {theme.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="hidden flex-wrap gap-1.5 sm:flex">
-                    {TEMPLATE_IMAGE_TONES.map((tone) => (
-                      <button
-                        key={`preview-tone-${tone.id}`}
-                        type="button"
-                        onClick={() => setSelectedImageTone(tone.id)}
-                        className={
-                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition " +
-                          (selectedImageTone === tone.id
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
-                        }
-                      >
-                        {tone.label}
-                      </button>
-                    ))}
-                  </div>
                   <button
                     type="button"
                     onClick={() => setPreviewTemplate(null)}
