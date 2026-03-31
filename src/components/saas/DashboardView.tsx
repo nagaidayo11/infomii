@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -40,6 +41,7 @@ export function DashboardView() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null);
   const [navigating, setNavigating] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<"owner" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const createBusyRef = useRef(false);
@@ -111,6 +113,10 @@ export function DashboardView() {
       setTogglingPublishId(null);
     }
   }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     void loadBootstrap();
@@ -378,14 +384,16 @@ export function DashboardView() {
         onClose={() => setPlanLimitModalOpen(false)}
         currentPlan={bootstrap?.subscription?.plan}
       />
-      {(loading || navigating) && (
-        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
-            {loading ? "読み込み中…" : "ページ遷移中…"}
-          </div>
-        </div>
-      )}
+      {mounted && (loading || navigating) &&
+        createPortal(
+          <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+              {loading ? "読み込み中…" : "ページ遷移中…"}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

@@ -86,7 +86,11 @@ export function migrateCardsForEditor(cards: Array<{ id: string; type: string; c
 
   if (!hasHero) {
     const heroCard = createEmptyCard("hero", nanoid(10), 0);
-    heroCard.content = { title: "Infomii Hotel", image: "", subtitle: "" };
+    heroCard.content = {
+      title: "Infomii Hotel",
+      image: "/preset-hero-sample.png",
+      subtitle: "館内案内をスマートにまとめました",
+    };
     migrated = [heroCard, ...migrated.map((c) => ({ ...c, order: c.order + 1 }))];
   }
 

@@ -68,7 +68,7 @@ export const BLOCK_LIBRARY: Array<{ type: SaasBlockType; label: string }> = [
 
 const defaultContent: Record<SaasBlockType, Record<string, unknown>> = {
   hero: {
-    imageSrc: "",
+    imageSrc: "/preset-hero-sample.png",
     title: "タイトル",
     subtitle: "",
     overlay: true,

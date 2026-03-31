@@ -652,8 +652,47 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   }, [cards, setCards]);
 
   const ensureTranslationsBeforePublish = useCallback(async (): Promise<string | null> => {
-    const missingBefore = cards.reduce((sum, card) => sum + countMissingRequiredLocales(card.content), 0);
-    if (missingBefore === 0) return null;
+    const nonTranslatable = new Set([
+      "href",
+      "link",
+      "linkUrl",
+      "src",
+      "mapEmbedUrl",
+      "pageSlug",
+      "icon",
+      "variant",
+      "style",
+      "color",
+      "accent",
+    ]);
+    const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
+      if (typeof value === "string") {
+        const ja = value.trim();
+        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return out;
+        out.add(ja);
+        return out;
+      }
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const localized = value as Record<string, unknown>;
+        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
+          const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
+          if (ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
+          return out;
+        }
+      }
+      if (Array.isArray(value)) {
+        value.forEach((v) => collectTargets(v, key, out));
+        return out;
+      }
+      if (value && typeof value === "object") {
+        Object.entries(value as Record<string, unknown>).forEach(([k, v]) => collectTargets(v, k, out));
+      }
+      return out;
+    };
+    const targetsBefore = Array.from(
+      cards.reduce((set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set), new Set<string>())
+    );
+    if (targetsBefore.length === 0) return null;
 
     const subscription = await getCurrentHotelSubscription().catch(() => null);
     if (!subscription || subscription.plan !== "business") {
@@ -674,12 +713,14 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         });
       }
       const latestCards = useEditor2Store.getState().cards;
-      const missingAfter = latestCards.reduce(
-        (sum, card) => sum + countMissingRequiredLocales(card.content),
-        0
+      const remainingTargets = Array.from(
+        latestCards.reduce(
+          (set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set),
+          new Set<string>()
+        )
       );
-      if (missingAfter > 0) {
-        return `未翻訳項目が ${missingAfter} 件残っているため公開できません。編集内容を確認してください。`;
+      if (remainingTargets.length > 0) {
+        return `未翻訳項目が ${remainingTargets.length} 件残っているため公開できません。編集内容を確認してください。`;
       }
       return null;
     } catch {

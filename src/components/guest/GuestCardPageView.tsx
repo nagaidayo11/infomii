@@ -48,7 +48,7 @@ export function GuestCardPageView({
   ];
 
   const headerActions = (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-nowrap items-center justify-end gap-1">
       {locales.map((item) => {
         const active = locale === item.code;
         return (
@@ -57,7 +57,7 @@ export function GuestCardPageView({
             type="button"
             onClick={() => setLocale(item.code)}
             className={
-              "rounded-md border px-2.5 py-1 text-xs font-medium transition " +
+              "whitespace-nowrap rounded-md border px-2 py-1 text-[11px] font-medium leading-none transition " +
               (active
                 ? "border-slate-900 bg-slate-900 text-white"
                 : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")

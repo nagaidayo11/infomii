@@ -56,6 +56,45 @@ function galleryItemsForCategory(category: string | null): Array<{ src: string; 
   return CATEGORY_GALLERY_IMAGES[key].map((src, i) => ({ src, alt: `gallery-${i + 1}` }));
 }
 
+function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: string; label: string; description: string }> {
+  switch (category) {
+    case "business":
+      return [
+        { icon: "svg:clock", label: "チェックイン 15:00 / チェックアウト 11:00", description: "" },
+        { icon: "svg:wifi", label: "Wi-Fiは全客室で利用可能", description: "" },
+      ];
+    case "resort":
+      return [
+        { icon: "svg:bath", label: "温浴施設の営業時間を事前確認", description: "" },
+        { icon: "svg:utensils", label: "夕朝食の時間を先にチェック", description: "" },
+      ];
+    case "ryokan":
+      return [
+        { icon: "svg:info", label: "館内作法・静粛時間のご案内", description: "" },
+        { icon: "svg:bath", label: "大浴場の時間帯をご確認ください", description: "" },
+      ];
+    case "airbnb":
+      return [
+        { icon: "svg:key", label: "チェックイン手順を先に確認", description: "" },
+        { icon: "svg:bell", label: "ハウスルールの確認をお願いします", description: "" },
+      ];
+    case "guide":
+      return [
+        { icon: "svg:map-pin", label: "主要スポットの位置を把握", description: "" },
+        { icon: "svg:train", label: "移動手段と所要時間を確認", description: "" },
+      ];
+    case "inbound":
+      return [
+        { icon: "svg:language", label: "英語でのサポート案内あり", description: "" },
+        { icon: "svg:phone", label: "緊急連絡先を事前に保存", description: "" },
+      ];
+    default:
+      return [
+        { icon: "svg:info", label: "基本情報を先にご確認ください", description: "" },
+      ];
+  }
+}
+
 function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
   const cards = template.cards.map((card) => ({
     ...card,
@@ -97,6 +136,7 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
 
   const hasHero = cards.some((c) => c.type === "hero");
   const hasGallery = cards.some((c) => c.type === "gallery");
+  const iconCount = cards.filter((c) => c.type === "icon").length;
   const shouldAddHero = !hasHero && ["resort", "guide", "inbound"].includes(template.category ?? "");
   const shouldAddGallery = !hasGallery && ["resort", "guide", "ryokan"].includes(template.category ?? "");
 
@@ -122,6 +162,26 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
       },
       order: 0,
     });
+  }
+
+  // Add icon-label cards when templates are text-heavy.
+  if (iconCount < 2) {
+    const iconDefaults = iconLabelDefaultsByCategory(template.category);
+    const missing = Math.max(0, 2 - iconCount);
+    const insertAt = cards.findIndex((c) => c.type !== "hero");
+    const baseIndex = insertAt >= 0 ? insertAt + 1 : Math.min(2, cards.length);
+    for (let i = 0; i < missing; i += 1) {
+      const row = iconDefaults[i % iconDefaults.length];
+      cards.splice(baseIndex + i, 0, {
+        type: "icon",
+        content: {
+          icon: row.icon,
+          label: row.label,
+          description: row.description,
+        },
+        order: 0,
+      });
+    }
   }
 
   return {

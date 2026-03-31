@@ -240,7 +240,7 @@ function SortableCardWrapper({
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card relative min-w-0 flex-1 rounded-r-xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+              "editor-card relative min-w-0 flex-1 overflow-hidden rounded-r-xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
               (isNewlyAdded ? "card-insert " : "") +
               (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
               (isSelected
