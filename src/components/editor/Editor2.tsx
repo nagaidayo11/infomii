@@ -91,6 +91,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
+  const [publishFlowBusy, setPublishFlowBusy] = useState(false);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -418,12 +419,16 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         setPublishing(false);
         return;
       }
+      await setInformationStatusBySlug(page.slug, "published");
+      setPublishStatus("published");
       const publicUrl = buildPublicUrlV(page.slug);
       setPublishState({
         publicUrl,
         pageTitle: page.title ?? "",
         slug: page.slug,
       });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "公開処理に失敗しました。");
     } finally {
       setPublishing(false);
     }
@@ -665,6 +670,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       "color",
       "accent",
     ]);
+    const requiredLocales: SupportedLocale[] = ["ja", "en", "zh", "ko"];
     const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
       if (typeof value === "string") {
         const ja = value.trim();
@@ -676,7 +682,11 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         const localized = value as Record<string, unknown>;
         if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
           const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
-          if (ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
+          const hasMissingLocale = requiredLocales.some((localeCode) => {
+            const val = localized[localeCode];
+            return typeof val !== "string" || val.trim().length === 0;
+          });
+          if (hasMissingLocale && ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
           return out;
         }
       }
@@ -735,16 +745,21 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
-    const translationError = await ensureTranslationsBeforePublish();
-    if (translationError) {
-      setPrepublishState({
-        errors: [translationError],
-        warnings: [],
-        allowContinue: false,
-      });
-      return;
+    setPublishFlowBusy(true);
+    try {
+      const translationError = await ensureTranslationsBeforePublish();
+      if (translationError) {
+        setPrepublishState({
+          errors: [translationError],
+          warnings: [],
+          allowContinue: false,
+        });
+        return;
+      }
+      await handlePublishClick();
+    } finally {
+      setPublishFlowBusy(false);
     }
-    await handlePublishClick();
   }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick]);
 
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
@@ -753,17 +768,22 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
-    const translationError = await ensureTranslationsBeforePublish();
-    if (translationError) {
-      setPrepublishState({
-        errors: [translationError],
-        warnings: [],
-        allowContinue: false,
-      });
-      return;
+    setPublishFlowBusy(true);
+    try {
+      const translationError = await ensureTranslationsBeforePublish();
+      if (translationError) {
+        setPrepublishState({
+          errors: [translationError],
+          warnings: [],
+          allowContinue: false,
+        });
+        return;
+      }
+      setPrepublishState(null);
+      await publishNow();
+    } finally {
+      setPublishFlowBusy(false);
     }
-    setPrepublishState(null);
-    await publishNow();
   }, [isDemoMode, ensureTranslationsBeforePublish, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
@@ -991,6 +1011,15 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+        {(publishFlowBusy || publishing) && (
+          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45">
+            <div className="rounded-2xl border border-white/40 bg-slate-900/80 px-10 py-8 text-center shadow-2xl backdrop-blur-sm">
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+              <p className="mt-4 text-3xl font-bold tracking-wide text-white">公開中...</p>
+              <p className="mt-2 text-sm font-medium text-slate-200">翻訳と公開処理を実行しています</p>
             </div>
           </div>
         )}
