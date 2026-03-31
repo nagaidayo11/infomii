@@ -256,7 +256,7 @@ export function CardRenderer(props: CardRendererProps) {
           return (
             <div
               key={card.id}
-              className={textColor ? "editor-card-colorized" : undefined}
+              className={textColor ? "editor-card-colorized overflow-hidden" : "overflow-hidden"}
               style={{
                 ...blockStyle,
                 ...(textColor
