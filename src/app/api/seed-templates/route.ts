@@ -9,6 +9,126 @@ type SeedTemplate = {
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
 };
 
+const STYLE_KEY = "_style";
+const PAGE_STYLE_KEY = "_pageStyle";
+
+function getCategoryBackground(category: string | null): {
+  mode: "solid" | "gradient";
+  color: string;
+  from: string;
+  to: string;
+  angle: number;
+} {
+  switch (category) {
+    case "business":
+      return { mode: "gradient", color: "#f8fafc", from: "#f8fafc", to: "#e2e8f0", angle: 180 };
+    case "resort":
+      return { mode: "gradient", color: "#ecfeff", from: "#ecfeff", to: "#cffafe", angle: 160 };
+    case "ryokan":
+      return { mode: "gradient", color: "#fff7ed", from: "#fff7ed", to: "#ffedd5", angle: 165 };
+    case "airbnb":
+      return { mode: "gradient", color: "#fdf4ff", from: "#fdf4ff", to: "#f3e8ff", angle: 170 };
+    case "guide":
+      return { mode: "gradient", color: "#f0fdf4", from: "#f0fdf4", to: "#dcfce7", angle: 170 };
+    case "inbound":
+      return { mode: "gradient", color: "#eff6ff", from: "#eff6ff", to: "#dbeafe", angle: 170 };
+    default:
+      return { mode: "gradient", color: "#f8fafc", from: "#f8fafc", to: "#f1f5f9", angle: 180 };
+  }
+}
+
+function getBaseCardStyle(type: string): Record<string, unknown> {
+  const shared = {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
+    titleFontSize: "lg",
+    bodyFontSize: "base",
+  };
+  switch (type) {
+    case "hero":
+      return {
+        ...shared,
+        borderRadius: 18,
+        backgroundColor: "#0f172a",
+        borderColor: "#0f172a",
+        textColor: "#ffffff",
+        titleFontSize: "2xl",
+        bodyFontSize: "lg",
+      };
+    case "notice":
+    case "emergency":
+      return {
+        ...shared,
+        backgroundColor: "#fff7ed",
+        borderColor: "#fdba74",
+      };
+    case "wifi":
+    case "checklist":
+    case "steps":
+      return {
+        ...shared,
+        backgroundColor: "#eff6ff",
+        borderColor: "#bfdbfe",
+      };
+    case "breakfast":
+    case "menu":
+    case "restaurant":
+      return {
+        ...shared,
+        backgroundColor: "#fefce8",
+        borderColor: "#fde68a",
+      };
+    case "nearby":
+    case "map":
+    case "pageLinks":
+      return {
+        ...shared,
+        backgroundColor: "#ecfeff",
+        borderColor: "#a5f3fc",
+      };
+    default:
+      return {
+        ...shared,
+        backgroundColor: "#ffffff",
+        borderColor: "#e2e8f0",
+      };
+  }
+}
+
+function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
+  const background = getCategoryBackground(template.category);
+  const cards = template.cards.map((card, index) => {
+    const content = { ...(card.content ?? {}) };
+    const existingStyle =
+      STYLE_KEY in content && typeof content[STYLE_KEY] === "object" && content[STYLE_KEY] != null
+        ? (content[STYLE_KEY] as Record<string, unknown>)
+        : {};
+    const style = {
+      ...getBaseCardStyle(card.type),
+      ...existingStyle,
+    };
+    const nextContent: Record<string, unknown> = {
+      ...content,
+      [STYLE_KEY]: style,
+    };
+    if (index === 0) {
+      nextContent[PAGE_STYLE_KEY] = {
+        background,
+      };
+    }
+    return {
+      ...card,
+      content: nextContent,
+    };
+  });
+  return {
+    ...template,
+    cards,
+  };
+}
+
 const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・即運用セット",
@@ -85,7 +205,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
     name: "ファミリー向け・館内回遊セット",
     description: "館内導線をわかりやすくし、子連れ滞在で必要な情報を網羅した構成です。",
     preview_image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&q=80",
-    category: null,
+    category: "resort",
     cards: [
       { type: "hero", content: { title: "Family Stay Guide", subtitle: "お子さま連れでも安心", image: "/preset-hero-sample.png" }, order: 0 },
       { type: "pageLinks", content: { title: "館内メニュー", columns: 2, iconSize: "lg", items: [{ label: "朝食会場", icon: "utensils", linkType: "page", pageSlug: "", link: "" }, { label: "キッズ備品", icon: "package", linkType: "page", pageSlug: "", link: "" }, { label: "駐車場", icon: "car", linkType: "page", pageSlug: "", link: "" }, { label: "周辺観光", icon: "map-pin", linkType: "page", pageSlug: "", link: "" }] }, order: 1 },
@@ -125,6 +245,76 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "faq", content: { title: "International FAQ", items: [{ q: "Can I pay by credit card?", a: "Yes, Visa/Mastercard/Amex are accepted." }, { q: "Do you support luggage shipping?", a: "Yes, delivery slips are available at front desk." }] }, order: 6 },
     ],
   },
+  {
+    name: "連泊ゲスト向け・快適滞在セット",
+    description: "2泊以上のゲスト向けに、清掃タイミング・ランドリー・周辺導線を強化した構成です。",
+    preview_image: "https://images.unsplash.com/photo-1455587734955-081b22074882?w=600&q=80",
+    category: "business",
+    cards: [
+      { type: "welcome", content: { title: "Long Stay Guide", message: "連泊中に便利な情報をまとめています。" }, order: 0 },
+      { type: "wifi", content: { ssid: "Infomii-LongStay", password: "stay2026plus", description: "動画会議に最適化された回線です。" }, order: 1 },
+      { type: "notice", content: { title: "客室清掃のご案内", body: "清掃は毎日 10:00-14:00。不要時はドアサインをご利用ください。", variant: "info" }, order: 2 },
+      { type: "laundry", content: { title: "ランドリー", hours: "6:00-24:00", priceNote: "洗濯 300円 / 乾燥 100円(30分)", contact: "内線 9" }, order: 3 },
+      { type: "nearby", content: { title: "連泊に便利な周辺施設", items: [{ name: "スーパー", description: "徒歩4分 / 24時まで営業", link: "" }, { name: "ドラッグストア", description: "徒歩6分 / 日用品あり", link: "" }] }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "連泊中の延泊相談は前日20:00までにご連絡ください。", linkUrl: "", linkLabel: "延泊相談" }, order: 5 },
+    ],
+  },
+  {
+    name: "スパ&ウェルネス重視セット",
+    description: "スパ・温浴・食事の時間設計を重視し、滞在満足を高める構成です。",
+    preview_image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&q=80",
+    category: "resort",
+    cards: [
+      { type: "hero", content: { title: "Wellness Stay", subtitle: "整える滞在体験をご案内", image: "/preset-hero-sample.png" }, order: 0 },
+      { type: "spa", content: { title: "スパ営業時間", hours: "14:00-23:00 / 6:00-9:00", location: "2F Wellness Zone", description: "トリートメント・サウナ利用可", note: "混雑状況はフロントで確認できます。" }, order: 1 },
+      { type: "schedule", content: { title: "おすすめ利用時間", items: [{ day: "夕方", time: "16:00-18:00", label: "比較的空いています" }, { day: "朝", time: "6:30-8:00", label: "景色を楽しめる時間帯" }] }, order: 2 },
+      { type: "menu", content: { title: "ヘルシーメニュー", items: [{ name: "発酵和朝食", price: "2,200円", description: "地元食材中心" }, { name: "デトックスティー", price: "850円", description: "ラウンジ提供" }] }, order: 3 },
+      { type: "notice", content: { title: "ご利用前のお願い", body: "体調が優れない場合は無理せずスタッフへご相談ください。", variant: "info" }, order: 4 },
+      { type: "button", content: { label: "スパ予約をする", href: "" }, order: 5 },
+    ],
+  },
+  {
+    name: "旅館・食事時間重視セット",
+    description: "夕朝食の導線と館内作法を中心に、和旅館運用に最適化した構成です。",
+    preview_image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&q=80",
+    category: "ryokan",
+    cards: [
+      { type: "welcome", content: { title: "ご滞在のご案内", message: "お食事と温泉をゆったりお楽しみください。" }, order: 0 },
+      { type: "restaurant", content: { title: "夕食のご案内", time: "18:00-21:00", location: "1F 食事処", menu: "季節の会席料理" }, order: 1 },
+      { type: "breakfast", content: { title: "朝食", time: "7:00-9:00", location: "1F 食事処", menu: "和定食 / お子様対応可" }, order: 2 },
+      { type: "notice", content: { title: "館内作法", body: "浴場・廊下での通話はお控えください。客室内は禁煙です。", variant: "warning" }, order: 3 },
+      { type: "spa", content: { title: "温泉", hours: "15:00-24:00 / 5:30-9:30", location: "1F 大浴場", description: "内湯・露天", note: "貸切風呂は要予約" }, order: 4 },
+      { type: "checkout", content: { title: "ご出発", time: "10:00", note: "送迎をご利用の方はチェックイン時にお申し付けください。", linkUrl: "", linkLabel: "送迎案内" }, order: 5 },
+    ],
+  },
+  {
+    name: "Airbnb・ワーケーション向けセット",
+    description: "長期滞在・リモートワーク利用向けに、設備情報と生活導線を重視した構成です。",
+    preview_image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80",
+    category: "airbnb",
+    cards: [
+      { type: "hero", content: { title: "Workation Home Guide", subtitle: "仕事も滞在も快適に", image: "/preset-hero-sample.png" }, order: 0 },
+      { type: "wifi", content: { title: "Wi-Fi / Work", ssid: "Infomii-Workation", password: "remote2026", description: "会議用の有線LANアダプタ貸出あり" }, order: 1 },
+      { type: "checklist", content: { title: "チェックイン後の確認", items: [{ text: "ワークデスク位置の確認", checked: false }, { text: "エアコン動作確認", checked: false }, { text: "ゴミ分別ルール確認", checked: false }] }, order: 2 },
+      { type: "nearby", content: { title: "生活インフラ", items: [{ name: "コインランドリー", description: "徒歩3分 / 24時間", link: "" }, { name: "カフェ", description: "徒歩5分 / 電源あり", link: "" }] }, order: 3 },
+      { type: "emergency", content: { title: "緊急時", fire: "119", police: "110", hospital: "○○総合病院 03-2222-3333", note: "ホスト連絡先: 090-xxxx-xxxx" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "キーボックス返却後にメッセージ送信をお願いします。", linkUrl: "", linkLabel: "退室報告" }, order: 5 },
+    ],
+  },
+  {
+    name: "インバウンド・空港アクセス重視セット",
+    description: "海外ゲスト向けに、空港アクセス・決済・緊急時の英語導線を強化した構成です。",
+    preview_image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80",
+    category: "inbound",
+    cards: [
+      { type: "welcome", content: { title: "Airport Access Guide", message: "International guests can check transport and payment info here." }, order: 0 },
+      { type: "notice", content: { title: "Payment", body: "Credit cards and contactless payments are accepted.", variant: "info" }, order: 1 },
+      { type: "nearby", content: { title: "Airport Transfer", items: [{ name: "Limousine Bus", description: "Hotel front 6:10 / 7:20 / 8:30", link: "" }, { name: "Train", description: "Nearest station 5 min walk", link: "" }] }, order: 2 },
+      { type: "taxi", content: { title: "Taxi", phone: "+81-3-5555-6666", companyName: "City Taxi", note: "24/7 support with English operator" }, order: 3 },
+      { type: "emergency", content: { title: "Emergency Contacts", fire: "119", police: "110", hospital: "+81-3-1111-2222", note: "Front Desk: +81-3-9999-8888" }, order: 4 },
+      { type: "map", content: { title: "Hotel Location", address: "Tokyo, Chiyoda-ku ○○ 1-2-3", mapEmbedUrl: "" }, order: 5 },
+    ],
+  },
 ];
 
 export async function GET(request: Request) {
@@ -150,19 +340,20 @@ export async function GET(request: Request) {
     let updated = 0;
 
     for (const template of SEED_TEMPLATES) {
+      const visualTemplate = applyTemplateVisualStyles(template);
       const found = existingByName.get(template.name);
       if (!found) {
-        toInsert.push(template);
+        toInsert.push(visualTemplate);
         continue;
       }
       if (syncLatest) {
         const { error } = await supabase
           .from("templates")
           .update({
-            description: template.description,
-            preview_image: template.preview_image,
-            category: template.category,
-            cards: template.cards,
+            description: visualTemplate.description,
+            preview_image: visualTemplate.preview_image,
+            category: visualTemplate.category,
+            cards: visualTemplate.cards,
           })
           .eq("id", found.id);
         if (!error) updated += 1;

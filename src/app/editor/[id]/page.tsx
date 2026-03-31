@@ -24,6 +24,11 @@ function EditorWithPageId() {
   const searchParams = useSearchParams();
   const pageId = typeof params.id === "string" ? params.id : null;
   const fromTemplate = searchParams.get("from") === "template";
+  const qualityScore = Number(searchParams.get("qscore") ?? "");
+  const qualitySuggestion = searchParams.get("qsug");
+  const qualityModel = searchParams.get("qmodel");
+  const fallbackUsed = searchParams.get("qfallback") === "1";
+  const hasQualityNotice = Number.isFinite(qualityScore);
   const [pageFound, setPageFound] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(false);
   const setCards = useEditor2Store((s) => s.setCards);
@@ -131,7 +136,23 @@ function EditorWithPageId() {
     );
   }
 
-  return <Editor2 pageId={pageId} />;
+  return (
+    <div className="space-y-3">
+      {hasQualityNotice && (
+        <div className="mx-auto max-w-6xl rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <p className="font-medium">AI生成品質スコア: {Math.max(0, Math.min(100, Math.round(qualityScore)))} / 100</p>
+          {qualitySuggestion ? <p className="mt-1 text-emerald-800">{qualitySuggestion}</p> : null}
+          {qualityModel ? (
+            <p className="mt-1 text-xs text-emerald-700">
+              生成モデル: {qualityModel}
+              {fallbackUsed ? "（フォールバック使用）" : ""}
+            </p>
+          ) : null}
+        </div>
+      )}
+      <Editor2 pageId={pageId} />
+    </div>
+  );
 }
 
 /**

@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { listTemplates, createPageFromTemplate, type TemplateRow } from "@/lib/storage";
+import { TEMPLATE_THEMES, type TemplateThemeId } from "@/lib/template-themes";
+import { applyThemeToTemplateCards } from "@/lib/template-themes";
+import {
+  resolveTemplateMeta,
+  TEMPLATE_AUDIENCE_TAGS,
+  type TemplateMeta,
+  type TemplateDifficulty,
+} from "@/lib/template-meta";
 import { TemplateCard } from "@/components/saas/TemplateCard";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
@@ -43,6 +52,50 @@ export default function TemplatesPage() {
   const [usingId, setUsingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
+  const [runtimeMetaOverrides, setRuntimeMetaOverrides] = useState<Record<string, TemplateMeta>>({});
+  const [selectedTheme, setSelectedTheme] = useState<TemplateThemeId>("classic");
+
+  const BADGE_META_STORAGE_KEY = "infomii.template-meta-overrides.v1";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      const raw = window.localStorage.getItem(BADGE_META_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, TemplateMeta>;
+      if (parsed && typeof parsed === "object") setRuntimeMetaOverrides(parsed);
+    } catch {
+      // ignore malformed local storage
+    }
+  }, [mounted]);
+
+  function saveRuntimeOverrides(next: Record<string, TemplateMeta>) {
+    setRuntimeMetaOverrides(next);
+    if (!mounted) return;
+    try {
+      window.localStorage.setItem(BADGE_META_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore storage failures
+    }
+  }
+
+  useEffect(() => {
+    if (!previewTemplate) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPreviewTemplate(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewTemplate]);
 
   useEffect(() => {
     let mounted = true;
@@ -76,12 +129,16 @@ export default function TemplatesPage() {
   }, []);
 
   const filtered = filterByCategory(templates, category);
+  const groupedWhenAll = TEMPLATE_CATEGORIES
+    .filter((c) => c.id !== "all")
+    .map((c) => ({ category: c.id, label: c.label, items: filterByCategory(templates, c.id) }))
+    .filter((g) => g.items.length > 0);
 
   async function handleUseTemplate(templateId: string) {
     setUsingId(templateId);
     setError(null);
     try {
-      const { pageId } = await createPageFromTemplate(templateId);
+      const { pageId } = await createPageFromTemplate(templateId, { themeId: selectedTheme });
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}?from=template`);
       }
@@ -93,7 +150,8 @@ export default function TemplatesPage() {
   }
 
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
-    return (template.cards ?? []).map((card, index) => ({
+    const themedCards = applyThemeToTemplateCards(template.cards ?? [], selectedTheme);
+    return themedCards.map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
       content: card.content ?? {},
@@ -131,6 +189,30 @@ export default function TemplatesPage() {
         ))}
       </div>
 
+      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+        <p className="text-xs font-semibold text-slate-600">テンプレートテーマ</p>
+        <div className="flex flex-wrap gap-2">
+          {TEMPLATE_THEMES.map((theme) => (
+            <button
+              key={theme.id}
+              type="button"
+              onClick={() => setSelectedTheme(theme.id)}
+              className={
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition " +
+                (selectedTheme === theme.id
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100")
+              }
+            >
+              {theme.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500">
+          テーマはテンプレート適用時に、ブロック配色・背景グラデーションへ反映されます。
+        </p>
+      </div>
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -160,20 +242,70 @@ export default function TemplatesPage() {
             ダッシュボードに戻る
           </Link>
         </div>
-      ) : (
+      ) : category !== "all" ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((template) => (
+          {filtered.map((template) => {
+            const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
+            return (
             <TemplateCard
               key={template.id}
               id={template.id}
               name={template.name}
               description={template.description}
               preview_image={template.preview_image}
+              difficulty={meta.difficulty}
+              audienceTags={meta.audienceTags}
               onUse={() => handleUseTemplate(template.id)}
               onPreview={() => setPreviewTemplate(template)}
               using={usingId === template.id}
             />
-          ))}
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {groupedWhenAll.map((group) => {
+            const expanded = !!expandedCategories[group.category];
+            const visible = expanded ? group.items : group.items.slice(0, 3);
+            const hiddenCount = Math.max(0, group.items.length - visible.length);
+            return (
+              <section key={group.category} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
+                  {group.items.length > 3 ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedCategories((prev) => ({ ...prev, [group.category]: !expanded }))
+                      }
+                      className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                    >
+                      {expanded ? "折りたたむ" : `さらに表示（+${hiddenCount}）`}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {visible.map((template) => {
+                    const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
+                    return (
+                    <TemplateCard
+                      key={template.id}
+                      id={template.id}
+                      name={template.name}
+                      description={template.description}
+                      preview_image={template.preview_image}
+                      difficulty={meta.difficulty}
+                      audienceTags={meta.audienceTags}
+                      onUse={() => handleUseTemplate(template.id)}
+                      onPreview={() => setPreviewTemplate(template)}
+                      using={usingId === template.id}
+                    />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
 
@@ -181,45 +313,186 @@ export default function TemplatesPage() {
         <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
         {" · "}
         <Link href="/dashboard/pages" className="hover:text-slate-600">ページ一覧</Link>
+        {" · "}
+        <button
+          type="button"
+          onClick={() => setBadgeEditorOpen(true)}
+          className="hover:text-slate-600"
+        >
+          バッジ編集
+        </button>
       </p>
 
-      {previewTemplate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-6"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${previewTemplate.name} テンプレートプレビュー`}
-          onClick={() => setPreviewTemplate(null)}
-        >
+      {mounted && previewTemplate &&
+        createPortal(
           <div
-            className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4 py-6"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${previewTemplate.name} テンプレートプレビュー`}
+            onClick={() => setPreviewTemplate(null)}
           >
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">{previewTemplate.name}</h3>
-                <p className="text-xs text-slate-500">テンプレート適用時の実プレビュー</p>
+            <div
+              className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">{previewTemplate.name}</h3>
+                  <p className="text-xs text-slate-500">
+                    テンプレート適用時の実プレビュー（{TEMPLATE_THEMES.find((t) => t.id === selectedTheme)?.label ?? "クラシック"}）
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTemplate(null)}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  閉じる
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setPreviewTemplate(null)}
-                className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                閉じる
-              </button>
-            </div>
-            <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-5">
-              <div className="mx-auto w-full max-w-[420px] rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
-                <LocaleProvider value="ja">
-                  <div className="space-y-4">
-                    <CardRenderer cards={previewCards} />
-                  </div>
-                </LocaleProvider>
+              <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-5">
+                <div className="mx-auto w-full max-w-[420px] rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+                  <LocaleProvider value="ja">
+                    <div className="space-y-4">
+                      <CardRenderer cards={previewCards} />
+                    </div>
+                  </LocaleProvider>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
+
+      {mounted && (loading || usingId) &&
+        createPortal(
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-white/45 backdrop-blur-[1px]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+              {usingId ? "テンプレートを適用中…" : "読み込み中…"}
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {mounted && badgeEditorOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 px-4 py-6"
+            role="dialog"
+            aria-modal="true"
+            aria-label="テンプレートバッジ編集"
+            onClick={() => setBadgeEditorOpen(false)}
+          >
+            <div
+              className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">テンプレートバッジ編集</h3>
+                  <p className="text-xs text-slate-500">難易度と想定ゲストを手動調整できます（このブラウザに保存）</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      saveRuntimeOverrides({});
+                    }}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    すべてリセット
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBadgeEditorOpen(false)}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-[78vh] overflow-y-auto bg-slate-50 p-4">
+                <div className="space-y-3">
+                  {templates.map((template) => {
+                    const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
+                    const current = runtimeMetaOverrides[template.name];
+                    return (
+                      <div key={template.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="mb-2">
+                          <p className="text-sm font-semibold text-slate-900">{template.name}</p>
+                          <p className="text-xs text-slate-500">{template.description}</p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-slate-600">難易度</label>
+                            <select
+                              value={meta.difficulty}
+                              onChange={(e) => {
+                                const nextDifficulty = e.target.value as TemplateDifficulty;
+                                const next = {
+                                  ...runtimeMetaOverrides,
+                                  [template.name]: {
+                                    difficulty: nextDifficulty,
+                                    audienceTags: current?.audienceTags ?? meta.audienceTags,
+                                  },
+                                };
+                                saveRuntimeOverrides(next);
+                              }}
+                              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700"
+                            >
+                              <option value="初級">初級</option>
+                              <option value="中級">中級</option>
+                              <option value="上級">上級</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-slate-600">想定ゲスト</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {TEMPLATE_AUDIENCE_TAGS.map((tag) => {
+                                const selected = (current?.audienceTags ?? meta.audienceTags).includes(tag);
+                                return (
+                                  <button
+                                    key={`${template.id}-${tag}`}
+                                    type="button"
+                                    onClick={() => {
+                                      const base = current?.audienceTags ?? meta.audienceTags;
+                                      const updated = selected
+                                        ? base.filter((t) => t !== tag)
+                                        : [...base, tag].slice(0, 3);
+                                      const next = {
+                                        ...runtimeMetaOverrides,
+                                        [template.name]: {
+                                          difficulty: current?.difficulty ?? meta.difficulty,
+                                          audienceTags: updated,
+                                        },
+                                      };
+                                      saveRuntimeOverrides(next);
+                                    }}
+                                    className={
+                                      "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
+                                      (selected
+                                        ? "border-blue-200 bg-blue-50 text-blue-700"
+                                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                                    }
+                                  >
+                                    {tag}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

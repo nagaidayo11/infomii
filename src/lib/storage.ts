@@ -10,6 +10,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
+import { applyThemeToTemplateCards, type TemplateThemeId } from "@/lib/template-themes";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -1113,6 +1114,8 @@ export async function getCurrentHotelTranslationUsage(): Promise<TranslationUsag
 export async function trackCurrentHotelTranslationRun(metadata?: {
   locale?: "en" | "zh" | "ko";
   translatedItems?: number;
+  /** editor の言語トグルからか、公開前の自動補完からか */
+  source?: "editor_locale" | "pre_publish";
 }): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return;
@@ -1126,6 +1129,7 @@ export async function trackCurrentHotelTranslationRun(metadata?: {
     metadata: {
       locale: metadata?.locale,
       translatedItems: metadata?.translatedItems ?? 0,
+      source: metadata?.source,
     },
   });
 }
@@ -3766,7 +3770,10 @@ export async function createBlankPage(title = ""): Promise<string> {
   }
 }
 
-export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
+export async function createPageFromTemplate(
+  templateId: string,
+  options?: { themeId?: TemplateThemeId }
+): Promise<{ pageId: string }> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
@@ -3791,7 +3798,9 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
   if (pError || !newPage) throw toError(pError ?? new Error("Insert failed"), "ページの作成に失敗しました");
   const pageId = newPage.id as string;
 
-  const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  const rawCards =
+    (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  const cards = options?.themeId ? applyThemeToTemplateCards(rawCards, options.themeId) : rawCards;
   if (cards.length > 0) {
     const rows = cards.map((c, i) => ({
       page_id: pageId,

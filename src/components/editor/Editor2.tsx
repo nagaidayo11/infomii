@@ -130,19 +130,31 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
     const hasWifi = cards.some((c) => c.type === "wifi");
     const hasCheckout = cards.some((c) => c.type === "checkout");
-    if (!hasWifi) warnings.push("Wi-Fi案内ブロックがありません。");
-    if (!hasCheckout) warnings.push("チェックアウト案内ブロックがありません。");
+    if (!hasWifi) {
+      warnings.push(
+        "「Wi-Fi」ブロックがまだありません。接続手順やSSIDを載せると、宿泊客が迷いにくくなります（任意・後から追加可）。",
+      );
+    }
+    if (!hasCheckout) {
+      warnings.push(
+        "「チェックアウト」ブロックがまだありません。退室時刻や手順を載せると安心です（任意・後から追加可）。",
+      );
+    }
     const placeholderPattern = /\[[^\]]+\]|ここに|入力してください|記載してください/;
     const emptyOrAnchorHrefPattern = /^#?$|^\s*$/;
     cards.forEach((card) => {
       const raw = JSON.stringify(card.content ?? {});
       if (placeholderPattern.test(raw)) {
-        warnings.push(`「${card.type}」にプレースホルダ文言が残っています。`);
+        warnings.push(
+          `「${card.type}」ブロックに、まだ仮の文言（例: [ ] や「ここに〜」）が残っている可能性があります。公開前に実際の内容へ差し替えてください。`,
+        );
       }
       if (card.type === "button") {
         const href = String((card.content as Record<string, unknown>).href ?? "");
         if (emptyOrAnchorHrefPattern.test(href)) {
-          warnings.push("ボタンリンク未設定のブロックがあります。");
+          warnings.push(
+            "リンクボタンの「リンク先URL」が未設定です。タップしても飛べない状態のままです。",
+          );
         }
       }
     });
@@ -658,6 +670,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       if (translatedCount > 0) {
         await trackCurrentHotelTranslationRun({
           translatedItems: translatedCount,
+          source: "pre_publish",
         });
       }
       const latestCards = useEditor2Store.getState().cards;
@@ -692,6 +705,25 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
     await handlePublishClick();
   }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick]);
+
+  /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
+  const handlePublishPastWarnings = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
+    const translationError = await ensureTranslationsBeforePublish();
+    if (translationError) {
+      setPrepublishState({
+        errors: [translationError],
+        warnings: [],
+        allowContinue: false,
+      });
+      return;
+    }
+    setPrepublishState(null);
+    await publishNow();
+  }, [isDemoMode, ensureTranslationsBeforePublish, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -737,6 +769,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         await trackCurrentHotelTranslationRun({
           locale: nextLocale,
           translatedItems: translatedCount,
+          source: "editor_locale",
         });
       }
       setEditorLocale(nextLocale);
@@ -858,13 +891,25 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
             <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
               <h3 className="text-lg font-semibold text-slate-900">公開前チェック</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                公開直前に、ページの内容を自動で確認しています。
+                {prepublishState.errors.length === 0 && prepublishState.warnings.length > 0 ? (
+                  <>
+                    下の「おすすめ」は<strong className="font-medium text-slate-800">なくても公開できます</strong>
+                    が、宿泊客向けに足した方がよい項目です。対応してから公開するか、「このまま公開」で先に公開しても構いません。
+                  </>
+                ) : null}
+              </p>
               {prepublishState.errors.length === 0 && prepublishState.warnings.length === 0 ? (
                 <p className="mt-3 text-sm text-emerald-700">問題は見つかりませんでした。</p>
               ) : (
                 <div className="mt-3 space-y-3">
                   {prepublishState.errors.length > 0 && (
                     <div>
-                      <p className="text-sm font-semibold text-rose-700">修正が必要</p>
+                      <p className="text-sm font-semibold text-rose-700">公開できない項目（要対応）</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        次を解消するまで公開処理に進めません。
+                      </p>
                       <ul className="mt-1 space-y-1 text-sm text-rose-700">
                         {prepublishState.errors.map((item) => (
                           <li key={item}>・{item}</li>
@@ -874,8 +919,11 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
                   )}
                   {prepublishState.warnings.length > 0 && (
                     <div>
-                      <p className="text-sm font-semibold text-amber-700">確認推奨</p>
-                      <ul className="mt-1 max-h-44 space-y-1 overflow-auto text-sm text-amber-700">
+                      <p className="text-sm font-semibold text-amber-800">おすすめ（任意）</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        ブロック種別名ではなく、「何が足りないか」「なぜ足すとよいか」を表示しています。
+                      </p>
+                      <ul className="mt-1 max-h-44 space-y-1 overflow-auto text-sm text-amber-800">
                         {prepublishState.warnings.map((item, idx) => (
                           <li key={`${item}-${idx}`}>・{item}</li>
                         ))}
@@ -895,10 +943,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
                 {prepublishState.allowContinue && (
                   <button
                     type="button"
-                    onClick={async () => {
-                      setPrepublishState(null);
-                      await handlePublishClickStrict();
-                    }}
+                    onClick={() => void handlePublishPastWarnings()}
                     className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white hover:bg-slate-800"
                   >
                     このまま公開

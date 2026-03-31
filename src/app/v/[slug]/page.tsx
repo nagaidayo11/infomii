@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard, CardType } from "@/components/editor/types";
-import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
+import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 const STYLE_KEY = "_style";
@@ -10,7 +10,7 @@ const PAGE_STYLE_KEY = "_pageStyle";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
+  searchParams: Promise<{ preview?: string; lang?: string }>;
 };
 
 function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): {
@@ -45,7 +45,12 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const isPreviewRequest = query.preview === "1";
   const requestHeaders = await headers();
   const acceptLanguage = requestHeaders.get("accept-language");
-  const initialLocale = getVisitorLocaleFromHeader(acceptLanguage);
+  const forcedFromUrl =
+    typeof query.lang === "string" && query.lang.trim() !== ""
+      ? normalizeLocale(query.lang.trim())
+      : null;
+  const initialLocale: SupportedLocale =
+    forcedFromUrl ?? getVisitorLocaleFromHeader(acceptLanguage);
 
   const supabase = getSupabaseAdminServerClient();
   const { data: page, error: pageError } = await supabase
@@ -111,6 +116,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       title={page.title}
       cards={cards}
       initialLocale={initialLocale}
+      localeLocked={Boolean(forcedFromUrl)}
       pageBackground={pageBackground}
       unpublishedPreview={!isPublished && isPreviewRequest}
     />

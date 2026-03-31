@@ -18,12 +18,23 @@ export type TemplateCardProps = {
   name: string;
   description: string;
   preview_image: string;
+  difficulty?: "初級" | "中級" | "上級";
+  audienceTags?: string[];
   onUse: () => void;
   onPreview?: () => void;
   using?: boolean;
 };
 
-export function TemplateCard({ name, description, preview_image, onUse, onPreview, using }: TemplateCardProps) {
+export function TemplateCard({
+  name,
+  description,
+  preview_image,
+  difficulty,
+  audienceTags = [],
+  onUse,
+  onPreview,
+  using,
+}: TemplateCardProps) {
   const imageSrc =
     preview_image?.trim() || FALLBACK_IMAGES_BY_NAME[name] || DEFAULT_FALLBACK;
   return (
@@ -40,6 +51,23 @@ export function TemplateCard({ name, description, preview_image, onUse, onPrevie
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-semibold text-slate-900">{name}</h3>
+        {(difficulty || audienceTags.length > 0) && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {difficulty && (
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                難易度: {difficulty}
+              </span>
+            )}
+            {audienceTags.map((tag) => (
+              <span
+                key={`${name}-${tag}`}
+                className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="mt-1 line-clamp-3 text-sm text-slate-600">{description || "説明なし"}</p>
         <div className="mt-4 flex flex-1 flex-wrap items-end gap-2">
           <button

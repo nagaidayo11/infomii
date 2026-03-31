@@ -12,6 +12,8 @@ type GuestCardPageViewProps = {
   title: string;
   cards: EditorCard[];
   initialLocale: SupportedLocale;
+  /** `?lang=xx` 指定時はブラウザ言語で上書きしない */
+  localeLocked?: boolean;
   pageBackground?: PageBackgroundStyle | null;
   unpublishedPreview?: boolean;
 };
@@ -23,18 +25,20 @@ export function GuestCardPageView({
   title,
   cards,
   initialLocale,
+  localeLocked = false,
   pageBackground = null,
   unpublishedPreview = false,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(initialLocale);
 
   useEffect(() => {
+    if (localeLocked) return;
     const raw = typeof navigator !== "undefined" ? navigator.language : "";
     const normalized = normalizeLocale(raw);
-    if (normalized) {
+    if (normalized && normalized !== initialLocale) {
       setLocale(normalized);
     }
-  }, []);
+  }, [initialLocale, localeLocked]);
 
   const locales: Array<{ code: SupportedLocale; label: string }> = [
     { code: "ja", label: "JA" },

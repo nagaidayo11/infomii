@@ -13,6 +13,17 @@ type ApiResponse = {
   details?: string;
   message?: string;
   dbError?: string;
+  quality?: {
+    score?: number;
+    missingCoreCards?: string[];
+    missingFields?: string[];
+    suggestions?: string[];
+  };
+  ai?: {
+    modelUsed?: string;
+    fallbackUsed?: boolean;
+    mode?: string;
+  };
 };
 
 export function GeneratePageFromUrl({ className = "" }: { className?: string }) {
@@ -65,7 +76,13 @@ export function GeneratePageFromUrl({ className = "" }: { className?: string }) 
       }
       const pageId = data.page_id ?? data.pageId;
       if (pageId && typeof pageId === "string") {
-        router.push(`/editor/${pageId}`);
+        const params = new URLSearchParams();
+        if (typeof data.quality?.score === "number") params.set("qscore", String(data.quality.score));
+        if (data.quality?.suggestions?.[0]) params.set("qsug", data.quality.suggestions[0]);
+        if (data.ai?.modelUsed) params.set("qmodel", data.ai.modelUsed);
+        if (data.ai?.fallbackUsed) params.set("qfallback", "1");
+        const query = params.toString();
+        router.push(query ? `/editor/${pageId}?${query}` : `/editor/${pageId}`);
         return;
       }
       setError(data.dbError ?? data.message ?? "ページの作成に失敗しました");

@@ -3,6 +3,8 @@ import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
+const FALLBACK_AI_MODEL = process.env.OPENAI_FALLBACK_MODEL ?? "gpt-4o-mini";
 
 /** Strip HTML and get plain text (rough extraction for AI). */
 function extractTextFromHtml(html: string): string {
@@ -27,12 +29,57 @@ type ExtractedHotel = {
   emergencyInfo: string;
 };
 
+function normalizeText(value: unknown, maxLen = 400): string {
+  return String(value ?? "").trim().slice(0, maxLen);
+}
+
+async function requestOpenAIJson(
+  apiKey: string,
+  prompt: string
+): Promise<{ content: string; modelUsed: string; fallbackUsed: boolean }> {
+  const models = PRIMARY_AI_MODEL === FALLBACK_AI_MODEL
+    ? [PRIMARY_AI_MODEL]
+    : [PRIMARY_AI_MODEL, FALLBACK_AI_MODEL];
+  let lastError = "AI extraction failed";
+
+  for (const [idx, model] of models.entries()) {
+    const res = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: "You output only valid JSON. No markdown, no explanation." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.1,
+      }),
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const content = data.choices?.[0]?.message?.content;
+      if (content) return { content, modelUsed: model, fallbackUsed: idx > 0 };
+      lastError = `No content in AI response (${model})`;
+      continue;
+    }
+
+    const err = await res.text();
+    lastError = `AI extraction failed (${model}): ${err.slice(0, 200)}`;
+  }
+
+  throw new Error(lastError);
+}
+
 /** Extract structured hotel data from webpage text using AI. */
 async function extractHotelData(
   apiKey: string,
   url: string,
   pageText: string
-): Promise<ExtractedHotel> {
+): Promise<{ extracted: ExtractedHotel; modelUsed: string; fallbackUsed: boolean }> {
   const prompt = `次のホテル・宿泊施設のウェブサイトから取得したテキストを分析し、以下の項目を抽出してJSONで返してください。不明な項目は空文字にしてください。JSON以外は出力しないでください。
 
 URL: ${url}
@@ -53,44 +100,47 @@ ${pageText.slice(0, 12000)}
   "emergencyInfo": "緊急時の連絡先（火災119・警察110・病院・フロントなど）"
 }`;
 
-  const res = await fetch(OPENAI_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You output only valid JSON. No markdown, no explanation." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.3,
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`AI extraction failed: ${err.slice(0, 200)}`);
-  }
-
-  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("No content in AI response");
+  const aiResult = await requestOpenAIJson(apiKey, prompt);
+  const content = aiResult.content;
 
   const trimmed = content.trim().replace(/^```json?\s*|\s*```$/g, "");
   const parsed = JSON.parse(trimmed) as Record<string, unknown>;
   return {
-    hotelName: String(parsed.hotelName ?? "").trim(),
-    address: String(parsed.address ?? "").trim(),
-    wifiInfo: String(parsed.wifiInfo ?? "").trim(),
-    breakfastInfo: String(parsed.breakfastInfo ?? "").trim(),
-    checkIn: String(parsed.checkIn ?? "").trim(),
-    checkOut: String(parsed.checkOut ?? "").trim(),
-    nearbyInfo: String(parsed.nearbyInfo ?? "").trim(),
-    taxiInfo: String(parsed.taxiInfo ?? "").trim(),
-    emergencyInfo: String(parsed.emergencyInfo ?? "").trim(),
+    extracted: {
+      hotelName: normalizeText(parsed.hotelName, 120),
+      address: normalizeText(parsed.address, 200),
+      wifiInfo: normalizeText(parsed.wifiInfo, 220),
+      breakfastInfo: normalizeText(parsed.breakfastInfo, 260),
+      checkIn: normalizeText(parsed.checkIn, 80),
+      checkOut: normalizeText(parsed.checkOut, 80),
+      nearbyInfo: normalizeText(parsed.nearbyInfo, 350),
+      taxiInfo: normalizeText(parsed.taxiInfo, 260),
+      emergencyInfo: normalizeText(parsed.emergencyInfo, 260),
+    },
+    modelUsed: aiResult.modelUsed,
+    fallbackUsed: aiResult.fallbackUsed,
   };
+}
+
+type UrlQualityReport = {
+  score: number;
+  missingFields: string[];
+  suggestions: string[];
+};
+
+function buildUrlQualityReport(extracted: ExtractedHotel): UrlQualityReport {
+  const missingFields = [
+    !extracted.hotelName ? "hotelName" : "",
+    !extracted.address ? "address" : "",
+    !extracted.wifiInfo ? "wifiInfo" : "",
+    !extracted.breakfastInfo ? "breakfastInfo" : "",
+    !extracted.checkOut ? "checkOut" : "",
+  ].filter(Boolean);
+  const suggestions: string[] = [];
+  if (!extracted.taxiInfo) suggestions.push("タクシー案内の情報を手動補完すると案内品質が上がります。");
+  if (!extracted.emergencyInfo) suggestions.push("緊急連絡先の情報を確認して追記してください。");
+  const score = Math.max(0, Math.min(100, 100 - missingFields.length * 12));
+  return { score, missingFields, suggestions };
 }
 
 /** Parse WiFi info into SSID and password if possible (e.g. "SSID: xxx / パスワード: yyy"). */
@@ -227,8 +277,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const extracted = await extractHotelData(apiKey, url, pageText);
+    const extraction = await extractHotelData(apiKey, url, pageText);
+    const extracted = extraction.extracted;
     const cards = buildCardsFromExtracted(extracted);
+    const quality = buildUrlQualityReport(extracted);
 
     if (cards.length === 0) {
       return NextResponse.json(
@@ -253,6 +305,12 @@ export async function POST(request: Request) {
         return NextResponse.json({
           cards: payload,
           extracted: { hotelName: extracted.hotelName, address: extracted.address },
+          quality,
+          ai: {
+            modelUsed: extraction.modelUsed,
+            fallbackUsed: extraction.fallbackUsed,
+            mode: "quality_first",
+          },
           message: "page_id を指定するか、Authorization Bearer でログインして新しいページを自動作成してください",
         });
       }
@@ -327,6 +385,12 @@ export async function POST(request: Request) {
         page_id: targetPageId,
         pageId: targetPageId,
         extracted: { hotelName: extracted.hotelName, address: extracted.address },
+        quality,
+        ai: {
+          modelUsed: extraction.modelUsed,
+          fallbackUsed: extraction.fallbackUsed,
+          mode: "quality_first",
+        },
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown";
@@ -334,6 +398,12 @@ export async function POST(request: Request) {
         cards: payload,
         page_id: targetPageId,
         extracted: { hotelName: extracted.hotelName, address: extracted.address },
+        quality,
+        ai: {
+          modelUsed: extraction.modelUsed,
+          fallbackUsed: extraction.fallbackUsed,
+          mode: "quality_first",
+        },
         dbError: msg,
       });
     }
