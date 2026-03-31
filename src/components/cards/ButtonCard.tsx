@@ -24,6 +24,11 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
   const c = card.content as Record<string, unknown> | undefined;
   const label = getLocalizedContent(c?.label as LocalizedString | undefined, locale) || "ボタン";
   const href = (c?.href as string) ?? "#";
+  const labels =
+    locale === "ko" ? { buttonPlaceholder: "버튼" } :
+    locale === "zh" ? { buttonPlaceholder: "按钮" } :
+    locale === "en" ? { buttonPlaceholder: "Button" } :
+    { buttonPlaceholder: "ボタン" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -43,7 +48,7 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
         onClick={isEditor ? (e) => e.preventDefault() : undefined}
         aria-disabled={isEditor ? true : undefined}
       >
-        <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={!!isSelected} onActivate={onActivate} className="text-white" placeholder="ボタン" />
+        <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={!!isSelected} onActivate={onActivate} className="text-white" placeholder={labels.buttonPlaceholder} />
       </a>
     </Card>
   );

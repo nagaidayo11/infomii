@@ -22,11 +22,19 @@ function getIconDisplay(icon: string | undefined) {
 
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
-export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) {
+export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageLinksCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "メニュー";
+  const labels =
+    locale === "ko"
+      ? { title: "메뉴", empty: "링크를 추가", item: "항목", titlePlaceholder: "제목", labelPlaceholder: "라벨" }
+      : locale === "zh"
+        ? { title: "菜单", empty: "请添加链接", item: "项目", titlePlaceholder: "标题", labelPlaceholder: "标签" }
+        : locale === "en"
+          ? { title: "Menu", empty: "Add links", item: "Item", titlePlaceholder: "Title", labelPlaceholder: "Label" }
+          : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
+  const title = (c?.title as string) ?? labels.title;
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
@@ -62,7 +70,7 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
           editable={isSelected}
           onActivate={onActivate}
           className="text-slate-800"
-          placeholder="タイトル"
+          placeholder={labels.titlePlaceholder}
         />
       </h3>
       <div
@@ -70,7 +78,7 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.length === 0 ? (
-          <p className="col-span-full text-slate-500" style={getBodyFontSizeStyle()}>リンクを追加</p>
+          <p className="col-span-full text-slate-500" style={getBodyFontSizeStyle()}>{labels.empty}</p>
         ) : (
           items.map((item, i) => {
             const href = getHref(item);
@@ -95,10 +103,10 @@ export function PageLinksCard({ card, isSelected = false }: PageLinksCardProps) 
                       editable
                       onActivate={onActivate}
                       className="text-slate-700"
-                      placeholder="ラベル"
+                      placeholder={labels.labelPlaceholder}
                     />
                   ) : (
-                    (item.label ?? "項目")
+                    (item.label ?? labels.item)
                   )}
                 </span>
               </div>

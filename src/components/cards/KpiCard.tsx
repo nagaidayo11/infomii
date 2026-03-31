@@ -14,12 +14,20 @@ type KpiCardProps = {
   locale?: string;
 };
 
-export function KpiCard({ card, isSelected = false }: KpiCardProps) {
+export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "KPI";
   const items = (Array.isArray(c?.items) ? c.items : []) as KpiItem[];
+  const labels =
+    locale === "ko"
+      ? { empty: "수치 항목을 추가하세요", titlePlaceholder: "KPI" }
+      : locale === "zh"
+        ? { empty: "请添加数值项", titlePlaceholder: "KPI" }
+        : locale === "en"
+          ? { empty: "Add metric items", titlePlaceholder: "KPI" }
+          : { empty: "数値項目を追加してください", titlePlaceholder: "KPI" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -36,12 +44,12 @@ export function KpiCard({ card, isSelected = false }: KpiCardProps) {
           editable={isSelected}
           onActivate={onActivate}
           className="font-semibold text-slate-800"
-          placeholder="KPI"
+          placeholder={labels.titlePlaceholder}
         />
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <p className="col-span-full text-slate-500">数値項目を追加してください</p>
+          <p className="col-span-full text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
             <div key={i} className="rounded-xl bg-slate-50 p-3">

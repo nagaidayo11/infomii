@@ -24,7 +24,15 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "周辺案内";
+  const labels =
+    locale === "ko"
+      ? { title: "주변 안내", detail: "상세", empty: "주변 명소를 추가할 수 있습니다" }
+      : locale === "zh"
+        ? { title: "周边信息", detail: "详情", empty: "可添加周边景点" }
+        : locale === "en"
+          ? { title: "Nearby Info", detail: "Details", empty: "You can add nearby spots" }
+          : { title: "周辺案内", detail: "詳細", empty: "周辺スポットを追加できます" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
   const items = (Array.isArray(c?.items) ? c.items : []) as NearbyItem[];
 
   const updateKey = (key: string, nextValue: string) => {
@@ -58,14 +66,14 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
                   onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
                   aria-disabled={isSelected !== undefined ? true : undefined}
                 >
-                  詳細
+                  {labels.detail}
                 </a>
               )}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>周辺スポットを追加できます</p>
+        <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>{labels.empty}</p>
       )}
     </Card>
   );

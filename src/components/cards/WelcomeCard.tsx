@@ -24,6 +24,14 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "ようこそ";
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { messagePlaceholder: "환영 메시지" }
+      : locale === "zh"
+        ? { messagePlaceholder: "欢迎信息" }
+        : locale === "en"
+          ? { messagePlaceholder: "Welcome message" }
+          : { messagePlaceholder: "おもてなしメッセージ" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -55,7 +63,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           onActivate={onActivate}
           multiline
           className="block min-h-[1.5em] leading-relaxed text-slate-600"
-          placeholder="おもてなしメッセージ"
+          placeholder={labels.messagePlaceholder}
         />
       </p>
     </Card>

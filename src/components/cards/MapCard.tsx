@@ -76,6 +76,14 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "地図";
   const mapEmbedUrl = normalizeMapEmbedUrl((c?.mapEmbedUrl as string) ?? "");
+  const labels =
+    locale === "ko"
+      ? { titlePlaceholder: "지도", addressPlaceholder: "주소" }
+      : locale === "zh"
+        ? { titlePlaceholder: "地图", addressPlaceholder: "地址" }
+        : locale === "en"
+          ? { titlePlaceholder: "Map", addressPlaceholder: "Address" }
+          : { titlePlaceholder: "地図", addressPlaceholder: "住所" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -88,7 +96,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   return (
     <Card padding="md" className="">
       <p className="mb-2 text-slate-900">
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder="地図" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
@@ -108,7 +116,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
         </div>
       )}
       <p className="mt-2 text-slate-700" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-slate-700" placeholder="住所" />
+        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-slate-700" placeholder={labels.addressPlaceholder} />
       </p>
     </Card>
   );

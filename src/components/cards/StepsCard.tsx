@@ -14,12 +14,20 @@ type StepsCardProps = {
   locale?: string;
 };
 
-export function StepsCard({ card, isSelected = false }: StepsCardProps) {
+export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "ステップ";
   const items = (Array.isArray(c?.items) ? c.items : []) as StepsItem[];
+  const labels =
+    locale === "ko"
+      ? { empty: "단계를 추가하세요", titlePlaceholder: "단계" }
+      : locale === "zh"
+        ? { empty: "请添加步骤", titlePlaceholder: "步骤" }
+        : locale === "en"
+          ? { empty: "Add steps", titlePlaceholder: "Steps" }
+          : { empty: "手順を追加してください", titlePlaceholder: "ステップ" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -36,12 +44,12 @@ export function StepsCard({ card, isSelected = false }: StepsCardProps) {
           editable={isSelected}
           onActivate={onActivate}
           className="font-semibold text-slate-800"
-          placeholder="ステップ"
+          placeholder={labels.titlePlaceholder}
         />
       </p>
       <ol className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <li className="text-slate-500">手順を追加してください</li>
+          <li className="text-slate-500">{labels.empty}</li>
         ) : (
           items.map((item, i) => (
             <li key={i} className="flex gap-3">

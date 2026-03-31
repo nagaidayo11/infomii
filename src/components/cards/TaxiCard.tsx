@@ -26,6 +26,14 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
   const phone = (c?.phone as string) ?? "";
   const companyName = getLocalizedContent(c?.companyName as LocalizedString | undefined, locale);
   const note = getLocalizedContent(c?.note as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { companyPlaceholder: "회사명", phonePlaceholder: "전화번호", notePlaceholder: "비고" }
+      : locale === "zh"
+        ? { companyPlaceholder: "公司名称", phonePlaceholder: "电话号码", notePlaceholder: "备注" }
+        : locale === "en"
+          ? { companyPlaceholder: "Company", phonePlaceholder: "Phone number", notePlaceholder: "Note" }
+          : { companyPlaceholder: "会社名", phonePlaceholder: "電話番号", notePlaceholder: "備考" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -41,13 +49,13 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
       <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={companyName} onSave={(v) => updateKey("companyName", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="会社名" />
+        <InlineEditable value={companyName} onSave={(v) => updateKey("companyName", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.companyPlaceholder} />
       </p>
       <p className="mt-1" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={phone} onSave={(v) => updateCard(card.id, { content: { ...c, phone: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary" placeholder="電話番号" />
+        <InlineEditable value={phone} onSave={(v) => updateCard(card.id, { content: { ...c, phone: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary" placeholder={labels.phonePlaceholder} />
       </p>
       <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="備考" />
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.notePlaceholder} />
       </p>
     </Card>
   );

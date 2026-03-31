@@ -29,6 +29,14 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
   const items = (Array.isArray(content?.items) ? content.items : [{ src: "", alt: "" }]) as GalleryItem[];
   const rawColumns = typeof content?.columns === "number" ? content.columns : Number(content?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
+  const labels =
+    locale === "ko"
+      ? { emptyImage: "이미지", titlePlaceholder: "갤러리" }
+      : locale === "zh"
+        ? { emptyImage: "图片", titlePlaceholder: "图库" }
+        : locale === "en"
+          ? { emptyImage: "Image", titlePlaceholder: "Gallery" }
+          : { emptyImage: "画像", titlePlaceholder: "ギャラリー" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = content?.[key];
@@ -40,7 +48,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
   return (
     <Card padding="md" className="">
       <p className="mb-3 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="ギャラリー" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
       <div
         className="grid gap-2"
@@ -58,7 +66,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
               />
             ) : (
               <div className="flex h-full items-center justify-center text-slate-400" style={getBodyFontSizeStyle()}>
-                画像
+                {labels.emptyImage}
               </div>
             )}
           </div>

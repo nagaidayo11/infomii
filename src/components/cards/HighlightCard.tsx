@@ -13,7 +13,7 @@ const ACCENT_CLASS: Record<string, string> = {
   emerald: "border-l-emerald-500 text-emerald-900",
 };
 
-export function HighlightCard({ card, isSelected = false }: HighlightCardProps) {
+export function HighlightCard({ card, isSelected = false, locale = "ja" }: HighlightCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -21,6 +21,14 @@ export function HighlightCard({ card, isSelected = false }: HighlightCardProps) 
   const body = (c?.body as string) ?? "";
   const accent = (c?.accent as string) ?? "amber";
   const accentClass = ACCENT_CLASS[accent] ?? ACCENT_CLASS.amber;
+  const labels =
+    locale === "ko"
+      ? { titlePlaceholder: "제목", bodyPlaceholder: "내용" }
+      : locale === "zh"
+        ? { titlePlaceholder: "标题", bodyPlaceholder: "内容" }
+        : locale === "en"
+          ? { titlePlaceholder: "Title", bodyPlaceholder: "Content" }
+          : { titlePlaceholder: "タイトル", bodyPlaceholder: "内容" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -33,10 +41,10 @@ export function HighlightCard({ card, isSelected = false }: HighlightCardProps) 
       style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
     >
       <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder="タイトル" />
+        <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder={labels.titlePlaceholder} />
       </h3>
       <p className="mt-2 leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em]" placeholder="内容" />
+        <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em]" placeholder={labels.bodyPlaceholder} />
       </p>
     </div>
   );

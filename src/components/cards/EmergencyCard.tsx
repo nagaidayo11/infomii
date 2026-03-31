@@ -22,7 +22,15 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "緊急連絡先";
+  const labels =
+    locale === "ko"
+      ? { title: "긴급 연락처", fire: "화재", police: "경찰", hospital: "병원", note: "비고", hospitalPlaceholder: "연락처" }
+      : locale === "zh"
+        ? { title: "紧急联系方式", fire: "火灾", police: "警察", hospital: "医院", note: "备注", hospitalPlaceholder: "联系方式" }
+        : locale === "en"
+          ? { title: "Emergency Contacts", fire: "Fire", police: "Police", hospital: "Hospital", note: "Note", hospitalPlaceholder: "Contact" }
+          : { title: "緊急連絡先", fire: "火災", police: "警察", hospital: "病院", note: "備考", hospitalPlaceholder: "連絡先" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
   const fire = (c?.fire as string) ?? "";
   const police = (c?.police as string) ?? "";
   const hospital = getLocalizedContent(c?.hospital as LocalizedString | undefined, locale);
@@ -44,20 +52,20 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
       </p>
       <ul className="mt-2 space-y-1 text-slate-600" style={getBodyFontSizeStyle()}>
         <li>
-          火災:{" "}
+          {labels.fire}:{" "}
           <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-red-600" placeholder="119" />
         </li>
         <li>
-          警察:{" "}
+          {labels.police}:{" "}
           <InlineEditable value={police} onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="110" />
         </li>
         <li>
-          病院:{" "}
-          <InlineEditable value={hospital} onSave={(v) => updateKey("hospital", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="連絡先" />
+          {labels.hospital}:{" "}
+          <InlineEditable value={hospital} onSave={(v) => updateKey("hospital", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.hospitalPlaceholder} />
         </li>
       </ul>
       <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="備考" />
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.note} />
       </p>
     </Card>
   );

@@ -23,6 +23,14 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
   const selectCard = useEditor2Store((s) => s.selectCard);
   const raw = card.content?.content;
   const content = getLocalizedContent(raw as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { placeholder: "텍스트 입력" }
+      : locale === "zh"
+        ? { placeholder: "输入文本" }
+        : locale === "en"
+          ? { placeholder: "Enter text" }
+          : { placeholder: "テキストを入力" };
 
   const updateContent = (nextValue: string) => {
     const cur = raw;
@@ -42,7 +50,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
           onActivate={onActivate}
           multiline
           className="block min-h-[1.5em] font-medium text-slate-800"
-          placeholder="テキストを入力"
+          placeholder={labels.placeholder}
         />
       </p>
     </Card>

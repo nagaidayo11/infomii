@@ -24,7 +24,15 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "よくある質問";
+  const labels =
+    locale === "ko"
+      ? { title: "자주 묻는 질문", empty: "설정에서 Q&A를 추가하세요", q: "질문", a: "답변" }
+      : locale === "zh"
+        ? { title: "常见问题", empty: "请在设置中添加问答", q: "问题", a: "回答" }
+        : locale === "en"
+          ? { title: "FAQ", empty: "Add Q&A in settings", q: "Question", a: "Answer" }
+          : { title: "よくある質問", empty: "Q&Aを右のパネルで追加", q: "質問", a: "回答" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
   const rawItems = (c?.items as FaqItem[] | undefined) ?? [];
   const items = Array.isArray(rawItems) ? rawItems : [];
 
@@ -56,7 +64,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
       </p>
       <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <p className="text-slate-500">Q&Aを右のパネルで追加</p>
+          <p className="text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
             <div key={i} className="pb-3 last:pb-0">
@@ -67,7 +75,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                   editable={isSelected}
                   onActivate={onActivate}
                   className="font-medium text-slate-700"
-                  placeholder="質問"
+                  placeholder={labels.q}
                 />
               </dt>
               <dd className="mt-1 text-slate-600">
@@ -78,7 +86,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                   onActivate={onActivate}
                   multiline
                   className="block min-h-[1em] text-slate-600"
-                  placeholder="回答"
+                  placeholder={labels.a}
                 />
               </dd>
             </div>

@@ -11,13 +11,21 @@ type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string }
 
 type InfoRow = { label?: string; value?: string };
 
-export function InfoCard({ card, isSelected = false }: InfoCardProps) {
+export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "情報";
   const icon = normalizeIconToken(c?.icon, "info");
   const rows = (c?.rows as InfoRow[]) ?? [];
+  const localeLabels =
+    locale === "ko"
+      ? { empty: "라벨과 값을 추가", title: "제목", value: "값" }
+      : locale === "zh"
+        ? { empty: "请添加标签和值", title: "标题", value: "值" }
+        : locale === "en"
+          ? { empty: "Add label and value", title: "Title", value: "Value" }
+          : { empty: "ラベルと値を追加", title: "タイトル", value: "値" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -31,12 +39,12 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
         <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder="タイトル" />
+          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder={localeLabels.title} />
         </h3>
       </div>
       <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {rows.length === 0 ? (
-          <p className="text-slate-500">ラベルと値を追加</p>
+          <p className="text-slate-500">{localeLabels.empty}</p>
         ) : (
           rows.map((row, i) => (
             <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2">
@@ -52,7 +60,7 @@ export function InfoCard({ card, isSelected = false }: InfoCardProps) {
                   editable={isSelected}
                   onActivate={onActivate}
                   className="font-medium text-slate-800"
-                  placeholder="値"
+                  placeholder={localeLabels.value}
                 />
               </span>
             </div>

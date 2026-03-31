@@ -27,6 +27,14 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
   const note = getLocalizedContent(c?.note as LocalizedString | undefined, locale);
   const linkUrl = (c?.linkUrl as string) ?? "";
   const linkLabel = getLocalizedContent(c?.linkLabel as LocalizedString | undefined, locale) || "詳細";
+  const labels =
+    locale === "ko"
+      ? { notePlaceholder: "보충", detailPlaceholder: "상세" }
+      : locale === "zh"
+        ? { notePlaceholder: "补充", detailPlaceholder: "详情" }
+        : locale === "en"
+          ? { notePlaceholder: "Note", detailPlaceholder: "Details" }
+          : { notePlaceholder: "補足", detailPlaceholder: "詳細" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -45,7 +53,7 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="11:00" />
       </p>
       <p className="mt-1 text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder="補足" />
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.notePlaceholder} />
       </p>
       {linkUrl && (
         <a
@@ -55,7 +63,7 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
           onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
           aria-disabled={isSelected !== undefined ? true : undefined}
         >
-          <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary underline" placeholder="詳細" />
+          <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary underline" placeholder={labels.detailPlaceholder} />
         </a>
       )}
     </Card>

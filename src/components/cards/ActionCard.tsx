@@ -7,11 +7,19 @@ import { useEditor2Store } from "@/components/editor/store";
 
 type ActionCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
-export function ActionCard({ card, isSelected = false }: ActionCardProps) {
+export function ActionCard({ card, isSelected = false, locale = "ja" }: ActionCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const label = (c?.label as string) ?? "詳しく見る";
+  const labels =
+    locale === "ko"
+      ? { button: "자세히 보기", placeholder: "버튼" }
+      : locale === "zh"
+        ? { button: "查看详情", placeholder: "按钮" }
+        : locale === "en"
+          ? { button: "Learn more", placeholder: "Button" }
+          : { button: "詳しく見る", placeholder: "ボタン" };
+  const label = (c?.label as string) ?? labels.button;
   const href = (c?.href as string) ?? "#";
 
   const update = (key: string, value: string) => {
@@ -29,7 +37,7 @@ export function ActionCard({ card, isSelected = false }: ActionCardProps) {
         aria-disabled={isSelected ? true : undefined}
       >
         <span style={getTitleFontSizeStyle()}>
-          <InlineEditable value={label} onSave={(v) => update("label", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder="ボタン" />
+          <InlineEditable value={label} onSave={(v) => update("label", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder={labels.placeholder} />
         </span>
       </a>
     </div>

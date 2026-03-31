@@ -25,6 +25,14 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const c = card.content as Record<string, unknown> | undefined;
   const src = (c?.src as string | undefined) ?? "";
   const alt = getLocalizedContent(c?.alt as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { altPlaceholder: "설명(선택)" }
+      : locale === "zh"
+        ? { altPlaceholder: "说明（可选）" }
+        : locale === "en"
+          ? { altPlaceholder: "Description (optional)" }
+          : { altPlaceholder: "説明（任意）" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -47,7 +55,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
       )}
       {(src || isSelected) && (
         <p className="mt-2 px-1 text-xs text-slate-500">
-          <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-500" placeholder="説明（任意）" />
+          <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-500" placeholder={labels.altPlaceholder} />
         </p>
       )}
     </Card>

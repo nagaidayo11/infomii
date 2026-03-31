@@ -26,6 +26,14 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
   const hours = getLocalizedContent(c?.hours as LocalizedString | undefined, locale);
   const priceNote = getLocalizedContent(c?.priceNote as LocalizedString | undefined, locale);
   const contact = getLocalizedContent(c?.contact as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { hours: "운영 시간", contact: "연락처", titlePlaceholder: "세탁", priceNotePlaceholder: "요금 · 비고", contactPlaceholder: "내선" }
+      : locale === "zh"
+        ? { hours: "营业时间", contact: "联系方式", titlePlaceholder: "洗衣", priceNotePlaceholder: "费用 / 备注", contactPlaceholder: "分机" }
+        : locale === "en"
+          ? { hours: "Hours", contact: "Contact", titlePlaceholder: "Laundry", priceNotePlaceholder: "Price / Note", contactPlaceholder: "Extension" }
+          : { hours: "営業時間", contact: "連絡先", titlePlaceholder: "ランドリー", priceNotePlaceholder: "料金・備考", contactPlaceholder: "内線" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -37,18 +45,18 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
   return (
     <Card padding="md" className="">
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="ランドリー" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
       <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-        営業時間:{" "}
+        {labels.hours}:{" "}
         <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="9:00–18:00" />
       </p>
       <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={priceNote} onSave={(v) => updateKey("priceNote", v)} editable={isSelected} onActivate={onActivate} className="text-slate-500" placeholder="料金・備考" />
+        <InlineEditable value={priceNote} onSave={(v) => updateKey("priceNote", v)} editable={isSelected} onActivate={onActivate} className="text-slate-500" placeholder={labels.priceNotePlaceholder} />
       </p>
       <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-        連絡先:{" "}
-        <InlineEditable value={contact} onSave={(v) => updateKey("contact", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="内線" />
+        {labels.contact}:{" "}
+        <InlineEditable value={contact} onSave={(v) => updateKey("contact", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.contactPlaceholder} />
       </p>
     </Card>
   );

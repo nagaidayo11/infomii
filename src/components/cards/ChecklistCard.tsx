@@ -14,12 +14,20 @@ type ChecklistCardProps = {
   locale?: string;
 };
 
-export function ChecklistCard({ card, isSelected = false }: ChecklistCardProps) {
+export function ChecklistCard({ card, isSelected = false, locale = "ja" }: ChecklistCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = (c?.title as string) ?? "チェックリスト";
   const items = (Array.isArray(c?.items) ? c.items : []) as ChecklistItem[];
+  const labels =
+    locale === "ko"
+      ? { empty: "항목을 추가하세요", titlePlaceholder: "체크리스트" }
+      : locale === "zh"
+        ? { empty: "请添加项目", titlePlaceholder: "清单" }
+        : locale === "en"
+          ? { empty: "Add items", titlePlaceholder: "Checklist" }
+          : { empty: "項目を追加してください", titlePlaceholder: "チェックリスト" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -36,12 +44,12 @@ export function ChecklistCard({ card, isSelected = false }: ChecklistCardProps) 
           editable={isSelected}
           onActivate={onActivate}
           className="font-semibold text-slate-800"
-          placeholder="チェックリスト"
+          placeholder={labels.titlePlaceholder}
         />
       </p>
       <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <li className="text-slate-500">項目を追加してください</li>
+          <li className="text-slate-500">{labels.empty}</li>
         ) : (
           items.map((item, i) => (
             <li key={i} className="flex items-start gap-2">

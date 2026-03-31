@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { useLocale } from "@/components/locale-context";
 
 type SpaceCardProps = {
   card: EditorCard;
@@ -9,20 +10,24 @@ type SpaceCardProps = {
 };
 
 export function SpaceCard({ card, isSelected = false, showLabel = false }: SpaceCardProps) {
+  const locale = useLocale();
   const style = (card.style ?? {}) as Record<string, unknown>;
   const position = (style._position ?? {}) as Record<string, unknown>;
   const rawHeight = Number(position.h ?? (card.content as Record<string, unknown>)?.height ?? 48);
   const height = Number.isFinite(rawHeight) ? Math.max(0, Math.min(480, rawHeight)) : 48;
 
+  const label =
+    locale === "ko" ? "여백" : locale === "zh" ? "间距" : locale === "en" ? "Space" : "スペース";
+
   return (
     <div
       className="w-full rounded-lg bg-transparent"
       style={{ height }}
-      aria-label={`スペース ${height}px`}
+      aria-label={`${label} ${height}px`}
     >
       {(showLabel || isSelected) && (
         <div className="flex h-full items-center justify-center text-xs text-slate-400">
-          スペース {height}px
+          {label} {height}px
         </div>
       )}
     </div>

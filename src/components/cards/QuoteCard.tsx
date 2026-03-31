@@ -13,12 +13,20 @@ type QuoteCardProps = {
   locale?: string;
 };
 
-export function QuoteCard({ card, isSelected = false }: QuoteCardProps) {
+export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const quote = (c?.quote as string) ?? "";
   const author = (c?.author as string) ?? "";
+  const labels =
+    locale === "ko"
+      ? { quote: "인용", quotePlaceholder: "인용문 입력", authorPlaceholder: "출처·저자" }
+      : locale === "zh"
+        ? { quote: "引用", quotePlaceholder: "输入引文", authorPlaceholder: "出处 / 作者" }
+        : locale === "en"
+          ? { quote: "Quote", quotePlaceholder: "Enter quote", authorPlaceholder: "Source / Author" }
+          : { quote: "引用", quotePlaceholder: "引用文を入力", authorPlaceholder: "出典・著者" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -30,7 +38,7 @@ export function QuoteCard({ card, isSelected = false }: QuoteCardProps) {
     <Card padding="md">
       <div className="flex items-center gap-2 text-slate-500">
         <LineIcon name="quote" className="h-4 w-4" />
-        <span className="text-xs font-medium tracking-wide">引用</span>
+        <span className="text-xs font-medium tracking-wide">{labels.quote}</span>
       </div>
       <blockquote className="mt-2 border-l-2 border-slate-200 pl-3 text-slate-800" style={getBodyFontSizeStyle()}>
         <InlineEditable
@@ -40,7 +48,7 @@ export function QuoteCard({ card, isSelected = false }: QuoteCardProps) {
           onActivate={onActivate}
           multiline
           className="block min-h-[2em] leading-relaxed"
-          placeholder="引用文を入力"
+          placeholder={labels.quotePlaceholder}
         />
       </blockquote>
       <p className="mt-3 text-slate-500" style={getTitleFontSizeStyle()}>
@@ -50,7 +58,7 @@ export function QuoteCard({ card, isSelected = false }: QuoteCardProps) {
           editable={isSelected}
           onActivate={onActivate}
           className="inline-block"
-          placeholder="出典・著者"
+          placeholder={labels.authorPlaceholder}
         />
       </p>
     </Card>

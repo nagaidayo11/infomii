@@ -25,6 +25,14 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
   const ssid = getLocalizedContent(c?.ssid as LocalizedString | undefined, locale);
   const password = getLocalizedContent(c?.password as LocalizedString | undefined, locale);
   const description = getLocalizedContent(c?.description as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { title: "와이파이", ssid: "SSID", password: "비밀번호", desc: "설명(선택)" }
+      : locale === "zh"
+        ? { title: "Wi-Fi", ssid: "SSID", password: "密码", desc: "说明（可选）" }
+        : locale === "en"
+          ? { title: "Wi-Fi", ssid: "SSID", password: "Password", desc: "Description (optional)" }
+          : { title: "WiFi", ssid: "SSID", password: "パスワード", desc: "説明（任意）" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -43,29 +51,29 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           editable={isSelected}
           onActivate={onActivate}
           className="text-sm font-medium text-slate-800"
-          placeholder="WiFi"
+          placeholder={labels.title}
         />
       </p>
       <p className="mt-1 text-xs text-slate-600">
-        SSID:{" "}
+        {labels.ssid}:{" "}
         <InlineEditable
           value={ssid}
           onSave={(v) => updateKey("ssid", v)}
           editable={isSelected}
           onActivate={onActivate}
           className="text-xs text-slate-600"
-          placeholder="SSID"
+          placeholder={labels.ssid}
         />
       </p>
       <p className="mt-0.5 text-xs font-mono text-slate-600">
-        パスワード:{" "}
+        {labels.password}:{" "}
         <InlineEditable
           value={password}
           onSave={(v) => updateKey("password", v)}
           editable={isSelected}
           onActivate={onActivate}
           className="text-xs font-mono text-slate-600"
-          placeholder="パスワード"
+          placeholder={labels.password}
         />
       </p>
       <p className="mt-2 text-xs text-slate-500">
@@ -76,7 +84,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           onActivate={onActivate}
           multiline
           className="block min-h-[1em] text-xs text-slate-500"
-          placeholder="説明（任意）"
+          placeholder={labels.desc}
         />
       </p>
     </Card>

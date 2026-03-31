@@ -93,6 +93,14 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <WelcomeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "wifi": {
       const c = resolvedCard.content as Record<string, unknown> | undefined;
+      const wifiLabels =
+        locale === "ko"
+          ? { network: "네트워크", password: "비밀번호" }
+          : locale === "zh"
+            ? { network: "网络名称", password: "密码" }
+            : locale === "en"
+              ? { network: "Network", password: "Password" }
+              : { network: "ネットワーク名", password: "パスワード" };
       const infoCard: EditorCard = {
         ...resolvedCard,
         type: "info",
@@ -100,8 +108,8 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
           title: (c?.title as string) || "Wi-Fi",
           icon: "wifi",
           rows: [
-            { label: "ネットワーク名", value: (c?.ssid as string) ?? "" },
-            { label: "パスワード", value: (c?.password as string) ?? "" },
+            { label: wifiLabels.network, value: (c?.ssid as string) ?? "" },
+            { label: wifiLabels.password, value: (c?.password as string) ?? "" },
           ],
         },
       };
@@ -112,12 +120,20 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       const time = (c?.time as string) ?? "";
       const location = (c?.location as string) ?? "";
       const menu = (c?.menu as string) ?? "";
+      const breakfastLabels =
+        locale === "ko"
+          ? { title: "조식", body: "시간 · 장소 · 메뉴" }
+          : locale === "zh"
+            ? { title: "早餐", body: "时间 · 地点 · 菜单" }
+            : locale === "en"
+              ? { title: "Breakfast", body: "Time · Venue · Menu" }
+              : { title: "朝食", body: "時間・会場・メニュー" };
       const highlightCard: EditorCard = {
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || "朝食",
-          body: [time, location, menu].filter(Boolean).join(" · ") || "時間・会場・メニュー",
+          title: (c?.title as string) || breakfastLabels.title,
+          body: [time, location, menu].filter(Boolean).join(" · ") || breakfastLabels.body,
           accent: "amber",
         },
       };
@@ -128,12 +144,20 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       const time = ((c?.time as string) ?? (c?.hours as string) ?? "").trim();
       const location = (c?.location as string) ?? "";
       const menu = ((c?.menu as string) ?? (c?.description as string) ?? (c?.note as string) ?? "").trim();
+      const spaLabels =
+        locale === "ko"
+          ? { title: "스파 · 온천", body: "시간 · 장소 · 안내" }
+          : locale === "zh"
+            ? { title: "SPA / 温泉", body: "时间 · 地点 · 指南" }
+            : locale === "en"
+              ? { title: "Spa / Onsen", body: "Time · Location · Info" }
+              : { title: "スパ・温泉", body: "時間・場所・ご案内" };
       const highlightCard: EditorCard = {
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || "スパ・温泉",
-          body: [time, location, menu].filter(Boolean).join(" · ") || "時間・場所・ご案内",
+          title: (c?.title as string) || spaLabels.title,
+          body: [time, location, menu].filter(Boolean).join(" · ") || spaLabels.body,
           accent: "blue",
         },
       };

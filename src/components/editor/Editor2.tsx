@@ -39,6 +39,33 @@ type Editor2Props = {
 };
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v1";
+const REQUIRED_LOCALES: SupportedLocale[] = ["en", "zh", "ko"];
+
+function hasText(value: unknown): boolean {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isLocalizedRecord(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const obj = value as Record<string, unknown>;
+  return "ja" in obj || "en" in obj || "zh" in obj || "ko" in obj;
+}
+
+function countMissingRequiredLocales(input: unknown): number {
+  if (Array.isArray(input)) {
+    return input.reduce((sum, item) => sum + countMissingRequiredLocales(item), 0);
+  }
+  if (!input || typeof input !== "object") return 0;
+  if (isLocalizedRecord(input)) {
+    const sourceJa = input.ja;
+    if (!hasText(sourceJa)) return 0;
+    return REQUIRED_LOCALES.reduce((sum, locale) => sum + (hasText(input[locale]) ? 0 : 1), 0);
+  }
+  return Object.values(input as Record<string, unknown>).reduce<number>(
+    (sum, value) => sum + countMissingRequiredLocales(value),
+    0
+  );
+}
 
 export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-menu" }: Editor2Props) {
   const isDemoMode = mode === "demo";
@@ -612,6 +639,75 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     return translatedCount;
   }, [cards, setCards]);
 
+  const ensureTranslationsBeforePublish = useCallback(async (): Promise<string | null> => {
+    const missingBefore = cards.reduce((sum, card) => sum + countMissingRequiredLocales(card.content), 0);
+    if (missingBefore === 0) return null;
+
+    const subscription = await getCurrentHotelSubscription().catch(() => null);
+    if (!subscription || subscription.plan !== "business") {
+      return "未翻訳項目があります。公開前に翻訳を完了するにはBusinessプランが必要です。";
+    }
+    const usage = await getCurrentHotelTranslationUsage().catch(() => null);
+    if (usage && usage.usedRuns >= usage.includedRuns) {
+      return `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているため公開できません。`;
+    }
+
+    setLocaleTranslating(true);
+    try {
+      const translatedCount = await translateAllCardsToMultilingual();
+      if (translatedCount > 0) {
+        await trackCurrentHotelTranslationRun({
+          translatedItems: translatedCount,
+        });
+      }
+      const latestCards = useEditor2Store.getState().cards;
+      const missingAfter = latestCards.reduce(
+        (sum, card) => sum + countMissingRequiredLocales(card.content),
+        0
+      );
+      if (missingAfter > 0) {
+        return `未翻訳項目が ${missingAfter} 件残っているため公開できません。編集内容を確認してください。`;
+      }
+      return null;
+    } catch {
+      return "自動翻訳に失敗したため公開できません。時間をおいて再試行してください。";
+    } finally {
+      setLocaleTranslating(false);
+    }
+  }, [cards, translateAllCardsToMultilingual]);
+
+  const handlePublishClickStrict = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
+    const translationError = await ensureTranslationsBeforePublish();
+    if (translationError) {
+      setPrepublishState({
+        errors: [translationError],
+        warnings: [],
+        allowContinue: false,
+      });
+      return;
+    }
+    await handlePublishClick();
+  }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick]);
+
+  const handleTogglePublishedStrict = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開状態の変更は利用できません。無料登録で解放されます。");
+      return;
+    }
+    if (publishStatus !== "published") {
+      const translationError = await ensureTranslationsBeforePublish();
+      if (translationError) {
+        alert(translationError);
+        return;
+      }
+    }
+    await handleTogglePublished();
+  }, [isDemoMode, publishStatus, ensureTranslationsBeforePublish, handleTogglePublished]);
+
   const handleChangeEditorLocale = useCallback(async (nextLocale: SupportedLocale) => {
     if (isDemoMode) {
       setDemoLockMessage("デモモードでは翻訳機能は利用できません。無料登録で解放されます。");
@@ -690,9 +786,9 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         localeTranslating={localeTranslating}
         translationEnabled={translationEnabled}
         onPreview={handlePreviewClick}
-        onPublish={handlePublishClick}
-        onQr={handlePublishClick}
-        onTogglePublished={isDemoMode ? undefined : handleTogglePublished}
+        onPublish={handlePublishClickStrict}
+        onQr={handlePublishClickStrict}
+        onTogglePublished={isDemoMode ? undefined : handleTogglePublishedStrict}
         publishToggleLoading={publishToggleLoading}
         publishToggleChecked={publishStatus === "published"}
         onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
@@ -801,7 +897,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
                     type="button"
                     onClick={async () => {
                       setPrepublishState(null);
-                      await publishNow();
+                      await handlePublishClickStrict();
                     }}
                     className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white hover:bg-slate-800"
                   >

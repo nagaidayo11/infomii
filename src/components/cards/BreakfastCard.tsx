@@ -25,6 +25,14 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
   const menu = getLocalizedContent(c?.menu as LocalizedString | undefined, locale);
+  const labels =
+    locale === "ko"
+      ? { time: "시간", location: "장소", titlePlaceholder: "조식", menuPlaceholder: "메뉴", locationPlaceholder: "1층 다이닝" }
+      : locale === "zh"
+        ? { time: "时间", location: "地点", titlePlaceholder: "早餐", menuPlaceholder: "菜单", locationPlaceholder: "1层餐厅" }
+        : locale === "en"
+          ? { time: "Time", location: "Venue", titlePlaceholder: "Breakfast", menuPlaceholder: "Menu", locationPlaceholder: "1F Dining" }
+          : { time: "時間", location: "会場", titlePlaceholder: "朝食", menuPlaceholder: "メニュー", locationPlaceholder: "1F ダイニング" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -37,18 +45,18 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
   return (
     <Card padding="md" className="">
       <p className="text-sm font-medium text-slate-800">
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder="朝食" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
       <p className="mt-1 text-xs text-slate-600">
-        時間:{" "}
+        {labels.time}:{" "}
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="7:00–9:30" />
       </p>
       <p className="mt-0.5 text-xs text-slate-600">
-        会場:{" "}
-        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="1F ダイニング" />
+        {labels.location}:{" "}
+        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder={labels.locationPlaceholder} />
       </p>
       <p className="mt-2 text-xs text-slate-500">
-        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder="メニュー" />
+        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
       </p>
     </Card>
   );

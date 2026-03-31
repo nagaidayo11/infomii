@@ -26,6 +26,14 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
   const variant = (c?.variant as string) ?? "info";
   const isWarning = variant === "warning";
+  const labels =
+    locale === "ko"
+      ? { bodyPlaceholder: "본문" }
+      : locale === "zh"
+        ? { bodyPlaceholder: "正文" }
+        : locale === "en"
+          ? { bodyPlaceholder: "Body" }
+          : { bodyPlaceholder: "本文" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -57,7 +65,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
           onActivate={onActivate}
           multiline
           className="block min-h-[1em] text-slate-600"
-          placeholder="本文"
+          placeholder={labels.bodyPlaceholder}
         />
       </p>
     </Card>
