@@ -19,6 +19,7 @@ export type EditorTopBarProps = {
   locale?: "ja" | "en" | "zh" | "ko";
   onChangeLocale?: (locale: "ja" | "en" | "zh" | "ko") => void;
   localeTranslating?: boolean;
+  translationEnabled?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   canClearAll?: boolean;
@@ -111,6 +112,7 @@ export function EditorTopBar({
   locale = "ja",
   onChangeLocale,
   localeTranslating = false,
+  translationEnabled = true,
   canUndo = false,
   canRedo = false,
   canClearAll = false,
@@ -312,19 +314,24 @@ export function EditorTopBar({
                 { code: "ko", label: "한국어" },
               ].map((item) => {
                 const active = locale === item.code;
+                const disabledByPlan = !translationEnabled && item.code !== "ja";
                 return (
                   <button
                     key={item.code}
                     type="button"
                     onClick={() => onChangeLocale(item.code as "ja" | "en" | "zh" | "ko")}
-                    disabled={localeTranslating}
+                    disabled={localeTranslating || disabledByPlan}
                     className={
                       "rounded-md border px-2 py-1 text-[11px] font-medium transition disabled:cursor-not-allowed disabled:opacity-60 " +
                       (active
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
                     }
-                    title={`表示言語: ${item.label}`}
+                    title={
+                      disabledByPlan
+                        ? "Businessプランで利用できます"
+                        : `表示言語: ${item.label}`
+                    }
                   >
                     {item.label}
                   </button>

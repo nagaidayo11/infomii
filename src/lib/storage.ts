@@ -524,6 +524,15 @@ export type HotelSubscription = {
   updatedAt: string;
 };
 
+export const BUSINESS_TRANSLATION_INCLUDED_MONTHLY = 1000;
+
+export type TranslationUsageSummary = {
+  monthKey: string;
+  usedRuns: number;
+  includedRuns: number;
+  overageRuns: number;
+};
+
 export type HotelViewMetrics = {
   totalViews7d: number;
   qrViews7d: number;
@@ -1058,6 +1067,67 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
   }
 
   return subscription;
+}
+
+export async function getCurrentHotelTranslationUsage(): Promise<TranslationUsageSummary> {
+  const supabase = getBrowserSupabaseClient();
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, "0")}`;
+
+  if (!supabase) {
+    return {
+      monthKey,
+      usedRuns: 0,
+      includedRuns: BUSINESS_TRANSLATION_INCLUDED_MONTHLY,
+      overageRuns: 0,
+    };
+  }
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) {
+    return {
+      monthKey,
+      usedRuns: 0,
+      includedRuns: BUSINESS_TRANSLATION_INCLUDED_MONTHLY,
+      overageRuns: 0,
+    };
+  }
+
+  const { count } = await supabase
+    .from("audit_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("hotel_id", hotelId)
+    .eq("action", "ai.translation_run")
+    .gte("created_at", monthStart.toISOString());
+
+  const usedRuns = count ?? 0;
+  return {
+    monthKey,
+    usedRuns,
+    includedRuns: BUSINESS_TRANSLATION_INCLUDED_MONTHLY,
+    overageRuns: Math.max(0, usedRuns - BUSINESS_TRANSLATION_INCLUDED_MONTHLY),
+  };
+}
+
+export async function trackCurrentHotelTranslationRun(metadata?: {
+  locale?: "en" | "zh" | "ko";
+  translatedItems?: number;
+}): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return;
+  await appendAuditLog({
+    hotelId,
+    action: "ai.translation_run",
+    message: "多言語翻訳を実行しました",
+    targetType: "translation",
+    metadata: {
+      locale: metadata?.locale,
+      translatedItems: metadata?.translatedItems ?? 0,
+    },
+  });
 }
 
 export async function updateCurrentHotelSubscription(

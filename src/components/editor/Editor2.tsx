@@ -22,6 +22,9 @@ import {
   savePageCards,
   setInformationStatusBySlug,
   updatePageTitle,
+  getCurrentHotelSubscription,
+  getCurrentHotelTranslationUsage,
+  trackCurrentHotelTranslationRun,
 } from "@/lib/storage";
 
 /**
@@ -57,6 +60,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
   const [editorLocale, setEditorLocale] = useState<SupportedLocale>("ja");
   const [localeTranslating, setLocaleTranslating] = useState(false);
+  const [translationEnabled, setTranslationEnabled] = useState(false);
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
@@ -226,6 +230,9 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           });
       }
     });
+    getCurrentHotelSubscription()
+      .then((sub) => setTranslationEnabled(Boolean(sub && sub.plan === "business")))
+      .catch(() => setTranslationEnabled(false));
   }, [isDemoMode, pageId, setPageMeta]);
 
   useEffect(() => {
@@ -615,9 +622,27 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       setEditorLocale("ja");
       return;
     }
+    const subscription = await getCurrentHotelSubscription().catch(() => null);
+    if (!subscription || subscription.plan !== "business") {
+      alert("多言語翻訳はBusinessプラン限定機能です。プランをアップグレードしてご利用ください。");
+      return;
+    }
+    const usage = await getCurrentHotelTranslationUsage().catch(() => null);
+    if (usage && usage.usedRuns >= usage.includedRuns) {
+      alert(
+        `今月の翻訳実行枠（${usage.includedRuns}回）に達しました。追加課金プランで継続利用できます。`
+      );
+      return;
+    }
     setLocaleTranslating(true);
     try {
-      await translateAllCardsToMultilingual();
+      const translatedCount = await translateAllCardsToMultilingual();
+      if (translatedCount > 0) {
+        await trackCurrentHotelTranslationRun({
+          locale: nextLocale === "ja" ? undefined : nextLocale,
+          translatedItems: translatedCount,
+        });
+      }
       setEditorLocale(nextLocale);
     } catch {
       // Even when translation API fails, switch locale and rely on existing localized/fallback text.
@@ -663,6 +688,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         locale={editorLocale}
         onChangeLocale={handleChangeEditorLocale}
         localeTranslating={localeTranslating}
+        translationEnabled={translationEnabled}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClick}
         onQr={handlePublishClick}
