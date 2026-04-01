@@ -10,7 +10,6 @@ type SeedTemplate = {
 };
 
 const STYLE_KEY = "_style";
-const PAGE_STYLE_KEY = "_pageStyle";
 const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&q=80";
 
 const CATEGORY_GALLERY_IMAGES: Record<string, string[]> = {
@@ -190,37 +189,13 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
   };
 }
 
-function getCategoryBackground(category: string | null): {
-  mode: "solid" | "gradient";
-  color: string;
-  from: string;
-  to: string;
-  angle: number;
-} {
-  switch (category) {
-    case "business":
-      return { mode: "gradient", color: "#f8fafc", from: "#f8fafc", to: "#e2e8f0", angle: 180 };
-    case "resort":
-      return { mode: "gradient", color: "#ecfeff", from: "#ecfeff", to: "#cffafe", angle: 160 };
-    case "ryokan":
-      return { mode: "gradient", color: "#fff7ed", from: "#fff7ed", to: "#ffedd5", angle: 165 };
-    case "airbnb":
-      return { mode: "gradient", color: "#fdf4ff", from: "#fdf4ff", to: "#f3e8ff", angle: 170 };
-    case "guide":
-      return { mode: "gradient", color: "#f0fdf4", from: "#f0fdf4", to: "#dcfce7", angle: 170 };
-    case "inbound":
-      return { mode: "gradient", color: "#eff6ff", from: "#eff6ff", to: "#dbeafe", angle: 170 };
-    default:
-      return { mode: "gradient", color: "#f8fafc", from: "#f8fafc", to: "#f1f5f9", angle: 180 };
-  }
-}
-
 function getBaseCardStyle(type: string): Record<string, unknown> {
   const shared = {
     borderRadius: 14,
     borderWidth: 1,
     padding: 16,
     boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
+    borderColor: "#e2e8f0",
   };
   switch (type) {
     case "hero":
@@ -228,38 +203,8 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
         ...shared,
         borderRadius: 18,
       };
-    case "notice":
-    case "emergency":
-      return {
-        ...shared,
-        borderColor: "#fdba74",
-      };
-    case "wifi":
-    case "checklist":
-    case "steps":
-      return {
-        ...shared,
-        borderColor: "#bfdbfe",
-      };
-    case "breakfast":
-    case "menu":
-    case "restaurant":
-      return {
-        ...shared,
-        borderColor: "#fde68a",
-      };
-    case "nearby":
-    case "map":
-    case "pageLinks":
-      return {
-        ...shared,
-        borderColor: "#a5f3fc",
-      };
     default:
-      return {
-        ...shared,
-        borderColor: "#e2e8f0",
-      };
+      return shared;
   }
 }
 
@@ -439,7 +384,6 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
 }
 
 function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
-  const background = getCategoryBackground(template.category);
   const cards = template.cards.map((card, index) => {
     const content = { ...(card.content ?? {}) };
     const existingStyle =
@@ -455,15 +399,11 @@ function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
     delete (style as Record<string, unknown>).titleFontSize;
     delete (style as Record<string, unknown>).bodyFontSize;
     delete (style as Record<string, unknown>).backgroundColor;
+    delete (style as Record<string, unknown>).textColor;
     const nextContent: Record<string, unknown> = {
       ...content,
       [STYLE_KEY]: style,
     };
-    if (index === 0) {
-      nextContent[PAGE_STYLE_KEY] = {
-        background,
-      };
-    }
     return {
       ...card,
       content: nextContent,

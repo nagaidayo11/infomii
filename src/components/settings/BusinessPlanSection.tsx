@@ -85,15 +85,6 @@ export function BusinessPlanSection() {
               ✓
             </span>
             <span>
-              <strong className="font-medium text-slate-900">ゲスト向けフッターの非表示</strong>
-              ／一番下の案内文を出さないようにできます（下の「公開ページのフッター」）。
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-indigo-500" aria-hidden>
-              ✓
-            </span>
-            <span>
               <strong className="font-medium text-slate-900">監査ログの CSV</strong>
               ／操作履歴をファイルで保存できます（下の「監査ログ」）。
             </span>
