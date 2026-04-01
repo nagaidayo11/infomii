@@ -17,18 +17,34 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "重要なお知らせ";
+  const labels =
+    locale === "ko"
+      ? {
+          titlePlaceholder: "제목",
+          bodyPlaceholder: "내용",
+          defaultTitle: "중요 안내",
+        }
+      : locale === "zh"
+        ? {
+            titlePlaceholder: "标题",
+            bodyPlaceholder: "内容",
+            defaultTitle: "重要通知",
+          }
+        : locale === "en"
+          ? {
+              titlePlaceholder: "Title",
+              bodyPlaceholder: "Content",
+              defaultTitle: "Important notice",
+            }
+          : {
+              titlePlaceholder: "タイトル",
+              bodyPlaceholder: "内容",
+              defaultTitle: "重要なお知らせ",
+            };
+  const title = (c?.title as string) ?? labels.defaultTitle;
   const body = (c?.body as string) ?? "";
   const accent = (c?.accent as string) ?? "amber";
   const accentClass = ACCENT_CLASS[accent] ?? ACCENT_CLASS.amber;
-  const labels =
-    locale === "ko"
-      ? { titlePlaceholder: "제목", bodyPlaceholder: "내용" }
-      : locale === "zh"
-        ? { titlePlaceholder: "标题", bodyPlaceholder: "内容" }
-        : locale === "en"
-          ? { titlePlaceholder: "Title", bodyPlaceholder: "Content" }
-          : { titlePlaceholder: "タイトル", bodyPlaceholder: "内容" };
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

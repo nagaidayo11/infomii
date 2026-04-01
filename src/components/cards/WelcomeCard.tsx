@@ -22,16 +22,17 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "ようこそ";
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"
-      ? { messagePlaceholder: "환영 메시지" }
+      ? { messagePlaceholder: "환영 메시지", defaultTitle: "환영합니다" }
       : locale === "zh"
-        ? { messagePlaceholder: "欢迎信息" }
+        ? { messagePlaceholder: "欢迎信息", defaultTitle: "欢迎" }
         : locale === "en"
-          ? { messagePlaceholder: "Welcome message" }
-          : { messagePlaceholder: "おもてなしメッセージ" };
+          ? { messagePlaceholder: "Welcome message", defaultTitle: "Welcome" }
+          : { messagePlaceholder: "おもてなしメッセージ", defaultTitle: "ようこそ" };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

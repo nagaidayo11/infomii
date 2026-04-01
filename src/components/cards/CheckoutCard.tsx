@@ -22,19 +22,42 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "チェックアウト";
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
   const note = getLocalizedContent(c?.note as LocalizedString | undefined, locale);
   const linkUrl = (c?.linkUrl as string) ?? "";
-  const linkLabel = getLocalizedContent(c?.linkLabel as LocalizedString | undefined, locale) || "詳細";
   const labels =
     locale === "ko"
-      ? { notePlaceholder: "보충", detailPlaceholder: "상세" }
+      ? {
+          notePlaceholder: "보충",
+          detailPlaceholder: "상세",
+          defaultTitle: "체크아웃",
+          defaultLinkLabel: "상세",
+        }
       : locale === "zh"
-        ? { notePlaceholder: "补充", detailPlaceholder: "详情" }
+        ? {
+            notePlaceholder: "补充",
+            detailPlaceholder: "详情",
+            defaultTitle: "退房",
+            defaultLinkLabel: "详情",
+          }
         : locale === "en"
-          ? { notePlaceholder: "Note", detailPlaceholder: "Details" }
-          : { notePlaceholder: "補足", detailPlaceholder: "詳細" };
+          ? {
+              notePlaceholder: "Note",
+              detailPlaceholder: "Details",
+              defaultTitle: "Check-out",
+              defaultLinkLabel: "Details",
+            }
+          : {
+              notePlaceholder: "補足",
+              detailPlaceholder: "詳細",
+              defaultTitle: "チェックアウト",
+              defaultLinkLabel: "詳細",
+            };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
+  const linkLabel =
+    getLocalizedContent(c?.linkLabel as LocalizedString | undefined, locale) ||
+    labels.defaultLinkLabel;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

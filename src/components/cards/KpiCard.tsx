@@ -18,7 +18,6 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "KPI";
   const items = (Array.isArray(c?.items) ? c.items : []) as KpiItem[];
   const labels =
     locale === "ko"
@@ -28,6 +27,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
         : locale === "en"
           ? { empty: "Add metric items", titlePlaceholder: "KPI" }
           : { empty: "数値項目を追加してください", titlePlaceholder: "KPI" };
+  const title = (c?.title as string) ?? labels.titlePlaceholder;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

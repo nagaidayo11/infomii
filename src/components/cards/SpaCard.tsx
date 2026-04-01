@@ -22,7 +22,6 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "スパ・温泉";
   const hours = getLocalizedContent(c?.hours as LocalizedString | undefined, locale);
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
   const description = getLocalizedContent(c?.description as LocalizedString | undefined, locale);
@@ -35,6 +34,8 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
         : locale === "en"
           ? { time: "Time", location: "Location", titlePlaceholder: "Spa / Onsen", descPlaceholder: "Description", notePlaceholder: "Note" }
           : { time: "時間", location: "場所", titlePlaceholder: "スパ・温泉", descPlaceholder: "説明", notePlaceholder: "備考" };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

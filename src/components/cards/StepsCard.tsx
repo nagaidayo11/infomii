@@ -18,7 +18,6 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "ステップ";
   const items = (Array.isArray(c?.items) ? c.items : []) as StepsItem[];
   const labels =
     locale === "ko"
@@ -28,6 +27,7 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
         : locale === "en"
           ? { empty: "Add steps", titlePlaceholder: "Steps" }
           : { empty: "手順を追加してください", titlePlaceholder: "ステップ" };
+  const title = (c?.title as string) ?? labels.titlePlaceholder;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

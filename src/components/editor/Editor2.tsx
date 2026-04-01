@@ -92,6 +92,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
   const [publishFlowBusy, setPublishFlowBusy] = useState(false);
+  const [togglePublishBusy, setTogglePublishBusy] = useState(false);
+  const [qrModalPreparing, setQrModalPreparing] = useState(false);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -451,6 +453,46 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     await publishNow();
   }, [isDemoMode, publishNow, runPrepublishChecks]);
 
+  /** 公開済みページのみ: 保存してQR/URLモーダルを開く（初回公開は「公開」ボタンを使用） */
+  const handleQrClick = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
+    if (!pageId || !pageMeta.slug) return;
+    if (publishStatus !== "published") {
+      window.alert(
+        "QRコードを表示するには、先にページを公開してください。\n「公開」ボタンから公開すると、URLとQRを確認できます。",
+      );
+      return;
+    }
+    setQrModalPreparing(true);
+    try {
+      const state = useEditor2Store.getState();
+      await savePageCards(pageId, state.cards, {
+        pageStyle: {
+          background: {
+            mode: state.pageBackgroundMode,
+            color: state.pageBackgroundColor,
+            from: state.pageGradientFrom,
+            to: state.pageGradientTo,
+            angle: state.pageGradientAngle,
+          },
+        },
+      });
+      const publicUrl = buildPublicUrlV(pageMeta.slug);
+      setPublishState({
+        publicUrl,
+        pageTitle: pageMeta.title ?? "",
+        slug: pageMeta.slug,
+      });
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "保存に失敗しました。");
+    } finally {
+      setQrModalPreparing(false);
+    }
+  }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus]);
+
   const handlePreviewClick = useCallback(async () => {
     if (isDemoMode) {
       setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
@@ -791,14 +833,19 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       setDemoLockMessage("デモモードでは公開状態の変更は利用できません。無料登録で解放されます。");
       return;
     }
-    if (publishStatus !== "published") {
-      const translationError = await ensureTranslationsBeforePublish();
-      if (translationError) {
-        alert(translationError);
-        return;
+    setTogglePublishBusy(true);
+    try {
+      if (publishStatus !== "published") {
+        const translationError = await ensureTranslationsBeforePublish();
+        if (translationError) {
+          window.alert(translationError);
+          return;
+        }
       }
+      await handleTogglePublished();
+    } finally {
+      setTogglePublishBusy(false);
     }
-    await handleTogglePublished();
   }, [isDemoMode, publishStatus, ensureTranslationsBeforePublish, handleTogglePublished]);
 
   const handleChangeEditorLocale = useCallback(async (nextLocale: SupportedLocale) => {
@@ -855,6 +902,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         status={publishStatus}
         publicUrl={isDemoMode ? demoPreviewUrl : pageMeta.publicUrl}
         publishing={publishing}
+        qrPreparing={qrModalPreparing}
         canUndo={canUndo}
         canRedo={canRedo}
         canClearAll={cards.length > 0}
@@ -881,13 +929,36 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         translationEnabled={translationEnabled}
         onPreview={handlePreviewClick}
         onPublish={handlePublishClickStrict}
-        onQr={handlePublishClickStrict}
+        onQr={handleQrClick}
         onTogglePublished={isDemoMode ? undefined : handleTogglePublishedStrict}
         publishToggleLoading={publishToggleLoading}
         publishToggleChecked={publishStatus === "published"}
         onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
       />
     ) : null;
+
+  const showEditorBusyOverlay =
+    publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
+  let editorBusyTitle = "公開中...";
+  let editorBusySubtitle = "保存と公開設定を実行しています";
+  if (togglePublishBusy) {
+    if (localeTranslating) {
+      editorBusyTitle = "一括翻訳中...";
+      editorBusySubtitle = "ja / en / zh / ko の翻訳を整えています";
+    } else {
+      editorBusyTitle = "公開準備中...";
+      editorBusySubtitle =
+        publishStatus === "published"
+          ? "公開OFFへ切り替えています"
+          : "公開ONへ切り替えています";
+    }
+  } else if (qrModalPreparing) {
+    editorBusyTitle = "QRを表示しています";
+    editorBusySubtitle = "最新の編集内容を保存しています";
+  } else if (publishFlowBusy && localeTranslating) {
+    editorBusyTitle = "多言語データ取得中...";
+    editorBusySubtitle = "ja / en / zh / ko の翻訳を取得・反映しています";
+  }
 
   return (
     <LocaleProvider value={editorLocale}>
@@ -1014,18 +1085,12 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
             </div>
           </div>
         )}
-        {(publishFlowBusy || publishing) && (
+        {showEditorBusyOverlay && (
           <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45">
             <div className="rounded-2xl border border-white/40 bg-slate-900/80 px-10 py-8 text-center shadow-2xl backdrop-blur-sm">
               <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-              <p className="mt-4 text-3xl font-bold tracking-wide text-white">
-                {publishFlowBusy && localeTranslating ? "多言語データ取得中..." : "公開中..."}
-              </p>
-              <p className="mt-2 text-sm font-medium text-slate-200">
-                {publishFlowBusy && localeTranslating
-                  ? "ja / en / zh / ko の翻訳を取得・反映しています"
-                  : "保存と公開設定を実行しています"}
-              </p>
+              <p className="mt-4 text-3xl font-bold tracking-wide text-white">{editorBusyTitle}</p>
+              <p className="mt-2 text-sm font-medium text-slate-200">{editorBusySubtitle}</p>
             </div>
           </div>
         )}

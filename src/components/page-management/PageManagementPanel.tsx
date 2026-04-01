@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
@@ -17,6 +18,7 @@ import type { PageRow } from "@/lib/storage";
 import { TemplateGallery } from "@/components/template-gallery-ui";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AIPageGenerator } from "@/components/ai-page-generator";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 
 /**
  * ページ管理 — ゲスト向け案内ページの一覧・新規・削除
@@ -31,6 +33,7 @@ export function PageManagementPanel() {
   const [deletingCardPageId, setDeletingCardPageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [subscription, setSubscription] = useState<{ plan: "free" | "pro" | "business" } | null>(null);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
@@ -60,6 +63,10 @@ export function PageManagementPanel() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function onNewPage() {
     if (createBusyRef.current) return;
@@ -278,6 +285,16 @@ export function PageManagementPanel() {
         onClose={() => setPlanLimitModalOpen(false)}
         currentPlan={subscription?.plan}
       />
+      {mounted &&
+        creating &&
+        createPortal(
+          <FullScreenLoadingOverlay
+            title="作成中…"
+            subtitle="新しい案内ページを用意しています"
+            classNameZ="z-[90]"
+          />,
+          document.body
+        )}
     </AuthGate>
   );
 }

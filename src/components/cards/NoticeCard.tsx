@@ -22,18 +22,19 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "お知らせ";
   const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
   const variant = (c?.variant as string) ?? "info";
   const isWarning = variant === "warning";
   const labels =
     locale === "ko"
-      ? { bodyPlaceholder: "본문" }
+      ? { bodyPlaceholder: "본문", defaultTitle: "공지" }
       : locale === "zh"
-        ? { bodyPlaceholder: "正文" }
+        ? { bodyPlaceholder: "正文", defaultTitle: "通知" }
         : locale === "en"
-          ? { bodyPlaceholder: "Body" }
-          : { bodyPlaceholder: "本文" };
+          ? { bodyPlaceholder: "Body", defaultTitle: "Notice" }
+          : { bodyPlaceholder: "本文", defaultTitle: "お知らせ" };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

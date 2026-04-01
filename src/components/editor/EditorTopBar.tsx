@@ -14,6 +14,8 @@ export type EditorTopBarProps = {
   status?: "draft" | "published";
   publicUrl: string | null;
   publishing?: boolean;
+  /** True while opening QR modal (save only); distinct from full publish flow */
+  qrPreparing?: boolean;
   onEditPageBackground?: () => void;
   onBulkFont?: () => void;
   locale?: "ja" | "en" | "zh" | "ko";
@@ -107,6 +109,7 @@ export function EditorTopBar({
   status = "draft",
   publicUrl,
   publishing = false,
+  qrPreparing = false,
   onEditPageBackground,
   onBulkFont,
   locale = "ja",
@@ -342,7 +345,7 @@ export function EditorTopBar({
         </div>
       )}
 
-      {/* Actions: Preview, Publish, QR */}
+      {/* Actions: Preview, Publish (full flow), QR (saved published page only) */}
       <div className="flex items-center gap-1.5">
         <button
           type="button"
@@ -355,7 +358,8 @@ export function EditorTopBar({
         <button
           type="button"
           onClick={onPublish}
-          disabled={publishing}
+          disabled={publishing || qrPreparing}
+          title="翻訳チェック・公開前確認のうえ、保存して公開します"
           className="rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {publishing ? "公開中…" : "公開"}
@@ -363,15 +367,19 @@ export function EditorTopBar({
         <button
           type="button"
           onClick={onQr}
-          disabled={publishing}
-          className="flex items-center gap-1.5 rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="QRコード"
+          disabled={publishing || qrPreparing}
+          title="公開済みのページのQR・URLを表示（最新内容を保存してから開きます）"
+          className={
+            "flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 " +
+            (qrPreparing ? "border-slate-200" : "")
+          }
+          aria-label="QRコードを表示"
         >
-          {publishing ? (
-            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          {qrPreparing ? (
+            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-slate-400 border-t-slate-800" />
           ) : (
             <svg
-              className="h-3.5 w-3.5 shrink-0 text-white"
+              className="h-3.5 w-3.5 shrink-0 text-slate-800"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -387,7 +395,7 @@ export function EditorTopBar({
               <path d="M14 17h4" />
             </svg>
           )}
-          <span className="hidden sm:inline">{publishing ? "公開中…" : "QR"}</span>
+          <span className="hidden sm:inline">{qrPreparing ? "表示中…" : "QR"}</span>
         </button>
       </div>
     </header>

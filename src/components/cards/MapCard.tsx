@@ -74,7 +74,6 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "地図";
   const mapEmbedUrl = normalizeMapEmbedUrl((c?.mapEmbedUrl as string) ?? "");
   const labels =
     locale === "ko"
@@ -84,6 +83,9 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
         : locale === "en"
           ? { titlePlaceholder: "Map", addressPlaceholder: "Address" }
           : { titlePlaceholder: "地図", addressPlaceholder: "住所" };
+
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

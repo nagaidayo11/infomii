@@ -15,17 +15,17 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "情報";
-  const icon = normalizeIconToken(c?.icon, "info");
-  const rows = (c?.rows as InfoRow[]) ?? [];
   const localeLabels =
     locale === "ko"
-      ? { empty: "라벨과 값을 추가", title: "제목", value: "값" }
+      ? { empty: "라벨과 값을 추가", title: "제목", value: "값", defaultTitle: "정보" }
       : locale === "zh"
-        ? { empty: "请添加标签和值", title: "标题", value: "值" }
+        ? { empty: "请添加标签和值", title: "标题", value: "值", defaultTitle: "信息" }
         : locale === "en"
-          ? { empty: "Add label and value", title: "Title", value: "Value" }
-          : { empty: "ラベルと値を追加", title: "タイトル", value: "値" };
+          ? { empty: "Add label and value", title: "Title", value: "Value", defaultTitle: "Information" }
+          : { empty: "ラベルと値を追加", title: "タイトル", value: "値", defaultTitle: "情報" };
+  const title = (c?.title as string) ?? localeLabels.defaultTitle;
+  const icon = normalizeIconToken(c?.icon, "info");
+  const rows = (c?.rows as InfoRow[]) ?? [];
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

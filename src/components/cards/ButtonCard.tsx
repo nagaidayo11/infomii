@@ -22,13 +22,14 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const label = getLocalizedContent(c?.label as LocalizedString | undefined, locale) || "ボタン";
   const href = (c?.href as string) ?? "#";
   const labels =
     locale === "ko" ? { buttonPlaceholder: "버튼" } :
     locale === "zh" ? { buttonPlaceholder: "按钮" } :
     locale === "en" ? { buttonPlaceholder: "Button" } :
     { buttonPlaceholder: "ボタン" };
+  const label =
+    getLocalizedContent(c?.label as LocalizedString | undefined, locale) || labels.buttonPlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

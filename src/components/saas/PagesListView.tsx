@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   buildPublicUrlV,
@@ -17,6 +18,7 @@ import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDes
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 
 function modeLabel(mode: PageConnectionSet["mode"]): string {
   return mode === "linked" ? "ページ連携" : "単発";
@@ -35,6 +37,7 @@ export function PagesListView() {
   } | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
 
@@ -60,6 +63,10 @@ export function PagesListView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleCreatePage() {
     if (createBusyRef.current) return;
@@ -425,6 +432,17 @@ export function PagesListView() {
           ))}
         </section>
       )}
+
+      {mounted &&
+        creating &&
+        createPortal(
+          <FullScreenLoadingOverlay
+            title="作成中…"
+            subtitle="新しい案内ページを用意しています"
+            classNameZ="z-[90]"
+          />,
+          document.body
+        )}
     </div>
   );
 }

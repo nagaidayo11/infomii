@@ -22,7 +22,6 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "ランドリー";
   const hours = getLocalizedContent(c?.hours as LocalizedString | undefined, locale);
   const priceNote = getLocalizedContent(c?.priceNote as LocalizedString | undefined, locale);
   const contact = getLocalizedContent(c?.contact as LocalizedString | undefined, locale);
@@ -34,6 +33,8 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
         : locale === "en"
           ? { hours: "Hours", contact: "Contact", titlePlaceholder: "Laundry", priceNotePlaceholder: "Price / Note", contactPlaceholder: "Extension" }
           : { hours: "営業時間", contact: "連絡先", titlePlaceholder: "ランドリー", priceNotePlaceholder: "料金・備考", contactPlaceholder: "内線" };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

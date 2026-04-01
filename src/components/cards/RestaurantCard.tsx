@@ -22,7 +22,6 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "レストラン";
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
   const menu = getLocalizedContent(c?.menu as LocalizedString | undefined, locale);
@@ -34,6 +33,8 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
         : locale === "en"
           ? { time: "Time", location: "Location", titlePlaceholder: "Restaurant", menuPlaceholder: "Menu" }
           : { time: "時間", location: "場所", titlePlaceholder: "レストラン", menuPlaceholder: "メニュー" };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

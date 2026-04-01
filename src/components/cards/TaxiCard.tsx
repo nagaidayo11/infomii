@@ -22,18 +22,39 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "タクシー";
   const phone = (c?.phone as string) ?? "";
   const companyName = getLocalizedContent(c?.companyName as LocalizedString | undefined, locale);
   const note = getLocalizedContent(c?.note as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"
-      ? { companyPlaceholder: "회사명", phonePlaceholder: "전화번호", notePlaceholder: "비고" }
+      ? {
+          companyPlaceholder: "회사명",
+          phonePlaceholder: "전화번호",
+          notePlaceholder: "비고",
+          titlePlaceholder: "택시",
+        }
       : locale === "zh"
-        ? { companyPlaceholder: "公司名称", phonePlaceholder: "电话号码", notePlaceholder: "备注" }
+        ? {
+            companyPlaceholder: "公司名称",
+            phonePlaceholder: "电话号码",
+            notePlaceholder: "备注",
+            titlePlaceholder: "出租车",
+          }
         : locale === "en"
-          ? { companyPlaceholder: "Company", phonePlaceholder: "Phone number", notePlaceholder: "Note" }
-          : { companyPlaceholder: "会社名", phonePlaceholder: "電話番号", notePlaceholder: "備考" };
+          ? {
+              companyPlaceholder: "Company",
+              phonePlaceholder: "Phone number",
+              notePlaceholder: "Note",
+              titlePlaceholder: "Taxi",
+            }
+          : {
+              companyPlaceholder: "会社名",
+              phonePlaceholder: "電話番号",
+              notePlaceholder: "備考",
+              titlePlaceholder: "タクシー",
+            };
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];

@@ -18,7 +18,6 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "チェックリスト";
   const items = (Array.isArray(c?.items) ? c.items : []) as ChecklistItem[];
   const labels =
     locale === "ko"
@@ -28,6 +27,7 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
         : locale === "en"
           ? { empty: "Add items", titlePlaceholder: "Checklist" }
           : { empty: "項目を追加してください", titlePlaceholder: "チェックリスト" };
+  const title = (c?.title as string) ?? labels.titlePlaceholder;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

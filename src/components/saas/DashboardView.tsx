@@ -385,11 +385,19 @@ export function DashboardView() {
         onClose={() => setPlanLimitModalOpen(false)}
         currentPlan={bootstrap?.subscription?.plan}
       />
-      {mounted && (loading || navigating) &&
+      {mounted && (loading || navigating || creating) &&
         createPortal(
           <FullScreenLoadingOverlay
-            title={loading ? "読み込み中…" : "ページ遷移中…"}
-            subtitle={loading ? "ダッシュボードを読み込んでいます" : "次の画面へ移動しています"}
+            title={
+              creating ? "作成中…" : loading ? "読み込み中…" : "ページ遷移中…"
+            }
+            subtitle={
+              creating
+                ? "新しい案内ページを用意しています"
+                : loading
+                  ? "ダッシュボードを読み込んでいます"
+                  : "次の画面へ移動しています"
+            }
             classNameZ="z-40"
           />,
           document.body
