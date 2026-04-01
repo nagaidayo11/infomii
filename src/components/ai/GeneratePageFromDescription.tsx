@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 type ApiResponse = {
@@ -46,6 +48,11 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,18 +63,17 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
     }
     setLoading(true);
     setError(null);
+    let navigated = false;
     try {
       const supabase = getBrowserSupabaseClient();
       if (!supabase) {
         setError("ログインが必要です");
-        setLoading(false);
         return;
       }
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
         setError("ログインが必要です");
-        setLoading(false);
         return;
       }
       const res = await fetch("/api/ai/generate-page-from-description", {
@@ -82,7 +88,6 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
       if (!res.ok) {
         const msg = data.error ?? data.details ?? "生成に失敗しました";
         setError(res.status === 503 ? `${msg}（OPENAI_API_KEY を設定してください）` : msg);
-        setLoading(false);
         return;
       }
       const pageId = data.page_id ?? data.pageId;
@@ -94,13 +99,14 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
         if (data.ai?.fallbackUsed) params.set("qfallback", "1");
         const query = params.toString();
         router.push(query ? `/editor/${pageId}?${query}` : `/editor/${pageId}`);
+        navigated = true;
         return;
       }
       setError(data.details ?? "ページの作成に失敗しました");
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました");
     } finally {
-      setLoading(false);
+      if (!navigated) setLoading(false);
     }
   }
 
@@ -162,6 +168,16 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
           </button>
         </div>
       </form>
+      {mounted &&
+        loading &&
+        createPortal(
+          <FullScreenLoadingOverlay
+            title="生成中…"
+            subtitle="AIが案内ページのカードを作成しています"
+            classNameZ="z-[90]"
+          />,
+          document.body
+        )}
     </section>
   );
 }
