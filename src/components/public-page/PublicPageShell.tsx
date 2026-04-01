@@ -18,8 +18,6 @@ type PublicPageShellProps = {
   isEmbed?: boolean;
   /** Page background style configured in editor */
   pageBackground?: PageBackgroundStyle | null;
-  /** When true, do not render the default footer strip (Business + hotel setting). contactActions still shown if set. */
-  hideDefaultFooter?: boolean;
 };
 
 const PHONE_WIDTH = 375;
@@ -30,7 +28,6 @@ function PageContent({
   children,
   contactActions,
   headerActions,
-  hideDefaultFooter,
 }: Omit<PublicPageShellProps, "isEmbed" | "pageBackground">) {
   return (
     <>
@@ -58,7 +55,7 @@ function PageContent({
         <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
           <div className="mx-auto max-w-[420px]">{contactActions}</div>
         </footer>
-      ) : hideDefaultFooter ? null : (
+      ) : (
         <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
           <div className="mx-auto max-w-[420px]">
             <p className="text-sm leading-relaxed text-slate-600">
@@ -85,7 +82,6 @@ export function PublicPageShell({
   headerActions,
   isEmbed = false,
   pageBackground = null,
-  hideDefaultFooter = false,
 }: PublicPageShellProps) {
   const pageBackgroundStyle =
     pageBackground?.mode === "gradient"
@@ -128,7 +124,6 @@ export function PublicPageShell({
                 backButton={backButton}
                 contactActions={contactActions}
                 headerActions={headerActions}
-                hideDefaultFooter={hideDefaultFooter}
               >
                 {children}
               </PageContent>

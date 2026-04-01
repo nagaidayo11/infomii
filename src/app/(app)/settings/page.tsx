@@ -1,5 +1,4 @@
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
-import { BusinessGuestFooterSettings } from "@/components/settings/BusinessGuestFooterSettings";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 
 /**
@@ -16,8 +15,6 @@ export default function SettingsPage() {
       </header>
 
       <BusinessPlanSection />
-
-      <BusinessGuestFooterSettings />
 
       <BusinessAuditLogExport />
     </div>
