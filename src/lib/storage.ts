@@ -10,6 +10,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
+import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -3796,14 +3797,32 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
 
   const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
   if (cards.length > 0) {
-    const normalizeTemplateContent = (content: Record<string, unknown> | undefined): Record<string, unknown> => {
+    const normalizeTemplateContent = (
+      type: string,
+      content: Record<string, unknown> | undefined,
+    ): Record<string, unknown> => {
       const base = { ...(content ?? {}) };
+      if (type === "hero" && (typeof base.image !== "string" || !base.image.trim())) {
+        base.image = PRESET_HERO_SAMPLE_IMAGE;
+      }
+      if (type === "image" && (typeof base.src !== "string" || !base.src.trim())) {
+        base.src = PRESET_HERO_SAMPLE_IMAGE;
+      }
+      if (type === "gallery" && Array.isArray(base.items)) {
+        base.items = base.items.map((item, i) => {
+          const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+          if (typeof row.src !== "string" || !row.src.trim()) row.src = PRESET_HERO_SAMPLE_IMAGE;
+          if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${i + 1}`;
+          return row;
+        });
+      }
       const rawStyle = base["_style"];
       if (rawStyle && typeof rawStyle === "object" && !Array.isArray(rawStyle)) {
         const style = { ...(rawStyle as Record<string, unknown>) };
         // Template forcing font-size / block color tends to break visual balance.
         delete style.fontSize;
         delete style.backgroundColor;
+        delete style.padding;
         if (Object.keys(style).length === 0) delete base["_style"];
         else base["_style"] = style;
       }
@@ -3813,7 +3832,7 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
     const rows = cards.map((c, i) => ({
       page_id: pageId,
       type: c.type ?? "text",
-      content: normalizeTemplateContent(c.content),
+      content: normalizeTemplateContent(c.type ?? "text", c.content),
       order: c.order ?? i,
     }));
     const { error: cError } = await supabase.from("cards").insert(rows);

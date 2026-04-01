@@ -15,6 +15,7 @@ import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
+import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 
 /** Template marketplace categories. Filter by template.category when available. */
 const TEMPLATE_CATEGORIES = [
@@ -146,13 +147,31 @@ export default function TemplatesPage() {
     }
   }
 
-  function normalizeTemplatePreviewContent(content: Record<string, unknown> | undefined): Record<string, unknown> {
+  function normalizeTemplatePreviewContent(
+    type: CardType,
+    content: Record<string, unknown> | undefined,
+  ): Record<string, unknown> {
     const base = { ...(content ?? {}) };
+    if (type === "hero" && (typeof base.image !== "string" || !base.image.trim())) {
+      base.image = PRESET_HERO_SAMPLE_IMAGE;
+    }
+    if (type === "image" && (typeof base.src !== "string" || !base.src.trim())) {
+      base.src = PRESET_HERO_SAMPLE_IMAGE;
+    }
+    if (type === "gallery" && Array.isArray(base.items)) {
+      base.items = base.items.map((item, i) => {
+        const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+        if (typeof row.src !== "string" || !row.src.trim()) row.src = PRESET_HERO_SAMPLE_IMAGE;
+        if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${i + 1}`;
+        return row;
+      });
+    }
     const rawStyle = base._style;
     if (rawStyle && typeof rawStyle === "object" && !Array.isArray(rawStyle)) {
       const style = { ...(rawStyle as Record<string, unknown>) };
       delete style.fontSize;
       delete style.backgroundColor;
+      delete style.padding;
       if (Object.keys(style).length === 0) delete base._style;
       else base._style = style;
     }
@@ -163,7 +182,7 @@ export default function TemplatesPage() {
     return (template.cards ?? []).map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
-      content: normalizeTemplatePreviewContent(card.content),
+      content: normalizeTemplatePreviewContent((card.type ?? "text") as CardType, card.content),
       order: typeof card.order === "number" ? card.order : index,
     }));
   }

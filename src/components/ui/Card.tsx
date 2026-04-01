@@ -8,12 +8,12 @@ type CardProps = {
   hover?: boolean;
 };
 
-/** Consistent card padding (compact): none | sm (12px) | md (16px) | lg (16px). */
+/** Consistent card padding (compact, top-trimmed): none | sm | md | lg. */
 const paddingClass = {
   none: "",
-  sm: "p-3",
-  md: "p-4",
-  lg: "p-4",
+  sm: "px-3 pt-2.5 pb-3",
+  md: "px-4 pt-3 pb-3",
+  lg: "px-4 pt-3 pb-3",
 };
 
 /**

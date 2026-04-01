@@ -10,44 +10,16 @@ type SeedTemplate = {
 };
 
 const STYLE_KEY = "_style";
-const DEFAULT_HERO_IMAGE = "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&q=80";
+const DEFAULT_HERO_IMAGE = "/preset-hero-sample.png";
 
 const CATEGORY_GALLERY_IMAGES: Record<string, string[]> = {
-  business: [
-    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1200&q=80",
-    "https://images.unsplash.com/photo-1497215842964-222b430dc094?w=1200&q=80",
-    "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80",
-  ],
-  resort: [
-    "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80",
-    "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200&q=80",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80",
-  ],
-  ryokan: [
-    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&q=80",
-    "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=1200&q=80",
-    "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=1200&q=80",
-  ],
-  airbnb: [
-    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1200&q=80",
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&q=80",
-  ],
-  guide: [
-    "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1200&q=80",
-    "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80",
-    "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=1200&q=80",
-  ],
-  inbound: [
-    "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=1200&q=80",
-    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80",
-    "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&q=80",
-  ],
-  default: [
-    "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80",
-    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1200&q=80",
-    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1200&q=80",
-  ],
+  business: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  resort: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  ryokan: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  airbnb: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  guide: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  inbound: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  default: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
 };
 
 function galleryItemsForCategory(category: string | null): Array<{ src: string; alt: string }> {
@@ -193,7 +165,7 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
   const shared = {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 16,
+    padding: 12,
     boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
     borderColor: "#e2e8f0",
   };
@@ -400,6 +372,7 @@ function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
     delete (style as Record<string, unknown>).bodyFontSize;
     delete (style as Record<string, unknown>).backgroundColor;
     delete (style as Record<string, unknown>).textColor;
+    delete (style as Record<string, unknown>).padding;
     const nextContent: Record<string, unknown> = {
       ...content,
       [STYLE_KEY]: style,

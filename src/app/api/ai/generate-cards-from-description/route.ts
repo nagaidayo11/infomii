@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const DEFAULT_SAMPLE_IMAGE = "/preset-hero-sample.png";
 
 const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider"] as const;
 
@@ -72,7 +73,33 @@ JSON配列のみ出力。マークダウン・説明禁止。`;
     .filter((c) => c && typeof c.type === "string" && ALLOWED_TYPES.includes(c.type as (typeof ALLOWED_TYPES)[number]))
     .map((c, i) => ({
       type: c.type as string,
-      content: typeof c.content === "object" && c.content !== null ? (c.content as Record<string, unknown>) : {},
+      content: (() => {
+        const base =
+          typeof c.content === "object" && c.content !== null ? ({ ...(c.content as Record<string, unknown>) }) : {};
+        if ((c.type as string) === "image") {
+          if (typeof base.src !== "string" || !base.src.trim()) base.src = DEFAULT_SAMPLE_IMAGE;
+          if (typeof base.alt !== "string" || !base.alt.trim()) base.alt = "施設イメージ";
+        }
+        if ((c.type as string) === "gallery") {
+          const rawItems = Array.isArray(base.items) ? base.items : [];
+          const items = rawItems
+            .map((item, index) => {
+              const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+              if (typeof row.src !== "string" || !row.src.trim()) row.src = DEFAULT_SAMPLE_IMAGE;
+              if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${index + 1}`;
+              return row;
+            })
+            .slice(0, 8);
+          base.items =
+            items.length > 0
+              ? items
+              : [
+                  { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-1" },
+                  { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-2" },
+                ];
+        }
+        return base;
+      })(),
       order: typeof c.order === "number" ? c.order : i,
     }));
 

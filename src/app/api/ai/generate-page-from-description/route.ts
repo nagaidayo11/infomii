@@ -5,6 +5,7 @@ import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
 const FALLBACK_AI_MODEL = process.env.OPENAI_FALLBACK_MODEL ?? "gpt-4o-mini";
+const DEFAULT_SAMPLE_IMAGE = "/preset-hero-sample.png";
 
 const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider", "welcome", "checkout", "nearby", "emergency", "taxi"] as const;
 
@@ -100,23 +101,30 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>): Re
       };
     case "image":
       return {
-        src: normalizeText(content.src, 300),
-        alt: normalizeText(content.alt, 120),
+        src: normalizeText(content.src, 300) || DEFAULT_SAMPLE_IMAGE,
+        alt: normalizeText(content.alt, 120) || "施設イメージ",
       };
     case "gallery": {
       const items = Array.isArray(content.items) ? content.items : [];
+      const normalizedItems = items
+        .slice(0, 8)
+        .map((item) => (typeof item === "object" && item !== null ? item : {}))
+        .map((item, index) => {
+          const row = item as Record<string, unknown>;
+          return {
+            src: normalizeText(row.src, 300) || DEFAULT_SAMPLE_IMAGE,
+            alt: normalizeText(row.alt, 120) || `gallery-${index + 1}`,
+          };
+        });
       return {
         title: normalizeText(content.title, 80),
-        items: items
-          .slice(0, 8)
-          .map((item) => (typeof item === "object" && item !== null ? item : {}))
-          .map((item) => {
-            const row = item as Record<string, unknown>;
-            return {
-              src: normalizeText(row.src, 300),
-              alt: normalizeText(row.alt, 120),
-            };
-          }),
+        items:
+          normalizedItems.length > 0
+            ? normalizedItems
+            : [
+                { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-1" },
+                { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-2" },
+              ],
       };
     }
     case "divider":
