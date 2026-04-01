@@ -6,6 +6,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -55,7 +56,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.slice(0, 12).map((item, i) => (
-          <div key={i} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
+          <div key={i} className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
             {item?.src ? (
               <Image
                 src={item.src}

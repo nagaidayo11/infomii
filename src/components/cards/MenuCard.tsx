@@ -4,6 +4,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 
 type MenuCardProps = {
@@ -30,7 +31,7 @@ export function MenuCard({ card, isSelected, locale = "ja" }: MenuCardProps) {
           const price = getLocalizedContent(item.price as LocalizedString | undefined, locale);
           const description = getLocalizedContent(item.description as LocalizedString | undefined, locale);
           return (
-            <div key={index} className="rounded-lg bg-slate-50 px-2.5 py-2">
+            <div key={index} className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
               <p className="font-medium text-slate-700" style={getBodyFontSizeStyle()}>
                 {name}{price ? ` - ${price}` : ""}
               </p>

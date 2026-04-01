@@ -79,17 +79,19 @@ export function PagesListView() {
     }
     createBusyRef.current = true;
     setCreating(true);
+    let navigated = false;
     try {
       const pageId = await createBlankPage(normalizedTitle);
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
+        navigated = true;
       }
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
     } finally {
-      setCreating(false);
       createBusyRef.current = false;
+      if (!navigated) setCreating(false);
     }
   }
 

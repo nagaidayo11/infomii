@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -52,10 +53,10 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
           <li className="text-slate-500">{labels.empty}</li>
         ) : (
           items.map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
+            <li key={i} className={`flex items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-1.5`}>
               <span
                 className={
-                  "mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded border " +
+                  "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border " +
                   (item.checked ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white text-transparent")
                 }
                 aria-hidden

@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -45,11 +46,11 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   return (
     <Card padding="none" className="">
       {src ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100">
+        <div className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
           <Image src={src} alt={alt} fill className="object-cover" unoptimized={src.startsWith("http")} />
         </div>
       ) : (
-        <div className="aspect-video w-full rounded-xl">
+        <div className={`aspect-video w-full ${editorInnerRadiusClassName}`}>
           <ImageUpload onUploaded={updateSrc} className="h-full min-h-[120px]" />
         </div>
       )}

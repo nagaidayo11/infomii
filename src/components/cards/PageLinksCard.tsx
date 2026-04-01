@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
@@ -84,7 +85,9 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
             const href = getHref(item);
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
-              <div className="flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-xl bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100">
+              <div
+                className={`flex min-h-[76px] flex-col items-center justify-center gap-1 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100`}
+              >
                 <span className={`flex shrink-0 items-center justify-center rounded-full bg-white text-slate-700 ${iconWrapClass}`}>
                   <LineIcon name={iconDisplay} className={iconClass} />
                 </span>

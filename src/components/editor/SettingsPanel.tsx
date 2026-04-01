@@ -79,7 +79,7 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#ffffff",
       borderWidth: 1,
       borderColor: "#e2e8f0",
-      borderRadius: 8,
+      innerBorderRadius: 8,
       boxShadow: "",
       padding: 0,
     },
@@ -91,7 +91,7 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#f8fafc",
       borderWidth: 0,
       borderColor: "",
-      borderRadius: 8,
+      innerBorderRadius: 8,
       boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
       padding: 0,
     },
@@ -103,7 +103,7 @@ const BLOCK_STYLE_PRESETS: Array<{
       backgroundColor: "#fff7ed",
       borderWidth: 1,
       borderColor: "#fdba74",
-      borderRadius: 8,
+      innerBorderRadius: 8,
       boxShadow: "0 8px 24px rgba(249,115,22,0.12)",
       padding: 0,
     },
@@ -2162,15 +2162,18 @@ export function CardSettings({
               </div>
             )}
             <div className="w-full">
-              <label className={labelClass}>角丸 (px)</label>
+              <label className={labelClass}>内側要素の角丸 (px)</label>
+              <p className="mb-1.5 text-[11px] leading-snug text-slate-400">
+                KPI・ギャラリー・ページリンク・ボタンなど、ブロック内の箱・ラベルに適用されます（外枠の角丸ではありません）。
+              </p>
               <input
                 type="number"
                 min={0}
                 max={32}
-                value={(style.borderRadius as number | string) ?? ""}
+                value={(style.innerBorderRadius as number | string) ?? ""}
                 onChange={(e) => {
                   const v = e.target.value;
-                  updateStyle("borderRadius", v === "" ? undefined : parseInt(v, 10) || 0);
+                  updateStyle("innerBorderRadius", v === "" ? undefined : parseInt(v, 10) || 0);
                 }}
                 placeholder="8"
                 className={inputClass}
@@ -2180,7 +2183,10 @@ export function CardSettings({
               <label className={labelClass}>フォント</label>
               <select
                 value={(style.fontFamily as string) ?? ""}
-                onChange={(e) => updateStyle("fontFamily", e.target.value || undefined)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateStyle("fontFamily", v === "" ? undefined : v);
+                }}
                 className={inputClass}
               >
                 <option value="">標準（システム）</option>
@@ -2285,7 +2291,7 @@ export function CardSettings({
                 <input
                   type="checkbox"
                   checked={Boolean(style.deleteProtected)}
-                  onChange={(e) => updateStyle("deleteProtected", e.target.checked ? true : undefined)}
+                  onChange={(e) => updateStyle("deleteProtected", e.target.checked ? true : false)}
                   className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
                 />
                 削除保護（全削除/削除キー対象外）

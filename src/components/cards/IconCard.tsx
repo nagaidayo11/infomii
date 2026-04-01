@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
@@ -49,7 +50,9 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
   return (
     <Card padding="md" className="">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 text-slate-700">
+        <div
+          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center text-slate-700 ${editorInnerRadiusClassName} bg-slate-100`}
+        >
           {showLineIcon ? (
             <LineIcon name={normalizedIconName} className="h-5 w-5" />
           ) : (

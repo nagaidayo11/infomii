@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -67,7 +68,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
           <p className="text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} className="pb-3 last:pb-0">
+            <div key={i} className={`border border-slate-100 bg-slate-50/60 p-3 ${editorInnerRadiusClassName}`}>
               <dt className="font-medium text-slate-700">
                 <InlineEditable
                   value={item.q ?? ""}

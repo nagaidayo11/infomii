@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -45,30 +46,29 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card
-      padding="md"
-      className={isWarning ? "bg-amber-50" : "bg-sky-50/80"}
-    >
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => updateKey("title", v)}
-          editable={isSelected}
-          onActivate={onActivate}
-          className="font-medium text-slate-800"
-        />
-      </p>
-      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-        <InlineEditable
-          value={body}
-          onSave={(v) => updateKey("body", v)}
-          editable={isSelected}
-          onActivate={onActivate}
-          multiline
-          className="block min-h-[1em] text-slate-600"
-          placeholder={labels.bodyPlaceholder}
-        />
-      </p>
+    <Card padding="md" className="">
+      <div className={`${editorInnerRadiusClassName} p-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}>
+        <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={isSelected}
+            onActivate={onActivate}
+            className="font-medium text-slate-800"
+          />
+        </p>
+        <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+          <InlineEditable
+            value={body}
+            onSave={(v) => updateKey("body", v)}
+            editable={isSelected}
+            onActivate={onActivate}
+            multiline
+            className="block min-h-[1em] text-slate-600"
+            placeholder={labels.bodyPlaceholder}
+          />
+        </p>
+      </div>
     </Card>
   );
 }

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { nanoid } from "nanoid";
-import type { EditorCard, CardType } from "./types";
+import type { CardStyle, EditorCard, CardType } from "./types";
 import { createEmptyCard } from "./types";
 
 export type GeneratedCardInput = {
@@ -139,7 +139,7 @@ function replaceInUnknown(
 
 function isDeleteProtected(card: EditorCard): boolean {
   const s = (card.style ?? {}) as Record<string, unknown>;
-  return Boolean(s.deleteProtected);
+  return s.deleteProtected === true;
 }
 
 export const useEditor2Store = create<Editor2State>((set, get) => ({
@@ -298,7 +298,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
           ? {
               ...c,
               ...(patch.content !== undefined ? { content: { ...c.content, ...patch.content } } : {}),
-              ...(patch.style !== undefined ? { style: { ...(c.style ?? {}), ...patch.style } } : {}),
+              ...(patch.style !== undefined ? { style: patch.style as CardStyle } : {}),
             }
           : c
       ),

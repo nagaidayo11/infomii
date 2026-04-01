@@ -135,10 +135,12 @@ export function DashboardView() {
     setCreateError(null);
     createBusyRef.current = true;
     setCreating(true);
+    let navigated = false;
     try {
       const pageId = await createBlankPage(normalizedTitle);
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
+        navigated = true;
       }
     } catch (e) {
       const err = e as Error & { code?: string };
@@ -150,8 +152,8 @@ export function DashboardView() {
         setCreateError(message);
       }
     } finally {
-      setCreating(false);
       createBusyRef.current = false;
+      if (!navigated) setCreating(false);
     }
   }
 

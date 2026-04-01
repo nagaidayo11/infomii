@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 
 type ActionCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -28,10 +29,10 @@ export function ActionCard({ card, isSelected = false, locale = "ja" }: ActionCa
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div className="rounded-2xl">
+    <div className={editorInnerRadiusClassName}>
       <a
         href={href}
-        className="flex w-full items-center justify-center rounded-2xl bg-slate-800 px-6 py-4 text-base font-semibold text-white transition hover:bg-slate-700"
+        className={`flex w-full items-center justify-center ${editorInnerRadiusClassName} bg-slate-800 px-6 py-4 text-base font-semibold text-white transition hover:bg-slate-700`}
         style={{ boxShadow: "0 4px 14px rgba(15,23,42,0.2)" }}
         onClick={(e) => isSelected && e.preventDefault()}
         aria-disabled={isSelected ? true : undefined}

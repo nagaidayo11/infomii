@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -48,7 +49,8 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
       <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.capacity}: <InlineEditable value={capacity} onSave={(v) => updateKey("capacity", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.capacityPlaceholder} />
       </p>
       <p className="mt-0.5 text-slate-600" style={getBodyFontSizeStyle()}>
@@ -60,6 +62,7 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
       <p className="mt-1 text-slate-500" style={getBodyFontSizeStyle()}>
         <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.note} />
       </p>
+      </div>
     </Card>
   );
 }

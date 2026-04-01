@@ -211,19 +211,28 @@ function SortableCardWrapper({
     >
       {isDragging ? (
         <div
-          className="editor-card-drop-placeholder flex items-stretch gap-0 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/40 min-h-[72px] shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          className="editor-card-drop-placeholder flex min-h-[72px] items-stretch gap-0 overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
           aria-hidden
         >
-          <div className="w-9 shrink-0 rounded-l-xl bg-blue-100/60" />
-          <div className="min-w-0 flex-1 rounded-r-xl" />
+          <div className="w-9 shrink-0 border-r border-blue-200/50 bg-blue-100/60" />
+          <div className="min-w-0 flex-1 bg-blue-50/20" />
         </div>
       ) : (
-        <div className="flex items-stretch gap-0">
+        <div
+          className={
+            "relative flex items-stretch gap-0 overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            (isNewlyAdded ? "card-insert " : "") +
+            (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
+            (isSelected
+              ? "border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
+              : "border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-slate-300 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-[1.005]")
+          }
+        >
           <button
             type="button"
             className={
-              "flex w-9 shrink-0 cursor-grab items-center justify-center rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 transition-all duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing " +
-              (isSelected ? "border-blue-200 opacity-100" : "border-slate-200 opacity-0")
+              "flex w-9 shrink-0 cursor-grab items-center justify-center border-r border-slate-200 bg-slate-50 text-slate-400 transition-all duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing " +
+              (isSelected ? "border-blue-200/80 opacity-100" : "opacity-0")
             }
             {...attributes}
             {...listeners}
@@ -239,14 +248,7 @@ function SortableCardWrapper({
             aria-pressed={isSelected}
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
-            className={
-              "editor-card relative min-w-0 flex-1 overflow-hidden rounded-r-xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
-              (isNewlyAdded ? "card-insert " : "") +
-              (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
-              (isSelected
-                ? "border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
-                : "border-slate-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-slate-300 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-[1.005]")
-            }
+            className="editor-card relative min-w-0 flex-1 overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out"
             style={getBlockStyle(card)}
             onClick={(e) => {
               e.stopPropagation();
@@ -471,15 +473,15 @@ export function Canvas({
       >
         {activeCard ? (
           <div
-            className="editor-card-dragging flex items-stretch gap-0 rounded-xl border-2 border-slate-200/90 bg-white"
+            className="editor-card-dragging flex items-stretch gap-0 overflow-hidden rounded-2xl border-2 border-slate-200/90 bg-white"
             style={{
               boxShadow:
                 "0 24px 56px -12px rgba(0,0,0,0.24), 0 12px 28px -8px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06)",
               transform: "translateY(-14px) scale(1.02)",
             }}
           >
-            <div className="w-9 shrink-0 rounded-l-xl bg-slate-100" aria-hidden />
-            <div className="min-w-0 flex-1 rounded-r-xl border-l border-slate-200 bg-white">
+            <div className="w-9 shrink-0 border-r border-slate-200 bg-slate-100" aria-hidden />
+            <div className="min-w-0 flex-1 border-0 bg-white">
               <CardRenderer card={activeCard} isSelected={false} />
             </div>
           </div>

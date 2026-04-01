@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -44,7 +45,7 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
     <Card padding="md" className="">
       <a
         href={href}
-        className="inline-flex w-full items-center justify-center rounded-xl bg-ds-primary px-4 py-3 font-medium text-white shadow-[var(--shadow-ds-sm)]"
+        className={`inline-flex w-full items-center justify-center ${editorInnerRadiusClassName} bg-ds-primary px-4 py-3 font-medium text-white shadow-[var(--shadow-ds-sm)]`}
         style={getTitleFontSizeStyle()}
         onClick={isEditor ? (e) => e.preventDefault() : undefined}
         aria-disabled={isEditor ? true : undefined}

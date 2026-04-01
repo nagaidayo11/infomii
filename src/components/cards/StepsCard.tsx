@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -56,7 +57,7 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
               <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
                 {i + 1}
               </span>
-              <div className="min-w-0">
+              <div className={`min-w-0 flex-1 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-2`}>
                 <p className="font-medium text-slate-800">{item.title ?? ""}</p>
                 <p className="mt-0.5 text-slate-600">{item.description ?? ""}</p>
               </div>

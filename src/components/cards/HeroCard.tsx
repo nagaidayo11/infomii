@@ -5,6 +5,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -31,7 +32,7 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+    <div className={`relative overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
       <div className="relative aspect-[2/1] min-h-[140px] w-full">
         {image ? (
           <Image src={image} alt="" fill className="object-cover" unoptimized={image.startsWith("http")} sizes="420px" />

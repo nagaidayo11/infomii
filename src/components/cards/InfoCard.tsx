@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
@@ -35,7 +36,9 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
   return (
     <Card padding="md">
       <div className="flex items-center gap-3 pb-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 text-slate-700`}
+        >
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
         <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
@@ -47,7 +50,10 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
           <p className="text-slate-500">{localeLabels.empty}</p>
         ) : (
           rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2">
+            <div
+              key={i}
+              className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
+            >
               <span className="text-slate-500 break-words">{row.label ?? "—"}</span>
               <span className="text-right font-medium text-slate-800 break-all leading-snug">
                 <InlineEditable

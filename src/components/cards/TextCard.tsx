@@ -5,6 +5,7 @@ import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -42,7 +43,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="min-h-[1.5em] font-medium text-slate-800" style={getBodyFontSizeStyle()}>
+      <div className={`min-h-[1.5em] px-3 py-2 font-medium text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`} style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={content}
           onSave={updateContent}
@@ -52,7 +53,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
           className="block min-h-[1.5em] font-medium text-slate-800"
           placeholder={labels.placeholder}
         />
-      </p>
+      </div>
     </Card>
   );
 }

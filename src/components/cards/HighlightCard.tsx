@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 
 type HighlightCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -53,7 +54,7 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
 
   return (
     <div
-      className={`h-full rounded-[inherit] border-l-4 px-4 py-4 ${accentClass}`}
+      className={`h-full ${editorInnerRadiusClassName} border-l-4 px-4 py-4 ${accentClass}`}
       style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
     >
       <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>

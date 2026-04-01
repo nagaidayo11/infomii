@@ -4,6 +4,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -44,6 +45,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
 
   return (
     <Card padding="md" className="">
+      <div className={`space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-3`}>
       <p className="text-sm font-medium text-slate-800">
         <InlineEditable
           value={title}
@@ -87,6 +89,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           placeholder={labels.desc}
         />
       </p>
+      </div>
     </Card>
   );
 }

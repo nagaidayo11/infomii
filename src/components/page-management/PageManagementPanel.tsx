@@ -80,11 +80,13 @@ export function PageManagementPanel() {
     createBusyRef.current = true;
     setCreating(true);
     setError(null);
+    let navigated = false;
     try {
       const pageId = await createBlankPage(normalizedTitle);
       await load();
       if (pageId && typeof pageId === "string") {
         router.push(`/editor/${pageId}`);
+        navigated = true;
       }
     } catch (e) {
       const err = e as Error & { code?: string };
@@ -94,8 +96,8 @@ export function PageManagementPanel() {
         setError(err instanceof Error ? err.message : "新規作成に失敗しました");
       }
     } finally {
-      setCreating(false);
       createBusyRef.current = false;
+      if (!navigated) setCreating(false);
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useLocale } from "@/components/locale-context";
 
 type SpaceCardProps = {
@@ -21,7 +22,7 @@ export function SpaceCard({ card, isSelected = false, showLabel = false }: Space
 
   return (
     <div
-      className="w-full rounded-lg bg-transparent"
+      className={`w-full ${editorInnerRadiusClassName} bg-transparent`}
       style={{ height }}
       aria-label={`${label} ${height}px`}
     >

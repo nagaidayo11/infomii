@@ -73,10 +73,10 @@ export function getBodyFontSizeStyle(): import("react").CSSProperties {
   return { fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))" };
 }
 
-/** Extract block style (borderRadius, boxShadow, backgroundColor, fontSize, titleFontSize, bodyFontSize) for rendering. */
+/** Extract block style (boxShadow, backgroundColor, fontSize, innerBorderRadius CSS var, …) for the block wrapper. Block outer radius comes from the canvas frame; inner chips use --editor-inner-border-radius. */
 export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
   const s = card.style;
-  if (!s || typeof s !== "object") return { borderRadius: "8px" };
+  if (!s || typeof s !== "object") return {};
   const transparentOn = Boolean((s as Record<string, unknown>).backgroundTransparent);
   const borderEnabledRaw = (s as Record<string, unknown>).borderEnabled;
   const borderEnabled = borderEnabledRaw === undefined ? true : Boolean(borderEnabledRaw);
@@ -84,13 +84,14 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   const fontSize = resolveFontSize(fontSizeKey);
   const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
   const bodyFontSize = resolveFontSize(s.bodyFontSize as string | undefined);
+  const innerR = (s as Record<string, unknown>).innerBorderRadius;
+  const innerRadiusPx =
+    typeof innerR === "number" && Number.isFinite(innerR)
+      ? `${innerR}px`
+      : typeof innerR === "string" && innerR.trim()
+        ? innerR.trim()
+        : undefined;
   const style: Record<string, string | number | undefined> = {
-    borderRadius:
-      typeof s.borderRadius === "string"
-        ? s.borderRadius
-        : typeof s.borderRadius === "number"
-          ? `${s.borderRadius}px`
-          : "8px",
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
     borderWidth: borderEnabled
       ? (
@@ -141,6 +142,9 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   }
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
   if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;
+  if (innerRadiusPx) {
+    (style as Record<string, string>)["--editor-inner-border-radius"] = innerRadiusPx;
+  }
   return style as import("react").CSSProperties;
 }
 
@@ -429,8 +433,8 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     content: defaultContent(type),
     style:
       type === "space"
-        ? { borderRadius: 8, backgroundTransparent: true, borderEnabled: false, padding: 0 }
-        : { borderRadius: 8 },
+        ? { backgroundTransparent: true, borderEnabled: false, padding: 0 }
+        : { innerBorderRadius: 8 },
     order,
   };
 }

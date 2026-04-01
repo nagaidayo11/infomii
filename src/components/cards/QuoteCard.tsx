@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon } from "./LineIcon";
@@ -40,7 +41,10 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
         <LineIcon name="quote" className="h-4 w-4" />
         <span className="text-xs font-medium tracking-wide">{labels.quote}</span>
       </div>
-      <blockquote className="mt-2 border-l-2 border-slate-200 pl-3 text-slate-800" style={getBodyFontSizeStyle()}>
+      <blockquote
+        className={`mt-2 border border-slate-100 bg-slate-50/80 px-3 py-2 text-slate-800 ${editorInnerRadiusClassName}`}
+        style={getBodyFontSizeStyle()}
+      >
         <InlineEditable
           value={quote}
           onSave={(v) => update({ quote: v })}

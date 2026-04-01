@@ -3,6 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -52,7 +53,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           <p className="col-span-full text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} className="rounded-xl bg-slate-50 p-3">
+            <div key={i} className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
               <p className="text-xs text-slate-500">{item.label ?? ""}</p>
               <p className="mt-1 text-lg font-semibold text-slate-800">{item.value ?? ""}</p>
             </div>

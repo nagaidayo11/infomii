@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -50,7 +51,7 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
         🆘{" "}
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
-      <ul className="mt-2 space-y-1 text-slate-600" style={getBodyFontSizeStyle()}>
+      <ul className={`mt-2 space-y-1 text-slate-600 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`} style={getBodyFontSizeStyle()}>
         <li>
           {labels.fire}:{" "}
           <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-red-600" placeholder="119" />

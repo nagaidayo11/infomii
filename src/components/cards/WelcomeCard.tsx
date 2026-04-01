@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -56,7 +57,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           className="font-semibold text-slate-900"
         />
       </p>
-      <p className="mt-2 leading-relaxed text-slate-600" style={getBodyFontSizeStyle()}>
+      <div className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={message}
           onSave={(v) => updateKey("message", v)}
@@ -66,7 +67,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           className="block min-h-[1.5em] leading-relaxed text-slate-600"
           placeholder={labels.messagePlaceholder}
         />
-      </p>
+      </div>
     </Card>
   );
 }

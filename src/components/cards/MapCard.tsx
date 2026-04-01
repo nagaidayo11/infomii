@@ -5,6 +5,7 @@ import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon } from "./LineIcon";
@@ -101,7 +102,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+        <div className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
           <iframe
             title={title}
             src={mapEmbedUrl}
@@ -111,7 +112,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-lg bg-slate-100 py-8">
+        <div className={`flex items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 py-8`}>
           <span className="text-slate-700" aria-hidden>
             <LineIcon name="map" className="h-8 w-8" />
           </span>

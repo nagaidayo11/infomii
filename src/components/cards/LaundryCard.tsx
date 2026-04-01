@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
+import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 
@@ -48,17 +49,19 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.hours}:{" "}
         <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="9:00–18:00" />
       </p>
-      <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
+      <p className="text-slate-500" style={getBodyFontSizeStyle()}>
         <InlineEditable value={priceNote} onSave={(v) => updateKey("priceNote", v)} editable={isSelected} onActivate={onActivate} className="text-slate-500" placeholder={labels.priceNotePlaceholder} />
       </p>
-      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+      <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.contact}:{" "}
         <InlineEditable value={contact} onSave={(v) => updateKey("contact", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.contactPlaceholder} />
       </p>
+      </div>
     </Card>
   );
 }
