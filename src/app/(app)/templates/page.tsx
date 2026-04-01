@@ -146,11 +146,24 @@ export default function TemplatesPage() {
     }
   }
 
+  function normalizeTemplatePreviewContent(content: Record<string, unknown> | undefined): Record<string, unknown> {
+    const base = { ...(content ?? {}) };
+    const rawStyle = base._style;
+    if (rawStyle && typeof rawStyle === "object" && !Array.isArray(rawStyle)) {
+      const style = { ...(rawStyle as Record<string, unknown>) };
+      delete style.fontSize;
+      delete style.backgroundColor;
+      if (Object.keys(style).length === 0) delete base._style;
+      else base._style = style;
+    }
+    return base;
+  }
+
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
     return (template.cards ?? []).map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
-      content: card.content ?? {},
+      content: normalizeTemplatePreviewContent(card.content),
       order: typeof card.order === "number" ? card.order : index,
     }));
   }

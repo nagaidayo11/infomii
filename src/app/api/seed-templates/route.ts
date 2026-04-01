@@ -221,25 +221,17 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
     borderWidth: 1,
     padding: 16,
     boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
-    titleFontSize: "lg",
-    bodyFontSize: "base",
   };
   switch (type) {
     case "hero":
       return {
         ...shared,
         borderRadius: 18,
-        backgroundColor: "#0f172a",
-        borderColor: "#0f172a",
-        textColor: "#ffffff",
-        titleFontSize: "2xl",
-        bodyFontSize: "lg",
       };
     case "notice":
     case "emergency":
       return {
         ...shared,
-        backgroundColor: "#fff7ed",
         borderColor: "#fdba74",
       };
     case "wifi":
@@ -247,7 +239,6 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
     case "steps":
       return {
         ...shared,
-        backgroundColor: "#eff6ff",
         borderColor: "#bfdbfe",
       };
     case "breakfast":
@@ -255,7 +246,6 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
     case "restaurant":
       return {
         ...shared,
-        backgroundColor: "#fefce8",
         borderColor: "#fde68a",
       };
     case "nearby":
@@ -263,16 +253,189 @@ function getBaseCardStyle(type: string): Record<string, unknown> {
     case "pageLinks":
       return {
         ...shared,
-        backgroundColor: "#ecfeff",
         borderColor: "#a5f3fc",
       };
     default:
       return {
         ...shared,
-        backgroundColor: "#ffffff",
         borderColor: "#e2e8f0",
       };
   }
+}
+
+function rotate<T>(arr: T[], offset: number): T[] {
+  if (arr.length === 0) return arr;
+  const n = ((offset % arr.length) + arr.length) % arr.length;
+  return [...arr.slice(n), ...arr.slice(0, n)];
+}
+
+function buildCardContentByType(type: string): Record<string, unknown> {
+  switch (type) {
+    case "kpi":
+      return {
+        title: "クイック情報",
+        items: [
+          { label: "チェックイン", value: "15:00" },
+          { label: "チェックアウト", value: "10:00" },
+          { label: "フロント", value: "内線 9" },
+        ],
+      };
+    case "schedule":
+      return {
+        title: "営業時間",
+        items: [
+          { day: "朝食", time: "7:00-9:30", label: "1F レストラン" },
+          { day: "フロント", time: "24時間", label: "対応可" },
+        ],
+      };
+    case "steps":
+      return {
+        title: "ご利用ステップ",
+        items: [
+          { title: "Step 1", description: "必要情報を確認" },
+          { title: "Step 2", description: "施設をご利用" },
+          { title: "Step 3", description: "チェックアウト手続き" },
+        ],
+      };
+    case "checklist":
+      return {
+        title: "チェックリスト",
+        items: [
+          { text: "鍵を持った", checked: false },
+          { text: "Wi-Fiを確認した", checked: false },
+          { text: "出発前に忘れ物確認", checked: false },
+        ],
+      };
+    case "quote":
+      return { quote: "案内が分かりやすく、迷わず使えました。", author: "ゲストレビュー" };
+    case "faq":
+      return {
+        title: "よくある質問",
+        items: [
+          { q: "チェックインは何時から？", a: "15:00以降です。" },
+          { q: "困った時の連絡先は？", a: "フロントへご連絡ください。" },
+        ],
+      };
+    case "menu":
+      return {
+        title: "おすすめメニュー",
+        items: [
+          { name: "季節メニュー", price: "1,200円", description: "日替わり提供" },
+          { name: "ドリンク", price: "500円", description: "ラウンジで提供" },
+        ],
+      };
+    case "gallery":
+      return { title: "ギャラリー", columns: 2, items: [] };
+    case "pageLinks":
+      return {
+        title: "関連ページ",
+        columns: 3,
+        iconSize: "md",
+        items: [
+          { label: "朝食", icon: "utensils", linkType: "page", pageSlug: "", link: "" },
+          { label: "Wi-Fi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
+          { label: "周辺", icon: "map-pin", linkType: "page", pageSlug: "", link: "" },
+        ],
+      };
+    case "nearby":
+      return {
+        title: "周辺案内",
+        items: [
+          { name: "コンビニ", description: "徒歩3分", link: "" },
+          { name: "駅", description: "徒歩8分", link: "" },
+        ],
+      };
+    case "taxi":
+      return { title: "タクシー", phone: "03-1234-5678", companyName: "○○タクシー", note: "" };
+    case "notice":
+      return { title: "お知らせ", body: "最新情報はこのページでご確認ください。", variant: "info" };
+    default:
+      return { title: "ご案内", content: "詳細をご確認ください。" };
+  }
+}
+
+function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory: number): SeedTemplate {
+  const categoryKey = template.category ?? "default";
+  const blockedByCategory: Record<string, Set<string>> = {
+    // ビジホは「温浴特化」を外して業務導線重視に
+    business: new Set(["spa"]),
+    // リゾートは緊急連絡より体験訴求を優先
+    resort: new Set(["emergency"]),
+    // 旅館はKPIよりも体験・作法を重視
+    ryokan: new Set(["kpi"]),
+    // Airbnbはホテル運用寄りの要素を除外
+    airbnb: new Set(["kpi", "spa", "restaurant"]),
+    // 観光ガイドは宿泊運用ブロックを除外
+    guide: new Set(["checkout", "laundry", "wifi", "restaurant"]),
+    // インバウンドは運用系より言語・移動・連絡を重視
+    inbound: new Set(["laundry", "spa", "restaurant"]),
+    default: new Set(),
+  };
+  const blocked = blockedByCategory[categoryKey] ?? blockedByCategory.default;
+
+  const cards = template.cards
+    .filter((card) => !blocked.has(card.type))
+    .map((card) => ({ ...card, content: { ...(card.content ?? {}) } }));
+  const existingTypes = new Set(cards.map((card) => card.type));
+
+  const requiredByCategory: Record<string, string[]> = {
+    business: ["hero", "kpi", "wifi", "schedule", "checkout", "faq"],
+    resort: ["hero", "gallery", "spa", "menu", "quote"],
+    ryokan: ["welcome", "notice", "spa", "restaurant", "steps"],
+    airbnb: ["hero", "steps", "checklist", "wifi", "emergency", "checkout"],
+    guide: ["hero", "nearby", "pageLinks", "map", "taxi"],
+    inbound: ["hero", "notice", "pageLinks", "wifi", "emergency", "faq"],
+    default: ["hero", "steps", "faq"],
+  };
+
+  const pools: Record<string, string[]> = {
+    business: ["kpi", "schedule", "steps", "faq", "taxi", "checklist", "quote"],
+    resort: ["gallery", "spa", "menu", "quote", "pageLinks", "schedule", "button"],
+    ryokan: ["welcome", "notice", "spa", "restaurant", "steps", "quote", "faq"],
+    airbnb: ["steps", "checklist", "wifi", "nearby", "emergency", "notice", "faq"],
+    guide: ["nearby", "pageLinks", "map", "taxi", "faq", "quote", "schedule"],
+    inbound: ["welcome", "notice", "pageLinks", "wifi", "emergency", "faq", "steps"],
+    default: ["kpi", "steps", "faq", "checklist", "nearby"],
+  };
+  const advanced = new Set(["kpi", "gallery", "pageLinks", "steps", "schedule", "checklist", "menu", "faq", "quote"]);
+  const categoryPool = rotate(
+    (pools[categoryKey] ?? pools.default).filter((type) => !blocked.has(type)),
+    templateIndexInCategory,
+  );
+  const desiredUnique = Math.min(8, Math.max(6, cards.length));
+
+  const countAdvanced = () => cards.filter((card) => advanced.has(card.type)).length;
+
+  const requiredSet = (requiredByCategory[categoryKey] ?? requiredByCategory.default).filter(
+    (type) => !blocked.has(type),
+  );
+  for (const type of requiredSet) {
+    if (cards.length >= 10) break;
+    if (existingTypes.has(type)) continue;
+    cards.push({
+      type,
+      content: buildCardContentByType(type),
+      order: cards.length,
+    });
+    existingTypes.add(type);
+  }
+
+  for (const type of categoryPool) {
+    if (cards.length >= 10) break;
+    if (existingTypes.size >= desiredUnique && countAdvanced() >= 2) break;
+    if (existingTypes.has(type)) continue;
+    cards.push({
+      type,
+      content: buildCardContentByType(type),
+      order: cards.length,
+    });
+    existingTypes.add(type);
+  }
+
+  return {
+    ...template,
+    cards: cards.map((card, index) => ({ ...card, order: index })),
+  };
 }
 
 function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
@@ -287,6 +450,11 @@ function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
       ...getBaseCardStyle(card.type),
       ...existingStyle,
     };
+    // Keep typography and block surface color on app defaults for visual consistency.
+    delete (style as Record<string, unknown>).fontSize;
+    delete (style as Record<string, unknown>).titleFontSize;
+    delete (style as Record<string, unknown>).bodyFontSize;
+    delete (style as Record<string, unknown>).backgroundColor;
     const nextContent: Record<string, unknown> = {
       ...content,
       [STYLE_KEY]: style,
@@ -907,9 +1075,14 @@ export async function GET(request: Request) {
     const toInsert: SeedTemplate[] = [];
     let updated = 0;
 
+    const categoryIndexMap = new Map<string, number>();
     for (const template of SEED_TEMPLATES) {
+      const categoryKey = template.category ?? "default";
+      const categoryIndex = categoryIndexMap.get(categoryKey) ?? 0;
+      categoryIndexMap.set(categoryKey, categoryIndex + 1);
       const mediaTemplate = applyTemplateMediaDefaults(template);
-      const visualTemplate = applyTemplateVisualStyles(mediaTemplate);
+      const diversifiedTemplate = diversifyTemplateBlocks(mediaTemplate, categoryIndex);
+      const visualTemplate = applyTemplateVisualStyles(diversifiedTemplate);
       const found = existingByName.get(template.name);
       if (!found) {
         toInsert.push(visualTemplate);

@@ -3822,10 +3822,24 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
 
   const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
   if (cards.length > 0) {
+    const normalizeTemplateContent = (content: Record<string, unknown> | undefined): Record<string, unknown> => {
+      const base = { ...(content ?? {}) };
+      const rawStyle = base["_style"];
+      if (rawStyle && typeof rawStyle === "object" && !Array.isArray(rawStyle)) {
+        const style = { ...(rawStyle as Record<string, unknown>) };
+        // Template forcing font-size / block color tends to break visual balance.
+        delete style.fontSize;
+        delete style.backgroundColor;
+        if (Object.keys(style).length === 0) delete base["_style"];
+        else base["_style"] = style;
+      }
+      return base;
+    };
+
     const rows = cards.map((c, i) => ({
       page_id: pageId,
       type: c.type ?? "text",
-      content: c.content ?? {},
+      content: normalizeTemplateContent(c.content),
       order: c.order ?? i,
     }));
     const { error: cError } = await supabase.from("cards").insert(rows);
