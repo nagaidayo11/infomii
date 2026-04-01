@@ -48,8 +48,8 @@ function PageContent({
           )}
         </div>
       </header>
-      <main className="flex-1 px-4 pb-8 pt-5">
-        <div className="app-stagger mx-auto max-w-[420px] space-y-5">{children}</div>
+      <main className="flex-1 px-4 pb-6 pt-4">
+        <div className="app-stagger mx-auto max-w-[420px] space-y-3">{children}</div>
       </main>
       {contactActions ? (
         <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>

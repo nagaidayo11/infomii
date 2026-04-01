@@ -419,7 +419,7 @@ export function Canvas({
                     </div>
                   ) : (
                     <div
-                      className="space-y-6"
+                      className="space-y-3"
                       onClick={(e) => {
                         if (e.target === e.currentTarget) onSelectCard(null);
                       }}
