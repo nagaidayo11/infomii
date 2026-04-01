@@ -309,7 +309,7 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
 export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-slate-200/80 px-4 py-4">
+      <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
         <h2 className="text-sm font-semibold text-slate-700">
           ブロックライブラリ
         </h2>
@@ -317,20 +317,20 @@ export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
           クリックでキャンバスに追加
         </p>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <div className="space-y-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        <div className="space-y-3">
           {onAddPreset && (
             <section aria-label="おすすめセット" className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 おすすめセット
               </h3>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {QUICK_PRESETS.map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => onAddPreset(preset.types)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all hover:border-slate-300 hover:bg-slate-50"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-left transition-all hover:border-slate-300 hover:bg-slate-50"
                     aria-label={`${preset.label}を追加`}
                   >
                     <span className="block text-sm font-medium text-slate-800">{preset.label}</span>
@@ -355,7 +355,7 @@ export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
                     key={`${section.id}-${item.type}`}
                     type="button"
                     onClick={() => onAddCard(item.type)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
                     aria-label={`${item.label}を追加`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round">

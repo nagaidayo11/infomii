@@ -47,10 +47,10 @@ export function TemplateCard({
           unoptimized={imageSrc.startsWith("http")}
         />
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3">
         <h3 className="font-semibold text-slate-900">{name}</h3>
         {audienceTags.length > 0 && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
             {audienceTags.map((tag) => (
               <span
                 key={`${name}-${tag}`}
@@ -62,12 +62,12 @@ export function TemplateCard({
           </div>
         )}
         <p className="mt-1 line-clamp-3 text-sm text-slate-600">{description || "説明なし"}</p>
-        <div className="mt-4 flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
+        <div className="mt-3 flex flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-end sm:gap-1.5">
           <button
             type="button"
             disabled={!!using}
             onClick={onUse}
-            className="w-full min-h-[44px] rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2.5"
+            className="w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
           >
             {using ? "作成中…" : "テンプレートを使う"}
           </button>
@@ -75,7 +75,7 @@ export function TemplateCard({
             type="button"
             onClick={onPreview}
             disabled={!onPreview}
-            className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs"
+            className="w-full min-h-[42px] rounded-lg border border-slate-200 bg-white px-2.5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-1.5 sm:text-xs"
           >
             プレビュー
           </button>
