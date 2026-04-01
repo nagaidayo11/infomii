@@ -13,7 +13,6 @@ import { SaveToast } from "./SaveToast";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
-import type { CardType } from "./types";
 import { createEmptyCard, STARTER_CARD_TYPES, type CardType } from "./types";
 import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
 import {
