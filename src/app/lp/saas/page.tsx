@@ -8,16 +8,17 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/p/demo-hub-menu";
 const DEMO_EDITOR_HREF = "/demo/editor";
+
 export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
   description:
-    "口頭説明・紙の更新の手間を減らすホテル向けSaaS。WiFi・朝食・設備を1枚のQRで。ビジネスホテル・少人数運営向け。",
+    "口頭説明・紙更新の手間を減らすホテル向けSaaS。WiFi・朝食・設備を1つのQRに集約。まずは無料で1ページから。",
   alternates: { canonical: "/lp/saas" },
   openGraph: {
     url: `${appUrl}/lp/saas`,
     title: "Infomii | QRひとつで館内案内を3分で",
     description:
-      "フロントの説明・紙更新を減らし、ゲストには常に最新の案内を。登録なしでサンプルを体験できます。",
+      "フロントの説明と紙更新を減らし、ゲストには常に最新の案内を。登録なしのデモあり。",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Infomii" }],
   },
   twitter: {
@@ -27,177 +28,12 @@ export const metadata: Metadata = {
   },
 };
 
-function LpMidCta({
-  ctaHref,
-  sampleHref,
-  headline,
-  sub,
-}: {
-  ctaHref: string;
-  sampleHref: string;
-  headline: string;
-  sub: string;
-}) {
-  return (
-    <section className="border-b border-slate-200/80 bg-emerald-50/50 py-12 sm:py-14">
-      <ScrollReveal intensity="subtle">
-        <Container className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
-          <div className="max-w-xl">
-            <p className="text-lg font-bold text-slate-900 sm:text-xl">{headline}</p>
-            <p className="mt-1 text-sm text-slate-600">{sub}</p>
-          </div>
-          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
-            <Button href={sampleHref} size="lg" className="w-full sm:w-auto">
-              30秒で試す（登録なし）
-            </Button>
-            <Button href={ctaHref} variant="secondary" size="lg" className="w-full sm:w-auto">
-              無料で作成する
-            </Button>
-          </div>
-        </Container>
-      </ScrollReveal>
-    </section>
-  );
-}
-
-function LpSolutionPhoneMock() {
-  function IconWifi({ className }: { className?: string }) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <path d="M5 12.55c4.7-4.15 9.3-4.15 14 0" />
-        <path d="M8.5 16c2.4-2.1 4.6-2.1 7 0" />
-        <path d="M12 20h.01" />
-      </svg>
-    );
-  }
-
-  function IconForkKnife({ className }: { className?: string }) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <path d="M7 3v9a4 4 0 0 0 4 4v5" />
-        <path d="M17 3v7" />
-        <path d="M20 3v5c0 2-1 3-3 3h-1" />
-      </svg>
-    );
-  }
-
-  function IconClock({ className }: { className?: string }) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v6l4 2" />
-      </svg>
-    );
-  }
-
-  function IconInfo({ className }: { className?: string }) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        className={className}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 10v6" />
-        <path d="M12 7h.01" />
-      </svg>
-    );
-  }
-
-  function GuestPhoneScreenMock() {
-    return (
-      <div className="flex h-full flex-col px-3 pt-3">
-        {/* Hero block (top) */}
-        <div>
-          <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-          <div className="mt-2 w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 to-slate-300 relative aspect-[16/9]">
-            <div className="absolute inset-0 bg-black/25" />
-            <div className="absolute left-3 bottom-3">
-              <p className="text-[10px] font-bold text-white/95">Infomii Hotel</p>
-              <p className="mt-0.5 text-[8.5px] text-white/80">館内案内をスマートにまとめました</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Icon labels (2 rows x 2 columns) */}
-        <div className="mt-3 grid grid-cols-2 gap-1.5">
-          {[
-            { label: "WiFi", icon: <IconWifi className="h-4 w-4 text-slate-700" /> },
-            { label: "朝食", icon: <IconForkKnife className="h-4 w-4 text-slate-700" /> },
-            { label: "チェックアウト", icon: <IconClock className="h-4 w-4 text-slate-700" /> },
-            { label: "お知らせ", icon: <IconInfo className="h-4 w-4 text-slate-700" /> },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-200/80 text-center"
-            >
-              <div className="flex items-center justify-center">{item.icon}</div>
-              <p className="mt-1 text-[8.5px] font-semibold text-slate-800">{item.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Breakfast block */}
-        <div className="mt-3 rounded-lg border border-slate-200/80 bg-white/70 px-2 py-1">
-          <p className="text-[9px] font-semibold text-slate-800">朝食バイキング</p>
-          <p className="mt-0.5 text-[8.5px] text-slate-600">時間：6:00-9:00</p>
-          <p className="mt-0.5 text-[8.5px] text-slate-600">場所：1F</p>
-          <p className="mt-1 text-[8.5px] font-semibold text-slate-700">朝食ビュッフェ</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="relative mx-auto w-full max-w-[260px] overflow-hidden rounded-[1.75rem] border-[7px] border-slate-800 bg-slate-800 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)]"
-      aria-hidden
-    >
-      <div className="absolute left-1/2 top-2.5 h-5 w-16 -translate-x-1/2 rounded-full bg-slate-900" />
-      <div className="mt-8 h-[280px] overflow-y-auto bg-[#fafaf9] pr-1">
-        <GuestPhoneScreenMock />
-      </div>
-    </div>
-  );
-}
-
 function PricingComparisonTable() {
   const no = <span className="text-slate-300">—</span>;
   const yes = <span className="font-medium text-emerald-700">✓</span>;
+
   return (
-    <div className="mb-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
       <table className="w-full min-w-[560px] border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
@@ -208,10 +44,7 @@ function PricingComparisonTable() {
             <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
               Free
             </th>
-            <th
-              scope="col"
-              className="border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900"
-            >
+            <th scope="col" className="border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900">
               Pro
             </th>
             <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
@@ -221,72 +54,27 @@ function PricingComparisonTable() {
         </thead>
         <tbody className="divide-y divide-slate-100 text-slate-800">
           <tr>
-            <th scope="row" className="max-w-[200px] px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              公開できるページ数
-            </th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開ページ数</th>
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
-            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">
-              最大5本
-            </td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大5本</td>
             <td className="px-3 py-2.5 text-center font-semibold tabular-nums text-slate-900">無制限</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              閲覧分析
-              <span className="mt-0.5 block text-xs font-normal text-slate-500">（アクセス数・人気ページなど）</span>
-            </th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">閲覧分析</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              複数ページの一覧・ページ同士のリンク
-            </th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">チーム招待</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              優先サポート
-            </th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開時の多言語自動翻訳</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              スタッフを招待して共同編集
-            </th>
-            <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              公開時の多言語自動翻訳
-            </th>
-            <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              独自ドメインで公開
-              <span className="mt-0.5 block text-xs font-normal text-slate-500">（例: info.施設名.jp）</span>
-            </th>
-            <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
-              予約・在庫など外部システムと連携
-              <span className="mt-0.5 block text-xs font-normal text-slate-500">（ページ内容をプログラムから取得・更新）</span>
-            </th>
-            <td className="px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
         </tbody>
@@ -303,32 +91,17 @@ export default function LpSaaSPage() {
 
   return (
     <main className="min-h-screen bg-[#fafafa] text-slate-900 antialiased">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-colors duration-200">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
         <Container className="flex h-14 items-center justify-between gap-2">
           <span className="text-lg font-semibold tracking-tight text-slate-900">Infomii</span>
           <nav className="flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
-            <a
-              href="#live-demo"
-              className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm"
-            >
+            <a href="#live-demo" className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm">
               デモ
             </a>
-            <a
-              href="#pain"
-              className="hidden rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 sm:block sm:px-3 sm:text-sm"
-            >
-              課題
+            <a href="#how-it-works" className="hidden rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:block sm:px-3 sm:text-sm">
+              使い方
             </a>
-            <a
-              href="#before-after"
-              className="hidden rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 md:block sm:px-3 sm:text-sm"
-            >
-              比較
-            </a>
-            <a
-              href="#pricing"
-              className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm"
-            >
+            <a href="#pricing" className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm">
               料金
             </a>
             <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
@@ -344,257 +117,22 @@ export default function LpSaaSPage() {
       <LpHero ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} demoEditorHref={DEMO_EDITOR_HREF} />
 
       <Section
-        id="pain"
-        kicker="こんな状態になっていませんか？"
-        title="説明と紙運用が、フロントを削っていく"
-        description="痛みが積み重なると、気づかないうちに時間もミスも増えます。現場の声からよく聞くのは次のパターンです。"
+        id="value"
+        kicker="何が良いの？"
+        title="フロントの「同じ説明」を減らすためのLPです"
+        description="WiFi・朝食・館内設備を1ページにまとめて、1つのQRで案内。紙の差し替えや口頭説明の負担を軽くします。"
         variant="muted"
-      >
-        <ScrollReveal>
-          <StaggerReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              "同じ説明を何度もしている（WiFi・朝食・館内ルール）",
-              "外国人対応でフロントが埋まり、他の業務が止まる",
-              "紙の案内はすぐ古くなり、差し替えと周知に追われる",
-            ].map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white p-4 transition-colors duration-200 hover:border-slate-300/80"
-              >
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-                  !
-                </span>
-                <span className="text-sm font-medium text-slate-700">{item}</span>
-              </li>
-            ))}
-          </StaggerReveal>
-        </ScrollReveal>
-      </Section>
-
-      <LpMidCta
-        ctaHref={ctaHref}
-        sampleHref={DEMO_EDITOR_HREF}
-        headline="まずはサンプルを触る。登録は後でいい。"
-        sub="ゲストに見える画面を、そのまま体験できます。"
-      />
-
-      <section
-        id="solution"
-        className="border-b border-slate-200/80 bg-white py-16 sm:py-20 transition-colors duration-200"
-      >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <ScrollReveal intensity="subtle">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">解決策</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                Infomiiなら、すべて1つのQRで完結
-              </h2>
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
-                チェックイン案内・WiFi・朝食・館内設備。ゲストが迷う情報を、スマホ1画面に集約。あなたは更新だけ。説明の繰り返しから解放されます。
-              </p>
-            </div>
-          </ScrollReveal>
-          <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1fr_280px] lg:gap-14">
-            <ScrollReveal>
-              <StaggerReveal className="grid gap-4 sm:grid-cols-2">
-                {[
-                  "ゲストはQRを読むだけ。フロント口頭対応が減る",
-                  "編集はノーコード。反映は即日。印刷の手間がいらない",
-                  "1つのURLだから、案内のばらつきが起きにくい",
-                  "テキストを言語別に並べれば、外国人対応の足がかりになる",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 transition-colors duration-200 hover:border-emerald-200/80 hover:bg-emerald-50/30"
-                  >
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                      ✓
-                    </span>
-                    <span className="text-sm font-medium text-slate-700">{item}</span>
-                  </li>
-                ))}
-              </StaggerReveal>
-            </ScrollReveal>
-            <ScrollReveal>
-              <LpSolutionPhoneMock />
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
-      <Section
-        id="before-after"
-        kicker="ビフォー・アフター"
-        title="導入で変わるのは「説明の量」ではなく、現場の進み方"
-        description="紙と口頭に分散していた負荷を、QRと1ページに寄せる。ここが売上というより、現場の体力とクレームの分岐点になります。"
-        variant="muted"
-      >
-        <ScrollReveal>
-          <StaggerReveal className="grid gap-6 lg:grid-cols-2" staggerDelay={0.12}>
-            <Card padding="lg" className="border-rose-200/80 bg-rose-50/30">
-              <p className="text-xs font-bold uppercase tracking-wider text-rose-700">導入前</p>
-              <ul className="mt-4 space-y-3 text-sm font-medium text-slate-800">
-                <li className="flex gap-2">
-                  <span className="text-rose-500">→</span>
-                  フロントで同じ説明を繰り返し、ピーク時に列ができる
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-rose-500">→</span>
-                  紙の更新・差し替え・廃棄。バージョン管理がバラバラ
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-rose-500">→</span>
-                  外国人対応で時間が読めず、他のゲストを待たせる
-                </li>
-              </ul>
-            </Card>
-            <Card padding="lg" className="border-emerald-200/80 bg-emerald-50/30">
-              <p className="text-xs font-bold uppercase tracking-wider text-emerald-800">導入後</p>
-              <ul className="mt-4 space-y-3 text-sm font-medium text-slate-800">
-                <li className="flex gap-2">
-                  <span className="text-emerald-600">→</span>
-                  QRを渡すだけで自己案内。繰り返し説明が激減
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-emerald-600">→</span>
-                  更新は管理画面から。常に同じURLの「最新」が見える
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-emerald-600">→</span>
-                  多言語テキストを1ページに集約し、対応の迷いを減らす
-                </li>
-              </ul>
-            </Card>
-          </StaggerReveal>
-        </ScrollReveal>
-      </Section>
-
-      <Section
-        id="benefits"
-        kicker="数字で見るベネフィット"
-        title="で、私の現場がどう楽になるの？"
-        description="※ 数値は導入施設ヒアリングに基づく目安です。稼働人数・客層・更新頻度で変動します。"
       >
         <ScrollReveal>
           <StaggerReveal className="grid gap-4 sm:grid-cols-3" staggerDelay={0.08}>
             {[
-              { label: "フロント対応時間", value: "最大50%削減", sub: "繰り返し案内・紙対応の削減イメージ" },
-              { label: "案内の更新", value: "約1分", sub: "テキスト差し替え〜再公開までの目安" },
-              { label: "外国語対応", value: "OK", sub: "ページ内に多言語テキストを並べて補助" },
-            ].map((row) => (
-              <div
-                key={row.label}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{row.label}</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{row.value}</p>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">{row.sub}</p>
-              </div>
-            ))}
-          </StaggerReveal>
-        </ScrollReveal>
-      </Section>
-
-      <Section
-        id="live-demo"
-        kicker="デモ（まずここ）"
-        title="実際に触ってみる。登録なしで始められます。"
-        description="ゲストが見る公開ページをブラウザでそのまま体験。ビルダーを使う場合は無料アカウント作成後にダッシュボードへ。"
-        variant="muted"
-      >
-        <ScrollReveal>
-          <div>
-            <StaggerReveal className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center" staggerDelay={0.1}>
-              <Button href={DEMO_EDITOR_HREF} size="lg">
-                デモを触る
-              </Button>
-              <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
-                サンプルページを見る
-              </Button>
-              <Button href={ctaHref} variant="secondary" size="lg">
-                無料アカウントでビルダーを開く
-              </Button>
-            </StaggerReveal>
-            <p className="mt-4 text-sm text-slate-500">
-              サンプルは同一の公開ページです。まず触って「これなら現場で回る」を確認してください。
-            </p>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
-                <p className="text-sm font-semibold text-slate-900">デモでできること</p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  <li className="flex gap-2">
-                    <span className="text-emerald-600">✓</span>
-                    ブロック追加・並べ替え・文言調整（雰囲気を体験）
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-emerald-600">✓</span>
-                    ゲスト画面の見え方を確認（公開ページのイメージ）
-                  </li>
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
-                <p className="text-sm font-semibold text-slate-900">デモの制限（次の一歩）</p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  <li className="flex gap-2">
-                    <span className="text-slate-400">-</span>
-                    公開・QR発行・詳細設定は無料登録で解放されます
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-slate-400">-</span>
-                    「まずは1ページ」なら Free で十分です
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </ScrollReveal>
-      </Section>
-
-      <LpMidCta
-        ctaHref={ctaHref}
-        sampleHref={DEMO_EDITOR_HREF}
-        headline="3分で、フロント業務を減らす準備ができる"
-        sub="クレカ不要で始められます。まずは無料プランで1ページ。"
-      />
-
-      <Section
-        id="features"
-        kicker="だから現場が楽になる"
-        title="機能の羅列ではなく、成果で選んでいます"
-        description="「で、現場の何が楽になるの？」に答えるために、Infomiiは次の価値に寄せて設計しています。"
-      >
-        <ScrollReveal>
-          <StaggerReveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
-            {[
-              {
-                title: "説明が減る",
-                desc: "ゲストが自分で読める。ピーク時のフロント滞留を抑えやすい。",
-              },
-              {
-                title: "更新が速い",
-                desc: "WiFiや朝食時間の変更を、印刷なしで即反映。",
-              },
-              {
-                title: "迷子が減る",
-                desc: "URLは1つ。紙・口頭・チャットの情報差を減らす。",
-              },
-              {
-                title: "オペに合わせる",
-                desc: "ノーコードのブロック編集。開発者を待たない。",
-              },
-              {
-                title: "テンプレで早い",
-                desc: "ホテル向けの型から始めて、自施設用に整える。",
-              },
-              {
-                title: "改善が見える（Pro）",
-                desc: "閲覧の傾向を見て、ページの並びや文言を調整。",
-              },
-            ].map((f) => (
-              <Card key={f.title} padding="lg" hover>
-                <h3 className="text-base font-semibold text-slate-900">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.desc}</p>
+              { title: "説明が減る", body: "ゲストが自分で見られるので、フロントの繰り返し対応を削減。" },
+              { title: "更新が速い", body: "管理画面で修正すると、公開ページにすぐ反映。" },
+              { title: "迷いが減る", body: "URLは1つ。案内の置き場所を統一しやすい。" },
+            ].map((item) => (
+              <Card key={item.title} padding="lg" className="border-slate-200/90">
+                <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
               </Card>
             ))}
           </StaggerReveal>
@@ -602,29 +140,38 @@ export default function LpSaaSPage() {
       </Section>
 
       <Section
-        id="how-it-works"
-        kicker="使い方"
-        title="3ステップで、最初の1ページを公開"
-        variant="muted"
+        id="live-demo"
+        kicker="デモ"
+        title="まず30秒だけ触ってください"
+        description="登録なしでデモ編集画面、または公開サンプルページを体験できます。"
       >
         <ScrollReveal>
-          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={1}>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button href={DEMO_EDITOR_HREF} size="lg">
+                デモを触る
+              </Button>
+              <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
+                サンプルページを見る
+              </Button>
+              <Button href={ctaHref} variant="secondary" size="lg">
+                無料で作成する
+              </Button>
+            </div>
+            <p className="mt-4 text-sm text-slate-500">
+              デモは体験用です。公開やQR発行など実運用は無料登録後のダッシュボードで行います。
+            </p>
+          </div>
+        </ScrollReveal>
+      </Section>
+
+      <Section id="how-it-works" kicker="使い方" title="3ステップで公開まで進める" variant="muted">
+        <ScrollReveal>
+          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.1}>
             {[
-              {
-                step: "1",
-                title: "テンプレを選ぶ",
-                desc: "ホテル向けテンプレまたは白紙から。WiFi・朝食・地図などのブロックを足すだけ。",
-              },
-              {
-                step: "2",
-                title: "編集してプレビュー",
-                desc: "スマホ表示を見ながら文言を詰める。並べ替えはドラッグ。",
-              },
-              {
-                step: "3",
-                title: "公開してQR配布",
-                desc: "URLを発行。卓上・客室・フロントにQRを置けば、常に最新案内が届く。",
-              },
+              { step: "1", title: "テンプレを選ぶ", desc: "ホテル向けテンプレか白紙から開始。" },
+              { step: "2", title: "編集して確認", desc: "文言・順番を整え、スマホ表示を確認。" },
+              { step: "3", title: "公開してQR配布", desc: "公開URLを発行し、客室やフロントに掲示。" },
             ].map((item) => (
               <div key={item.step}>
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700">
@@ -639,233 +186,126 @@ export default function LpSaaSPage() {
       </Section>
 
       <Section
-        id="trust"
-        kicker="信頼・導入イメージ"
-        title="こんな施設で使われる想定です"
-        description="実名事例・画面キャプチャは順次公開予定です。まずは業態別の活用イメージとしてご覧ください。"
-      >
-        <ScrollReveal>
-          <StaggerReveal className="grid gap-6 md:grid-cols-3" staggerDelay={0.1}>
-            {[
-              {
-                tag: "ビジネスホテル",
-                title: "フロント少人数・ピーク時に強い",
-                body: "チェックイン直後に聞かれるWiFiと朝食を、QRで一気に案内。同じ説明から解放されます。",
-              },
-              {
-                tag: "温泉・リゾート",
-                title: "館内が広いほど、1ページの価値が上がる",
-                body: "大浴場・食事・館内マップをまとめ、紙の差し替え回数を減らす使い方です。",
-              },
-              {
-                tag: "都市型・インバウンド",
-                title: "多言語テキストを1か所に",
-                body: "英語などを同じブロックに併記し、短い接遇で意図が伝わりやすくなります。",
-              },
-            ].map((c) => (
-              <Card key={c.tag} padding="lg" className="border-slate-200/90">
-                <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">{c.tag}</p>
-                <h3 className="mt-2 text-base font-semibold text-slate-900">{c.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{c.body}</p>
-              </Card>
-            ))}
-          </StaggerReveal>
-        </ScrollReveal>
-      </Section>
-
-      <Section
         id="pricing"
         kicker="料金"
-        title="まずは無料。伸びたらProへ。"
-        description="1ページで十分ならFree。複数ページや分析が要るならPro。チーム運用や本数が増えるならBusiness。"
+        title="まずは無料。必要になったらアップグレード"
+        description="最初はFreeで1ページ。ページ増加や分析が必要ならPro、チーム運用や大規模運用ならBusinessが目安です。"
       >
         <ScrollReveal>
-          <StaggerReveal className="mb-8 grid gap-4 md:grid-cols-2" staggerDelay={0.12}>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
-              <p className="text-sm font-bold text-slate-900">こんな人は Free</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                まず1ページで館内案内を試したい。QRを卓上に置くだけで十分。分析はまだいらない。
-              </p>
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
+            <p className="mt-1 text-sm text-slate-600">詳細は横スクロールで確認できます。</p>
+            <div className="mt-4">
+              <PricingComparisonTable />
             </div>
-            <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-5">
-              <p className="text-sm font-bold text-slate-900">こんな人は Pro</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                客室タイプ別・フロア別など複数ページに分けたい。閲覧分析で改善ループを回したい。
-              </p>
-            </div>
-          </StaggerReveal>
-
-          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
-            <p className="text-sm font-semibold text-slate-900">迷ったら、この選び方</p>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              {[
-                {
-                  title: "まず1ページで回したい",
-                  desc: "WiFi・朝食・チェックアウトなど基本の案内を集約。",
-                  plan: "Free",
-                },
-                {
-                  title: "客室/フロア別に分けたい",
-                  desc: "複数ページ＋改善ループを回したい。",
-                  plan: "Pro",
-                },
-                {
-                  title: "ページ数が増える/チーム運用",
-                  desc: "館内設備・多施設・運用者が複数。",
-                  plan: "Business",
-                },
-              ].map((row) => (
-                <div key={row.plan} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{row.plan}</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">{row.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{row.desc}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-slate-500">
-              ※ まず Free で作って、必要になったタイミングでアップグレードするのが一番スムーズです。
-            </p>
           </div>
-
-          <div className="mb-3">
-            <h3 className="text-base font-semibold text-slate-900">プラン別の機能一覧</h3>
-            <p className="mt-1 text-sm text-slate-600">
-              ページ数や分析、チーム運用の有無など、主な違いを一覧で比較できます。
-            </p>
-            <p className="mt-1 text-xs text-slate-500 md:hidden">表は横にスクロールできます。</p>
-          </div>
-          <PricingComparisonTable />
 
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
             <Card padding="lg" className="rounded-2xl p-8">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
-              <p className="mt-1 text-sm text-slate-500">1ページから始められる無料プラン</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                <li className="flex items-center gap-2">✓ 公開ページ1本</li>
-                <li className="flex items-center gap-2">✓ ブロックエディタ・スマホプレビュー</li>
-                <li className="flex items-center gap-2">✓ 共有URL・QR発行</li>
+              <p className="mt-1 text-sm text-slate-500">まず1ページで運用開始</p>
+              <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                <li>✓ 公開ページ1本</li>
+                <li>✓ ブロック編集・プレビュー</li>
+                <li>✓ 共有URL・QR発行</li>
               </ul>
               <Button href={ctaHref} variant="secondary" className="mt-6">
                 Freeで始める
               </Button>
             </Card>
+
             <div className="rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
-                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">
-                  おすすめ
-                </span>
+                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">おすすめ</span>
               </div>
               <p className="mt-3 text-4xl font-bold text-slate-900">
-                ¥1,980
-                <span className="text-base font-normal text-slate-600">/月</span>
+                ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">最大5ページ・閲覧分析・優先サポート付き</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                <li className="flex items-center gap-2">✓ 公開ページは最大5本</li>
-                <li className="flex items-center gap-2">✓ ページ一覧とページ同士のリンク</li>
-                <li className="flex items-center gap-2">✓ 閲覧分析（アクセス数・人気ページなど）</li>
-                <li className="flex items-center gap-2">✓ 優先サポート</li>
+              <p className="mt-1 text-sm text-slate-500">複数ページ + 分析</p>
+              <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                <li>✓ 最大5ページ</li>
+                <li>✓ 閲覧分析</li>
+                <li>✓ 優先サポート</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
                 <CheckoutButton plan="pro" className="w-full">
                   Proを申し込む{hasProAnnual ? "（月払い）" : ""}
                 </CheckoutButton>
-                {hasProAnnual && (
+                {hasProAnnual ? (
                   <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full">
                     年払い ¥19,800（2ヶ月分お得）
                   </CheckoutButton>
-                )}
+                ) : null}
               </div>
             </div>
+
             <Card padding="lg" className="rounded-2xl p-8">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">
-                ¥4,980
-                <span className="text-base font-normal text-slate-600">/月</span>
+                ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">ページ無制限・チーム運用・独自ドメイン・外部連携</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                <li className="flex items-center gap-2">✓ 公開ページ無制限</li>
-                <li className="flex items-center gap-2">✓ Proの全機能</li>
-                <li className="flex items-center gap-2">✓ スタッフを招待して共同編集</li>
-                <li className="flex items-center gap-2">✓ 公開時の多言語自動翻訳（Business限定）</li>
-                <li className="flex items-center gap-2">✓ 独自ドメインで公開（自社のURL）</li>
-                <li className="flex items-center gap-2">✓ 予約・在庫など外部システムとページを連携</li>
+              <p className="mt-1 text-sm text-slate-500">無制限運用 + チーム</p>
+              <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                <li>✓ 公開ページ無制限</li>
+                <li>✓ チーム招待</li>
+                <li>✓ 多言語自動翻訳（公開時）</li>
+                <li>✓ 独自ドメイン/外部連携（順次）</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
                 <CheckoutButton plan="business" variant="secondary" className="w-full">
                   Businessを申し込む{hasBusinessAnnual ? "（月払い）" : ""}
                 </CheckoutButton>
-                {hasBusinessAnnual && (
+                {hasBusinessAnnual ? (
                   <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">
                     年払い ¥49,800（2ヶ月分お得）
                   </CheckoutButton>
-                )}
+                ) : null}
               </div>
             </Card>
           </StaggerReveal>
         </ScrollReveal>
       </Section>
 
-      <Section
-        id="faq"
-        kicker="FAQ"
-        title="導入前によくある質問"
-        description="現場で止まりやすい不安を先回りで解消します。"
-        variant="muted"
-      >
+      <Section id="faq" kicker="FAQ" title="よくある質問" variant="muted">
         <ScrollReveal>
-          <div className="mx-auto max-w-3xl">
-            <div className="space-y-3">
-              {[
-                {
-                  q: "デモで作った内容は、そのまま本番に引き継げますか？",
-                  a: "デモは体験用のため、公開・QR発行などは制限されています。実運用は無料登録後にダッシュボードで作成してください（同じ感覚で編集できます）。",
-                },
-                {
-                  q: "現場では誰が更新しますか？ITに詳しくなくても大丈夫？",
-                  a: "フロント担当者でも更新できるよう、ブロック追加と文章の差し替え中心の設計です。紙の差し替えより軽く、必要なところだけ更新できます。",
-                },
-                {
-                  q: "外国語対応はできますか？",
-                  a: "対応できます。Businessプランでは公開時に多言語へ自動翻訳してから保存・公開できます。Free/Proは手動での多言語運用が基本です。",
-                },
-                {
-                  q: "QRはどこに置くのが良い？",
-                  a: "フロント、客室内、卓上（レストラン）、エレベーター前など「聞かれやすい場所」に置くのが効果的です。URLは1つなので、更新してもQRは差し替え不要です。",
-                },
-                {
-                  q: "どのプランを選べばいいですか？",
-                  a: "まずは Free で1ページを作って運用に乗せるのが最短です。客室タイプ別などでページを増やしたくなったら Pro、チーム運用や本数が増えるなら Business が目安です。",
-                },
-              ].map((row) => (
-                <details
-                  key={row.q}
-                  className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100"
-                >
-                  <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
-                    <span className="inline-flex w-full items-center justify-between gap-4">
-                      <span>{row.q}</span>
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden
-                      >
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{row.a}</p>
-                </details>
-              ))}
-            </div>
+          <div className="mx-auto max-w-3xl space-y-3">
+            {[
+              {
+                q: "デモで作った内容は本番へ引き継げますか？",
+                a: "デモは体験用です。実運用は無料登録後のダッシュボードで作成してください。",
+              },
+              {
+                q: "ITに詳しくなくても更新できますか？",
+                a: "はい。ブロック追加と文章差し替え中心の設計です。まずは1ページ作る運用から始めるのがおすすめです。",
+              },
+              {
+                q: "どのプランを選べばいいですか？",
+                a: "最初はFree。ページ数や分析が必要になったらPro、チーム運用や大規模運用ならBusinessが目安です。",
+              },
+            ].map((row) => (
+              <details key={row.q} className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
+                  <span className="inline-flex w-full items-center justify-between gap-4">
+                    <span>{row.q}</span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">{row.a}</p>
+              </details>
+            ))}
           </div>
         </ScrollReveal>
       </Section>
@@ -874,10 +314,10 @@ export default function LpSaaSPage() {
         <ScrollReveal intensity="subtle">
           <Container size="sm" className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              3分で、フロント業務を減らす
+              まずは無料で1ページ作る
             </h2>
             <p className="mt-4 text-lg text-slate-300">
-              今すぐ無料で作成。クレジットカード不要。サンプルを触ってからでも遅くありません。
+              クレジットカード不要。サンプルを触ってから始めてもOKです。
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
@@ -897,23 +337,17 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </section>
 
-      <footer className="border-t border-slate-200/80 bg-white py-8 transition-colors duration-200">
+      <footer className="border-t border-slate-200/80 bg-white py-8">
         <Container className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm text-slate-500">© {new Date().getFullYear()} Infomii</p>
           <div className="flex flex-wrap gap-6 text-sm">
-            <Link
-              href="/terms"
-              className="text-slate-600 transition-colors duration-200 hover:text-slate-900"
-            >
+            <Link href="/terms" className="text-slate-600 hover:text-slate-900">
               利用規約
             </Link>
-            <Link
-              href="/privacy"
-              className="text-slate-600 transition-colors duration-200 hover:text-slate-900"
-            >
+            <Link href="/privacy" className="text-slate-600 hover:text-slate-900">
               プライバシーポリシー
             </Link>
-            <Link href={loginHref} className="text-slate-600 transition-colors duration-200 hover:text-slate-900">
+            <Link href={loginHref} className="text-slate-600 hover:text-slate-900">
               ログイン
             </Link>
           </div>

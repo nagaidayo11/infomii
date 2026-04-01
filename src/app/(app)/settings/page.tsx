@@ -1,10 +1,9 @@
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { BusinessGuestFooterSettings } from "@/components/settings/BusinessGuestFooterSettings";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
-import { InfomiiManual } from "@/components/settings/InfomiiManual";
 
 /**
- * 設定ページ — Business 特典の案内と、Infomii 利用マニュアル
+ * 設定ページ — プラン・Business向け設定
  */
 export default function SettingsPage() {
   return (
@@ -12,7 +11,7 @@ export default function SettingsPage() {
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">設定</h1>
         <p className="mt-2 text-sm text-slate-600">
-          プランの案内と、Infomii でできることの一覧です。見出しのリンクから、そのまま各画面に移動できます。
+          プランの案内と、Business向けの設定項目です。使い方の全体は左メニューの「マニュアル」をご確認ください。
         </p>
       </header>
 
@@ -21,13 +20,6 @@ export default function SettingsPage() {
       <BusinessGuestFooterSettings />
 
       <BusinessAuditLogExport />
-
-      <section aria-labelledby="manual-heading">
-        <h2 id="manual-heading" className="mb-4 text-lg font-semibold text-slate-900">
-          利用マニュアル
-        </h2>
-        <InfomiiManual />
-      </section>
     </div>
   );
 }

@@ -24,6 +24,49 @@ const EXTRA_SCREEN_LINKS: { href: string; label: string; description: string }[]
   },
 ];
 
+const MANUAL_SCREEN_PREVIEWS: { href: string; title: string; note: string }[] = [
+  {
+    href: "/dashboard",
+    title: "ダッシュボード",
+    note: "ページ作成・最近のページ・主要指標の起点です。",
+  },
+  {
+    href: "/templates",
+    title: "テンプレート",
+    note: "型から素早くページを作成できます。",
+  },
+  {
+    href: "/dashboard/pages",
+    title: "ページ一覧",
+    note: "公開/下書き、名前変更、削除などの管理を行います。",
+  },
+  {
+    href: "/dashboard/qr-generator",
+    title: "QRコード生成",
+    note: "大きなQR表示・保存・印刷ができます。",
+  },
+  {
+    href: "/dashboard/qr",
+    title: "QRコード管理",
+    note: "ページごとのQRとスキャン状況を確認できます。",
+  },
+  {
+    href: "/dashboard/analytics",
+    title: "分析",
+    note: "閲覧状況や人気ページを確認できます。",
+  },
+  {
+    href: "/dashboard/team",
+    title: "チーム",
+    note: "メンバー招待と権限管理を行います。",
+  },
+  {
+    href: "/settings",
+    title: "設定",
+    note: "Business向け設定や運用設定の確認画面です。",
+  },
+];
+
 function OpenScreenLink({ href, children }: { href: string; children?: ReactNode }) {
   return (
     <p className="mt-3">
@@ -38,6 +81,34 @@ function OpenScreenLink({ href, children }: { href: string; children?: ReactNode
   );
 }
 
+function LivePreviewCard({ href, title, note }: { href: string; title: string; note: string }) {
+  return (
+    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="border-b border-slate-100 px-3 py-2.5">
+        <p className="text-sm font-medium text-slate-900">{title}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{note}</p>
+      </div>
+      <div className="relative bg-slate-100">
+        <iframe
+          title={`${title} の実画面プレビュー`}
+          src={href}
+          loading="lazy"
+          className="h-52 w-full border-0 bg-white"
+        />
+      </div>
+      <div className="border-t border-slate-100 px-3 py-2">
+        <Link
+          href={href}
+          className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 underline-offset-2 hover:text-blue-800 hover:underline"
+        >
+          この画面を開く
+          <span aria-hidden>→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 /**
  * Infomii の主な機能を一覧した利用マニュアル（設定画面用）
  * 実際の画面へのリンクで、左メニューと同じ動線をたどれるようにします。
@@ -45,6 +116,18 @@ function OpenScreenLink({ href, children }: { href: string; children?: ReactNode
 export function InfomiiManual() {
   return (
     <div className="space-y-6">
+      <Card padding="lg">
+        <h2 className="text-base font-semibold text-slate-900">実画面プレビュー</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          主要画面をそのまま埋め込んでいます。見た目を確認してから、下のリンクで同じ画面へ移動できます。
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {MANUAL_SCREEN_PREVIEWS.map((item) => (
+            <LivePreviewCard key={item.href} href={item.href} title={item.title} note={item.note} />
+          ))}
+        </div>
+      </Card>
+
       <Card padding="lg">
         <h2 className="text-base font-semibold text-slate-900">画面一覧（メニューと同じ）</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
