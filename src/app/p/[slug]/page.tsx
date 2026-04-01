@@ -1419,7 +1419,21 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           </div>
   );
 
-  const hideDefaultFooter = await resolveGuestFooterHidden(row.hotel_id);
+  let hotelIdForFooter = row.hotel_id;
+  if (!hotelIdForFooter) {
+    try {
+      const admin = getSupabaseAdminServerClient();
+      const { data: pageRow } = await admin
+        .from("pages")
+        .select("hotel_id")
+        .eq("slug", slug)
+        .maybeSingle();
+      hotelIdForFooter = pageRow?.hotel_id ?? null;
+    } catch {
+      // Keep fallback silent; footer remains visible if hotel cannot be resolved.
+    }
+  }
+  const hideDefaultFooter = await resolveGuestFooterHidden(hotelIdForFooter);
 
   return (
     <>

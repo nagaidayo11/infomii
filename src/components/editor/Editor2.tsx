@@ -14,7 +14,7 @@ import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import type { CardType } from "./types";
-import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
+import { createEmptyCard, STARTER_CARD_TYPES, type CardType } from "./types";
 import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
 import {
   getInformationBySlug,
@@ -39,7 +39,8 @@ type Editor2Props = {
   demoPreviewUrl?: string;
 };
 
-const DEMO_STORAGE_KEY = "editor2:demo-state:v1";
+const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
+const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
 const REQUIRED_LOCALES: SupportedLocale[] = ["en", "zh", "ko"];
 /** ヘッダーの言語ピルと同一（EDITOR_LOCALE_PILL_OPTIONS の label を " / " 連結） */
 const EDITOR_LOCALE_LABELS_DISPLAY = EDITOR_LOCALE_PILL_OPTIONS.map((o) => o.label).join(" / ");
@@ -208,7 +209,8 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         // ignore malformed localStorage and fall back to starter cards
       }
     }
-    const starterCards = STARTER_CARD_TYPES.map((type, i) =>
+    const starterTypes = isDemoMode ? DEMO_FRONTDESK_PRESET_TYPES : STARTER_CARD_TYPES;
+    const starterCards = starterTypes.map((type, i) =>
       createEmptyCard(type, `demo-${i}-${Math.random().toString(36).slice(2, 8)}`, i)
     );
     setCards(starterCards);
