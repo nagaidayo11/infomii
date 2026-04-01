@@ -128,7 +128,7 @@ export default function TeamPage() {
 
   return (
     <AuthGate>
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-6 sm:space-y-8">
         <FadeIn>
           <header>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">チーム・招待</h1>
@@ -146,24 +146,24 @@ export default function TeamPage() {
 
         {/* 招待コードで参加 */}
         <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">招待コードで参加</h2>
             <p className="mt-1 text-sm text-slate-500">
               招待コードを受け取った場合、ここで入力して施設に参加できます。
             </p>
-            <form onSubmit={handleRedeem} className="mt-4 flex gap-2">
+            <form onSubmit={handleRedeem} className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-2">
               <input
                 type="text"
                 value={redeemCode}
                 onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                 placeholder="例: ABCD1234"
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
+                className="min-h-[44px] w-full flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
                 maxLength={12}
               />
               <button
                 type="submit"
                 disabled={redeeming || !redeemCode.trim()}
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
+                className="min-h-[44px] w-full shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
               >
                 {redeeming ? "適用中…" : "参加する"}
               </button>
@@ -173,16 +173,16 @@ export default function TeamPage() {
 
         {/* 招待コード発行 */}
         <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">招待コードを発行</h2>
             <p className="mt-1 text-sm text-slate-500">
               コードを共有すると、相手がログイン後に施設に参加できます。
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "editor" | "viewer")}
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900"
+                className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
               >
                 <option value="editor">編集可</option>
                 <option value="viewer">閲覧のみ</option>
@@ -191,7 +191,7 @@ export default function TeamPage() {
                 type="button"
                 onClick={handleCreateInvite}
                 disabled={creating}
-                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+                className="min-h-[44px] w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
               >
                 {creating ? "発行中…" : "招待コードを発行"}
               </button>
@@ -201,7 +201,7 @@ export default function TeamPage() {
 
         {/* 発行済み招待 */}
         <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">発行済み招待コード</h2>
             {loading ? (
               <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
@@ -212,10 +212,10 @@ export default function TeamPage() {
                 {invites.map((inv) => (
                   <li
                     key={inv.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3"
+                    className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-center gap-3">
-                      <code className="rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
+                    <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                      <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
                         {inv.code}
                       </code>
                       <span className="text-xs text-slate-500">
@@ -226,7 +226,7 @@ export default function TeamPage() {
                       <button
                         type="button"
                         onClick={() => handleRevoke(inv.id)}
-                        className="text-xs font-medium text-slate-500 hover:text-red-600"
+                        className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
                       >
                         無効化
                       </button>
@@ -240,7 +240,7 @@ export default function TeamPage() {
 
         {/* メンバー一覧 */}
         <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">メンバー</h2>
             {loading ? (
               <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
@@ -249,10 +249,10 @@ export default function TeamPage() {
                 {members.map((m) => (
                   <li
                     key={m.userId}
-                    className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3"
+                    className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   >
-                    <div>
-                      <p className="font-medium text-slate-800">{m.email ?? "（メール未取得）"}</p>
+                    <div className="min-w-0">
+                      <p className="break-all font-medium text-slate-800">{m.email ?? "（メール未取得）"}</p>
                       <p className="text-xs text-slate-500">
                         {m.role === "owner" ? "オーナー" : m.role === "viewer" ? "閲覧のみ" : "編集可"}
                       </p>
@@ -262,7 +262,7 @@ export default function TeamPage() {
                         type="button"
                         onClick={() => handleRemoveMember(m.userId)}
                         disabled={removingId === m.userId}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                        className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1.5 sm:text-xs"
                       >
                         {removingId === m.userId ? "削除中…" : "削除"}
                       </button>

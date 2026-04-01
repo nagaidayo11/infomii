@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorLayout } from "./EditorLayout";
-import { EditorTopBar } from "./EditorTopBar";
+import { EditorTopBar, EDITOR_LOCALE_PILL_OPTIONS } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
 import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
@@ -40,6 +40,8 @@ type Editor2Props = {
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v1";
 const REQUIRED_LOCALES: SupportedLocale[] = ["en", "zh", "ko"];
+/** ヘッダーの言語ピルと同一（EDITOR_LOCALE_PILL_OPTIONS の label を " / " 連結） */
+const EDITOR_LOCALE_LABELS_DISPLAY = EDITOR_LOCALE_PILL_OPTIONS.map((o) => o.label).join(" / ");
 
 function hasText(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
@@ -944,7 +946,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   if (togglePublishBusy) {
     if (localeTranslating) {
       editorBusyTitle = "一括翻訳中...";
-      editorBusySubtitle = "ja / en / zh / ko の翻訳を整えています";
+      editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を整えています`;
     } else {
       editorBusyTitle = "公開準備中...";
       editorBusySubtitle =
@@ -957,12 +959,12 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     editorBusySubtitle = "最新の編集内容を保存しています";
   } else if (publishFlowBusy && localeTranslating) {
     editorBusyTitle = "多言語データ取得中...";
-    editorBusySubtitle = "ja / en / zh / ko の翻訳を取得・反映しています";
+    editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を取得・反映しています`;
   }
 
   return (
     <LocaleProvider value={editorLocale}>
-      <div ref={rootRef} className="h-screen w-full overflow-hidden">
+      <div ref={rootRef} className="h-[100dvh] w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
           library={<CardLibrary onAddCard={addCard} onAddPreset={handleAddPreset} />}

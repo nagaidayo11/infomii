@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
@@ -48,6 +48,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,7 +61,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="lux-shell ds-app bg-ds-bg text-slate-900 antialiased">
+      <body className="lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-slate-900 antialiased [-webkit-tap-highlight-color:transparent]">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

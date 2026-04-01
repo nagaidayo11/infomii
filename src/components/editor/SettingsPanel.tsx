@@ -372,7 +372,7 @@ const PAGE_LINKS_ICON_OPTIONS = [
   { value: "nearby", label: "周辺" },
   { value: "notice", label: "お知らせ" },
   { value: "bell", label: "ベル" },
-  { value: "emergency", label: "緊急" },
+  { value: "emergency", label: "緊急連絡先" },
   { value: "phone", label: "電話" },
   { value: "laundry", label: "ランドリー" },
   { value: "washing-machine", label: "洗濯機" },

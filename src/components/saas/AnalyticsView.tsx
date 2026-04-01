@@ -32,10 +32,13 @@ function SimpleBarRow({
 }) {
   const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span className="w-24 shrink-0 truncate text-sm font-medium text-slate-700" title={label}>
-        {label || "—"}
-      </span>
+    <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:gap-3">
+      <div className="flex min-w-0 items-center justify-between gap-2 sm:w-28 sm:shrink-0 sm:justify-start">
+        <span className="truncate text-sm font-medium text-slate-700" title={label}>
+          {label || "—"}
+        </span>
+        <span className="shrink-0 text-sm tabular-nums text-slate-600 sm:hidden">{count}</span>
+      </div>
       <div className="min-w-0 flex-1">
         <div className="h-6 overflow-hidden rounded-md bg-slate-100">
           <div
@@ -44,7 +47,7 @@ function SimpleBarRow({
           />
         </div>
       </div>
-      <span className="w-10 shrink-0 text-right text-sm tabular-nums text-slate-600">{count}</span>
+      <span className="hidden w-10 shrink-0 text-right text-sm tabular-nums text-slate-600 sm:inline-block">{count}</span>
     </div>
   );
 }
@@ -118,7 +121,7 @@ export function AnalyticsView() {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
           主要指標
         </h2>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <AnalyticsSummaryCard
             label="総ページビュー"
             value={loading ? "—" : totalViews}
@@ -151,14 +154,14 @@ export function AnalyticsView() {
         {loading ? (
           <div className="mt-3 h-40 animate-pulse rounded-xl bg-slate-100" />
         ) : byDay.length > 0 ? (
-          <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-            <div className="flex items-end gap-1">
+          <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-4">
+            <div className="-mx-1 flex min-h-[140px] items-end gap-0.5 overflow-x-auto pb-1 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:gap-1 [&::-webkit-scrollbar]:h-1.5">
               {byDay.map(({ date, count }) => {
                 const h = maxDay > 0 ? Math.round((count / maxDay) * 100) : 0;
                 return (
                   <div
                     key={date}
-                    className="flex min-w-0 flex-1 flex-col items-center gap-1"
+                    className="flex w-8 min-w-[2rem] shrink-0 flex-col items-center gap-1 sm:w-auto sm:min-w-0 sm:flex-1"
                     title={`${date}: ${count} 回`}
                   >
                     <span className="text-[10px] font-medium tabular-nums text-slate-600">
@@ -259,19 +262,19 @@ export function AnalyticsView() {
               {topPages.map((page, index) => (
                 <li
                   key={page.informationId}
-                  className="flex items-center justify-between gap-4 px-4 py-3 transition hover:bg-slate-50/80"
+                  className="flex flex-col gap-3 px-4 py-3 transition hover:bg-slate-50/80 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
                       {index + 1}
                     </span>
                     <span className="truncate font-medium text-slate-900">{page.title}</span>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-sm tabular-nums text-slate-600">
+                  <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 text-sm tabular-nums text-slate-600 sm:justify-end sm:gap-3">
                     <span>{page.views} 回</span>
                     <Link
                       href="/dashboard/pages"
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:min-h-0 sm:px-2.5 sm:py-1.5"
                     >
                       ページ一覧
                     </Link>

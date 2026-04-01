@@ -166,15 +166,15 @@ export default function TemplatesPage() {
         </p>
       </header>
 
-      {/* カテゴリ（将来 category カラム対応時はフィルタ有効） */}
-      <div className="flex flex-wrap gap-2">
+      {/* カテゴリ — スマホは横スクロールで押しやすく */}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
         {TEMPLATE_CATEGORIES.map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => setCategory(c.id)}
             className={
-              "rounded-lg px-3 py-1.5 text-sm font-medium transition " +
+              "shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium transition " +
               (category === c.id
                 ? "bg-slate-900 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200")

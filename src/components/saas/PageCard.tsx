@@ -149,12 +149,12 @@ export function PageCard({
             </div>
           </dl>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <Link
             href={publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0 sm:flex-initial sm:py-2"
           >
             公開ページ
           </Link>
@@ -162,7 +162,7 @@ export function PageCard({
           <Link
             href={resolvedEditHref}
             onClick={() => setNavigating(true)}
-            className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition hover:bg-slate-800"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:py-2"
           >
             編集
           </Link>
@@ -173,7 +173,7 @@ export function PageCard({
               onClick={() => {
                 if (window.confirm(`${title?.trim() ? `「${title}」を` : "このページを"}削除しますか？`)) onDelete(id);
               }}
-              className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:py-2"
               aria-label="削除"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>

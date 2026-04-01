@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { MobileNavDrawer } from "./MobileNavDrawer";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -24,12 +25,19 @@ export function AppLayout({
   subtitle: _subtitle,
   topbarActions,
 }: AppLayoutProps) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+
   return (
-    <div className="app-ambient-bg flex h-screen w-full overflow-hidden bg-slate-100/90">
+    <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-slate-100/90">
+      <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar actions={topbarActions} />
-        <main className="app-page-enter flex-1 overflow-y-auto p-6">
+        <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
+        <main
+          className="app-page-enter flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        >
           {children}
         </main>
       </div>

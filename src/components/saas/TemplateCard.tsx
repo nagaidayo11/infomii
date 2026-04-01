@@ -62,12 +62,12 @@ export function TemplateCard({
           </div>
         )}
         <p className="mt-1 line-clamp-3 text-sm text-slate-600">{description || "説明なし"}</p>
-        <div className="mt-4 flex flex-1 flex-wrap items-end gap-2">
+        <div className="mt-4 flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
           <button
             type="button"
             disabled={!!using}
             onClick={onUse}
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            className="w-full min-h-[44px] rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2.5"
           >
             {using ? "作成中…" : "テンプレートを使う"}
           </button>
@@ -75,7 +75,7 @@ export function TemplateCard({
             type="button"
             onClick={onPreview}
             disabled={!onPreview}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-2 sm:text-xs"
           >
             プレビュー
           </button>

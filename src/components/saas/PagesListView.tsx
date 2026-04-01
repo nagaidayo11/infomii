@@ -169,9 +169,10 @@ export function PagesListView() {
         </div>
 
         <div className="px-4 py-4">
+          <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
           <div
             className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50"
-            style={{ height: `${canvasHeight}px` }}
+            style={{ height: `${canvasHeight}px`, minWidth: "min(100%, 520px)" }}
           >
             <svg className="absolute inset-0 h-full w-full" aria-hidden>
               {root &&
@@ -192,7 +193,7 @@ export function PagesListView() {
               <button
                 type="button"
                 onClick={() => router.push(`/editor/${root.id}`)}
-                className="absolute w-[170px] -translate-x-1/2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+                className="absolute max-w-[min(180px,45vw)] -translate-x-1/2 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-left text-[11px] shadow-sm transition hover:border-slate-400 hover:bg-slate-50 sm:w-[170px] sm:max-w-none sm:px-3 sm:text-xs"
                 style={{ left: `${rootNode.x}%`, top: `${rootNode.y}%` }}
               >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">ルート</div>
@@ -207,7 +208,7 @@ export function PagesListView() {
                 key={node.page.id}
                 type="button"
                 onClick={() => router.push(`/editor/${node.page.id}`)}
-                className="absolute w-[150px] -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                className="absolute max-w-[min(160px,42vw)] -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-left text-[11px] shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:w-[150px] sm:max-w-none sm:px-3 sm:text-xs"
                 style={{ left: `${node.x}%`, top: `${node.y}%` }}
               >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">子ページ</div>
@@ -216,6 +217,7 @@ export function PagesListView() {
                 </div>
               </button>
             ))}
+          </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -258,18 +260,18 @@ export function PagesListView() {
   return (
     <div className="mx-auto max-w-5xl">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">ページ</h1>
           <p className="mt-1 text-sm text-slate-500">
             単発ページとページ連携をセット単位で管理できます。
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-stretch gap-2 sm:w-auto sm:items-center">
           <button
             type="button"
             onClick={handleCreatePage}
             disabled={creating}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
               +
@@ -284,7 +286,7 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("nodes")}
           className={
-            "rounded-md px-3 py-1.5 text-xs font-medium transition " +
+            "min-h-[44px] rounded-md px-4 py-2 text-xs font-medium transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
             (viewMode === "nodes" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
           }
         >
@@ -294,7 +296,7 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("table")}
           className={
-            "rounded-md px-3 py-1.5 text-xs font-medium transition " +
+            "min-h-[44px] rounded-md px-4 py-2 text-xs font-medium transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
             (viewMode === "table" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
           }
         >

@@ -199,21 +199,21 @@ export function DashboardView() {
             閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           {canEdit && (
             <>
               <button
                 type="button"
                 onClick={handleCreatePage}
                 disabled={creating}
-                className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+                className="w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
               >
                 {creating ? "作成中…" : "ページを作成"}
               </button>
               <Link
                 href="/templates"
                 onClick={() => setNavigating(true)}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="block w-full rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:w-auto sm:py-3"
               >
                 テンプレートから作成
               </Link>

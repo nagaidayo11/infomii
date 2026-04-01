@@ -280,7 +280,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "map", label: "地図", description: "住所・地図" },
   { type: "restaurant", label: "レストラン", description: "営業時間・場所・メニュー" },
   { type: "taxi", label: "タクシー", description: "電話番号・会社名・備考" },
-  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院" },
+  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
   { type: "laundry", label: "ランドリー", description: "営業時間・料金・連絡先" },
   { type: "spa", label: "スパ・温泉", description: "時間・場所・説明" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
@@ -292,16 +292,19 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
   { type: "checklist", label: "チェックリスト", description: "チェック項目" },
-  { type: "steps", label: "ステップ", description: "手順・導線" },
+  { type: "steps", label: "ステップ", description: "手順を段階表示" },
   { type: "compare", label: "比較", description: "2カラム比較" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
+/** Default sample image (hero / image / gallery block presets). */
+export const PRESET_HERO_SAMPLE_IMAGE = "/preset-hero-sample.png";
+
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
     case "hero":
-      return { title: "Infomii Hotel", image: "/preset-hero-sample.png", subtitle: "館内案内をスマートにまとめました" };
+      return { title: "Infomii Hotel", image: PRESET_HERO_SAMPLE_IMAGE, subtitle: "館内案内をスマートにまとめました" };
     case "info":
       return {
         title: "Wi-Fi",
@@ -344,7 +347,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "icon":
       return { icon: "info", label: "ラベル", description: "" };
     case "image":
-      return { src: "", alt: "施設イメージ" };
+      return { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" };
     case "button":
       return { label: "予約サイトへ", href: "#" };
     case "faq":
@@ -366,7 +369,14 @@ function defaultContent(type: CardType): Record<string, unknown> {
         ],
       };
     case "gallery":
-      return { title: "", columns: 2, items: [{ src: "", alt: "" }] };
+      return {
+        title: "",
+        columns: 2,
+        items: [
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" },
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" },
+        ],
+      };
     case "divider":
       return { style: "line" };
     case "space":

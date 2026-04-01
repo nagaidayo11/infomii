@@ -40,14 +40,14 @@ export function UpgradeCtaBanner({
               無料プランは1ページまで。Proにアップグレードで分析・複数ページ連携が使えます。
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/lp/saas#pricing"
-              className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>
-            <DashboardCheckoutButton plan="pro">
+            <DashboardCheckoutButton plan="pro" className="w-full justify-center sm:w-auto">
               Proを申し込む（¥1,980/月）
             </DashboardCheckoutButton>
           </div>
@@ -68,14 +68,14 @@ export function UpgradeCtaBanner({
               公開中 {publishedCount}/{maxPublishedPages} 件。Businessプランで無制限まで拡張できます。
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/lp/saas#pricing"
-              className="inline-flex items-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-50"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-center text-sm font-medium text-amber-800 transition hover:bg-amber-50 sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>
-            <DashboardCheckoutButton plan="business" variant="secondary">
+            <DashboardCheckoutButton plan="business" variant="secondary" className="w-full justify-center sm:w-auto">
               Businessを申し込む（¥4,980/月）
             </DashboardCheckoutButton>
           </div>
@@ -90,10 +90,12 @@ export function UpgradeCtaBanner({
 function DashboardCheckoutButton({
   plan,
   variant = "primary",
+  className = "",
   children,
 }: {
   plan: "pro" | "business";
   variant?: "primary" | "secondary";
+  className?: string;
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(false);
@@ -121,7 +123,7 @@ function DashboardCheckoutButton({
       type="button"
       variant={variant}
       size="sm"
-      className={plan === "business" ? "" : "!text-white"}
+      className={(plan === "business" ? "" : "!text-white") + " min-h-[44px] sm:min-h-0 " + className}
       onClick={handleClick}
       disabled={loading}
     >

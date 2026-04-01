@@ -193,6 +193,108 @@ function LpSolutionPhoneMock() {
   );
 }
 
+function PricingComparisonTable() {
+  const no = <span className="text-slate-300">—</span>;
+  const yes = <span className="font-medium text-emerald-700">✓</span>;
+  return (
+    <div className="mb-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
+      <table className="w-full min-w-[560px] border-collapse text-sm">
+        <caption className="sr-only">Infomii プラン別の機能比較</caption>
+        <thead>
+          <tr className="border-b border-slate-200 bg-slate-50">
+            <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              比較項目
+            </th>
+            <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
+              Free
+            </th>
+            <th
+              scope="col"
+              className="border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900"
+            >
+              Pro
+            </th>
+            <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
+              Business
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 text-slate-800">
+          <tr>
+            <th scope="row" className="max-w-[200px] px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              公開できるページ数
+            </th>
+            <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">
+              最大5本
+            </td>
+            <td className="px-3 py-2.5 text-center font-semibold tabular-nums text-slate-900">無制限</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              閲覧分析
+              <span className="mt-0.5 block text-xs font-normal text-slate-500">（アクセス数・人気ページなど）</span>
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              複数ページの一覧・ページ同士のリンク
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              優先サポート
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              スタッフを招待して共同編集
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              公開時の多言語自動翻訳
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              独自ドメインで公開
+              <span className="mt-0.5 block text-xs font-normal text-slate-500">（例: info.施設名.jp）</span>
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">
+              予約・在庫など外部システムと連携
+              <span className="mt-0.5 block text-xs font-normal text-slate-500">（ページ内容をプログラムから取得・更新）</span>
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="px-3 py-2.5 text-center border-x border-slate-100 bg-slate-50/60">{no}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function LpSaaSPage() {
   const loginHref = "/login?ref=lp-saas";
   const ctaHref = "/login?ref=lp-saas&next=%2Fdashboard%3Ftab%3Dcreate";
@@ -625,6 +727,15 @@ export default function LpSaaSPage() {
             </p>
           </div>
 
+          <div className="mb-3">
+            <h3 className="text-base font-semibold text-slate-900">プラン別の機能一覧</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              ページ数や分析、チーム運用の有無など、主な違いを一覧で比較できます。
+            </p>
+            <p className="mt-1 text-xs text-slate-500 md:hidden">表は横にスクロールできます。</p>
+          </div>
+          <PricingComparisonTable />
+
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
             <Card padding="lg" className="rounded-2xl p-8">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
@@ -650,11 +761,11 @@ export default function LpSaaSPage() {
                 ¥1,980
                 <span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">5ページまで・分析・サポート付き</p>
+              <p className="mt-1 text-sm text-slate-500">最大5ページ・閲覧分析・優先サポート付き</p>
               <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                <li className="flex items-center gap-2">✓ 公開ページ5本まで</li>
-                <li className="flex items-center gap-2">✓ ノードマップ・複数ページ連携</li>
-                <li className="flex items-center gap-2">✓ 閲覧分析</li>
+                <li className="flex items-center gap-2">✓ 公開ページは最大5本</li>
+                <li className="flex items-center gap-2">✓ ページ一覧とページ同士のリンク</li>
+                <li className="flex items-center gap-2">✓ 閲覧分析（アクセス数・人気ページなど）</li>
                 <li className="flex items-center gap-2">✓ 優先サポート</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
@@ -674,13 +785,14 @@ export default function LpSaaSPage() {
                 ¥4,980
                 <span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">10ページ以上・チーム・API対応</p>
+              <p className="mt-1 text-sm text-slate-500">ページ無制限・チーム運用・独自ドメイン・外部連携</p>
               <ul className="mt-6 space-y-3 text-sm text-slate-700">
                 <li className="flex items-center gap-2">✓ 公開ページ無制限</li>
                 <li className="flex items-center gap-2">✓ Proの全機能</li>
-                <li className="flex items-center gap-2">✓ チーム招待</li>
+                <li className="flex items-center gap-2">✓ スタッフを招待して共同編集</li>
                 <li className="flex items-center gap-2">✓ 公開時の多言語自動翻訳（Business限定）</li>
-                <li className="flex items-center gap-2">✓ API・ホワイトラベル</li>
+                <li className="flex items-center gap-2">✓ 独自ドメインで公開（自社のURL）</li>
+                <li className="flex items-center gap-2">✓ 予約・在庫など外部システムとページを連携</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
                 <CheckoutButton plan="business" variant="secondary" className="w-full">

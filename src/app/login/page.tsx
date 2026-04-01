@@ -68,7 +68,13 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
+    <div
+      className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 px-4 py-12"
+      style={{
+        paddingBottom: "max(3rem, env(safe-area-inset-bottom))",
+        paddingTop: "max(3rem, env(safe-area-inset-top))",
+      }}
+    >
       <FadeIn className="w-full max-w-sm">
         {/* Logo / タイトル */}
         <div className="mb-8 text-center">

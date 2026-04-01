@@ -10,6 +10,8 @@ type TopbarProps = {
   title?: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** Opens slide-in navigation (mobile only). */
+  onOpenMobileNav?: () => void;
 };
 
 const SECTION_TITLES: Record<string, string> = {
@@ -42,7 +44,7 @@ function getInitials(email: string | undefined): string {
  * トップバー — ワークスペース名・セクション・ユーザーアバター・ログアウトメニュー
  * Linear / Notion / Stripe 風
  */
-export function Topbar({ title: _title, subtitle: _subtitle, actions }: TopbarProps) {
+export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobileNav }: TopbarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const [workspaceTitle, setWorkspaceTitle] = useState<string>("");
@@ -78,27 +80,52 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions }: TopbarPr
   const initials = getInitials(email);
 
   return (
-    <header className="app-page-enter flex h-14 shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <div className="flex min-w-0 flex-1 items-center gap-4">
-        <span className="truncate text-sm font-medium text-slate-700">
-          {workspaceTitle || "—"}
-        </span>
-        {sectionTitle && (
-          <>
-            <span className="text-slate-300" aria-hidden>/</span>
-            <h1 className="truncate text-sm font-semibold text-slate-800" aria-hidden>
-              {sectionTitle}
-            </h1>
-          </>
+    <header
+      className="app-page-enter flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:gap-4 sm:px-4"
+      style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+        {onOpenMobileNav && (
+          <button
+            type="button"
+            onClick={onOpenMobileNav}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden"
+            aria-label="メニューを開く"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         )}
+        <div className="min-w-0 flex-1">
+          <div className="hidden min-w-0 items-center gap-2 sm:flex">
+            <span className="truncate text-sm font-medium text-slate-700">{workspaceTitle || "—"}</span>
+            {sectionTitle && (
+              <>
+                <span className="shrink-0 text-slate-300" aria-hidden>
+                  /
+                </span>
+                <h1 className="truncate text-sm font-semibold text-slate-800">{sectionTitle}</h1>
+              </>
+            )}
+          </div>
+          <div className="min-w-0 sm:hidden">
+            <span className="block truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              {workspaceTitle || "—"}
+            </span>
+            {sectionTitle && (
+              <h1 className="truncate text-sm font-semibold leading-tight text-slate-900">{sectionTitle}</h1>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {actions}
         <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
             aria-expanded={menuOpen}
             aria-haspopup="true"
             aria-label="ユーザーメニュー"

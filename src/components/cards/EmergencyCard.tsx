@@ -19,6 +19,31 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
+/** Red "SOS" wordmark (replaces emoji for consistent rendering). */
+function SosMark() {
+  return (
+    <svg
+      className="h-[1.1em] w-[2.25em] shrink-0 text-red-600"
+      viewBox="0 0 34 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <text
+        x="0"
+        y="11"
+        fill="currentColor"
+        fontSize="12"
+        fontWeight="700"
+        fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        letterSpacing="0.04em"
+      >
+        SOS
+      </text>
+    </svg>
+  );
+}
+
 export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
@@ -47,8 +72,8 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
 
   return (
     <Card padding="md" className="">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        🆘{" "}
+      <p className="flex flex-wrap items-center gap-1.5 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+        <SosMark />
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
       <ul className={`mt-2 space-y-1 text-slate-600 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`} style={getBodyFontSizeStyle()}>

@@ -201,67 +201,72 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   ),
 };
 
-/** Role-based: promotion blocks */
+/** ファーストビュー・目立たせたい内容 */
 const PROMOTION_ITEMS: LibraryItem[] = [
-  { type: "hero", label: "ヒーロー", description: "最上部の主メッセージ（1ページ1つ推奨）" },
-  { type: "highlight", label: "強調ブロック", description: "注意事項・訴求を強く見せる" },
-  { type: "button", label: "リンクボタン", description: "予約・問い合わせへ誘導する" },
+  { type: "hero", label: "ヒーロー", description: "ページ先頭の大きな見出しと写真（1ページ1つ推奨）" },
+  { type: "highlight", label: "強調ブロック", description: "注意事項やお知らせを目立たせる" },
+  { type: "button", label: "リンクボタン", description: "予約サイトやお問い合わせへつなぐ" },
 ];
 
-/** Role-based: guide blocks */
+/** 館内サービス・宿泊に関する案内 */
 const GUIDE_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "ウェルカム", description: "最初の挨拶・使い方を案内" },
-  { type: "wifi", label: "WiFi案内", description: "SSID/パスワードの案内に特化" },
-  { type: "checkout", label: "チェックアウト", description: "退館時刻・手順を明記" },
-  { type: "breakfast", label: "施設案内（汎用）", description: "時間/場所/詳細を1ブロックで案内" },
-  { type: "schedule", label: "営業時間一覧", description: "曜日・区分ごとに営業時間を表示" },
-  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
-  { type: "notice", label: "重要なお知らせ", description: "必読の連絡事項を表示" },
-  { type: "faq", label: "よくある質問", description: "問い合わせを減らす定番Q&A" },
-  { type: "emergency", label: "緊急連絡先", description: "トラブル時の連絡導線をまとめる" },
+  { type: "welcome", label: "ウェルカム", description: "あいさつやページの使い方" },
+  { type: "wifi", label: "WiFi案内", description: "SSIDとパスワードをまとめる" },
+  { type: "checkout", label: "チェックアウト", description: "退室時刻や手順" },
+  { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・内容を1ブロックで" },
+  { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧で" },
+  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明" },
+  { type: "notice", label: "重要なお知らせ", description: "必ず読んでもらいたい連絡事項" },
+  { type: "faq", label: "よくある質問", description: "よくある問い合わせと回答" },
 ];
 
-/** Role-based: navigation blocks */
+/** 緊急時の連絡先 */
+const SAFETY_ITEMS: LibraryItem[] = [
+  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院などの番号をまとめる" },
+];
+
+/** アクセス・周辺・別ページへのリンク */
 const NAV_ITEMS: LibraryItem[] = [
-  { type: "pageLinks", label: "ページリンク", description: "子ページへの導線メニュー" },
-  { type: "map", label: "地図", description: "アクセス情報を表示" },
-  { type: "nearby", label: "周辺案内", description: "観光/飲食スポットを紹介" },
-  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
-  { type: "taxi", label: "タクシー案内", description: "配車連絡先をまとめる" },
+  { type: "pageLinks", label: "ページリンク", description: "子ページへのメニュー（アイコン付き）" },
+  { type: "map", label: "地図", description: "住所や地図の埋め込み" },
+  { type: "nearby", label: "周辺案内", description: "周辺のスポットや施設" },
+  { type: "parking", label: "駐車場案内", description: "台数・料金・場所" },
+  { type: "taxi", label: "タクシー案内", description: "タクシー会社の電話番号など" },
 ];
 
-/** Role-based: evidence/trust blocks */
+/** 比較・数値・口コミ */
 const TRUST_ITEMS: LibraryItem[] = [
-  { type: "compare", label: "比較", description: "2案を比較して伝える" },
-  { type: "kpi", label: "数字強調", description: "時間/件数などを強調表示" },
-  { type: "quote", label: "引用", description: "レビューやコメント掲載" },
+  { type: "compare", label: "比較", description: "2つの内容を並べて比較" },
+  { type: "kpi", label: "数字強調", description: "チェックイン時刻など数字を強調" },
+  { type: "quote", label: "引用", description: "お客様の声やレビュー" },
 ];
 
-/** Industry-specific blocks (optional) */
+/** レストラン・温泉など施設タイプ別 */
 const INDUSTRY_ITEMS: LibraryItem[] = [
-  { type: "restaurant", label: "レストラン案内", description: "館内レストラン向けの案内" },
-  { type: "laundry", label: "ランドリー案内", description: "洗濯設備・料金の案内" },
-  { type: "spa", label: "スパ・温泉案内", description: "温浴施設の案内に特化" },
+  { type: "restaurant", label: "レストラン案内", description: "館内レストランの案内" },
+  { type: "laundry", label: "ランドリー案内", description: "コインランドリーなど" },
+  { type: "spa", label: "スパ・温泉案内", description: "大浴場・スパの案内" },
 ];
 
-/** Free layout blocks */
+/** 写真・テキスト・余白などレイアウト用 */
 const LAYOUT_ITEMS: LibraryItem[] = [
-  { type: "image", label: "画像", description: "1枚画像を配置" },
-  { type: "gallery", label: "ギャラリー", description: "複数写真を一覧表示" },
-  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
-  { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
-  { type: "steps", label: "ステップ", description: "手順・流れ" },
-  { type: "divider", label: "区切り線", description: "区切り線" },
-  { type: "space", label: "スペース", description: "余白を追加" },
+  { type: "image", label: "画像", description: "写真を1枚はめ込む" },
+  { type: "gallery", label: "ギャラリー", description: "複数枚をグリッド表示" },
+  { type: "text", label: "自由テキスト", description: "見出しと本文を自由に" },
+  { type: "checklist", label: "チェックリスト", description: "持ち物・手続きの確認" },
+  { type: "steps", label: "ステップ", description: "手順を番号付きで表示" },
+  { type: "divider", label: "区切り線", description: "ブロック同士の区切り" },
+  { type: "space", label: "スペース", description: "上下の余白を空ける" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
-  { id: "promotion", title: "訴求系", items: PROMOTION_ITEMS },
-  { id: "guide", title: "案内系", items: GUIDE_ITEMS },
-  { id: "nav", title: "導線系", items: NAV_ITEMS },
-  { id: "trust", title: "証拠系", items: TRUST_ITEMS },
-  { id: "industry", title: "業種専用（任意）", items: INDUSTRY_ITEMS },
-  { id: "layout", title: "レイアウト補助", items: LAYOUT_ITEMS },
+  { id: "promotion", title: "メイン表示・誘導", items: PROMOTION_ITEMS },
+  { id: "guide", title: "館内案内・サービス", items: GUIDE_ITEMS },
+  { id: "safety", title: "緊急・安全", items: SAFETY_ITEMS },
+  { id: "nav", title: "アクセス・周辺・リンク", items: NAV_ITEMS },
+  { id: "trust", title: "比較・実績・口コミ", items: TRUST_ITEMS },
+  { id: "industry", title: "施設タイプ別（任意）", items: INDUSTRY_ITEMS },
+  { id: "layout", title: "写真・余白・装飾", items: LAYOUT_ITEMS },
 ];
 
 const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
@@ -285,21 +290,21 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
   },
   {
     id: "promo-conversion",
-    label: "訴求強化セット",
+    label: "強調・比較・数字セット",
     description: "ヒーロー / 強調 / 比較 / 数字強調 / 引用 / ボタン",
     types: ["hero", "highlight", "compare", "kpi", "quote", "button"],
   },
   {
     id: "resort-experience",
-    label: "旅館・体験訴求セット",
+    label: "旅館・ギャラリー・周辺セット",
     description: "ヒーロー / ギャラリー / スパ / レストラン / 周辺案内 / 地図",
     types: ["hero", "gallery", "spa", "restaurant", "nearby", "map"],
   },
 ];
 
 /**
- * Left panel: Card Library. Sections (Basic, Information, Actions, Media, Hospitality)
- * with cards (icon + label + description). Click inserts card into canvas.
+ * Left panel: Card Library — grouped by purpose (main view, guides, safety, access, trust, layout).
+ * Click inserts a card into the canvas.
  */
 export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
   return (

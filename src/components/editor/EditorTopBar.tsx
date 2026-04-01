@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+/** プレビュー言語ピル — オーバーレイ文言などと共有 */
+export const EDITOR_LOCALE_PILL_OPTIONS = [
+  { code: "ja", label: "JA" },
+  { code: "en", label: "EN" },
+  { code: "zh", label: "中文" },
+  { code: "ko", label: "한국어" },
+] as const;
 
 export type EditorTopBarProps = {
   backHref?: string;
@@ -132,6 +140,20 @@ export function EditorTopBar({
 }: EditorTopBarProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleDocClick(e: MouseEvent) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    if (moreOpen) {
+      document.addEventListener("click", handleDocClick);
+      return () => document.removeEventListener("click", handleDocClick);
+    }
+  }, [moreOpen]);
 
   async function commitTitle() {
     const next = titleValue.trim();
@@ -143,14 +165,14 @@ export function EditorTopBar({
 
   return (
     <header
-      className="flex h-12 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4"
+      className="flex min-h-12 shrink-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain border-b border-slate-200 bg-white px-2 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 sm:px-4 sm:py-0 [&::-webkit-scrollbar]:hidden"
       role="banner"
       aria-label="エディタツールバー"
     >
       {/* Back to dashboard */}
       <Link
         href={backHref}
-        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+        className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
         aria-label="ダッシュボードに戻る"
       >
         <svg
@@ -208,7 +230,7 @@ export function EditorTopBar({
                 setTitleValue(pageTitle ?? "");
                 setEditingTitle(true);
               }}
-              className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+              className="hidden rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50 lg:inline-flex"
             >
               名前変更
             </button>
@@ -222,7 +244,7 @@ export function EditorTopBar({
       </div>
 
       {/* Autosave + draft/published */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
         <span
           className={
@@ -251,8 +273,8 @@ export function EditorTopBar({
         )}
       </div>
 
-      {/* Page controls */}
-      <div className="flex items-center gap-1.5">
+      {/* Page controls — desktop; mobile uses 「その他」メニュー */}
+      <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
         <button
           type="button"
           onClick={onUndo}
@@ -283,7 +305,7 @@ export function EditorTopBar({
       </div>
 
       {onEditPageBackground && (
-        <div className="flex items-center gap-1.5">
+        <div className="hidden shrink-0 flex-wrap items-center gap-1.5 lg:flex">
           <button
             type="button"
             onClick={onEditPageBackground}
@@ -310,12 +332,7 @@ export function EditorTopBar({
                   翻訳中…
                 </span>
               )}
-              {[
-                { code: "ja", label: "JA" },
-                { code: "en", label: "EN" },
-                { code: "zh", label: "中文" },
-                { code: "ko", label: "한국어" },
-              ].map((item) => {
+              {EDITOR_LOCALE_PILL_OPTIONS.map((item) => {
                 const active = locale === item.code;
                 const disabledByPlan = !translationEnabled && item.code !== "ja";
                 return (
@@ -346,21 +363,29 @@ export function EditorTopBar({
       )}
 
       {/* Actions: Preview, Publish (full flow), QR (saved published page only) */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5 pr-1">
         <button
           type="button"
           onClick={onPreview}
           disabled={!publicUrl}
-          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-10 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:py-1.5"
         >
-          プレビュー
+          <span className="hidden items-center gap-1 sm:inline-flex">
+            プレビュー
+          </span>
+          <span className="inline-flex sm:hidden" aria-hidden>
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </span>
         </button>
         <button
           type="button"
           onClick={onPublish}
           disabled={publishing || qrPreparing}
           title="翻訳チェック・公開前確認のうえ、保存して公開します"
-          className="rounded-md bg-slate-900 px-2.5 py-1.5 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-10 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:px-2.5 lg:py-1.5"
         >
           {publishing ? "公開中…" : "公開"}
         </button>
@@ -397,6 +422,159 @@ export function EditorTopBar({
           )}
           <span className="hidden sm:inline">{qrPreparing ? "表示中…" : "QR"}</span>
         </button>
+
+        {/* Mobile: 編集・言語・元に戻す等 */}
+        <div className="relative lg:hidden" ref={moreMenuRef}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMoreOpen((o) => !o);
+            }}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+            aria-expanded={moreOpen}
+            aria-haspopup="true"
+            aria-label="その他の操作"
+          >
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <circle cx="12" cy="6" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="18" r="1.5" />
+            </svg>
+          </button>
+          {moreOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-[55] bg-slate-900/30"
+                aria-label="閉じる"
+                onClick={() => setMoreOpen(false)}
+              />
+              <div
+                className="fixed right-3 top-14 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                role="menu"
+              >
+                {!demoMode && onRenamePageTitle && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setTitleValue(pageTitle ?? "");
+                      setEditingTitle(true);
+                    }}
+                  >
+                    ページ名を変更
+                  </button>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!canUndo || !onUndo}
+                  className={
+                    "flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 " +
+                    (!demoMode && onRenamePageTitle ? " border-t border-slate-100" : "")
+                  }
+                  onClick={() => {
+                    onUndo?.();
+                    setMoreOpen(false);
+                  }}
+                >
+                  元に戻す
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!canRedo || !onRedo}
+                  className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                  onClick={() => {
+                    onRedo?.();
+                    setMoreOpen(false);
+                  }}
+                >
+                  やり直す
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={!canClearAll || !onClearAll}
+                  className="flex w-full px-4 py-3 text-left text-sm text-rose-700 hover:bg-rose-50 disabled:opacity-40"
+                  onClick={() => {
+                    onClearAll?.();
+                    setMoreOpen(false);
+                  }}
+                >
+                  ブロックをすべて削除
+                </button>
+                {onEditPageBackground && (
+                  <>
+                    <div className="border-t border-slate-100" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                      onClick={() => {
+                        onEditPageBackground();
+                        setMoreOpen(false);
+                      }}
+                    >
+                      ページ背景
+                    </button>
+                    {onBulkFont && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        onClick={() => {
+                          onBulkFont();
+                          setMoreOpen(false);
+                        }}
+                      >
+                        一括フォント
+                      </button>
+                    )}
+                  </>
+                )}
+                {onChangeLocale && (
+                  <>
+                    <div className="border-t border-slate-100 px-4 py-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">表示言語</p>
+                      {localeTranslating && (
+                        <p className="mt-1 text-xs text-slate-500">翻訳中…</p>
+                      )}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {EDITOR_LOCALE_PILL_OPTIONS.map((item) => {
+                          const active = locale === item.code;
+                          const disabledByPlan = !translationEnabled && item.code !== "ja";
+                          return (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => {
+                                onChangeLocale(item.code as "ja" | "en" | "zh" | "ko");
+                                setMoreOpen(false);
+                              }}
+                              disabled={localeTranslating || disabledByPlan}
+                              className={
+                                "rounded-lg border px-3 py-2 text-xs font-medium transition disabled:opacity-40 " +
+                                (active
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-200 bg-white text-slate-700")
+                              }
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
