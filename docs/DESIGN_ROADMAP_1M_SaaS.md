@@ -136,7 +136,7 @@
 - **Frontend**: Next.js 16, React 19, Tailwind 4, Zustand, Framer Motion
 - **Backend**: Vercel, Supabase (Auth, DB, RLS)
 - **決済**: Stripe
-- **AI**: OpenAI API（既存: generate-cards-from-url, translate, info-chat）
+- **AI**: OpenAI API（既存: translate, info-chat 等）
 
 ### 3.2 データモデル（schema.sql ベース）
 

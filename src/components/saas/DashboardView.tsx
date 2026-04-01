@@ -21,7 +21,6 @@ import {
 } from "@/lib/storage";
 import type { DashboardBootstrapData } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
-import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
@@ -227,7 +226,6 @@ export function DashboardView() {
         )}
         {canEdit && (
         <div className="mt-6 space-y-6 border-t border-slate-100 pt-6">
-          <GeneratePageFromUrl />
           <GeneratePageFromDescription />
         </div>
         )}

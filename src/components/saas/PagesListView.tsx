@@ -15,7 +15,6 @@ import {
   updatePageTitle,
 } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
-import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
@@ -321,7 +320,6 @@ export function PagesListView() {
       )}
 
       <div className="mt-6 space-y-6">
-        <GeneratePageFromUrl />
         <GeneratePageFromDescription />
       </div>
 

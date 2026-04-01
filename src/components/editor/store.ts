@@ -68,7 +68,7 @@ export type Editor2State = {
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
   /** Highlight cards (e.g. from template). Auto-clears after 3s. */
   highlightFromTemplate: (cardIds: string[]) => void;
-  /** Load cards from API (e.g. AI generate from URL). Adds id, normalizes order. */
+  /** Load cards from API (e.g. AI generate). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
   addCard: (type: CardType, index?: number) => void;
   updateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;

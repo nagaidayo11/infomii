@@ -61,29 +61,28 @@ export function InlineEditable({
   };
 
   const startEditing = (e: React.MouseEvent) => {
+    if (!editable) return;
     e.stopPropagation();
     onActivate?.();
     setEditing(true);
   };
 
   const handleFocus = () => {
+    if (!editable) return;
     onActivate?.();
     setEditing(true);
   };
 
-  if (!editable && !editing) {
+  /** Guest / preview: plain text only — no focus ring, no keyboard focus, no click-to-edit affordance. */
+  if (!editable) {
+    const text = value || placeholder || "\u00a0";
     return (
       <span
-        role="button"
-        tabIndex={0}
         className={
-          "cursor-text rounded px-0.5 py-px transition-colors duration-150 ease-out hover:bg-slate-100/80 " +
-          className
+          multiline ? `whitespace-pre-wrap ${className}`.trim() : className
         }
-        onClick={startEditing}
-        onFocus={handleFocus}
       >
-        {value || placeholder || "\u00a0"}
+        {text}
       </span>
     );
   }
