@@ -23,6 +23,7 @@ import type { DashboardBootstrapData } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FadeIn, ScrollReveal } from "@/components/motion";
@@ -386,12 +387,11 @@ export function DashboardView() {
       />
       {mounted && (loading || navigating) &&
         createPortal(
-          <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/35 backdrop-blur-[1px]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
-              {loading ? "読み込み中…" : "ページ遷移中…"}
-            </div>
-          </div>,
+          <FullScreenLoadingOverlay
+            title={loading ? "読み込み中…" : "ページ遷移中…"}
+            subtitle={loading ? "ダッシュボードを読み込んでいます" : "次の画面へ移動しています"}
+            classNameZ="z-40"
+          />,
           document.body
         )}
     </div>

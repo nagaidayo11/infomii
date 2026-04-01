@@ -17,6 +17,7 @@ import {
   savePageCards,
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -117,9 +118,11 @@ function EditorWithPageId() {
 
   if (!loaded) {
     return (
-      <div className="flex h-full items-center justify-center text-slate-500">
-        読み込み中…
-      </div>
+      <FullScreenLoadingOverlay
+        title="読み込み中…"
+        subtitle="ページとブロックを読み込んでいます"
+        classNameZ="z-[100]"
+      />
     );
   }
 
@@ -142,9 +145,11 @@ export default function EditorPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-full items-center justify-center text-slate-500">
-          読み込み中…
-        </div>
+        <FullScreenLoadingOverlay
+          title="読み込み中…"
+          subtitle="ページとブロックを読み込んでいます"
+          classNameZ="z-[100]"
+        />
       }
     >
       <EditorWithPageId />

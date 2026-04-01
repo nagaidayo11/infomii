@@ -1018,8 +1018,14 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45">
             <div className="rounded-2xl border border-white/40 bg-slate-900/80 px-10 py-8 text-center shadow-2xl backdrop-blur-sm">
               <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-              <p className="mt-4 text-3xl font-bold tracking-wide text-white">公開中...</p>
-              <p className="mt-2 text-sm font-medium text-slate-200">翻訳と公開処理を実行しています</p>
+              <p className="mt-4 text-3xl font-bold tracking-wide text-white">
+                {publishFlowBusy && localeTranslating ? "多言語データ取得中..." : "公開中..."}
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-200">
+                {publishFlowBusy && localeTranslating
+                  ? "ja / en / zh / ko の翻訳を取得・反映しています"
+                  : "保存と公開設定を実行しています"}
+              </p>
             </div>
           </div>
         )}

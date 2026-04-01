@@ -34,6 +34,14 @@ export type LineIconName =
   | "ticket"
   | "info"
   | "link"
+  | "language"
+  | "coffee"
+  | "shopping-bag"
+  | "camera"
+  | "gift"
+  | "baby"
+  | "shield"
+  | "check"
   | "quote"
   | "checklist"
   | "steps"
@@ -104,6 +112,23 @@ const ICON_ALIASES: Record<string, LineIconName> = {
   info: "info",
   "svg:info": "info",
   link: "link",
+  language: "language",
+  "svg:language": "language",
+  coffee: "coffee",
+  "svg:coffee": "coffee",
+  "shopping-bag": "shopping-bag",
+  shopping: "shopping-bag",
+  "svg:shopping-bag": "shopping-bag",
+  camera: "camera",
+  "svg:camera": "camera",
+  gift: "gift",
+  "svg:gift": "gift",
+  baby: "baby",
+  "svg:baby": "baby",
+  shield: "shield",
+  "svg:shield": "shield",
+  check: "check",
+  "svg:check": "check",
   quote: "quote",
   checklist: "checklist",
   steps: "steps",
@@ -354,6 +379,68 @@ export function LineIcon({ name, className = "h-5 w-5", style }: LineIconProps) 
         <svg {...base}>
           <path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1.5 1.5" />
           <path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7L13.5 18" />
+        </svg>
+      );
+    case "language":
+      return (
+        <svg {...base}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M4.5 12h15" />
+          <path d="M12 4a12 12 0 0 1 0 16" />
+          <path d="M12 4a12 12 0 0 0 0 16" />
+        </svg>
+      );
+    case "coffee":
+      return (
+        <svg {...base}>
+          <path d="M5 10h10v5a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-5Z" />
+          <path d="M15 11h1.5a2 2 0 1 1 0 4H15" />
+          <path d="M7 6c0 1 1 1 1 2M10 6c0 1 1 1 1 2M13 6c0 1 1 1 1 2" />
+        </svg>
+      );
+    case "shopping-bag":
+      return (
+        <svg {...base}>
+          <path d="M6 9h12l-1 10H7L6 9Z" />
+          <path d="M9 9V7a3 3 0 0 1 6 0v2" />
+        </svg>
+      );
+    case "camera":
+      return (
+        <svg {...base}>
+          <rect x="4" y="7" width="16" height="12" rx="2" />
+          <circle cx="12" cy="13" r="3.2" />
+          <path d="M8 7l1.2-2h5.6L16 7" />
+        </svg>
+      );
+    case "gift":
+      return (
+        <svg {...base}>
+          <path d="M4 10h16v9H4z" />
+          <path d="M12 10v9M4 13h16" />
+          <path d="M12 10s-2.8-.8-3.8-2a1.8 1.8 0 1 1 2.8-2.2c.5.6 1 1.6 1 1.6s.5-1 1-1.6A1.8 1.8 0 1 1 15.8 8c-1 1.2-3.8 2-3.8 2Z" />
+        </svg>
+      );
+    case "baby":
+      return (
+        <svg {...base}>
+          <circle cx="12" cy="9" r="2.2" />
+          <path d="M8 19v-2.5a4 4 0 0 1 8 0V19" />
+          <path d="M9 13h6" />
+        </svg>
+      );
+    case "shield":
+      return (
+        <svg {...base}>
+          <path d="M12 3 5.5 6v5.5c0 4.1 2.7 6.8 6.5 9.5 3.8-2.7 6.5-5.4 6.5-9.5V6L12 3Z" />
+          <path d="m9.5 12 1.8 1.8 3.2-3.2" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...base}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="m8.5 12 2.2 2.2 4.8-4.8" />
         </svg>
       );
     case "quote":

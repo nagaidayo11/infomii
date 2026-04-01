@@ -388,6 +388,14 @@ const PAGE_LINKS_ICON_OPTIONS = [
   { value: "package", label: "荷物" },
   { value: "bed", label: "客室" },
   { value: "ticket", label: "チケット" },
+  { value: "language", label: "言語" },
+  { value: "coffee", label: "コーヒー" },
+  { value: "shopping-bag", label: "買い物" },
+  { value: "camera", label: "カメラ" },
+  { value: "gift", label: "ギフト" },
+  { value: "baby", label: "キッズ" },
+  { value: "shield", label: "セキュリティ" },
+  { value: "check", label: "チェック" },
   { value: "info", label: "情報" },
 ];
 

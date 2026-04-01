@@ -14,6 +14,7 @@ import { TemplateCard } from "@/components/saas/TemplateCard";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
+import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 
 /** Template marketplace categories. Filter by template.category when available. */
 const TEMPLATE_CATEGORIES = [
@@ -336,12 +337,13 @@ export default function TemplatesPage() {
 
       {mounted && (loading || usingId) &&
         createPortal(
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-white/45 backdrop-blur-[1px]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
-              {usingId ? "テンプレートを適用中…" : "読み込み中…"}
-            </div>
-          </div>,
+          <FullScreenLoadingOverlay
+            title={usingId ? "テンプレートを適用中…" : "読み込み中…"}
+            subtitle={
+              usingId ? "エディタ用のページを作成しています" : "テンプレート一覧を読み込んでいます"
+            }
+            classNameZ="z-[90]"
+          />,
           document.body
         )}
 

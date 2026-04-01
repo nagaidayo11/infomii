@@ -7,6 +7,7 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { LineIcon, normalizeIconToken } from "./LineIcon";
 
 type IconCardProps = {
   card: EditorCard;
@@ -41,11 +42,20 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
   };
 
   const onActivate = () => selectCard(card.id);
+  const tokenLike = /^[a-z0-9:-]+$/i.test(icon);
+  const showLineIcon = tokenLike || icon.startsWith("svg:");
+  const normalizedIconName = normalizeIconToken(icon, "info");
 
   return (
     <Card padding="md" className="">
       <div className="flex items-start gap-3">
-        <p className="mt-0.5 text-xl leading-none">{icon}</p>
+        <div className="mt-0.5 text-slate-700">
+          {showLineIcon ? (
+            <LineIcon name={normalizedIconName} className="h-5 w-5" />
+          ) : (
+            <p className="text-xl leading-none">{icon}</p>
+          )}
+        </div>
         <div className="min-w-0">
           <p className="font-semibold text-slate-900" style={getTitleFontSizeStyle()}>
             <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className="font-semibold text-slate-900" />
