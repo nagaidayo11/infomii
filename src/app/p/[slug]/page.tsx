@@ -10,6 +10,7 @@ import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
 import { blocksToContextText } from "@/lib/information-to-context";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
+import { resolveGuestFooterHidden } from "@/lib/server/guest-footer";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 type PublicPageProps = {
@@ -1418,6 +1419,8 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           </div>
   );
 
+  const hideDefaultFooter = await resolveGuestFooterHidden(row.hotel_id);
+
   return (
     <>
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
@@ -1436,9 +1439,11 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             <h1 className="mb-5 text-xl font-bold text-slate-900">{row.title}</h1>
             {contentArea}
           </div>
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
-            <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
-          </footer>
+          {!hideDefaultFooter ? (
+            <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
+              <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
+            </footer>
+          ) : null}
         </main>
       ) : (
         <PublicPageShell
@@ -1452,6 +1457,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             ) : undefined
           }
           isEmbed={false}
+          hideDefaultFooter={hideDefaultFooter}
         >
           {contentArea}
         </PublicPageShell>

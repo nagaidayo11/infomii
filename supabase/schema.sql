@@ -77,6 +77,10 @@ alter table public.informations
 add column if not exists theme jsonb not null default '{}'::jsonb;
 alter table public.hotels
 add column if not exists owner_user_id uuid references auth.users(id) on delete set null;
+alter table public.hotels
+add column if not exists custom_domain text default null;
+alter table public.hotels
+add column if not exists hide_guest_footer boolean not null default false;
 alter table public.subscriptions
 add column if not exists plan text not null default 'free';
 alter table public.subscriptions

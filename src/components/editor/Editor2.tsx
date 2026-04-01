@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar, EDITOR_LOCALE_PILL_OPTIONS } from "./EditorTopBar";
@@ -1131,13 +1132,11 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
                   onChange={(e) => setBulkFontFamily(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none"
                 >
-                  <option value="">標準（システム）</option>
-                  <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
-                  <option value="'Hiragino Kaku Gothic ProN', sans-serif">ヒラギノ角ゴ</option>
-                  <option value="'Yu Gothic', 'YuGothic', sans-serif">Yu Gothic</option>
-                  <option value="'Noto Serif JP', serif">Noto Serif JP</option>
-                  <option value="serif">Serif</option>
-                  <option value="sans-serif">Sans Serif</option>
+                  {EDITOR_FONT_OPTIONS.map((opt) => (
+                    <option key={opt.label + opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="mt-5 flex justify-end gap-2">

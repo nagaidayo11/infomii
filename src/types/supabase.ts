@@ -51,6 +51,7 @@ export type Database = {
           owner_user_id: string | null;
           created_at: string;
           custom_domain: string | null;
+          hide_guest_footer: boolean;
         };
         Insert: {
           id?: string;
@@ -58,12 +59,14 @@ export type Database = {
           owner_user_id?: string | null;
           created_at?: string;
           custom_domain?: string | null;
+          hide_guest_footer?: boolean;
         };
         Update: {
           name?: string;
           owner_user_id?: string | null;
           created_at?: string;
           custom_domain?: string | null;
+          hide_guest_footer?: boolean;
         };
         Relationships: [];
       };

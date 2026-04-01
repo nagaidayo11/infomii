@@ -988,6 +988,32 @@ export async function getCurrentUserHotelRole(): Promise<HotelRole | null> {
   return (membership.role === "viewer" ? "viewer" : "editor") as HotelRole;
 }
 
+/** 施設の「ゲスト向けフッター非表示」設定（Business 向け UI、実効は Business プラン時のみ） */
+export async function getHotelHideGuestFooter(): Promise<boolean> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return false;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return false;
+  const { data } = await supabase.from("hotels").select("hide_guest_footer").eq("id", hotelId).maybeSingle();
+  return Boolean(data?.hide_guest_footer);
+}
+
+/** Business プラン・オーナーのみ。ゲスト公開ページ下部のデフォルト案内文を出さない */
+export async function setHotelHideGuestFooter(hidden: boolean): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+  const role = await getCurrentUserHotelRole();
+  if (role !== "owner") throw new Error("オーナーのみこの設定を変更できます");
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") {
+    throw new Error("この設定は Business プランでご利用いただけます");
+  }
+  const { error } = await supabase.from("hotels").update({ hide_guest_footer: hidden }).eq("id", hotelId);
+  if (error) throw toError(error, "設定の更新に失敗しました");
+}
+
 /** 施設のカスタムドメイン取得（Business向け） */
 export async function getHotelCustomDomain(): Promise<string | null> {
   const supabase = getBrowserSupabaseClient();

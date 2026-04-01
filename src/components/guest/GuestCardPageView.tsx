@@ -16,6 +16,8 @@ type GuestCardPageViewProps = {
   localeLocked?: boolean;
   pageBackground?: PageBackgroundStyle | null;
   unpublishedPreview?: boolean;
+  /** Business + 施設設定時、下部のデフォルト案内文を出さない */
+  hideDefaultFooter?: boolean;
 };
 
 /**
@@ -28,6 +30,7 @@ export function GuestCardPageView({
   localeLocked = false,
   pageBackground = null,
   unpublishedPreview = false,
+  hideDefaultFooter = false,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(initialLocale);
 
@@ -72,7 +75,12 @@ export function GuestCardPageView({
 
   return (
     <LocaleProvider value={locale}>
-      <PublicPageShell title={title} pageBackground={pageBackground} headerActions={headerActions}>
+      <PublicPageShell
+        title={title}
+        pageBackground={pageBackground}
+        headerActions={headerActions}
+        hideDefaultFooter={hideDefaultFooter}
+      >
         <div className="space-y-4">
           {unpublishedPreview && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">

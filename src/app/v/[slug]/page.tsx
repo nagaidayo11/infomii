@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
+import { resolveGuestFooterHidden } from "@/lib/server/guest-footer";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 const STYLE_KEY = "_style";
@@ -55,7 +56,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const supabase = getSupabaseAdminServerClient();
   const { data: page, error: pageError } = await supabase
     .from("pages")
-    .select("id,title,slug")
+    .select("id,title,slug,hotel_id")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -86,6 +87,8 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
 
   if (cardsError) notFound();
   const pageBackground = readPageBackground((rows ?? []) as Array<{ content: Record<string, unknown> }>);
+
+  const hideDefaultFooter = await resolveGuestFooterHidden(page.hotel_id as string);
 
   const cards: EditorCard[] = (rows ?? []).map((r) => ({
     // Keep public rendering in sync with editor persistence:
@@ -119,6 +122,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       localeLocked={Boolean(forcedFromUrl)}
       pageBackground={pageBackground}
       unpublishedPreview={!isPublished && isPreviewRequest}
+      hideDefaultFooter={hideDefaultFooter}
     />
   );
 }

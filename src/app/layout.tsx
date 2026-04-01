@@ -54,6 +54,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/** エディタのフォント選択で使う日本語 Web フォント（公開ページプレビューでも利用） */
+const editorGoogleFontsHref =
+  "https://fonts.googleapis.com/css2?" +
+  [
+    "family=Zen+Kaku+Gothic+New:wght@400;700",
+    "family=M+PLUS+Rounded+1c:wght@400;700",
+    "family=Kosugi+Maru",
+    "family=Shippori+Mincho:wght@400;600",
+    "family=Noto+Sans+JP:wght@400;700",
+    "family=Noto+Serif+JP:wght@400;600",
+  ].join("&") +
+  "&display=swap";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -61,6 +74,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href={editorGoogleFontsHref} />
+      </head>
       <body className="lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-slate-900 antialiased [-webkit-tap-highlight-color:transparent]">
         <AuthProvider>{children}</AuthProvider>
       </body>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { triggerAnalyticsCsvDownload } from "@/lib/analytics-csv-export";
 import {
   getDashboardBootstrapData,
   getCurrentHotelViewMetrics,
@@ -103,11 +104,22 @@ export function AnalyticsView() {
   return (
     <AnalyticsProGate plan={plan}>
     <div className="mx-auto max-w-4xl space-y-8">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">分析ダッシュボード</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          お客様の閲覧状況を確認し、ゲストエンゲージメントを把握できます
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">分析ダッシュボード</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            お客様の閲覧状況を確認し、ゲストエンゲージメントを把握できます
+          </p>
+        </div>
+        {plan === "business" && !loading && (
+          <button
+            type="button"
+            onClick={() => triggerAnalyticsCsvDownload(metrics, pageViews)}
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 transition hover:bg-indigo-100 sm:min-h-0"
+          >
+            CSVをダウンロード（Business）
+          </button>
+        )}
       </header>
 
       {error && (

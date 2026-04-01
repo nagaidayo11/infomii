@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useEffect, useState } from "react";
+import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -2189,13 +2190,11 @@ export function CardSettings({
                 }}
                 className={inputClass}
               >
-                <option value="">標準（システム）</option>
-                <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
-                <option value="'Hiragino Kaku Gothic ProN', sans-serif">ヒラギノ角ゴ</option>
-                <option value="'Yu Gothic', 'YuGothic', sans-serif">Yu Gothic</option>
-                <option value="'Noto Serif JP', serif">Noto Serif JP</option>
-                <option value="serif">Serif</option>
-                <option value="sans-serif">Sans Serif</option>
+                {EDITOR_FONT_OPTIONS.map((opt) => (
+                  <option key={opt.label + opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="w-full">
