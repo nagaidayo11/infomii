@@ -1114,8 +1114,8 @@ export async function getCurrentHotelTranslationUsage(): Promise<TranslationUsag
 export async function trackCurrentHotelTranslationRun(metadata?: {
   locale?: "en" | "zh" | "ko";
   translatedItems?: number;
-  /** editor の言語トグルからか、公開前の自動補完からか */
-  source?: "editor_locale" | "pre_publish";
+  /** editor の言語トグルからか、公開前の自動補完からか、プレビュー前の自動補完からか */
+  source?: "editor_locale" | "pre_publish" | "preview";
 }): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return;

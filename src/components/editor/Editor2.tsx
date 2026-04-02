@@ -97,6 +97,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
   const [publishFlowBusy, setPublishFlowBusy] = useState(false);
   const [togglePublishBusy, setTogglePublishBusy] = useState(false);
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
+  const [previewBusy, setPreviewBusy] = useState(false);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -497,33 +498,6 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     }
   }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus]);
 
-  const handlePreviewClick = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
-      window.open(demoPreviewUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-    if (!pageMeta.publicUrl || !pageId) return;
-    try {
-      const state = useEditor2Store.getState();
-      await savePageCards(pageId, state.cards, {
-        pageStyle: {
-          background: {
-            mode: state.pageBackgroundMode,
-            color: state.pageBackgroundColor,
-            from: state.pageGradientFrom,
-            to: state.pageGradientTo,
-            angle: state.pageGradientAngle,
-          },
-        },
-      });
-    } catch {
-      // Even if save fails, allow user to inspect current public page.
-    }
-    const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
-    window.open(previewUrl, "_blank", "noopener,noreferrer");
-  }, [isDemoMode, demoPreviewUrl, pageMeta.publicUrl, pageId]);
-
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
       for (const type of types) {
@@ -702,7 +676,9 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     return translatedCount;
   }, [cards, setCards]);
 
-  const ensureTranslationsBeforePublish = useCallback(async (): Promise<string | null> => {
+  const ensureTranslationsBeforePublish = useCallback(
+    async (opts?: { translationSource?: "pre_publish" | "preview" }): Promise<string | null> => {
+    const flow = opts?.translationSource === "preview" ? "preview" : "publish";
     const nonTranslatable = new Set([
       "href",
       "link",
@@ -752,11 +728,15 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
 
     const subscription = await getCurrentHotelSubscription().catch(() => null);
     if (!subscription || subscription.plan !== "business") {
-      return "未翻訳項目があります。公開前に翻訳を完了するにはBusinessプランが必要です。";
+      return flow === "preview"
+        ? "未翻訳項目があります。プレビュー前に翻訳を完了するにはBusinessプランが必要です。"
+        : "未翻訳項目があります。公開前に翻訳を完了するにはBusinessプランが必要です。";
     }
     const usage = await getCurrentHotelTranslationUsage().catch(() => null);
     if (usage && usage.usedRuns >= usage.includedRuns) {
-      return `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているため公開できません。`;
+      return flow === "preview"
+        ? `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているためプレビューできません。`
+        : `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているため公開できません。`;
     }
 
     setLocaleTranslating(true);
@@ -765,7 +745,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       if (translatedCount > 0) {
         await trackCurrentHotelTranslationRun({
           translatedItems: translatedCount,
-          source: "pre_publish",
+          source: flow === "preview" ? "preview" : "pre_publish",
         });
       }
       const latestCards = useEditor2Store.getState().cards;
@@ -776,15 +756,74 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         )
       );
       if (remainingTargets.length > 0) {
-        return `未翻訳項目が ${remainingTargets.length} 件残っているため公開できません。編集内容を確認してください。`;
+        return flow === "preview"
+          ? `未翻訳項目が ${remainingTargets.length} 件残っているためプレビューできません。編集内容を確認してください。`
+          : `未翻訳項目が ${remainingTargets.length} 件残っているため公開できません。編集内容を確認してください。`;
       }
       return null;
     } catch {
-      return "自動翻訳に失敗したため公開できません。時間をおいて再試行してください。";
+      return flow === "preview"
+        ? "自動翻訳に失敗したためプレビューできません。時間をおいて再試行してください。"
+        : "自動翻訳に失敗したため公開できません。時間をおいて再試行してください。";
     } finally {
       setLocaleTranslating(false);
     }
-  }, [cards, translateAllCardsToMultilingual]);
+  },
+    [cards, translateAllCardsToMultilingual]
+  );
+
+  const handlePreviewClick = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      window.open(demoPreviewUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (!pageMeta.publicUrl || !pageId) return;
+    setPreviewBusy(true);
+    try {
+      const state = useEditor2Store.getState();
+      try {
+        await savePageCards(pageId, state.cards, {
+          pageStyle: {
+            background: {
+              mode: state.pageBackgroundMode,
+              color: state.pageBackgroundColor,
+              from: state.pageGradientFrom,
+              to: state.pageGradientTo,
+              angle: state.pageGradientAngle,
+            },
+          },
+        });
+      } catch {
+        // Even if save fails, allow user to inspect current public page.
+      }
+      const translationError = await ensureTranslationsBeforePublish({ translationSource: "preview" });
+      if (translationError) {
+        window.alert(translationError);
+        return;
+      }
+      try {
+        const after = useEditor2Store.getState();
+        await savePageCards(pageId, after.cards, {
+          pageStyle: {
+            background: {
+              mode: after.pageBackgroundMode,
+              color: after.pageBackgroundColor,
+              from: after.pageGradientFrom,
+              to: after.pageGradientTo,
+              angle: after.pageGradientAngle,
+            },
+          },
+        });
+      } catch {
+        // Preview tab still opens; user may see slightly stale server content until save succeeds.
+      }
+      const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
+      window.open(previewUrl, "_blank", "noopener,noreferrer");
+    } finally {
+      setPreviewBusy(false);
+    }
+  }, [isDemoMode, demoPreviewUrl, pageMeta.publicUrl, pageId, ensureTranslationsBeforePublish]);
 
   const handlePublishClickStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -932,6 +971,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
         localeTranslating={localeTranslating}
         translationEnabled={translationEnabled}
         onPreview={handlePreviewClick}
+        previewPreparing={previewBusy || localeTranslating}
         onPublish={handlePublishClickStrict}
         onQr={handleQrClick}
         onTogglePublished={isDemoMode ? undefined : handleTogglePublishedStrict}
@@ -942,10 +982,16 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
     ) : null;
 
   const showEditorBusyOverlay =
-    publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
+    previewBusy || publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
   let editorBusyTitle = "公開中...";
   let editorBusySubtitle = "保存と公開設定を実行しています";
-  if (togglePublishBusy) {
+  if (previewBusy && localeTranslating) {
+    editorBusyTitle = "一括翻訳中...";
+    editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を整えています`;
+  } else if (previewBusy) {
+    editorBusyTitle = "プレビュー準備中...";
+    editorBusySubtitle = "保存してプレビューを開きます";
+  } else if (togglePublishBusy) {
     if (localeTranslating) {
       editorBusyTitle = "一括翻訳中...";
       editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を整えています`;

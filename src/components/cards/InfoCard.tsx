@@ -2,6 +2,8 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { getLocalizedContent } from "@/lib/localized-content";
+import type { LocalizedString } from "@/lib/localized-content";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -24,7 +26,8 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         : locale === "en"
           ? { empty: "Add label and value", title: "Title", value: "Value", defaultTitle: "Information" }
           : { empty: "ラベルと値を追加", title: "タイトル", value: "値", defaultTitle: "情報" };
-  const title = (c?.title as string) ?? localeLabels.defaultTitle;
+  const title =
+    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || localeLabels.defaultTitle;
   const icon = normalizeIconToken(c?.icon, "info");
   const rows = (c?.rows as InfoRow[]) ?? [];
 

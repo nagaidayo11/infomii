@@ -69,7 +69,10 @@ export function getLocalizedContent(
 
   for (const key of keys) {
     const v = value[key];
-    if (v != null && String(v).trim() !== "") return String(v);
+    if (v == null) continue;
+    if (typeof v === "string" && v.trim() !== "") return v;
+    if (typeof v === "number" && String(v).trim() !== "") return String(v);
+    /* 誤ってオブジェクトが入った場合は String() せずスキップ（[object Object] を防ぐ） */
   }
   return "";
 }

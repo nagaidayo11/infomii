@@ -156,6 +156,66 @@ type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
 type ScheduleItem = { day?: string; time?: string; label?: string };
 type MenuItem = { name?: string; price?: string; description?: string };
+type InfoRowItem = { label?: string; value?: string };
+
+function InfoRowsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const rows = (Array.isArray(content.rows) ? content.rows : []) as InfoRowItem[];
+  const setRows = (next: InfoRowItem[]) => onUpdate("rows", next);
+  const updateRow = (index: number, field: keyof InfoRowItem, value: string) => {
+    const next = [...rows];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setRows(next);
+  };
+  const addRow = () => setRows([...rows, { label: "", value: "" }]);
+  const removeRow = (index: number) => setRows(rows.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className={labelClass}>行（ラベル・値）</span>
+        <button
+          type="button"
+          onClick={addRow}
+          className="shrink-0 text-xs font-medium text-slate-600 hover:text-slate-800"
+        >
+          + 行を追加
+        </button>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-xs text-slate-500">行が未設定です。追加するか、キャンバス上のブロックから編集できます。</p>
+      ) : null}
+      {rows.map((row, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/90 p-3">
+          <Input
+            label="ラベル"
+            value={row.label ?? ""}
+            onChange={(e) => updateRow(i, "label", e.target.value)}
+            placeholder="例: ネットワーク名"
+          />
+          <Input
+            label="値"
+            value={row.value ?? ""}
+            onChange={(e) => updateRow(i, "value", e.target.value)}
+            placeholder="表示する値"
+          />
+          <button
+            type="button"
+            onClick={() => removeRow(i)}
+            className="text-xs font-medium text-rose-600 hover:text-rose-700"
+          >
+            この行を削除
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function GalleryItemsEditor({
   content,
@@ -1220,8 +1280,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="Wi-Fi"
               />
               <Input
@@ -1230,7 +1290,7 @@ export function CardSettings({
                 onChange={(e) => update("icon", e.target.value)}
                 placeholder="wifi / map / info"
               />
-              <p className="text-xs text-slate-500">行はコンテンツで編集してください。</p>
+              <InfoRowsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 

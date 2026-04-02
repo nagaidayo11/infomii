@@ -38,18 +38,8 @@ export function migrateCardsForEditor(cards: Array<{ id: string; type: string; c
     let type = card.type as CardType;
     let content = { ...card.content };
 
-    if (type === "wifi") {
-      type = "info";
-      const c = card.content as Record<string, unknown>;
-      content = {
-        title: (c?.title as string) || "Wi-Fi",
-        icon: "wifi",
-        rows: [
-          { label: "ネットワーク名", value: (c?.ssid as string) ?? "" },
-          { label: "パスワード", value: (c?.password as string) ?? "" },
-        ],
-      };
-    } else if (type === "breakfast") {
+    /* wifi は Editor2 / CardRenderer で type=wifi のまま扱う（設定で ssid/password を編集） */
+    if (type === "breakfast") {
       type = "highlight";
       const c = card.content as Record<string, unknown>;
       const time = (c?.time as string) ?? "";

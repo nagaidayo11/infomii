@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { trackOnboardingWizardEvent } from "@/lib/storage";
 
@@ -24,6 +25,11 @@ const STEPS = [
 export function OnboardingTour() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -33,6 +39,15 @@ export function OnboardingTour() {
       trackOnboardingWizardEvent("wizard_started", { step: 0 });
     }
   }, []);
+
+  useEffect(() => {
+    if (!visible || typeof document === "undefined") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [visible]);
 
   const handleNext = () => {
     if (step < STEPS.length - 1) {
@@ -55,18 +70,22 @@ export function OnboardingTour() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!visible || !mounted || typeof document === "undefined") return null;
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 p-4">
+  const overlay = (
+    <div
+      className="fixed inset-0 z-[9999] flex min-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-slate-900/30 p-4"
+      role="presentation"
+    >
       <div
-        className="relative max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        className="relative my-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
         role="dialog"
         aria-labelledby="onboarding-title"
         aria-describedby="onboarding-desc"
+        aria-modal="true"
       >
         <button
           type="button"
@@ -122,4 +141,6 @@ export function OnboardingTour() {
       </div>
     </div>
   );
+
+  return createPortal(overlay, document.body);
 }
