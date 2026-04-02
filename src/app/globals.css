@@ -737,4 +737,8 @@ a {
     opacity: 1 !important;
     transform: none !important;
   }
+
+  .lux-section-card:hover {
+    transform: none !important;
+  }
 }

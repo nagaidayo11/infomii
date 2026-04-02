@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
@@ -144,6 +144,20 @@ function GuestPhoneScreen() {
 }
 
 function HeroVisuals() {
+  const reduceMotion = useReducedMotion();
+  const hoverLift = reduceMotion
+    ? undefined
+    : {
+        scale: 1.03,
+        rotate: -1.5,
+        boxShadow: "0 12px 40px rgba(0,0,0,0.1)",
+        transition: { duration: 0.2 },
+      };
+  const hoverQr = reduceMotion ? undefined : { scale: 1.08, rotate: 5, transition: { duration: 0.2 } };
+  const hoverPhone = reduceMotion
+    ? undefined
+    : { scale: 1.03, rotate: -1.5, transition: { duration: 0.2 } };
+
   return (
     <motion.div
       className="relative mx-auto grid w-full max-w-[1480px] grid-cols-1 items-center gap-10 sm:gap-12 lg:items-stretch lg:grid-cols-[minmax(0,1fr)_48px_minmax(0,0.45fr)_48px_375px] lg:gap-8 xl:gap-10"
@@ -158,12 +172,7 @@ function HeroVisuals() {
       >
         <motion.div
           className="w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.08)] lg:h-[520px] xl:h-[560px]"
-          whileHover={{
-            scale: 1.03,
-            rotate: -1.5,
-            boxShadow: "0 12px 40px rgba(0,0,0,0.1)",
-            transition: { duration: 0.2 },
-          }}
+          whileHover={hoverLift}
         >
           <div className="flex h-full w-full flex-col">
             {/* Top bar */}
@@ -256,7 +265,12 @@ function HeroVisuals() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.25 }}
       >
-        <IconArrowRight className="h-10 w-10 text-slate-300" />
+        <motion.span
+          animate={reduceMotion ? undefined : { x: [0, 4, 0] }}
+          transition={reduceMotion ? undefined : { duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <IconArrowRight className="h-10 w-10 text-slate-300" />
+        </motion.span>
       </motion.div>
 
       {/* Middle: QR */}
@@ -268,7 +282,7 @@ function HeroVisuals() {
       >
         <motion.div
           className="flex h-20 w-20 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-md sm:h-24 sm:w-24"
-          whileHover={{ scale: 1.08, rotate: 5, transition: { duration: 0.2 } }}
+          whileHover={hoverQr}
         >
           <svg
             viewBox="0 0 24 24"
@@ -297,7 +311,12 @@ function HeroVisuals() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.55 }}
       >
-        <IconArrowRight className="h-10 w-10 text-slate-300" />
+        <motion.span
+          animate={reduceMotion ? undefined : { x: [0, 4, 0] }}
+          transition={reduceMotion ? undefined : { duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+        >
+          <IconArrowRight className="h-10 w-10 text-slate-300" />
+        </motion.span>
       </motion.div>
 
       {/* Right: guest phone */}
@@ -309,11 +328,7 @@ function HeroVisuals() {
       >
         <motion.div
           className="relative mx-auto aspect-[9/18] w-[min(330px,100%)] overflow-hidden rounded-[1.9rem] shadow-md ring-1 ring-slate-200/80 sm:w-[min(360px,100%)] lg:h-[520px] lg:w-[375px] lg:max-w-full lg:aspect-auto xl:h-[560px]"
-          whileHover={{
-            scale: 1.03,
-            rotate: -1.5,
-            transition: { duration: 0.2 },
-          }}
+          whileHover={hoverPhone}
         >
           <div className="absolute inset-0 bg-[#dbe3ed]" />
           <div className="absolute inset-[10px] rounded-[1.65rem] bg-white shadow-sm ring-1 ring-slate-200/60">

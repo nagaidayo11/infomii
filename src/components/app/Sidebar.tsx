@@ -31,7 +31,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={
-                "app-interactive flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors " +
+                "group app-interactive flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors " +
                 (isActive
                   ? "bg-white text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
                   : "text-slate-600 hover:bg-white/80 hover:text-slate-900")
@@ -39,7 +39,7 @@ export function Sidebar() {
             >
               <span
                 className={
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg " +
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[transform,color,background-color] duration-200 motion-safe:group-hover:scale-105 " +
                   (isActive ? "bg-slate-100 text-slate-800" : "text-slate-500")
                 }
               >

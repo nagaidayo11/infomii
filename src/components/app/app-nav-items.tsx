@@ -60,15 +60,6 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     ),
   },
   {
-    href: "/dashboard/manual",
-    label: "マニュアル",
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.25c-2.97-1.98-6.25-.8-8 0v11.5c1.9-1 5.2-2 8 0m0-11.5c2.97-1.98 6.25-.8 8 0v11.5c-1.9-1-5.2-2-8 0m0-11.5V17.75" />
-      </svg>
-    ),
-  },
-  {
     href: "/settings",
     label: "設定",
     icon: (

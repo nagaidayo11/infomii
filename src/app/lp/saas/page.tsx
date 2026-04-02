@@ -33,7 +33,7 @@ function PricingComparisonTable() {
   const yes = <span className="font-medium text-emerald-700">✓</span>;
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
+    <div className="lux-section-card overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
       <table className="w-full min-w-[560px] border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
@@ -89,19 +89,26 @@ export default function LpSaaSPage() {
   const hasProAnnual = !!process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
   const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
+  const navLinkClass =
+    "rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 " +
+    "motion-safe:hover:-translate-y-px motion-safe:hover:bg-emerald-50/60 motion-safe:hover:text-emerald-800 " +
+    "sm:px-3 sm:text-sm";
+
   return (
     <main className="min-h-screen bg-[#fafafa] text-slate-900 antialiased">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-shadow duration-300 motion-safe:hover:shadow-sm">
         <Container className="flex h-14 items-center justify-between gap-2">
-          <span className="text-lg font-semibold tracking-tight text-slate-900">Infomii</span>
+          <span className="text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800">
+            Infomii
+          </span>
           <nav className="flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
-            <a href="#live-demo" className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm">
+            <a href="#live-demo" className={navLinkClass}>
               デモ
             </a>
-            <a href="#how-it-works" className="hidden rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:block sm:px-3 sm:text-sm">
+            <a href="#how-it-works" className={`hidden sm:block ${navLinkClass}`}>
               使い方
             </a>
-            <a href="#pricing" className="rounded-lg px-2 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:px-3 sm:text-sm">
+            <a href="#pricing" className={navLinkClass}>
               料金
             </a>
             <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
@@ -130,7 +137,11 @@ export default function LpSaaSPage() {
               { title: "更新が速い", body: "管理画面で修正すると、公開ページにすぐ反映。" },
               { title: "迷いが減る", body: "URLは1つ。案内の置き場所を統一しやすい。" },
             ].map((item) => (
-              <Card key={item.title} padding="lg" className="border-slate-200/90">
+              <Card
+                key={item.title}
+                padding="lg"
+                className="lux-section-card rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80"
+              >
                 <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
               </Card>
@@ -146,7 +157,7 @@ export default function LpSaaSPage() {
         description="登録なしでデモ編集画面、または公開サンプルページを体験できます。"
       >
         <ScrollReveal>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button href={DEMO_EDITOR_HREF} size="lg">
                 デモを触る
@@ -174,7 +185,7 @@ export default function LpSaaSPage() {
               { step: "3", title: "公開してQR配布", desc: "公開URLを発行し、客室やフロントに掲示。" },
             ].map((item) => (
               <div key={item.step}>
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition-[transform,border-color,background-color,box-shadow] duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-300 motion-safe:hover:bg-emerald-50/50 motion-safe:hover:shadow-sm">
                   {item.step}
                 </span>
                 <h3 className="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
@@ -192,7 +203,7 @@ export default function LpSaaSPage() {
         description="最初はFreeで1ページ。ページ増加や分析が必要ならPro、チーム運用や大規模運用ならBusinessが目安です。"
       >
         <ScrollReveal>
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <div className="lux-section-card mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
             <p className="mt-1 text-sm text-slate-600">詳細は横スクロールで確認できます。</p>
             <div className="mt-4">
@@ -201,7 +212,10 @@ export default function LpSaaSPage() {
           </div>
 
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
-            <Card padding="lg" className="rounded-2xl p-8">
+            <Card
+              padding="lg"
+              className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80"
+            >
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
               <p className="mt-1 text-sm text-slate-500">まず1ページで運用開始</p>
@@ -215,7 +229,7 @@ export default function LpSaaSPage() {
               </Button>
             </Card>
 
-            <div className="rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8">
+            <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
                 <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">おすすめ</span>
@@ -241,7 +255,10 @@ export default function LpSaaSPage() {
               </div>
             </div>
 
-            <Card padding="lg" className="rounded-2xl p-8">
+            <Card
+              padding="lg"
+              className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80"
+            >
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
@@ -285,8 +302,11 @@ export default function LpSaaSPage() {
                 a: "最初はFree。ページ数や分析が必要になったらPro、チーム運用や大規模運用ならBusinessが目安です。",
               },
             ].map((row) => (
-              <details key={row.q} className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100">
-                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900">
+              <details
+                key={row.q}
+                className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100 transition-[box-shadow,border-color,transform] duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-200/60 motion-safe:hover:shadow-md open:border-emerald-200/50"
+              >
+                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-900 transition-colors duration-200 group-hover:text-emerald-900">
                   <span className="inline-flex w-full items-center justify-between gap-4">
                     <span>{row.q}</span>
                     <svg
@@ -310,7 +330,7 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </Section>
 
-      <section className="bg-slate-900 py-16 sm:py-20">
+      <section className="lp-cta-shell relative overflow-hidden bg-slate-900 py-16 sm:py-20">
         <ScrollReveal intensity="subtle">
           <Container size="sm" className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -341,13 +361,22 @@ export default function LpSaaSPage() {
         <Container className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm text-slate-500">© {new Date().getFullYear()} Infomii</p>
           <div className="flex flex-wrap gap-6 text-sm">
-            <Link href="/terms" className="text-slate-600 hover:text-slate-900">
+            <Link
+              href="/terms"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color,transform] duration-200 motion-safe:hover:-translate-y-px motion-safe:hover:text-emerald-700 motion-safe:hover:decoration-emerald-400/80"
+            >
               利用規約
             </Link>
-            <Link href="/privacy" className="text-slate-600 hover:text-slate-900">
+            <Link
+              href="/privacy"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color,transform] duration-200 motion-safe:hover:-translate-y-px motion-safe:hover:text-emerald-700 motion-safe:hover:decoration-emerald-400/80"
+            >
               プライバシーポリシー
             </Link>
-            <Link href={loginHref} className="text-slate-600 hover:text-slate-900">
+            <Link
+              href={loginHref}
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition-[color,text-decoration-color,transform] duration-200 motion-safe:hover:-translate-y-px motion-safe:hover:text-emerald-700 motion-safe:hover:decoration-emerald-400/80"
+            >
               ログイン
             </Link>
           </div>
