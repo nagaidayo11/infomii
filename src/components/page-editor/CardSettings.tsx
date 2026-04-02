@@ -7,6 +7,7 @@ import { usePageEditorStore } from "./store";
 import { BLOCK_TYPE_LABELS } from "./types";
 import { BlockToolbar } from "./BlockToolbar";
 import { nanoid } from "nanoid";
+import { IconTokenSelect } from "@/components/editor/IconTokenSelect";
 
 const inputClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20";
@@ -499,15 +500,14 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "icon" && (
             <>
-              <label className={labelClass}>アイコン（絵文字など）</label>
-              <input
-                type="text"
+              <IconTokenSelect
+                label="アイコン"
                 value={block.icon}
-                onChange={(e) =>
-                  updateBlock(block.id, { icon: e.target.value } as Partial<PageBlock>)
+                onChange={(next) =>
+                  updateBlock(block.id, { icon: next } as Partial<PageBlock>)
                 }
-                className={inputClass + " text-2xl"}
-                placeholder="📍"
+                className={inputClass}
+                labelClassName={labelClass}
               />
               <label className={labelClass + " mt-3"}>ラベル</label>
               <input
@@ -518,6 +518,16 @@ export function CardSettings({ block }: CardSettingsProps) {
                 }
                 className={inputClass}
                 placeholder="ラベル"
+              />
+              <label className={labelClass + " mt-3"}>補足</label>
+              <textarea
+                value={block.description ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { description: e.target.value } as Partial<PageBlock>)
+                }
+                className={inputClass + " min-h-[72px] resize-y"}
+                placeholder="任意（施設ページのアイコンカードと同様）"
+                rows={3}
               />
             </>
           )}

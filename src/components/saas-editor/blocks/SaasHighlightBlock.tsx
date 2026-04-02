@@ -1,5 +1,6 @@
 "use client";
 
+import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
 import type { SaasBlock } from "../types";
 
 const ACCENT_STYLES: Record<string, string> = {
@@ -11,7 +12,7 @@ const ACCENT_STYLES: Record<string, string> = {
 };
 
 export function SaasHighlightBlock({ block }: { block: SaasBlock }) {
-  const icon = (block.content.icon as string) ?? "★";
+  const iconName = normalizeIconToken(block.content.icon ?? "info", "info");
   const title = (block.content.title as string) ?? "重要なお知らせ";
   const body = (block.content.body as string) ?? "";
   const accent = (block.content.accent as string) ?? "amber";
@@ -30,10 +31,10 @@ export function SaasHighlightBlock({ block }: { block: SaasBlock }) {
     >
       <div className="flex items-start gap-4">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-white/70 text-xl"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-white/70 text-slate-700"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
         >
-          {icon}
+          <LineIcon name={iconName} className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="text-lg font-bold leading-snug tracking-tight">{title || " "}</h3>

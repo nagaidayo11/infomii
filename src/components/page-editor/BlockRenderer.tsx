@@ -3,6 +3,12 @@
 import Image from "next/image";
 import type { PageBlock } from "./types";
 import { usePageEditorStore } from "./store";
+import { IconTokenSelect } from "@/components/editor/IconTokenSelect";
+import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
+
+const inputClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20";
+const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
 
 type BlockRendererProps = {
   block: PageBlock;
@@ -150,34 +156,59 @@ export function BlockRenderer({
       if (editable) {
         return (
           <div
-            className={baseCard + " flex flex-wrap items-center gap-3 p-4"}
+            className={baseCard + " space-y-3 p-4"}
             onClick={() => selectBlock(block.id)}
           >
-            <input
-              type="text"
-              value={block.icon}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-full min-w-0 shrink-0 sm:w-48">
+                <IconTokenSelect
+                  label="アイコン"
+                  hideLabel
+                  value={block.icon}
+                  onChange={(next) =>
+                    updateBlock(block.id, { icon: next } as Partial<PageBlock>)
+                  }
+                  className={inputClass}
+                  labelClassName={labelClass}
+                />
+              </div>
+              <input
+                type="text"
+                value={block.label ?? ""}
+                onChange={(e) =>
+                  updateBlock(block.id, { label: e.target.value } as Partial<PageBlock>)
+                }
+                placeholder="ラベル"
+                className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <textarea
+              value={block.description ?? ""}
               onChange={(e) =>
-                updateBlock(block.id, { icon: e.target.value } as Partial<PageBlock>)
+                updateBlock(block.id, { description: e.target.value } as Partial<PageBlock>)
               }
-              className="w-16 rounded-lg border border-slate-200 px-2 py-2 text-center text-2xl"
-            />
-            <input
-              type="text"
-              value={block.label ?? ""}
-              onChange={(e) =>
-                updateBlock(block.id, { label: e.target.value } as Partial<PageBlock>)
-              }
-              placeholder="ラベル"
-              className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="補足（任意）"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+              rows={2}
             />
           </div>
         );
       }
       return (
-        <div className="flex items-center gap-2 py-2">
-          <span className="text-2xl">{block.icon}</span>
-          {block.label && (
-            <span className="text-sm text-slate-700">{block.label}</span>
+        <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-700">
+              <LineIcon
+                name={normalizeIconToken(block.icon, "info")}
+                className="h-6 w-6"
+              />
+            </span>
+            {block.label && (
+              <span className="text-sm font-medium text-slate-800">{block.label}</span>
+            )}
+          </div>
+          {block.description != null && block.description !== "" && (
+            <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{block.description}</p>
           )}
         </div>
       );

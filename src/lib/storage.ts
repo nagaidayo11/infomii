@@ -158,7 +158,7 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                     typeof item.id === "string" && item.id
                       ? item.id
                       : `icon-item-${itemIndex + 1}`,
-                  icon: typeof item.icon === "string" ? item.icon : "⭐",
+                  icon: typeof item.icon === "string" ? item.icon : "info",
                   label: typeof item.label === "string" ? item.label : "",
                   nodeId: typeof item.nodeId === "string" ? item.nodeId : "",
                   link: typeof item.link === "string" ? item.link : "",

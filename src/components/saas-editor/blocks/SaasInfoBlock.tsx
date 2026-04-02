@@ -1,12 +1,13 @@
 "use client";
 
+import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
 import type { SaasBlock } from "../types";
 import { CopyButton } from "./CopyButton";
 
 type InfoRow = { id?: string; label?: string; value?: string };
 
 export function SaasInfoBlock({ block }: { block: SaasBlock }) {
-  const icon = (block.content.icon as string) ?? "📶";
+  const iconName = normalizeIconToken(block.content.icon ?? "wifi", "wifi");
   const title = (block.content.title as string) ?? "情報";
   const rows = (block.content.rows as InfoRow[]) ?? [];
   const style = block.style || {};
@@ -21,8 +22,11 @@ export function SaasInfoBlock({ block }: { block: SaasBlock }) {
       }}
     >
       <div className="shrink-0 flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-6 py-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white text-xl" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          {icon}
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white text-slate-700"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+        >
+          <LineIcon name={iconName} className="h-5 w-5" />
         </span>
         <h3 className="text-lg font-semibold tracking-tight text-slate-800">{title || " "}</h3>
       </div>

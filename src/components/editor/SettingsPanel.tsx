@@ -7,6 +7,8 @@ import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
+import { IconTokenSelect } from "./IconTokenSelect";
+import { LINE_ICON_EDITOR_OPTIONS } from "@/lib/editor-line-icon-options";
 import type { EditorCard } from "./types";
 import { CARD_TYPE_LABELS } from "./types";
 import { useEditor2Store } from "./store";
@@ -417,49 +419,6 @@ function FaqItemsEditor({
   );
 }
 
-const PAGE_LINKS_ICON_OPTIONS = [
-  { value: "wifi", label: "WiFi" },
-  { value: "breakfast", label: "朝食" },
-  { value: "utensils", label: "食事（汎用）" },
-  { value: "checkout", label: "チェックアウト" },
-  { value: "clock", label: "時間" },
-  { value: "restaurant", label: "レストラン" },
-  { value: "spa", label: "スパ・温泉" },
-  { value: "bath", label: "風呂" },
-  { value: "parking", label: "駐車場" },
-  { value: "car", label: "車" },
-  { value: "map", label: "地図" },
-  { value: "map-pin", label: "ピン" },
-  { value: "nearby", label: "周辺" },
-  { value: "notice", label: "お知らせ" },
-  { value: "bell", label: "ベル" },
-  { value: "emergency", label: "緊急連絡先" },
-  { value: "phone", label: "電話" },
-  { value: "laundry", label: "ランドリー" },
-  { value: "washing-machine", label: "洗濯機" },
-  { value: "taxi", label: "タクシー" },
-  { value: "train", label: "電車" },
-  { value: "bus", label: "バス" },
-  { value: "credit-card", label: "カード" },
-  { value: "key", label: "鍵" },
-  { value: "toothbrush", label: "歯ブラシ" },
-  { value: "hanger", label: "ハンガー" },
-  { value: "broom", label: "清掃" },
-  { value: "microwave", label: "電子レンジ" },
-  { value: "package", label: "荷物" },
-  { value: "bed", label: "客室" },
-  { value: "ticket", label: "チケット" },
-  { value: "language", label: "言語" },
-  { value: "coffee", label: "コーヒー" },
-  { value: "shopping-bag", label: "買い物" },
-  { value: "camera", label: "カメラ" },
-  { value: "gift", label: "ギフト" },
-  { value: "baby", label: "キッズ" },
-  { value: "shield", label: "セキュリティ" },
-  { value: "check", label: "チェック" },
-  { value: "info", label: "情報" },
-];
-
 function PageLinksItemsEditor({
   content,
   onUpdate,
@@ -546,20 +505,13 @@ function PageLinksItemsEditor({
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder="WiFi"
           />
-          <div className="w-full">
-            <label className={labelClass}>アイコン</label>
-            <select
-              value={item.icon ?? "info"}
-              onChange={(e) => updateItem(i, "icon", e.target.value)}
-              className={inputClass}
-            >
-              {PAGE_LINKS_ICON_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <IconTokenSelect
+            label="アイコン"
+            value={item.icon}
+            onChange={(next) => updateItem(i, "icon", next)}
+            className={inputClass}
+            labelClassName={labelClass}
+          />
           <div className="w-full">
             <label className={labelClass}>リンク先</label>
             <select
@@ -1284,11 +1236,12 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="Wi-Fi"
               />
-              <Input
+              <IconTokenSelect
                 label="アイコン"
                 value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="wifi / map / info"
+                onChange={(next) => update("icon", next)}
+                className={inputClass}
+                labelClassName={labelClass}
               />
               <InfoRowsEditor content={content} onUpdate={update} />
             </SettingsSection>
@@ -1365,12 +1318,6 @@ export function CardSettings({
                 </div>
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
-                />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
                   <select
@@ -1413,11 +1360,12 @@ export function CardSettings({
                 />
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1439,11 +1387,12 @@ export function CardSettings({
 
           {card.type === "icon" && (
             <SettingsSection title="コンテンツ">
-              <Input
+              <IconTokenSelect
                 label="アイコン"
                 value={(content.icon as string) ?? ""}
-                onChange={(e) => update("icon", e.target.value)}
-                placeholder="📍"
+                onChange={(next) => update("icon", next)}
+                className={inputClass}
+                labelClassName={labelClass}
               />
               <Input
                 label="ラベル"
@@ -1493,11 +1442,12 @@ export function CardSettings({
                 </div>
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1550,11 +1500,12 @@ export function CardSettings({
                 </div>
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1816,11 +1767,12 @@ export function CardSettings({
                 </div>
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
                 <div className="w-full">
                   <label className={labelClass}>色</label>
@@ -1897,11 +1849,12 @@ export function CardSettings({
                     ))}
                   </select>
                 </div>
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
               </SettingsSection>
             </>
@@ -1924,11 +1877,12 @@ export function CardSettings({
                 />
               </SettingsSection>
               <SettingsSection title="表示">
-                <Input
+                <IconTokenSelect
                   label="アイコン"
                   value={(content.icon as string) ?? ""}
-                  onChange={(e) => update("icon", e.target.value)}
-                  placeholder="icon name (wifi / map / info)"
+                  onChange={(next) => update("icon", next)}
+                  className={inputClass}
+                  labelClassName={labelClass}
                 />
                 <div className="w-full">
                   <label className={labelClass}>Style</label>

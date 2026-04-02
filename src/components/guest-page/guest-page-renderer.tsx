@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { PageBlock } from "@/components/page-editor/types";
+import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
 
 type GuestPageRendererProps = {
   blocks: PageBlock[];
@@ -130,22 +131,34 @@ export function GuestPageRenderer({
             }
 
             case "icon": {
+              const desc = block.description?.trim();
               return (
-                <section
-                  key={block.id}
-                  className="flex items-center gap-4 px-5 pt-6"
-                >
-                  <span
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm ring-1 ring-stone-200/80"
-                    aria-hidden
-                  >
-                    {block.icon || "·"}
-                  </span>
-                  {block.label && (
-                    <p className="text-[1.125rem] font-medium leading-snug text-stone-800">
-                      {block.label}
-                    </p>
-                  )}
+                <section key={block.id} className="px-5 pt-6">
+                  <div className="rounded-2xl border border-stone-200/90 bg-white/90 p-4 shadow-sm ring-1 ring-stone-200/60">
+                    <div className="flex items-start gap-4">
+                      <span
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-stone-50 text-slate-700 shadow-sm ring-1 ring-stone-200/80"
+                        aria-hidden
+                      >
+                        <LineIcon
+                          name={normalizeIconToken(block.icon, "info")}
+                          className="h-8 w-8"
+                        />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        {block.label && (
+                          <p className="text-[1.125rem] font-medium leading-snug text-stone-800">
+                            {block.label}
+                          </p>
+                        )}
+                        {desc && (
+                          <p className="mt-1.5 whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-stone-600">
+                            {desc}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </section>
               );
             }

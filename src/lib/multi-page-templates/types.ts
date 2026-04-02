@@ -36,7 +36,7 @@ export type TemplateBlock =
   | { type: "text"; content: string }
   | { type: "image"; src: string; alt?: string }
   | { type: "button"; label: string; href?: string }
-  | { type: "icon"; icon: string; label?: string }
+  | { type: "icon"; icon: string; label?: string; description?: string }
   | { type: "section"; title: string; body: string }
   | { type: "iconRow"; items: TemplateIconRowItem[] }
   | { type: "checklist"; items: string[] }

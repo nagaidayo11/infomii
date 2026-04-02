@@ -28,6 +28,7 @@ export type IconBlockData = {
   type: "icon";
   icon: string;
   label?: string;
+  description?: string;
   id?: string;
 };
 

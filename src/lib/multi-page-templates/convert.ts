@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { normalizeIconToken } from "@/components/cards/LineIcon";
 import type { InformationBlock } from "@/types/information";
 import type { TemplateBlock, TemplatePage } from "./types";
 
@@ -6,37 +7,9 @@ function blockId(): string {
   return nanoid(8);
 }
 
+/** テンプレートの icon は LineIcon トークンに正規化（絵文字はレガシー読み取りのみ） */
 function normalizeTemplateIcon(icon: string | undefined): string {
-  const raw = (icon ?? "").trim().toLowerCase();
-  if (!raw) return "svg:info";
-  const map: Record<string, string> = {
-    wifi: "svg:wifi",
-    "📶": "svg:wifi",
-    breakfast: "svg:utensils",
-    "🍽️": "svg:utensils",
-    "🍽": "svg:utensils",
-    checkout: "svg:clock",
-    "⏰": "svg:clock",
-    "🕐": "svg:clock",
-    map: "svg:map-pin",
-    nearby: "svg:map-pin",
-    "📍": "svg:map-pin",
-    parking: "svg:car",
-    "🅿️": "svg:car",
-    taxi: "svg:taxi",
-    "🚕": "svg:taxi",
-    laundry: "svg:washing-machine",
-    "🧺": "svg:washing-machine",
-    emergency: "svg:phone",
-    "🚨": "svg:phone",
-    spa: "svg:bath",
-    "♨️": "svg:bath",
-    notice: "svg:bell",
-    "📢": "svg:bell",
-    key: "svg:key",
-    "🔑": "svg:key",
-  };
-  return map[raw] ?? (raw.startsWith("svg:") ? raw : "svg:info");
+  return normalizeIconToken(icon?.trim(), "info");
 }
 
 /**
@@ -92,7 +65,8 @@ export function templatePageToInformationBlocks(page: TemplatePage): Information
           id: blockId(),
           type: "icon",
           icon: normalizeTemplateIcon(b.icon),
-          description: b.label ?? "",
+          label: b.label ?? "",
+          description: b.description ?? "",
           iconSize: "lg",
         });
         break;

@@ -46,8 +46,11 @@ export type ButtonBlock = {
 export type IconBlock = {
   id: string;
   type: "icon";
-  icon: string; // short name e.g. "wifi"
+  /** LineIcon トークン（`normalizeIconToken` と同一セット） */
+  icon: string;
   label?: string;
+  /** 施設カードの「アイコン」ブロックと同様の補足文 */
+  description?: string;
 };
 
 export type DividerBlock = {
@@ -153,7 +156,7 @@ export const BLOCK_LIBRARY_ITEMS: Array<{
   { type: "schedule", label: "スケジュール", description: "営業時間" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
   { type: "menu", label: "メニュー", description: "メニュー・価格" },
-  { type: "icon", label: "アイコン", description: "アイコン名＋ラベル" },
+  { type: "icon", label: "アイコン", description: "SVGアイコン・ラベル・補足" },
   { type: "divider", label: "区切り線", description: "セクションの区切り" },
   { type: "gallery", label: "ギャラリー", description: "複数画像" },
 ];
@@ -184,7 +187,7 @@ export function createEmptyBlock(type: PageBlockType, id: string): PageBlock {
     case "button":
       return { id, type: "button", label: "ボタン", href: "#" };
     case "icon":
-      return { id, type: "icon", icon: "info", label: "ラベル" };
+      return { id, type: "icon", icon: "info", label: "ラベル", description: "" };
     case "divider":
       return { id, type: "divider" };
     case "map":

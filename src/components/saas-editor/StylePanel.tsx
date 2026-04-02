@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { IconTokenSelect } from "@/components/editor/IconTokenSelect";
 import { useSaasEditorStore } from "./store";
 import { BLOCK_TYPE_LABELS } from "./types";
 import type { SaasBlockType } from "./types";
@@ -106,17 +107,13 @@ export function StylePanel() {
         )}
         {selected.type === "highlight" && (
           <>
-            <div>
-              <label className={labelClass}>アイコン（1文字）</label>
-              <input
-                type="text"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => updateContent({ icon: e.target.value })}
-                className={inputClass}
-                placeholder="★"
-                maxLength={2}
-              />
-            </div>
+            <IconTokenSelect
+              label="アイコン"
+              value={(content.icon as string) ?? ""}
+              onChange={(next) => updateContent({ icon: next })}
+              className={inputClass}
+              labelClassName={labelClass}
+            />
             <div>
               <label className={labelClass}>タイトル</label>
               <input
@@ -155,17 +152,13 @@ export function StylePanel() {
         )}
         {selected.type === "info" && (
           <>
-            <div>
-              <label className={labelClass}>アイコン（1文字）</label>
-              <input
-                type="text"
-                value={(content.icon as string) ?? ""}
-                onChange={(e) => updateContent({ icon: e.target.value })}
-                className={inputClass}
-                placeholder="📶"
-                maxLength={2}
-              />
-            </div>
+            <IconTokenSelect
+              label="アイコン"
+              value={(content.icon as string) ?? ""}
+              onChange={(next) => updateContent({ icon: next })}
+              className={inputClass}
+              labelClassName={labelClass}
+            />
             <div>
               <label className={labelClass}>タイトル（例: Wi-Fi）</label>
               <input

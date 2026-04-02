@@ -1,13 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import Image from "next/image";
-import type { ReactNode } from "react";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
 import { InfoPageChat } from "@/components/info-chat/InfoPageChat";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
+import { renderInformationIconVisual } from "@/components/information/InformationIconVisual";
 import { blocksToContextText } from "@/lib/information-to-context";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
@@ -147,7 +147,7 @@ function normalizeBlocks(value: unknown, fallbackBody: string): InformationBlock
                       typeof item.id === "string" && item.id
                         ? item.id
                         : `icon-item-${itemIndex + 1}`,
-                    icon: typeof item.icon === "string" ? item.icon : "⭐",
+                    icon: typeof item.icon === "string" ? item.icon : "info",
                     label: typeof item.label === "string" ? item.label : "",
                     nodeId: typeof item.nodeId === "string" ? item.nodeId : "",
                     link: typeof item.link === "string" ? item.link : "",
@@ -507,19 +507,6 @@ function getBlockContainerStyle(
   };
 }
 
-function getIconSizeClass(size: InformationBlock["iconSize"] | undefined): string {
-  if (size === "sm") {
-    return "text-base h-4 w-4";
-  }
-  if (size === "lg") {
-    return "text-2xl h-6 w-6";
-  }
-  if (size === "xl") {
-    return "text-3xl h-7 w-7";
-  }
-  return "text-xl h-5 w-5";
-}
-
 function getIconRowColumnsClass(iconCount: number): string {
   if (iconCount >= 10) {
     return "grid-cols-3 sm:grid-cols-4";
@@ -528,255 +515,6 @@ function getIconRowColumnsClass(iconCount: number): string {
     return "grid-cols-3";
   }
   return "grid-cols-2";
-}
-
-function renderLineIcon(token: string, size: InformationBlock["iconSize"] | undefined): ReactNode {
-  const iconSize = getIconSizeClass(size);
-  const className = `${iconSize.split(" ").filter((c) => c.startsWith("h-") || c.startsWith("w-")).join(" ")} text-slate-700`;
-  if (token === "svg:clock") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 8v4l3 2" />
-      </svg>
-    );
-  }
-  if (token === "svg:map-pin") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 21s6-5.4 6-10a6 6 0 1 0-12 0c0 4.6 6 10 6 10Z" />
-        <circle cx="12" cy="11" r="2.5" />
-      </svg>
-    );
-  }
-  if (token === "svg:wifi") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4.5 9.5a11 11 0 0 1 15 0" />
-        <path d="M7.5 12.5a7 7 0 0 1 9 0" />
-        <path d="M10.5 15.5a3 3 0 0 1 3 0" />
-        <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  }
-  if (token === "svg:car") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4 13h16l-1.5-4h-13L4 13Z" />
-        <path d="M5 13v4h2" />
-        <path d="M17 17h2v-4" />
-        <circle cx="8" cy="17" r="1.6" />
-        <circle cx="16" cy="17" r="1.6" />
-      </svg>
-    );
-  }
-  if (token === "svg:bell") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M8 17h8l-1-2v-4a3 3 0 1 0-6 0v4l-1 2Z" />
-        <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
-      </svg>
-    );
-  }
-  if (token === "svg:utensils") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M7 4v8" />
-        <path d="M5 4v4" />
-        <path d="M9 4v4" />
-        <path d="M7 12v8" />
-        <path d="M16 4c1.5 2.5 1.5 5.5 0 8v8" />
-      </svg>
-    );
-  }
-  if (token === "svg:bath") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M5 12h14v3a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-3Z" />
-        <path d="M8 12V8a2 2 0 1 1 4 0" />
-      </svg>
-    );
-  }
-  if (token === "svg:phone") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M6 3h4l1 4-2 1.5a14 14 0 0 0 6 6L16.5 12l4 1v4l-2 2a3 3 0 0 1-3 .7A18 18 0 0 1 4.3 8.5 3 3 0 0 1 5 5.5L6 3Z" />
-      </svg>
-    );
-  }
-  if (token === "svg:train") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="6" y="3.5" width="12" height="14" rx="2" />
-        <path d="M9 7h2M13 7h2M8 12h8M10 17l-2 3M14 17l2 3" />
-      </svg>
-    );
-  }
-  if (token === "svg:bus") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="5" y="4" width="14" height="13" rx="2" />
-        <path d="M5 10h14M8 17v3M16 17v3" />
-        <circle cx="9" cy="18" r="1.2" />
-        <circle cx="15" cy="18" r="1.2" />
-      </svg>
-    );
-  }
-  if (token === "svg:credit-card") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18M7 14h4" />
-      </svg>
-    );
-  }
-  if (token === "svg:baby") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="9" r="3.2" />
-        <path d="M7 20a5 5 0 0 1 10 0" />
-      </svg>
-    );
-  }
-  if (token === "svg:wheelchair") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="9" cy="18" r="3" />
-        <circle cx="13" cy="5" r="1.2" />
-        <path d="M13 7v5h3l2 4h-5" />
-        <path d="M9 15h6" />
-      </svg>
-    );
-  }
-  if (token === "svg:paw") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="7" cy="8" r="1.5" />
-        <circle cx="11" cy="6.5" r="1.5" />
-        <circle cx="15" cy="6.5" r="1.5" />
-        <circle cx="17" cy="9" r="1.5" />
-        <path d="M9 17c0-2.2 1.8-4 4-4s4 1.8 4 4c0 1.4-1 2-2.3 2H11c-1.2 0-2-.7-2-2Z" />
-      </svg>
-    );
-  }
-  if (token === "svg:plug") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M9 3v6M15 3v6M7 9h10v2a5 5 0 0 1-5 5v5" />
-      </svg>
-    );
-  }
-  if (token === "svg:ticket") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4 8a2 2 0 0 0 2-2h12v4a2 2 0 1 1 0 4v4H6a2 2 0 0 0-2-2V8Z" />
-        <path d="M12 7v10" />
-      </svg>
-    );
-  }
-  if (token === "svg:key") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="8.5" cy="12" r="3.2" />
-        <path d="M11.7 12H20" />
-        <path d="M16 12v2" />
-        <path d="M18 12v1.5" />
-      </svg>
-    );
-  }
-  if (token === "svg:toothbrush") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4 18.5h6.5a2.5 2.5 0 0 0 2.3-1.5L20 4.5" />
-        <path d="M17.8 3.8 20.2 6.2" />
-        <path d="M5.5 16.5h3.5" />
-      </svg>
-    );
-  }
-  if (token === "svg:hanger") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 7a2 2 0 1 0-2-2" />
-        <path d="M10 7.2 4.5 14a2 2 0 0 0 1.6 3.3h11.8a2 2 0 0 0 1.6-3.3L14 7.2" />
-      </svg>
-    );
-  }
-  if (token === "svg:broom") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4 19h9" />
-        <path d="M14 5 9 10" />
-        <path d="m8 11 4.5 4.5a2 2 0 0 1 0 2.8L11.8 19H6.5" />
-      </svg>
-    );
-  }
-  if (token === "svg:washing-machine") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="5" y="3.5" width="14" height="17" rx="2" />
-        <circle cx="12" cy="13" r="4" />
-        <path d="M8 6.8h.01M10.5 6.8h.01" />
-      </svg>
-    );
-  }
-  if (token === "svg:microwave") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3.5" y="5" width="17" height="14" rx="2" />
-        <rect x="6.5" y="8" width="9" height="8" rx="1" />
-        <path d="M18 8v8M19 9v.01M19 12v.01M19 15v.01" />
-      </svg>
-    );
-  }
-  if (token === "svg:package") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M4.5 8.5 12 4l7.5 4.5v7L12 20l-7.5-4.5v-7Z" />
-        <path d="M12 20v-7.5M4.5 8.5 12 13l7.5-4.5" />
-      </svg>
-    );
-  }
-  if (token === "svg:taxi") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M5 13h14l-1.6-4.5H6.6L5 13Z" />
-        <path d="M7.5 8.5 9 6h6l1.5 2.5" />
-        <circle cx="8" cy="17" r="1.6" />
-        <circle cx="16" cy="17" r="1.6" />
-        <path d="M6 13v4M18 13v4" />
-      </svg>
-    );
-  }
-  if (token === "svg:bed") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M3.5 18.5h17" />
-        <path d="M5 18.5V9.5h14v9" />
-        <rect x="6.5" y="11" width="4.5" height="3" rx="1" />
-      </svg>
-    );
-  }
-  if (token === "svg:info") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 10v5" />
-        <path d="M12 7.5h.01" />
-      </svg>
-    );
-  }
-  return null;
-}
-
-function renderIconVisual(icon: string | undefined, size: InformationBlock["iconSize"] | undefined): ReactNode {
-  const iconSize = getIconSizeClass(size).split(" ")[0];
-  if (!icon) {
-    return <span className={iconSize}>⭐</span>;
-  }
-  if (icon.startsWith("svg:")) {
-    return renderLineIcon(icon, size) ?? <span className={iconSize}>⭐</span>;
-  }
-  return <span className={iconSize}>{icon}</span>;
 }
 
 export default async function PublicInformationPage({ params, searchParams }: PublicPageProps) {
@@ -1024,7 +762,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                     <div key={block.id} style={getBlockContainerStyle(block, theme)}>
                       <div className={`rounded-xl border border-slate-200 bg-slate-50/60 p-3 ${getBlockAlignClass(block.textAlign)}`}>
                         <div className={`flex items-center gap-2 ${getBlockJustifyClass(block.textAlign)}`}>
-                          {renderIconVisual(block.icon, block.iconSize)}
+                          {renderInformationIconVisual(block.icon, block.iconSize)}
                           <p
                             className={`${getWeightClass(block.textWeight ?? "semibold")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                             style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -1068,7 +806,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16"
                                     style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                                   >
-                                    {renderIconVisual(entry.icon, block.iconSize)}
+                                    {renderInformationIconVisual(entry.icon, block.iconSize)}
                                   </span>
                                   <p
                                     className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -1083,7 +821,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-300 sm:h-16 sm:w-16"
                                     style={{ backgroundColor: entry.backgroundColor ?? "#ffffff" }}
                                   >
-                                    {renderIconVisual(entry.icon, block.iconSize)}
+                                    {renderInformationIconVisual(entry.icon, block.iconSize)}
                                   </span>
                                   <p
                                     className={`text-center ${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
@@ -1106,7 +844,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                     rel={entry.link.startsWith("/p/") ? undefined : "noreferrer"}
                                     className="flex min-h-[52px] w-full touch-manipulation flex-col items-center justify-center gap-1 px-3 py-3 transition active:scale-[0.99] sm:min-h-[56px]"
                                   >
-                                    {renderIconVisual(entry.icon, block.iconSize)}
+                                    {renderInformationIconVisual(entry.icon, block.iconSize)}
                                     <p
                                       className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                       style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
@@ -1116,7 +854,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
                                   </a>
                                 ) : (
                                   <div className="flex min-h-[52px] w-full flex-col items-center justify-center gap-1 px-3 py-3 sm:min-h-[56px]">
-                                    {renderIconVisual(entry.icon, block.iconSize)}
+                                    {renderInformationIconVisual(entry.icon, block.iconSize)}
                                     <p
                                       className={`${getWeightClass(block.textWeight ?? "medium")} ${getBlockTextSizeClass(block.textSize, theme.bodySize)}`}
                                       style={{ color: block.textColor ?? theme.textColor ?? "#0f172a" }}
