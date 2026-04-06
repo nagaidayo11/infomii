@@ -57,7 +57,7 @@ export function TemplateGalleryCard({
             type="button"
             disabled={isLoading}
             onClick={() => onUse(template.id)}
-            className="w-full rounded-xl bg-ds-primary py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-600 active:scale-[0.99] disabled:opacity-60"
+            className="w-full rounded-xl bg-ds-primary py-3 text-sm font-medium text-white shadow-sm transition hover:bg-ds-primary-hover active:scale-[0.99] disabled:opacity-60"
           >
             {isLoading ? "作成中…" : "テンプレートを使う"}
           </button>

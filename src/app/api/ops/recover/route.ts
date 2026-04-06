@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
       .update({
         plan,
         status,
-        max_published_pages: plan === "pro" ? 1000 : 3,
+        max_published_pages: plan === "pro" ? 10 : 1,
         stripe_customer_id: typeof stripeSub.customer === "string" ? stripeSub.customer : null,
         stripe_subscription_id: stripeSub.id,
         stripe_price_id: firstItem?.price?.id ?? null,

@@ -783,7 +783,7 @@ function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBl
 
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
   if (plan === "business") return 999;
-  if (plan === "pro") return 5;
+  if (plan === "pro") return 10;
   return 1;
 }
 
@@ -3740,7 +3740,7 @@ export async function createBlankPage(title = ""): Promise<string> {
       .eq("hotel_id", hotelId);
     if (!error && (count ?? 0) >= sub.maxPublishedPages) {
       const e = new Error(
-        `ページ数の上限に達しました（${sub.maxPublishedPages}件）。Proプランで5ページまで作成できます。`
+        `ページ数の上限に達しました（${sub.maxPublishedPages}件）。Proプランで10ページまで作成できます。`
       ) as Error & { code?: string };
       e.code = PAGE_LIMIT_REACHED;
       throw e;

@@ -346,7 +346,7 @@ export async function POST(request: Request) {
     .eq("hotel_id", membership.hotel_id);
   if ((count ?? 0) >= maxPages) {
     return NextResponse.json(
-      { error: `ページ数の上限に達しました（${maxPages}件）。Proプランで5ページまで作成できます。` },
+      { error: `ページ数の上限に達しました（${maxPages}件）。Proプランで10ページまで作成できます。` },
       { status: 403 }
     );
   }

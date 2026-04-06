@@ -36,6 +36,7 @@ type Editor2Props = {
   pageId?: string | null;
   mode?: "full" | "demo";
   demoPreviewUrl?: string;
+  startUnselected?: boolean;
 };
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
@@ -70,7 +71,12 @@ function countMissingRequiredLocales(input: unknown): number {
   );
 }
 
-export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-menu" }: Editor2Props) {
+export function Editor2({
+  pageId,
+  mode = "full",
+  demoPreviewUrl = "/p/demo-hub-menu",
+  startUnselected = false,
+}: Editor2Props) {
   const isDemoMode = mode === "demo";
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -186,7 +192,7 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
           };
           if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
             setCards(parsed.cards);
-            selectCard(parsed.cards[0]?.id ?? null);
+            selectCard(startUnselected ? null : (parsed.cards[0]?.id ?? null));
             if (parsed.background) {
               setPageBackground({
                 mode: parsed.background.mode,
@@ -214,14 +220,14 @@ export function Editor2({ pageId, mode = "full", demoPreviewUrl = "/p/demo-hub-m
       createEmptyCard(type, `demo-${i}-${Math.random().toString(36).slice(2, 8)}`, i)
     );
     setCards(starterCards);
-    selectCard(starterCards[0]?.id ?? null);
+    selectCard(startUnselected ? null : (starterCards[0]?.id ?? null));
     setPageMeta({
       pageId: null,
       title: "デモ編集画面",
       slug: "demo-preview",
       publicUrl: demoPreviewUrl,
     });
-  }, [isDemoMode, demoPreviewUrl, setCards, selectCard, setPageMeta, setPageBackground]);
+  }, [isDemoMode, demoPreviewUrl, setCards, selectCard, setPageMeta, setPageBackground, startUnselected]);
 
   useEffect(() => {
     if (!isDemoMode || typeof window === "undefined") return;

@@ -58,6 +58,7 @@ export const viewport: Viewport = {
 const editorGoogleFontsHref =
   "https://fonts.googleapis.com/css2?" +
   [
+    "family=Inter:wght@400;500;600;700",
     "family=Zen+Kaku+Gothic+New:wght@400;700",
     "family=M+PLUS+Rounded+1c:wght@400;700",
     "family=Kosugi+Maru",
@@ -79,7 +80,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href={editorGoogleFontsHref} />
       </head>
-      <body className="lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-slate-900 antialiased [-webkit-tap-highlight-color:transparent]">
+      <body className="font-sans lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-ds-foreground antialiased [-webkit-tap-highlight-color:transparent]">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

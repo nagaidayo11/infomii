@@ -163,7 +163,7 @@ export function PageManagementPanel() {
           <div className="mb-10">
             <TemplateGallery
               title="テンプレートギャラリー"
-              description="テンプレートを選ぶと、館内案内・WiFi・朝食・チェックアウト・アクセスの5ページが自動作成されます。"
+              description="テンプレートを選ぶと、館内案内・WiFi・朝食・チェックアウト・アクセスなどの複数ページが自動作成されます。"
               onCreated={() => void load()}
             />
           </div>

@@ -90,13 +90,27 @@ export function PublicPageShell({
 
   if (isEmbed) {
     return (
-      <div className="min-h-full" style={{ background: pageBackgroundStyle }}>
-        <main className="min-h-full pb-6">{children}</main>
-        {contactActions ? (
-          <footer className="bg-white/80 px-4 py-5 backdrop-blur-sm">
-            {contactActions}
-          </footer>
-        ) : null}
+      <div className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3" style={{ background: pageBackgroundStyle }}>
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          {(title.trim() || headerActions) && (
+            <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-3 pt-3.5 backdrop-blur-sm">
+              <div className="mx-auto flex max-w-[420px] items-center justify-between gap-2">
+                {title.trim() ? (
+                  <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900">
+                    {title}
+                  </h1>
+                ) : (
+                  <div />
+                )}
+                {headerActions}
+              </div>
+            </header>
+          )}
+          <main className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 pb-6 pt-4">
+            <div className="app-stagger mx-auto max-w-[420px] space-y-3 overflow-hidden">{children}</div>
+          </main>
+          {contactActions ? <footer className="shrink-0 bg-white/80 px-4 py-5 backdrop-blur-sm">{contactActions}</footer> : null}
+        </div>
       </div>
     );
   }

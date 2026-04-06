@@ -26,7 +26,7 @@ export function UpgradeCtaBanner({
 
   const isFree = currentPlan === "free";
   const isProNearLimit =
-    currentPlan === "pro" && maxPublishedPages <= 5 && publishedCount >= Math.max(1, maxPublishedPages - 1);
+    currentPlan === "pro" && maxPublishedPages <= 10 && publishedCount >= Math.max(1, maxPublishedPages - 1);
 
   if (isFree) {
     return (
@@ -34,7 +34,7 @@ export function UpgradeCtaBanner({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">
-              Proプランで5ページまで作成できます
+              Proプランで10ページまで作成できます
             </h3>
             <p className="mt-1 text-xs text-slate-600">
               無料プランは1ページまで。Proにアップグレードで分析・複数ページ連携が使えます。

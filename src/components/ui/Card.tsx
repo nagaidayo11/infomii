@@ -27,7 +27,7 @@ export function Card({
 }: CardProps) {
   return (
     <div
-      style={{ backgroundColor: "var(--editor-block-surface, #ffffff)" }}
+      style={{ backgroundColor: "var(--editor-block-surface, var(--color-ds-card))" }}
       className={
         "app-interactive rounded-[inherit] " +
         "transition-[transform] duration-200 ease-out " +

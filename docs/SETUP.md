@@ -71,7 +71,7 @@ create table if not exists public.subscriptions (
   hotel_id uuid not null unique references public.hotels(id) on delete cascade,
   plan text not null default 'free' check (plan in ('free', 'pro')),
   status text not null default 'active' check (status in ('trialing', 'active', 'past_due', 'canceled')),
-  max_published_pages integer not null default 3 check (max_published_pages >= 0),
+  max_published_pages integer not null default 1 check (max_published_pages >= 0),
   stripe_customer_id text,
   stripe_subscription_id text,
   stripe_price_id text,
@@ -89,7 +89,7 @@ begin
   select id into sub_id from public.subscriptions where hotel_id = target_hotel_id limit 1;
   if sub_id is not null then return sub_id; end if;
   insert into public.subscriptions (hotel_id, plan, status, max_published_pages)
-  values (target_hotel_id, 'free', 'active', 3) returning id into sub_id;
+  values (target_hotel_id, 'free', 'active', 1) returning id into sub_id;
   return sub_id;
 end; $$;
 revoke all on function public.ensure_hotel_subscription(uuid) from public;

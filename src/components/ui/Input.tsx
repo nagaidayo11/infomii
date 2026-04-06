@@ -8,7 +8,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 const baseClass =
-  "w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
+  "w-full rounded-ds border border-ds-border bg-ds-card px-3 py-2 text-sm text-ds-foreground outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-ds-placeholder focus:border-ds-primary focus:ring-2 focus:ring-ds-ring-primary focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 
 /**
  * Modern SaaS input. rounded-xl, soft focus ring.
@@ -18,7 +18,7 @@ export function Input({ label, error, className = "", id, ...rest }: InputProps)
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="mb-1.5 block text-xs font-medium text-slate-500">
+        <label htmlFor={inputId} className="mb-1.5 block text-xs font-medium text-ds-muted">
           {label}
         </label>
       )}

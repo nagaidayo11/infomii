@@ -67,7 +67,7 @@ export function MultiPageTemplateSelector({
                 type="button"
                 disabled={isLoading}
                 onClick={() => void handleSelect(template.id as MultiPageTemplateId)}
-                className="mt-4 w-full rounded-xl bg-ds-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:opacity-60"
+                className="mt-4 w-full rounded-xl bg-ds-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-ds-primary-hover disabled:opacity-60"
               >
                 {isLoading ? "作成中…" : "このテンプレートでページを作成"}
               </button>

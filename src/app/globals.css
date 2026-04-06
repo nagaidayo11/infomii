@@ -1,37 +1,65 @@
 @import "tailwindcss";
 
-/* ─── Design system (Infomii SaaS) ───
-   Primary #2563EB | Background #F9FAFB | Card #FFFFFF | Border #E5E7EB
-   Font: Inter | UI: rounded-xl, soft shadows, minimal SaaS
+/* ─── Design system v1 (Infomii) ───
+   Product: primary blue, neutral surfaces, radius-ds (12px), shadow-ds-*.
+   Type: Inter + Noto Sans JP (see RootLayout Google Fonts) — body uses font-sans.
+   Marketing accent (LP): ds-accent* (emerald) — product CTAs use ds-primary.
 */
 @theme {
+  --font-sans:
+    "Inter", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", ui-sans-serif,
+    system-ui, sans-serif;
+
   --color-ds-primary: #2563eb;
+  --color-ds-primary-hover: #1d4ed8;
   --color-ds-bg: #f9fafb;
+  --color-ds-shell: #fafafa;
   --color-ds-card: #ffffff;
   --color-ds-border: #e5e7eb;
-  /* rounded-xl 相当（12px）— カード・ボタン・入力の基準 */
+  --color-ds-border-strong: #d1d5db;
+  --color-ds-foreground: #0f172a;
+  --color-ds-foreground-secondary: #334155;
+  --color-ds-muted: #64748b;
+  --color-ds-muted-fg: #475569;
+  --color-ds-placeholder: #94a3b8;
+  --color-ds-ring: rgb(148 163 184 / 0.45);
+  --color-ds-ring-primary: rgb(37 99 235 / 0.2);
+  /* LP / キャンペーン強調（宿泊コアの現行トーン） */
+  --color-ds-accent: #059669;
+  --color-ds-accent-strong: #047857;
+  --color-ds-accent-fg: #065f46;
+
   --radius-ds: 0.75rem;
   --radius-xl: 0.75rem;
-  /* ソフトシャドウ（ミニマルSaaS） */
-  --shadow-ds-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-ds-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-ds-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --shadow-ds-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+  --shadow-ds-xs: 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-ds-sm: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-ds-md: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-ds-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-ds-primary-glow: 0 2px 8px rgb(37 99 235 / 0.2);
+
+  /* 見出し / リード（基準値 — コンポーネントは text-* で上書き可） */
+  --text-ds-display: 2.25rem;
+  --text-ds-display--line-height: 1.15;
+  --text-ds-display--font-weight: 700;
+  --text-ds-title: 1.5rem;
+  --text-ds-title--line-height: 1.25;
+  --text-ds-title--font-weight: 700;
+  --text-ds-body: 1rem;
+  --text-ds-body--line-height: 1.6;
+  --text-ds-body--font-weight: 400;
+  --text-ds-lead: 1.125rem;
+  --text-ds-lead--line-height: 1.625;
 }
 
 :root {
-  /* Design system aliases */
-  --ds-primary: #2563eb;
-  --ds-bg: #f9fafb;
-  --ds-card: #ffffff;
-  --ds-border: #e5e7eb;
   /* Transitions: Linear/Notion/Stripe-style (snappy, subtle) */
   --ui-duration-fast: 150ms;
   --ui-duration: 200ms;
   --ui-duration-slow: 250ms;
   --ui-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  /* Legacy lux (gradual migration) */
+  /* Legacy lux (gradual migration) — align to theme colors */
   --lux-accent: #2563eb;
   --lux-accent-soft: #dbeafe;
   --lux-ink: #0f172a;
@@ -45,28 +73,28 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--ds-bg);
-  color: #111827;
-  font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  background: var(--color-ds-bg);
+  color: var(--color-ds-foreground);
+  font-family: var(--font-sans);
 }
 
 /* App shell: minimal SaaS background (no gradient) */
 .ds-app {
-  background-color: var(--ds-bg);
+  background-color: var(--color-ds-bg);
 }
 
 /* Unified SaaS LP–aligned app shell (use for /dashboard, /editor, etc.) */
 .saas-app-shell {
-  background-color: #fafafa;
+  background-color: var(--color-ds-shell);
   min-height: 100vh;
 }
 
 /* SaaS LP–aligned card (rounded-xl, light border, soft shadow) */
 .saas-card {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  background-color: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-ds);
+  border: 1px solid color-mix(in srgb, var(--color-ds-border) 80%, transparent);
+  background-color: var(--color-ds-card);
+  box-shadow: var(--shadow-ds-sm);
 }
 
 /* ─── UI polish: transitions, elevation, hover ─── */
@@ -125,15 +153,15 @@ a {
 
 /* Surface: card + rounded-xl + soft shadow（ミニマルSaaS） */
 .ds-card {
-  background: var(--ds-card);
-  border: 1px solid var(--ds-border);
+  background: var(--color-ds-card);
+  border: 1px solid var(--color-ds-border);
   border-radius: var(--radius-ds);
   box-shadow: var(--shadow-ds-sm);
 }
 
 .ds-card-elevated {
-  background: var(--ds-card);
-  border: 1px solid var(--ds-border);
+  background: var(--color-ds-card);
+  border: 1px solid var(--color-ds-border);
   border-radius: var(--radius-ds);
   box-shadow: var(--shadow-ds-md);
 }
@@ -146,25 +174,25 @@ a {
 @media (hover: hover) {
   .ds-card-hover:hover {
     box-shadow: var(--shadow-ds-lg);
-    border-color: #d1d5db;
+    border-color: var(--color-ds-border-strong);
   }
 }
 
 .ds-btn-primary {
-  background: var(--ds-primary);
+  background: var(--color-ds-primary);
   color: #fff;
   border-radius: var(--radius-ds);
   box-shadow: var(--shadow-ds-xs);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border: 1px solid color-mix(in srgb, var(--color-ds-primary) 20%, transparent);
 }
 .ds-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-ds-primary-hover);
 }
 
 .lux-card {
-  border: 1px solid var(--ds-border);
-  background: var(--ds-card);
-  border-radius: 0.75rem;
+  border: 1px solid var(--color-ds-border);
+  background: var(--color-ds-card);
+  border-radius: var(--radius-ds);
   box-shadow: var(--shadow-ds-md);
 }
 
@@ -186,21 +214,21 @@ a {
 .lux-kicker {
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #2563eb;
+  color: var(--color-ds-primary);
   font-size: 0.6875rem;
   font-weight: 600;
 }
 
 .lux-btn-primary {
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  background: var(--ds-primary);
+  border: 1px solid color-mix(in srgb, var(--color-ds-primary) 35%, transparent);
+  background: var(--color-ds-primary);
   color: #fff;
   border-radius: var(--radius-ds);
   box-shadow: var(--shadow-ds-xs);
 }
 
 .lux-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-ds-primary-hover);
 }
 
 .lux-main {
@@ -229,7 +257,7 @@ a {
 .lux-main select:focus,
 .lux-main textarea:focus {
   outline: none;
-  border-color: var(--ds-primary);
+  border-color: var(--color-ds-primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 

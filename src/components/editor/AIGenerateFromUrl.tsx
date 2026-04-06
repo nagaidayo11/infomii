@@ -5,20 +5,17 @@ import { useEditor2Store } from "./store";
 
 type ApiCard = { type: string; content: Record<string, unknown>; order: number };
 
-export type AIGenerateFromDescriptionProps = {
+export type AIGenerateFromUrlProps = {
   onClose?: () => void;
   className?: string;
 };
 
 /**
- * User describes the page (e.g. "Create a hotel information page");
- * AI generates cards and loads them into the editor canvas.
+ * ホテルURLを入力してAIでカードを生成し、エディタのキャンバスに反映する。
+ * 日本語UIのまま。
  */
-export function AIGenerateFromDescription({
-  onClose,
-  className = "",
-}: AIGenerateFromDescriptionProps) {
-  const [description, setDescription] = useState("");
+export function AIGenerateFromUrl({ onClose, className = "" }: AIGenerateFromUrlProps) {
+  const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,18 +23,18 @@ export function AIGenerateFromDescription({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = description.trim();
+    const trimmed = url.trim();
     if (!trimmed) {
-      setError("Describe the page you want to create");
+      setError("URLを入力してください");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/ai/generate-cards-from-description", {
+      const res = await fetch("/api/ai/generate-cards-from-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: trimmed }),
+        body: JSON.stringify({ url: trimmed }),
       });
       const data = (await res.json()) as {
         cards?: ApiCard[];
@@ -45,13 +42,13 @@ export function AIGenerateFromDescription({
         details?: string;
       };
       if (!res.ok) {
-        const msg = data.error ?? data.details ?? "Generation failed";
-        setError(res.status === 503 ? `${msg} (OPENAI_API_KEY required)` : msg);
+        const msg = data.error ?? data.details ?? "生成に失敗しました";
+        setError(res.status === 503 ? `${msg}（OPENAI_API_KEY を設定してください）` : msg);
         return;
       }
       const cards = data.cards;
       if (!cards || !Array.isArray(cards) || cards.length === 0) {
-        setError("No cards were generated");
+        setError("カードを取得できませんでした");
         return;
       }
       loadGeneratedCards(
@@ -61,10 +58,10 @@ export function AIGenerateFromDescription({
           order: c.order ?? 0,
         }))
       );
-      setDescription("");
+      setUrl("");
       onClose?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : "エラーが発生しました");
     } finally {
       setLoading(false);
     }
@@ -72,9 +69,9 @@ export function AIGenerateFromDescription({
 
   return (
     <div className={className}>
-      <h3 className="text-sm font-semibold text-slate-800">AI page generation</h3>
+      <h3 className="text-sm font-semibold text-slate-800">URLから自動作成</h3>
       <p className="mt-1 text-xs text-slate-500">
-        Describe the page and we&apos;ll generate useful cards automatically.
+        ホテルサイトのURLを入力すると、情報を取得してカードを自動生成します。
       </p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         {error && (
@@ -82,12 +79,12 @@ export function AIGenerateFromDescription({
             {error}
           </div>
         )}
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g. Create a hotel information page with WiFi, breakfast hours, and a map"
-          rows={3}
-          className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://..."
+          className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]"
           disabled={loading}
         />
         <div className="flex gap-2">
@@ -96,15 +93,15 @@ export function AIGenerateFromDescription({
             disabled={loading}
             className="flex-1 rounded-xl bg-ds-primary px-3 py-2 text-sm font-medium text-white shadow-[var(--shadow-ds-sm)] transition hover:bg-ds-primary-hover disabled:opacity-60"
           >
-            {loading ? "Generating…" : "Generate page"}
+            {loading ? "生成中…" : "生成してキャンバスに追加"}
           </button>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
             >
-              Cancel
+              キャンセル
             </button>
           )}
         </div>

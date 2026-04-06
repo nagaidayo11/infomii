@@ -13,16 +13,16 @@ type SectionProps = {
   title: string;
   /** Optional description below title */
   description?: string;
-  /** Background: white or muted (#fafafa) */
+  /** Background: card or shell (muted) */
   variant?: "white" | "muted";
   className?: string;
 };
 
 const kickerClass =
-  "text-xs font-semibold uppercase tracking-wider text-slate-500";
+  "text-xs font-semibold uppercase tracking-wider text-ds-muted";
 const titleClass =
-  "mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl";
-const descriptionClass = "mt-4 max-w-2xl text-lg leading-relaxed text-slate-600";
+  "mt-3 text-3xl font-bold tracking-tight text-ds-foreground sm:text-4xl";
+const descriptionClass = "mt-4 max-w-2xl text-lg leading-relaxed text-ds-muted-fg";
 
 /**
  * SaaS landing page–aligned section.
@@ -37,10 +37,9 @@ export function Section({
   variant = "white",
   className = "",
 }: SectionProps) {
-  const bgClass =
-    variant === "muted" ? "bg-[#fafafa]" : "bg-white";
+  const bgClass = variant === "muted" ? "bg-ds-shell" : "bg-ds-card";
   const sectionClass =
-    "border-b border-slate-200/80 " + bgClass + " py-16 sm:py-20 transition-colors duration-200 " + className;
+    "border-b border-ds-border/80 " + bgClass + " py-16 sm:py-20 transition-colors duration-200 " + className;
 
   return (
     <section id={id} className={sectionClass}>

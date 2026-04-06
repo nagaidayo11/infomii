@@ -6,7 +6,7 @@ import { LpHero } from "@/components/lp/LpHero";
 import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
-const SAMPLE_PAGE_HREF = "/p/demo-hub-menu";
+const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
 const DEMO_EDITOR_HREF = "/demo/editor";
 
 export const metadata: Metadata = {
@@ -34,7 +34,7 @@ function PricingComparisonTable() {
 
   return (
     <div className="lux-section-card overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
-      <table className="w-full min-w-[560px] border-collapse text-sm">
+      <table className="w-full min-w-[760px] border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50">
@@ -56,8 +56,42 @@ function PricingComparisonTable() {
           <tr>
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開ページ数</th>
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
-            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大5本</td>
-            <td className="px-3 py-2.5 text-center font-semibold tabular-nums text-slate-900">無制限</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大10本</td>
+            <td className="px-3 py-2.5 text-center tabular-nums">
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                無制限
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">テンプレート適用</th>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">編集プレビュー（PC / スマホ）</th>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">下書き / 公開切り替え</th>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">QR発行 / 共有URL</th>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開前チェック</th>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">閲覧分析</th>
@@ -72,10 +106,22 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開時の多言語自動翻訳</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+              <span className="block">公開時の多言語自動翻訳</span>
+              <span className="mt-1 block text-xs font-medium text-emerald-700/90">
+                公開操作にあわせて主要言語へまとめて反映
+              </span>
+              <span className="ml-2 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                Business
+              </span>
+            </th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                {yes} 対応
+              </span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -114,7 +160,11 @@ export default function LpSaaSPage() {
             <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
               ログイン
             </Button>
-            <Button href={ctaHref} size="md" className="px-3 sm:px-4">
+            <Button
+              href={ctaHref}
+              size="md"
+              className="px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+            >
               無料で作成
             </Button>
           </nav>
@@ -126,7 +176,7 @@ export default function LpSaaSPage() {
       <Section
         id="value"
         kicker="何が良いの？"
-        title="フロントの「同じ説明」を減らすためのLPです"
+        title="フロントでの「同じ説明」を減らします"
         description="WiFi・朝食・館内設備を1ページにまとめて、1つのQRで案内。紙の差し替えや口頭説明の負担を軽くします。"
         variant="muted"
       >
@@ -159,7 +209,11 @@ export default function LpSaaSPage() {
         <ScrollReveal>
           <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button href={DEMO_EDITOR_HREF} size="lg">
+              <Button
+                href={DEMO_EDITOR_HREF}
+                size="lg"
+                className="!border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+              >
                 デモを触る
               </Button>
               <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
@@ -200,10 +254,13 @@ export default function LpSaaSPage() {
         id="pricing"
         kicker="料金"
         title="まずは無料。必要になったらアップグレード"
-        description="最初はFreeで1ページ。ページ増加や分析が必要ならPro、チーム運用や大規模運用ならBusinessが目安です。"
+        description="最初はFreeで1ページ。運用担当1名で複数ページを回すならPro、複数担当・複数拠点で運用するならBusinessが目安です。"
       >
         <ScrollReveal>
-          <div className="lux-section-card mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+          <div
+            id="pricing-comparison"
+            className="lux-section-card mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100"
+          >
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
             <p className="mt-1 text-sm text-slate-600">詳細は横スクロールで確認できます。</p>
             <div className="mt-4">
@@ -220,9 +277,10 @@ export default function LpSaaSPage() {
               <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
               <p className="mt-1 text-sm text-slate-500">まず1ページで運用開始</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 公開ページ1本</li>
-                <li>✓ ブロック編集・プレビュー</li>
-                <li>✓ 共有URL・QR発行</li>
+                <li>✓ 公開ページ数: 1本</li>
+                <li>✓ 編集プレビュー（PC / スマホ）</li>
+                <li>✓ QR発行 / 共有URL</li>
+                <li>✓ 下書き / 公開切り替え</li>
               </ul>
               <Button href={ctaHref} variant="secondary" className="mt-6">
                 Freeで始める
@@ -237,14 +295,23 @@ export default function LpSaaSPage() {
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">複数ページ + 分析</p>
+              <p className="mt-1 text-sm text-slate-500">運用担当1名の実務運用向け</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 最大5ページ</li>
+                <li>✓ 公開ページ数: 最大10本</li>
+                <li>✓ 公開前チェック</li>
                 <li>✓ 閲覧分析</li>
-                <li>✓ 優先サポート</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
-                <CheckoutButton plan="pro" className="w-full">
+                <a
+                  href="#pricing-comparison"
+                  className="text-center text-xs font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-700 hover:decoration-emerald-400"
+                >
+                  比較表の詳細を見る
+                </a>
+                <CheckoutButton
+                  plan="pro"
+                  className="w-full !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                >
                   Proを申し込む{hasProAnnual ? "（月払い）" : ""}
                 </CheckoutButton>
                 {hasProAnnual ? (
@@ -263,12 +330,13 @@ export default function LpSaaSPage() {
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">無制限運用 + チーム</p>
+              <p className="mt-1 text-sm text-slate-500">複数担当・複数拠点の運用向け</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 公開ページ無制限</li>
+                <li>✓ 公開ページ数: <span className="font-semibold text-emerald-700">無制限</span></li>
+                <li>✓ 公開前チェック</li>
+                <li>✓ 閲覧分析</li>
                 <li>✓ チーム招待</li>
-                <li>✓ 多言語自動翻訳（公開時）</li>
-                <li>✓ 独自ドメイン/外部連携（順次）</li>
+                <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（公開時）</li>
               </ul>
               <div className="mt-6 flex flex-col gap-2">
                 <CheckoutButton plan="business" variant="secondary" className="w-full">
@@ -343,7 +411,12 @@ export default function LpSaaSPage() {
               <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
                 今すぐ無料で作成
               </Button>
-              <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="border-slate-600 bg-transparent text-white hover:bg-white/10">
+              <Button
+                href={DEMO_EDITOR_HREF}
+                variant="secondary"
+                size="lg"
+                className="border-slate-600 bg-transparent !text-white hover:bg-white/10 hover:!text-white"
+              >
                 30秒で試す（登録なし）
               </Button>
             </div>

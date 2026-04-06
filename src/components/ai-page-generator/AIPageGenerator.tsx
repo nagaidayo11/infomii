@@ -72,7 +72,7 @@ export function AIPageGenerator({ onCreated, className = "" }: AIPageGeneratorPr
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-900">AIでページを自動作成</h2>
         <p className="mt-1 text-sm text-slate-500">
-          ホテル名と所在地を入力すると、館内総合案内・WiFi・朝食・チェックアウト・周辺観光の5ページを自動作成します。
+          ホテル名と所在地を入力すると、館内総合案内・WiFi・朝食・チェックアウト・周辺観光などの複数ページを自動作成します。
         </p>
       </div>
       <form onSubmit={handleSubmit} className="rounded-xl border border-ds-border bg-ds-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -115,7 +115,7 @@ export function AIPageGenerator({ onCreated, className = "" }: AIPageGeneratorPr
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-ds-primary px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-600 disabled:opacity-60 sm:w-auto sm:min-w-[200px]"
+            className="w-full rounded-xl bg-ds-primary px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-ds-primary-hover disabled:opacity-60 sm:w-auto sm:min-w-[200px]"
           >
             {loading ? "生成中…" : "AIでページを生成"}
           </button>

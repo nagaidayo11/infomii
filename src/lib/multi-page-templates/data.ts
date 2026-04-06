@@ -414,7 +414,7 @@ export const MULTI_PAGE_TEMPLATES: MultiPageTemplate[] = [
   {
     id: "hotel-basic",
     name: "ホテル基本（標準運用）",
-    description: "到着〜滞在〜退館をそのまま公開できる文面入りで5ページ化した完成テンプレ。",
+    description: "到着〜滞在〜退館をそのまま公開できる文面入りの完成テンプレ。",
     previewImage: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
     pages: hotelBasicPages(),
   },

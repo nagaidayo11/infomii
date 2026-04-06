@@ -13,11 +13,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const baseClass =
-  "app-interactive inline-flex items-center justify-center rounded-xl font-semibold " +
+  "app-interactive inline-flex items-center justify-center rounded-ds font-semibold " +
   "transition-[transform,background-color,color,box-shadow,border-color] duration-200 ease-out " +
-  "shadow-sm " +
+  "shadow-ds-sm " +
   "active:scale-[0.98] " +
-  "focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white";
+  "focus:outline-none focus-visible:ring-2 focus-visible:ring-ds-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ds-card";
 
 const sizeClass: Record<ButtonSize, string> = {
   sm: "px-3 py-2 text-xs",
@@ -27,18 +27,17 @@ const sizeClass: Record<ButtonSize, string> = {
 
 const variantClass: Record<ButtonVariant, string> = {
   primary:
-    "bg-slate-900 !text-white border border-slate-900 hover:bg-slate-800 hover:shadow-[0_2px_8px_rgba(15,23,42,0.2)] motion-safe:hover:scale-[1.02]",
+    "border border-ds-primary/20 bg-ds-primary !text-white hover:bg-ds-primary-hover hover:shadow-ds-primary-glow motion-safe:hover:scale-[1.02]",
   secondary:
-    "border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm motion-safe:hover:scale-[1.02]",
+    "border border-ds-border bg-ds-card text-ds-foreground-secondary hover:border-ds-border-strong hover:bg-ds-bg hover:shadow-ds-sm motion-safe:hover:scale-[1.02]",
   ghost:
-    "text-slate-600 shadow-none hover:bg-slate-100 hover:text-slate-900",
+    "text-ds-muted shadow-none hover:bg-ds-bg hover:text-ds-foreground",
   inverted:
-    "bg-white text-slate-900 border border-white hover:bg-slate-100 hover:shadow-md motion-safe:hover:scale-[1.02]",
+    "border border-ds-card bg-ds-card text-ds-foreground hover:bg-ds-bg hover:shadow-ds-md motion-safe:hover:scale-[1.02]",
 };
 
 /**
- * SaaS landing page–aligned button.
- * rounded-xl, soft shadow, same primary (slate-900) as LP.
+ * Product / LP 共通: ds-primary（青）とトークン上の neutrals。
  */
 export function Button({
   children,
