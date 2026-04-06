@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import {
+  getSupabaseAdminServerClient,
+  getSupabaseAnonServerClient,
+  isSupabaseServiceRoleConfigured,
+} from "@/lib/server/supabase-server";
 
 export type MemberRow = {
   userId: string;
@@ -44,6 +48,12 @@ async function getMembers(hotelId: string, ownerUserId: string | null) {
  * GET: 現在の施設のメンバー一覧（認証必須）
  */
 export async function GET(request: Request) {
+  if (!isSupabaseServiceRoleConfigured()) {
+    return NextResponse.json(
+      { error: "サーバー設定不足: SUPABASE_SERVICE_ROLE_KEY を設定してください" },
+      { status: 503 },
+    );
+  }
   const authHeader = request.headers.get("authorization") ?? "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
   if (!token) {

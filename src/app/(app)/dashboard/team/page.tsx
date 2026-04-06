@@ -71,6 +71,10 @@ export default function TeamPage() {
         // owner/admin以外は403になるため、画面では黙って空表示にする
         if (res.status !== 403) {
           setError(data.error ?? "公開申請一覧の取得に失敗しました");
+        } else if ((data.error ?? "").includes("Businessプラン")) {
+          // API側の判定を優先し、プラン表示と実機能の不整合を解消する
+          setIsBusiness(false);
+          setBusinessChecked(true);
         }
         setApprovals([]);
         return;
@@ -121,12 +125,13 @@ export default function TeamPage() {
   }, [load]);
 
   useEffect(() => {
+    if (!businessChecked || !isBusiness) return;
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       await fetchApprovals(session?.access_token ?? null, approvalFilter);
     })();
-  }, [approvalFilter, fetchApprovals]);
+  }, [approvalFilter, businessChecked, fetchApprovals, isBusiness]);
 
   async function handleCreateInvite() {
     if (!isBusiness) {

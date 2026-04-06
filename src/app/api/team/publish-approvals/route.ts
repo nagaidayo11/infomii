@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import {
+  getSupabaseAdminServerClient,
+  getSupabaseAnonServerClient,
+  isSupabaseServiceRoleConfigured,
+} from "@/lib/server/supabase-server";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 
@@ -33,6 +37,15 @@ async function appendAuditLog(
 }
 
 async function authenticateWithHotel(request: Request): Promise<AuthContext> {
+  if (!isSupabaseServiceRoleConfigured()) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "サーバー設定不足: SUPABASE_SERVICE_ROLE_KEY を設定してください" },
+        { status: 503 },
+      ),
+    };
+  }
   const token = parseBearerToken(request);
   if (!token) {
     return { ok: false, response: NextResponse.json({ error: "認証が必要です" }, { status: 401 }) };

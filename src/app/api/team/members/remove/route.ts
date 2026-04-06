@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import {
+  getSupabaseAdminServerClient,
+  getSupabaseAnonServerClient,
+  isSupabaseServiceRoleConfigured,
+} from "@/lib/server/supabase-server";
 
 /**
  * POST: メンバーを施設から削除（オーナーのみ）
  * Body: { userId: string }
  */
 export async function POST(request: Request) {
+  if (!isSupabaseServiceRoleConfigured()) {
+    return NextResponse.json(
+      { error: "サーバー設定不足: SUPABASE_SERVICE_ROLE_KEY を設定してください" },
+      { status: 503 },
+    );
+  }
   const authHeader = request.headers.get("authorization") ?? "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
   if (!token) {
