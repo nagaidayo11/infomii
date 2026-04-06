@@ -10,6 +10,7 @@ create table if not exists public.hotels (
 create table if not exists public.hotel_memberships (
   user_id uuid primary key references auth.users(id) on delete cascade,
   hotel_id uuid not null references public.hotels(id) on delete cascade,
+  role text not null default 'editor' check (role in ('admin', 'editor', 'viewer')),
   created_at timestamptz not null default now()
 );
 
@@ -573,6 +574,7 @@ create table if not exists public.hotel_invites (
   consumed_by_user_id uuid references auth.users(id) on delete set null,
   consumed_at timestamptz,
   expires_at timestamptz,
+  role text not null default 'editor' check (role in ('admin', 'editor', 'viewer')),
   created_at timestamptz not null default now()
 );
 
@@ -590,6 +592,8 @@ alter table public.hotel_invites
 add column if not exists consumed_at timestamptz;
 alter table public.hotel_invites
 add column if not exists expires_at timestamptz;
+alter table public.hotel_invites
+add column if not exists role text not null default 'editor';
 alter table public.hotel_invites
 add column if not exists created_at timestamptz not null default now();
 
@@ -703,10 +707,10 @@ begin
     raise exception 'invite_expired';
   end if;
 
-  insert into public.hotel_memberships (user_id, hotel_id)
-  values (current_user_id, invite_row.hotel_id)
+  insert into public.hotel_memberships (user_id, hotel_id, role)
+  values (current_user_id, invite_row.hotel_id, case when invite_row.role in ('admin', 'editor', 'viewer') then invite_row.role else 'editor' end)
   on conflict (user_id) do update
-  set hotel_id = excluded.hotel_id;
+  set hotel_id = excluded.hotel_id, role = excluded.role;
 
   update public.hotel_invites
   set
@@ -721,3 +725,20 @@ $$;
 
 revoke all on function public.redeem_hotel_invite(text) from public;
 grant execute on function public.redeem_hotel_invite(text) to authenticated;
+
+create table if not exists public.publish_approval_requests (
+  id uuid primary key default gen_random_uuid(),
+  information_id uuid not null references public.informations(id) on delete cascade,
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  requested_by_user_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  requested_at timestamptz not null default now(),
+  reviewed_by_user_id uuid references auth.users(id) on delete set null,
+  reviewed_at timestamptz,
+  review_comment text
+);
+
+create index if not exists publish_approval_requests_hotel_status_idx
+  on public.publish_approval_requests (hotel_id, status, requested_at desc);
+
+alter table public.publish_approval_requests enable row level security;

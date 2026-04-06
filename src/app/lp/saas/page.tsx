@@ -8,6 +8,7 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
 const DEMO_EDITOR_HREF = "/demo/editor";
+const CONSULT_HREF = process.env.NEXT_PUBLIC_SALES_CONSULT_URL ?? "mailto:info@infomii.com?subject=Infomii%20導入相談";
 
 export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
@@ -103,7 +104,12 @@ function PricingComparisonTable() {
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">チーム招待</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
+            <td className="px-3 py-2.5 text-center">
+              <div className="inline-flex flex-col items-center gap-1">
+                {yes}
+                <span className="text-[11px] text-slate-500">更新漏れ防止・引き継ぎ容易</span>
+              </div>
+            </td>
           </tr>
           <tr>
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
@@ -157,6 +163,9 @@ export default function LpSaaSPage() {
             <a href="#pricing" className={navLinkClass}>
               料金
             </a>
+            <Button href={CONSULT_HREF} variant="secondary" size="md" className="rounded-lg px-2 sm:px-4">
+              15分導入相談
+            </Button>
             <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
               ログイン
             </Button>
@@ -165,7 +174,7 @@ export default function LpSaaSPage() {
               size="md"
               className="px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
             >
-              無料で作成
+              1ページ無料で公開してみる
             </Button>
           </nav>
         </Container>
@@ -214,13 +223,13 @@ export default function LpSaaSPage() {
                 size="lg"
                 className="!border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
               >
-                デモを触る
+                30秒デモで運用イメージを見る
               </Button>
               <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
                 サンプルページを見る
               </Button>
               <Button href={ctaHref} variant="secondary" size="lg">
-                無料で作成する
+                1ページ無料で公開を始める
               </Button>
             </div>
             <p className="mt-4 text-sm text-slate-500">
@@ -253,8 +262,8 @@ export default function LpSaaSPage() {
       <Section
         id="pricing"
         kicker="料金"
-        title="まずは無料。必要になったらアップグレード"
-        description="最初はFreeで1ページ。運用担当1名で複数ページを回すならPro、複数担当・複数拠点で運用するならBusinessが目安です。"
+        title="用途で選べる3プラン"
+        description="最初はFreeで1ページ公開して検証。運用が回り始めて複数ページを扱うならPro。複数担当・複数拠点で多言語運用まで行うならBusiness。"
       >
         <ScrollReveal>
           <div
@@ -265,6 +274,17 @@ export default function LpSaaSPage() {
             <p className="mt-1 text-sm text-slate-600">詳細は横スクロールで確認できます。</p>
             <div className="mt-4">
               <PricingComparisonTable />
+            </div>
+            <div className="mt-5 rounded-xl border border-emerald-200/80 bg-emerald-50/70 p-4">
+              <p className="text-sm font-semibold text-emerald-900">導入判断で迷う場合は15分で整理できます</p>
+              <p className="mt-1 text-xs text-emerald-800">
+                現在の運用体制（担当者数・拠点数・公開本数）に合わせて、Free/Pro/Businessの最短ルートを提案します。
+              </p>
+              <div className="mt-3">
+                <Button href={CONSULT_HREF} variant="secondary" size="md" className="border-emerald-300 bg-white hover:bg-emerald-50">
+                  15分導入相談を予約
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -298,9 +318,13 @@ export default function LpSaaSPage() {
               <p className="mt-1 text-sm text-slate-500">運用担当1名の実務運用向け</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
                 <li>✓ 公開ページ数: 最大10本</li>
+                <li>✓ 店舗別・イベント別に分けて運用しやすい</li>
                 <li>✓ 公開前チェック</li>
                 <li>✓ 閲覧分析</li>
               </ul>
+              <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                案内を用途ごとに分けて更新できるため、1名運用でも差し替え作業の手戻りを減らせます。
+              </p>
               <div className="mt-6 flex flex-col gap-2">
                 <a
                   href="#pricing-comparison"
@@ -337,7 +361,12 @@ export default function LpSaaSPage() {
                 <li>✓ 閲覧分析</li>
                 <li>✓ チーム招待</li>
                 <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（公開時）</li>
+                <li>✓ 拠点ごとの更新漏れを防ぎやすい</li>
+                <li>✓ 担当交代時も引き継ぎしやすい</li>
               </ul>
+              <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                担当者と拠点が増えても、翻訳反映と更新ルールをそろえやすく、案内品質の統一を維持できます。
+              </p>
               <div className="mt-6 flex flex-col gap-2">
                 <CheckoutButton plan="business" variant="secondary" className="w-full">
                   Businessを申し込む{hasBusinessAnnual ? "（月払い）" : ""}
@@ -350,6 +379,9 @@ export default function LpSaaSPage() {
               </div>
             </Card>
           </StaggerReveal>
+          <p className="mt-5 text-center text-sm font-medium text-slate-600">
+            迷ったらPro：1名運用で最も選ばれています
+          </p>
         </ScrollReveal>
       </Section>
 

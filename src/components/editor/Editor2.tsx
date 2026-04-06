@@ -21,10 +21,14 @@ import {
   buildPublicUrlV,
   savePageCards,
   setInformationStatusBySlug,
+  requestPublishApprovalBySlug,
+  getPendingPublishApprovalBySlug,
+  approvePublishApprovalBySlug,
   updatePageTitle,
   getCurrentHotelSubscription,
   getCurrentHotelTranslationUsage,
   trackCurrentHotelTranslationRun,
+  getCurrentUserHotelRole,
 } from "@/lib/storage";
 
 /**
@@ -104,6 +108,8 @@ export function Editor2({
   const [togglePublishBusy, setTogglePublishBusy] = useState(false);
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
+  const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
+  const [hasPendingApproval, setHasPendingApproval] = useState(false);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -286,7 +292,15 @@ export function Editor2({
     getCurrentHotelSubscription()
       .then((sub) => setTranslationEnabled(Boolean(sub && sub.plan === "business")))
       .catch(() => setTranslationEnabled(false));
+    getCurrentUserHotelRole().then(setHotelRole).catch(() => setHotelRole(null));
   }, [isDemoMode, pageId, setPageMeta]);
+
+  useEffect(() => {
+    if (isDemoMode || !pageMeta.slug) return;
+    getPendingPublishApprovalBySlug(pageMeta.slug)
+      .then((row) => setHasPendingApproval(Boolean(row)))
+      .catch(() => setHasPendingApproval(false));
+  }, [isDemoMode, pageMeta.slug, publishStatus]);
 
   useEffect(() => {
     if (!pageId || typeof window === "undefined" || isDemoMode) return;
@@ -847,11 +861,28 @@ export function Editor2({
         });
         return;
       }
+      if (hotelRole === "editor") {
+        if (!pageMeta.slug) {
+          window.alert("公開申請対象ページが見つかりません。");
+          return;
+        }
+        await requestPublishApprovalBySlug(pageMeta.slug);
+        setHasPendingApproval(true);
+        window.alert("公開申請を送信しました。オーナー/管理者の承認後に公開されます。");
+        return;
+      }
+      if ((hotelRole === "owner" || hotelRole === "admin") && hasPendingApproval && pageMeta.slug) {
+        await approvePublishApprovalBySlug(pageMeta.slug);
+        setHasPendingApproval(false);
+        setPublishStatus("published");
+        window.alert("公開申請を承認し、公開しました。");
+        return;
+      }
       await handlePublishClick();
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick]);
+  }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval]);
 
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
   const handlePublishPastWarnings = useCallback(async () => {
@@ -979,8 +1010,17 @@ export function Editor2({
         onPreview={handlePreviewClick}
         previewPreparing={previewBusy || localeTranslating}
         onPublish={handlePublishClickStrict}
+        publishActionLabel={
+          hotelRole === "editor"
+            ? hasPendingApproval
+              ? "再申請"
+              : "公開申請"
+            : hasPendingApproval
+              ? "承認して公開"
+              : "公開"
+        }
         onQr={handleQrClick}
-        onTogglePublished={isDemoMode ? undefined : handleTogglePublishedStrict}
+        onTogglePublished={isDemoMode || hotelRole === "editor" ? undefined : handleTogglePublishedStrict}
         publishToggleLoading={publishToggleLoading}
         publishToggleChecked={publishStatus === "published"}
         onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}

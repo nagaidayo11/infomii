@@ -573,7 +573,7 @@ export type DashboardBootstrapData = {
 export type HotelInvite = {
   id: string;
   code: string;
-  role: "editor" | "viewer";
+  role: "admin" | "editor" | "viewer";
   isActive: boolean;
   consumedAt: string | null;
   createdAt: string;
@@ -582,8 +582,20 @@ export type HotelInvite = {
 export type HotelMember = {
   userId: string;
   email: string | null;
-  role: "owner" | "editor" | "viewer";
+  role: "owner" | "admin" | "editor" | "viewer";
   createdAt: string;
+};
+
+export type PublishApprovalRequest = {
+  id: string;
+  informationId: string;
+  hotelId: string;
+  requestedByUserId: string;
+  status: "pending" | "approved" | "rejected";
+  requestedAt: string;
+  reviewedByUserId: string | null;
+  reviewedAt: string | null;
+  reviewComment: string | null;
 };
 
 export type HotelInviteMetrics = {
@@ -963,7 +975,7 @@ export async function ensureUserHotelScope(): Promise<string | null> {
   return hotelId;
 }
 
-export type HotelRole = "owner" | "editor" | "viewer";
+export type HotelRole = "owner" | "admin" | "editor" | "viewer";
 
 /** 現在のユーザーの施設内権限。owner/editor は編集可、viewer は閲覧のみ。 */
 export async function getCurrentUserHotelRole(): Promise<HotelRole | null> {
@@ -986,6 +998,7 @@ export async function getCurrentUserHotelRole(): Promise<HotelRole | null> {
     .eq("id", membership.hotel_id)
     .maybeSingle();
   if (hotel?.owner_user_id === user.id) return "owner";
+  if (membership.role === "admin") return "admin";
   return (membership.role === "viewer" ? "viewer" : "editor") as HotelRole;
 }
 
@@ -2167,10 +2180,14 @@ function makeInviteCode(length = 8): string {
   return code;
 }
 
-export async function createHotelInvite(role: "editor" | "viewer" = "editor"): Promise<HotelInvite> {
+export async function createHotelInvite(role: "admin" | "editor" | "viewer" = "editor"): Promise<HotelInvite> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");
+  }
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") {
+    throw new Error("チーム招待はBusinessプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2213,7 +2230,10 @@ export async function createHotelInvite(role: "editor" | "viewer" = "editor"): P
   return {
     id: data.id,
     code: data.code,
-    role: (data.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
+    role: (data.role === "viewer" ? "viewer" : data.role === "admin" ? "admin" : "editor") as
+      | "admin"
+      | "editor"
+      | "viewer",
     isActive: data.is_active,
     consumedAt: data.consumed_at,
     createdAt: data.created_at,
@@ -2223,6 +2243,10 @@ export async function createHotelInvite(role: "editor" | "viewer" = "editor"): P
 export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
+    return [];
+  }
+  const sub = await getCurrentHotelSubscription().catch(() => null);
+  if (sub?.plan !== "business") {
     return [];
   }
   const hotelId = await ensureUserHotelScope();
@@ -2244,7 +2268,10 @@ export async function listCurrentHotelInvites(limit = 20): Promise<HotelInvite[]
   return (data ?? []).map((row) => ({
     id: row.id,
     code: row.code,
-    role: (row.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer",
+    role: (row.role === "viewer" ? "viewer" : row.role === "admin" ? "admin" : "editor") as
+      | "admin"
+      | "editor"
+      | "viewer",
     isActive: row.is_active,
     consumedAt: row.consumed_at,
     createdAt: row.created_at,
@@ -2255,6 +2282,10 @@ export async function revokeHotelInvite(inviteId: string): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");
+  }
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") {
+    throw new Error("チーム招待はBusinessプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2324,6 +2355,10 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
   if (userError || !user) {
     throw new Error("ユーザー情報の取得に失敗しました");
   }
+  const sub = await getCurrentHotelSubscription().catch(() => null);
+  if (sub?.plan !== "business") {
+    throw new Error("チーム招待の参加はBusinessプランでご利用いただけます");
+  }
 
   const { data: hotelId, error } = await supabase.rpc("redeem_hotel_invite", {
     input_code: code,
@@ -2344,6 +2379,122 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
     targetType: "invite",
     metadata: { inviteCode: code },
   });
+}
+
+export async function requestPublishApprovalBySlug(slug: string): Promise<PublishApprovalRequest> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設情報が見つかりません");
+  const role = await getCurrentUserHotelRole();
+  if (role !== "editor") throw new Error("公開申請は編集担当（editor）のみ実行できます");
+  const sub = await getCurrentHotelSubscription();
+  if (sub?.plan !== "business") throw new Error("公開申請フローはBusinessプランでご利用いただけます");
+
+  const { data: info, error: infoError } = await supabase
+    .from("informations")
+    .select("id,title")
+    .eq("hotel_id", hotelId)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (infoError || !info) throw new Error("公開対象ページが見つかりません");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("認証が必要です");
+
+  const { data, error } = await supabase
+    .from("publish_approval_requests")
+    .insert({
+      information_id: info.id,
+      hotel_id: hotelId,
+      requested_by_user_id: user.id,
+      status: "pending",
+    })
+    .select("id,information_id,hotel_id,requested_by_user_id,status,requested_at,reviewed_by_user_id,reviewed_at,review_comment")
+    .single();
+  if (error || !data) throw toError(error, "公開申請の作成に失敗しました");
+
+  await appendAuditLog({
+    hotelId,
+    action: "information.publish_requested",
+    message: `公開申請を作成しました（${info.title}）`,
+    targetType: "information",
+    targetId: info.id,
+  });
+  return {
+    id: data.id,
+    informationId: data.information_id,
+    hotelId: data.hotel_id,
+    requestedByUserId: data.requested_by_user_id,
+    status: data.status as "pending" | "approved" | "rejected",
+    requestedAt: data.requested_at,
+    reviewedByUserId: data.reviewed_by_user_id,
+    reviewedAt: data.reviewed_at,
+    reviewComment: data.review_comment,
+  };
+}
+
+export async function getPendingPublishApprovalBySlug(slug: string): Promise<PublishApprovalRequest | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return null;
+  const { data: info } = await supabase
+    .from("informations")
+    .select("id")
+    .eq("hotel_id", hotelId)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!info?.id) return null;
+  const { data, error } = await supabase
+    .from("publish_approval_requests")
+    .select("id,information_id,hotel_id,requested_by_user_id,status,requested_at,reviewed_by_user_id,reviewed_at,review_comment")
+    .eq("hotel_id", hotelId)
+    .eq("information_id", info.id)
+    .eq("status", "pending")
+    .order("requested_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return {
+    id: data.id,
+    informationId: data.information_id,
+    hotelId: data.hotel_id,
+    requestedByUserId: data.requested_by_user_id,
+    status: data.status as "pending" | "approved" | "rejected",
+    requestedAt: data.requested_at,
+    reviewedByUserId: data.reviewed_by_user_id,
+    reviewedAt: data.reviewed_at,
+    reviewComment: data.review_comment,
+  };
+}
+
+export async function approvePublishApprovalBySlug(slug: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const role = await getCurrentUserHotelRole();
+  if (role !== "owner" && role !== "admin") {
+    throw new Error("公開承認はオーナー/管理者のみ実行できます");
+  }
+  const pending = await getPendingPublishApprovalBySlug(slug);
+  if (!pending) throw new Error("承認待ちの公開申請がありません");
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("認証が必要です");
+  await setInformationStatusBySlug(slug, "published");
+  const { error } = await supabase
+    .from("publish_approval_requests")
+    .update({
+      status: "approved",
+      reviewed_by_user_id: user.id,
+      reviewed_at: new Date().toISOString(),
+      review_comment: "approved_and_published",
+    })
+    .eq("id", pending.id);
+  if (error) throw toError(error, "公開申請の承認記録に失敗しました");
 }
 
 type CheckoutSessionOptions = {

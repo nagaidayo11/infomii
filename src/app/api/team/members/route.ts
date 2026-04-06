@@ -4,7 +4,7 @@ import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib
 export type MemberRow = {
   userId: string;
   email: string | null;
-  role: "owner" | "editor" | "viewer";
+  role: "owner" | "admin" | "editor" | "viewer";
   createdAt: string;
 };
 
@@ -29,7 +29,13 @@ async function getMembers(hotelId: string, ownerUserId: string | null) {
   return (members ?? []).map((m) => ({
     userId: m.user_id,
     email: emailByUserId.get(m.user_id) ?? null,
-    role: m.user_id === ownerUserId ? "owner" : ((m.role === "viewer" ? "viewer" : "editor") as "editor" | "viewer"),
+    role:
+      m.user_id === ownerUserId
+        ? "owner"
+        : ((m.role === "admin" ? "admin" : m.role === "viewer" ? "viewer" : "editor") as
+            | "admin"
+            | "editor"
+            | "viewer"),
     createdAt: m.created_at,
   }));
 }
@@ -61,6 +67,14 @@ export async function GET(request: Request) {
   }
 
   const hotelId = membership.hotel_id;
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("plan")
+    .eq("hotel_id", hotelId)
+    .maybeSingle();
+  if (sub?.plan !== "business") {
+    return NextResponse.json({ error: "チーム機能はBusinessプランでご利用いただけます" }, { status: 403 });
+  }
 
   const { data: hotel } = await admin
     .from("hotels")

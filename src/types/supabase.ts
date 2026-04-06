@@ -74,19 +74,19 @@ export type Database = {
         Row: {
           user_id: string;
           hotel_id: string;
-          role: "editor" | "viewer";
+          role: "admin" | "editor" | "viewer";
           created_at: string;
         };
         Insert: {
           user_id: string;
           hotel_id: string;
-          role?: "editor" | "viewer";
+          role?: "admin" | "editor" | "viewer";
           created_at?: string;
         };
         Update: {
           user_id?: string;
           hotel_id?: string;
-          role?: "editor" | "viewer";
+          role?: "admin" | "editor" | "viewer";
           created_at?: string;
         };
         Relationships: [];
@@ -146,7 +146,7 @@ export type Database = {
           consumed_at: string | null;
           expires_at: string | null;
           created_at: string;
-          role: "editor" | "viewer";
+          role: "admin" | "editor" | "viewer";
         };
         Insert: {
           id?: string;
@@ -158,7 +158,7 @@ export type Database = {
           consumed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
-          role?: "editor" | "viewer";
+          role?: "admin" | "editor" | "viewer";
         };
         Update: {
           hotel_id?: string;
@@ -169,7 +169,42 @@ export type Database = {
           consumed_at?: string | null;
           expires_at?: string | null;
           created_at?: string;
-          role?: "editor" | "viewer";
+          role?: "admin" | "editor" | "viewer";
+        };
+        Relationships: [];
+      };
+      publish_approval_requests: {
+        Row: {
+          id: string;
+          information_id: string;
+          hotel_id: string;
+          requested_by_user_id: string;
+          status: "pending" | "approved" | "rejected";
+          requested_at: string;
+          reviewed_by_user_id: string | null;
+          reviewed_at: string | null;
+          review_comment: string | null;
+        };
+        Insert: {
+          id?: string;
+          information_id: string;
+          hotel_id: string;
+          requested_by_user_id: string;
+          status?: "pending" | "approved" | "rejected";
+          requested_at?: string;
+          reviewed_by_user_id?: string | null;
+          reviewed_at?: string | null;
+          review_comment?: string | null;
+        };
+        Update: {
+          information_id?: string;
+          hotel_id?: string;
+          requested_by_user_id?: string;
+          status?: "pending" | "approved" | "rejected";
+          requested_at?: string;
+          reviewed_by_user_id?: string | null;
+          reviewed_at?: string | null;
+          review_comment?: string | null;
         };
         Relationships: [];
       };

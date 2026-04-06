@@ -38,14 +38,30 @@ export async function POST(request: Request) {
   if (!membership?.hotel_id) {
     return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
   }
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("plan")
+    .eq("hotel_id", membership.hotel_id)
+    .maybeSingle();
+  if (sub?.plan !== "business") {
+    return NextResponse.json({ error: "チーム機能はBusinessプランでご利用いただけます" }, { status: 403 });
+  }
 
   const { data: hotel } = await admin
     .from("hotels")
     .select("owner_user_id")
     .eq("id", membership.hotel_id)
     .maybeSingle();
-  if (hotel?.owner_user_id !== user.id) {
-    return NextResponse.json({ error: "オーナーのみメンバーを削除できます" }, { status: 403 });
+  const { data: actorMembership } = await admin
+    .from("hotel_memberships")
+    .select("role")
+    .eq("hotel_id", membership.hotel_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const isOwner = hotel?.owner_user_id === user.id;
+  const isAdmin = actorMembership?.role === "admin";
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "オーナー/管理者のみメンバーを削除できます" }, { status: 403 });
   }
 
   if (targetUserId === user.id) {
@@ -53,6 +69,17 @@ export async function POST(request: Request) {
   }
   if (targetUserId === hotel?.owner_user_id) {
     return NextResponse.json({ error: "オーナーは削除できません" }, { status: 400 });
+  }
+  if (isAdmin) {
+    const { data: targetMembership } = await admin
+      .from("hotel_memberships")
+      .select("role")
+      .eq("hotel_id", membership.hotel_id)
+      .eq("user_id", targetUserId)
+      .maybeSingle();
+    if (targetMembership?.role === "admin") {
+      return NextResponse.json({ error: "管理者同士の削除はオーナーのみ実行できます" }, { status: 403 });
+    }
   }
 
   const { error } = await admin

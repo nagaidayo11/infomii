@@ -40,6 +40,7 @@ export type EditorTopBarProps = {
   onClearAll?: () => void;
   onPreview: () => void;
   onPublish: () => void;
+  publishActionLabel?: string;
   onQr: () => void;
   onTogglePublished?: () => void;
   publishToggleLoading?: boolean;
@@ -135,6 +136,7 @@ export function EditorTopBar({
   onClearAll,
   onPreview,
   onPublish,
+  publishActionLabel = "公開",
   onQr,
   onTogglePublished,
   publishToggleLoading = false,
@@ -394,7 +396,7 @@ export function EditorTopBar({
           title="翻訳チェック・公開前確認のうえ、保存して公開します"
           className="min-h-10 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:px-2.5 lg:py-1.5"
         >
-          {publishing ? "公開中…" : "公開"}
+          {publishing ? "公開中…" : publishActionLabel}
         </button>
         <button
           type="button"
