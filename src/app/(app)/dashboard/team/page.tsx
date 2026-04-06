@@ -7,7 +7,6 @@ import {
   listCurrentHotelInvites,
   redeemHotelInvite,
   revokeHotelInvite,
-  getCurrentHotelSubscription,
   type HotelInvite,
   type HotelMember,
 } from "@/lib/storage";
@@ -58,8 +57,12 @@ export default function TeamPage() {
   const [businessChecked, setBusinessChecked] = useState(false);
 
   const fetchApprovals = useCallback(
-    async (token: string | null, filter: "pending" | "approved" | "rejected" | "all") => {
-      if (!token || !isBusiness) {
+    async (
+      token: string | null,
+      filter: "pending" | "approved" | "rejected" | "all",
+      businessEnabled: boolean,
+    ) => {
+      if (!token || !businessEnabled) {
         setApprovals([]);
         return;
       }
@@ -82,7 +85,7 @@ export default function TeamPage() {
       const data = (await readJsonSafe<{ approvals?: PublishApprovalRow[] }>(res)) ?? {};
       setApprovals(Array.isArray(data.approvals) ? data.approvals : []);
     },
-    [isBusiness],
+    [],
   );
 
   const load = useCallback(async () => {
@@ -93,24 +96,26 @@ export default function TeamPage() {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       const token = session?.access_token;
       setCurrentUserId(session?.user?.id ?? null);
-      const [invitesData, membersResRaw, subscription] = await Promise.all([
-        listCurrentHotelInvites(),
-        token
-          ? fetch("/api/team/members", {
-              headers: { Authorization: `Bearer ${token}` },
-            }).then((r) => readJsonSafe<{ members?: HotelMember[]; error?: string }>(r))
-          : Promise.resolve({ members: [] }),
-        getCurrentHotelSubscription(),
-      ]);
-      const membersRes = membersResRaw ?? { members: [] };
-      setInvites(invitesData);
+      const membersApi = token
+        ? await fetch("/api/team/members", {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then(async (r) => ({
+            ok: r.ok,
+            status: r.status,
+            body: (await readJsonSafe<{ members?: HotelMember[]; error?: string }>(r)) ?? {},
+          }))
+        : { ok: false, status: 401, body: { members: [] as HotelMember[] } };
+      const membersRes = membersApi.body ?? { members: [] };
       setMembers(Array.isArray(membersRes.members) ? membersRes.members : []);
-      const isBiz = subscription?.plan === "business";
+      const isBiz = membersApi.ok;
       setIsBusiness(isBiz);
       setBusinessChecked(true);
       if (isBiz) {
-        await fetchApprovals(token ?? null, approvalFilter);
+        const invitesData = await listCurrentHotelInvites();
+        setInvites(invitesData);
+        await fetchApprovals(token ?? null, approvalFilter, true);
       } else {
+        setInvites([]);
         setApprovals([]);
       }
     } catch (e) {
@@ -129,7 +134,7 @@ export default function TeamPage() {
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
-      await fetchApprovals(session?.access_token ?? null, approvalFilter);
+      await fetchApprovals(session?.access_token ?? null, approvalFilter, true);
     })();
   }, [approvalFilter, businessChecked, fetchApprovals, isBusiness]);
 
@@ -223,7 +228,7 @@ export default function TeamPage() {
         setError(data.error ?? "公開申請の処理に失敗しました");
         return;
       }
-      await fetchApprovals(token, approvalFilter);
+      await fetchApprovals(token, approvalFilter, true);
       if (action === "reject") {
         setRejectModalOpen(false);
         setRejectTargetId(null);
@@ -277,9 +282,14 @@ export default function TeamPage() {
                 チーム招待・公開申請の承認フローは Business プランでご利用いただけます。
                 現在のプランではこの画面の操作はできません。
               </p>
+              <p className="mt-3 text-xs leading-relaxed text-amber-800/90">
+                この画面の判定は、お支払い画面ではなく
+                <strong className="font-semibold"> 施設に紐づく契約プラン（データベース上の plan）</strong>
+                が business かどうかで行います。Business に加入済みのはずなのに表示される場合は、反映待ち・別施設を見ている・同期のずれの可能性があります。設定のプラン表示と食い違うときはサポートへお問い合わせください。
+              </p>
               <a
                 href="/lp/saas#pricing"
-                className="mt-4 inline-flex min-h-[40px] items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="mt-4 inline-flex min-h-[40px] items-center rounded-lg bg-black px-3 py-2 text-sm font-medium !text-white hover:bg-neutral-900 hover:!text-white"
               >
                 Businessプランを見る
               </a>
@@ -301,65 +311,67 @@ export default function TeamPage() {
           </div>
         )}
 
-        {/* 招待コードで参加 */}
-        <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-            <h2 className="text-base font-semibold text-slate-900">招待コードで参加</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              招待コードを受け取った場合、ここで入力して施設に参加できます。
-            </p>
-            <form onSubmit={handleRedeem} className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-2">
-              <input
-                type="text"
-                value={redeemCode}
-                onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
-                placeholder="例: ABCD1234"
-                className="min-h-[44px] w-full flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
-                maxLength={12}
-              />
-              <button
-                type="submit"
-                disabled={!isBusiness || redeeming || !redeemCode.trim()}
-                className="min-h-[44px] w-full shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
-              >
-                {redeeming ? "適用中…" : "参加する"}
-              </button>
-            </form>
-          </section>
-        </FadeIn>
+        {isBusiness ? (
+          <>
+            {/* 招待コードで参加 */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+                <h2 className="text-base font-semibold text-slate-900">招待コードで参加</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  招待コードを受け取った場合、ここで入力して施設に参加できます。
+                </p>
+                <form onSubmit={handleRedeem} className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-2">
+                  <input
+                    type="text"
+                    value={redeemCode}
+                    onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                    placeholder="例: ABCD1234"
+                    className="min-h-[44px] w-full flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
+                    maxLength={12}
+                  />
+                  <button
+                    type="submit"
+                    disabled={redeeming || !redeemCode.trim()}
+                    className="min-h-[44px] w-full shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
+                  >
+                    {redeeming ? "適用中…" : "参加する"}
+                  </button>
+                </form>
+              </section>
+            </FadeIn>
 
-        {/* 招待コード発行 */}
-        <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-            <h2 className="text-base font-semibold text-slate-900">招待コードを発行</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              コードを共有すると、相手がログイン後に施設に参加できます。
-            </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
-                className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
-              >
-                <option value="admin">管理者（承認・メンバー管理）</option>
-                <option value="editor">編集可</option>
-                <option value="viewer">閲覧のみ</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleCreateInvite}
-                disabled={!isBusiness || creating}
-                className="min-h-[44px] w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
-              >
-                {creating ? "発行中…" : "招待コードを発行"}
-              </button>
-            </div>
-          </section>
-        </FadeIn>
+            {/* 招待コード発行 */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+                <h2 className="text-base font-semibold text-slate-900">招待コードを発行</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  コードを共有すると、相手がログイン後に施設に参加できます。
+                </p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
+                    className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
+                  >
+                    <option value="admin">管理者（承認・メンバー管理）</option>
+                    <option value="editor">編集可</option>
+                    <option value="viewer">閲覧のみ</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleCreateInvite}
+                    disabled={creating}
+                    className="min-h-[44px] w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
+                  >
+                    {creating ? "発行中…" : "招待コードを発行"}
+                  </button>
+                </div>
+              </section>
+            </FadeIn>
 
-        {/* 発行済み招待 */}
-        <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+            {/* 発行済み招待 */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">発行済み招待コード</h2>
             {loading ? (
               <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
@@ -399,12 +411,12 @@ export default function TeamPage() {
                 ))}
               </ul>
             )}
-          </section>
-        </FadeIn>
+              </section>
+            </FadeIn>
 
-        {/* メンバー一覧 */}
-        <FadeIn>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+            {/* メンバー一覧 */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
             <h2 className="text-base font-semibold text-slate-900">メンバー</h2>
             {loading ? (
               <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
@@ -441,12 +453,11 @@ export default function TeamPage() {
                 ))}
               </ul>
             )}
-          </section>
-        </FadeIn>
-        {/* 公開申請 */}
-        {isBusiness && (
-          <FadeIn>
-            <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+              </section>
+            </FadeIn>
+            {/* 公開申請 */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-semibold text-slate-900">公開申請</h2>
@@ -531,9 +542,10 @@ export default function TeamPage() {
                   ))}
                 </ul>
               )}
-            </section>
-          </FadeIn>
-        )}
+              </section>
+            </FadeIn>
+          </>
+        ) : null}
       </div>
       {rejectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
