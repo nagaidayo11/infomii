@@ -1849,13 +1849,6 @@ export function CardSettings({
                     ))}
                   </select>
                 </div>
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
-                  className={inputClass}
-                  labelClassName={labelClass}
-                />
               </SettingsSection>
             </>
           )}

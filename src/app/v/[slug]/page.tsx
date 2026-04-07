@@ -66,12 +66,13 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     .select("status")
     .eq("slug", slug)
     .maybeSingle();
-  const { data: subRow } = await supabase
+  const { data: subRows } = await supabase
     .from("subscriptions")
     .select("plan")
     .eq("hotel_id", page.hotel_id)
-    .maybeSingle();
-  const canShowLocaleToggle = subRow?.plan === "business";
+    .order("updated_at", { ascending: false })
+    .limit(1);
+  const canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
   const isPublished = infoRow?.status === "published";
   if (!isPublished && !isPreviewRequest) {
     return (

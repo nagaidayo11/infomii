@@ -57,8 +57,14 @@ const cards: EditorCard[] = [
   },
 ];
 
-export default function DemoGuestPage() {
-  return (
+export default function DemoGuestPage({
+  searchParams,
+}: {
+  searchParams?: { frame?: string };
+}) {
+  const withFrame = searchParams?.frame === "1";
+
+  const page = (
     <GuestCardPageView
       title="ご案内"
       cards={cards}
@@ -66,6 +72,29 @@ export default function DemoGuestPage() {
       localeLocked
       pageBackground={{ mode: "solid", color: "#f8fafc", from: "#f8fafc", to: "#e2e8f0", angle: 180 }}
       unpublishedPreview
+      localeToggleHint="Businessプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
+      disableLocaleSwitch
     />
+  );
+
+  if (!withFrame) {
+    return page;
+  }
+
+  return (
+    <div className="mx-auto flex min-h-[100dvh] w-full items-center justify-center bg-slate-100 p-4 sm:p-6">
+      <div className="relative h-[88dvh] w-[min(390px,100%)] overflow-hidden rounded-[2rem] border border-slate-300/70 bg-[#dbe3ed] p-[10px] shadow-[0_18px_42px_rgba(15,23,42,0.2)]">
+        <div className="absolute left-1/2 top-[12px] z-10 h-1.5 w-14 -translate-x-1/2 rounded-full bg-slate-300/90" />
+        <div
+          className="h-full w-full overflow-auto rounded-[1.65rem] bg-white p-0 pt-2.5 shadow-inner ring-1 ring-slate-200/70"
+          style={{
+            clipPath: "inset(0 round 1.5rem)",
+            WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+          }}
+        >
+          {page}
+        </div>
+      </div>
+    </div>
   );
 }

@@ -7,8 +7,8 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
+const SAMPLE_PAGE_DEMO_HREF = "/demo/guest?frame=1";
 const DEMO_EDITOR_HREF = "/demo/editor";
-const CONSULT_HREF = process.env.NEXT_PUBLIC_SALES_CONSULT_URL ?? "mailto:info@infomii.com?subject=Infomii%20導入相談";
 
 export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
@@ -163,9 +163,6 @@ export default function LpSaaSPage() {
             <a href="#pricing" className={navLinkClass}>
               料金
             </a>
-            <Button href={CONSULT_HREF} variant="secondary" size="md" className="rounded-lg px-2 sm:px-4">
-              15分導入相談
-            </Button>
             <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
               ログイン
             </Button>
@@ -225,7 +222,7 @@ export default function LpSaaSPage() {
               >
                 30秒デモで運用イメージを見る
               </Button>
-              <Button href={SAMPLE_PAGE_HREF} variant="secondary" size="lg">
+              <Button href={SAMPLE_PAGE_DEMO_HREF} variant="secondary" size="lg">
                 サンプルページを見る
               </Button>
               <Button href={ctaHref} variant="secondary" size="lg">
@@ -275,24 +272,10 @@ export default function LpSaaSPage() {
             <div className="mt-4">
               <PricingComparisonTable />
             </div>
-            <div className="mt-5 rounded-xl border border-emerald-200/80 bg-emerald-50/70 p-4">
-              <p className="text-sm font-semibold text-emerald-900">導入判断で迷う場合は15分で整理できます</p>
-              <p className="mt-1 text-xs text-emerald-800">
-                現在の運用体制（担当者数・拠点数・公開本数）に合わせて、Free/Pro/Businessの最短ルートを提案します。
-              </p>
-              <div className="mt-3">
-                <Button href={CONSULT_HREF} variant="secondary" size="md" className="border-emerald-300 bg-white hover:bg-emerald-50">
-                  15分導入相談を予約
-                </Button>
-              </div>
-            </div>
           </div>
 
           <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
-            <Card
-              padding="lg"
-              className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80"
-            >
+            <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
               <p className="mt-1 text-sm text-slate-500">まず1ページで運用開始</p>
@@ -305,7 +288,7 @@ export default function LpSaaSPage() {
               <Button href={ctaHref} variant="secondary" className="mt-6">
                 Freeで始める
               </Button>
-            </Card>
+            </div>
 
             <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
               <div className="flex items-center justify-between">
@@ -346,10 +329,7 @@ export default function LpSaaSPage() {
               </div>
             </div>
 
-            <Card
-              padding="lg"
-              className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80"
-            >
+            <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
@@ -377,7 +357,7 @@ export default function LpSaaSPage() {
                   </CheckoutButton>
                 ) : null}
               </div>
-            </Card>
+            </div>
           </StaggerReveal>
           <p className="mt-5 text-center text-sm font-medium text-slate-600">
             迷ったらPro：1名運用で最も選ばれています

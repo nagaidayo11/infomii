@@ -30,7 +30,6 @@ import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
 export function DashboardView() {
-  const consultHref = process.env.NEXT_PUBLIC_SALES_CONSULT_URL ?? "mailto:info@infomii.com?subject=Infomii%20導入相談";
   const router = useRouter();
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);
@@ -45,11 +44,6 @@ export function DashboardView() {
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
-  const [kpiChecks, setKpiChecks] = useState({
-    reviewCvr: false,
-    reviewMrr: false,
-    nextAction: false,
-  });
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
 
@@ -124,34 +118,6 @@ export function DashboardView() {
     setMounted(true);
   }, []);
 
-  const weekKey = (() => {
-    const now = new Date();
-    const start = new Date(now);
-    start.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    return `kpi-week-${start.toISOString().slice(0, 10)}`;
-  })();
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(weekKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as typeof kpiChecks;
-      setKpiChecks({
-        reviewCvr: Boolean(parsed.reviewCvr),
-        reviewMrr: Boolean(parsed.reviewMrr),
-        nextAction: Boolean(parsed.nextAction),
-      });
-    } catch {
-      // ignore malformed localStorage
-    }
-  }, [weekKey]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(weekKey, JSON.stringify(kpiChecks));
-  }, [weekKey, kpiChecks]);
-
   useEffect(() => {
     void loadBootstrap();
   }, [loadBootstrap]);
@@ -197,8 +163,6 @@ export function DashboardView() {
   const totalViews = viewMetrics?.totalViews7d ?? pageViewAnalytics?.totalViews ?? 0;
   const todayViews = viewMetrics?.totalViewsToday ?? 0;
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
-  const publishedRate = items.length > 0 ? Math.round((published.length / items.length) * 100) : 0;
-  const weeklyChecklistDone = [kpiChecks.reviewCvr, kpiChecks.reviewMrr, kpiChecks.nextAction].filter(Boolean).length;
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -303,96 +267,6 @@ export function DashboardView() {
             </ul>
           </div>
         )}
-      </section>
-      </ScrollReveal>
-
-      <ScrollReveal>
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-700">週次KPIレビュー</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              毎週の勝ち筋確認（CVR / MRR / 次アクション）を固定運用にします
-            </p>
-          </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-            進捗 {weeklyChecklistDone}/3
-          </span>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-            <p className="text-xs font-medium text-slate-500">公開率</p>
-            <p className="mt-1 text-lg font-semibold text-slate-900">{publishedRate}%</p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-            <p className="text-xs font-medium text-slate-500">総閲覧（7日）</p>
-            <p className="mt-1 text-lg font-semibold text-slate-900">{totalViews}</p>
-          </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-            <p className="text-xs font-medium text-slate-500">公開中ページ</p>
-            <p className="mt-1 text-lg font-semibold text-slate-900">{published.length}</p>
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          {[
-            { key: "reviewCvr", label: "LP→登録CVRを確認する" },
-            { key: "reviewMrr", label: "Pro/BusinessのMRR推移を確認する" },
-            { key: "nextAction", label: "次週の改善アクションを1つ決める" },
-          ].map((item) => (
-            <label key={item.key} className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={kpiChecks[item.key as keyof typeof kpiChecks]}
-                onChange={(e) =>
-                  setKpiChecks((prev) => ({
-                    ...prev,
-                    [item.key]: e.target.checked,
-                  }))
-                }
-              />
-              {item.label}
-            </label>
-          ))}
-        </div>
-      </section>
-      </ScrollReveal>
-
-      <ScrollReveal>
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-700">導入相談・営業テンプレ</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              初回提案時にそのまま使える短文テンプレ
-            </p>
-          </div>
-          <Link
-            href={consultHref}
-            className="inline-flex min-h-[40px] items-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
-          >
-            15分導入相談を案内
-          </Link>
-        </div>
-        <div className="mt-4 space-y-3">
-          {[
-            "最短30分で、1ページ公開まで伴走します。まずは現状運用を15分で整理しませんか？",
-            "運用担当1名で複数ページを回すならPro、複数拠点・複数担当ならBusinessが最短です。",
-            "更新漏れ防止と引き継ぎを重視する場合は、公開申請フロー付きのBusiness運用がおすすめです。",
-          ].map((text) => (
-            <div key={text} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-              <p className="text-sm text-slate-700">{text}</p>
-              <button
-                type="button"
-                className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-50"
-                onClick={() => {
-                  void navigator.clipboard.writeText(text);
-                }}
-              >
-                コピー
-              </button>
-            </div>
-          ))}
-        </div>
       </section>
       </ScrollReveal>
 

@@ -1049,16 +1049,18 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     return null;
   }
 
-  const { data, error } = await supabase
+  const { data: rows, error } = await supabase
     .from("subscriptions")
     .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
     .eq("hotel_id", hotelId)
-    .maybeSingle();
+    .order("updated_at", { ascending: false })
+    .limit(1);
 
   if (error) {
     throw toError(error, "プラン情報の取得に失敗しました");
   }
 
+  const data = rows?.[0] ?? null;
   if (!data) {
     if (await getIsDevBusinessOverrideEnabledForCurrentUser()) {
       return createDevBusinessOverrideSubscriptionFallback();
@@ -1286,7 +1288,8 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       .from("subscriptions")
       .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
       .eq("hotel_id", hotelId)
-      .maybeSingle(),
+      .order("updated_at", { ascending: false })
+      .limit(1),
     supabase
       .from("informations")
       .select("id,title,body,images,content_blocks,theme,status,publish_at,unpublish_at,slug,updated_at")
@@ -1304,15 +1307,16 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     throw toError(infoRes.error, "一覧取得に失敗しました");
   }
 
-  const subscription = subRes.data
+  const latestSub = subRes.data?.[0] ?? null;
+  const subscription = latestSub
     ? {
-      id: subRes.data.id,
-      plan: subRes.data.plan,
-      status: subRes.data.status,
-      maxPublishedPages: subRes.data.max_published_pages,
-      currentPeriodEnd: subRes.data.current_period_end,
-      hasStripeCustomer: Boolean(subRes.data.stripe_customer_id),
-      updatedAt: subRes.data.updated_at,
+      id: latestSub.id,
+      plan: latestSub.plan,
+      status: latestSub.status,
+      maxPublishedPages: latestSub.max_published_pages,
+      currentPeriodEnd: latestSub.current_period_end,
+      hasStripeCustomer: Boolean(latestSub.stripe_customer_id),
+      updatedAt: latestSub.updated_at,
     }
     : null;
 
