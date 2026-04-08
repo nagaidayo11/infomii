@@ -92,6 +92,11 @@ export function PublicPageShell({
     return (
       <div className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3" style={{ background: pageBackgroundStyle }}>
         <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          {backButton ? (
+            <div className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2 pt-2.5 backdrop-blur-sm">
+              <div className="mx-auto max-w-[420px]">{backButton}</div>
+            </div>
+          ) : null}
           {(title.trim() || headerActions) && (
             <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-3 pt-3.5 backdrop-blur-sm">
               <div className="mx-auto flex max-w-[420px] items-center justify-between gap-2">

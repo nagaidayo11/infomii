@@ -42,7 +42,11 @@ export type CardType =
   | "compare"
   | "kpi"
   | "space"
-  | "campaign_timer";
+  | "campaign_timer"
+  | "tabs_info"
+  | "faq_search"
+  | "notice_ticker"
+  | "coupon";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -233,6 +237,10 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   kpi: "KPI",
   space: "スペース",
   campaign_timer: "キャンペーンタイマー",
+  tabs_info: "タブ切替案内",
+  faq_search: "FAQ検索",
+  notice_ticker: "お知らせティッカー",
+  coupon: "クーポン",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -252,6 +260,10 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "compare",
   "kpi",
   "campaign_timer",
+  "tabs_info",
+  "faq_search",
+  "notice_ticker",
+  "coupon",
   "gallery",
   "divider",
   "space",
@@ -274,6 +286,10 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "compare", label: "比較", description: "2列比較・プラン比較" },
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
+  { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
+  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
+  { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
@@ -320,10 +336,14 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "compare", label: "比較", description: "2カラム比較" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
+  { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
+  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
+  { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
-export const BUSINESS_ONLY_CARD_TYPES: CardType[] = ["hero_slider", "campaign_timer"];
+export const BUSINESS_ONLY_CARD_TYPES: CardType[] = ["hero_slider", "campaign_timer", "notice_ticker", "coupon"];
 
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
@@ -433,6 +453,41 @@ function defaultContent(type: CardType): Record<string, unknown> {
         hideBeforeStart: false,
         hideAfterEnd: false,
         showSeconds: true,
+        ctaLabel: "詳細を見る",
+        ctaUrl: "",
+      };
+    case "tabs_info":
+      return {
+        title: "館内案内タブ",
+        defaultIndex: 0,
+        tabs: [
+          { label: "朝食", body: "7:00-9:30 / 1F ダイニング" },
+          { label: "大浴場", body: "15:00-24:00 / 6:00-10:00" },
+          { label: "アクセス", body: "最寄り駅から徒歩7分。地図をご確認ください。" },
+        ],
+      };
+    case "faq_search":
+      return {
+        title: "よくあるご質問",
+        placeholder: "キーワードで検索",
+        items: [
+          { q: "チェックインは何時からですか？", a: "15:00からです。" },
+          { q: "WiFiは利用できますか？", a: "客室・ロビーでご利用いただけます。" },
+        ],
+      };
+    case "notice_ticker":
+      return {
+        title: "お知らせ",
+        items: ["本日の大浴場は通常営業です。", "朝食会場は1Fダイニングです。"],
+        speed: "normal",
+        pauseOnHover: true,
+      };
+    case "coupon":
+      return {
+        title: "ご宿泊者限定クーポン",
+        code: "WELCOME10",
+        expiryText: "有効期限: 2026/12/31",
+        notes: "チェックイン時にフロントでご提示ください。",
         ctaLabel: "詳細を見る",
         ctaUrl: "",
       };

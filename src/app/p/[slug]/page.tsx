@@ -7,8 +7,7 @@ import { InfoPageChat } from "@/components/info-chat/InfoPageChat";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
-import { LocaleProvider } from "@/components/locale-context";
-import { CardRenderer } from "@/components/cards/CardRenderer";
+import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard } from "@/components/editor/types";
 import { renderInformationIconVisual } from "@/components/information/InformationIconVisual";
 import { blocksToContextText } from "@/lib/information-to-context";
@@ -593,6 +592,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   const source = query.src === "qr" ? "qr" : "direct";
   const requestHeaders = await headers();
+  const initialLocale = getVisitorLocaleFromHeader(requestHeaders.get("accept-language"));
   const referer = requestHeaders.get("referer");
   const parentSlug = (() => {
     if (!referer) {
@@ -675,6 +675,21 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     content: typeof c.content === "object" && c.content && !Array.isArray(c.content) ? (c.content as Record<string, unknown>) : {},
     order: typeof c.order === "number" ? c.order : idx,
   }));
+  let canShowLocaleToggle = false;
+  if (row.hotel_id) {
+    try {
+      const admin = getSupabaseAdminServerClient();
+      const { data: subRows } = await admin
+        .from("subscriptions")
+        .select("plan")
+        .eq("hotel_id", row.hotel_id)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
+    } catch {
+      canShowLocaleToggle = false;
+    }
+  }
 
   const themeStyle = {
     backgroundColor: theme.backgroundColor || "#ffffff",
@@ -1191,7 +1206,25 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     <>
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
       <InfoPageChat contextText={contextText} pageTitle={row.title} />
-      {isEmbed ? (
+      {/** /p でも card-based 表示時は GuestCardPageView を使って /v と同じ多言語トグル挙動に合わせる */}
+      {cardBasedView ? (
+        <GuestCardPageView
+          title={row.title}
+          cards={cardViewData}
+          initialLocale={initialLocale}
+          isEmbed={isEmbed}
+          showLocaleToggle={canShowLocaleToggle}
+          backButton={
+            isChildPage ? (
+              <PublicFooterBackButton
+                fallbackHref="/"
+                label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+              />
+            ) : undefined
+          }
+        />
+      ) : (
+      isEmbed ? (
         <main className="min-h-screen overflow-x-hidden bg-[#f8fafc] p-0 text-slate-900">
           <div className="mx-auto max-w-[420px] px-3 py-6" style={themeStyle}>
             {isChildPage ? (
@@ -1203,13 +1236,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
               </div>
             ) : null}
             <h1 className="mb-5 text-xl font-bold text-slate-900">{row.title}</h1>
-            {cardBasedView ? (
-              <LocaleProvider value={getVisitorLocaleFromHeader(requestHeaders.get("accept-language"))}>
-                <CardRenderer cards={cardViewData} />
-              </LocaleProvider>
-            ) : (
-              contentArea
-            )}
+            {contentArea}
           </div>
           <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
             <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
@@ -1228,14 +1255,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           }
           isEmbed={false}
         >
-          {cardBasedView ? (
-            <LocaleProvider value={getVisitorLocaleFromHeader(requestHeaders.get("accept-language"))}>
-              <CardRenderer cards={cardViewData} />
-            </LocaleProvider>
-          ) : (
-            contentArea
-          )}
+          {contentArea}
         </PublicPageShell>
+      )
       )}
     </>
   );

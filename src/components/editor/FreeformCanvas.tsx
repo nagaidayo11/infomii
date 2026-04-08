@@ -90,6 +90,10 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   kpi: 96,
   space: 48,
   campaign_timer: 128,
+  tabs_info: 120,
+  faq_search: 128,
+  notice_ticker: 92,
+  coupon: 128,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {

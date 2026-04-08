@@ -45,7 +45,7 @@ type Editor2Props = {
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
 const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
-const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / ハングル";
+const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / 한국어";
 
 export function Editor2({
   pageId,
@@ -964,16 +964,17 @@ export function Editor2({
 
   const showEditorBusyOverlay =
     previewBusy || publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
+  const showBusinessTranslationOverlay = translationEnabled && localeTranslating;
   let editorBusyTitle = "公開中...";
   let editorBusySubtitle = "保存と公開設定を実行しています";
-  if (previewBusy && localeTranslating) {
+  if (previewBusy && showBusinessTranslationOverlay) {
     editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
     editorBusySubtitle = "公開前に多言語データを整えています";
   } else if (previewBusy) {
     editorBusyTitle = "プレビュー準備中...";
     editorBusySubtitle = "保存してプレビューを開きます";
   } else if (togglePublishBusy) {
-    if (localeTranslating) {
+    if (showBusinessTranslationOverlay) {
       editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
       editorBusySubtitle = "公開前に多言語データを整えています";
     } else {
@@ -986,7 +987,7 @@ export function Editor2({
   } else if (qrModalPreparing) {
     editorBusyTitle = "QRを表示しています";
     editorBusySubtitle = "最新の編集内容を保存しています";
-  } else if (publishFlowBusy && localeTranslating) {
+  } else if (publishFlowBusy && showBusinessTranslationOverlay) {
     editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
     editorBusySubtitle = "公開前に多言語データを取得・反映しています";
   } else if (publishFlowBusy) {

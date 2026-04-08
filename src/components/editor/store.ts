@@ -227,6 +227,10 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "kpi",
       "space",
       "campaign_timer",
+      "tabs_info",
+      "faq_search",
+      "notice_ticker",
+      "coupon",
     ];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
@@ -276,6 +280,10 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "kpi",
       "space",
       "campaign_timer",
+      "tabs_info",
+      "faq_search",
+      "notice_ticker",
+      "coupon",
     ];
     if (!allowed.includes(type)) return;
     const { cards, historyPast } = get();

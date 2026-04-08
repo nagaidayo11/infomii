@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
@@ -24,6 +25,8 @@ type GuestCardPageViewProps = {
   disableLocaleSwitch?: boolean;
   /** false のとき言語トグル自体を表示しない */
   showLocaleToggle?: boolean;
+  /** Optional back button (for child pages). */
+  backButton?: ReactNode;
 };
 
 /**
@@ -40,6 +43,7 @@ export function GuestCardPageView({
   localeToggleHint = null,
   disableLocaleSwitch = false,
   showLocaleToggle = true,
+  backButton,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(() => {
     if (localeLocked || typeof navigator === "undefined") return initialLocale;
@@ -92,6 +96,7 @@ export function GuestCardPageView({
     <LocaleProvider value={locale}>
       <PublicPageShell
         title={title}
+        backButton={backButton}
         pageBackground={pageBackground}
         headerActions={headerActions}
         isEmbed={isEmbed}

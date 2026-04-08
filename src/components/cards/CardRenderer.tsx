@@ -36,6 +36,10 @@ import { CompareCard } from "./CompareCard";
 import { KpiCard } from "./KpiCard";
 import { SpaceCard } from "./SpaceCard";
 import { CampaignTimerCard } from "./CampaignTimerCard";
+import { TabsInfoCard } from "./TabsInfoCard";
+import { FaqSearchCard } from "./FaqSearchCard";
+import { NoticeTickerCard } from "./NoticeTickerCard";
+import { CouponCard } from "./CouponCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -220,6 +224,14 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <SpaceCard card={resolvedCard} isSelected={isSelected} showLabel={showSpaceLabel} />;
     case "campaign_timer":
       return <CampaignTimerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "tabs_info":
+      return <TabsInfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "faq_search":
+      return <FaqSearchCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "notice_ticker":
+      return <NoticeTickerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "coupon":
+      return <CouponCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }

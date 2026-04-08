@@ -8,6 +8,17 @@ import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
 const RECENT_STORAGE_KEY = "infomii-slash-recent";
 const RECENT_MAX = 5;
 
+function BusinessBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+      <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
+      </svg>
+      Business
+    </span>
+  );
+}
+
 function getRecentTypes(): CardType[] {
   try {
     const raw = localStorage.getItem(RECENT_STORAGE_KEY) || "[]";
@@ -66,12 +77,11 @@ export function SlashCommandMenu({
   const recentTypes = getRecentTypes();
   const recentItems = recentTypes
     .map((t) => ALL_ITEMS.find((i) => i.type === t))
-    .filter((x): x is FlatItem => !!x)
-    .filter((item) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type));
+    .filter((x): x is FlatItem => !!x);
 
   const allAvailableItems = useMemo(
-    () => ALL_ITEMS.filter((item) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)),
-    [canUseBusinessBlocks]
+    () => ALL_ITEMS,
+    []
   );
 
   const filteredItems = useMemo(() => {
@@ -111,7 +121,8 @@ export function SlashCommandMenu({
         const item = displayItems[Math.min(highlightIndex, Math.max(0, displayItems.length - 1))];
         if (item) {
           persistRecent(item.type);
-          onSelect(item.type);
+          if (canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)) onSelect(item.type);
+          else onLockedAddCard?.(item.type);
           onClose();
         }
         return;
@@ -119,7 +130,7 @@ export function SlashCommandMenu({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, onSelect, highlightIndex, displayItems]);
+  }, [open, onClose, onSelect, highlightIndex, displayItems, canUseBusinessBlocks, onLockedAddCard]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -179,12 +190,25 @@ export function SlashCommandMenu({
               }`}
               onMouseEnter={() => setHighlightIndex(i)}
               onClick={() => handleSelect(item)}
+              title={!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "Businessプラン限定ブロックです" : undefined}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm">
+              <span
+                className={
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-slate-600 shadow-sm " +
+                  (!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type)
+                    ? "border-violet-300 bg-violet-100 text-violet-700"
+                    : "border-slate-200 bg-white")
+                }
+              >
                 {CARD_ICONS[item.type] ?? CARD_ICONS.text}
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{item.label}</span>
+                <span className="flex items-center gap-1.5 text-sm font-medium">
+                  <span>{item.label}</span>
+                  {!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? (
+                    <BusinessBadge />
+                  ) : null}
+                </span>
                 {!showRecentLabel && (
                   <span className="block truncate text-[11px] text-slate-500">{item.category}</span>
                 )}

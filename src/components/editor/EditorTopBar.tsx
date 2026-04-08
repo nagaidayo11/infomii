@@ -110,7 +110,6 @@ export function EditorTopBar({
   publishing = false,
   qrPreparing = false,
   previewPreparing = false,
-  onEditPageBackground,
   onBulkFont,
   canUndo = false,
   canRedo = false,
@@ -293,26 +292,16 @@ export function EditorTopBar({
         </button>
       </div>
 
-      {onEditPageBackground && (
+      {onBulkFont && (
         <div className="hidden shrink-0 flex-wrap items-center gap-1.5 lg:flex">
           <button
             type="button"
-            onClick={onEditPageBackground}
+            onClick={onBulkFont}
             className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
-            title="ページ背景を編集"
+            title="ページ内ブロックのフォントを一括変更"
           >
-            背景
+            一括フォント切替
           </button>
-          {onBulkFont && (
-            <button
-              type="button"
-              onClick={onBulkFont}
-              className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
-              title="ページ内ブロックのフォントを一括変更"
-            >
-              一括フォント
-            </button>
-          )}
         </div>
       )}
 
@@ -465,7 +454,7 @@ export function EditorTopBar({
                 >
                   ブロックをすべて削除
                 </button>
-                {onEditPageBackground && (
+                {onBulkFont && (
                   <>
                     <div className="border-t border-slate-100" />
                     <button
@@ -473,25 +462,12 @@ export function EditorTopBar({
                       role="menuitem"
                       className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
                       onClick={() => {
-                        onEditPageBackground();
+                        onBulkFont();
                         setMoreOpen(false);
                       }}
                     >
-                      ページ背景
+                      一括フォント切替
                     </button>
-                    {onBulkFont && (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
-                        onClick={() => {
-                          onBulkFont();
-                          setMoreOpen(false);
-                        }}
-                      >
-                        一括フォント
-                      </button>
-                    )}
                   </>
                 )}
               </div>

@@ -21,6 +21,26 @@ type LibrarySection = {
   items: LibraryItem[];
 };
 
+type QuickPreset = {
+  id: string;
+  label: string;
+  description: string;
+  purpose: string;
+  types: CardType[];
+  businessOnly?: boolean;
+};
+
+function BusinessBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+      <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
+      </svg>
+      Business
+    </span>
+  );
+}
+
 export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   hero: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,108 +233,131 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4l2 2M9 3h6" />
     </svg>
   ),
+  tabs_info: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 9h3m4 0h3M7 13h10" />
+    </svg>
+  ),
+  faq_search: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m20 20-3.5-3.5" />
+    </svg>
+  ),
+  notice_ticker: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11h14m0 0-3-3m3 3-3 3M3 6h18M3 18h18" />
+    </svg>
+  ),
+  coupon: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 1 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 1 0 0-4V9z" />
+    </svg>
+  ),
 };
 
-/** ファーストビュー・目立たせたい内容 */
-const PROMOTION_ITEMS: LibraryItem[] = [
-  { type: "hero", label: "ヒーロー", description: "ページ先頭の大きな見出しと写真（1ページ1つ推奨）" },
+const MAIN_ITEMS: LibraryItem[] = [
+  { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Business限定）" },
-  { type: "highlight", label: "強調ブロック", description: "注意事項やお知らせを目立たせる" },
-  { type: "button", label: "リンクボタン", description: "予約サイトやお問い合わせへつなぐ" },
+  { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
+  { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
 ];
 
-/** 館内サービス・宿泊に関する案内 */
 const GUIDE_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "ウェルカム", description: "あいさつやページの使い方" },
-  { type: "wifi", label: "WiFi案内", description: "SSIDとパスワードをまとめる" },
-  { type: "checkout", label: "チェックアウト", description: "退室時刻や手順" },
-  { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・内容を1ブロックで" },
-  { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧で" },
-  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明" },
-  { type: "notice", label: "重要なお知らせ", description: "必ず読んでもらいたい連絡事項" },
-  { type: "faq", label: "よくある質問", description: "よくある問い合わせと回答" },
+  { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
+  { type: "wifi", label: "WiFi案内", description: "SSID・パスワードを掲載" },
+  { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
+  { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・詳細をまとめる" },
+  { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧表示" },
+  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
+  { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
+  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
 ];
 
-/** 緊急時の連絡先 */
-const SAFETY_ITEMS: LibraryItem[] = [
-  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院などの番号をまとめる" },
+const OPERATION_ITEMS: LibraryItem[] = [
+  { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
+  { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
+  { type: "map", label: "地図", description: "アクセス・所在地を表示" },
+  { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
+  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
+  { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
 ];
 
-/** アクセス・周辺・別ページへのリンク */
-const NAV_ITEMS: LibraryItem[] = [
-  { type: "pageLinks", label: "ページリンク", description: "子ページへのメニュー（アイコン付き）" },
-  { type: "map", label: "地図", description: "住所や地図の埋め込み" },
-  { type: "nearby", label: "周辺案内", description: "周辺のスポットや施設" },
-  { type: "parking", label: "駐車場案内", description: "台数・料金・場所" },
-  { type: "taxi", label: "タクシー案内", description: "タクシー会社の電話番号など" },
+const COMPARISON_ITEMS: LibraryItem[] = [
+  { type: "compare", label: "比較", description: "2列で内容を比較表示" },
+  { type: "kpi", label: "数字強調", description: "時間・数値情報を強く見せる" },
+  { type: "quote", label: "引用", description: "レビュー・口コミ掲載" },
+  { type: "checklist", label: "チェックリスト", description: "持ち物・手続き確認" },
+  { type: "steps", label: "ステップ", description: "手順を段階的に表示" },
+  { type: "tabs_info", label: "タブ切替案内", description: "複数案内をタブで切替表示" },
+  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワードで絞り込み" },
 ];
 
-/** 比較・数値・口コミ */
-const TRUST_ITEMS: LibraryItem[] = [
-  { type: "compare", label: "比較", description: "2つの内容を並べて比較" },
-  { type: "kpi", label: "数字強調", description: "チェックイン時刻など数字を強調" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business限定）" },
-  { type: "quote", label: "引用", description: "お客様の声やレビュー" },
+const MEDIA_ITEMS: LibraryItem[] = [
+  { type: "image", label: "画像", description: "写真を1枚表示" },
+  { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
+  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
+  { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
+  { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
+  { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
+  { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
+  { type: "space", label: "スペース", description: "上下の余白を調整" },
 ];
 
-/** レストラン・温泉など施設タイプ別 */
-const INDUSTRY_ITEMS: LibraryItem[] = [
-  { type: "restaurant", label: "レストラン案内", description: "館内レストランの案内" },
-  { type: "laundry", label: "ランドリー案内", description: "コインランドリーなど" },
-  { type: "spa", label: "スパ・温泉案内", description: "大浴場・スパの案内" },
-];
-
-/** 写真・テキスト・余白などレイアウト用 */
-const LAYOUT_ITEMS: LibraryItem[] = [
-  { type: "image", label: "画像", description: "写真を1枚はめ込む" },
-  { type: "gallery", label: "ギャラリー", description: "複数枚をグリッド表示" },
-  { type: "text", label: "自由テキスト", description: "見出しと本文を自由に" },
-  { type: "checklist", label: "チェックリスト", description: "持ち物・手続きの確認" },
-  { type: "steps", label: "ステップ", description: "手順を番号付きで表示" },
-  { type: "divider", label: "区切り線", description: "ブロック同士の区切り" },
-  { type: "space", label: "スペース", description: "上下の余白を空ける" },
+const BUSINESS_ITEMS: LibraryItem[] = [
+  { type: "hero_slider", label: "ヒーロースライド", description: "動的な複数写真ヒーロー" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示" },
+  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
-  { id: "promotion", title: "メイン表示・誘導", items: PROMOTION_ITEMS },
-  { id: "guide", title: "館内案内・サービス", items: GUIDE_ITEMS },
-  { id: "safety", title: "緊急・安全", items: SAFETY_ITEMS },
-  { id: "nav", title: "アクセス・周辺・リンク", items: NAV_ITEMS },
-  { id: "trust", title: "比較・実績・口コミ", items: TRUST_ITEMS },
-  { id: "industry", title: "施設タイプ別（任意）", items: INDUSTRY_ITEMS },
-  { id: "layout", title: "写真・余白・装飾", items: LAYOUT_ITEMS },
+  { id: "main", title: "メイン表示", items: MAIN_ITEMS },
+  { id: "guide", title: "案内・情報", items: GUIDE_ITEMS },
+  { id: "operation", title: "運用・導線", items: OPERATION_ITEMS },
+  { id: "comparison", title: "比較・訴求", items: COMPARISON_ITEMS },
+  { id: "media", title: "メディア・装飾", items: MEDIA_ITEMS },
+  { id: "business", title: "Business限定", items: BUSINESS_ITEMS },
 ];
 
-const QUICK_PRESETS: Array<{ id: string; label: string; description: string; types: CardType[] }> = [
+const QUICK_PRESETS: QuickPreset[] = [
   {
     id: "checkin-basic",
-    label: "ホテル基本セット",
-    description: "ヒーロー / ウェルカム / WiFi案内 / チェックアウト / FAQ",
-    types: ["hero", "welcome", "wifi", "checkout", "faq"],
+    label: "チェックイン基本セット",
+    purpose: "初回案内を最短で公開",
+    description: "ヒーロー / ウェルカム / WiFi案内 / チェックアウト / リンクボタン",
+    types: ["hero", "welcome", "wifi", "checkout", "button"],
   },
   {
-    id: "frontdesk-reduction",
-    label: "フロント時短セット",
-    description: "ヒーロー / お知らせ / ページリンク / FAQ / 緊急連絡先",
-    types: ["hero", "notice", "pageLinks", "faq", "emergency"],
+    id: "facility-standard",
+    label: "館内案内スタンダード",
+    purpose: "館内情報を1ページで網羅",
+    description: "ヒーロー / 施設案内 / 営業時間一覧 / よくある質問 / 地図",
+    types: ["hero", "breakfast", "schedule", "faq", "map"],
   },
   {
-    id: "facility-guide-complete",
-    label: "館内施設セット",
-    description: "ヒーロー / 施設案内 / 営業時間一覧 / メニュー一覧 / 地図",
-    types: ["hero", "breakfast", "schedule", "menu", "map"],
+    id: "sightseeing-nearby",
+    label: "観光・周辺案内セット",
+    purpose: "移動と周辺導線を明確化",
+    description: "ヒーロー / 周辺案内 / ページリンク / タクシー案内 / 地図",
+    types: ["hero", "nearby", "pageLinks", "taxi", "map"],
   },
   {
-    id: "promo-conversion",
-    label: "強調・比較・数字セット",
-    description: "ヒーロー / 強調 / 比較 / 数字強調 / 引用 / ボタン",
-    types: ["hero", "highlight", "compare", "kpi", "quote", "button"],
+    id: "multilingual-ops",
+    label: "多言語運用セット（Business）",
+    purpose: "多言語前提の運用導線を構築",
+    description: "ヒーロースライド / 重要なお知らせ / WiFi案内 / よくある質問 / リンクボタン",
+    types: ["hero_slider", "notice", "wifi", "faq", "button"],
+    businessOnly: true,
   },
   {
-    id: "resort-experience",
-    label: "旅館・ギャラリー・周辺セット",
-    description: "ヒーロー / ギャラリー / スパ / レストラン / 周辺案内 / 地図",
-    types: ["hero", "gallery", "spa", "restaurant", "nearby", "map"],
+    id: "campaign-conversion",
+    label: "キャンペーン訴求セット（Business）",
+    purpose: "期間訴求とCV導線を強化",
+    description: "ヒーロースライド / キャンペーンタイマー / 強調ブロック / 比較 / リンクボタン",
+    types: ["hero_slider", "campaign_timer", "highlight", "compare", "button"],
+    businessOnly: true,
   },
 ];
 
@@ -329,12 +372,21 @@ export function CardLibrary({
   onLockedAddCard,
 }: CardLibraryProps) {
   const canAdd = (type: CardType) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(type);
+  const canAddPreset = (types: CardType[]) => types.every((type) => canAdd(type));
   const handleAdd = (type: CardType) => {
     if (!canAdd(type)) {
       onLockedAddCard?.(type);
       return;
     }
     onAddCard(type);
+  };
+  const handleAddPreset = (preset: QuickPreset) => {
+    if (!canAddPreset(preset.types)) {
+      const locked = preset.types.find((type) => !canAdd(type));
+      if (locked) onLockedAddCard?.(locked);
+      return;
+    }
+    onAddPreset?.(preset.types);
   };
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -358,12 +410,24 @@ export function CardLibrary({
                   <button
                     key={preset.id}
                     type="button"
-                    onClick={() => onAddPreset(preset.types)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-left transition-all hover:border-slate-300 hover:bg-slate-50"
+                    onClick={() => handleAddPreset(preset)}
+                    className={
+                      "w-full rounded-xl border px-2.5 py-2 text-left transition-all " +
+                      (canAddPreset(preset.types)
+                        ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        : "border-violet-300 bg-violet-50/70")
+                    }
                     aria-label={`${preset.label}を追加`}
+                    title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
                   >
-                    <span className="block text-sm font-medium text-slate-800">{preset.label}</span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{preset.description}</span>
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                      {preset.label}
+                      {preset.businessOnly ? (
+                        <BusinessBadge />
+                      ) : null}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-600">{preset.purpose}</span>
+                    <span className="mt-0.5 block text-[11px] text-slate-500">{preset.description}</span>
                   </button>
                 ))}
               </div>
@@ -393,13 +457,22 @@ export function CardLibrary({
                     aria-label={`${item.label}を追加`}
                     title={canAdd(item.type) ? undefined : "Businessプラン限定ブロックです"}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round">
+                    <span
+                      className={
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round " +
+                        (!canAdd(item.type)
+                          ? "border border-violet-300 bg-violet-100 text-violet-700"
+                          : "bg-slate-100")
+                      }
+                    >
                       {CARD_ICONS[item.type] ?? CARD_ICONS.text}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-slate-800">
-                        {item.label}
-                        {!canAdd(item.type) ? " (Business)" : ""}
+                      <span className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-800">
+                        <span className="truncate">{item.label}</span>
+                        {!canAdd(item.type) ? (
+                          <BusinessBadge />
+                        ) : null}
                       </span>
                       <span className="block truncate text-xs text-slate-500">
                         {item.description}

@@ -160,6 +160,7 @@ type KpiItem = { label?: string; value?: string };
 type ScheduleItem = { day?: string; time?: string; label?: string };
 type MenuItem = { name?: string; price?: string; description?: string };
 type InfoRowItem = { label?: string; value?: string };
+type TabsInfoItem = { label?: string; body?: string };
 type HeroSliderItem = {
   src?: string;
   alt?: string;
@@ -536,6 +537,118 @@ function FaqItemsEditor({
               className={inputClass}
             />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TabsInfoItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.tabs) ? content.tabs : []) as TabsInfoItem[];
+  const setItems = (next: TabsInfoItem[]) => onUpdate("tabs", next);
+  const updateItem = (index: number, field: keyof TabsInfoItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { label: "", body: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const to = index + dir;
+    if (to < 0 || to >= items.length) return;
+    const next = [...items];
+    const [row] = next.splice(index, 1);
+    next.splice(to, 0, row);
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">タブ項目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input
+            label="タブラベル"
+            value={item.label ?? ""}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder={`タブ ${i + 1}`}
+          />
+          <div className="w-full">
+            <label className={labelClass}>本文</label>
+            <textarea
+              value={item.body ?? ""}
+              onChange={(e) => updateItem(i, "body", e.target.value)}
+              placeholder="タブに表示する内容"
+              rows={2}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TickerItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as string[];
+  const setItems = (next: string[]) => onUpdate("items", next);
+  const updateItem = (index: number, value: string) => {
+    const next = [...items];
+    next[index] = value;
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, ""]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const to = index + dir;
+    if (to < 0 || to >= items.length) return;
+    const next = [...items];
+    const [row] = next.splice(index, 1);
+    next.splice(to, 0, row);
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">お知らせ文</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input
+            label={`メッセージ ${i + 1}`}
+            value={item ?? ""}
+            onChange={(e) => updateItem(i, e.target.value)}
+            placeholder="流すお知らせ文"
+          />
         </div>
       ))}
     </div>
@@ -2138,6 +2251,24 @@ export function CardSettings({
             </SettingsSection>
           )}
 
+          {card.type === "faq_search" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="よくあるご質問"
+              />
+              <Input
+                label="検索プレースホルダ"
+                value={(content.placeholder as string) ?? ""}
+                onChange={(e) => update("placeholder", e.target.value)}
+                placeholder="キーワードで検索"
+              />
+              <FaqItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
           {card.type === "quote" && (
             <SettingsSection title="コンテンツ">
               <div className="w-full">
@@ -2180,6 +2311,29 @@ export function CardSettings({
                 placeholder="ご利用ステップ"
               />
               <StepsItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "tabs_info" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="館内案内タブ"
+              />
+              <div className="w-full">
+                <label className={labelClass}>初期表示タブ</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={(content.defaultIndex as number | string | undefined) ?? 0}
+                  onChange={(e) => update("defaultIndex", Number(e.target.value) || 0)}
+                  className={inputClass}
+                />
+              </div>
+              <TabsInfoItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
@@ -2227,6 +2381,84 @@ export function CardSettings({
                 placeholder="KPI"
               />
               <KpiItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "notice_ticker" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="お知らせ"
+              />
+              <div className="w-full">
+                <label className={labelClass}>速度</label>
+                <select
+                  value={(content.speed as string) ?? "normal"}
+                  onChange={(e) => update("speed", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="slow">ゆっくり</option>
+                  <option value="normal">標準</option>
+                  <option value="fast">はやい</option>
+                </select>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={content.pauseOnHover !== false}
+                  onChange={(e) => update("pauseOnHover", e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                ホバー時に停止
+              </label>
+              <TickerItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "coupon" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="ご宿泊者限定クーポン"
+              />
+              <Input
+                label="クーポンコード"
+                value={(content.code as string) ?? ""}
+                onChange={(e) => update("code", e.target.value)}
+                placeholder="WELCOME10"
+              />
+              <Input
+                label="有効期限"
+                value={(content.expiryText as string) ?? ""}
+                onChange={(e) => update("expiryText", e.target.value)}
+                placeholder="有効期限: 2026/12/31"
+              />
+              <div className="w-full">
+                <label className={labelClass}>注意事項</label>
+                <textarea
+                  value={(content.notes as string) ?? ""}
+                  onChange={(e) => update("notes", e.target.value)}
+                  placeholder="利用条件や注意点"
+                  rows={2}
+                  className={inputClass}
+                />
+              </div>
+              <Input
+                label="CTAラベル（任意）"
+                value={(content.ctaLabel as string) ?? ""}
+                onChange={(e) => update("ctaLabel", e.target.value)}
+                placeholder="詳細を見る"
+              />
+              <Input
+                label="CTAリンクURL（任意）"
+                value={(content.ctaUrl as string) ?? ""}
+                onChange={(e) => update("ctaUrl", e.target.value)}
+                placeholder="https://..."
+              />
             </SettingsSection>
           )}
 
