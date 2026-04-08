@@ -87,8 +87,20 @@ function deriveTemplateMeta(template: TemplateRow): TemplateMeta {
       : mustMisses.length > 0
         ? `必須要素不足: ${mustMisses.join(" / ")}`
         : "タイトルと画像の整合は概ね良好";
+  const categoryBasedPlan: "free" | "pro" | "business" =
+    category === "inbound"
+      ? "business"
+      : category === "business" || category === "resort" || category === "ryokan"
+        ? "pro"
+        : "free";
   const recommendedPlan: "free" | "pro" | "business" =
-    cardsCount >= 8 || /多言語|team|運用|統制/.test(keywordSource) ? "business" : cardsCount >= 5 ? "pro" : "free";
+    /多言語|team|運用|統制/.test(keywordSource)
+      ? "business"
+      : cardsCount >= 9
+        ? "business"
+        : cardsCount >= 6
+          ? "pro"
+          : categoryBasedPlan;
 
   return {
     difficulty,

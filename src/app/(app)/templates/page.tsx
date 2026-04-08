@@ -7,14 +7,8 @@ import { useRouter } from "next/navigation";
 import {
   listTemplates,
   createPageFromTemplate,
-  recheckTemplateConsistency,
   type TemplateRow,
 } from "@/lib/storage";
-import {
-  resolveTemplateMeta,
-  TEMPLATE_AUDIENCE_TAGS,
-  type TemplateMeta,
-} from "@/lib/template-meta";
 import { TemplateCard } from "@/components/saas/TemplateCard";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
@@ -58,37 +52,10 @@ export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [mounted, setMounted] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
-  const [runtimeMetaOverrides, setRuntimeMetaOverrides] = useState<Record<string, TemplateMeta>>({});
-  const [recheckingTemplateId, setRecheckingTemplateId] = useState<string | null>(null);
-
-  const BADGE_META_STORAGE_KEY = "infomii.template-meta-overrides.v1";
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      const raw = window.localStorage.getItem(BADGE_META_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Record<string, TemplateMeta>;
-      if (parsed && typeof parsed === "object") setRuntimeMetaOverrides(parsed);
-    } catch {
-      // ignore malformed local storage
-    }
-  }, [mounted]);
-
-  function saveRuntimeOverrides(next: Record<string, TemplateMeta>) {
-    setRuntimeMetaOverrides(next);
-    if (!mounted) return;
-    try {
-      window.localStorage.setItem(BADGE_META_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore storage failures
-    }
-  }
 
   useEffect(() => {
     if (!previewTemplate) return;
@@ -133,13 +100,6 @@ export default function TemplatesPage() {
   }, []);
 
   const filtered = filterByCategory(templates, category);
-  const filteredMeta = filtered.map((t) => resolveTemplateMeta(t, runtimeMetaOverrides));
-  const avgConsistencyScore =
-    filteredMeta.length > 0
-      ? Math.round(filteredMeta.reduce((sum, m) => sum + m.consistencyScore, 0) / filteredMeta.length)
-      : 0;
-  const lowScoreCount = filteredMeta.filter((m) => m.consistencyScore < 60).length;
-  const lowScoreRate = filteredMeta.length > 0 ? Math.round((lowScoreCount / filteredMeta.length) * 100) : 0;
   const groupedWhenAll = TEMPLATE_CATEGORIES
     .filter((c) => c.id !== "all")
     .map((c) => ({ category: c.id, label: c.label, items: filterByCategory(templates, c.id) }))
@@ -157,30 +117,6 @@ export default function TemplatesPage() {
       setError(e instanceof Error ? e.message : "ページの作成に失敗しました");
     } finally {
       setUsingId(null);
-    }
-  }
-
-  async function handleRecheckTemplate(template: TemplateRow) {
-    setRecheckingTemplateId(template.id);
-    setError(null);
-    try {
-      const result = await recheckTemplateConsistency(template.id);
-      setTemplates((prev) =>
-        prev.map((row) =>
-          row.id === template.id
-            ? {
-                ...row,
-                review_status: result.review_status,
-                consistency_score: result.consistency_score,
-                consistency_reason: result.consistency_reason,
-              }
-            : row
-        )
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "再評価に失敗しました");
-    } finally {
-      setRecheckingTemplateId(null);
     }
   }
 
@@ -254,21 +190,6 @@ export default function TemplatesPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] text-slate-500">平均一致スコア</p>
-          <p className="text-lg font-semibold text-slate-900">{avgConsistencyScore}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] text-slate-500">低スコア率 (&lt;60)</p>
-          <p className="text-lg font-semibold text-amber-700">{lowScoreRate}%</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] text-slate-500">要見直し件数</p>
-          <p className="text-lg font-semibold text-amber-700">{lowScoreCount}</p>
-        </div>
-      </div>
-
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -301,47 +222,17 @@ export default function TemplatesPage() {
       ) : category !== "all" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((template) => {
-            const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
-            const consistencyScore =
-              typeof template.consistency_score === "number"
-                ? template.consistency_score
-                : meta.consistencyScore;
-            const needsReview =
-              template.review_status === "needs_review" ||
-              template.review_status === "failed" ||
-              consistencyScore < 60;
-            const consistencyReason =
-              template.consistency_reason?.trim() ||
-              meta.consistencyReason;
             return (
-              <div key={template.id} className="space-y-2">
-                <TemplateCard
-                  id={template.id}
-                  name={template.name}
-                  description={template.description}
-                  preview_image={template.preview_image}
-                  audienceTags={meta.audienceTags}
-                  industry={meta.industry}
-                  useCase={meta.useCase}
-                  recommendedPlan={meta.recommendedPlan}
-                  consistencyScore={consistencyScore}
-                  needsReview={needsReview}
-                  consistencyReason={consistencyReason}
-                  onUse={() => handleUseTemplate(template.id)}
-                  onPreview={() => setPreviewTemplate(template)}
-                  using={usingId === template.id}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleRecheckTemplate(template)}
-                    disabled={recheckingTemplateId === template.id}
-                    className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    {recheckingTemplateId === template.id ? "再評価中..." : "再評価"}
-                  </button>
-                </div>
-              </div>
+              <TemplateCard
+                key={template.id}
+                id={template.id}
+                name={template.name}
+                description={template.description}
+                preview_image={template.preview_image}
+                onUse={() => handleUseTemplate(template.id)}
+                onPreview={() => setPreviewTemplate(template)}
+                using={usingId === template.id}
+              />
             );
           })}
         </div>
@@ -369,47 +260,17 @@ export default function TemplatesPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {visible.map((template) => {
-                    const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
-                    const consistencyScore =
-                      typeof template.consistency_score === "number"
-                        ? template.consistency_score
-                        : meta.consistencyScore;
-                    const needsReview =
-                      template.review_status === "needs_review" ||
-                      template.review_status === "failed" ||
-                      consistencyScore < 60;
-                    const consistencyReason =
-                      template.consistency_reason?.trim() ||
-                      meta.consistencyReason;
                     return (
-                      <div key={template.id} className="space-y-2">
-                        <TemplateCard
-                          id={template.id}
-                          name={template.name}
-                          description={template.description}
-                          preview_image={template.preview_image}
-                          audienceTags={meta.audienceTags}
-                          industry={meta.industry}
-                          useCase={meta.useCase}
-                          recommendedPlan={meta.recommendedPlan}
-                          consistencyScore={consistencyScore}
-                          needsReview={needsReview}
-                          consistencyReason={consistencyReason}
-                          onUse={() => handleUseTemplate(template.id)}
-                          onPreview={() => setPreviewTemplate(template)}
-                          using={usingId === template.id}
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleRecheckTemplate(template)}
-                            disabled={recheckingTemplateId === template.id}
-                            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                          >
-                            {recheckingTemplateId === template.id ? "再評価中..." : "再評価"}
-                          </button>
-                        </div>
-                      </div>
+                      <TemplateCard
+                        key={template.id}
+                        id={template.id}
+                        name={template.name}
+                        description={template.description}
+                        preview_image={template.preview_image}
+                        onUse={() => handleUseTemplate(template.id)}
+                        onPreview={() => setPreviewTemplate(template)}
+                        using={usingId === template.id}
+                      />
                     );
                   })}
                 </div>
@@ -423,14 +284,6 @@ export default function TemplatesPage() {
         <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
         {" · "}
         <Link href="/dashboard/pages" className="hover:text-slate-600">ページ一覧</Link>
-        {" · "}
-        <button
-          type="button"
-          onClick={() => setBadgeEditorOpen(true)}
-          className="hover:text-slate-600"
-        >
-          バッジ編集
-        </button>
       </p>
 
       {mounted && previewTemplate &&
@@ -487,116 +340,6 @@ export default function TemplatesPage() {
           document.body
         )}
 
-      {mounted && badgeEditorOpen &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 px-4 py-6"
-            role="dialog"
-            aria-modal="true"
-            aria-label="テンプレートバッジ編集"
-            onClick={() => setBadgeEditorOpen(false)}
-          >
-            <div
-              className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900">テンプレートバッジ編集</h3>
-                  <p className="text-xs text-slate-500">難易度と想定ゲストを手動調整できます（このブラウザに保存）</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      saveRuntimeOverrides({});
-                    }}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    すべてリセット
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBadgeEditorOpen(false)}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    閉じる
-                  </button>
-                </div>
-              </div>
-              <div className="max-h-[78vh] overflow-y-auto bg-slate-50 p-4">
-                <div className="space-y-3">
-                  {templates.map((template) => {
-                    const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
-                    const current = runtimeMetaOverrides[template.name];
-                    return (
-                      <div key={template.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                        <div className="mb-2">
-                          <p className="text-sm font-semibold text-slate-900">{template.name}</p>
-                          <p className="text-xs text-slate-500">{template.description}</p>
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-slate-600">想定ゲスト</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {TEMPLATE_AUDIENCE_TAGS.map((tag) => {
-                              const selected = (current?.audienceTags ?? meta.audienceTags).includes(tag);
-                              return (
-                                <button
-                                  key={`${template.id}-${tag}`}
-                                  type="button"
-                                  onClick={() => {
-                                    const base = current?.audienceTags ?? meta.audienceTags;
-                                    const updated = selected
-                                      ? base.filter((t) => t !== tag)
-                                      : [...base, tag].slice(0, 3);
-                                    const next = {
-                                      ...runtimeMetaOverrides,
-                                      [template.name]: {
-                                        difficulty: current?.difficulty ?? meta.difficulty,
-                                        audienceTags: updated,
-                                        industry: current?.industry ?? meta.industry,
-                                        useCase: current?.useCase ?? meta.useCase,
-                                        tone: current?.tone ?? meta.tone,
-                                        mustIncludeElements:
-                                          current?.mustIncludeElements ?? meta.mustIncludeElements,
-                                        forbiddenElements:
-                                          current?.forbiddenElements ?? meta.forbiddenElements,
-                                        imagePromptSeed:
-                                          current?.imagePromptSeed ?? meta.imagePromptSeed,
-                                        recommendedPlan:
-                                          current?.recommendedPlan ?? meta.recommendedPlan,
-                                        consistencyScore:
-                                          current?.consistencyScore ?? meta.consistencyScore,
-                                        needsReview:
-                                          current?.needsReview ?? meta.needsReview,
-                                        consistencyReason:
-                                          current?.consistencyReason ?? meta.consistencyReason,
-                                      },
-                                    };
-                                    saveRuntimeOverrides(next);
-                                  }}
-                                  className={
-                                    "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
-                                    (selected
-                                      ? "border-blue-200 bg-blue-50 text-blue-700"
-                                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
-                                  }
-                                >
-                                  {tag}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
     </div>
   );
 }
