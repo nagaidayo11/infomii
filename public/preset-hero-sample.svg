@@ -1,0 +1,26 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="card" x1="220" y1="120" x2="980" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#E2E8F0" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <circle cx="1060" cy="120" r="140" fill="#93C5FD" fill-opacity="0.35"/>
+  <circle cx="160" cy="700" r="180" fill="#38BDF8" fill-opacity="0.28"/>
+  <rect x="210" y="110" width="780" height="580" rx="32" fill="url(#card)"/>
+  <rect x="260" y="180" width="420" height="36" rx="10" fill="#1E293B" fill-opacity="0.14"/>
+  <rect x="260" y="240" width="320" height="24" rx="8" fill="#1E293B" fill-opacity="0.1"/>
+  <rect x="260" y="300" width="680" height="250" rx="18" fill="#0F172A" fill-opacity="0.12"/>
+  <rect x="260" y="572" width="210" height="56" rx="14" fill="#111827" fill-opacity="0.82"/>
+  <rect x="494" y="572" width="210" height="56" rx="14" fill="#1D4ED8" fill-opacity="0.82"/>
+  <rect x="728" y="572" width="210" height="56" rx="14" fill="#059669" fill-opacity="0.82"/>
+  <text x="260" y="160" fill="#0F172A" fill-opacity="0.78" font-size="36" font-family="Inter, Arial, sans-serif" font-weight="700">Infomii Sample Hero</text>
+  <text x="272" y="608" fill="#FFFFFF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="600">Preview</text>
+  <text x="512" y="608" fill="#FFFFFF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="600">Book Now</text>
+  <text x="752" y="608" fill="#FFFFFF" font-size="22" font-family="Inter, Arial, sans-serif" font-weight="600">Explore</text>
+</svg>

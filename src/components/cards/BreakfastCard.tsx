@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -45,18 +46,18 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800">
+      <p className="text-sm font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="7:00–9:30" />
       </p>
-      <p className="mt-0.5 text-xs text-slate-600">
+      <p className="mt-0.5 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.location}:{" "}
         <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder={labels.locationPlaceholder} />
       </p>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-500" style={getBodyFontSizeStyle()}>
         <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
       </p>
     </Card>

@@ -194,6 +194,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   loadGeneratedCards: (inputs) => {
     const allowed: CardType[] = [
       "hero",
+      "hero_slider",
       "info",
       "highlight",
       "action",
@@ -225,6 +226,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "compare",
       "kpi",
       "space",
+      "campaign_timer",
     ];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
@@ -241,6 +243,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   addCard: (type, index?: number) => {
     const allowed: CardType[] = [
       "hero",
+      "hero_slider",
       "info",
       "highlight",
       "action",
@@ -272,6 +275,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "compare",
       "kpi",
       "space",
+      "campaign_timer",
     ];
     if (!allowed.includes(type)) return;
     const { cards, historyPast } = get();

@@ -9,6 +9,7 @@
 
 export type CardType =
   | "hero"
+  | "hero_slider"
   | "info"
   | "highlight"
   | "action"
@@ -40,7 +41,8 @@ export type CardType =
   | "steps"
   | "compare"
   | "kpi"
-  | "space";
+  | "space"
+  | "campaign_timer";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -85,6 +87,16 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
   const bodyFontSize = resolveFontSize(s.bodyFontSize as string | undefined);
   const innerR = (s as Record<string, unknown>).innerBorderRadius;
+  const innerSurfaceModeRaw = (s as Record<string, unknown>).innerSurfaceMode;
+  const innerSurfaceMode =
+    innerSurfaceModeRaw === "transparent" || innerSurfaceModeRaw === "custom"
+      ? innerSurfaceModeRaw
+      : "default";
+  const innerSurfaceColorRaw = (s as Record<string, unknown>).innerSurfaceColor;
+  const innerSurfaceColor =
+    typeof innerSurfaceColorRaw === "string" && /^#([0-9a-fA-F]{6})$/.test(innerSurfaceColorRaw.trim())
+      ? innerSurfaceColorRaw.trim()
+      : undefined;
   const innerRadiusPx =
     typeof innerR === "number" && Number.isFinite(innerR)
       ? `${innerR}px`
@@ -145,6 +157,11 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   if (innerRadiusPx) {
     (style as Record<string, string>)["--editor-inner-border-radius"] = innerRadiusPx;
   }
+  if (innerSurfaceMode === "transparent") {
+    (style as Record<string, string>)["--editor-inner-surface-bg"] = "transparent";
+  } else if (innerSurfaceMode === "custom" && innerSurfaceColor) {
+    (style as Record<string, string>)["--editor-inner-surface-bg"] = innerSurfaceColor;
+  }
   return style as import("react").CSSProperties;
 }
 
@@ -182,6 +199,7 @@ export type EditorPage = {
 /** カードタイプのラベル（日本語・変更しない） */
 export const CARD_TYPE_LABELS: Record<CardType, string> = {
   hero: "ヒーロー",
+  hero_slider: "ヒーロースライド",
   info: "情報",
   highlight: "ハイライト",
   action: "アクション",
@@ -214,11 +232,13 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   compare: "比較",
   kpi: "KPI",
   space: "スペース",
+  campaign_timer: "キャンペーンタイマー",
 };
 
 /** Card types shown in the editor library (Canva-style). */
 export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "hero",
+  "hero_slider",
   "info",
   "highlight",
   "action",
@@ -231,6 +251,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "steps",
   "compare",
   "kpi",
+  "campaign_timer",
   "gallery",
   "divider",
   "space",
@@ -239,6 +260,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
   { type: "info", label: "情報", description: "WiFi・構造化情報" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
@@ -251,6 +273,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
   { type: "compare", label: "比較", description: "2列比較・プラン比較" },
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
@@ -268,6 +291,7 @@ export const STARTER_CARD_TYPES: CardType[] = [
 /** Full list (all card types) — for backwards compatibility / migration. */
 export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
   { type: "info", label: "情報", description: "構造化情報・WiFi" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
@@ -295,16 +319,35 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
   { type: "compare", label: "比較", description: "2カラム比較" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
+export const BUSINESS_ONLY_CARD_TYPES: CardType[] = ["hero_slider", "campaign_timer"];
+
 /** Default sample image (hero / image / gallery block presets). */
-export const PRESET_HERO_SAMPLE_IMAGE = "/preset-hero-sample.png";
+export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
+export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/hero-slider-default-2.png";
 
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
     case "hero":
       return { title: "Infomii Hotel", image: PRESET_HERO_SAMPLE_IMAGE, subtitle: "館内案内をスマートにまとめました" };
+    case "hero_slider":
+      return {
+        title: "おすすめ案内",
+        autoplay: true,
+        intervalSec: 4,
+        transitionEnabled: true,
+        transitionType: "fade",
+        transitionDurationMs: 500,
+        showCaptions: true,
+        height: "s",
+        slides: [
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "メインイメージ", caption: "チェックインのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+          { src: PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE, alt: "朝食イメージ", caption: "朝食ビュッフェのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+        ],
+      };
     case "info":
       return {
         title: "Wi-Fi",
@@ -381,6 +424,18 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { style: "line" };
     case "space":
       return { height: 48 };
+    case "campaign_timer":
+      return {
+        title: "春のキャンペーン",
+        description: "公式サイト限定の特典をご用意しています。",
+        startAt: "",
+        endAt: "",
+        hideBeforeStart: false,
+        hideAfterEnd: false,
+        showSeconds: true,
+        ctaLabel: "詳細を見る",
+        ctaUrl: "",
+      };
     case "parking":
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };
     case "pageLinks":

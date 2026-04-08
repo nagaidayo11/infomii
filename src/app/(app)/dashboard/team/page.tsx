@@ -282,11 +282,6 @@ export default function TeamPage() {
                 チーム招待・公開申請の承認フローは Business プランでご利用いただけます。
                 現在のプランではこの画面の操作はできません。
               </p>
-              <p className="mt-3 text-xs leading-relaxed text-amber-800/90">
-                この画面の判定は、お支払い画面ではなく
-                <strong className="font-semibold"> 施設に紐づく契約プラン（データベース上の plan）</strong>
-                が business かどうかで行います。Business に加入済みのはずなのに表示される場合は、反映待ち・別施設を見ている・同期のずれの可能性があります。設定のプラン表示と食い違うときはサポートへお問い合わせください。
-              </p>
               <a
                 href="/lp/saas#pricing"
                 className="mt-4 inline-flex min-h-[40px] items-center rounded-lg bg-black px-3 py-2 text-sm font-medium !text-white hover:bg-neutral-900 hover:!text-white"

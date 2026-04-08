@@ -5,6 +5,7 @@ import { getBlockStyle } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { HeroCard } from "./HeroCard";
+import { HeroSliderCard } from "./HeroSliderCard";
 import { InfoCard } from "./InfoCard";
 import { HighlightCard } from "./HighlightCard";
 import { ActionCard } from "./ActionCard";
@@ -34,6 +35,7 @@ import { StepsCard } from "./StepsCard";
 import { CompareCard } from "./CompareCard";
 import { KpiCard } from "./KpiCard";
 import { SpaceCard } from "./SpaceCard";
+import { CampaignTimerCard } from "./CampaignTimerCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -83,6 +85,8 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
   switch (resolvedCard.type) {
     case "hero":
       return <HeroCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "hero_slider":
+      return <HeroSliderCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "info":
       return <InfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "highlight":
@@ -122,18 +126,19 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       const menu = (c?.menu as string) ?? "";
       const breakfastLabels =
         locale === "ko"
-          ? { title: "조식", body: "시간 · 장소 · 메뉴" }
+          ? { title: "조식", body: "시간\n장소\n상세" }
           : locale === "zh"
-            ? { title: "早餐", body: "时间 · 地点 · 菜单" }
+            ? { title: "早餐", body: "时间\n地点\n详情" }
             : locale === "en"
-              ? { title: "Breakfast", body: "Time · Venue · Menu" }
-              : { title: "朝食", body: "時間・会場・メニュー" };
+              ? { title: "Breakfast", body: "Time\nVenue\nDetails" }
+              : { title: "朝食", body: "時間\n場所\n詳細" };
+      const detailLines = [time, location, menu].filter(Boolean);
       const highlightCard: EditorCard = {
         ...resolvedCard,
         type: "highlight",
         content: {
           title: (c?.title as string) || breakfastLabels.title,
-          body: [time, location, menu].filter(Boolean).join(" · ") || breakfastLabels.body,
+          body: detailLines.join("\n") || breakfastLabels.body,
           accent: "amber",
         },
       };
@@ -213,6 +218,8 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <KpiCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "space":
       return <SpaceCard card={resolvedCard} isSelected={isSelected} showLabel={showSpaceLabel} />;
+    case "campaign_timer":
+      return <CampaignTimerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }
@@ -253,11 +260,19 @@ export function CardRenderer(props: CardRendererProps) {
             card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
               ? card.style.textColor
               : undefined;
+          const innerSurfaceMode =
+            card.style && typeof card.style === "object"
+              ? (card.style as Record<string, unknown>).innerSurfaceMode
+              : undefined;
+          const hasInnerSurfaceOverride =
+            innerSurfaceMode === "transparent" || innerSurfaceMode === "custom";
           return (
             <div
               key={card.id}
               className={
-                (textColor ? "editor-card-colorized " : "") + "overflow-hidden rounded-2xl"
+                (textColor ? "editor-card-colorized " : "") +
+                (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "") +
+                "overflow-hidden rounded-2xl"
               }
               style={{
                 ...blockStyle,

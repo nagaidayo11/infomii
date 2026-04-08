@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import {
   getSupabaseAdminServerClient,
   getSupabaseAnonServerClient,
@@ -82,7 +83,8 @@ export async function GET(request: Request) {
     .select("plan")
     .eq("hotel_id", hotelId)
     .maybeSingle();
-  if (sub?.plan !== "business") {
+  const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
+  if (!isBusinessAccessible) {
     return NextResponse.json({ error: "チーム機能はBusinessプランでご利用いただけます" }, { status: 403 });
   }
 

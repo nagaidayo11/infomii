@@ -1,10 +1,12 @@
 "use client";
 
-import type { CardType } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
   onAddPreset?: (types: CardType[]) => void;
+  canUseBusinessBlocks?: boolean;
+  onLockedAddCard?: (type: CardType) => void;
 };
 
 type LibraryItem = {
@@ -23,6 +25,12 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   hero: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  hero_slider: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M8 15h6M6.5 12l-1.5 1.5L6.5 15m11-3 1.5 1.5-1.5 1.5" />
     </svg>
   ),
   info: (
@@ -199,11 +207,18 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <rect x="16" y="5" width="3" height="11" rx=".6" strokeWidth={2} />
     </svg>
   ),
+  campaign_timer: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="13" r="7" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4l2 2M9 3h6" />
+    </svg>
+  ),
 };
 
 /** ファーストビュー・目立たせたい内容 */
 const PROMOTION_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ先頭の大きな見出しと写真（1ページ1つ推奨）" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Business限定）" },
   { type: "highlight", label: "強調ブロック", description: "注意事項やお知らせを目立たせる" },
   { type: "button", label: "リンクボタン", description: "予約サイトやお問い合わせへつなぐ" },
 ];
@@ -238,6 +253,7 @@ const NAV_ITEMS: LibraryItem[] = [
 const TRUST_ITEMS: LibraryItem[] = [
   { type: "compare", label: "比較", description: "2つの内容を並べて比較" },
   { type: "kpi", label: "数字強調", description: "チェックイン時刻など数字を強調" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business限定）" },
   { type: "quote", label: "引用", description: "お客様の声やレビュー" },
 ];
 
@@ -306,7 +322,20 @@ const QUICK_PRESETS: Array<{ id: string; label: string; description: string; typ
  * Left panel: Card Library — grouped by purpose (main view, guides, safety, access, trust, layout).
  * Click inserts a card into the canvas.
  */
-export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
+export function CardLibrary({
+  onAddCard,
+  onAddPreset,
+  canUseBusinessBlocks = false,
+  onLockedAddCard,
+}: CardLibraryProps) {
+  const canAdd = (type: CardType) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(type);
+  const handleAdd = (type: CardType) => {
+    if (!canAdd(type)) {
+      onLockedAddCard?.(type);
+      return;
+    }
+    onAddCard(type);
+  };
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
@@ -354,9 +383,15 @@ export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
                   <button
                     key={`${section.id}-${item.type}`}
                     type="button"
-                    onClick={() => onAddCard(item.type)}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
+                    onClick={() => handleAdd(item.type)}
+                    className={
+                      "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all " +
+                      (canAdd(item.type)
+                        ? "hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
+                        : "cursor-not-allowed opacity-55")
+                    }
                     aria-label={`${item.label}を追加`}
+                    title={canAdd(item.type) ? undefined : "Businessプラン限定ブロックです"}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round">
                       {CARD_ICONS[item.type] ?? CARD_ICONS.text}
@@ -364,6 +399,7 @@ export function CardLibrary({ onAddCard, onAddPreset }: CardLibraryProps) {
                     <div className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-slate-800">
                         {item.label}
+                        {!canAdd(item.type) ? " (Business)" : ""}
                       </span>
                       <span className="block truncate text-xs text-slate-500">
                         {item.description}

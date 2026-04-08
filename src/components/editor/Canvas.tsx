@@ -248,7 +248,13 @@ function SortableCardWrapper({
             aria-pressed={isSelected}
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
-            className="editor-card relative min-w-0 flex-1 overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out"
+            className={
+              "editor-card relative min-w-0 flex-1 overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out " +
+              ((((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "transparent") ||
+              ((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "custom"))
+                ? "editor-inner-surface-overridden "
+                : "")
+            }
             style={getBlockStyle(card)}
             onClick={(e) => {
               e.stopPropagation();

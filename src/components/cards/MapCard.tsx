@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getBodyFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -98,7 +98,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="mb-2 text-slate-900">
+      <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (

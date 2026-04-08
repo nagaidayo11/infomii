@@ -13,7 +13,7 @@ import { SaveToast } from "./SaveToast";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
-import { createEmptyCard, STARTER_CARD_TYPES, type CardType } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, createEmptyCard, STARTER_CARD_TYPES, type CardType } from "./types";
 import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
 import {
   getInformationBySlug,
@@ -45,35 +45,8 @@ type Editor2Props = {
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
 const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
-const REQUIRED_LOCALES: SupportedLocale[] = ["en", "zh", "ko"];
 /** ヘッダーの言語ピルと同一（EDITOR_LOCALE_PILL_OPTIONS の label を " / " 連結） */
 const EDITOR_LOCALE_LABELS_DISPLAY = EDITOR_LOCALE_PILL_OPTIONS.map((o) => o.label).join(" / ");
-
-function hasText(value: unknown): boolean {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function isLocalizedRecord(value: unknown): value is Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const obj = value as Record<string, unknown>;
-  return "ja" in obj || "en" in obj || "zh" in obj || "ko" in obj;
-}
-
-function countMissingRequiredLocales(input: unknown): number {
-  if (Array.isArray(input)) {
-    return input.reduce((sum, item) => sum + countMissingRequiredLocales(item), 0);
-  }
-  if (!input || typeof input !== "object") return 0;
-  if (isLocalizedRecord(input)) {
-    const sourceJa = input.ja;
-    if (!hasText(sourceJa)) return 0;
-    return REQUIRED_LOCALES.reduce((sum, locale) => sum + (hasText(input[locale]) ? 0 : 1), 0);
-  }
-  return Object.values(input as Record<string, unknown>).reduce<number>(
-    (sum, value) => sum + countMissingRequiredLocales(value),
-    0
-  );
-}
 
 export function Editor2({
   pageId,
@@ -415,10 +388,14 @@ export function Editor2({
 
   const handleSlashSelect = useCallback(
     (type: CardType) => {
+      if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+        setDemoLockMessage("このブロックはBusinessプラン限定です。");
+        return;
+      }
       addCard(type);
       setSlashMenuOpen(false);
     },
-    [addCard]
+    [addCard, translationEnabled]
   );
 
   const publishNow = useCallback(async () => {
@@ -521,10 +498,14 @@ export function Editor2({
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
       for (const type of types) {
+        if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+          setDemoLockMessage("このセットにはBusinessプラン限定ブロックが含まれています。");
+          continue;
+        }
         addCard(type);
       }
     },
-    [addCard]
+    [addCard, translationEnabled]
   );
 
   const handleClearAll = useCallback(() => {
@@ -1061,7 +1042,20 @@ export function Editor2({
       <div ref={rootRef} className="h-[100dvh] w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
-          library={<CardLibrary onAddCard={addCard} onAddPreset={handleAddPreset} />}
+          library={
+            <CardLibrary
+              onAddCard={(type) => {
+                if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+                  setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                  return;
+                }
+                addCard(type);
+              }}
+              onAddPreset={handleAddPreset}
+              canUseBusinessBlocks={translationEnabled}
+              onLockedAddCard={() => setDemoLockMessage("このブロックはBusinessプラン限定です。")}
+            />
+          }
           canvas={
             <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
               {!isDemoMode && publishStatus !== "published" && (
@@ -1098,6 +1092,7 @@ export function Editor2({
               lastAddedCardId={lastAddedCardId}
               demoMode={isDemoMode}
               onLockedAction={(message) => setDemoLockMessage(message)}
+              isBusinessEnabled={translationEnabled}
             />
           }
         />
@@ -1106,6 +1101,8 @@ export function Editor2({
           onClose={() => setSlashMenuOpen(false)}
           onSelect={handleSlashSelect}
           anchorRef={canvasRef}
+          canUseBusinessBlocks={translationEnabled}
+          onLockedAddCard={() => setDemoLockMessage("このブロックはBusinessプラン限定です。")}
         />
         {publishState && (
           <PublishModal

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { CARD_ICONS, LIBRARY_SECTIONS } from "./CardLibrary";
-import type { CardType } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
 
 const RECENT_STORAGE_KEY = "infomii-slash-recent";
 const RECENT_MAX = 5;
@@ -46,6 +46,8 @@ type SlashCommandMenuProps = {
   onClose: () => void;
   onSelect: (type: CardType) => void;
   anchorRef?: React.RefObject<HTMLElement | null>;
+  canUseBusinessBlocks?: boolean;
+  onLockedAddCard?: (type: CardType) => void;
 };
 
 export function SlashCommandMenu({
@@ -53,6 +55,8 @@ export function SlashCommandMenu({
   onClose,
   onSelect,
   anchorRef,
+  canUseBusinessBlocks = false,
+  onLockedAddCard,
 }: SlashCommandMenuProps) {
   const [search, setSearch] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(0);
@@ -62,28 +66,27 @@ export function SlashCommandMenu({
   const recentTypes = getRecentTypes();
   const recentItems = recentTypes
     .map((t) => ALL_ITEMS.find((i) => i.type === t))
-    .filter((x): x is FlatItem => !!x);
+    .filter((x): x is FlatItem => !!x)
+    .filter((item) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type));
+
+  const allAvailableItems = useMemo(
+    () => ALL_ITEMS.filter((item) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)),
+    [canUseBusinessBlocks]
+  );
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return ALL_ITEMS;
-    return ALL_ITEMS.filter(
+    if (!q) return allAvailableItems;
+    return allAvailableItems.filter(
       (i) =>
         i.label.toLowerCase().includes(q) ||
         i.type.toLowerCase().includes(q) ||
         i.category.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, allAvailableItems]);
 
-  const displayItems = search.trim() ? filteredItems : recentItems.length > 0 ? recentItems : ALL_ITEMS;
+  const displayItems = search.trim() ? filteredItems : recentItems.length > 0 ? recentItems : allAvailableItems;
   const showRecentLabel = !search.trim() && recentItems.length > 0;
-
-  useEffect(() => {
-    if (!open) return;
-    setSearch("");
-    setHighlightIndex(0);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,17 +98,17 @@ export function SlashCommandMenu({
       }
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setHighlightIndex((i) => (i + 1) % displayItems.length);
+        if (displayItems.length > 0) setHighlightIndex((i) => (i + 1) % displayItems.length);
         return;
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setHighlightIndex((i) => (i - 1 + displayItems.length) % displayItems.length);
+        if (displayItems.length > 0) setHighlightIndex((i) => (i - 1 + displayItems.length) % displayItems.length);
         return;
       }
       if (e.key === "Enter") {
         e.preventDefault();
-        const item = displayItems[highlightIndex];
+        const item = displayItems[Math.min(highlightIndex, Math.max(0, displayItems.length - 1))];
         if (item) {
           persistRecent(item.type);
           onSelect(item.type);
@@ -119,19 +122,17 @@ export function SlashCommandMenu({
   }, [open, onClose, onSelect, highlightIndex, displayItems]);
 
   useEffect(() => {
-    setHighlightIndex(0);
-  }, [displayItems.length]);
-
-  useEffect(() => {
     const el = listRef.current;
     if (!el || !open) return;
-    const row = el.querySelector(`[data-index="${highlightIndex}"]`) as HTMLElement | undefined;
+    const currentIndex = Math.min(highlightIndex, Math.max(0, displayItems.length - 1));
+    const row = el.querySelector(`[data-index="${currentIndex}"]`) as HTMLElement | undefined;
     row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [highlightIndex, open]);
+  }, [highlightIndex, open, displayItems.length]);
 
   const handleSelect = (item: FlatItem) => {
     persistRecent(item.type);
-    onSelect(item.type);
+    if (canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)) onSelect(item.type);
+    else onLockedAddCard?.(item.type);
     onClose();
   };
 
@@ -147,6 +148,7 @@ export function SlashCommandMenu({
       <div className="border-b border-slate-100 px-3 py-2">
         <input
           ref={inputRef}
+          autoFocus
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

@@ -60,7 +60,7 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
       <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder={labels.titlePlaceholder} />
       </h3>
-      <p className="mt-2 leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
+      <p className="mt-2 whitespace-pre-line leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
         <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em]" placeholder={labels.bodyPlaceholder} />
       </p>
     </div>

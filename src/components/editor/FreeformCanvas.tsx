@@ -57,6 +57,7 @@ const CANVAS_PADDING_X = 16;
 
 const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   hero: 120,
+  hero_slider: 220,
   info: 90,
   highlight: 84,
   action: 64,
@@ -89,6 +90,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   compare: 96,
   kpi: 96,
   space: 48,
+  campaign_timer: 128,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
@@ -568,6 +570,12 @@ export function FreeformCanvas({
             const isDragging = dragState?.id === card.id;
             const isSelected = selectedCardId === card.id;
             const blockStyle = getBlockStyle(card);
+            const innerSurfaceMode =
+              card.style && typeof card.style === "object"
+                ? (card.style as Record<string, unknown>).innerSurfaceMode
+                : undefined;
+            const hasInnerSurfaceOverride =
+              innerSurfaceMode === "transparent" || innerSurfaceMode === "custom";
             return (
               <Rnd
                 key={card.id}
@@ -597,7 +605,8 @@ export function FreeformCanvas({
                     className={
                       "h-full w-full overflow-hidden rounded-xl transition-shadow " +
                       (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
-                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "")
+                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
+                      (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
                     }
                     style={{
                       ...blockStyle,

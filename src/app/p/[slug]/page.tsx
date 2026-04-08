@@ -7,10 +7,14 @@ import { InfoPageChat } from "@/components/info-chat/InfoPageChat";
 import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
+import { LocaleProvider } from "@/components/locale-context";
+import { CardRenderer } from "@/components/cards/CardRenderer";
+import type { EditorCard } from "@/components/editor/types";
 import { renderInformationIconVisual } from "@/components/information/InformationIconVisual";
 import { blocksToContextText } from "@/lib/information-to-context";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -645,6 +649,33 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     console.error("failed to insert page_view", pageViewError.message);
   }
 
+  let cardRows: Array<{ id: string; type: string; content: unknown; order: number | null }> = [];
+  try {
+    const admin = getSupabaseAdminServerClient();
+    const { data: pageRow } = await admin
+      .from("pages")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (pageRow?.id) {
+      const { data: cards } = await admin
+        .from("cards")
+        .select("id,type,content,order")
+        .eq("page_id", pageRow.id)
+        .order("order", { ascending: true });
+      cardRows = (cards ?? []) as Array<{ id: string; type: string; content: unknown; order: number | null }>;
+    }
+  } catch {
+    cardRows = [];
+  }
+  const cardBasedView = cardRows.length > 0;
+  const cardViewData: EditorCard[] = cardRows.map((c, idx) => ({
+    id: c.id,
+    type: (c.type as EditorCard["type"]) ?? "text",
+    content: typeof c.content === "object" && c.content && !Array.isArray(c.content) ? (c.content as Record<string, unknown>) : {},
+    order: typeof c.order === "number" ? c.order : idx,
+  }));
+
   const themeStyle = {
     backgroundColor: theme.backgroundColor || "#ffffff",
     color: theme.textColor || "#0f172a",
@@ -1172,7 +1203,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
               </div>
             ) : null}
             <h1 className="mb-5 text-xl font-bold text-slate-900">{row.title}</h1>
-            {contentArea}
+            {cardBasedView ? (
+              <LocaleProvider value={getVisitorLocaleFromHeader(requestHeaders.get("accept-language"))}>
+                <CardRenderer cards={cardViewData} />
+              </LocaleProvider>
+            ) : (
+              contentArea
+            )}
           </div>
           <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
             <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
@@ -1191,7 +1228,13 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           }
           isEmbed={false}
         >
-          {contentArea}
+          {cardBasedView ? (
+            <LocaleProvider value={getVisitorLocaleFromHeader(requestHeaders.get("accept-language"))}>
+              <CardRenderer cards={cardViewData} />
+            </LocaleProvider>
+          ) : (
+            contentArea
+          )}
         </PublicPageShell>
       )}
     </>

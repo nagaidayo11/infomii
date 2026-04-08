@@ -8,27 +8,12 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
-import { LINE_ICON_EDITOR_OPTIONS } from "@/lib/editor-line-icon-options";
 import type { EditorCard } from "./types";
-import { CARD_TYPE_LABELS } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS } from "./types";
 import { useEditor2Store } from "./store";
 
 const TRANSLATE_DEBOUNCE_MS = 1200;
 const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
-const NON_TRANSLATABLE_KEYS = new Set([
-  "href",
-  "link",
-  "linkUrl",
-  "src",
-  "mapEmbedUrl",
-  "pageSlug",
-  "icon",
-  "variant",
-  "style",
-  "color",
-  "accent",
-]);
-
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
@@ -50,20 +35,33 @@ function SettingsSection({
   );
 }
 
-const COLOR_PRESETS = [
-  { value: "", label: "標準" },
-  { value: "#2563eb", label: "青" },
-  { value: "#059669", label: "緑" },
-  { value: "#d97706", label: "琥珀" },
-  { value: "#dc2626", label: "赤" },
-  { value: "#7c3aed", label: "紫" },
-];
+function isoToLocalInput(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
-const BUTTON_STYLE_PRESETS = [
-  { value: "primary", label: "メイン" },
-  { value: "secondary", label: "サブ" },
-  { value: "outline", label: "枠線" },
-];
+function localInputToIso(value: string): string {
+  if (!value.trim()) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
+}
+
+function normalizeHexColor(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const v = value.trim();
+  if (/^#([0-9a-fA-F]{6})$/.test(v)) return v;
+  return undefined;
+}
+
+const INNER_SURFACE_PRESETS = [
+  { label: "薄灰", value: "#f8fafc" },
+  { label: "薄青", value: "#eff6ff" },
+  { label: "薄緑", value: "#ecfdf5" },
+] as const;
 
 const NOTICE_PRIORITY_PRESETS = [
   { value: "info", label: "情報" },
@@ -126,6 +124,7 @@ export type CardSettingsProps = {
   onLockedAction?: (message: string) => void;
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
   lastAddedCardId?: string | null;
+  isBusinessEnabled?: boolean;
 };
 
 function isLocalizedObject(v: unknown): v is Record<string, string> {
@@ -159,6 +158,30 @@ type KpiItem = { label?: string; value?: string };
 type ScheduleItem = { day?: string; time?: string; label?: string };
 type MenuItem = { name?: string; price?: string; description?: string };
 type InfoRowItem = { label?: string; value?: string };
+type HeroSliderItem = {
+  src?: string;
+  alt?: string;
+  caption?: string;
+  linkEnabled?: boolean;
+  linkType?: "internal" | "external";
+  href?: string;
+  openInNewTab?: boolean;
+};
+
+function getHeroSlideLinkValidation(item: HeroSliderItem): { level: "error" | "hint"; message: string } | null {
+  if (item.linkEnabled !== true) return null;
+  const href = typeof item.href === "string" ? item.href.trim() : "";
+  if (!href) return { level: "error", message: "遷移先URLを入力してください。" };
+  if (item.linkType === "external") {
+    if (!/^https?:\/\//i.test(href)) return { level: "error", message: "外部URLは http:// または https:// で始めてください。" };
+    return null;
+  }
+  if (!href.startsWith("/")) return { level: "error", message: "内部リンクは / から始めてください（例: /p/sample）。" };
+  if (!(href.startsWith("/p/") || href.startsWith("/v/"))) {
+    return { level: "hint", message: "推奨: 内部リンクは /p/... または /v/... を使ってください。" };
+  }
+  return null;
+}
 
 function InfoRowsEditor({
   content,
@@ -289,6 +312,104 @@ function GalleryItemsEditor({
             onChange={(e) => updateItem(i, "alt", e.target.value)}
             placeholder="任意"
           />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HeroSliderItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.slides) ? content.slides : []) as HeroSliderItem[];
+  const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next);
+  const updateItem = (index: number, field: keyof HeroSliderItem, value: unknown) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { src: "", alt: "", caption: "", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const to = index + dir;
+    if (to < 0 || to >= items.length) return;
+    const next = [...items];
+    const [row] = next.splice(index, 1);
+    next.splice(to, 0, row);
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">スライド画像</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.slice(0, 10).map((_, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-end gap-2">
+            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <ImageUpload onUploaded={(url) => updateItem(i, "src", url)} className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3" />
+          <Input label="代替テキスト" value={items[i]?.alt ?? ""} onChange={(e) => updateItem(i, "alt", e.target.value)} placeholder="任意" />
+          <Input label="キャプション" value={items[i]?.caption ?? ""} onChange={(e) => updateItem(i, "caption", e.target.value)} placeholder="任意" />
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={items[i]?.linkEnabled === true}
+              onChange={(e) => updateItem(i, "linkEnabled", e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+            />
+            ページ遷移を有効化
+          </label>
+          {items[i]?.linkEnabled ? (
+            <>
+              <div className="w-full">
+                <label className={labelClass}>リンク種別</label>
+                <select
+                  value={items[i]?.linkType === "external" ? "external" : "internal"}
+                  onChange={(e) => updateItem(i, "linkType", e.target.value === "external" ? "external" : "internal")}
+                  className={inputClass}
+                >
+                  <option value="internal">内部ページ</option>
+                  <option value="external">外部URL</option>
+                </select>
+              </div>
+              <Input
+                label="遷移先"
+                value={items[i]?.href ?? ""}
+                onChange={(e) => updateItem(i, "href", e.target.value)}
+                placeholder={items[i]?.linkType === "external" ? "https://example.com" : "/p/sample または /v/sample"}
+              />
+              {(() => {
+                const validation = getHeroSlideLinkValidation(items[i] ?? {});
+                if (!validation) return null;
+                return (
+                  <p className={`text-xs ${validation.level === "error" ? "text-rose-600" : "text-amber-600"}`}>
+                    {validation.message}
+                  </p>
+                );
+              })()}
+              {items[i]?.linkType === "external" ? (
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={items[i]?.openInNewTab === true}
+                    onChange={(e) => updateItem(i, "openInNewTab", e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+                  />
+                  新しいタブで開く
+                </label>
+              ) : null}
+            </>
+          ) : null}
         </div>
       ))}
     </div>
@@ -839,6 +960,7 @@ export function CardSettings({
   demoMode = false,
   onLockedAction,
   lastAddedCardId = null,
+  isBusinessEnabled = false,
 }: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
@@ -849,7 +971,17 @@ export function CardSettings({
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
   const [customPresets, setCustomPresets] = useState<
     Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
-  >([]);
+  >(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(CUSTOM_PRESET_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>;
+      return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
+    } catch {
+      return [];
+    }
+  });
   const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
   const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
@@ -893,18 +1025,6 @@ export function CardSettings({
     return () => {
       if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(CUSTOM_PRESET_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>;
-      if (Array.isArray(parsed)) setCustomPresets(parsed.slice(0, 5));
-    } catch {
-      // ignore
-    }
   }, []);
 
   const persistCustomPresets = useCallback(
@@ -1137,6 +1257,11 @@ export function CardSettings({
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
 
   const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
+  const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
+  const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
+  const supportsGlobalFontSize = !["divider", "space"].includes(card.type);
+  const supportsTitleFontSize = !["text", "image", "divider", "space"].includes(card.type);
+  const supportsBodyFontSize = !["button", "action", "divider", "space"].includes(card.type);
   const facilityTime = card.type === "spa" ? display("time") || display("hours") : display("time");
   const facilityDetail =
     card.type === "spa"
@@ -1172,6 +1297,23 @@ export function CardSettings({
     }
     updateLocalized(key, value);
   };
+
+  if (businessLocked) {
+    return (
+      <>
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+          <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+          <p className="mt-1.5 text-sm font-medium text-slate-800">{CARD_TYPE_LABELS[card.type]}</p>
+          <p className="mt-0.5 text-xs text-slate-500">Businessプラン限定ブロック</p>
+        </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+          <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+            このブロックの編集は Business プランでご利用いただけます。公開ページでの表示は維持されます。
+          </section>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -1224,6 +1366,102 @@ export function CardSettings({
                 value={(content.subtitle as string) ?? ""}
                 onChange={(e) => update("subtitle", e.target.value)}
                 placeholder="任意"
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "hero_slider" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="おすすめ案内"
+              />
+              <HeroSliderItemsEditor content={content} onUpdate={update} />
+              <div className="w-full">
+                <label className={labelClass}>高さ</label>
+                <select
+                  value={(content.height as string) ?? "m"}
+                  onChange={(e) => update("height", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="s">小</option>
+                  <option value="m">標準</option>
+                  <option value="l">大</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.autoplay !== false} onChange={(e) => update("autoplay", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  自動再生
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.showCaptions !== false} onChange={(e) => update("showCaptions", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  キャプション表示
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.transitionEnabled !== false} onChange={(e) => update("transitionEnabled", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  トランジション
+                </label>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>トランジション種別</label>
+                <select
+                  value={(content.transitionType as string) ?? "fade"}
+                  onChange={(e) => update("transitionType", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="fade">フワッと（fade）</option>
+                  <option value="slide">スクロール（slide）</option>
+                  <option value="zoom">ズーム（zoom）</option>
+                </select>
+              </div>
+              <Input
+                label="トランジション時間（ms）"
+                type="number"
+                min={250}
+                max={1200}
+                step={50}
+                value={(content.transitionDurationMs as number | string | undefined) ?? 500}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    update("transitionDurationMs", "");
+                    return;
+                  }
+                  const parsed = Number(raw);
+                  if (!Number.isFinite(parsed)) return;
+                  update("transitionDurationMs", parsed);
+                }}
+                onBlur={(e) => {
+                  const parsed = Number(e.target.value);
+                  update("transitionDurationMs", Number.isFinite(parsed) ? Math.max(250, Math.min(1200, parsed)) : 500);
+                }}
+                placeholder="250-1200"
+              />
+              <Input
+                label="自動再生間隔（秒）"
+                type="number"
+                min={2}
+                max={10}
+                step={1}
+                value={(content.intervalSec as number | string | undefined) ?? 4}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    update("intervalSec", "");
+                    return;
+                  }
+                  const parsed = Number(raw);
+                  if (!Number.isFinite(parsed)) return;
+                  update("intervalSec", parsed);
+                }}
+                onBlur={(e) => {
+                  const parsed = Number(e.target.value);
+                  update("intervalSec", Number.isFinite(parsed) ? Math.max(2, Math.min(10, parsed)) : 4);
+                }}
+                placeholder="2-10"
               />
             </SettingsSection>
           )}
@@ -1298,14 +1536,7 @@ export function CardSettings({
           )}
 
           {card.type === "text" && (
-            <>
-              <SettingsSection title="コンテンツ">
-                <Input
-                  label="タイトル"
-                  value={display("title")}
-                  onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="任意の見出し"
-                />
+            <SettingsSection title="コンテンツ">
                 <div className="w-full">
                   <label className={labelClass}>Text</label>
                   <textarea
@@ -1316,35 +1547,11 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <div className="w-full">
-                  <label className={labelClass}>色</label>
-                  <select
-                    value={(content.color as string) ?? ""}
-                    onChange={(e) => update("color", e.target.value)}
-                    className={inputClass}
-                  >
-                    {COLOR_PRESETS.map((p) => (
-                      <option key={p.value || "default"} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "image" && (
-            <>
-              <SettingsSection title="コンテンツ">
-                <Input
-                  label="タイトル"
-                  value={display("title")}
-                  onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="任意のキャプション"
-                />
+            <SettingsSection title="コンテンツ">
                 <div className="w-full">
                   <label className={labelClass}>画像</label>
                   <ImageUpload
@@ -1358,31 +1565,7 @@ export function CardSettings({
                   onChange={(e) => updateLocalized("alt", e.target.value)}
                   placeholder="Image description"
                 />
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
-                  className={inputClass}
-                  labelClassName={labelClass}
-                />
-                <div className="w-full">
-                  <label className={labelClass}>色</label>
-                  <select
-                    value={(content.color as string) ?? ""}
-                    onChange={(e) => update("color", e.target.value)}
-                    className={inputClass}
-                  >
-                    {COLOR_PRESETS.map((p) => (
-                      <option key={p.value || "default"} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "icon" && (
@@ -1410,8 +1593,7 @@ export function CardSettings({
           )}
 
           {card.type === "wifi" && (
-            <>
-              <SettingsSection title="コンテンツ">
+            <SettingsSection title="コンテンツ">
                 <Input
                   label="タイトル"
                   value={display("title")}
@@ -1440,36 +1622,11 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
-                  className={inputClass}
-                  labelClassName={labelClass}
-                />
-                <div className="w-full">
-                  <label className={labelClass}>色</label>
-                  <select
-                    value={(content.color as string) ?? ""}
-                    onChange={(e) => update("color", e.target.value)}
-                    className={inputClass}
-                  >
-                    {COLOR_PRESETS.map((p) => (
-                      <option key={p.value || "default"} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-            </>
+            </SettingsSection>
           )}
 
           {isFacilityGuideBlock && (
-            <>
-              <SettingsSection title="コンテンツ">
+            <SettingsSection title="コンテンツ">
                 <Input
                   label="タイトル"
                   value={display("title")}
@@ -1498,31 +1655,7 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
-                  className={inputClass}
-                  labelClassName={labelClass}
-                />
-                <div className="w-full">
-                  <label className={labelClass}>色</label>
-                  <select
-                    value={(content.color as string) ?? ""}
-                    onChange={(e) => update("color", e.target.value)}
-                    className={inputClass}
-                  >
-                    {COLOR_PRESETS.map((p) => (
-                      <option key={p.value || "default"} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "checkout" && (
@@ -1734,8 +1867,7 @@ export function CardSettings({
           )}
 
           {card.type === "map" && (
-            <>
-              <SettingsSection title="コンテンツ">
+            <SettingsSection title="コンテンツ">
                 <Input
                   label="タイトル"
                   value={display("title")}
@@ -1765,31 +1897,7 @@ export function CardSettings({
                     共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
                   </p>
                 </div>
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
-                  className={inputClass}
-                  labelClassName={labelClass}
-                />
-                <div className="w-full">
-                  <label className={labelClass}>色</label>
-                  <select
-                    value={(content.color as string) ?? ""}
-                    onChange={(e) => update("color", e.target.value)}
-                    className={inputClass}
-                  >
-                    {COLOR_PRESETS.map((p) => (
-                      <option key={p.value || "default"} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-            </>
+            </SettingsSection>
           )}
 
           {card.type === "nearby" && (
@@ -1836,7 +1944,6 @@ export function CardSettings({
                         content: {
                           ...content,
                           variant: v,
-                          color: v === "warning" ? "#d97706" : "#2563eb",
                         },
                       });
                     }}
@@ -1854,56 +1961,75 @@ export function CardSettings({
           )}
 
           {card.type === "button" && (
-            <>
-              <SettingsSection title="コンテンツ">
-                <Input
-                  label="ラベル"
-                  value={display("label")}
-                  onChange={(e) => updateLocalized("label", e.target.value)}
-                  placeholder="Button text"
-                />
-                <Input
-                  label="リンク"
-                  value={(content.href as string) ?? ""}
-                  onChange={(e) => update("href", e.target.value)}
-                  placeholder="https://..."
-                />
-              </SettingsSection>
-              <SettingsSection title="表示">
-                <IconTokenSelect
-                  label="アイコン"
-                  value={(content.icon as string) ?? ""}
-                  onChange={(next) => update("icon", next)}
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="ラベル"
+                value={display("label")}
+                onChange={(e) => updateLocalized("label", e.target.value)}
+                placeholder="Button text"
+              />
+              <Input
+                label="リンク"
+                value={(content.href as string) ?? ""}
+                onChange={(e) => update("href", e.target.value)}
+                placeholder="https://..."
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "campaign_timer" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="キャンペーン名"
+              />
+              <div className="w-full">
+                <label className={labelClass}>説明</label>
+                <textarea
+                  value={(content.description as string) ?? ""}
+                  onChange={(e) => update("description", e.target.value)}
+                  placeholder="任意"
+                  rows={3}
                   className={inputClass}
-                  labelClassName={labelClass}
                 />
-                <div className="w-full">
-                  <label className={labelClass}>Style</label>
-                  <select
-                    value={(content.style as string) ?? "primary"}
-                    onChange={(e) => update("style", e.target.value)}
-                    className={inputClass}
-                  >
-                    {BUTTON_STYLE_PRESETS.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </SettingsSection>
-              <SettingsSection title="Behavior">
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={content.openInNewTab === true}
-                    onChange={(e) => update("openInNewTab", e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
-                  />
-                  <span className="text-sm text-slate-700">Open link in new tab</span>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>開始日時</label>
+                <input
+                  type="datetime-local"
+                  value={isoToLocalInput(content.startAt)}
+                  onChange={(e) => update("startAt", localInputToIso(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>終了日時</label>
+                <input
+                  type="datetime-local"
+                  value={isoToLocalInput(content.endAt)}
+                  onChange={(e) => update("endAt", localInputToIso(e.target.value))}
+                  className={inputClass}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.hideBeforeStart === true} onChange={(e) => update("hideBeforeStart", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  開始前は非表示
                 </label>
-              </SettingsSection>
-            </>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.hideAfterEnd === true} onChange={(e) => update("hideAfterEnd", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  終了後は非表示
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.showSeconds !== false} onChange={(e) => update("showSeconds", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  秒を表示
+                </label>
+              </div>
+              <Input label="CTAラベル" value={(content.ctaLabel as string) ?? ""} onChange={(e) => update("ctaLabel", e.target.value)} placeholder="詳細を見る" />
+              <Input label="CTA URL" value={(content.ctaUrl as string) ?? ""} onChange={(e) => update("ctaUrl", e.target.value)} placeholder="https://..." />
+            </SettingsSection>
           )}
 
           {card.type === "gallery" && (
@@ -2244,6 +2370,66 @@ export function CardSettings({
               </div>
             </div>
             <div className="w-full">
+              <label className={labelClass}>内部要素の背景</label>
+              <select
+                value={
+                  (style.innerSurfaceMode as string) === "transparent" || (style.innerSurfaceMode as string) === "custom"
+                    ? (style.innerSurfaceMode as string)
+                    : "default"
+                }
+                onChange={(e) => {
+                  const mode = e.target.value as "default" | "transparent" | "custom";
+                  updateStyle("innerSurfaceMode", mode === "default" ? undefined : mode);
+                  if (mode !== "custom") updateStyle("innerSurfaceColor", undefined);
+                }}
+                className={inputClass}
+              >
+                <option value="default">デフォルト</option>
+                <option value="transparent">透過</option>
+                <option value="custom">カスタム</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>背景プリセット</label>
+              <div className="flex flex-wrap gap-2">
+                {INNER_SURFACE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => {
+                      updateStyle("innerSurfaceMode", "custom");
+                      updateStyle("innerSurfaceColor", preset.value);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                  >
+                    <span className="inline-block h-3 w-3 rounded-sm border border-slate-200" style={{ backgroundColor: preset.value }} />
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {((style.innerSurfaceMode as string) ?? "default") === "custom" ? (
+              <div className="w-full">
+                <label className={labelClass}>内部要素の背景色</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={normalizeHexColor(style.innerSurfaceColor as string | undefined) ?? "#f8fafc"}
+                    onChange={(e) => updateStyle("innerSurfaceColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(style.innerSurfaceColor as string) ?? ""}
+                    onChange={(e) => updateStyle("innerSurfaceColor", e.target.value || undefined)}
+                    placeholder="#f8fafc"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">#RRGGBB 形式（例: #f8fafc）</p>
+              </div>
+            ) : null}
+            <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -2327,54 +2513,60 @@ export function CardSettings({
             </div>
             {styleMode === "advanced" && (
               <>
-                <div className="w-full">
-                  <label className={labelClass}>フォントサイズ（全体）</label>
-                  <select
-                    value={(style.fontSize as string) ?? ""}
-                    onChange={(e) => updateStyle("fontSize", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">標準</option>
-                    <option value="xs">極小 (12px)</option>
-                    <option value="sm">小 (14px)</option>
-                    <option value="base">標準 (16px)</option>
-                    <option value="lg">大 (18px)</option>
-                    <option value="xl">特大 (20px)</option>
-                    <option value="2xl">最大 (24px)</option>
-                  </select>
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>タイトルサイズ</label>
-                  <select
-                    value={(style.titleFontSize as string) ?? ""}
-                    onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">継承（上記に従う）</option>
-                    <option value="xs">極小 (12px)</option>
-                    <option value="sm">小 (14px)</option>
-                    <option value="base">標準 (16px)</option>
-                    <option value="lg">大 (18px)</option>
-                    <option value="xl">特大 (20px)</option>
-                    <option value="2xl">最大 (24px)</option>
-                  </select>
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>本文サイズ</label>
-                  <select
-                    value={(style.bodyFontSize as string) ?? ""}
-                    onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">継承（上記に従う）</option>
-                    <option value="xs">極小 (12px)</option>
-                    <option value="sm">小 (14px)</option>
-                    <option value="base">標準 (16px)</option>
-                    <option value="lg">大 (18px)</option>
-                    <option value="xl">特大 (20px)</option>
-                    <option value="2xl">最大 (24px)</option>
-                  </select>
-                </div>
+                {supportsGlobalFontSize ? (
+                  <div className="w-full">
+                    <label className={labelClass}>フォントサイズ（全体）</label>
+                    <select
+                      value={(style.fontSize as string) ?? ""}
+                      onChange={(e) => updateStyle("fontSize", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">標準</option>
+                      <option value="xs">極小 (12px)</option>
+                      <option value="sm">小 (14px)</option>
+                      <option value="base">標準 (16px)</option>
+                      <option value="lg">大 (18px)</option>
+                      <option value="xl">特大 (20px)</option>
+                      <option value="2xl">最大 (24px)</option>
+                    </select>
+                  </div>
+                ) : null}
+                {supportsTitleFontSize ? (
+                  <div className="w-full">
+                    <label className={labelClass}>タイトルサイズ</label>
+                    <select
+                      value={(style.titleFontSize as string) ?? ""}
+                      onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">継承（上記に従う）</option>
+                      <option value="xs">極小 (12px)</option>
+                      <option value="sm">小 (14px)</option>
+                      <option value="base">標準 (16px)</option>
+                      <option value="lg">大 (18px)</option>
+                      <option value="xl">特大 (20px)</option>
+                      <option value="2xl">最大 (24px)</option>
+                    </select>
+                  </div>
+                ) : null}
+                {supportsBodyFontSize ? (
+                  <div className="w-full">
+                    <label className={labelClass}>本文サイズ</label>
+                    <select
+                      value={(style.bodyFontSize as string) ?? ""}
+                      onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">継承（上記に従う）</option>
+                      <option value="xs">極小 (12px)</option>
+                      <option value="sm">小 (14px)</option>
+                      <option value="base">標準 (16px)</option>
+                      <option value="lg">大 (18px)</option>
+                      <option value="xl">特大 (20px)</option>
+                      <option value="2xl">最大 (24px)</option>
+                    </select>
+                  </div>
+                ) : null}
                 <div className="w-full">
                   <label className={labelClass}>影</label>
                   <select

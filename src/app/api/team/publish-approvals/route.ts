@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import {
   getSupabaseAdminServerClient,
   getSupabaseAnonServerClient,
@@ -76,7 +77,8 @@ async function authenticateWithHotel(request: Request): Promise<AuthContext> {
     admin.from("subscriptions").select("plan").eq("hotel_id", hotelId).maybeSingle(),
   ]);
 
-  if (sub?.plan !== "business") {
+  const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
+  if (!isBusinessAccessible) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -90,7 +92,10 @@ async function authenticateWithHotel(request: Request): Promise<AuthContext> {
   const membershipRole = membership.role === "admin" ? "admin" : membership.role === "viewer" ? "viewer" : "editor";
   const role: Role = isOwner ? "owner" : membershipRole;
 
-  return { ok: true, userId: user.id, hotelId, role, plan: sub?.plan ?? null };
+  const effectivePlan =
+    sub?.plan === "business" ? sub.plan : canUseDevBusinessOverride(user) ? "business" : sub?.plan ?? null;
+
+  return { ok: true, userId: user.id, hotelId, role, plan: effectivePlan };
 }
 
 export async function GET(request: Request) {
