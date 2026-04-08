@@ -296,7 +296,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
   { type: "welcome", label: "ウェルカム", description: "おもてなしメッセージ" },
-  { type: "wifi", label: "WiFi", description: "SSID・パスワード・説明" },
+  { type: "wifi", label: "WiFi", description: "SSID・パスワード" },
   { type: "breakfast", label: "朝食", description: "時間・会場・メニュー" },
   { type: "checkout", label: "チェックアウト", description: "時刻・補足・リンク" },
   { type: "nearby", label: "周辺案内", description: "近隣スポット・アクセス" },
@@ -364,7 +364,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "welcome":
       return { title: "ようこそ", message: "ご宿泊ありがとうございます。ごゆっくりお過ごしください。" };
     case "wifi":
-      return { title: "WiFi案内", ssid: "Infomii-Guest", password: "welcome2026", description: "接続できない場合はフロントまでお声がけください。" };
+      return { title: "WiFi案内", ssid: "Infomii-Guest", password: "welcome2026" };
     case "breakfast":
       return { title: "施設案内", time: "7:00-9:30", location: "1F ダイニング", menu: "和洋ビュッフェ / 最終入場 9:00" };
     case "checkout":

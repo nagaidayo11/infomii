@@ -19,7 +19,6 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
-import { BlockToolbar } from "./BlockToolbar";
 import { getBlockStyle, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
@@ -164,12 +163,6 @@ function SortableCardWrapper({
   isNewlyAdded,
   isTemplateHighlighted,
   onSelect,
-  onDuplicate,
-  onRemove,
-  onMoveUp,
-  onMoveDown,
-  canMoveUp,
-  canMoveDown,
   onContextMenuClick,
   children,
 }: {
@@ -177,12 +170,6 @@ function SortableCardWrapper({
   isSelected: boolean;
   isNewlyAdded: boolean;
   onSelect: () => void;
-  onDuplicate?: () => void;
-  onRemove?: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  canMoveUp?: boolean;
-  canMoveDown?: boolean;
   onContextMenuClick?: (e: React.MouseEvent) => void;
   isTemplateHighlighted?: boolean;
   children: React.ReactNode;
@@ -267,18 +254,6 @@ function SortableCardWrapper({
               }
             }}
           >
-            {isSelected && onDuplicate && onRemove && (
-              <BlockToolbar
-                cardId={card.id}
-                cardType={card.type}
-                onDuplicate={onDuplicate}
-                onDelete={onRemove}
-                onMoveUp={onMoveUp}
-                onMoveDown={onMoveDown}
-                canMoveUp={canMoveUp}
-                canMoveDown={canMoveDown}
-              />
-            )}
             {children}
           </div>
         </div>
@@ -430,7 +405,7 @@ export function Canvas({
                         if (e.target === e.currentTarget) onSelectCard(null);
                       }}
                     >
-                      {sortedCards.map((card, idx) => (
+                      {sortedCards.map((card) => (
                         <SortableCardWrapper
                           key={card.id}
                           card={card}
@@ -438,12 +413,6 @@ export function Canvas({
                           isNewlyAdded={card.id === lastAddedCardId}
                           isTemplateHighlighted={highlightedCardIds?.has(card.id)}
                           onSelect={() => onSelectCard(card.id)}
-                          onDuplicate={onDuplicateCard ? () => onDuplicateCard(card.id) : undefined}
-                          onRemove={onRemoveCard ? () => onRemoveCard(card.id) : undefined}
-                          onMoveUp={idx > 0 ? () => moveCard(card.id, "up") : undefined}
-                          onMoveDown={idx < sortedCards.length - 1 ? () => moveCard(card.id, "down") : undefined}
-                          canMoveUp={idx > 0}
-                          canMoveDown={idx < sortedCards.length - 1}
                           onContextMenuClick={
                             onDuplicateCard && onRemoveCard
                               ? (e) => {

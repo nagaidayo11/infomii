@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
-import { BlockToolbar } from "./BlockToolbar";
 import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
 const FIXED_VIEWPORT_WIDTH = 375;
@@ -199,8 +198,6 @@ type FreeformCanvasProps = {
   onSelectCard: (id: string | null) => void;
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onReorderCards?: (cards: EditorCard[]) => void;
-  onDuplicateCard?: (id: string) => void;
-  onRemoveCard?: (id: string) => void;
   pageBackground?: {
     mode: "solid" | "gradient";
     color: string;
@@ -216,8 +213,6 @@ export function FreeformCanvas({
   onSelectCard,
   onUpdateCard,
   onReorderCards,
-  onDuplicateCard,
-  onRemoveCard,
   pageBackground,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -625,19 +620,6 @@ export function FreeformCanvas({
                       <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
                     </div>
                   </div>
-                  {isSelected && onDuplicateCard && onRemoveCard && (
-                    <BlockToolbar
-                      cardId={card.id}
-                      cardType={card.type}
-                      onDuplicate={() => onDuplicateCard(card.id)}
-                      onDelete={() => onRemoveCard(card.id)}
-                      onMoveUp={undefined}
-                      onMoveDown={undefined}
-                      canMoveUp={false}
-                      canMoveDown={false}
-                      verticalPosition="above"
-                    />
-                  )}
                 </div>
               </Rnd>
             );

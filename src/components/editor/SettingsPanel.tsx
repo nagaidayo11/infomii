@@ -118,6 +118,8 @@ type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<strin
 export type CardSettingsProps = {
   card: EditorCard | null;
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
+  onDuplicateCard?: (id: string) => void;
+  onRemoveCard?: (id: string) => void;
   onBulkReplace?: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
   onRunPrepublishCheck?: () => void;
   demoMode?: boolean;
@@ -955,6 +957,8 @@ function MenuItemsEditor({
 export function CardSettings({
   card,
   onUpdate,
+  onDuplicateCard,
+  onRemoveCard,
   onBulkReplace,
   onRunPrepublishCheck,
   demoMode = false,
@@ -1262,6 +1266,15 @@ export function CardSettings({
   const supportsGlobalFontSize = !["divider", "space"].includes(card.type);
   const supportsTitleFontSize = !["text", "image", "divider", "space"].includes(card.type);
   const supportsBodyFontSize = !["button", "action", "divider", "space"].includes(card.type);
+  const canEditCard = Boolean(onDuplicateCard || onRemoveCard);
+  const handleDuplicateCard = () => {
+    if (!card || !onDuplicateCard) return;
+    onDuplicateCard(card.id);
+  };
+  const handleRemoveCard = () => {
+    if (!card || !onRemoveCard) return;
+    onRemoveCard(card.id);
+  };
   const facilityTime = card.type === "spa" ? display("time") || display("hours") : display("time");
   const facilityDetail =
     card.type === "spa"
@@ -1303,7 +1316,31 @@ export function CardSettings({
       <>
         <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
           <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
-          <p className="mt-1.5 text-sm font-medium text-slate-800">{CARD_TYPE_LABELS[card.type]}</p>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <p className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-lg font-extrabold tracking-tight text-slate-950 ring-1 ring-slate-200">
+              {CARD_TYPE_LABELS[card.type]}
+            </p>
+            {canEditCard ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleDuplicateCard}
+                  disabled={!onDuplicateCard}
+                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  コピー
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveCard}
+                  disabled={!onRemoveCard}
+                  className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  削除
+                </button>
+              </div>
+            ) : null}
+          </div>
           <p className="mt-0.5 text-xs text-slate-500">Businessプラン限定ブロック</p>
         </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
@@ -1321,9 +1358,31 @@ export function CardSettings({
         <h2 className="text-sm font-semibold text-slate-700">
           ブロック設定
         </h2>
-        <p className="mt-1.5 text-sm font-medium text-slate-800">
-          {CARD_TYPE_LABELS[card.type]}
-        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-lg font-extrabold tracking-tight text-slate-950 ring-1 ring-slate-200">
+            {CARD_TYPE_LABELS[card.type]}
+          </p>
+          {canEditCard ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleDuplicateCard}
+                disabled={!onDuplicateCard}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                コピー
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoveCard}
+                disabled={!onRemoveCard}
+                className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                削除
+              </button>
+            </div>
+          ) : null}
+        </div>
         <p className="mt-0.5 text-xs text-slate-500">変更はリアルタイムで反映されます</p>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
@@ -1612,16 +1671,6 @@ export function CardSettings({
                   onChange={(e) => updateLocalized("password", e.target.value)}
                   placeholder="Password"
                 />
-                <div className="w-full">
-                  <label className={labelClass}>Description</label>
-                  <textarea
-                    value={display("description")}
-                    onChange={(e) => updateLocalized("description", e.target.value)}
-                    placeholder="任意の説明"
-                    rows={2}
-                    className={inputClass}
-                  />
-                </div>
             </SettingsSection>
           )}
 

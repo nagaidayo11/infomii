@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorLayout } from "./EditorLayout";
-import { EditorTopBar, EDITOR_LOCALE_PILL_OPTIONS } from "./EditorTopBar";
+import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
 import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
@@ -45,8 +45,7 @@ type Editor2Props = {
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
 const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
-/** ヘッダーの言語ピルと同一（EDITOR_LOCALE_PILL_OPTIONS の label を " / " 連結） */
-const EDITOR_LOCALE_LABELS_DISPLAY = EDITOR_LOCALE_PILL_OPTIONS.map((o) => o.label).join(" / ");
+const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / ハングル";
 
 export function Editor2({
   pageId,
@@ -71,7 +70,7 @@ export function Editor2({
   } | null>(null);
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
-  const [editorLocale, setEditorLocale] = useState<SupportedLocale>("ja");
+  const editorLocale: SupportedLocale = "ja";
   const [localeTranslating, setLocaleTranslating] = useState(false);
   const [translationEnabled, setTranslationEnabled] = useState(false);
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
@@ -909,47 +908,6 @@ export function Editor2({
     }
   }, [isDemoMode, publishStatus, ensureTranslationsBeforePublish, handleTogglePublished]);
 
-  const handleChangeEditorLocale = useCallback(async (nextLocale: SupportedLocale) => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは翻訳機能は利用できません。無料登録で解放されます。");
-      return;
-    }
-    if (localeTranslating || editorLocale === nextLocale) return;
-    if (nextLocale === "ja") {
-      setEditorLocale("ja");
-      return;
-    }
-    const subscription = await getCurrentHotelSubscription().catch(() => null);
-    if (!subscription || subscription.plan !== "business") {
-      alert("多言語翻訳はBusinessプラン限定機能です。プランをアップグレードしてご利用ください。");
-      return;
-    }
-    const usage = await getCurrentHotelTranslationUsage().catch(() => null);
-    if (usage && usage.usedRuns >= usage.includedRuns) {
-      alert(
-        `今月の翻訳実行枠（${usage.includedRuns}回）に達しました。追加課金プランで継続利用できます。`
-      );
-      return;
-    }
-    setLocaleTranslating(true);
-    try {
-      const translatedCount = await translateAllCardsToMultilingual();
-      if (translatedCount > 0) {
-        await trackCurrentHotelTranslationRun({
-          locale: nextLocale,
-          translatedItems: translatedCount,
-          source: "editor_locale",
-        });
-      }
-      setEditorLocale(nextLocale);
-    } catch {
-      // Even when translation API fails, switch locale and rely on existing localized/fallback text.
-      setEditorLocale(nextLocale);
-    } finally {
-      setLocaleTranslating(false);
-    }
-  }, [isDemoMode, localeTranslating, editorLocale, translateAllCardsToMultilingual]);
-
   const topBar =
     pageId || isDemoMode ? (
       <EditorTopBar
@@ -984,10 +942,6 @@ export function Editor2({
           }
           setBulkFontOpen(true);
         }}
-        locale={editorLocale}
-        onChangeLocale={handleChangeEditorLocale}
-        localeTranslating={localeTranslating}
-        translationEnabled={translationEnabled}
         onPreview={handlePreviewClick}
         previewPreparing={previewBusy || localeTranslating}
         onPublish={handlePublishClickStrict}
@@ -1013,15 +967,15 @@ export function Editor2({
   let editorBusyTitle = "公開中...";
   let editorBusySubtitle = "保存と公開設定を実行しています";
   if (previewBusy && localeTranslating) {
-    editorBusyTitle = "一括翻訳中...";
-    editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を整えています`;
+    editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
+    editorBusySubtitle = "公開前に多言語データを整えています";
   } else if (previewBusy) {
     editorBusyTitle = "プレビュー準備中...";
     editorBusySubtitle = "保存してプレビューを開きます";
   } else if (togglePublishBusy) {
     if (localeTranslating) {
-      editorBusyTitle = "一括翻訳中...";
-      editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を整えています`;
+      editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
+      editorBusySubtitle = "公開前に多言語データを整えています";
     } else {
       editorBusyTitle = "公開準備中...";
       editorBusySubtitle =
@@ -1033,8 +987,11 @@ export function Editor2({
     editorBusyTitle = "QRを表示しています";
     editorBusySubtitle = "最新の編集内容を保存しています";
   } else if (publishFlowBusy && localeTranslating) {
-    editorBusyTitle = "多言語データ取得中...";
-    editorBusySubtitle = `${EDITOR_LOCALE_LABELS_DISPLAY} の翻訳を取得・反映しています`;
+    editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
+    editorBusySubtitle = "公開前に多言語データを取得・反映しています";
+  } else if (publishFlowBusy) {
+    editorBusyTitle = "公開準備中...";
+    editorBusySubtitle = "保存と公開前チェックを実行しています";
   }
 
   return (
@@ -1070,8 +1027,6 @@ export function Editor2({
                   onSelectCard={selectCard}
                   onUpdateCard={updateCard}
                   onReorderCards={reorderCards}
-                  onDuplicateCard={duplicateCard}
-                  onRemoveCard={removeCard}
                   pageBackground={{
                     mode: pageBackgroundMode,
                     color: pageBackgroundColor,
@@ -1087,6 +1042,8 @@ export function Editor2({
             <CardSettings
               card={selectedCard}
               onUpdate={updateCard}
+              onDuplicateCard={duplicateCard}
+              onRemoveCard={removeCard}
               onBulkReplace={isDemoMode ? undefined : replaceTextAll}
               onRunPrepublishCheck={isDemoMode ? undefined : handleRunPrepublishCheck}
               lastAddedCardId={lastAddedCardId}

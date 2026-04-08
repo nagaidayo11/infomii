@@ -3,14 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-/** プレビュー言語ピル — オーバーレイ文言などと共有 */
-export const EDITOR_LOCALE_PILL_OPTIONS = [
-  { code: "ja", label: "JA" },
-  { code: "en", label: "EN" },
-  { code: "zh", label: "中文" },
-  { code: "ko", label: "한국어" },
-] as const;
-
 export type EditorTopBarProps = {
   backHref?: string;
   demoMode?: boolean;
@@ -28,10 +20,6 @@ export type EditorTopBarProps = {
   previewPreparing?: boolean;
   onEditPageBackground?: () => void;
   onBulkFont?: () => void;
-  locale?: "ja" | "en" | "zh" | "ko";
-  onChangeLocale?: (locale: "ja" | "en" | "zh" | "ko") => void;
-  localeTranslating?: boolean;
-  translationEnabled?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   canClearAll?: boolean;
@@ -124,10 +112,6 @@ export function EditorTopBar({
   previewPreparing = false,
   onEditPageBackground,
   onBulkFont,
-  locale = "ja",
-  onChangeLocale,
-  localeTranslating = false,
-  translationEnabled = true,
   canUndo = false,
   canRedo = false,
   canClearAll = false,
@@ -329,41 +313,6 @@ export function EditorTopBar({
               一括フォント
             </button>
           )}
-          {onChangeLocale && (
-            <div className="ml-1 flex items-center gap-1">
-              {localeTranslating && (
-                <span className="mr-1 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
-                  翻訳中…
-                </span>
-              )}
-              {EDITOR_LOCALE_PILL_OPTIONS.map((item) => {
-                const active = locale === item.code;
-                const disabledByPlan = !translationEnabled && item.code !== "ja";
-                return (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => onChangeLocale(item.code as "ja" | "en" | "zh" | "ko")}
-                    disabled={localeTranslating || disabledByPlan}
-                    className={
-                      "rounded-md border px-2 py-1 text-[11px] font-medium transition disabled:cursor-not-allowed disabled:opacity-60 " +
-                      (active
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
-                    }
-                    title={
-                      disabledByPlan
-                        ? "Businessプランで利用できます"
-                        : `表示言語: ${item.label}`
-                    }
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 
@@ -543,41 +492,6 @@ export function EditorTopBar({
                         一括フォント
                       </button>
                     )}
-                  </>
-                )}
-                {onChangeLocale && (
-                  <>
-                    <div className="border-t border-slate-100 px-4 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">表示言語</p>
-                      {localeTranslating && (
-                        <p className="mt-1 text-xs text-slate-500">翻訳中…</p>
-                      )}
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {EDITOR_LOCALE_PILL_OPTIONS.map((item) => {
-                          const active = locale === item.code;
-                          const disabledByPlan = !translationEnabled && item.code !== "ja";
-                          return (
-                            <button
-                              key={item.code}
-                              type="button"
-                              onClick={() => {
-                                onChangeLocale(item.code as "ja" | "en" | "zh" | "ko");
-                                setMoreOpen(false);
-                              }}
-                              disabled={localeTranslating || disabledByPlan}
-                              className={
-                                "rounded-lg border px-3 py-2 text-xs font-medium transition disabled:opacity-40 " +
-                                (active
-                                  ? "border-slate-900 bg-slate-900 text-white"
-                                  : "border-slate-200 bg-white text-slate-700")
-                              }
-                            >
-                              {item.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </>
                 )}
               </div>
