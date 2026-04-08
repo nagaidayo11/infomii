@@ -231,6 +231,16 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "faq_search",
       "notice_ticker",
       "coupon",
+      "accordion_info",
+      "open_status",
+      "social_links",
+      "contact_hub",
+      "progress_steps",
+      "emergency_banner",
+      "scheduled_banner",
+      "multilingual_notice",
+      "conditional_section",
+      "update_log",
     ];
     const cards: EditorCard[] = inputs
       .filter((c) => allowed.includes(c.type as CardType))
@@ -284,6 +294,16 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "faq_search",
       "notice_ticker",
       "coupon",
+      "accordion_info",
+      "open_status",
+      "social_links",
+      "contact_hub",
+      "progress_steps",
+      "emergency_banner",
+      "scheduled_banner",
+      "multilingual_notice",
+      "conditional_section",
+      "update_log",
     ];
     if (!allowed.includes(type)) return;
     const { cards, historyPast } = get();

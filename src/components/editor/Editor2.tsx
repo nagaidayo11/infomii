@@ -30,6 +30,11 @@ import {
   trackCurrentHotelTranslationRun,
   getCurrentUserHotelRole,
 } from "@/lib/storage";
+import {
+  detectBusinessTypeMisuse,
+  estimateTemplateConsistencyScore,
+  hasInvalidRange,
+} from "@/lib/server-time";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -148,9 +153,32 @@ export function Editor2({
           );
         }
       }
+      if (card.type === "scheduled_banner") {
+        const c = card.content as Record<string, unknown>;
+        const startAt = typeof c.startAt === "string" ? c.startAt : undefined;
+        const endAt = typeof c.endAt === "string" ? c.endAt : undefined;
+        if (hasInvalidRange(startAt, endAt)) {
+          errors.push("期間限定バナーの開始日時が終了日時より後になっています。");
+        }
+      }
+      if (card.type === "campaign_timer") {
+        const c = card.content as Record<string, unknown>;
+        const startAt = typeof c.startAt === "string" ? c.startAt : undefined;
+        const endAt = typeof c.endAt === "string" ? c.endAt : undefined;
+        if (hasInvalidRange(startAt, endAt)) {
+          errors.push("キャンペーンタイマーの開始日時が終了日時より後になっています。");
+        }
+      }
     });
+    const lowConsistencyScore = estimateTemplateConsistencyScore(pageMeta.title || "", JSON.stringify(cards));
+    if (lowConsistencyScore < 60) {
+      warnings.push(`テンプレート整合スコアが低めです（${lowConsistencyScore}）。タイトルと画像/本文の一致を見直してください。`);
+    }
+    if (detectBusinessTypeMisuse(cards.map((c) => c.type), translationEnabled)) {
+      warnings.push("Business限定ブロックが含まれています。現在のプランで公開時表示が制限される可能性があります。");
+    }
     return { errors, warnings };
-  }, [cards]);
+  }, [cards, pageMeta.title, translationEnabled]);
 
   useEffect(() => {
     if (!isDemoMode) return;

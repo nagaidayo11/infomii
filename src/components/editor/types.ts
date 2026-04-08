@@ -46,7 +46,17 @@ export type CardType =
   | "tabs_info"
   | "faq_search"
   | "notice_ticker"
-  | "coupon";
+  | "coupon"
+  | "accordion_info"
+  | "open_status"
+  | "social_links"
+  | "contact_hub"
+  | "progress_steps"
+  | "emergency_banner"
+  | "scheduled_banner"
+  | "multilingual_notice"
+  | "conditional_section"
+  | "update_log";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -241,6 +251,16 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   faq_search: "FAQ検索",
   notice_ticker: "お知らせティッカー",
   coupon: "クーポン",
+  accordion_info: "アコーディオン案内",
+  open_status: "営業時間ステータス",
+  social_links: "SNSリンク集",
+  contact_hub: "連絡先ハブ",
+  progress_steps: "進捗ステップ",
+  emergency_banner: "緊急告知バナー",
+  scheduled_banner: "期間限定バナー",
+  multilingual_notice: "多言語注意文",
+  conditional_section: "条件表示セクション",
+  update_log: "更新履歴",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -264,6 +284,16 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "faq_search",
   "notice_ticker",
   "coupon",
+  "accordion_info",
+  "open_status",
+  "social_links",
+  "contact_hub",
+  "progress_steps",
+  "emergency_banner",
+  "scheduled_banner",
+  "multilingual_notice",
+  "conditional_section",
+  "update_log",
   "gallery",
   "divider",
   "space",
@@ -290,6 +320,16 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
+  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
+  { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
+  { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
+  { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
+  { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
+  { type: "multilingual_notice", label: "多言語注意文", description: "4言語の注意文テンプレ（Business）" },
+  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示制御（Business）" },
+  { type: "update_log", label: "更新履歴", description: "更新履歴タイムライン（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
@@ -340,10 +380,30 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
+  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
+  { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
+  { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
+  { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
+  { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
+  { type: "multilingual_notice", label: "多言語注意文", description: "4言語の注意文テンプレ（Business）" },
+  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示制御（Business）" },
+  { type: "update_log", label: "更新履歴", description: "更新履歴タイムライン（Business）" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
-export const BUSINESS_ONLY_CARD_TYPES: CardType[] = ["hero_slider", "campaign_timer", "notice_ticker", "coupon"];
+export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
+  "hero_slider",
+  "campaign_timer",
+  "notice_ticker",
+  "coupon",
+  "emergency_banner",
+  "scheduled_banner",
+  "multilingual_notice",
+  "conditional_section",
+  "update_log",
+];
 
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
@@ -490,6 +550,89 @@ function defaultContent(type: CardType): Record<string, unknown> {
         notes: "チェックイン時にフロントでご提示ください。",
         ctaLabel: "詳細を見る",
         ctaUrl: "",
+        ctaBgColor: "#0f172a",
+        ctaTextColor: "#ffffff",
+      };
+    case "accordion_info":
+      return {
+        title: "よくあるご案内",
+        items: [
+          { title: "チェックイン時間", body: "15:00からです。" },
+          { title: "荷物預かり", body: "当日中はフロントで承ります。" },
+        ],
+      };
+    case "open_status":
+      return {
+        title: "フロント営業時間",
+        mode: "manual",
+        openNow: true,
+        openLabel: "営業中",
+        closedLabel: "営業時間外",
+        hoursText: "7:00-23:00",
+      };
+    case "social_links":
+      return {
+        title: "公式SNS",
+        items: [
+          { label: "Instagram", href: "", handle: "@infomii_hotel" },
+          { label: "X", href: "", handle: "@infomii" },
+        ],
+      };
+    case "contact_hub":
+      return {
+        title: "お問い合わせ",
+        phone: "03-1234-5678",
+        email: "front@example.com",
+        lineUrl: "",
+        mapUrl: "",
+        note: "ご不明点はお気軽にお問い合わせください。",
+      };
+    case "progress_steps":
+      return {
+        title: "ご利用の流れ",
+        currentStep: 2,
+        items: [
+          { label: "予約確認", done: true },
+          { label: "チェックイン", done: false },
+          { label: "ご案内確認", done: false },
+        ],
+      };
+    case "emergency_banner":
+      return {
+        title: "緊急のお知らせ",
+        message: "設備点検のため一部エリアを一時閉鎖しています。",
+        level: "high",
+      };
+    case "scheduled_banner":
+      return {
+        title: "期間限定のお知らせ",
+        message: "春の特典キャンペーン実施中です。",
+        startAt: "",
+        endAt: "",
+      };
+    case "multilingual_notice":
+      return {
+        title: "多言語注意文",
+        ja: "客室内は禁煙です。",
+        en: "No smoking in guest rooms.",
+        zh: "客房内禁止吸烟。",
+        ko: "객실 내 금연입니다.",
+      };
+    case "conditional_section":
+      return {
+        title: "条件表示セクション",
+        message: "現在の時間帯のみ表示される案内です。",
+        enabledDays: [1, 2, 3, 4, 5, 6, 0],
+        startHour: 0,
+        endHour: 24,
+      };
+    case "update_log":
+      return {
+        title: "更新履歴",
+        items: [
+          { at: "2026-04-01T09:00:00.000Z", actor: "owner", kind: "文言", text: "朝食時間を更新" },
+          { at: "2026-04-03T11:30:00.000Z", actor: "admin", kind: "画像", text: "館内マップを差し替え" },
+        ],
       };
     case "parking":
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };

@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { listTemplates, createPageFromTemplate, type TemplateRow } from "@/lib/storage";
+import {
+  listTemplates,
+  createPageFromTemplate,
+  recheckTemplateConsistency,
+  type TemplateRow,
+} from "@/lib/storage";
 import {
   resolveTemplateMeta,
   TEMPLATE_AUDIENCE_TAGS,
@@ -55,6 +60,7 @@ export default function TemplatesPage() {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [badgeEditorOpen, setBadgeEditorOpen] = useState(false);
   const [runtimeMetaOverrides, setRuntimeMetaOverrides] = useState<Record<string, TemplateMeta>>({});
+  const [recheckingTemplateId, setRecheckingTemplateId] = useState<string | null>(null);
 
   const BADGE_META_STORAGE_KEY = "infomii.template-meta-overrides.v1";
 
@@ -127,6 +133,13 @@ export default function TemplatesPage() {
   }, []);
 
   const filtered = filterByCategory(templates, category);
+  const filteredMeta = filtered.map((t) => resolveTemplateMeta(t, runtimeMetaOverrides));
+  const avgConsistencyScore =
+    filteredMeta.length > 0
+      ? Math.round(filteredMeta.reduce((sum, m) => sum + m.consistencyScore, 0) / filteredMeta.length)
+      : 0;
+  const lowScoreCount = filteredMeta.filter((m) => m.consistencyScore < 60).length;
+  const lowScoreRate = filteredMeta.length > 0 ? Math.round((lowScoreCount / filteredMeta.length) * 100) : 0;
   const groupedWhenAll = TEMPLATE_CATEGORIES
     .filter((c) => c.id !== "all")
     .map((c) => ({ category: c.id, label: c.label, items: filterByCategory(templates, c.id) }))
@@ -144,6 +157,30 @@ export default function TemplatesPage() {
       setError(e instanceof Error ? e.message : "ページの作成に失敗しました");
     } finally {
       setUsingId(null);
+    }
+  }
+
+  async function handleRecheckTemplate(template: TemplateRow) {
+    setRecheckingTemplateId(template.id);
+    setError(null);
+    try {
+      const result = await recheckTemplateConsistency(template.id);
+      setTemplates((prev) =>
+        prev.map((row) =>
+          row.id === template.id
+            ? {
+                ...row,
+                review_status: result.review_status,
+                consistency_score: result.consistency_score,
+                consistency_reason: result.consistency_reason,
+              }
+            : row
+        )
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "再評価に失敗しました");
+    } finally {
+      setRecheckingTemplateId(null);
     }
   }
 
@@ -217,6 +254,21 @@ export default function TemplatesPage() {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[11px] text-slate-500">平均一致スコア</p>
+          <p className="text-lg font-semibold text-slate-900">{avgConsistencyScore}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[11px] text-slate-500">低スコア率 (&lt;60)</p>
+          <p className="text-lg font-semibold text-amber-700">{lowScoreRate}%</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p className="text-[11px] text-slate-500">要見直し件数</p>
+          <p className="text-lg font-semibold text-amber-700">{lowScoreCount}</p>
+        </div>
+      </div>
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -250,18 +302,46 @@ export default function TemplatesPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((template) => {
             const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
+            const consistencyScore =
+              typeof template.consistency_score === "number"
+                ? template.consistency_score
+                : meta.consistencyScore;
+            const needsReview =
+              template.review_status === "needs_review" ||
+              template.review_status === "failed" ||
+              consistencyScore < 60;
+            const consistencyReason =
+              template.consistency_reason?.trim() ||
+              meta.consistencyReason;
             return (
-            <TemplateCard
-              key={template.id}
-              id={template.id}
-              name={template.name}
-              description={template.description}
-              preview_image={template.preview_image}
-              audienceTags={meta.audienceTags}
-              onUse={() => handleUseTemplate(template.id)}
-              onPreview={() => setPreviewTemplate(template)}
-              using={usingId === template.id}
-            />
+              <div key={template.id} className="space-y-2">
+                <TemplateCard
+                  id={template.id}
+                  name={template.name}
+                  description={template.description}
+                  preview_image={template.preview_image}
+                  audienceTags={meta.audienceTags}
+                  industry={meta.industry}
+                  useCase={meta.useCase}
+                  recommendedPlan={meta.recommendedPlan}
+                  consistencyScore={consistencyScore}
+                  needsReview={needsReview}
+                  consistencyReason={consistencyReason}
+                  onUse={() => handleUseTemplate(template.id)}
+                  onPreview={() => setPreviewTemplate(template)}
+                  using={usingId === template.id}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleRecheckTemplate(template)}
+                    disabled={recheckingTemplateId === template.id}
+                    className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {recheckingTemplateId === template.id ? "再評価中..." : "再評価"}
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -290,18 +370,46 @@ export default function TemplatesPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {visible.map((template) => {
                     const meta = resolveTemplateMeta(template, runtimeMetaOverrides);
+                    const consistencyScore =
+                      typeof template.consistency_score === "number"
+                        ? template.consistency_score
+                        : meta.consistencyScore;
+                    const needsReview =
+                      template.review_status === "needs_review" ||
+                      template.review_status === "failed" ||
+                      consistencyScore < 60;
+                    const consistencyReason =
+                      template.consistency_reason?.trim() ||
+                      meta.consistencyReason;
                     return (
-                    <TemplateCard
-                      key={template.id}
-                      id={template.id}
-                      name={template.name}
-                      description={template.description}
-                      preview_image={template.preview_image}
-                      audienceTags={meta.audienceTags}
-                      onUse={() => handleUseTemplate(template.id)}
-                      onPreview={() => setPreviewTemplate(template)}
-                      using={usingId === template.id}
-                    />
+                      <div key={template.id} className="space-y-2">
+                        <TemplateCard
+                          id={template.id}
+                          name={template.name}
+                          description={template.description}
+                          preview_image={template.preview_image}
+                          audienceTags={meta.audienceTags}
+                          industry={meta.industry}
+                          useCase={meta.useCase}
+                          recommendedPlan={meta.recommendedPlan}
+                          consistencyScore={consistencyScore}
+                          needsReview={needsReview}
+                          consistencyReason={consistencyReason}
+                          onUse={() => handleUseTemplate(template.id)}
+                          onPreview={() => setPreviewTemplate(template)}
+                          using={usingId === template.id}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleRecheckTemplate(template)}
+                            disabled={recheckingTemplateId === template.id}
+                            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                          >
+                            {recheckingTemplateId === template.id ? "再評価中..." : "再評価"}
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -446,6 +554,23 @@ export default function TemplatesPage() {
                                       [template.name]: {
                                         difficulty: current?.difficulty ?? meta.difficulty,
                                         audienceTags: updated,
+                                        industry: current?.industry ?? meta.industry,
+                                        useCase: current?.useCase ?? meta.useCase,
+                                        tone: current?.tone ?? meta.tone,
+                                        mustIncludeElements:
+                                          current?.mustIncludeElements ?? meta.mustIncludeElements,
+                                        forbiddenElements:
+                                          current?.forbiddenElements ?? meta.forbiddenElements,
+                                        imagePromptSeed:
+                                          current?.imagePromptSeed ?? meta.imagePromptSeed,
+                                        recommendedPlan:
+                                          current?.recommendedPlan ?? meta.recommendedPlan,
+                                        consistencyScore:
+                                          current?.consistencyScore ?? meta.consistencyScore,
+                                        needsReview:
+                                          current?.needsReview ?? meta.needsReview,
+                                        consistencyReason:
+                                          current?.consistencyReason ?? meta.consistencyReason,
                                       },
                                     };
                                     saveRuntimeOverrides(next);

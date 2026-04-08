@@ -279,9 +279,51 @@ export type Database = {
         Relationships: [];
       };
       templates: {
-        Row: { id: string; name: string; description: string; preview_image: string; cards: unknown; created_at: string; category: string | null };
-        Insert: { id?: string; name: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string; category?: string | null };
-        Update: { name?: string; description?: string; preview_image?: string; cards?: unknown; created_at?: string; category?: string | null };
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          preview_image: string;
+          cards: unknown;
+          created_at: string;
+          category: string | null;
+          review_status: string;
+          consistency_score: number | null;
+          consistency_reason: string | null;
+          // kept for backward compatibility; regenerate flow is no longer used in UI
+          regen_requested_at: string | null;
+          regen_completed_at: string | null;
+          regen_error: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          preview_image?: string;
+          cards?: unknown;
+          created_at?: string;
+          category?: string | null;
+          review_status?: string;
+          consistency_score?: number | null;
+          consistency_reason?: string | null;
+          regen_requested_at?: string | null;
+          regen_completed_at?: string | null;
+          regen_error?: string | null;
+        };
+        Update: {
+          name?: string;
+          description?: string;
+          preview_image?: string;
+          cards?: unknown;
+          created_at?: string;
+          category?: string | null;
+          review_status?: string;
+          consistency_score?: number | null;
+          consistency_reason?: string | null;
+          regen_requested_at?: string | null;
+          regen_completed_at?: string | null;
+          regen_error?: string | null;
+        };
         Relationships: [];
       };
       audit_logs: {

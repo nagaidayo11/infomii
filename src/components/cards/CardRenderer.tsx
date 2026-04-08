@@ -40,6 +40,16 @@ import { TabsInfoCard } from "./TabsInfoCard";
 import { FaqSearchCard } from "./FaqSearchCard";
 import { NoticeTickerCard } from "./NoticeTickerCard";
 import { CouponCard } from "./CouponCard";
+import { AccordionInfoCard } from "./AccordionInfoCard";
+import { OpenStatusCard } from "./OpenStatusCard";
+import { SocialLinksCard } from "./SocialLinksCard";
+import { ContactHubCard } from "./ContactHubCard";
+import { ProgressStepsCard } from "./ProgressStepsCard";
+import { EmergencyBannerCard } from "./EmergencyBannerCard";
+import { ScheduledBannerCard } from "./ScheduledBannerCard";
+import { MultilingualNoticeCard } from "./MultilingualNoticeCard";
+import { ConditionalSectionCard } from "./ConditionalSectionCard";
+import { UpdateLogCard } from "./UpdateLogCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -232,6 +242,26 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <NoticeTickerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "coupon":
       return <CouponCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "accordion_info":
+      return <AccordionInfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "open_status":
+      return <OpenStatusCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "social_links":
+      return <SocialLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "contact_hub":
+      return <ContactHubCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "progress_steps":
+      return <ProgressStepsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "emergency_banner":
+      return <EmergencyBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "scheduled_banner":
+      return <ScheduledBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "multilingual_notice":
+      return <MultilingualNoticeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "conditional_section":
+      return <ConditionalSectionCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "update_log":
+      return <UpdateLogCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }

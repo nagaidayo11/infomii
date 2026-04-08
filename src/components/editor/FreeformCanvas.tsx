@@ -94,6 +94,16 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   faq_search: 128,
   notice_ticker: 92,
   coupon: 128,
+  accordion_info: 140,
+  open_status: 104,
+  social_links: 120,
+  contact_hub: 132,
+  progress_steps: 124,
+  emergency_banner: 108,
+  scheduled_banner: 108,
+  multilingual_notice: 144,
+  conditional_section: 112,
+  update_log: 132,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {

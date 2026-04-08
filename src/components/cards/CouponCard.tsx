@@ -20,6 +20,14 @@ export function CouponCard({ card }: CouponCardProps) {
   const notes = typeof content.notes === "string" ? content.notes : "";
   const ctaLabel = typeof content.ctaLabel === "string" ? content.ctaLabel : "";
   const ctaUrl = typeof content.ctaUrl === "string" ? content.ctaUrl : "";
+  const ctaBgColor =
+    typeof content.ctaBgColor === "string" && content.ctaBgColor.trim()
+      ? content.ctaBgColor
+      : "#0f172a";
+  const ctaTextColor =
+    typeof content.ctaTextColor === "string" && content.ctaTextColor.trim()
+      ? content.ctaTextColor
+      : "#ffffff";
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -65,16 +73,34 @@ export function CouponCard({ card }: CouponCardProps) {
           {notes}
         </p>
       ) : null}
-      {ctaLabel && ctaUrl ? (
-        <a
-          href={ctaUrl}
-          target={ctaUrl.startsWith("/") ? undefined : "_blank"}
-          rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
-          className={`mt-3 inline-flex bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 ${editorInnerRadiusClassName}`}
-          style={getBodyFontSizeStyle()}
-        >
-          {ctaLabel}
-        </a>
+      {ctaLabel.trim() ? (
+        ctaUrl.trim() ? (
+          <a
+            href={ctaUrl}
+            target={ctaUrl.startsWith("/") ? undefined : "_blank"}
+            rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
+            className={`mt-3 inline-flex px-3 py-2 text-sm font-medium ${editorInnerRadiusClassName}`}
+            style={{
+              ...getBodyFontSizeStyle(),
+              backgroundColor: ctaBgColor,
+              color: ctaTextColor,
+            }}
+          >
+            {ctaLabel}
+          </a>
+        ) : (
+          <button
+            type="button"
+            className={`mt-3 inline-flex px-3 py-2 text-sm font-medium ${editorInnerRadiusClassName}`}
+            style={{
+              ...getBodyFontSizeStyle(),
+              backgroundColor: ctaBgColor,
+              color: ctaTextColor,
+            }}
+          >
+            {ctaLabel}
+          </button>
+        )
       ) : null}
     </Card>
   );

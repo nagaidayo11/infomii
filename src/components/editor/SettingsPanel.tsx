@@ -655,6 +655,161 @@ function TickerItemsEditor({
   );
 }
 
+function AccordionItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ title?: string; body?: string }>;
+  const setItems = (next: Array<{ title?: string; body?: string }>) => onUpdate("items", next);
+  const updateItem = (index: number, field: "title" | "body", value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">項目</span>
+        <button type="button" onClick={() => setItems([...items, { title: "", body: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input label="見出し" value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`項目 ${i + 1}`} />
+          <div className="w-full">
+            <label className={labelClass}>本文</label>
+            <textarea value={item.body ?? ""} onChange={(e) => updateItem(i, "body", e.target.value)} rows={2} className={inputClass} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SocialLinksItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ label?: string; href?: string; handle?: string }>;
+  const setItems = (next: Array<{ label?: string; href?: string; handle?: string }>) => onUpdate("items", next);
+  const updateItem = (index: number, field: "label" | "href" | "handle", value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">SNS項目</span>
+        <button type="button" onClick={() => setItems([...items, { label: "", href: "", handle: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input label="名称" value={item.label ?? ""} onChange={(e) => updateItem(i, "label", e.target.value)} placeholder="Instagram" />
+          <Input label="ハンドル" value={item.handle ?? ""} onChange={(e) => updateItem(i, "handle", e.target.value)} placeholder="@example" />
+          <Input label="URL" value={item.href ?? ""} onChange={(e) => updateItem(i, "href", e.target.value)} placeholder="https://..." />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProgressItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ label?: string; done?: boolean }>;
+  const setItems = (next: Array<{ label?: string; done?: boolean }>) => onUpdate("items", next);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">ステップ</span>
+        <button type="button" onClick={() => setItems([...items, { label: "", done: false }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input label="ラベル" value={item.label ?? ""} onChange={(e) => {
+            const next = [...items];
+            next[i] = { ...(next[i] ?? {}), label: e.target.value };
+            setItems(next);
+          }} placeholder={`ステップ ${i + 1}`} />
+          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={item.done === true} onChange={(e) => {
+              const next = [...items];
+              next[i] = { ...(next[i] ?? {}), done: e.target.checked };
+              setItems(next);
+            }} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+            完了済み
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function UpdateLogItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ at?: string; actor?: string; kind?: string; text?: string }>;
+  const setItems = (next: Array<{ at?: string; actor?: string; kind?: string; text?: string }>) => onUpdate("items", next);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">履歴項目</span>
+        <button type="button" onClick={() => setItems([...items, { at: "", actor: "", kind: "", text: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+          </div>
+          <Input label="日時(ISO)" value={item.at ?? ""} onChange={(e) => {
+            const next = [...items];
+            next[i] = { ...(next[i] ?? {}), at: e.target.value };
+            setItems(next);
+          }} placeholder="2026-04-08T12:00:00.000Z" />
+          <Input label="更新者" value={item.actor ?? ""} onChange={(e) => {
+            const next = [...items];
+            next[i] = { ...(next[i] ?? {}), actor: e.target.value };
+            setItems(next);
+          }} placeholder="owner/admin/editor" />
+          <Input label="種別" value={item.kind ?? ""} onChange={(e) => {
+            const next = [...items];
+            next[i] = { ...(next[i] ?? {}), kind: e.target.value };
+            setItems(next);
+          }} placeholder="文言/画像/期間/設定" />
+          <Input label="内容" value={item.text ?? ""} onChange={(e) => {
+            const next = [...items];
+            next[i] = { ...(next[i] ?? {}), text: e.target.value };
+            setItems(next);
+          }} placeholder="更新内容" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PageLinksItemsEditor({
   content,
   onUpdate,
@@ -1086,6 +1241,7 @@ export function CardSettings({
   const [bulkFind, setBulkFind] = useState("");
   const [bulkReplaceTo, setBulkReplaceTo] = useState("");
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const allCards = useEditor2Store((s) => s.cards);
   const [customPresets, setCustomPresets] = useState<
     Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
   >(() => {
@@ -1351,6 +1507,27 @@ export function CardSettings({
   const spaceHeight = Number.isFinite(rawSpaceHeight) ? Math.max(0, Math.min(480, rawSpaceHeight)) : 48;
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
+  };
+  const appendOperationalLog = (kind: string, text: string) => {
+    const target = allCards.find((c) => c.type === "update_log");
+    if (!target) return;
+    const targetContent = (target.content ?? {}) as Record<string, unknown>;
+    const items = (Array.isArray(targetContent.items) ? targetContent.items : []) as Array<Record<string, unknown>>;
+    const nextItems = [
+      {
+        at: new Date().toISOString(),
+        actor: "editor",
+        kind,
+        text,
+      },
+      ...items,
+    ].slice(0, 50);
+    onUpdate(target.id, {
+      content: {
+        ...targetContent,
+        items: nextItems,
+      },
+    });
   };
   const updateStyle = (key: string, value: unknown) => {
     const next = value === undefined || value === "" ? undefined : value;
@@ -2459,6 +2636,225 @@ export function CardSettings({
                 onChange={(e) => update("ctaUrl", e.target.value)}
                 placeholder="https://..."
               />
+              <div className="w-full">
+                <label className={labelClass}>CTA背景色</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={(() => {
+                      const v = (content.ctaBgColor as string) ?? "#0f172a";
+                      const hex = v.startsWith("#") ? v.slice(1) : v;
+                      return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
+                    })()}
+                    onChange={(e) => update("ctaBgColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.ctaBgColor as string) ?? ""}
+                    onChange={(e) => update("ctaBgColor", e.target.value || undefined)}
+                    placeholder="#0f172a"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>CTA文字色</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={(() => {
+                      const v = (content.ctaTextColor as string) ?? "#ffffff";
+                      const hex = v.startsWith("#") ? v.slice(1) : v;
+                      return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#ffffff";
+                    })()}
+                    onChange={(e) => update("ctaTextColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.ctaTextColor as string) ?? ""}
+                    onChange={(e) => update("ctaTextColor", e.target.value || undefined)}
+                    placeholder="#ffffff"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "accordion_info" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="よくあるご案内" />
+              <AccordionItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "open_status" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="営業時間" />
+              <div className="w-full">
+                <label className={labelClass}>判定モード</label>
+                <select value={(content.mode as string) ?? "manual"} onChange={(e) => update("mode", e.target.value)} className={inputClass}>
+                  <option value="manual">手動</option>
+                  <option value="hours">時間帯で自動</option>
+                </select>
+              </div>
+              {(content.mode as string) !== "hours" ? (
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={content.openNow !== false} onChange={(e) => update("openNow", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
+                  現在営業中
+                </label>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="開始時刻" value={String(content.startHour ?? 7)} onChange={(e) => update("startHour", Number(e.target.value) || 0)} placeholder="7" />
+                  <Input label="終了時刻" value={String(content.endHour ?? 23)} onChange={(e) => update("endHour", Number(e.target.value) || 24)} placeholder="23" />
+                </div>
+              )}
+              <Input label="営業時間テキスト" value={(content.hoursText as string) ?? ""} onChange={(e) => update("hoursText", e.target.value)} placeholder="7:00-23:00" />
+              <Input label="営業中ラベル" value={(content.openLabel as string) ?? ""} onChange={(e) => update("openLabel", e.target.value)} placeholder="営業中" />
+              <Input label="営業時間外ラベル" value={(content.closedLabel as string) ?? ""} onChange={(e) => update("closedLabel", e.target.value)} placeholder="営業時間外" />
+            </SettingsSection>
+          )}
+
+          {card.type === "social_links" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="公式SNS" />
+              <SocialLinksItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "contact_hub" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="お問い合わせ" />
+              <Input label="電話番号" value={(content.phone as string) ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="03-1234-5678" />
+              <Input label="メール" value={(content.email as string) ?? ""} onChange={(e) => update("email", e.target.value)} placeholder="front@example.com" />
+              <Input label="LINE URL" value={(content.lineUrl as string) ?? ""} onChange={(e) => update("lineUrl", e.target.value)} placeholder="https://..." />
+              <Input label="地図URL" value={(content.mapUrl as string) ?? ""} onChange={(e) => update("mapUrl", e.target.value)} placeholder="https://..." />
+              <div className="w-full">
+                <label className={labelClass}>補足</label>
+                <textarea value={(content.note as string) ?? ""} onChange={(e) => update("note", e.target.value)} rows={2} className={inputClass} />
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "progress_steps" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="ご利用の流れ" />
+              <Input label="現在ステップ" value={String(content.currentStep ?? 1)} onChange={(e) => update("currentStep", Number(e.target.value) || 1)} placeholder="1" />
+              <ProgressItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "emergency_banner" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
+                update("title", e.target.value);
+                appendOperationalLog("設定", "緊急告知バナーのタイトルを更新");
+              }} placeholder="緊急のお知らせ" />
+              <div className="w-full">
+                <label className={labelClass}>本文</label>
+                <textarea value={(content.message as string) ?? ""} onChange={(e) => {
+                  update("message", e.target.value);
+                  appendOperationalLog("文言", "緊急告知バナーの本文を更新");
+                }} rows={3} className={inputClass} />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>重要度</label>
+                <select value={(content.level as string) ?? "high"} onChange={(e) => {
+                  update("level", e.target.value);
+                  appendOperationalLog("設定", `緊急告知バナーの重要度を ${e.target.value} に変更`);
+                }} className={inputClass}>
+                  <option value="high">高</option>
+                  <option value="medium">中</option>
+                  <option value="low">低</option>
+                </select>
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "scheduled_banner" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
+                update("title", e.target.value);
+                appendOperationalLog("設定", "期間限定バナーのタイトルを更新");
+              }} placeholder="期間限定のお知らせ" />
+              <div className="w-full">
+                <label className={labelClass}>本文</label>
+                <textarea value={(content.message as string) ?? ""} onChange={(e) => {
+                  update("message", e.target.value);
+                  appendOperationalLog("文言", "期間限定バナーの本文を更新");
+                }} rows={3} className={inputClass} />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>開始日時</label>
+                <input type="datetime-local" value={isoToLocalInput(content.startAt)} onChange={(e) => {
+                  const next = localInputToIso(e.target.value);
+                  update("startAt", next);
+                  appendOperationalLog("期間", `期間限定バナーの開始日時を更新: ${next || "未設定"}`);
+                }} className={inputClass} />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>終了日時</label>
+                <input type="datetime-local" value={isoToLocalInput(content.endAt)} onChange={(e) => {
+                  const next = localInputToIso(e.target.value);
+                  update("endAt", next);
+                  appendOperationalLog("期間", `期間限定バナーの終了日時を更新: ${next || "未設定"}`);
+                }} className={inputClass} />
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "multilingual_notice" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="多言語注意文" />
+              <Input label="日本語" value={(content.ja as string) ?? ""} onChange={(e) => update("ja", e.target.value)} placeholder="..." />
+              <Input label="English" value={(content.en as string) ?? ""} onChange={(e) => update("en", e.target.value)} placeholder="..." />
+              <Input label="中文" value={(content.zh as string) ?? ""} onChange={(e) => update("zh", e.target.value)} placeholder="..." />
+              <Input label="한국어" value={(content.ko as string) ?? ""} onChange={(e) => update("ko", e.target.value)} placeholder="..." />
+            </SettingsSection>
+          )}
+
+          {card.type === "conditional_section" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="条件表示セクション" />
+              <div className="w-full">
+                <label className={labelClass}>表示メッセージ</label>
+                <textarea value={(content.message as string) ?? ""} onChange={(e) => update("message", e.target.value)} rows={2} className={inputClass} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="開始時刻" value={String(content.startHour ?? 0)} onChange={(e) => update("startHour", Number(e.target.value) || 0)} placeholder="0" />
+                <Input label="終了時刻" value={String(content.endHour ?? 24)} onChange={(e) => update("endHour", Number(e.target.value) || 24)} placeholder="24" />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>表示曜日</label>
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  {["日", "月", "火", "水", "木", "金", "土"].map((d, day) => {
+                    const selected = Array.isArray(content.enabledDays) ? (content.enabledDays as number[]).includes(day) : false;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          const prev = Array.isArray(content.enabledDays) ? (content.enabledDays as number[]) : [];
+                          const next = selected ? prev.filter((v) => v !== day) : [...prev, day];
+                          update("enabledDays", next);
+                        }}
+                        className={`rounded-lg border px-2 py-1 ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700"}`}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "update_log" && (
+            <SettingsSection title="コンテンツ">
+              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="更新履歴" />
+              <UpdateLogItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 

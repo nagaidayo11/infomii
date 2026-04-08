@@ -5,6 +5,16 @@ export type TemplateDifficulty = "初級" | "中級" | "上級";
 export type TemplateMeta = {
   difficulty: TemplateDifficulty;
   audienceTags: string[];
+  industry: string;
+  useCase: string;
+  tone: string;
+  mustIncludeElements: string[];
+  forbiddenElements: string[];
+  imagePromptSeed: string;
+  recommendedPlan: "free" | "pro" | "business";
+  consistencyScore: number;
+  needsReview: boolean;
+  consistencyReason: string;
 };
 
 export const TEMPLATE_AUDIENCE_TAGS = [
@@ -22,11 +32,20 @@ export const TEMPLATE_AUDIENCE_TAGS = [
  * Key is template name shown in templates list.
  */
 export const TEMPLATE_META_OVERRIDES: Record<string, TemplateMeta> = {
-  "ビジネスホテル・即運用セット": { difficulty: "初級", audienceTags: ["出張"] },
-  "駅前特化ビジホ・時短導線セット": { difficulty: "中級", audienceTags: ["出張"] },
-  "インバウンド特化・多言語おもてなしセット": { difficulty: "上級", audienceTags: ["海外"] },
-  "旅館・おもてなし案内セット": { difficulty: "中級", audienceTags: ["和旅館"] },
-  "ファミリー向け・館内回遊セット": { difficulty: "中級", audienceTags: ["家族", "レジャー"] },
+  "ビジネスホテル・即運用セット": {
+    difficulty: "初級",
+    audienceTags: ["出張"],
+    industry: "ホテル",
+    useCase: "チェックイン導線",
+    tone: "実用",
+    mustIncludeElements: ["フロント", "Wi-Fi"],
+    forbiddenElements: ["海辺", "温泉露天"],
+    imagePromptSeed: "city hotel lobby, clean signage, practical information board",
+    recommendedPlan: "pro",
+    consistencyScore: 85,
+    needsReview: false,
+    consistencyReason: "手動設定",
+  },
 };
 
 function deriveTemplateMeta(template: TemplateRow): TemplateMeta {
@@ -47,10 +66,43 @@ function deriveTemplateMeta(template: TemplateRow): TemplateMeta {
   let difficulty: TemplateDifficulty = "中級";
   if (cardsCount <= 6) difficulty = "初級";
   if (cardsCount >= 7) difficulty = "上級";
+  const keywordSource = `${name} ${template.description ?? ""} ${template.preview_image ?? ""}`.toLowerCase();
+  const inferredIndustry =
+    /旅館|温泉|和/.test(name) ? "旅館" : /リゾート|resort/.test(keywordSource) ? "リゾートホテル" : /airbnb|民泊/.test(keywordSource) ? "民泊" : "ホテル";
+  const useCase = /チェックイン|導線/.test(keywordSource) ? "チェックイン導線" : /観光|周辺/.test(keywordSource) ? "周辺案内" : "館内案内";
+  const tone = /高級|premium|luxury/.test(keywordSource) ? "高級" : "実用";
+  const mustIncludeElements = useCase === "チェックイン導線" ? ["チェックイン", "チェックアウト"] : ["施設情報", "連絡先"];
+  const forbiddenElements = inferredIndustry === "旅館" ? ["高層ビル群"] : ["和室布団"];
+  const imagePromptSeed = `${inferredIndustry} ${useCase} ${tone} signage`;
+  const titleTokens = name.replace(/[【】・\[\]（）()]/g, " ").split(/\s+/).filter(Boolean);
+  const matched = titleTokens.filter((t) => keywordSource.includes(t.toLowerCase())).length;
+  const mustMisses = mustIncludeElements.filter((k) => !keywordSource.includes(k.toLowerCase()));
+  const forbiddenHits = forbiddenElements.filter((k) => keywordSource.includes(k.toLowerCase()));
+  const baseScore = Math.round((matched / Math.max(1, titleTokens.length)) * 100);
+  const consistencyScore = Math.max(0, Math.min(100, baseScore - mustMisses.length * 10 - forbiddenHits.length * 20));
+  const needsReview = consistencyScore < 60;
+  const consistencyReason =
+    forbiddenHits.length > 0
+      ? `禁止要素混入: ${forbiddenHits.join(" / ")}`
+      : mustMisses.length > 0
+        ? `必須要素不足: ${mustMisses.join(" / ")}`
+        : "タイトルと画像の整合は概ね良好";
+  const recommendedPlan: "free" | "pro" | "business" =
+    cardsCount >= 8 || /多言語|team|運用|統制/.test(keywordSource) ? "business" : cardsCount >= 5 ? "pro" : "free";
 
   return {
     difficulty,
     audienceTags: Array.from(new Set(audienceTags)).slice(0, 3),
+    industry: inferredIndustry,
+    useCase,
+    tone,
+    mustIncludeElements,
+    forbiddenElements,
+    imagePromptSeed,
+    recommendedPlan,
+    consistencyScore,
+    needsReview,
+    consistencyReason,
   };
 }
 

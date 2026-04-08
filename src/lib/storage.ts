@@ -3832,7 +3832,22 @@ export type TemplateRow = {
   created_at: string;
   /** Category for marketplace filter: business | resort | ryokan | airbnb | guide */
   category?: string | null;
+  review_status?: "ok" | "needs_review" | "regenerating" | "failed" | null;
+  consistency_score?: number | null;
+  consistency_reason?: string | null;
+  regen_requested_at?: string | null;
+  regen_completed_at?: string | null;
+  regen_error?: string | null;
 };
+
+export type TemplateReviewStatus = "ok" | "needs_review" | "failed";
+
+function parseTemplateReviewStatus(value: unknown): TemplateReviewStatus {
+  if (value === "ok" || value === "needs_review" || value === "failed") {
+    return value;
+  }
+  return "ok";
+}
 
 /** Returns true if the error indicates the templates table does not exist (e.g. not yet created in Supabase). */
 function isTemplatesTableMissing(error: unknown): boolean {
@@ -3851,13 +3866,41 @@ export async function listTemplates(): Promise<TemplateRow[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("templates")
-    .select("id,name,description,preview_image,cards,created_at,category")
+    .select(
+      "id,name,description,preview_image,cards,created_at,category,review_status,consistency_score,consistency_reason,regen_requested_at,regen_completed_at,regen_error"
+    )
     .order("created_at", { ascending: false });
   if (error) {
     if (isTemplatesTableMissing(error)) return [];
     throw toError(error, "テンプレート一覧の取得に失敗しました");
   }
   return (data ?? []) as TemplateRow[];
+}
+
+export async function recheckTemplateConsistency(
+  templateId: string
+): Promise<{ id: string; review_status: TemplateReviewStatus; consistency_score: number; consistency_reason: string }> {
+  const token = await getAccessTokenOrThrow();
+  const response = await fetch(`/api/templates/${templateId}/recheck-consistency`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const payload = (await response.json()) as {
+    id?: string;
+    review_status?: string;
+    consistency_score?: number;
+    consistency_reason?: string;
+    error?: string;
+  };
+  if (!response.ok) throw new Error(payload.error || "テンプレート整合再評価に失敗しました");
+  return {
+    id: payload.id || templateId,
+    review_status: parseTemplateReviewStatus(payload.review_status),
+    consistency_score: typeof payload.consistency_score === "number" ? payload.consistency_score : 100,
+    consistency_reason: payload.consistency_reason || "",
+  };
 }
 
 /** Error code when page limit is reached (for UI to show upgrade modal). */

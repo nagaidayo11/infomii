@@ -11,6 +11,13 @@ export type GalleryTemplate = {
   /** 自動で含まれるページ構成（カードに表示） */
   pages: string[];
   accent: string;
+  industry: string;
+  useCase: string;
+  tone: string;
+  mustIncludeElements: string[];
+  forbiddenElements: string[];
+  imagePromptSeed: string;
+  recommendedPlan: "free" | "pro" | "business";
 };
 
 /**
@@ -25,6 +32,13 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
       "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-slate-600 to-slate-800",
+    industry: "ホテル",
+    useCase: "館内案内",
+    tone: "実用",
+    mustIncludeElements: ["館内", "フロント", "客室"],
+    forbiddenElements: ["ビーチ", "温泉露天"],
+    imagePromptSeed: "city hotel lobby information display, practical clean composition",
+    recommendedPlan: "pro",
   },
   {
     id: "ryokan",
@@ -34,6 +48,13 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-amber-700 to-stone-800",
+    industry: "旅館",
+    useCase: "おもてなし案内",
+    tone: "和風",
+    mustIncludeElements: ["和室", "温泉", "旅館"],
+    forbiddenElements: ["高層ビル", "ネオン街"],
+    imagePromptSeed: "traditional ryokan entrance and tatami atmosphere",
+    recommendedPlan: "pro",
   },
   {
     id: "resort",
@@ -43,6 +64,13 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
       "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-cyan-600 to-teal-700",
+    industry: "リゾートホテル",
+    useCase: "滞在体験案内",
+    tone: "開放的",
+    mustIncludeElements: ["プール", "海", "リゾート"],
+    forbiddenElements: ["会議室中心"],
+    imagePromptSeed: "resort hotel poolside and sunny vacation mood",
+    recommendedPlan: "business",
   },
   {
     id: "minpaku",
@@ -52,8 +80,33 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-violet-600 to-indigo-800",
+    industry: "民泊",
+    useCase: "セルフ利用案内",
+    tone: "カジュアル",
+    mustIncludeElements: ["リビング", "キッチン", "セルフチェックイン"],
+    forbiddenElements: ["大規模ロビー"],
+    imagePromptSeed: "cozy airbnb living room with self check-in guide feel",
+    recommendedPlan: "free",
   },
 ];
+
+export function evaluateTemplateImageConsistency(template: GalleryTemplate): number {
+  const source = `${template.name} ${template.description} ${template.previewImage}`.toLowerCase();
+  const positiveMatches = template.mustIncludeElements.filter((k) => source.includes(k.toLowerCase())).length;
+  const negativeMatches = template.forbiddenElements.filter((k) => source.includes(k.toLowerCase())).length;
+  const posScore = (positiveMatches / Math.max(1, template.mustIncludeElements.length)) * 80;
+  const negPenalty = (negativeMatches / Math.max(1, template.forbiddenElements.length)) * 40;
+  return Math.max(0, Math.min(100, Math.round(20 + posScore - negPenalty)));
+}
+
+export function evaluateTemplateMismatchReason(template: GalleryTemplate): string {
+  const source = `${template.name} ${template.description} ${template.previewImage}`.toLowerCase();
+  const mustMisses = template.mustIncludeElements.filter((k) => !source.includes(k.toLowerCase()));
+  const forbiddenHits = template.forbiddenElements.filter((k) => source.includes(k.toLowerCase()));
+  if (forbiddenHits.length > 0) return `禁止要素混入: ${forbiddenHits.join(" / ")}`;
+  if (mustMisses.length > 0) return `必須要素不足: ${mustMisses.join(" / ")}`;
+  return "タイトルと画像の整合は概ね良好";
+}
 
 function nid() {
   return nanoid(8);

@@ -255,6 +255,65 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 1 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 1 0 0-4V9z" />
     </svg>
   ),
+  accordion_info: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  ),
+  open_status: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2" />
+    </svg>
+  ),
+  social_links: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8v8" />
+      <circle cx="6" cy="12" r="2" strokeWidth={2} />
+      <circle cx="18" cy="12" r="2" strokeWidth={2} />
+    </svg>
+  ),
+  contact_hub: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18v14H3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9 6 9-6" />
+    </svg>
+  ),
+  progress_steps: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="2" strokeWidth={2} />
+      <circle cx="12" cy="12" r="2" strokeWidth={2} />
+      <circle cx="19" cy="12" r="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12h3m4 0h3" />
+    </svg>
+  ),
+  emergency_banner: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 4h.01M4 19h16L12 4z" />
+    </svg>
+  ),
+  scheduled_banner: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="4" y="5" width="16" height="14" rx="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v4m8-4v4m-8 6h8" />
+    </svg>
+  ),
+  multilingual_notice: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M6 12h12M8 18h8" />
+    </svg>
+  ),
+  conditional_section: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5v14" />
+      <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
+    </svg>
+  ),
+  update_log: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+    </svg>
+  ),
 };
 
 const MAIN_ITEMS: LibraryItem[] = [
@@ -272,6 +331,8 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧表示" },
   { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
+  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
+  { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
 ];
 
@@ -282,6 +343,8 @@ const OPERATION_ITEMS: LibraryItem[] = [
   { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
   { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
   { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
+  { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
+  { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図リンクを集約" },
 ];
 
 const COMPARISON_ITEMS: LibraryItem[] = [
@@ -290,6 +353,7 @@ const COMPARISON_ITEMS: LibraryItem[] = [
   { type: "quote", label: "引用", description: "レビュー・口コミ掲載" },
   { type: "checklist", label: "チェックリスト", description: "持ち物・手続き確認" },
   { type: "steps", label: "ステップ", description: "手順を段階的に表示" },
+  { type: "progress_steps", label: "進捗ステップ", description: "現在進捗を視覚化" },
   { type: "tabs_info", label: "タブ切替案内", description: "複数案内をタブで切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "FAQをキーワードで絞り込み" },
 ];
@@ -310,6 +374,11 @@ const BUSINESS_ITEMS: LibraryItem[] = [
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示" },
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知" },
+  { type: "multilingual_notice", label: "多言語注意文", description: "4言語テンプレを同時表示" },
+  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示を制御" },
+  { type: "update_log", label: "更新履歴", description: "更新内容を時系列で表示" },
 ];
 
 export const LIBRARY_SECTIONS: LibrarySection[] = [
@@ -333,8 +402,8 @@ const QUICK_PRESETS: QuickPreset[] = [
     id: "facility-standard",
     label: "館内案内スタンダード",
     purpose: "館内情報を1ページで網羅",
-    description: "ヒーロー / 施設案内 / 営業時間一覧 / よくある質問 / 地図",
-    types: ["hero", "breakfast", "schedule", "faq", "map"],
+    description: "ヒーロー / 施設案内 / 営業時間ステータス / アコーディオン案内 / 地図",
+    types: ["hero", "breakfast", "open_status", "accordion_info", "map"],
   },
   {
     id: "sightseeing-nearby",
@@ -357,6 +426,14 @@ const QUICK_PRESETS: QuickPreset[] = [
     purpose: "期間訴求とCV導線を強化",
     description: "ヒーロースライド / キャンペーンタイマー / 強調ブロック / 比較 / リンクボタン",
     types: ["hero_slider", "campaign_timer", "highlight", "compare", "button"],
+    businessOnly: true,
+  },
+  {
+    id: "ops-business",
+    label: "運用統制セット（Business）",
+    purpose: "更新漏れ防止と緊急告知対応",
+    description: "緊急告知バナー / 期間限定バナー / 条件表示 / 更新履歴 / 多言語注意文",
+    types: ["emergency_banner", "scheduled_banner", "conditional_section", "update_log", "multilingual_notice"],
     businessOnly: true,
   },
 ];

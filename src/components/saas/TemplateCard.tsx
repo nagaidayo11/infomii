@@ -19,6 +19,12 @@ export type TemplateCardProps = {
   description: string;
   preview_image: string;
   audienceTags?: string[];
+  industry?: string;
+  useCase?: string;
+  recommendedPlan?: "free" | "pro" | "business";
+  consistencyScore?: number;
+  needsReview?: boolean;
+  consistencyReason?: string;
   onUse: () => void;
   onPreview?: () => void;
   using?: boolean;
@@ -29,6 +35,12 @@ export function TemplateCard({
   description,
   preview_image,
   audienceTags = [],
+  industry,
+  useCase,
+  recommendedPlan,
+  consistencyScore,
+  needsReview,
+  consistencyReason,
   onUse,
   onPreview,
   using,
@@ -61,6 +73,26 @@ export function TemplateCard({
             ))}
           </div>
         )}
+        {(industry || useCase || recommendedPlan) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            {industry ? <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{industry}</span> : null}
+            {useCase ? <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{useCase}</span> : null}
+            {recommendedPlan ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">推奨: {recommendedPlan}</span>
+            ) : null}
+          </div>
+        )}
+        {typeof consistencyScore === "number" && (
+          <p className={`mt-1 text-[11px] ${consistencyScore >= 60 ? "text-slate-500" : "text-amber-700"}`}>
+            タイトル/画像一致スコア: {consistencyScore}
+            {consistencyScore < 60 ? "（差し戻し候補）" : ""}
+          </p>
+        )}
+        {needsReview ? (
+          <p className="mt-1 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
+            要見直し: {consistencyReason || "タイトル/画像の整合が低い可能性があります"}
+          </p>
+        ) : null}
         <p className="mt-1 line-clamp-3 text-sm text-slate-600">{description || "説明なし"}</p>
         <div className="mt-3 flex flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-end sm:gap-1.5">
           <button

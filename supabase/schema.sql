@@ -503,6 +503,13 @@ create table if not exists public.templates (
   created_at timestamptz not null default now()
 );
 alter table public.templates add column if not exists category text default null;
+alter table public.templates add column if not exists review_status text not null default 'ok';
+alter table public.templates add column if not exists consistency_score integer;
+alter table public.templates add column if not exists consistency_reason text;
+alter table public.templates add column if not exists regen_requested_at timestamptz;
+alter table public.templates add column if not exists regen_completed_at timestamptz;
+alter table public.templates add column if not exists regen_error text;
+create index if not exists idx_templates_review_status on public.templates (review_status);
 alter table public.templates enable row level security;
 
 drop policy if exists "pages authenticated read write own hotel" on public.pages;
