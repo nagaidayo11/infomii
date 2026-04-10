@@ -31,7 +31,7 @@ export function MenuCard({ card, isSelected, locale = "ja" }: MenuCardProps) {
           const price = getLocalizedContent(item.price as LocalizedString | undefined, locale);
           const description = getLocalizedContent(item.description as LocalizedString | undefined, locale);
           return (
-            <div key={index} className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
+            <div key={index} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
               <p className="font-medium text-slate-700" style={getBodyFontSizeStyle()}>
                 {name}{price ? ` - ${price}` : ""}
               </p>

@@ -50,7 +50,7 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
       <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}
         <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.time} />
@@ -60,7 +60,7 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
         <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.location} />
       </p>
       <p className="text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.descPlaceholder} />
+        <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.descPlaceholder} />
       </p>
       <p className="text-slate-400" style={getBodyFontSizeStyle()}>
         <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} className="text-slate-400" placeholder={labels.notePlaceholder} />

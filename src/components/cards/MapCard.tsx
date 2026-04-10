@@ -102,7 +102,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (
-        <div className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
+        <div data-inner-surface className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
           <iframe
             title={title}
             src={mapEmbedUrl}
@@ -112,7 +112,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
           />
         </div>
       ) : (
-        <div className={`flex items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 py-8`}>
+        <div data-inner-surface className={`flex items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 py-8`}>
           <span className="text-slate-700" aria-hidden>
             <LineIcon name="map" className="h-8 w-8" />
           </span>

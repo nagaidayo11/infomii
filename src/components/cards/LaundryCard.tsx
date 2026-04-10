@@ -49,7 +49,7 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.hours}:{" "}
         <InlineEditable value={hours} onSave={(v) => updateKey("hours", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="9:00–18:00" />

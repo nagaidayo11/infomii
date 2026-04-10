@@ -22,7 +22,7 @@ export function OpenStatusCard({ card }: { card: EditorCard; isSelected?: boolea
   return (
     <Card padding="md">
       <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
-      <div className={`${editorInnerRadiusClassName} mt-3 border px-3 py-2 ${isOpen ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
+      <div data-inner-surface className={`${editorInnerRadiusClassName} mt-3 border px-3 py-2 ${isOpen ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
         <p className={`text-sm font-semibold ${isOpen ? "text-emerald-700" : "text-slate-700"}`} style={getBodyFontSizeStyle()}>
           {isOpen ? openLabel : closedLabel}
         </p>

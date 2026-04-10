@@ -45,7 +45,26 @@ const DEFAULT_W = 280;
 const DEFAULT_H = 96;
 const MIN_W = 120;
 const MIN_H = 48;
+/** 観測要素の scrollHeight が親高さと再帰し暴走するのを防ぐ上限（px） */
+const MAX_AUTO_BLOCK_H = 2400;
 const GRID = 8;
+
+/**
+ * 自動高さ用の実測。コンテナに `h-full`+`justify-center` があると `scrollHeight` が親の高さに引きずられ再帰しやすいので、
+ * 中身のルート要素（firstElementChild）の `offsetHeight` を優先する。
+ */
+function measureCardContentHeightPx(container: HTMLElement): number {
+  const first = container.firstElementChild as HTMLElement | null;
+  if (first) {
+    const h = first.offsetHeight;
+    if (Number.isFinite(h) && h > 0) {
+      return Math.min(MAX_AUTO_BLOCK_H, Math.ceil(h + 8));
+    }
+  }
+  const sh = container.scrollHeight;
+  const capped = Math.min(MAX_AUTO_BLOCK_H - 8, Math.max(MIN_H, sh));
+  return Math.ceil(capped + 8);
+}
 const SNAP_THRESHOLD = 8;
 const STACK_GAP_Y = 12;
 
@@ -57,6 +76,7 @@ const CANVAS_PADDING_X = 16;
 const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   hero: 120,
   hero_slider: 220,
+  heading_body: 96,
   info: 90,
   highlight: 84,
   action: 64,
@@ -101,9 +121,6 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   progress_steps: 124,
   emergency_banner: 108,
   scheduled_banner: 108,
-  multilingual_notice: 144,
-  conditional_section: 112,
-  update_log: 132,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
@@ -247,7 +264,7 @@ export function FreeformCanvas({
   const setAutoHeightForCard = useCallback((id: string, measuredHeight: number) => {
     if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
     setAutoHeights((prev) => {
-      const next = Math.max(MIN_H, measuredHeight);
+      const next = Math.min(MAX_AUTO_BLOCK_H, Math.max(MIN_H, measuredHeight));
       const current = prev[id];
       if (typeof current === "number" && Math.abs(current - next) < 2) return prev;
       return { ...prev, [id]: next };
@@ -270,7 +287,7 @@ export function FreeformCanvas({
         resizeObserverRef.current.observe(el);
       }
       requestAnimationFrame(() => {
-        setAutoHeightForCard(cardId, Math.ceil(el.scrollHeight + 8));
+        setAutoHeightForCard(cardId, measureCardContentHeightPx(el));
       });
     },
     [setAutoHeightForCard]
@@ -283,7 +300,7 @@ export function FreeformCanvas({
         const el = entry.target as HTMLDivElement;
         const id = el.dataset.cardContentId;
         if (!id) continue;
-        setAutoHeightForCard(id, Math.ceil(el.scrollHeight + 8));
+        setAutoHeightForCard(id, measureCardContentHeightPx(el));
       }
     });
     resizeObserverRef.current = observer;
@@ -629,7 +646,7 @@ export function FreeformCanvas({
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="overflow-x-hidden overflow-y-visible p-0"
+                      className="flex h-full min-h-0 flex-col items-stretch justify-center overflow-x-hidden overflow-y-visible p-0"
                     >
                       <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
                     </div>

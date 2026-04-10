@@ -44,9 +44,9 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card padding="md" className="">
-      <div className={`space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-3`}>
-      <p className="text-sm font-medium text-slate-800">
+    <Card padding="none" className="">
+      <div data-inner-surface className={`flex flex-col gap-1.5 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2.5`}>
+      <p className="text-sm font-medium leading-snug text-slate-800">
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
@@ -56,7 +56,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           placeholder={labels.title}
         />
       </p>
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="text-xs leading-snug text-slate-600">
         {labels.ssid}:{" "}
         <InlineEditable
           value={ssid}
@@ -67,7 +67,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           placeholder={labels.ssid}
         />
       </p>
-      <p className="mt-0.5 text-xs font-mono text-slate-600">
+      <p className="text-xs font-mono leading-snug text-slate-600">
         {labels.password}:{" "}
         <InlineEditable
           value={password}
@@ -78,14 +78,14 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           placeholder={labels.password}
         />
       </p>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="text-xs leading-snug text-slate-500">
         <InlineEditable
           value={description}
           onSave={(v) => updateKey("description", v)}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1em] text-xs text-slate-500"
+          className="block w-full min-h-[1lh] text-xs text-slate-500"
           placeholder={labels.desc}
         />
       </p>

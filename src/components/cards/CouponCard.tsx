@@ -46,7 +46,7 @@ export function CouponCard({ card }: CouponCardProps) {
       <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
         {title}
       </p>
-      <div className={`mt-3 border border-amber-300 bg-amber-50 px-3 py-3 ${editorInnerRadiusClassName}`}>
+      <div data-inner-surface className={`mt-3 border border-amber-300 bg-amber-50 px-3 py-3 ${editorInnerRadiusClassName}`}>
         <p className="text-xs font-medium uppercase tracking-wide text-amber-700" style={getBodyFontSizeStyle()}>
           クーポンコード
         </p>

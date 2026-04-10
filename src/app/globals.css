@@ -403,24 +403,10 @@ a {
   color: var(--editor-card-text-color) !important;
 }
 
-/* Override internal chip/cardlet backgrounds from block style. */
-.editor-inner-surface-overridden :is(
-  .bg-slate-50,
-  .bg-slate-50\/60,
-  .bg-slate-50\/70,
-  .bg-slate-50\/80,
-  .bg-slate-50\/90,
-  .bg-slate-100,
-  .bg-sky-50\/80,
-  .bg-amber-50,
-  .bg-amber-50\/80,
-  .bg-white,
-  .bg-white\/90,
-  .hover\:bg-slate-100:hover,
-  .hover\:bg-slate-700:hover,
-  .hover\:bg-slate-800:hover
-) {
+/* Override internal chip/cardlet backgrounds from block style (card defines data-inner-surface). */
+.editor-inner-surface-overridden [data-inner-surface] {
   background-color: var(--editor-inner-surface-bg, transparent) !important;
+  background-image: none !important;
 }
 
 @keyframes app-shell-drift {

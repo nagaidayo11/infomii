@@ -6,6 +6,7 @@ import { useLocale } from "@/components/locale-context";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { HeroCard } from "./HeroCard";
 import { HeroSliderCard } from "./HeroSliderCard";
+import { HeadingBodyCard } from "./HeadingBodyCard";
 import { InfoCard } from "./InfoCard";
 import { HighlightCard } from "./HighlightCard";
 import { ActionCard } from "./ActionCard";
@@ -47,9 +48,6 @@ import { ContactHubCard } from "./ContactHubCard";
 import { ProgressStepsCard } from "./ProgressStepsCard";
 import { EmergencyBannerCard } from "./EmergencyBannerCard";
 import { ScheduledBannerCard } from "./ScheduledBannerCard";
-import { MultilingualNoticeCard } from "./MultilingualNoticeCard";
-import { ConditionalSectionCard } from "./ConditionalSectionCard";
-import { UpdateLogCard } from "./UpdateLogCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -101,6 +99,8 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <HeroCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "hero_slider":
       return <HeroSliderCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "heading_body":
+      return <HeadingBodyCard card={resolvedCard} isSelected={isSelected} />;
     case "info":
       return <InfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "highlight":
@@ -256,12 +256,6 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <EmergencyBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "scheduled_banner":
       return <ScheduledBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "multilingual_notice":
-      return <MultilingualNoticeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "conditional_section":
-      return <ConditionalSectionCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "update_log":
-      return <UpdateLogCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }

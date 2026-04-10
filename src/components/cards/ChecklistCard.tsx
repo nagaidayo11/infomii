@@ -53,7 +53,7 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
           <li className="text-slate-500">{labels.empty}</li>
         ) : (
           items.map((item, i) => (
-            <li key={i} className={`flex items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-1.5`}>
+            <li key={i} data-inner-surface className={`flex items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-1.5`}>
               <span
                 className={
                   `mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center ${editorInnerRadiusClassName} border ` +

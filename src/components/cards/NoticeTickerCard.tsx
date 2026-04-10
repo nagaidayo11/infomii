@@ -41,6 +41,7 @@ export function NoticeTickerCard({ card }: NoticeTickerCardProps) {
         {title}
       </p>
       <div
+        data-inner-surface
         className={`mt-3 overflow-hidden border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}
         style={getBodyFontSizeStyle()}
       >

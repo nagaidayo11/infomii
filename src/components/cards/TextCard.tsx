@@ -42,15 +42,19 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card padding="md" className="">
-      <div className={`min-h-[1.5em] px-3 py-2 font-medium text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`} style={getBodyFontSizeStyle()}>
+    <Card padding="none" className="">
+      <div
+        data-inner-surface
+        className={`px-3 py-2.5 font-medium leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`}
+        style={getBodyFontSizeStyle()}
+      >
         <InlineEditable
           value={content}
           onSave={updateContent}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1.5em] font-medium text-slate-800"
+          className="font-medium text-slate-800"
           placeholder={labels.placeholder}
         />
       </div>

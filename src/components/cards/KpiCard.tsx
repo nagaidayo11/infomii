@@ -53,7 +53,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           <p className="col-span-full text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
+            <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
               <p className="text-xs text-slate-500">{item.label ?? ""}</p>
               <p className="mt-1 text-lg font-semibold text-slate-800">{item.value ?? ""}</p>
             </div>

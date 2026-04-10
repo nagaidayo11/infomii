@@ -19,7 +19,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
         {items.map((item, idx) => {
           const open = idx === openIndex;
           return (
-            <div key={idx} className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
+            <div key={idx} data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
               <button
                 type="button"
                 onClick={() => setOpenIndex(open ? -1 : idx)}

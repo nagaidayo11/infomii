@@ -25,10 +25,13 @@ export function ScheduledBannerCard({ card }: { card: EditorCard; isSelected?: b
   });
   if (!visible) return null;
   return (
-    <Card padding="md">
-      <section className={`${editorInnerRadiusClassName} border border-violet-200 bg-violet-50 px-3 py-3`}>
-        <p className="font-semibold text-violet-900" style={getTitleFontSizeStyle()}>{title}</p>
-        <p className="mt-1 text-sm text-violet-800" style={getBodyFontSizeStyle()}>{message}</p>
+    <Card padding="none">
+      <section
+        data-inner-surface
+        className={`${editorInnerRadiusClassName} flex flex-col gap-1.5 border border-violet-200 bg-violet-50 px-3 py-2.5`}
+      >
+        <p className="font-semibold leading-snug text-violet-900" style={getTitleFontSizeStyle()}>{title}</p>
+        <p className="text-sm leading-snug text-violet-800" style={getBodyFontSizeStyle()}>{message}</p>
       </section>
     </Card>
   );

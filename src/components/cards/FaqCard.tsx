@@ -68,7 +68,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
           <p className="text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} className={`border border-slate-100 bg-slate-50/60 p-3 ${editorInnerRadiusClassName}`}>
+            <div key={i} data-inner-surface className={`border border-slate-100 bg-slate-50/60 p-3 ${editorInnerRadiusClassName}`}>
               <dt className="font-medium text-slate-700">
                 <InlineEditable
                   value={item.q ?? ""}
@@ -86,7 +86,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                   editable={isSelected}
                   onActivate={onActivate}
                   multiline
-                  className="block min-h-[1em] text-slate-600"
+                  className="block w-full min-h-[1lh] text-slate-600"
                   placeholder={labels.a}
                 />
               </dd>

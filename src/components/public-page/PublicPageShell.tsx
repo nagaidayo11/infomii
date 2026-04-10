@@ -31,19 +31,17 @@ function PageContent({
 }: Omit<PublicPageShellProps, "isEmbed" | "pageBackground">) {
   return (
     <>
-      <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-4 backdrop-blur-sm safe-area-inset-top">
-        <div className="mx-auto flex max-w-[420px] flex-col gap-3">
+      <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-3 backdrop-blur-sm safe-area-inset-top">
+        <div className="mx-auto flex max-w-[420px] flex-col gap-2.5">
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
           {(title.trim() || headerActions) && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col gap-1.5">
               {title.trim() ? (
-                <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+                <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
                   {title}
                 </h1>
-              ) : (
-                <div />
-              )}
-              {headerActions}
+              ) : null}
+              {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
             </div>
           )}
         </div>
@@ -98,16 +96,14 @@ export function PublicPageShell({
             </div>
           ) : null}
           {(title.trim() || headerActions) && (
-            <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-3 pt-3.5 backdrop-blur-sm">
-              <div className="mx-auto flex max-w-[420px] items-center justify-between gap-2">
+            <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2.5 pt-3 backdrop-blur-sm">
+              <div className="mx-auto flex max-w-[420px] flex-col gap-1.5">
                 {title.trim() ? (
-                  <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900">
+                  <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900">
                     {title}
                   </h1>
-                ) : (
-                  <div />
-                )}
-                {headerActions}
+                ) : null}
+                {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
               </div>
             </header>
           )}

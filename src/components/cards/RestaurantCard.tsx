@@ -49,7 +49,7 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
-      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="7:00–22:00" />
@@ -59,7 +59,7 @@ export function RestaurantCard({ card, isSelected, locale = "ja" }: RestaurantCa
         <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="1F" />
       </p>
       <p className="text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.menuPlaceholder} />
+        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.menuPlaceholder} />
       </p>
       </div>
     </Card>

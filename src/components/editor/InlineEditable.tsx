@@ -92,6 +92,7 @@ export function InlineEditable({
       "w-full resize-none border-0 bg-transparent p-0 outline-none rounded px-0.5 py-px transition-[box-shadow] duration-150 ease-out focus:ring-0 focus:shadow-[0_0_0_2px_rgba(37,99,235,0.2)] " +
       className;
     if (multiline) {
+      const lineCount = Math.min(12, Math.max(1, local.split("\n").length));
       return (
         <textarea
           ref={inputRef as React.RefObject<HTMLTextAreaElement>}
@@ -105,7 +106,7 @@ export function InlineEditable({
             }
           }}
           className={baseClass}
-          rows={3}
+          rows={lineCount}
           placeholder={placeholder}
         />
       );
@@ -129,17 +130,16 @@ export function InlineEditable({
     );
   }
 
+  /** multiline は block + align-top だと行ボックス下に余白が乗り「下だけ広い」見え方になりやすいので align は付けない */
+  const displayClass =
+    "cursor-text rounded transition-colors duration-150 ease-out hover:bg-slate-100/80 " +
+    (multiline
+      ? "block w-full max-w-full whitespace-pre-wrap break-words px-0.5 py-0 "
+      : "px-0.5 py-px ") +
+    className;
+
   return (
-    <span
-      role="button"
-      tabIndex={0}
-      className={
-        "cursor-text rounded px-0.5 py-px transition-colors duration-150 ease-out hover:bg-slate-100/80 " +
-        className
-      }
-      onClick={startEditing}
-      onFocus={handleFocus}
-    >
+    <span role="button" tabIndex={0} className={displayClass} onClick={startEditing} onFocus={handleFocus}>
       {value || placeholder || "\u00a0"}
     </span>
   );

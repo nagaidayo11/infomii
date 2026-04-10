@@ -58,7 +58,7 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
         <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder={labels.locationPlaceholder} />
       </p>
       <p className="mt-2 text-xs text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
+        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
       </p>
     </Card>
   );

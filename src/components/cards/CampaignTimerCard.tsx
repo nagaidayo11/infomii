@@ -68,11 +68,18 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
             : "期間設定が未完了です";
 
   return (
-    <Card padding="md">
-      <section className={`${editorInnerRadiusClassName} overflow-hidden border border-amber-200 bg-amber-50/80 p-4`}>
-        <p className="text-base font-semibold text-amber-900" style={getTitleFontSizeStyle()}>{title}</p>
-        {description ? <p className="mt-1 text-sm text-amber-900/90" style={getBodyFontSizeStyle()}>{description}</p> : null}
-        <div className="mt-3 flex items-center justify-between gap-2">
+    <Card padding="none">
+      <section
+        data-inner-surface
+        className={`${editorInnerRadiusClassName} flex flex-col gap-3 overflow-hidden border border-amber-200 bg-amber-50/80 px-3 py-2.5`}
+      >
+        <div className="flex flex-col gap-1">
+          <p className="text-base font-semibold leading-snug text-amber-900" style={getTitleFontSizeStyle()}>{title}</p>
+          {description ? (
+            <p className="text-sm leading-snug text-amber-900/90" style={getBodyFontSizeStyle()}>{description}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold tracking-wide text-amber-800" style={getBodyFontSizeStyle()}>{statusLabel}</p>
           {(state === "before" || state === "during") && (
             <div className="flex items-center gap-1.5 font-mono text-sm font-semibold text-amber-900" style={getBodyFontSizeStyle()}>
@@ -88,7 +95,7 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
             href={ctaUrl}
             target={ctaUrl.startsWith("/") ? undefined : "_blank"}
             rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
-            className={`mt-3 inline-flex ${editorInnerRadiusClassName} bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800`}
+            className={`inline-flex ${editorInnerRadiusClassName} bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800`}
             style={getBodyFontSizeStyle()}
           >
             {ctaLabel}

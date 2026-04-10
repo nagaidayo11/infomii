@@ -17,10 +17,10 @@ export function EmergencyBannerCard({ card }: { card: EditorCard; isSelected?: b
         ? "border-amber-300 bg-amber-50 text-amber-900"
         : "border-sky-300 bg-sky-50 text-sky-900";
   return (
-    <Card padding="md">
-      <section className={`${editorInnerRadiusClassName} border px-3 py-3 ${tone}`}>
-        <p className="font-semibold" style={getTitleFontSizeStyle()}>{title}</p>
-        <p className="mt-1 text-sm" style={getBodyFontSizeStyle()}>{message}</p>
+    <Card padding="none">
+      <section data-inner-surface className={`${editorInnerRadiusClassName} flex flex-col gap-1.5 border px-3 py-2.5 ${tone}`}>
+        <p className="font-semibold leading-snug" style={getTitleFontSizeStyle()}>{title}</p>
+        <p className="text-sm leading-snug" style={getBodyFontSizeStyle()}>{message}</p>
       </section>
     </Card>
   );

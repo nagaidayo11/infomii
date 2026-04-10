@@ -56,7 +56,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.slice(0, 12).map((item, i) => (
-          <div key={i} className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
+          <div key={i} data-inner-surface className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
             {item?.src ? (
               <Image
                 src={item.src}

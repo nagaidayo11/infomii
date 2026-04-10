@@ -18,7 +18,7 @@ export function ProgressStepsCard({ card }: { card: EditorCard; isSelected?: boo
           const active = idx + 1 === currentStep;
           const done = item.done === true || idx + 1 < currentStep;
           return (
-            <li key={idx} className={`${editorInnerRadiusClassName} flex items-center gap-2 border px-3 py-2 ${done ? "border-emerald-200 bg-emerald-50" : active ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-slate-50"}`}>
+            <li data-inner-surface key={idx} className={`${editorInnerRadiusClassName} flex items-center gap-2 border px-3 py-2 ${done ? "border-emerald-200 bg-emerald-50" : active ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-slate-50"}`}>
               <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold ${done ? "bg-emerald-600 text-white" : active ? "bg-blue-600 text-white" : "bg-slate-300 text-slate-700"}`}>{idx + 1}</span>
               <span className="text-sm text-slate-700">{item.label ?? `ステップ ${idx + 1}`}</span>
             </li>

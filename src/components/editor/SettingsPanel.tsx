@@ -764,52 +764,6 @@ function ProgressItemsEditor({
   );
 }
 
-function UpdateLogItemsEditor({
-  content,
-  onUpdate,
-}: {
-  content: Record<string, unknown>;
-  onUpdate: (key: string, value: unknown) => void;
-}) {
-  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ at?: string; actor?: string; kind?: string; text?: string }>;
-  const setItems = (next: Array<{ at?: string; actor?: string; kind?: string; text?: string }>) => onUpdate("items", next);
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">履歴項目</span>
-        <button type="button" onClick={() => setItems([...items, { at: "", actor: "", kind: "", text: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
-      </div>
-      {items.map((item, i) => (
-        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
-          </div>
-          <Input label="日時(ISO)" value={item.at ?? ""} onChange={(e) => {
-            const next = [...items];
-            next[i] = { ...(next[i] ?? {}), at: e.target.value };
-            setItems(next);
-          }} placeholder="2026-04-08T12:00:00.000Z" />
-          <Input label="更新者" value={item.actor ?? ""} onChange={(e) => {
-            const next = [...items];
-            next[i] = { ...(next[i] ?? {}), actor: e.target.value };
-            setItems(next);
-          }} placeholder="owner/admin/editor" />
-          <Input label="種別" value={item.kind ?? ""} onChange={(e) => {
-            const next = [...items];
-            next[i] = { ...(next[i] ?? {}), kind: e.target.value };
-            setItems(next);
-          }} placeholder="文言/画像/期間/設定" />
-          <Input label="内容" value={item.text ?? ""} onChange={(e) => {
-            const next = [...items];
-            next[i] = { ...(next[i] ?? {}), text: e.target.value };
-            setItems(next);
-          }} placeholder="更新内容" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function PageLinksItemsEditor({
   content,
   onUpdate,
@@ -1241,7 +1195,6 @@ export function CardSettings({
   const [bulkFind, setBulkFind] = useState("");
   const [bulkReplaceTo, setBulkReplaceTo] = useState("");
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
-  const allCards = useEditor2Store((s) => s.cards);
   const [customPresets, setCustomPresets] = useState<
     Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
   >(() => {
@@ -1508,31 +1461,19 @@ export function CardSettings({
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
   };
-  const appendOperationalLog = (kind: string, text: string) => {
-    const target = allCards.find((c) => c.type === "update_log");
-    if (!target) return;
-    const targetContent = (target.content ?? {}) as Record<string, unknown>;
-    const items = (Array.isArray(targetContent.items) ? targetContent.items : []) as Array<Record<string, unknown>>;
-    const nextItems = [
-      {
-        at: new Date().toISOString(),
-        actor: "editor",
-        kind,
-        text,
-      },
-      ...items,
-    ].slice(0, 50);
-    onUpdate(target.id, {
-      content: {
-        ...targetContent,
-        items: nextItems,
-      },
-    });
-  };
   const updateStyle = (key: string, value: unknown) => {
     const next = value === undefined || value === "" ? undefined : value;
     const nextStyle = next != null ? { ...style, [key]: next } : { ...style };
     if (next === undefined) delete nextStyle[key];
+    onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
+  };
+  const updateStyles = (patch: Record<string, unknown>) => {
+    const nextStyle = { ...style } as Record<string, unknown>;
+    for (const [key, value] of Object.entries(patch)) {
+      const next = value === undefined || value === "" ? undefined : value;
+      if (next === undefined) delete nextStyle[key];
+      else nextStyle[key] = next;
+    }
     onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
   };
   const applyStylePreset = (preset: Record<string, string | number | undefined>) => {
@@ -1605,9 +1546,52 @@ export function CardSettings({
     return (
       <>
         <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
+                {CARD_TYPE_LABELS[card.type]}
+              </p>
+              {canEditCard ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleDuplicateCard}
+                    disabled={!onDuplicateCard}
+                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    コピー
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCard}
+                    disabled={!onRemoveCard}
+                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    削除
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <p className="text-xs text-slate-500">Businessプラン限定ブロック</p>
+          </div>
+        </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+          <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+            このブロックの編集は Business プランでご利用いただけます。公開ページでの表示は維持されます。
+          </section>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+        <div className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <p className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-lg font-extrabold tracking-tight text-slate-950 ring-1 ring-slate-200">
+          <div className="flex items-center justify-between gap-2">
+            <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
               {CARD_TYPE_LABELS[card.type]}
             </p>
             {canEditCard ? (
@@ -1631,49 +1615,8 @@ export function CardSettings({
               </div>
             ) : null}
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">Businessプラン限定ブロック</p>
+          <p className="text-xs text-slate-500">変更はリアルタイムで反映されます</p>
         </div>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-          <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-            このブロックの編集は Business プランでご利用いただけます。公開ページでの表示は維持されます。
-          </section>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-sm font-semibold text-slate-700">
-          ブロック設定
-        </h2>
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <p className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-lg font-extrabold tracking-tight text-slate-950 ring-1 ring-slate-200">
-            {CARD_TYPE_LABELS[card.type]}
-          </p>
-          {canEditCard ? (
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleDuplicateCard}
-                disabled={!onDuplicateCard}
-                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                コピー
-              </button>
-              <button
-                type="button"
-                onClick={handleRemoveCard}
-                disabled={!onRemoveCard}
-                className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                削除
-              </button>
-            </div>
-          ) : null}
-        </div>
-        <p className="mt-0.5 text-xs text-slate-500">変更はリアルタイムで反映されます</p>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="space-y-6">
@@ -1896,6 +1839,49 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "heading_body" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={(content.title as string) ?? ""}
+                onChange={(e) => update("title", e.target.value)}
+                placeholder="見出しテキスト"
+              />
+              <div className="w-full">
+                <label className={labelClass}>本文</label>
+                <textarea
+                  value={(content.body as string) ?? ""}
+                  onChange={(e) => update("body", e.target.value)}
+                  placeholder="本文テキスト"
+                  rows={4}
+                  className={inputClass}
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={content.dividerEnabled === true}
+                  onChange={(e) => update("dividerEnabled", e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+                />
+                区切り線を表示
+              </label>
+              {content.dividerEnabled === true ? (
+                <div className="w-full">
+                  <label className={labelClass}>線種</label>
+                  <select
+                    value={(content.dividerStyle as string) === "dashed" ? "dashed" : "solid"}
+                    onChange={(e) => update("dividerStyle", e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="solid">実線</option>
+                    <option value="dashed">破線</option>
+                  </select>
+                </div>
+              ) : null}
             </SettingsSection>
           )}
 
@@ -2750,20 +2736,17 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
                 update("title", e.target.value);
-                appendOperationalLog("設定", "緊急告知バナーのタイトルを更新");
               }} placeholder="緊急のお知らせ" />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
                 <textarea value={(content.message as string) ?? ""} onChange={(e) => {
                   update("message", e.target.value);
-                  appendOperationalLog("文言", "緊急告知バナーの本文を更新");
                 }} rows={3} className={inputClass} />
               </div>
               <div className="w-full">
                 <label className={labelClass}>重要度</label>
                 <select value={(content.level as string) ?? "high"} onChange={(e) => {
                   update("level", e.target.value);
-                  appendOperationalLog("設定", `緊急告知バナーの重要度を ${e.target.value} に変更`);
                 }} className={inputClass}>
                   <option value="high">高</option>
                   <option value="medium">中</option>
@@ -2777,13 +2760,11 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
                 update("title", e.target.value);
-                appendOperationalLog("設定", "期間限定バナーのタイトルを更新");
               }} placeholder="期間限定のお知らせ" />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
                 <textarea value={(content.message as string) ?? ""} onChange={(e) => {
                   update("message", e.target.value);
-                  appendOperationalLog("文言", "期間限定バナーの本文を更新");
                 }} rows={3} className={inputClass} />
               </div>
               <div className="w-full">
@@ -2791,7 +2772,6 @@ export function CardSettings({
                 <input type="datetime-local" value={isoToLocalInput(content.startAt)} onChange={(e) => {
                   const next = localInputToIso(e.target.value);
                   update("startAt", next);
-                  appendOperationalLog("期間", `期間限定バナーの開始日時を更新: ${next || "未設定"}`);
                 }} className={inputClass} />
               </div>
               <div className="w-full">
@@ -2799,62 +2779,8 @@ export function CardSettings({
                 <input type="datetime-local" value={isoToLocalInput(content.endAt)} onChange={(e) => {
                   const next = localInputToIso(e.target.value);
                   update("endAt", next);
-                  appendOperationalLog("期間", `期間限定バナーの終了日時を更新: ${next || "未設定"}`);
                 }} className={inputClass} />
               </div>
-            </SettingsSection>
-          )}
-
-          {card.type === "multilingual_notice" && (
-            <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="多言語注意文" />
-              <Input label="日本語" value={(content.ja as string) ?? ""} onChange={(e) => update("ja", e.target.value)} placeholder="..." />
-              <Input label="English" value={(content.en as string) ?? ""} onChange={(e) => update("en", e.target.value)} placeholder="..." />
-              <Input label="中文" value={(content.zh as string) ?? ""} onChange={(e) => update("zh", e.target.value)} placeholder="..." />
-              <Input label="한국어" value={(content.ko as string) ?? ""} onChange={(e) => update("ko", e.target.value)} placeholder="..." />
-            </SettingsSection>
-          )}
-
-          {card.type === "conditional_section" && (
-            <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="条件表示セクション" />
-              <div className="w-full">
-                <label className={labelClass}>表示メッセージ</label>
-                <textarea value={(content.message as string) ?? ""} onChange={(e) => update("message", e.target.value)} rows={2} className={inputClass} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Input label="開始時刻" value={String(content.startHour ?? 0)} onChange={(e) => update("startHour", Number(e.target.value) || 0)} placeholder="0" />
-                <Input label="終了時刻" value={String(content.endHour ?? 24)} onChange={(e) => update("endHour", Number(e.target.value) || 24)} placeholder="24" />
-              </div>
-              <div className="w-full">
-                <label className={labelClass}>表示曜日</label>
-                <div className="grid grid-cols-4 gap-2 text-xs">
-                  {["日", "月", "火", "水", "木", "金", "土"].map((d, day) => {
-                    const selected = Array.isArray(content.enabledDays) ? (content.enabledDays as number[]).includes(day) : false;
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => {
-                          const prev = Array.isArray(content.enabledDays) ? (content.enabledDays as number[]) : [];
-                          const next = selected ? prev.filter((v) => v !== day) : [...prev, day];
-                          update("enabledDays", next);
-                        }}
-                        className={`rounded-lg border px-2 py-1 ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700"}`}
-                      >
-                        {d}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </SettingsSection>
-          )}
-
-          {card.type === "update_log" && (
-            <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="更新履歴" />
-              <UpdateLogItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
@@ -3056,14 +2982,22 @@ export function CardSettings({
                 }
                 onChange={(e) => {
                   const mode = e.target.value as "default" | "transparent" | "custom";
-                  updateStyle("innerSurfaceMode", mode === "default" ? undefined : mode);
-                  if (mode !== "custom") updateStyle("innerSurfaceColor", undefined);
+                  if (mode === "default") {
+                    updateStyles({ innerSurfaceMode: undefined, innerSurfaceColor: undefined });
+                    return;
+                  }
+                  if (mode === "transparent") {
+                    updateStyles({ innerSurfaceMode: "transparent", innerSurfaceColor: undefined });
+                    return;
+                  }
+                  const current = normalizeHexColor(style.innerSurfaceColor as string | undefined) ?? "#f8fafc";
+                  updateStyles({ innerSurfaceMode: "custom", innerSurfaceColor: current });
                 }}
                 className={inputClass}
               >
                 <option value="default">デフォルト</option>
                 <option value="transparent">透過</option>
-                <option value="custom">カスタム</option>
+                <option value="custom">カスタム（任意色）</option>
               </select>
             </div>
             <div className="w-full">
@@ -3074,8 +3008,7 @@ export function CardSettings({
                     key={preset.value}
                     type="button"
                     onClick={() => {
-                      updateStyle("innerSurfaceMode", "custom");
-                      updateStyle("innerSurfaceColor", preset.value);
+                      updateStyles({ innerSurfaceMode: "custom", innerSurfaceColor: preset.value });
                     }}
                     className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
                   >
@@ -3085,6 +3018,7 @@ export function CardSettings({
                 ))}
               </div>
             </div>
+            <p className="mt-1 text-[11px] text-slate-500">カスタム = 内部要素背景に任意色（#RRGGBB）を適用</p>
             {((style.innerSurfaceMode as string) ?? "default") === "custom" ? (
               <div className="w-full">
                 <label className={labelClass}>内部要素の背景色</label>
@@ -3099,6 +3033,10 @@ export function CardSettings({
                     type="text"
                     value={(style.innerSurfaceColor as string) ?? ""}
                     onChange={(e) => updateStyle("innerSurfaceColor", e.target.value || undefined)}
+                    onBlur={(e) => {
+                      const normalized = normalizeHexColor(e.target.value || undefined);
+                      updateStyle("innerSurfaceColor", normalized ?? undefined);
+                    }}
                     placeholder="#f8fafc"
                     className={inputClass + " flex-1"}
                   />

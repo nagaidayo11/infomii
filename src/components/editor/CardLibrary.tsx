@@ -32,11 +32,14 @@ type QuickPreset = {
 
 function BusinessBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
+    <span
+      className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-violet-300 bg-violet-100 text-violet-700"
+      aria-label="Business"
+      title="Business"
+    >
       <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
       </svg>
-      Business
     </span>
   );
 }
@@ -51,6 +54,11 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={2} />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M8 15h6M6.5 12l-1.5 1.5L6.5 15m11-3 1.5 1.5-1.5 1.5" />
+    </svg>
+  ),
+  heading_body: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
     </svg>
   ),
   info: (
@@ -298,27 +306,12 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v4m8-4v4m-8 6h8" />
     </svg>
   ),
-  multilingual_notice: (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M6 12h12M8 18h8" />
-    </svg>
-  ),
-  conditional_section: (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5v14" />
-      <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
-    </svg>
-  ),
-  update_log: (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
-    </svg>
-  ),
 };
 
 const MAIN_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Business限定）" },
+  { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を上下で表示" },
   { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
   { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
 ];
@@ -331,6 +324,9 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧表示" },
   { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Business限定）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（Business限定）" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Business限定）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
   { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
@@ -339,6 +335,8 @@ const GUIDE_ITEMS: LibraryItem[] = [
 const OPERATION_ITEMS: LibraryItem[] = [
   { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Business限定）" },
+  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Business限定）" },
   { type: "map", label: "地図", description: "アクセス・所在地を表示" },
   { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
   { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
@@ -369,25 +367,12 @@ const MEDIA_ITEMS: LibraryItem[] = [
   { type: "space", label: "スペース", description: "上下の余白を調整" },
 ];
 
-const BUSINESS_ITEMS: LibraryItem[] = [
-  { type: "hero_slider", label: "ヒーロースライド", description: "動的な複数写真ヒーロー" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示" },
-  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示" },
-  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知" },
-  { type: "multilingual_notice", label: "多言語注意文", description: "4言語テンプレを同時表示" },
-  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示を制御" },
-  { type: "update_log", label: "更新履歴", description: "更新内容を時系列で表示" },
-];
-
 export const LIBRARY_SECTIONS: LibrarySection[] = [
   { id: "main", title: "メイン表示", items: MAIN_ITEMS },
   { id: "guide", title: "案内・情報", items: GUIDE_ITEMS },
   { id: "operation", title: "運用・導線", items: OPERATION_ITEMS },
   { id: "comparison", title: "比較・訴求", items: COMPARISON_ITEMS },
   { id: "media", title: "メディア・装飾", items: MEDIA_ITEMS },
-  { id: "business", title: "Business限定", items: BUSINESS_ITEMS },
 ];
 
 const QUICK_PRESETS: QuickPreset[] = [
@@ -414,7 +399,7 @@ const QUICK_PRESETS: QuickPreset[] = [
   },
   {
     id: "multilingual-ops",
-    label: "多言語運用セット（Business）",
+    label: "多言語運用セット",
     purpose: "多言語前提の運用導線を構築",
     description: "ヒーロースライド / 重要なお知らせ / WiFi案内 / よくある質問 / リンクボタン",
     types: ["hero_slider", "notice", "wifi", "faq", "button"],
@@ -422,18 +407,10 @@ const QUICK_PRESETS: QuickPreset[] = [
   },
   {
     id: "campaign-conversion",
-    label: "キャンペーン訴求セット（Business）",
+    label: "キャンペーン訴求セット",
     purpose: "期間訴求とCV導線を強化",
     description: "ヒーロースライド / キャンペーンタイマー / 強調ブロック / 比較 / リンクボタン",
     types: ["hero_slider", "campaign_timer", "highlight", "compare", "button"],
-    businessOnly: true,
-  },
-  {
-    id: "ops-business",
-    label: "運用統制セット（Business）",
-    purpose: "更新漏れ防止と緊急告知対応",
-    description: "緊急告知バナー / 期間限定バナー / 条件表示 / 更新履歴 / 多言語注意文",
-    types: ["emergency_banner", "scheduled_banner", "conditional_section", "update_log", "multilingual_notice"],
     businessOnly: true,
   },
 ];
@@ -520,8 +497,10 @@ export function CardLibrary({
                 {section.title}
               </h3>
               <div className="space-y-1">
-                {section.items.map((item) => (
-                  <button
+                {section.items.map((item) => {
+                  const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
+                  return (
+                    <button
                     key={`${section.id}-${item.type}`}
                     type="button"
                     onClick={() => handleAdd(item.type)}
@@ -545,9 +524,9 @@ export function CardLibrary({
                       {CARD_ICONS[item.type] ?? CARD_ICONS.text}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 truncate text-sm font-medium text-slate-800">
+                      <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-800">
                         <span className="truncate">{item.label}</span>
-                        {!canAdd(item.type) ? (
+                        {isBusinessType ? (
                           <BusinessBadge />
                         ) : null}
                       </span>
@@ -556,7 +535,8 @@ export function CardLibrary({
                       </span>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ))}

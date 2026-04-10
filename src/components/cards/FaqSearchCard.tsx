@@ -49,6 +49,7 @@ export function FaqSearchCard({ card }: FaqSearchCardProps) {
         {title}
       </p>
       <input
+        data-inner-surface
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -60,6 +61,7 @@ export function FaqSearchCard({ card }: FaqSearchCardProps) {
           visibleItems.map((item, idx) => (
             <div
               key={`${item.q}-${idx}`}
+              data-inner-surface
               className={`border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}
             >
               <p className="font-medium text-slate-800">{item.q || "質問"}</p>

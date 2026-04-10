@@ -40,6 +40,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
     <Card padding="md">
       <div className="flex items-center gap-3 pb-3">
         <span
+          data-inner-surface
           className={`flex h-10 w-10 shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 text-slate-700`}
         >
           <LineIcon name={icon} className="h-5 w-5" />
@@ -55,6 +56,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
           rows.map((row, i) => (
             <div
               key={i}
+              data-inner-surface
               className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
             >
               <span className="text-slate-500 break-words">{row.label ?? "—"}</span>

@@ -32,7 +32,10 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const onActivate = () => selectCard(card.id);
 
   return (
-    <div className={`relative overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
+    <div
+      data-inner-surface
+      className={`app-interactive relative overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 transition-transform duration-200 ease-out hover:-translate-y-0.5`}
+    >
       <div className="relative aspect-[2/1] min-h-[140px] w-full">
         {image ? (
           <Image src={image} alt="" fill className="object-cover" unoptimized={image.startsWith("http")} sizes="420px" />

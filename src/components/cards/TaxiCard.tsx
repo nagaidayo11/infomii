@@ -70,7 +70,7 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
       <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
-      <div className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
+      <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         <InlineEditable value={companyName} onSave={(v) => updateKey("companyName", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.companyPlaceholder} />
       </p>
@@ -78,7 +78,7 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
         <InlineEditable value={phone} onSave={(v) => updateCard(card.id, { content: { ...c, phone: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary" placeholder={labels.phonePlaceholder} />
       </p>
       <p className="text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block min-h-[1em] text-slate-500" placeholder={labels.notePlaceholder} />
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.notePlaceholder} />
       </p>
       </div>
     </Card>

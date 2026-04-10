@@ -76,9 +76,6 @@ export function detectBusinessTypeMisuse(cardTypes: string[], isBusinessEnabled:
     "coupon",
     "emergency_banner",
     "scheduled_banner",
-    "multilingual_notice",
-    "conditional_section",
-    "update_log",
   ]);
   return !isBusinessEnabled && cardTypes.some((type) => businessTypes.has(type));
 }

@@ -46,28 +46,31 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const onActivate = () => selectCard(card.id);
 
   return (
-    <Card padding="md" className="">
-      <div className={`${editorInnerRadiusClassName} p-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}>
-        <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+    <Card padding="none">
+      <div
+        data-inner-surface
+        className={`${editorInnerRadiusClassName} flex flex-col gap-2 px-3 py-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
+      >
+        <div className="min-w-0 font-medium leading-tight text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
             editable={isSelected}
             onActivate={onActivate}
-            className="font-medium text-slate-800"
+            className="font-medium leading-tight text-slate-800"
           />
-        </p>
-        <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
+        </div>
+        <div className="min-w-0 leading-normal text-slate-600" style={getBodyFontSizeStyle()}>
           <InlineEditable
             value={body}
             onSave={(v) => updateKey("body", v)}
             editable={isSelected}
             onActivate={onActivate}
             multiline
-            className="block min-h-[1em] text-slate-600"
+            className="text-slate-600 leading-normal"
             placeholder={labels.bodyPlaceholder}
           />
-        </p>
+        </div>
       </div>
     </Card>
   );

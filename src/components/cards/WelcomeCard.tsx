@@ -57,14 +57,14 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           className="font-semibold text-slate-900"
         />
       </p>
-      <div className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>
+      <div data-inner-surface className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={message}
           onSave={(v) => updateKey("message", v)}
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="block min-h-[1.5em] leading-relaxed text-slate-600"
+          className="block w-full min-h-[1lh] leading-relaxed text-slate-600"
           placeholder={labels.messagePlaceholder}
         />
       </div>

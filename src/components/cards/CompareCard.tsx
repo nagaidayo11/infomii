@@ -50,11 +50,11 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
         />
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
-        <div className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
+        <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
           <p className="font-medium text-slate-800">{leftTitle}</p>
           <p className="mt-1 text-slate-600">{leftBody}</p>
         </div>
-        <div className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
+        <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
           <p className="font-medium text-slate-800">{rightTitle}</p>
           <p className="mt-1 text-slate-600">{rightBody}</p>
         </div>

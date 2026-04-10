@@ -86,9 +86,10 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
             const iconDisplay = getIconDisplay(item.icon);
             const content = (
               <div
+                data-inner-surface
                 className={`flex min-h-[76px] flex-col items-center justify-center gap-1 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100`}
               >
-                <span className={`flex shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-white text-slate-700 ${iconWrapClass}`}>
+                <span data-inner-surface className={`flex shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-white text-slate-700 ${iconWrapClass}`}>
                   <LineIcon name={iconDisplay} className={iconClass} />
                 </span>
                 <span

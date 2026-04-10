@@ -51,6 +51,7 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
     <Card padding="md" className="">
       <div className="flex items-start gap-3">
         <div
+          data-inner-surface
           className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center text-slate-700 ${editorInnerRadiusClassName} bg-slate-100`}
         >
           {showLineIcon ? (

@@ -31,7 +31,7 @@ export function ScheduleCard({ card, isSelected, locale = "ja" }: ScheduleCardPr
           const time = getLocalizedContent(item.time as LocalizedString | undefined, locale) || "-";
           const label = getLocalizedContent(item.label as LocalizedString | undefined, locale);
           return (
-            <div key={index} className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
+            <div key={index} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
               <p className="font-medium text-slate-700" style={getBodyFontSizeStyle()}>{day}: {time}</p>
               {label ? <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>{label}</p> : null}
             </div>

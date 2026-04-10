@@ -10,6 +10,7 @@
 export type CardType =
   | "hero"
   | "hero_slider"
+  | "heading_body"
   | "info"
   | "highlight"
   | "action"
@@ -53,10 +54,7 @@ export type CardType =
   | "contact_hub"
   | "progress_steps"
   | "emergency_banner"
-  | "scheduled_banner"
-  | "multilingual_notice"
-  | "conditional_section"
-  | "update_log";
+  | "scheduled_banner";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -173,8 +171,8 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   }
   if (innerSurfaceMode === "transparent") {
     (style as Record<string, string>)["--editor-inner-surface-bg"] = "transparent";
-  } else if (innerSurfaceMode === "custom" && innerSurfaceColor) {
-    (style as Record<string, string>)["--editor-inner-surface-bg"] = innerSurfaceColor;
+  } else if (innerSurfaceMode === "custom") {
+    (style as Record<string, string>)["--editor-inner-surface-bg"] = innerSurfaceColor ?? "#f8fafc";
   }
   return style as import("react").CSSProperties;
 }
@@ -214,6 +212,7 @@ export type EditorPage = {
 export const CARD_TYPE_LABELS: Record<CardType, string> = {
   hero: "ヒーロー",
   hero_slider: "ヒーロースライド",
+  heading_body: "見出し＋本文セット",
   info: "情報",
   highlight: "ハイライト",
   action: "アクション",
@@ -258,15 +257,13 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   progress_steps: "進捗ステップ",
   emergency_banner: "緊急告知バナー",
   scheduled_banner: "期間限定バナー",
-  multilingual_notice: "多言語注意文",
-  conditional_section: "条件表示セクション",
-  update_log: "更新履歴",
 };
 
 /** Card types shown in the editor library (Canva-style). */
 export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "hero",
   "hero_slider",
+  "heading_body",
   "info",
   "highlight",
   "action",
@@ -291,9 +288,6 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "progress_steps",
   "emergency_banner",
   "scheduled_banner",
-  "multilingual_notice",
-  "conditional_section",
-  "update_log",
   "gallery",
   "divider",
   "space",
@@ -303,6 +297,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
+  { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を縦に表示" },
   { type: "info", label: "情報", description: "WiFi・構造化情報" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
@@ -327,9 +322,6 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
   { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
   { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
-  { type: "multilingual_notice", label: "多言語注意文", description: "4言語の注意文テンプレ（Business）" },
-  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示制御（Business）" },
-  { type: "update_log", label: "更新履歴", description: "更新履歴タイムライン（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
@@ -348,6 +340,7 @@ export const STARTER_CARD_TYPES: CardType[] = [
 export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
+  { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を縦に表示" },
   { type: "info", label: "情報", description: "構造化情報・WiFi" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
@@ -387,9 +380,6 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
   { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
   { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
-  { type: "multilingual_notice", label: "多言語注意文", description: "4言語の注意文テンプレ（Business）" },
-  { type: "conditional_section", label: "条件表示セクション", description: "曜日/時間で表示制御（Business）" },
-  { type: "update_log", label: "更新履歴", description: "更新履歴タイムライン（Business）" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
@@ -400,9 +390,6 @@ export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
   "coupon",
   "emergency_banner",
   "scheduled_banner",
-  "multilingual_notice",
-  "conditional_section",
-  "update_log",
 ];
 
 /** Default sample image (hero / image / gallery block presets). */
@@ -427,6 +414,13 @@ function defaultContent(type: CardType): Record<string, unknown> {
           { src: PRESET_HERO_SAMPLE_IMAGE, alt: "メインイメージ", caption: "チェックインのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
           { src: PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE, alt: "朝食イメージ", caption: "朝食ビュッフェのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
         ],
+      };
+    case "heading_body":
+      return {
+        title: "見出しテキスト",
+        body: "本文テキストを入力してください。",
+        dividerEnabled: false,
+        dividerStyle: "solid",
       };
     case "info":
       return {
@@ -609,30 +603,6 @@ function defaultContent(type: CardType): Record<string, unknown> {
         message: "春の特典キャンペーン実施中です。",
         startAt: "",
         endAt: "",
-      };
-    case "multilingual_notice":
-      return {
-        title: "多言語注意文",
-        ja: "客室内は禁煙です。",
-        en: "No smoking in guest rooms.",
-        zh: "客房内禁止吸烟。",
-        ko: "객실 내 금연입니다.",
-      };
-    case "conditional_section":
-      return {
-        title: "条件表示セクション",
-        message: "現在の時間帯のみ表示される案内です。",
-        enabledDays: [1, 2, 3, 4, 5, 6, 0],
-        startHour: 0,
-        endHour: 24,
-      };
-    case "update_log":
-      return {
-        title: "更新履歴",
-        items: [
-          { at: "2026-04-01T09:00:00.000Z", actor: "owner", kind: "文言", text: "朝食時間を更新" },
-          { at: "2026-04-03T11:30:00.000Z", actor: "admin", kind: "画像", text: "館内マップを差し替え" },
-        ],
       };
     case "parking":
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };

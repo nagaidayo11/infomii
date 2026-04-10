@@ -18,7 +18,7 @@ export function SocialLinksCard({ card }: { card: EditorCard; isSelected?: boole
           const label = item.label || `SNS ${idx + 1}`;
           const handle = item.handle || "";
           const inner = (
-            <div className={`${editorInnerRadiusClassName} flex items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2`}>
+            <div data-inner-surface className={`${editorInnerRadiusClassName} flex items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2`}>
               <span className="text-sm font-medium text-slate-800" style={getBodyFontSizeStyle()}>{label}</span>
               <span className="text-xs text-slate-500" style={getBodyFontSizeStyle()}>{handle}</span>
             </div>
