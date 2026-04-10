@@ -794,7 +794,7 @@ function PageLinksItemsEditor({
     if (typeof window === "undefined") return;
     const target = pages.find((p) => p.slug === slug);
     if (!target?.id) return;
-    window.open(`/editor/saas/${target.id}`, "_blank", "noopener,noreferrer");
+    window.open(`/editor/${target.id}`, "_blank", "noopener,noreferrer");
   };
 
   return (

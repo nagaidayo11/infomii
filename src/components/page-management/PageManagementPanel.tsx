@@ -144,7 +144,7 @@ export function PageManagementPanel() {
               type="button"
               disabled={creating}
               onClick={() => void onNewPage()}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+              className="app-button-native inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
             >
               <span className="text-lg leading-none">+</span>
               ページを追加

@@ -101,24 +101,40 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">チーム統制: チーム招待</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+              <span className="block">チーム統制: チーム招待</span>
+              <span className="mt-1 block text-xs font-medium text-emerald-700/90">
+                更新漏れ防止・引き継ぎ容易
+              </span>
+            </th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
-              <div className="inline-flex flex-col items-center gap-1">
-                {yes}
-                <span className="text-[11px] text-slate-500">更新漏れ防止・引き継ぎ容易</span>
-              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                {yes} 対応
+              </span>
             </td>
           </tr>
           <tr>
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
-              <span className="block">チーム統制: 公開時の多言語自動翻訳</span>
+              <span className="block">公開時の多言語自動翻訳</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 公開操作にあわせて主要言語へまとめて反映
               </span>
-              <span className="ml-2 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                Business
+            </th>
+            <td className="px-3 py-2.5 text-center">{no}</td>
+            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
+            <td className="px-3 py-2.5 text-center">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                {yes} 対応
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+              <span className="block">動的ブロック</span>
+              <span className="mt-1 block text-xs font-medium text-emerald-700/90">
+                ヒーロースライド / キャンペーンタイマー / 緊急バナー など
               </span>
             </th>
             <td className="px-3 py-2.5 text-center">{no}</td>
@@ -348,8 +364,14 @@ export default function LpSaaSPage() {
                 担当者と拠点が増えても、翻訳反映と更新ルールをそろえやすく、案内品質の統一を維持できます。
               </p>
               <div className="mt-6 flex flex-col gap-2">
-                <CheckoutButton plan="business" variant="secondary" className="w-full">
-                  Businessを申し込む{hasBusinessAnnual ? "（月払い）" : ""}
+                <CheckoutButton
+                  plan="business"
+                  variant="secondary"
+                  className="w-full"
+                  adaptiveBusinessCta
+                  showUpgradeHint
+                >
+                  Businessを申し込む
                 </CheckoutButton>
                 {hasBusinessAnnual ? (
                   <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">

@@ -162,7 +162,7 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            className="app-button-native rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
           >
             {loading ? "生成中…" : "生成して編集"}
           </button>

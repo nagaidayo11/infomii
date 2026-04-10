@@ -163,10 +163,10 @@ export default function TemplatesPage() {
   const previewCards = previewTemplate ? buildPreviewCards(previewTemplate) : [];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">テンプレート</h1>
-        <p className="mt-1 text-sm text-slate-500">
+    <div className="app-main-container space-y-4">
+      <header className="app-page-header">
+        <h1 className="app-page-title">テンプレート</h1>
+        <p className="app-page-subtitle">
           館内案内・WiFi・朝食など、そのまま使える型からQR用ページを作成
         </p>
       </header>
@@ -179,7 +179,7 @@ export default function TemplatesPage() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={
-              "shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition " +
+              "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition " +
               (category === c.id
                 ? "bg-slate-900 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200")
@@ -214,7 +214,7 @@ export default function TemplatesPage() {
           </p>
           <Link
             href="/dashboard"
-            className="mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+            className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
           >
             ダッシュボードに戻る
           </Link>
@@ -308,7 +308,7 @@ export default function TemplatesPage() {
                   <button
                     type="button"
                     onClick={() => setPreviewTemplate(null)}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    className="app-button-native rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                   >
                     閉じる
                   </button>

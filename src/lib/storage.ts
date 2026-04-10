@@ -568,6 +568,8 @@ export type DashboardBootstrapData = {
   hotelName: string;
   subscription: HotelSubscription | null;
   informations: Information[];
+  /** Published count aligned to existing pages (ignores orphan informations). */
+  publishedPageCount: number;
 };
 
 export type HotelInvite = {
@@ -1270,6 +1272,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       hotelName: "Infomii",
       subscription: null,
       informations: [],
+      publishedPageCount: 0,
     };
   }
 
@@ -1279,10 +1282,11 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       hotelName: "Infomii",
       subscription: null,
       informations: [],
+      publishedPageCount: 0,
     };
   }
 
-  const [hotelRes, subRes, infoRes] = await Promise.all([
+  const [hotelRes, subRes, infoRes, pagesRes] = await Promise.all([
     supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle(),
     supabase
       .from("subscriptions")
@@ -1295,6 +1299,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       .select("id,title,body,images,content_blocks,theme,status,publish_at,unpublish_at,slug,updated_at")
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false }),
+    supabase.from("pages").select("slug").eq("hotel_id", hotelId),
   ]);
 
   if (hotelRes.error) {
@@ -1305,6 +1310,9 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   }
   if (infoRes.error) {
     throw toError(infoRes.error, "一覧取得に失敗しました");
+  }
+  if (pagesRes.error) {
+    throw toError(pagesRes.error, "ページ一覧の取得に失敗しました");
   }
 
   const latestSub = subRes.data?.[0] ?? null;
@@ -1325,10 +1333,17 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     ? applyDevBusinessOverrideToSubscription(subscription)
     : subscription ?? (overrideEnabled ? createDevBusinessOverrideSubscriptionFallback() : null);
 
+  const existingPageSlugs = new Set((pagesRes.data ?? []).map((row) => (row as { slug: string }).slug));
+  const publishedPageCount = (infoRes.data ?? []).filter((row) => {
+    const typed = row as SupabaseInformationRow;
+    return typed.status === "published" && existingPageSlugs.has(typed.slug);
+  }).length;
+
   return {
     hotelName: hotelRes.data?.name ?? "Infomii",
     subscription: normalizedSubscription,
     informations: (infoRes.data ?? []).map((row) => mapRow(row as SupabaseInformationRow)),
+    publishedPageCount,
   };
 }
 
@@ -1937,6 +1952,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     { data: views7d, error: views7dError },
     { data: viewsToday, error: viewsTodayError },
     { data: infos, error: infosError },
+    { data: pageSlugRows, error: pagesError },
   ] = await Promise.all([
     supabase
       .from("information_views")
@@ -1948,7 +1964,8 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
       .select("source", { count: "exact" })
       .eq("hotel_id", hotelId)
       .gte("created_at", startOfToday.toISOString()),
-    supabase.from("informations").select("id,title").eq("hotel_id", hotelId),
+    supabase.from("informations").select("id,title,slug").eq("hotel_id", hotelId),
+    supabase.from("pages").select("slug").eq("hotel_id", hotelId),
   ]);
 
   if (views7dError) {
@@ -1960,9 +1977,15 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
   if (infosError) {
     throw toError(infosError, "ページ情報の取得に失敗しました");
   }
+  if (pagesError) {
+    throw toError(pagesError, "ページ一覧の取得に失敗しました");
+  }
+
+  /** ページ一覧から削除済みの informations は人気ページ等に含めない（pages に slug が残るもののみ） */
+  const activeSlugs = new Set((pageSlugRows ?? []).map((row) => (row as { slug: string }).slug));
+  const infosForStats = (infos ?? []).filter((row) => activeSlugs.has(row.slug));
 
   const rows = views7d ?? [];
-  const pageNameMap = new Map((infos ?? []).map((row) => [row.id, row.title]));
 
   const totalViews7d = rows.length;
   let qrViews7d = 0;
@@ -1989,7 +2012,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     }
   }
 
-  const allPageStats = (infos ?? [])
+  const allPageStats = infosForStats
     .map((row) => {
       const agg = aggregate.get(row.id) ?? { views: 0, qrViews: 0 };
       return {
@@ -3917,6 +3940,9 @@ let deletePageGlobalLockUntil = 0;
 /** Creates a blank page (cards table empty). Use for new-page onboarding in the card editor. */
 export async function createBlankPage(title = ""): Promise<string> {
   const normalizedTitle = (title ?? "").trim();
+  if (!normalizedTitle) {
+    throw new Error("ページ名を入力してください。");
+  }
   const now = Date.now();
   if (createPageSnapshot && now - createPageSnapshot.at < CREATE_PAGE_DEDUPE_MS) {
     return createPageSnapshot.id;
@@ -3930,6 +3956,19 @@ export async function createBlankPage(title = ""): Promise<string> {
   if (!supabase) throw new Error("Supabase設定が未完了です");
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: existingPages, error: existingPagesError } = await supabase
+    .from("pages")
+    .select("id,title")
+    .eq("hotel_id", hotelId);
+  if (existingPagesError) throw toError(existingPagesError, "既存ページの確認に失敗しました");
+  const normalizedLower = normalizedTitle.toLocaleLowerCase("ja-JP");
+  const hasDuplicateTitle = (existingPages ?? []).some(
+    (row) => String(row.title ?? "").trim().toLocaleLowerCase("ja-JP") === normalizedLower
+  );
+  if (hasDuplicateTitle) {
+    throw new Error("同名のページが既に存在します。別のタイトルを入力してください。");
+  }
 
   const sub = await getCurrentHotelSubscription();
   if (sub) {
@@ -4104,7 +4143,13 @@ function isSupabaseId(id: string): boolean {
   return UUID_REGEX.test(id);
 }
 
-export type PageRow = { id: string; title: string; slug: string };
+export type PageRow = {
+  id: string;
+  title: string;
+  slug: string;
+  /** Mirrors `informations.status` for this slug (default draft if no row). */
+  publishStatus?: "published" | "draft";
+};
 
 /** List all pages for the current hotel (card-based pages). Used for pageLinks block. */
 export async function listPagesForHotel(): Promise<PageRow[]> {
@@ -4155,8 +4200,22 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
     .eq("hotel_id", hotelId)
     .order("title", { ascending: true });
   if (pagesError) return [];
-  const pages = (pagesData ?? []) as PageRow[];
-  if (pages.length === 0) return [];
+  const rawPages = (pagesData ?? []) as PageRow[];
+  if (rawPages.length === 0) return [];
+
+  const { data: infoRows } = await supabase
+    .from("informations")
+    .select("slug,status")
+    .eq("hotel_id", hotelId);
+  const slugPublished = new Map<string, boolean>();
+  for (const row of infoRows ?? []) {
+    const r = row as { slug: string; status: string };
+    slugPublished.set(r.slug, r.status === "published");
+  }
+  const pages: PageRow[] = rawPages.map((p) => ({
+    ...p,
+    publishStatus: slugPublished.get(p.slug) === true ? "published" : "draft",
+  }));
 
   const pageIds = pages.map((p) => p.id);
   const slugToId = new Map(pages.map((p) => [p.slug, p.id]));
@@ -4252,11 +4311,27 @@ export async function deletePage(pageId: string): Promise<void> {
 
   const { data: page, error: fetchError } = await supabase
     .from("pages")
-    .select("id")
+    .select("id,slug")
     .eq("id", pageId)
     .eq("hotel_id", hotelId)
     .maybeSingle();
   if (fetchError || !page) throw toError(fetchError ?? new Error("Not found"), "ページが見つかりません");
+
+  const nowIso = new Date().toISOString();
+  const { error: infoSyncError } = await supabase
+    .from("informations")
+    .update({
+      status: "draft",
+      publish_at: null,
+      unpublish_at: nowIso,
+      updated_at: nowIso,
+    })
+    .eq("hotel_id", hotelId)
+    .eq("slug", page.slug)
+    .eq("status", "published");
+  if (infoSyncError) {
+    throw toError(infoSyncError, "公開状態の同期解除に失敗しました");
+  }
 
   const { error: cardsError } = await supabase.from("cards").delete().eq("page_id", pageId);
   if (cardsError) throw toError(cardsError, "カードの削除に失敗しました");
@@ -4288,6 +4363,23 @@ export async function updatePageTitle(pageId: string, title: string): Promise<vo
   if (!hotelId) throw new Error("施設が選択されていません");
 
   const normalizedTitle = title.trim();
+  if (!normalizedTitle) {
+    throw new Error("ページ名を入力してください。");
+  }
+  const { data: existingPages, error: existingPagesError } = await supabase
+    .from("pages")
+    .select("id,title")
+    .eq("hotel_id", hotelId);
+  if (existingPagesError) throw toError(existingPagesError, "既存ページの確認に失敗しました");
+  const normalizedLower = normalizedTitle.toLocaleLowerCase("ja-JP");
+  const hasDuplicateTitle = (existingPages ?? []).some(
+    (row) =>
+      String(row.id) !== pageId &&
+      String(row.title ?? "").trim().toLocaleLowerCase("ja-JP") === normalizedLower
+  );
+  if (hasDuplicateTitle) {
+    throw new Error("同名のページが既に存在します。別のタイトルを入力してください。");
+  }
   const { error } = await supabase
     .from("pages")
     .update({ title: normalizedTitle })

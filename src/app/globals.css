@@ -458,6 +458,49 @@ a {
   animation: app-fade-up 480ms var(--ui-ease-out) both;
 }
 
+/* Non-LP / non-editor app pages: unified container + heading scale */
+.app-main-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.app-page-header {
+  border-bottom: 1px solid rgba(16, 185, 129, 0.22);
+  padding-bottom: 0.75rem;
+}
+
+.app-page-title {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.app-page-subtitle {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.app-section-title {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+@media (min-width: 640px) {
+  .app-page-title {
+    font-size: 1.875rem;
+  }
+  .app-section-title {
+    font-size: 1.25rem;
+  }
+}
+
 .app-stagger > * {
   opacity: 0;
   transform: translateY(12px);
@@ -482,6 +525,28 @@ a {
 @media (hover: hover) {
   .app-interactive:hover {
     transform: translateY(-2px);
+  }
+}
+
+/* 製品UIのネイティブ button: LP 同様のホバー浮き（/lp/*・/editor* では html[data-app-buttonlift] 未設定のため無効） */
+.app-button-native {
+  transition:
+    transform 180ms var(--ui-ease-out),
+    box-shadow 200ms var(--ui-ease-out),
+    border-color 180ms var(--ui-ease-out),
+    background-color 180ms var(--ui-ease-out);
+}
+
+@media (hover: hover) {
+  html[data-app-buttonlift="true"] .app-button-native:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -14px rgba(15, 23, 42, 0.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-app-buttonlift="true"] .app-button-native:hover:not(:disabled) {
+    transform: none;
   }
 }
 

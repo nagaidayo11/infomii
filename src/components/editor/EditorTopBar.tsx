@@ -95,7 +95,7 @@ function AutosaveStatus({
 
 /**
  * Editor top bar — clean, minimal SaaS style.
- * Back | Title | Autosave + Status | Preview | Publish | QR
+ * Back | Title | Autosave | Preview | Publish group | QR
  */
 export function EditorTopBar({
   backHref = "/dashboard",
@@ -130,6 +130,10 @@ export function EditorTopBar({
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
   const [moreOpen, setMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const isPublished = status === "published";
+  const canTogglePublish = !demoMode && typeof onTogglePublished === "function";
+  const showPublishActionButton =
+    !demoMode && (!canTogglePublish || publishActionLabel !== "公開");
 
   useEffect(() => {
     function handleDocClick(e: MouseEvent) {
@@ -231,34 +235,9 @@ export function EditorTopBar({
         </div>
       </div>
 
-      {/* Autosave + draft/published */}
+      {/* Autosave */}
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
-        <span
-          className={
-            status === "published"
-              ? "rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-              : "rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"
-          }
-        >
-          {status === "published" ? "公開済み" : "下書き"}
-        </span>
-        {!demoMode && onTogglePublished && (
-          <button
-            type="button"
-            onClick={onTogglePublished}
-            disabled={publishToggleLoading}
-            className={
-              "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
-              (publishToggleChecked
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                : "border-slate-200 bg-white text-slate-600") +
-              " disabled:opacity-50"
-            }
-          >
-            {publishToggleLoading ? "切替中…" : publishToggleChecked ? "公開ON" : "公開OFF"}
-          </button>
-        )}
       </div>
 
       {/* Page controls — desktop; mobile uses 「その他」メニュー */}
@@ -305,7 +284,7 @@ export function EditorTopBar({
         </div>
       )}
 
-      {/* Actions: Preview, Publish (full flow), QR (saved published page only) */}
+      {/* Actions: Preview, Publish group, QR */}
       <div className="flex shrink-0 items-center gap-1.5 pr-1">
         <button
           type="button"
@@ -327,15 +306,45 @@ export function EditorTopBar({
             )}
           </span>
         </button>
-        <button
-          type="button"
-          onClick={onPublish}
-          disabled={publishing || qrPreparing}
-          title="翻訳チェック・公開前確認のうえ、保存して公開します"
-          className="min-h-10 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:px-2.5 lg:py-1.5"
-        >
-          {publishing ? "公開中…" : publishActionLabel}
-        </button>
+        <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1 sm:flex">
+          <span
+            className={
+              isPublished
+                ? "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                : "rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600"
+            }
+          >
+            {isPublished ? "公開中" : "非公開"}
+          </span>
+          {canTogglePublish ? (
+            <button
+              type="button"
+              onClick={onTogglePublished}
+              disabled={publishToggleLoading || publishing}
+              className={
+                "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
+                (publishToggleChecked
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                  : "border-slate-200 bg-white text-slate-600") +
+                " disabled:opacity-50"
+              }
+              title={publishToggleChecked ? "公開をOFFに切り替える" : "公開をONに切り替える"}
+            >
+              {publishToggleLoading ? "切替中…" : publishToggleChecked ? "公開ON" : "公開OFF"}
+            </button>
+          ) : null}
+          {showPublishActionButton ? (
+            <button
+              type="button"
+              onClick={onPublish}
+              disabled={publishing || qrPreparing}
+              title="翻訳チェック・公開前確認のうえ、保存して公開します"
+              className="rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-semibold !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {publishing ? "処理中…" : publishActionLabel}
+            </button>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={onQr}
@@ -401,6 +410,54 @@ export function EditorTopBar({
                 className="fixed right-3 top-14 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={publishing || qrPreparing}
+                  className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    onPreview();
+                  }}
+                >
+                  {previewPreparing ? "プレビュー準備中…" : "プレビュー"}
+                </button>
+                {!demoMode && (
+                  <>
+                    <div className="border-t border-slate-100" />
+                    <div className="px-4 py-2 text-xs text-slate-500">
+                      {isPublished ? "公開中: ゲストがアクセスできます" : "非公開: ゲストはアクセスできません"}
+                    </div>
+                  </>
+                )}
+                {canTogglePublish && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={publishToggleLoading || publishing}
+                    className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      onTogglePublished?.();
+                    }}
+                  >
+                    {publishToggleLoading ? "公開状態を切替中…" : publishToggleChecked ? "公開をOFFにする" : "公開をONにする"}
+                  </button>
+                )}
+                {showPublishActionButton && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={publishing || qrPreparing}
+                    className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                    onClick={() => {
+                      setMoreOpen(false);
+                      onPublish();
+                    }}
+                  >
+                    {publishing ? "処理中…" : publishActionLabel}
+                  </button>
+                )}
                 {!demoMode && onRenamePageTitle && (
                   <button
                     type="button"

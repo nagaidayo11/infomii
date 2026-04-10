@@ -70,7 +70,7 @@ export function TemplateCard({ template, onUse }: TemplateCardProps) {
         <button
           type="button"
           onClick={() => onUse(template)}
-          className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99]"
+          className="app-button-native w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99]"
         >
           テンプレートを使う
         </button>

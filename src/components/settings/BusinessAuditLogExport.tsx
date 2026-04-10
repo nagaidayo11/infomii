@@ -62,7 +62,7 @@ export function BusinessAuditLogExport() {
         type="button"
         disabled={busy}
         onClick={() => void handleExport()}
-        className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0"
+        className="app-button-native mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0"
       >
         {busy ? "作成中…" : "CSVをダウンロード"}
       </button>

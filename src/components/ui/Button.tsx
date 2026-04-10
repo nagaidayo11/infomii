@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode, ButtonHTMLAttributes } from "react";
+import { useButtonLift } from "@/components/providers/ButtonLiftProvider";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "inverted";
 type ButtonSize = "sm" | "md" | "lg";
@@ -13,7 +16,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const baseClass =
-  "app-interactive inline-flex items-center justify-center rounded-ds font-semibold " +
+  "inline-flex items-center justify-center rounded-ds font-semibold " +
   "transition-[transform,background-color,color,box-shadow,border-color] duration-200 ease-out " +
   "shadow-ds-sm " +
   "active:scale-[0.98] " +
@@ -25,19 +28,42 @@ const sizeClass: Record<ButtonSize, string> = {
   lg: "px-6 py-3.5 text-base",
 };
 
-const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    "border border-ds-primary/20 bg-ds-primary !text-white hover:bg-ds-primary-hover hover:shadow-ds-primary-glow motion-safe:hover:scale-[1.02]",
-  secondary:
-    "border border-ds-border bg-ds-card text-ds-foreground-secondary hover:border-ds-border-strong hover:bg-ds-bg hover:shadow-ds-sm motion-safe:hover:scale-[1.02]",
-  ghost:
-    "text-ds-muted shadow-none hover:bg-ds-bg hover:text-ds-foreground",
-  inverted:
-    "border border-ds-card bg-ds-card text-ds-foreground hover:bg-ds-bg hover:shadow-ds-md motion-safe:hover:scale-[1.02]",
-};
+function buildVariantClass(variant: ButtonVariant, lift: boolean): string {
+  switch (variant) {
+    case "primary":
+      return (
+        "border border-ds-primary/20 bg-ds-primary !text-white hover:bg-ds-primary-hover hover:shadow-ds-primary-glow " +
+        (lift
+          ? "motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-ds-lg "
+          : "motion-safe:hover:scale-[1.02] ")
+      );
+    case "secondary":
+      return (
+        "border border-ds-border bg-ds-card text-ds-foreground-secondary hover:border-ds-border-strong hover:bg-ds-bg hover:shadow-ds-sm " +
+        (lift
+          ? "motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-ds-md "
+          : "motion-safe:hover:scale-[1.02] ")
+      );
+    case "ghost":
+      return (
+        "text-ds-muted shadow-none hover:bg-ds-bg hover:text-ds-foreground " +
+        (lift ? "motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-ds-sm " : "")
+      );
+    case "inverted":
+      return (
+        "border border-ds-card bg-ds-card text-ds-foreground hover:bg-ds-bg hover:shadow-ds-md " +
+        (lift
+          ? "motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-ds-lg "
+          : "motion-safe:hover:scale-[1.02] ")
+      );
+    default:
+      return "";
+  }
+}
 
 /**
  * Product / LP 共通: ds-primary（青）とトークン上の neutrals。
+ * ホバー浮きは ButtonLiftProvider により /lp/*・/editor* ではオフ。
  */
 export function Button({
   children,
@@ -48,12 +74,13 @@ export function Button({
   type = "button",
   ...rest
 }: ButtonProps) {
+  const { liftEnabled } = useButtonLift();
   const combined =
     baseClass +
     " " +
     sizeClass[size] +
     " " +
-    variantClass[variant] +
+    buildVariantClass(variant, liftEnabled) +
     " " +
     className;
 

@@ -187,3 +187,33 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 | 「Supabase設定が未完了です」 | `.env.local` がルートにあり、`NEXT_PUBLIC_` の typo がないか。`npm run dev` をやり直したか。 |
 
 セットアップ後も問題がある場合は、ブラウザの開発者ツールのコンソールやネットワークタブでエラー内容を確認してください。
+
+### 公開件数が実態より多い場合（孤児 informations の応急修正）
+
+`pages` を削除した後に、同じ `slug` の `informations` が `published` のまま残ると、公開件数表示だけ増え続ける場合があります。  
+Supabase SQL Editor で対象施設の `HOTEL_ID` を指定して実行してください。
+
+```sql
+-- 1) pages に存在しない published informations を確認
+select i.id, i.slug, i.status, i.updated_at
+from informations i
+left join pages p
+  on p.hotel_id = i.hotel_id
+ and p.slug = i.slug
+where i.hotel_id = 'HOTEL_ID'
+  and i.status = 'published'
+  and p.id is null
+order by i.updated_at desc;
+
+-- 2) 応急修正（削除ではなく draft 化）
+update informations i
+set status = 'draft', unpublish_at = now()
+where i.hotel_id = 'HOTEL_ID'
+  and i.status = 'published'
+  and not exists (
+    select 1
+    from pages p
+    where p.hotel_id = i.hotel_id
+      and p.slug = i.slug
+  );
+```

@@ -23,6 +23,20 @@ function modeLabel(mode: PageConnectionSet["mode"]): string {
   return mode === "linked" ? "ページ連携" : "単発";
 }
 
+function PagePublishBadge({ page }: { page: PageRow }) {
+  const published = page.publishStatus === "published";
+  return (
+    <span
+      className={
+        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold " +
+        (published ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80")
+      }
+    >
+      {published ? "公開中" : "非公開"}
+    </span>
+  );
+}
+
 export function PagesListView() {
   const router = useRouter();
   const [sets, setSets] = useState<PageConnectionSet[]>([]);
@@ -54,7 +68,11 @@ export function PagesListView() {
           }
         : null
     );
-    setPublishedCount((bootstrap.informations ?? []).filter((i) => i.status === "published").length);
+    setPublishedCount(
+      typeof bootstrap.publishedPageCount === "number"
+        ? bootstrap.publishedPageCount
+        : (bootstrap.informations ?? []).filter((i) => i.status === "published").length
+    );
     setSets(connectionSets);
     setLoading(false);
   }, []);
@@ -150,12 +168,16 @@ export function PagesListView() {
       return { page, x, y };
     });
 
+    const publishedInSet = set.pages.filter((p) => p.publishStatus === "published").length;
+
     return (
       <article key={set.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold text-slate-900">{set.name}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{set.pageCount}ページ</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {set.pageCount}ページ · 公開中 {publishedInSet}/{set.pageCount}
+            </p>
           </div>
           <span
             className={
@@ -196,8 +218,11 @@ export function PagesListView() {
                 style={{ left: `${rootNode.x}%`, top: `${rootNode.y}%` }}
               >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">ルート</div>
-                <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-900">
-                  {root.title || "(無題)"}
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  <div className="line-clamp-1 min-w-0 flex-1 text-xs font-medium text-slate-900">
+                    {root.title || "(無題)"}
+                  </div>
+                  <PagePublishBadge page={root} />
                 </div>
               </button>
             )}
@@ -211,8 +236,11 @@ export function PagesListView() {
                 style={{ left: `${node.x}%`, top: `${node.y}%` }}
               >
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">子ページ</div>
-                <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-800">
-                  {node.page.title || "(無題)"}
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  <div className="line-clamp-1 min-w-0 flex-1 text-xs font-medium text-slate-800">
+                    {node.page.title || "(無題)"}
+                  </div>
+                  <PagePublishBadge page={node.page} />
                 </div>
               </button>
             ))}
@@ -223,8 +251,9 @@ export function PagesListView() {
             {set.pages.map((page) => (
               <div
                 key={`${set.id}-${page.id}-actions`}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1"
               >
+                <PagePublishBadge page={page} />
                 <span className="max-w-[200px] truncate text-xs text-slate-700">{page.title || "(無題)"}</span>
                 <button
                   type="button"
@@ -257,20 +286,25 @@ export function PagesListView() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="app-main-container">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">ページ</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="app-page-title">ページ</h1>
+          <p className="app-page-subtitle">
             単発ページとページ連携をセット単位で管理できます。
           </p>
+          {subscription ? (
+            <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900 shadow-[0_1px_2px_rgba(16,185,129,0.2)]">
+              公開中 {publishedCount}/{subscription.plan === "business" ? "∞" : subscription.maxPublishedPages} 件
+            </p>
+          ) : null}
         </div>
         <div className="flex w-full flex-wrap items-stretch gap-2 sm:w-auto sm:items-center">
           <button
             type="button"
             onClick={handleCreatePage}
             disabled={creating}
-            className="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
+            className="app-button-native inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
               +
@@ -285,7 +319,7 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("nodes")}
           className={
-            "min-h-[44px] rounded-md px-4 py-2 text-xs font-medium transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs font-medium shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
             (viewMode === "nodes" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
           }
         >
@@ -295,7 +329,7 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("table")}
           className={
-            "min-h-[44px] rounded-md px-4 py-2 text-xs font-medium transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs font-medium shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
             (viewMode === "table" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
           }
         >
@@ -359,7 +393,9 @@ export function PagesListView() {
                 <div className="min-w-0">
                   <h2 className="truncate text-sm font-semibold text-slate-900">{set.name}</h2>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {set.pageCount}ページ · ルート {set.pages.find((p) => p.id === set.rootPageId)?.title || ""}
+                    {set.pageCount}ページ · 公開中{" "}
+                    {set.pages.filter((p) => p.publishStatus === "published").length}/{set.pageCount} · ルート{" "}
+                    {set.pages.find((p) => p.id === set.rootPageId)?.title || ""}
                   </p>
                 </div>
                 <span
@@ -377,6 +413,7 @@ export function PagesListView() {
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/70">
                       <th className="px-4 py-2 text-xs font-semibold text-slate-600">ページ名</th>
+                      <th className="px-4 py-2 text-xs font-semibold text-slate-600">公開</th>
                       <th className="px-4 py-2 text-xs font-semibold text-slate-600">役割</th>
                       <th className="px-4 py-2 text-xs font-semibold text-slate-600">操作</th>
                     </tr>
@@ -385,6 +422,9 @@ export function PagesListView() {
                     {set.pages.map((page) => (
                       <tr key={page.id} className="border-b border-slate-50 last:border-0">
                         <td className="px-4 py-3 font-medium text-slate-900">{page.title || "(無題)"}</td>
+                        <td className="px-4 py-3 align-middle">
+                          <PagePublishBadge page={page} />
+                        </td>
                         <td className="px-4 py-3 text-xs text-slate-600">
                           {page.id === set.rootPageId ? (
                             <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-700">ルート</span>
@@ -396,14 +436,14 @@ export function PagesListView() {
                           <div className="flex flex-wrap items-center gap-2">
                             <a
                               href={`/editor/${page.id}`}
-                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                              className="app-button-native inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
                             >
                               編集
                             </a>
                             <button
                               type="button"
                               onClick={() => void handleRenamePage(page)}
-                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              className="app-button-native rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                             >
                               名前変更
                             </button>
@@ -411,7 +451,7 @@ export function PagesListView() {
                               href={buildPublicUrlV(page.slug)}
                               target="_blank"
                               rel="noreferrer"
-                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              className="app-button-native inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                             >
                               公開ページ
                             </a>
@@ -419,7 +459,7 @@ export function PagesListView() {
                               type="button"
                               disabled={deletingPageId === page.id}
                               onClick={() => void handleDeleteCardPage(page)}
-                              className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                              className="app-button-native rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
                             >
                               {deletingPageId === page.id ? "削除中…" : "削除"}
                             </button>

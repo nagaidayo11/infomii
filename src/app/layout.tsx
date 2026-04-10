@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/auth-provider";
+import { ButtonLiftProvider } from "@/components/providers/ButtonLiftProvider";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
@@ -81,7 +82,9 @@ export default function RootLayout({
         <link rel="stylesheet" href={editorGoogleFontsHref} />
       </head>
       <body className="font-sans lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-ds-foreground antialiased [-webkit-tap-highlight-color:transparent]">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ButtonLiftProvider>{children}</ButtonLiftProvider>
+        </AuthProvider>
       </body>
     </html>
   );

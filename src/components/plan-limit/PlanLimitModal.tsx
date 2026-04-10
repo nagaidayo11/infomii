@@ -45,7 +45,7 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
           {!isPro && (
             <Link
               href={pricingHref}
-              className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="app-button-native inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
             >
               Proプラン（¥1,980/月）
             </Link>
@@ -54,8 +54,8 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
             href={pricingHref}
             className={
               isPro
-                ? "rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                : "rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                ? "app-button-native inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                : "app-button-native inline-flex rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"
             }
           >
             Businessプラン（¥4,980/月）
@@ -63,7 +63,7 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="app-button-native rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
             閉じる
           </button>

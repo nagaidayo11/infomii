@@ -103,11 +103,11 @@ export function AnalyticsView() {
 
   return (
     <AnalyticsProGate plan={plan}>
-    <div className="mx-auto max-w-4xl space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="app-main-container space-y-8">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">分析ダッシュボード</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="app-page-title">分析ダッシュボード</h1>
+          <p className="app-page-subtitle">
             お客様の閲覧状況を確認し、ゲストエンゲージメントを把握できます
           </p>
         </div>
@@ -115,7 +115,7 @@ export function AnalyticsView() {
           <button
             type="button"
             onClick={() => triggerAnalyticsCsvDownload(metrics, pageViews)}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 transition hover:bg-indigo-100 sm:min-h-0"
+            className="app-button-native inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-sm transition hover:bg-indigo-100 sm:min-h-0"
           >
             CSVをダウンロード（Business）
           </button>
@@ -130,9 +130,7 @@ export function AnalyticsView() {
 
       {/* Primary metrics: Total page views, Views today, 7d, QR */}
       <section>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          主要指標
-        </h2>
+        <h2 className="app-section-title">主要指標</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <AnalyticsSummaryCard
             label="総ページビュー"
@@ -159,9 +157,7 @@ export function AnalyticsView() {
 
       {/* Views by day — simple bar chart */}
       <section>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          日別ビュー
-        </h2>
+        <h2 className="app-section-title">日別ビュー</h2>
         <p className="mt-1 text-sm text-slate-500">直近30日間の日別閲覧数</p>
         {loading ? (
           <div className="mt-3 h-40 animate-pulse rounded-xl bg-slate-100" />
@@ -206,9 +202,7 @@ export function AnalyticsView() {
       {/* Views by country & language — simple horizontal bar charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            国別ビュー
-          </h2>
+          <h2 className="app-section-title">国別ビュー</h2>
           <p className="mt-1 text-sm text-slate-500">アクセス元の国・地域</p>
           {loading ? (
             <div className="mt-3 h-48 animate-pulse rounded-xl bg-slate-100" />
@@ -231,9 +225,7 @@ export function AnalyticsView() {
         </section>
 
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            言語別ビュー
-          </h2>
+          <h2 className="app-section-title">言語別ビュー</h2>
           <p className="mt-1 text-sm text-slate-500">ブラウザの言語設定</p>
           {loading ? (
             <div className="mt-3 h-48 animate-pulse rounded-xl bg-slate-100" />
@@ -258,9 +250,7 @@ export function AnalyticsView() {
 
       {/* Top pages */}
       <section>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          人気ページ
-        </h2>
+        <h2 className="app-section-title">人気ページ</h2>
         <p className="mt-1 text-sm text-slate-500">閲覧数が多いページ（直近7日）</p>
         {loading ? (
           <div className="mt-3 space-y-2">

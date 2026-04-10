@@ -43,7 +43,7 @@ export function UpgradeCtaBanner({
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/lp/saas#pricing"
-              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0 sm:py-2"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-ds-accent/30 bg-ds-accent px-3 py-2.5 text-center text-sm font-medium !text-white shadow-sm transition hover:bg-ds-accent-strong sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>
@@ -71,7 +71,7 @@ export function UpgradeCtaBanner({
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/lp/saas#pricing"
-              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2.5 text-center text-sm font-medium text-amber-800 transition hover:bg-amber-50 sm:min-h-0 sm:py-2"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-ds-accent/30 bg-ds-accent px-3 py-2.5 text-center text-sm font-medium !text-white shadow-sm transition hover:bg-ds-accent-strong sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>

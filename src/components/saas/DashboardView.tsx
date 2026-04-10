@@ -165,15 +165,15 @@ export function DashboardView() {
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="app-main-container space-y-8">
       <OnboardingTour />
       <FadeIn>
-        <header>
+        <header className="app-page-header">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
             {bootstrap?.hotelName ?? "施設"}
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">ダッシュボード</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="mt-1 app-page-title">ダッシュボード</h1>
+          <p className="app-page-subtitle">
             案内を1つ作って、QRでお客様に届けます
           </p>
         </header>
@@ -190,52 +190,54 @@ export function DashboardView() {
         </ScrollReveal>
       )}
 
-      {/* Primary action: create once, deliver via QR */}
-      <ScrollReveal>
-      <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        {!canEdit && (
-          <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
-            閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
-          </p>
-        )}
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-          {canEdit && (
-            <>
-              <button
-                type="button"
-                onClick={handleCreatePage}
-                disabled={creating}
-                className="w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
-              >
-                {creating ? "作成中…" : "ページを作成"}
-              </button>
-              <Link
-                href="/templates"
-                onClick={() => setNavigating(true)}
-                className="block w-full rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:w-auto sm:py-3"
-              >
-                テンプレートから作成
-              </Link>
-            </>
-          )}
-        </div>
-        {createError && (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            {createError}
-          </div>
-        )}
-        {canEdit && (
-        <div className="mt-6 space-y-6 border-t border-slate-100 pt-6">
-          <GeneratePageFromDescription />
-        </div>
-        )}
-      </section>
-      </ScrollReveal>
+      {/* Primary action: create once, deliver via QR（ロード中は空の白カードになるため非表示） */}
+      {!loading && (
+        <ScrollReveal>
+          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+            {role === "viewer" && (
+              <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
+                閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
+              </p>
+            )}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+              {canEdit && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCreatePage}
+                    disabled={creating}
+                    className="app-button-native w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
+                  >
+                    {creating ? "作成中…" : "ページを作成"}
+                  </button>
+                  <Link
+                    href="/templates"
+                    onClick={() => setNavigating(true)}
+                    className="app-button-native inline-flex w-full min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto sm:min-h-0 sm:py-3"
+                  >
+                    テンプレートから作成
+                  </Link>
+                </>
+              )}
+            </div>
+            {createError && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {createError}
+              </div>
+            )}
+            {canEdit && (
+              <div className="mt-6 space-y-6 border-t border-slate-100 pt-6">
+                <GeneratePageFromDescription />
+              </div>
+            )}
+          </section>
+        </ScrollReveal>
+      )}
 
       {/* Analytics summary */}
       <ScrollReveal>
       <section>
-        <h2 className="text-sm font-semibold text-slate-700">分析サマリー</h2>
+        <h2 className="app-section-title">分析サマリー</h2>
         {loading ? (
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
@@ -274,7 +276,7 @@ export function DashboardView() {
       <ScrollReveal>
       <section>
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">最近編集したページ</h2>
+          <h2 className="app-section-title">最近編集したページ</h2>
           <Link
             href="/dashboard/pages"
             onClick={() => setNavigating(true)}
@@ -344,7 +346,7 @@ export function DashboardView() {
       {!loading && published.length > 0 && (
         <ScrollReveal>
         <section>
-          <h2 className="text-sm font-semibold text-slate-700">公開中のページ</h2>
+          <h2 className="app-section-title">公開中のページ</h2>
           <div className="mt-3 space-y-2">
             {published.slice(0, 5).map((item) => {
               const stat = viewMetrics?.pageStats?.find((p) => p.informationId === item.id);

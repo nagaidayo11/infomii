@@ -89,7 +89,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
           <button
             type="button"
             onClick={onOpenMobileNav}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden"
+            className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden"
             aria-label="メニューを開く"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
@@ -125,7 +125,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
             aria-expanded={menuOpen}
             aria-haspopup="true"
             aria-label="ユーザーメニュー"

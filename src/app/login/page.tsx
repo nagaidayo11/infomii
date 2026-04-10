@@ -155,7 +155,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={submitting || !hasSupabaseEnv}
-              className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "処理中..." : isSignUp ? "登録する" : "ログイン"}
             </button>
@@ -166,7 +166,7 @@ function LoginForm() {
                 setMessage("");
               }}
               disabled={submitting}
-              className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+              className="app-button-native w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             >
               {isSignUp ? "ログイン画面へ" : "新規登録"}
             </button>

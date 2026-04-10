@@ -79,7 +79,7 @@ function AnalyticsUpgradePrompt() {
           <div className="flex flex-col items-stretch justify-center gap-3 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href="/lp/saas#pricing"
-              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 sm:min-h-0"
             >
               料金を見る
             </Link>
@@ -87,11 +87,11 @@ function AnalyticsUpgradePrompt() {
               type="button"
               variant="primary"
               size="md"
-              className="!text-white min-h-[44px] w-full sm:min-h-0 sm:w-auto"
+              className="min-h-[44px] w-full !border-slate-800/30 !bg-slate-900 !text-white hover:!bg-slate-800 hover:!shadow-ds-md sm:min-h-0 sm:w-auto"
               onClick={handleUpgrade}
               disabled={loading}
             >
-              {loading ? "処理中…" : "Proを申し込む（¥1,980/月）"}
+              {loading ? "処理中…" : "プランをアップグレードする"}
             </Button>
           </div>
           <p className="pt-2 text-xs text-slate-500">

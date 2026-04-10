@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createStripeCheckoutSession,
   createStripePortalSession,
@@ -16,6 +16,8 @@ type CheckoutButtonProps = {
   interval?: "monthly" | "yearly";
   variant?: "primary" | "secondary";
   className?: string;
+  adaptiveBusinessCta?: boolean;
+  showUpgradeHint?: boolean;
   children: React.ReactNode;
 };
 
@@ -30,9 +32,38 @@ export function CheckoutButton({
   interval = "monthly",
   variant = "primary",
   className = "",
+  adaptiveBusinessCta = false,
+  showUpgradeHint = false,
   children,
 }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [subscription, setSubscription] = useState<Awaited<ReturnType<typeof getCurrentHotelSubscription>>>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void getCurrentHotelSubscription()
+      .then((sub) => {
+        if (mounted) setSubscription(sub);
+      })
+      .catch(() => {
+        if (mounted) setSubscription(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const isPaidPlan = subscription?.plan === "pro" || subscription?.plan === "business";
+  const isActive = subscription?.status === "active" || subscription?.status === "trialing";
+  const shouldOpenPortal = isPaidPlan && isActive;
+  const buttonLabel = useMemo(() => {
+    if (!adaptiveBusinessCta || plan !== "business") {
+      return children;
+    }
+    if (!shouldOpenPortal) return "Businessを申し込む";
+    if (subscription?.plan === "business") return "請求情報を管理";
+    return "Businessへアップグレード";
+  }, [adaptiveBusinessCta, plan, shouldOpenPortal, subscription?.plan, children]);
 
   const handleClick = async () => {
     if (loading) return;
@@ -40,11 +71,7 @@ export function CheckoutButton({
     try {
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
 
-      const subscription = await getCurrentHotelSubscription().catch(() => null);
-      const isPaidPlan = subscription?.plan === "pro" || subscription?.plan === "business";
-      const isActive = subscription?.status === "active" || subscription?.status === "trialing";
-
-      const url = isPaidPlan && isActive
+      const url = shouldOpenPortal
         ? await createStripePortalSession()
         : await createStripeCheckoutSession({
           plan,
@@ -90,14 +117,19 @@ export function CheckoutButton({
   };
 
   return (
-    <Button
-      type="button"
-      variant={variant}
-      className={className}
-      onClick={handleClick}
-      disabled={loading}
-    >
-      {loading ? "処理中…" : children}
-    </Button>
+    <div className="space-y-1.5">
+      <Button
+        type="button"
+        variant={variant}
+        className={className}
+        onClick={handleClick}
+        disabled={loading}
+      >
+        {loading ? "処理中…" : buttonLabel}
+      </Button>
+      {showUpgradeHint && plan === "business" && subscription?.plan === "pro" && isActive ? (
+        <p className="text-center text-xs text-slate-500">現在の契約から決済ページでBusinessへ変更できます。</p>
+      ) : null}
+    </div>
   );
 }

@@ -733,6 +733,8 @@ export function Editor2({
 
   const ensureTranslationsBeforePublish = useCallback(
     async (opts?: { translationSource?: "pre_publish" | "preview" }): Promise<string | null> => {
+    // Translation flow is Business-only. Free/Pro should skip checks and alerts.
+    if (!translationEnabled) return null;
     const flow = opts?.translationSource === "preview" ? "preview" : "publish";
     const nonTranslatable = new Set([
       "href",
@@ -824,7 +826,7 @@ export function Editor2({
       setLocaleTranslating(false);
     }
   },
-    [cards, translateAllCardsToMultilingual]
+    [cards, translateAllCardsToMultilingual, translationEnabled]
   );
 
   const handlePreviewClick = useCallback(async () => {
