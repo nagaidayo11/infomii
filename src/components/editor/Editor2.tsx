@@ -13,7 +13,13 @@ import { SaveToast } from "./SaveToast";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
-import { BUSINESS_ONLY_CARD_TYPES, createEmptyCard, STARTER_CARD_TYPES, type CardType } from "./types";
+import {
+  BUSINESS_ONLY_CARD_TYPES,
+  CARD_TYPE_LABELS,
+  createEmptyCard,
+  STARTER_CARD_TYPES,
+  type CardType,
+} from "./types";
 import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
 import {
   getInformationBySlug,
@@ -29,6 +35,7 @@ import {
   getCurrentHotelTranslationUsage,
   trackCurrentHotelTranslationRun,
   getCurrentUserHotelRole,
+  trackUpgradeClick,
 } from "@/lib/storage";
 import {
   detectBusinessTypeMisuse,
@@ -87,6 +94,14 @@ export function Editor2({
   const [previewBusy, setPreviewBusy] = useState(false);
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
+  const [businessUpsellState, setBusinessUpsellState] = useState<{
+    open: boolean;
+    lockedType: CardType | null;
+  }>({ open: false, lockedType: null });
+  const openBusinessUpsell = useCallback((type: CardType) => {
+    void trackUpgradeClick("editor");
+    setBusinessUpsellState({ open: true, lockedType: type });
+  }, []);
 
   const cards = useEditor2Store((s) => s.cards);
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
@@ -290,8 +305,12 @@ export function Editor2({
       }
     });
     getCurrentHotelSubscription()
-      .then((sub) => setTranslationEnabled(Boolean(sub && sub.plan === "business")))
-      .catch(() => setTranslationEnabled(false));
+      .then((sub) => {
+        setTranslationEnabled(Boolean(sub && sub.plan === "business"));
+      })
+      .catch(() => {
+        setTranslationEnabled(false);
+      });
     getCurrentUserHotelRole().then(setHotelRole).catch(() => setHotelRole(null));
   }, [isDemoMode, pageId, setPageMeta]);
 
@@ -416,13 +435,17 @@ export function Editor2({
   const handleSlashSelect = useCallback(
     (type: CardType) => {
       if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
-        setDemoLockMessage("このブロックはBusinessプラン限定です。");
+        if (isDemoMode) {
+          setDemoLockMessage("このブロックはBusinessプラン限定です。");
+        } else {
+          openBusinessUpsell(type);
+        }
         return;
       }
       addCard(type);
       setSlashMenuOpen(false);
     },
-    [addCard, translationEnabled]
+    [addCard, translationEnabled, isDemoMode, openBusinessUpsell]
   );
 
   const publishNow = useCallback(async () => {
@@ -526,13 +549,17 @@ export function Editor2({
     (types: CardType[]) => {
       for (const type of types) {
         if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
-          setDemoLockMessage("このセットにはBusinessプラン限定ブロックが含まれています。");
+          if (isDemoMode) {
+            setDemoLockMessage("このセットにはBusinessプラン限定ブロックが含まれています。");
+          } else {
+            openBusinessUpsell(type);
+          }
           continue;
         }
         addCard(type);
       }
     },
-    [addCard, translationEnabled]
+    [addCard, translationEnabled, isDemoMode, openBusinessUpsell]
   );
 
   const handleClearAll = useCallback(() => {
@@ -1032,14 +1059,24 @@ export function Editor2({
             <CardLibrary
               onAddCard={(type) => {
                 if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
-                  setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                  if (isDemoMode) {
+                    setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                  } else {
+                    openBusinessUpsell(type);
+                  }
                   return;
                 }
                 addCard(type);
               }}
               onAddPreset={handleAddPreset}
               canUseBusinessBlocks={translationEnabled}
-              onLockedAddCard={() => setDemoLockMessage("このブロックはBusinessプラン限定です。")}
+              onLockedAddCard={(type) => {
+                if (isDemoMode) {
+                  setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                } else {
+                  openBusinessUpsell(type);
+                }
+              }}
             />
           }
           canvas={
@@ -1088,8 +1125,71 @@ export function Editor2({
           onSelect={handleSlashSelect}
           anchorRef={canvasRef}
           canUseBusinessBlocks={translationEnabled}
-          onLockedAddCard={() => setDemoLockMessage("このブロックはBusinessプラン限定です。")}
+          onLockedAddCard={(type) => {
+            if (isDemoMode) {
+              setDemoLockMessage("このブロックはBusinessプラン限定です。");
+            } else {
+              openBusinessUpsell(type);
+            }
+          }}
         />
+        {businessUpsellState.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="w-full max-w-lg rounded-2xl border border-violet-200 bg-white p-5 shadow-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">この機能はBusiness限定です</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Businessにアップグレードすると、今選んだ機能をすぐ使えます。</p>
+                </div>
+                <span
+                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-violet-300 bg-violet-100 text-violet-700"
+                  aria-hidden
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
+                  </svg>
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-slate-600">
+                  <p className="font-semibold text-slate-700">Free</p>
+                  <p className="mt-1 text-[11px]">1ページ運用</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-slate-600">
+                  <p className="font-semibold text-slate-700">Pro</p>
+                  <p className="mt-1 text-[11px]">10ページ運用</p>
+                </div>
+                <div className="rounded-lg border border-violet-300 bg-violet-50 px-2 py-2 text-violet-800">
+                  <p className="font-semibold">Business</p>
+                  <p className="mt-1 text-[11px]">無制限 + 多言語/運用</p>
+                </div>
+              </div>
+              {businessUpsellState.lockedType ? (
+                <p className="mt-3 text-xs text-slate-500">
+                  選択ブロック: {CARD_TYPE_LABELS[businessUpsellState.lockedType] ?? businessUpsellState.lockedType}
+                </p>
+              ) : null}
+              <div className="mt-5 flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBusinessUpsellState({ open: false, lockedType: null })}
+                  className="min-h-[44px] rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  閉じる
+                </button>
+                <a
+                  href="/lp/saas#pricing"
+                  onClick={() => {
+                    void trackUpgradeClick("editor");
+                  }}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold !text-white no-underline hover:bg-violet-600"
+                >
+                  Businessプランを見る
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         {publishState && (
           <PublishModal
             publicUrl={publishState.publicUrl}

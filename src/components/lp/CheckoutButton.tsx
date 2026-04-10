@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { createStripeCheckoutSession, trackUpgradeClick } from "@/lib/storage";
+import {
+  createStripeCheckoutSession,
+  createStripePortalSession,
+  getCurrentHotelSubscription,
+  trackUpgradeClick,
+} from "@/lib/storage";
 import { Button } from "@/components/ui";
 
 type Plan = "pro" | "business";
@@ -18,7 +23,7 @@ const loginHref = "/login?ref=lp-saas&next=%2Flp%2Fsaas%23pricing";
 
 /**
  * LP料金セクション用の申し込みボタン。
- * ログイン済みならStripe Checkoutへ、未ログインならログインへ遷移。
+ * ログイン済みなら現在プランに応じてCheckout/Portalへ、未ログインならログインへ遷移。
  */
 export function CheckoutButton({
   plan,
@@ -34,12 +39,19 @@ export function CheckoutButton({
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
-      const url = await createStripeCheckoutSession({
-        plan,
-        interval,
-        successPath: "/dashboard?billing=success",
-        cancelPath: "/lp/saas#pricing",
-      });
+
+      const subscription = await getCurrentHotelSubscription().catch(() => null);
+      const isPaidPlan = subscription?.plan === "pro" || subscription?.plan === "business";
+      const isActive = subscription?.status === "active" || subscription?.status === "trialing";
+
+      const url = isPaidPlan && isActive
+        ? await createStripePortalSession()
+        : await createStripeCheckoutSession({
+          plan,
+          interval,
+          successPath: "/dashboard?billing=success",
+          cancelPath: "/lp/saas#pricing",
+        });
       window.location.href = url;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -49,6 +61,27 @@ export function CheckoutButton({
         msg.includes("セッション")
       ) {
         window.location.href = loginHref;
+        return;
+      }
+      if (msg.includes("すでに有料プランです")) {
+        try {
+          const portalUrl = await createStripePortalSession();
+          window.location.href = portalUrl;
+          return;
+        } catch (portalError) {
+          const portalMsg = portalError instanceof Error ? portalError.message : String(portalError);
+          if (portalMsg.includes("ログイン") || portalMsg.includes("認証") || portalMsg.includes("セッション")) {
+            window.location.href = loginHref;
+            return;
+          }
+          setLoading(false);
+          alert(portalMsg || "決済ページの起動に失敗しました");
+          return;
+        }
+      }
+      if (msg.includes("Stripe顧客情報")) {
+        setLoading(false);
+        alert("契約情報の同期中です。しばらくしてからもう一度お試しください。");
         return;
       }
       setLoading(false);

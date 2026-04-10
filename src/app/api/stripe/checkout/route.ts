@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     const { data: sub } = await admin
       .from("subscriptions")
-      .select("plan,status")
+      .select("plan,status,stripe_customer_id")
       .eq("hotel_id", hotelId)
       .maybeSingle();
 
@@ -132,10 +132,35 @@ export async function POST(request: NextRequest) {
       (sub?.plan === "pro" || sub?.plan === "business") &&
       (sub.status === "active" || sub.status === "trialing")
     ) {
-      if (auditHotelId) {
-        await appendBillingLog(auditHotelId, "billing.checkout_blocked", "Checkout中止: すでに有料プランです");
+      const stripeCustomerId = sub.stripe_customer_id;
+      if (stripeCustomerId) {
+        const origin = request.headers.get("origin");
+        const baseUrl = getAppBaseUrl(origin);
+        const portalSession = await stripe.billingPortal.sessions.create({
+          customer: stripeCustomerId,
+          return_url: `${baseUrl}/dashboard`,
+        });
+        if (auditHotelId) {
+          await appendBillingLog(
+            auditHotelId,
+            "billing.checkout_redirected_to_portal",
+            "Checkout要求をPortalへリダイレクトしました",
+            { plan: sub.plan, status: sub.status, portalUrlReady: Boolean(portalSession.url) },
+          );
+        }
+        return NextResponse.json({ url: portalSession.url, mode: "portal" });
       }
-      return NextResponse.json({ message: "すでに有料プランです" }, { status: 400 });
+      if (auditHotelId) {
+        await appendBillingLog(
+          auditHotelId,
+          "billing.checkout_blocked",
+          "Checkout中止: 有料契約中だがStripe顧客情報が未設定",
+        );
+      }
+      return NextResponse.json(
+        { message: "有料契約が確認されました。請求情報の同期後に再度お試しください。" },
+        { status: 400 },
+      );
     }
 
     let requestBody: CheckoutRequestBody = {};

@@ -3779,12 +3779,13 @@ export async function createStripeCheckoutSession(
     }),
   });
 
-  const payload = (await response.json()) as { url?: string; message?: string };
-  if (!response.ok || !payload.url) {
+  const payload = (await response.json()) as { url?: string; portal_url?: string; message?: string };
+  const checkoutUrl = payload.portal_url ?? payload.url;
+  if (!response.ok || !checkoutUrl) {
     throw new Error(payload.message || "Checkout作成に失敗しました");
   }
 
-  return payload.url;
+  return checkoutUrl;
 }
 
 export async function createStripePortalSession(): Promise<string> {

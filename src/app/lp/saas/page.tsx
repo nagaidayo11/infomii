@@ -55,7 +55,7 @@ function PricingComparisonTable() {
         </thead>
         <tbody className="divide-y divide-slate-100 text-slate-800">
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開ページ数</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">作成規模: 公開ページ数</th>
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大10本</td>
             <td className="px-3 py-2.5 text-center tabular-nums">
@@ -89,19 +89,19 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">公開前チェック</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">運用効率: 公開前チェック</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">閲覧分析</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">運用効率: 閲覧分析</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">チーム招待</th>
+            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">チーム統制: チーム招待</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
@@ -113,7 +113,7 @@ function PricingComparisonTable() {
           </tr>
           <tr>
             <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
-              <span className="block">公開時の多言語自動翻訳</span>
+              <span className="block">チーム統制: 公開時の多言語自動翻訳</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 公開操作にあわせて主要言語へまとめて反映
               </span>
@@ -260,7 +260,7 @@ export default function LpSaaSPage() {
         id="pricing"
         kicker="料金"
         title="用途で選べる3プラン"
-        description="最初はFreeで1ページ公開して検証。運用が回り始めて複数ページを扱うならPro。複数担当・複数拠点で多言語運用まで行うならBusiness。"
+        description="Freeはまず試す1ページ運用。Proは1拠点を安定運用。Businessは複数拠点・複数担当で、多言語と運用統制まで一括対応。"
       >
         <ScrollReveal>
           <div
@@ -268,7 +268,7 @@ export default function LpSaaSPage() {
             className="lux-section-card mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100"
           >
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
-            <p className="mt-1 text-sm text-slate-600">詳細は横スクロールで確認できます。</p>
+            <p className="mt-1 text-sm text-slate-600">比較軸: 作成規模 / 運用効率 / チーム統制（詳細は横スクロールで確認）</p>
             <div className="mt-4">
               <PricingComparisonTable />
             </div>
@@ -278,7 +278,7 @@ export default function LpSaaSPage() {
             <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
               <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
-              <p className="mt-1 text-sm text-slate-500">まず1ページで運用開始</p>
+              <p className="mt-1 text-sm text-slate-500">まず試したい方向け（1ページ公開）</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
                 <li>✓ 公開ページ数: 1本</li>
                 <li>✓ 編集プレビュー（PC / スマホ）</li>
@@ -298,10 +298,10 @@ export default function LpSaaSPage() {
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">運用担当1名の実務運用向け</p>
+              <p className="mt-1 text-sm text-slate-500">1拠点を安定運用したい方向け</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
                 <li>✓ 公開ページ数: 最大10本</li>
-                <li>✓ 店舗別・イベント別に分けて運用しやすい</li>
+                <li>✓ 用途別にページを分けて更新しやすい</li>
                 <li>✓ 公開前チェック</li>
                 <li>✓ 閲覧分析</li>
               </ul>
@@ -334,12 +334,12 @@ export default function LpSaaSPage() {
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">複数担当・複数拠点の運用向け</p>
+              <p className="mt-1 text-sm text-slate-500">複数拠点・複数担当のチーム運用向け</p>
               <ul className="mt-6 space-y-2 text-sm text-slate-700">
                 <li>✓ 公開ページ数: <span className="font-semibold text-emerald-700">無制限</span></li>
                 <li>✓ 公開前チェック</li>
                 <li>✓ 閲覧分析</li>
-                <li>✓ チーム招待</li>
+                <li>✓ チーム招待（引き継ぎしやすい）</li>
                 <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（公開時）</li>
                 <li>✓ 拠点ごとの更新漏れを防ぎやすい</li>
                 <li>✓ 担当交代時も引き継ぎしやすい</li>
