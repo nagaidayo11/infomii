@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { getDashboardBootstrapData } from "@/lib/storage";
@@ -49,35 +50,115 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
   const { user, signOut } = useAuth();
   const [workspaceTitle, setWorkspaceTitle] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let mounted = true;
-    getDashboardBootstrapData()
-      .then((d) => {
-        if (mounted) setWorkspaceTitle(d.hotelName || "施設");
-      })
-      .catch(() => {
-        if (mounted) setWorkspaceTitle("施設");
-      });
-    return () => {
-      mounted = false;
-    };
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    let alive = true;
+    getDashboardBootstrapData()
+      .then((d) => {
+        if (alive) setWorkspaceTitle(d.hotelName || "施設");
+      })
+      .catch(() => {
+        if (alive) setWorkspaceTitle("施設");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const updateMenuPosition = () => {
+    const el = triggerRef.current;
+    if (!el || typeof window === "undefined") return;
+    const rect = el.getBoundingClientRect();
+    setMenuPos({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    updateMenuPosition();
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    function handlePointerDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t)) return;
+      setMenuOpen(false);
     }
     if (menuOpen) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
+      document.addEventListener("mousedown", handlePointerDown, true);
+      return () => document.removeEventListener("mousedown", handlePointerDown, true);
     }
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
   const sectionTitle = getSectionTitle(pathname);
   const email = user?.email;
   const initials = getInitials(email);
+
+  const userMenu =
+    mounted && menuOpen ? (
+      createPortal(
+        <div
+          ref={panelRef}
+          className="fixed z-[200] min-w-[200px] max-w-[min(100vw-1rem,20rem)] rounded-xl border border-slate-200 bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
+          role="menu"
+          style={{
+            top: menuPos.top,
+            right: menuPos.right,
+          }}
+        >
+          <div className="border-b border-slate-100 px-3 py-2">
+            <p className="truncate text-xs font-medium text-slate-500">ログイン中</p>
+            <p className="truncate text-sm text-slate-800">{email || "—"}</p>
+          </div>
+          <Link
+            href="/settings"
+            className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            role="menuitem"
+            onClick={() => setMenuOpen(false)}
+          >
+            設定
+          </Link>
+          <button
+            type="button"
+            className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+            role="menuitem"
+            onClick={() => {
+              setMenuOpen(false);
+              void signOut();
+            }}
+          >
+            ログアウト
+          </button>
+        </div>,
+        document.body
+      )
+    ) : null;
 
   return (
     <header
@@ -121,49 +202,31 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
       </div>
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {actions}
-        <div className="relative" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
-            aria-expanded={menuOpen}
-            aria-haspopup="true"
-            aria-label="ユーザーメニュー"
-          >
-            {initials}
-          </button>
-          {menuOpen && (
-            <div
-              className="absolute right-0 top-full z-50 mt-2 min-w-[160px] rounded-xl border border-slate-200 bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-              role="menu"
-            >
-              <div className="border-b border-slate-100 px-3 py-2">
-                <p className="truncate text-xs font-medium text-slate-500">ログイン中</p>
-                <p className="truncate text-sm text-slate-800">{email || "—"}</p>
-              </div>
-              <Link
-                href="/settings"
-              className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                role="menuitem"
-                onClick={() => setMenuOpen(false)}
-              >
-                設定
-              </Link>
-              <button
-                type="button"
-                className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  void signOut();
-                }}
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={() => {
+            setMenuOpen((o) => {
+              const next = !o;
+              if (next && triggerRef.current && typeof window !== "undefined") {
+                const rect = triggerRef.current.getBoundingClientRect();
+                setMenuPos({
+                  top: rect.bottom + 8,
+                  right: window.innerWidth - rect.right,
+                });
+              }
+              return next;
+            });
+          }}
+          className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          aria-expanded={menuOpen}
+          aria-haspopup="true"
+          aria-label="ユーザーメニュー"
+        >
+          {initials}
+        </button>
       </div>
+      {userMenu}
     </header>
   );
 }
