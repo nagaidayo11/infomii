@@ -19,7 +19,6 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
-import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { getBlockStyle, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
@@ -208,7 +207,7 @@ function SortableCardWrapper({
       ) : (
         <div
           className={
-            "relative flex items-stretch gap-0 overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            "relative overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
             (isNewlyAdded ? "card-insert " : "") +
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
@@ -219,8 +218,8 @@ function SortableCardWrapper({
           <button
             type="button"
             className={
-              "flex w-9 shrink-0 cursor-grab items-center justify-center border-r border-slate-200 bg-slate-50 text-slate-400 transition-all duration-200 ease-out group-hover:opacity-100 active:cursor-grabbing " +
-              (isSelected ? "border-blue-200/80 opacity-100" : "opacity-0")
+              "absolute left-0 top-0 z-20 flex h-full w-9 cursor-grab items-center justify-center border-r border-slate-200/80 bg-slate-50/95 text-slate-400 shadow-[1px_0_0_rgba(0,0,0,0.04)] transition-all duration-200 ease-out active:cursor-grabbing " +
+              (isSelected ? "border-blue-200/80 opacity-100" : "opacity-0 group-hover:opacity-100")
             }
             {...attributes}
             {...listeners}
@@ -237,7 +236,7 @@ function SortableCardWrapper({
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card relative min-w-0 flex-1 overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out " +
+              "editor-card relative min-w-0 w-full overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out " +
               ((((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "transparent") ||
               ((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "custom"))
                 ? "editor-inner-surface-overridden "
@@ -383,11 +382,11 @@ export function Canvas({
             >
               <div
                 ref={scrollContainerRef}
-                className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 py-4"
+                className="editor-phone-body-scroll template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-white"
               >
                 <div
-                  className="mx-auto w-full"
-                  style={{ maxWidth: guestCardColumnMaxWidthPx(viewportWidth) }}
+                  className="mx-auto box-border w-full min-w-0 px-4 py-4"
+                  style={{ maxWidth: viewportWidth }}
                 >
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}

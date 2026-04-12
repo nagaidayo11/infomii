@@ -399,6 +399,17 @@ a {
   }
 }
 
+/* Editor phone screen: symmetric gutter so cards + selection ring stay visually centered. */
+.editor-phone-body-scroll {
+  scrollbar-gutter: stable;
+}
+
+@supports (scrollbar-gutter: stable both-edges) {
+  .editor-phone-body-scroll {
+    scrollbar-gutter: stable both-edges;
+  }
+}
+
 .template-preview-scroll::-webkit-scrollbar {
   width: 6px;
 }
