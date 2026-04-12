@@ -38,13 +38,13 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
 
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-semibold text-slate-800"
+          className="font-medium text-slate-800"
           placeholder={labels.titlePlaceholder}
         />
       </p>
@@ -55,7 +55,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           items.map((item, i) => (
             <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
               <p className="text-xs text-slate-500">{item.label ?? ""}</p>
-              <p className="mt-1 text-lg font-semibold text-slate-800">{item.value ?? ""}</p>
+              <p className="mt-1 text-lg font-medium text-slate-800">{item.value ?? ""}</p>
             </div>
           ))
         )}

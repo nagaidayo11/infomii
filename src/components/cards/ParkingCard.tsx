@@ -46,8 +46,8 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
 
   return (
     <Card padding="md" className="">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" placeholder={labels.titlePlaceholder} />
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>

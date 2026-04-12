@@ -11,7 +11,7 @@ export function SocialLinksCard({ card }: { card: EditorCard; isSelected?: boole
   const items = (Array.isArray(c.items) ? c.items : []) as Array<{ label?: string; href?: string; handle?: string }>;
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
       <div className="mt-3 grid grid-cols-1 gap-2">
         {items.map((item, idx) => {
           const href = typeof item.href === "string" ? item.href : "";

@@ -99,7 +99,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   return (
     <Card padding="md" className="">
       <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-900" placeholder={labels.titlePlaceholder} />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (
         <div data-inner-surface className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>

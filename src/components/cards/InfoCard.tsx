@@ -45,7 +45,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         >
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
-        <h3 className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+        <h3 className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder={localeLabels.title} />
         </h3>
       </div>

@@ -61,8 +61,8 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
           )}
         </div>
         <div className="min-w-0">
-          <p className="font-semibold text-slate-900" style={getTitleFontSizeStyle()}>
-            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className="font-semibold text-slate-900" />
+          <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className="font-medium text-slate-800" />
           </p>
           <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
             <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.descriptionPlaceholder} className="text-slate-600" />

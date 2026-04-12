@@ -49,8 +49,8 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
       padding="md"
       className=""
     >
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-semibold text-slate-800" />
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
       </p>
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>

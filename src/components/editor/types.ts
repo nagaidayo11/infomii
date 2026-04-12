@@ -87,6 +87,12 @@ export function getBodyFontSizeStyle(): import("react").CSSProperties {
   return { fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))" };
 }
 
+/**
+ * Default guest card block title typography (Checkout / Notice / Wi‑Fi baseline).
+ * Use with {@link getTitleFontSizeStyle}; merge with `leading-tight` etc. as needed.
+ */
+export const CARD_BLOCK_TITLE_CLASS = "font-medium text-slate-800" as const;
+
 /** Extract block style (boxShadow, backgroundColor, fontSize, innerBorderRadius CSS var, …) for the block wrapper. Block outer radius comes from the canvas frame; inner chips use --editor-inner-border-radius. */
 export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
   const s = card.style;

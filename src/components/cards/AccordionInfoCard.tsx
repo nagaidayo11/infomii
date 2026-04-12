@@ -14,7 +14,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
 
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
       <div className="mt-3 space-y-2">
         {items.map((item, idx) => {
           const open = idx === openIndex;

@@ -30,7 +30,7 @@ export function ScheduledBannerCard({ card }: { card: EditorCard; isSelected?: b
         data-inner-surface
         className={`${editorInnerRadiusClassName} flex flex-col gap-1.5 border border-violet-200 bg-violet-50 px-3 py-2.5`}
       >
-        <p className="font-semibold leading-snug text-violet-900" style={getTitleFontSizeStyle()}>{title}</p>
+        <p className="font-medium leading-snug text-violet-900" style={getTitleFontSizeStyle()}>{title}</p>
         <p className="text-sm leading-snug text-violet-800" style={getBodyFontSizeStyle()}>{message}</p>
       </section>
     </Card>

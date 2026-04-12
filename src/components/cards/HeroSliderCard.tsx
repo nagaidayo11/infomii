@@ -158,7 +158,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   if (!hasSlides || normalizedSlides.length === 0) {
     return (
       <section data-inner-surface className={`${editorInnerRadiusClassName} border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500`}>
-        {title ? <p className="mb-1 font-medium text-slate-700" style={getTitleFontSizeStyle()}>{title}</p> : null}
+        {title ? <p className="mb-1 font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p> : null}
         スライド画像が未設定です。設定パネルから画像を追加してください。
       </section>
     );
@@ -194,7 +194,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
 
   return (
     <section className="app-interactive space-y-3 transition-transform duration-200 ease-out hover:-translate-y-0.5">
-      {title ? <h3 className="px-1 text-base font-semibold text-slate-900" style={getTitleFontSizeStyle()}>{title}</h3> : null}
+      {title ? <h3 className="px-1 text-base font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</h3> : null}
       <div
         data-inner-surface
         className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 ${heightClass}`}

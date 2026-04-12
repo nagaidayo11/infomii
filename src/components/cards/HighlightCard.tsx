@@ -58,7 +58,7 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
       className={`${editorInnerRadiusClassName} border-l-4 px-4 py-4 ${accentClass}`}
       style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
     >
-      <h3 className="font-bold leading-snug" style={getTitleFontSizeStyle()}>
+      <h3 className="font-medium leading-snug" style={getTitleFontSizeStyle()}>
         <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder={labels.titlePlaceholder} />
       </h3>
       <p className="mt-2 whitespace-pre-line leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>

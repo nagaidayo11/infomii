@@ -54,13 +54,13 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-semibold text-slate-800"
+          className="font-medium text-slate-800"
         />
       </p>
       <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>

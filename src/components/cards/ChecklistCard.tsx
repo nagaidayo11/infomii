@@ -38,13 +38,13 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
 
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-semibold text-slate-800"
+          className="font-medium text-slate-800"
           placeholder={labels.titlePlaceholder}
         />
       </p>

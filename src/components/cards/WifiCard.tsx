@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -46,13 +47,14 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
   return (
     <Card padding="none" className="">
       <div data-inner-surface className={`flex flex-col gap-1.5 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2.5`}>
-      <p className="text-sm font-medium leading-snug text-slate-800">
+      {/* Block title: same weight/size as Checkout — use CARD_BLOCK_TITLE_CLASS + getTitleFontSizeStyle */}
+      <p className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="text-sm font-medium text-slate-800"
+          className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`}
           placeholder={labels.title}
         />
       </p>

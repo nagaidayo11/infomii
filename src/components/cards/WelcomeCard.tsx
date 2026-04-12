@@ -48,13 +48,13 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
       padding="lg"
       className=""
     >
-      <p className="font-semibold text-slate-900" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-semibold text-slate-900"
+          className="font-medium text-slate-800"
         />
       </p>
       <div data-inner-surface className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>

@@ -37,7 +37,7 @@ export function NoticeTickerCard({ card }: NoticeTickerCardProps) {
 
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         {title}
       </p>
       <div

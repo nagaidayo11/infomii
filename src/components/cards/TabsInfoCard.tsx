@@ -37,7 +37,7 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
 
   return (
     <Card padding="md">
-      <p className="font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         {title}
       </p>
       {tabs.length > 0 ? (

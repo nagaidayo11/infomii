@@ -37,14 +37,14 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
   return (
     <Card padding="none" hover>
       <section data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-3`}>
-        <h3 className="font-semibold leading-tight text-slate-900" style={getTitleFontSizeStyle()}>
+        <h3 className="font-medium leading-tight text-slate-800" style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => update("title", v)}
             editable={isSelected}
             onActivate={onActivate}
             placeholder="見出しテキスト"
-            className="font-semibold text-slate-900"
+            className="font-medium text-slate-800"
           />
         </h3>
         {dividerEnabled ? <div className={`my-2.5 border-t ${dividerClass}`} style={dividerStyleObj} /> : null}

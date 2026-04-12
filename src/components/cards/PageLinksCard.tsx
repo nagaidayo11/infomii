@@ -64,7 +64,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
 
   return (
     <Card padding="md">
-      <h3 className="mb-2.5 font-semibold text-slate-800" style={getTitleFontSizeStyle()}>
+      <h3 className="mb-2.5 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
