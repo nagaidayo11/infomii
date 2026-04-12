@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 type PublicPageShellProps = {
@@ -32,7 +33,10 @@ function PageContent({
   return (
     <>
       <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-3 backdrop-blur-sm safe-area-inset-top">
-        <div className="mx-auto flex max-w-[420px] flex-col gap-2.5">
+        <div
+          className="mx-auto flex w-full flex-col gap-2.5"
+          style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
+        >
           {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
           {(title.trim() || headerActions) && (
             <div className="flex flex-col gap-1.5">
@@ -46,16 +50,23 @@ function PageContent({
           )}
         </div>
       </header>
-      <main className="flex-1 px-4 pb-6 pt-4">
-        <div className="app-stagger mx-auto max-w-[420px] space-y-3">{children}</div>
+      <main className="min-w-0 flex-1 px-4 pb-6 pt-4">
+        <div
+          className="app-stagger mx-auto w-full space-y-3"
+          style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
+        >
+          {children}
+        </div>
       </main>
       {contactActions ? (
         <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
-          <div className="mx-auto max-w-[420px]">{contactActions}</div>
+          <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
+            {contactActions}
+          </div>
         </footer>
       ) : (
         <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
-          <div className="mx-auto max-w-[420px]">
+          <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
             <p className="text-sm leading-relaxed text-slate-600">
               ご不明な点はスタッフまでお声がけください。
             </p>
@@ -92,12 +103,17 @@ export function PublicPageShell({
         <div className="flex h-full min-h-0 flex-col overflow-hidden">
           {backButton ? (
             <div className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2 pt-2.5 backdrop-blur-sm">
-              <div className="mx-auto max-w-[420px]">{backButton}</div>
+              <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
+                {backButton}
+              </div>
             </div>
           ) : null}
           {(title.trim() || headerActions) && (
             <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2.5 pt-3 backdrop-blur-sm">
-              <div className="mx-auto flex max-w-[420px] flex-col gap-1.5">
+              <div
+                className="mx-auto flex w-full flex-col gap-1.5"
+                style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
+              >
                 {title.trim() ? (
                   <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900">
                     {title}
@@ -107,8 +123,13 @@ export function PublicPageShell({
               </div>
             </header>
           )}
-          <main className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 pb-6 pt-4">
-            <div className="app-stagger mx-auto max-w-[420px] space-y-3 overflow-hidden">{children}</div>
+          <main className="template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 pb-6 pt-4">
+            <div
+              className="app-stagger mx-auto w-full space-y-3 overflow-hidden"
+              style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
+            >
+              {children}
+            </div>
           </main>
           {contactActions ? <footer className="shrink-0 bg-white/80 px-4 py-5 backdrop-blur-sm">{contactActions}</footer> : null}
         </div>
@@ -131,7 +152,7 @@ export function PublicPageShell({
             className="flex min-h-[480px] w-full flex-1 flex-col overflow-hidden rounded-b-[1.25rem] border-0 border-t-0 bg-white md:h-[84vh] md:max-h-[84vh] md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
           >
             <div
-              className="template-preview-scroll flex h-full min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
+              className="template-preview-scroll flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y", background: pageBackgroundStyle }}
             >
               <PageContent

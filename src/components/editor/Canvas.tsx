@@ -19,6 +19,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { getBlockStyle, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
@@ -47,7 +48,7 @@ function MobileCanvasFrame({
       >
         <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
         <div
-          className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
+          className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
           style={{ width }}
         >
           {children}
@@ -373,18 +374,21 @@ export function Canvas({
               </button>
             ))}
           </div>
-          <div className="flex flex-1 justify-center overflow-y-auto p-6">
+          <div className="flex min-w-0 flex-1 justify-center overflow-y-auto p-6 [scrollbar-gutter:stable]">
           <MobileCanvasFrame width={viewportWidth}>
             <div
-              className="flex min-h-[480px] flex-1 flex-col bg-white"
+              className="flex min-h-[480px] min-w-0 flex-1 flex-col bg-white"
               data-mobile-preview
               onClick={(e) => e.stopPropagation()}
             >
               <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto bg-white px-4 py-4"
+                className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-white px-4 py-4"
               >
-                <div className="mx-auto" style={{ maxWidth: viewportWidth }}>
+                <div
+                  className="mx-auto w-full"
+                  style={{ maxWidth: guestCardColumnMaxWidthPx(viewportWidth) }}
+                >
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}

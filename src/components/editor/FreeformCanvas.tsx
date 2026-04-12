@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { getBlockStyle, type CardType, type EditorCard } from "./types";
 
 const FIXED_VIEWPORT_WIDTH = 375;
@@ -26,7 +27,7 @@ function MobileCanvasFrame({
       >
         <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
         <div
-          className="flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
+          className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
           style={{ width }}
         >
           <div
@@ -250,7 +251,7 @@ export function FreeformCanvas({
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const viewportWidth = FIXED_VIEWPORT_WIDTH;
-  const contentWidth = viewportWidth - CANVAS_PADDING_X * 2;
+  const contentWidth = guestCardColumnMaxWidthPx(viewportWidth);
   const [dragState, setDragState] = useState<{
     id: string;
     x: number;
@@ -534,7 +535,7 @@ export function FreeformCanvas({
       onClick={() => onSelectCard(null)}
     >
       <div
-        className="flex flex-1 justify-center overflow-auto p-6"
+        className="flex min-w-0 flex-1 justify-center overflow-auto p-6 [scrollbar-gutter:stable]"
         style={{
           background: "#eef0f3",
         }}

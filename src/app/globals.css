@@ -382,6 +382,8 @@ a {
 }
 
 .template-preview-scroll {
+  /* Avoid content jumping horizontally when scrollbar appears (editor + guest preview). */
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
 }
