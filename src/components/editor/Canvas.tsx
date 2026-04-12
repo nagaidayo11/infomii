@@ -198,11 +198,14 @@ function SortableCardWrapper({
     >
       {isDragging ? (
         <div
-          className="editor-card-drop-placeholder flex min-h-[72px] items-stretch gap-0 overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          className="editor-card-drop-placeholder relative min-h-[72px] w-full overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
           aria-hidden
         >
-          <div className="w-9 shrink-0 border-r border-blue-200/50 bg-blue-100/60" />
-          <div className="min-w-0 flex-1 bg-blue-50/20" />
+          <div
+            className="pointer-events-none absolute left-0 top-0 z-10 h-full w-9 border-r border-blue-200/50 bg-blue-100/60"
+            aria-hidden
+          />
+          <div className="min-h-[72px] w-full bg-blue-50/20" />
         </div>
       ) : (
         <div
@@ -451,15 +454,18 @@ export function Canvas({
       >
         {activeCard ? (
           <div
-            className="editor-card-dragging flex items-stretch gap-0 overflow-hidden rounded-2xl border-2 border-slate-200/90 bg-white"
+            className="editor-card-dragging relative overflow-hidden rounded-2xl border-2 border-slate-200/90 bg-white"
             style={{
               boxShadow:
                 "0 24px 56px -12px rgba(0,0,0,0.24), 0 12px 28px -8px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.06)",
               transform: "translateY(-14px) scale(1.02)",
             }}
           >
-            <div className="w-9 shrink-0 border-r border-slate-200 bg-slate-100" aria-hidden />
-            <div className="min-w-0 flex-1 border-0 bg-white">
+            <div
+              className="pointer-events-none absolute left-0 top-0 z-10 h-full w-9 border-r border-slate-200/80 bg-slate-50/95 shadow-[1px_0_0_rgba(0,0,0,0.04)]"
+              aria-hidden
+            />
+            <div className="relative min-w-0 w-full border-0 bg-white">
               <CardRenderer card={activeCard} isSelected={false} />
             </div>
           </div>
