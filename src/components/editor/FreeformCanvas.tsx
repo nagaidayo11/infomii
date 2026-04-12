@@ -535,7 +535,7 @@ export function FreeformCanvas({
       onClick={() => onSelectCard(null)}
     >
       <div
-        className="flex min-w-0 flex-1 justify-center overflow-auto p-6 [scrollbar-gutter:stable]"
+        className="editor-canvas-outer-scroll flex min-w-0 flex-1 justify-center overflow-auto p-6"
         style={{
           background: "#eef0f3",
         }}

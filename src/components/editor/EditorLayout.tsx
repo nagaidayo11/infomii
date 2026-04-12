@@ -70,7 +70,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           data-editor-column="library"
           className={
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm " +
-            "lg:static lg:z-auto lg:h-full lg:w-[280px] lg:border-r " +
+            "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
             (sheet === "library"
               ? "fixed inset-x-0 bottom-0 top-12 z-50 max-h-[min(90dvh,calc(100dvh-3rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
@@ -97,7 +97,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           data-editor-column="settings"
           className={
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm " +
-            "lg:static lg:z-auto lg:h-full lg:w-[320px] lg:border-l " +
+            "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-l " +
             (sheet === "settings"
               ? "fixed inset-x-0 bottom-0 top-12 z-50 max-h-[min(90dvh,calc(100dvh-3rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")

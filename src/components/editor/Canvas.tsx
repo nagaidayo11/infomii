@@ -374,7 +374,7 @@ export function Canvas({
               </button>
             ))}
           </div>
-          <div className="flex min-w-0 flex-1 justify-center overflow-y-auto p-6 [scrollbar-gutter:stable]">
+          <div className="editor-canvas-outer-scroll flex w-full min-w-0 flex-1 justify-center overflow-y-auto p-6">
           <MobileCanvasFrame width={viewportWidth}>
             <div
               className="flex min-h-[480px] min-w-0 flex-1 flex-col bg-white"

@@ -388,6 +388,17 @@ a {
   scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
 }
 
+/* Editor: outer canvas column — balance scrollbar gutter so mockup doesn’t look shifted sideways. */
+.editor-canvas-outer-scroll {
+  scrollbar-gutter: stable;
+}
+
+@supports (scrollbar-gutter: stable both-edges) {
+  .editor-canvas-outer-scroll {
+    scrollbar-gutter: stable both-edges;
+  }
+}
+
 .template-preview-scroll::-webkit-scrollbar {
   width: 6px;
 }
