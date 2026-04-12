@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
@@ -42,6 +42,28 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
+/** Warm decode cache so slide changes do not flash undecoded frames on mobile Safari. */
+function decodeImageUrl(src: string): Promise<void> {
+  if (typeof window === "undefined" || !src) return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = document.createElement("img");
+    const done = () => resolve();
+    img.onload = () => {
+      if (typeof img.decode === "function") {
+        img.decode().then(done).catch(done);
+      } else {
+        done();
+      }
+    };
+    img.onerror = done;
+    img.src = src;
+  });
+}
+
+function unoptimizedRemote(src: string): boolean {
+  return src.startsWith("http");
+}
+
 export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const content = (card.content ?? {}) as Record<string, unknown>;
   const title = typeof content.title === "string" ? content.title : "";
@@ -66,6 +88,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const [animationSeed, setAnimationSeed] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [suppressTapUntil, setSuppressTapUntil] = useState(0);
+  const indexRef = useRef(0);
 
   const normalizedSlides = useMemo(
     () =>
@@ -85,18 +108,39 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   );
 
   useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+
+  useEffect(() => {
+    if (normalizedSlides.length <= 1) return;
+    const n = normalizedSlides.length;
+    const next = (index + 1) % n;
+    const prev = (index - 1 + n) % n;
+    void decodeImageUrl(normalizedSlides[next]!.src);
+    void decodeImageUrl(normalizedSlides[prev]!.src);
+  }, [normalizedSlides, index]);
+
+  useEffect(() => {
     if (!autoplay || reducedMotion || normalizedSlides.length <= 1) return;
     const timer = window.setInterval(() => {
-      const next = (index + 1) % normalizedSlides.length;
-      setDirection(1);
-      if (transitionEnabled && !reducedMotion) {
-        setPrevIndex(index);
-        setAnimationSeed((prev) => prev + 1);
-      }
-      setIndex(next);
+      void (async () => {
+        const prev = indexRef.current;
+        const n = normalizedSlides.length;
+        const next = (prev + 1) % n;
+        const nextSlide = normalizedSlides[next];
+        if (nextSlide?.src) await decodeImageUrl(nextSlide.src);
+        setDirection(1);
+        if (transitionEnabled && !reducedMotion) {
+          setPrevIndex(prev);
+          setAnimationSeed((s) => s + 1);
+        } else {
+          setPrevIndex(null);
+        }
+        setIndex(next);
+      })();
     }, intervalSec * 1000);
     return () => window.clearInterval(timer);
-  }, [autoplay, reducedMotion, normalizedSlides.length, intervalSec, index, transitionEnabled]);
+  }, [autoplay, reducedMotion, normalizedSlides, intervalSec, transitionEnabled]);
 
   useEffect(() => {
     if (prevIndex == null) return;
@@ -128,8 +172,10 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const shouldAnimate = transitionEnabled && !reducedMotion;
   const isTransitioning = shouldAnimate && previous != null;
 
-  const moveTo = (nextIndex: number, dir: 1 | -1) => {
+  const moveTo = async (nextIndex: number, dir: 1 | -1) => {
     if (nextIndex === currentIndex) return;
+    const target = normalizedSlides[nextIndex];
+    if (target?.src) await decodeImageUrl(target.src);
     setDirection(dir);
     if (shouldAnimate) {
       setPrevIndex(currentIndex);
@@ -151,7 +197,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       {title ? <h3 className="px-1 text-base font-semibold text-slate-900" style={getTitleFontSizeStyle()}>{title}</h3> : null}
       <div
         data-inner-surface
-        className={`relative w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 ${heightClass}`}
+        className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 ${heightClass}`}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (!canMove || touchStartX == null) return;
@@ -159,18 +205,19 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
           const delta = endX - touchStartX;
           if (Math.abs(delta) < 40) return;
           setSuppressTapUntil(Date.now() + 350);
-          if (delta < 0) moveTo((currentIndex + 1) % normalizedSlides.length, 1);
-          else moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1);
+          if (delta < 0) void moveTo((currentIndex + 1) % normalizedSlides.length, 1);
+          else void moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1);
         }}
       >
-        {isTransitioning ? (
-          <>
+        {isTransitioning && previous ? (
+          <div className="pointer-events-none absolute inset-0 z-[1] will-change-[opacity,transform] [backface-visibility:hidden]">
             <Image
-              key={`prev-${prevIndex}-${animationSeed}`}
+              key={`hero-out-${prevIndex}-${animationSeed}`}
               src={previous.src}
               alt={previous.alt}
               fill
               sizes="(max-width: 640px) 100vw, 640px"
+              unoptimized={unoptimizedRemote(previous.src)}
               className="object-cover"
               style={{
                 animation: `${
@@ -182,27 +229,26 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
                 } ${transitionDurationMs}ms ease-out both`,
               }}
             />
-            <Image
-              key={`current-${currentIndex}-${animationSeed}`}
-              src={current.src}
-              alt={current.alt}
-              fill
-              sizes="(max-width: 640px) 100vw, 640px"
-              className="object-cover"
-              style={{ animation: `${animationName} ${transitionDurationMs}ms ease-out both` }}
-            />
-          </>
-        ) : (
+          </div>
+        ) : null}
+        <div
+          className={`pointer-events-none absolute inset-0 [backface-visibility:hidden] ${isTransitioning ? "z-[2] will-change-[opacity,transform]" : "z-[1]"}`}
+        >
           <Image
-            key={`current-static-${currentIndex}`}
+            key={`hero-in-${currentIndex}`}
             src={current.src}
             alt={current.alt}
             fill
             sizes="(max-width: 640px) 100vw, 640px"
+            unoptimized={unoptimizedRemote(current.src)}
             className="object-cover"
-            style={undefined}
+            style={
+              isTransitioning
+                ? { animation: `${animationName} ${transitionDurationMs}ms ease-out both` }
+                : undefined
+            }
           />
-        )}
+        </div>
         {currentLink ? (
           <a
             href={currentLink.href}
@@ -228,7 +274,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
             <button
               type="button"
               aria-label="前のスライド"
-              onClick={() => moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1)}
+              onClick={() => void moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1)}
               className={`absolute left-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-white hover:bg-black/60`}
             >
               ‹
@@ -236,7 +282,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
             <button
               type="button"
               aria-label="次のスライド"
-              onClick={() => moveTo((currentIndex + 1) % normalizedSlides.length, 1)}
+              onClick={() => void moveTo((currentIndex + 1) % normalizedSlides.length, 1)}
               className={`absolute right-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-white hover:bg-black/60`}
             >
               ›
@@ -249,7 +295,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
                   aria-label={`スライド ${i + 1}`}
                   aria-current={i === currentIndex ? "true" : "false"}
                   className={`h-2.5 w-2.5 ${editorInnerRadiusClassName} ${i === currentIndex ? "bg-white" : "bg-white/55"}`}
-                  onClick={() => moveTo(i, i > currentIndex ? 1 : -1)}
+                  onClick={() => void moveTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}
             </div>

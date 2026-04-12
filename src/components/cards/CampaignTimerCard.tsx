@@ -82,7 +82,7 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold tracking-wide text-amber-800" style={getBodyFontSizeStyle()}>{statusLabel}</p>
           {(state === "before" || state === "during") && (
-            <div className="flex items-center gap-1.5 font-mono text-sm font-semibold text-amber-900" style={getBodyFontSizeStyle()}>
+            <div className="flex items-center gap-1.5 font-mono text-sm font-semibold tabular-nums text-amber-900" style={getBodyFontSizeStyle()}>
               <span>{days}d</span>
               <span>{formatPart(hours)}h</span>
               <span>{formatPart(minutes)}m</span>
