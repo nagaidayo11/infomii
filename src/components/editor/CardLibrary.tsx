@@ -771,8 +771,8 @@ export function CardLibrary({
         <div className="space-y-3">
           {onAddPreset && (
             <section aria-label="おすすめセット" className="space-y-2">
-              <h3>
-                <span className="ui-kicker-label">おすすめセット</span>
+              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                おすすめセット
               </h3>
               <div className="space-y-1">
                 {QUICK_PRESETS.map((preset) => (
@@ -781,25 +781,22 @@ export function CardLibrary({
                     type="button"
                     onClick={() => handleAddPreset(preset)}
                     className={
-                      "w-full rounded-xl border px-2.5 py-2 text-left transition-all " +
+                      "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-all " +
                       (canAddPreset(preset.types)
-                        ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        ? "hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
                         : "border-violet-300 bg-violet-50/70")
                     }
                     aria-label={`${preset.label}を追加`}
                     title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
                   >
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
                       {preset.label}
                       {preset.businessOnly ? (
                         <BusinessBadge />
                       ) : null}
                     </span>
-                    <span className="mt-1 inline-flex">
-                      <span className="ui-kicker-label">Quick Set</span>
-                    </span>
-                    <span className="mt-1 block text-xs text-slate-600">{preset.purpose}</span>
-                    <span className="mt-0.5 block text-[11px] text-slate-500">{preset.description}</span>
+                    <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
+                    <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
                   </button>
                 ))}
               </div>
@@ -809,10 +806,10 @@ export function CardLibrary({
             <section
               key={section.id}
               aria-label={section.title}
-              className="relative isolate space-y-2"
+              className="relative isolate space-y-1 pt-3 first:pt-0"
             >
-              <h3>
-                <span className="ui-kicker-label">{section.title}</span>
+              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                {section.title}
               </h3>
               <div className="relative space-y-1">
                 {section.items.map((item) => {
