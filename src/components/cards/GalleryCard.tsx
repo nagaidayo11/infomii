@@ -58,13 +58,15 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
         {items.slice(0, 12).map((item, i) => (
           <div key={i} data-inner-surface className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
             {item?.src ? (
-              <Image
-                src={item.src}
-                alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
-                fill
-                className="object-cover"
-                unoptimized={item.src.startsWith("http")}
-              />
+              <div className="absolute inset-0">
+                <Image
+                  src={item.src}
+                  alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
+                  fill
+                  className="object-cover object-center"
+                  unoptimized={item.src.startsWith("http")}
+                />
+              </div>
             ) : (
               <div className="flex h-full items-center justify-center text-slate-400" style={getBodyFontSizeStyle()}>
                 {labels.emptyImage}

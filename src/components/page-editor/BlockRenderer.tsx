@@ -75,13 +75,15 @@ export function BlockRenderer({
           >
             {block.src ? (
               <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-slate-100">
-                <Image
-                  src={block.src}
-                  alt={block.alt ?? ""}
-                  fill
-                  className="object-cover"
-                  unoptimized={block.src.startsWith("http")}
-                />
+                <div className="absolute inset-0">
+                  <Image
+                    src={block.src}
+                    alt={block.alt ?? ""}
+                    fill
+                    className="object-cover object-center"
+                    unoptimized={block.src.startsWith("http")}
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex aspect-video items-center justify-center rounded-lg bg-slate-100 text-sm text-slate-500">
@@ -103,13 +105,15 @@ export function BlockRenderer({
       if (!block.src) return null;
       return (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100">
-          <Image
-            src={block.src}
-            alt={block.alt ?? ""}
-            fill
-            className="object-cover"
-            unoptimized={block.src.startsWith("http")}
-          />
+          <div className="absolute inset-0">
+            <Image
+              src={block.src}
+              alt={block.alt ?? ""}
+              fill
+              className="object-cover object-center"
+              unoptimized={block.src.startsWith("http")}
+            />
+          </div>
         </div>
       );
 
@@ -290,13 +294,15 @@ export function BlockRenderer({
                 key={item.id}
                 className="relative aspect-square overflow-hidden rounded-lg bg-slate-100"
               >
-                <Image
-                  src={item.src}
-                  alt={item.caption ?? ""}
-                  fill
-                  className="object-cover"
-                  unoptimized={item.src.startsWith("http")}
-                />
+                <div className="absolute inset-0">
+                  <Image
+                    src={item.src}
+                    alt={item.caption ?? ""}
+                    fill
+                    className="object-cover object-center"
+                    unoptimized={item.src.startsWith("http")}
+                  />
+                </div>
               </div>
             ))}
         </div>

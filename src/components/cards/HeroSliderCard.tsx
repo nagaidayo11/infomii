@@ -211,43 +211,47 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       >
         {isTransitioning && previous ? (
           <div className="pointer-events-none absolute inset-0 z-[1] will-change-[opacity,transform] [backface-visibility:hidden]">
-            <Image
-              key={`hero-out-${prevIndex}-${animationSeed}`}
-              src={previous.src}
-              alt={previous.alt}
-              fill
-              sizes="(max-width: 640px) 100vw, 640px"
-              unoptimized={unoptimizedRemote(previous.src)}
-              className="object-cover"
-              style={{
-                animation: `${
-                  transitionType === "slide"
-                    ? slideOutAnimationName
-                    : transitionType === "zoom"
-                      ? zoomOutAnimationName
-                      : fadeOutAnimationName
-                } ${transitionDurationMs}ms ease-out both`,
-              }}
-            />
+            <div className="relative h-full w-full">
+              <Image
+                key={`hero-out-${prevIndex}-${animationSeed}`}
+                src={previous.src}
+                alt={previous.alt}
+                fill
+                sizes="(max-width: 640px) 100vw, 640px"
+                unoptimized={unoptimizedRemote(previous.src)}
+                className="object-cover object-center"
+                style={{
+                  animation: `${
+                    transitionType === "slide"
+                      ? slideOutAnimationName
+                      : transitionType === "zoom"
+                        ? zoomOutAnimationName
+                        : fadeOutAnimationName
+                  } ${transitionDurationMs}ms ease-out both`,
+                }}
+              />
+            </div>
           </div>
         ) : null}
         <div
           className={`pointer-events-none absolute inset-0 [backface-visibility:hidden] ${isTransitioning ? "z-[2] will-change-[opacity,transform]" : "z-[1]"}`}
         >
-          <Image
-            key={`hero-in-${currentIndex}`}
-            src={current.src}
-            alt={current.alt}
-            fill
-            sizes="(max-width: 640px) 100vw, 640px"
-            unoptimized={unoptimizedRemote(current.src)}
-            className="object-cover"
-            style={
-              isTransitioning
-                ? { animation: `${animationName} ${transitionDurationMs}ms ease-out both` }
-                : undefined
-            }
-          />
+          <div className="relative h-full w-full">
+            <Image
+              key={`hero-in-${currentIndex}`}
+              src={current.src}
+              alt={current.alt}
+              fill
+              sizes="(max-width: 640px) 100vw, 640px"
+              unoptimized={unoptimizedRemote(current.src)}
+              className="object-cover object-center"
+              style={
+                isTransitioning
+                  ? { animation: `${animationName} ${transitionDurationMs}ms ease-out both` }
+                  : undefined
+              }
+            />
+          </div>
         </div>
         {currentLink ? (
           <a

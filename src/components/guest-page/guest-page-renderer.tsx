@@ -52,15 +52,17 @@ export function GuestPageRenderer({
                 heroUsed = true;
                 return (
                   <section key={block.id} className="w-full">
-                    <div className="relative aspect-[4/3] w-full bg-stone-200">
-                      <Image
-                        src={block.src}
-                        alt={block.alt ?? ""}
-                        fill
-                        className="object-cover"
-                        priority
-                        unoptimized={block.src.startsWith("http")}
-                      />
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-stone-200">
+                      <div className="absolute inset-0">
+                        <Image
+                          src={block.src}
+                          alt={block.alt ?? ""}
+                          fill
+                          className="object-cover object-center"
+                          priority
+                          unoptimized={block.src.startsWith("http")}
+                        />
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                     </div>
                   </section>
@@ -69,13 +71,15 @@ export function GuestPageRenderer({
               return (
                 <section key={block.id} className="px-4 pt-6">
                   <div className="relative aspect-video overflow-hidden rounded-2xl bg-stone-200 shadow-sm">
-                    <Image
-                      src={block.src}
-                      alt={block.alt ?? ""}
-                      fill
-                      className="object-cover"
-                      unoptimized={block.src.startsWith("http")}
-                    />
+                    <div className="absolute inset-0">
+                      <Image
+                        src={block.src}
+                        alt={block.alt ?? ""}
+                        fill
+                        className="object-cover object-center"
+                        unoptimized={block.src.startsWith("http")}
+                      />
+                    </div>
                   </div>
                 </section>
               );
@@ -214,13 +218,15 @@ export function GuestPageRenderer({
                         key={item.id}
                         className="relative aspect-square overflow-hidden rounded-xl bg-stone-200"
                       >
-                        <Image
-                          src={item.src}
-                          alt={item.caption ?? ""}
-                          fill
-                          className="object-cover"
-                          unoptimized={item.src.startsWith("http")}
-                        />
+                        <div className="absolute inset-0">
+                          <Image
+                            src={item.src}
+                            alt={item.caption ?? ""}
+                            fill
+                            className="object-cover object-center"
+                            unoptimized={item.src.startsWith("http")}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

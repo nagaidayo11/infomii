@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { trackOnboardingWizardEvent } from "@/lib/storage";
@@ -9,36 +9,32 @@ const STORAGE_KEY = "infomii_onboarding_tour_completed";
 
 const STEPS = [
   {
-    title: "ようこそ Infomii へ",
-    body: "案内ページを1つ作って、QRでお客様に届けます。ダッシュボードからページ作成やテンプレート選択ができます。",
+    title: "ようこそ、Infomii へ",
+    body: "まずは案内ページを1つ作成し、QRでお客様へ届けましょう。ダッシュボードからすぐに始められます。",
   },
   {
-    title: "ページの作り方",
-    body: "「ページを作成」で白紙から、または「テンプレートから作成」で館内案内・WiFi・朝食などの型から始められます。",
+    title: "作成方法を選ぶ",
+    body: "白紙で始めるか、テンプレートから始めるかを選べます。館内案内・WiFi・朝食などの型をすぐに利用できます。",
   },
   {
-    title: "最初はテンプレートがおすすめ",
-    body: "ホテル・旅館・民泊など業態別のテンプレートがあります。型を選んで文言を編集するだけで、すぐに公開できます。",
+    title: "最初はテンプレートがおすすめです",
+    body: "業態別テンプレートを選び、文言を編集するだけで公開準備が整います。最短で体験を作っていきましょう。",
   },
 ];
 
 export function OnboardingTour() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem(STORAGE_KEY);
+  });
   const [step, setStep] = useState(0);
-  const [mounted, setMounted] = useState(false);
+  const startedTrackedRef = useRef(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const completed = localStorage.getItem(STORAGE_KEY);
-    if (!completed) {
-      setVisible(true);
-      trackOnboardingWizardEvent("wizard_started", { step: 0 });
-    }
-  }, []);
+    if (!visible || startedTrackedRef.current) return;
+    trackOnboardingWizardEvent("wizard_started", { step: 0 });
+    startedTrackedRef.current = true;
+  }, [visible]);
 
   useEffect(() => {
     if (!visible || typeof document === "undefined") return;
@@ -70,7 +66,16 @@ export function OnboardingTour() {
     setVisible(false);
   };
 
-  if (!visible || !mounted || typeof document === "undefined") return null;
+  useEffect(() => {
+    if (!visible || typeof window === "undefined") return;
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleSkip();
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [visible]);
+
+  if (!visible || typeof document === "undefined") return null;
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -81,16 +86,18 @@ export function OnboardingTour() {
       role="presentation"
     >
       <div
-        className="relative my-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        className="onboarding-surface relative my-auto max-w-md p-6"
         role="dialog"
         aria-labelledby="onboarding-title"
         aria-describedby="onboarding-desc"
         aria-modal="true"
       >
+        <div aria-hidden className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-blue-200/35 blur-2xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-indigo-200/30 blur-2xl" />
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          className="ui-focus-ring absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           aria-label="スキップ"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +105,10 @@ export function OnboardingTour() {
           </svg>
         </button>
 
-        <div className="pr-8">
+        <div key={step} className="onboarding-step-enter pr-8">
+          <p className="mb-2">
+            <span className="ui-kicker-label">Step {step + 1} / {STEPS.length}</span>
+          </p>
           <h2 id="onboarding-title" className="text-lg font-semibold text-slate-900">
             {current.title}
           </h2>
@@ -113,7 +123,9 @@ export function OnboardingTour() {
               <span
                 key={i}
                 className={`h-1.5 w-6 rounded-full transition ${
-                  i <= step ? "bg-blue-600" : "bg-slate-200"
+                  i <= step
+                    ? `bg-blue-600 ${i === step ? "onboarding-progress-active" : ""}`
+                    : "bg-slate-200"
                 }`}
               />
             ))}
@@ -122,16 +134,16 @@ export function OnboardingTour() {
             {isLast ? (
               <Link
                 href="/templates"
-                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                className="onboarding-cta-primary ui-focus-ring px-5 py-2.5 text-sm font-semibold"
                 onClick={handleComplete}
               >
-                テンプレートを見る
+                テンプレートで始める
               </Link>
             ) : (
               <button
                 type="button"
                 onClick={handleNext}
-                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                className="onboarding-cta-primary ui-focus-ring px-5 py-2.5 text-sm font-semibold"
               >
                 次へ
               </button>

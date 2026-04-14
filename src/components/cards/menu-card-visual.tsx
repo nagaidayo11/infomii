@@ -22,14 +22,16 @@ export function MenuCardHeroImage({
     <div
       className={`relative aspect-[21/9] w-full min-h-[100px] overflow-hidden bg-slate-100 ${editorInnerRadiusClassName}`}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        className="object-cover"
-        sizes="(max-width: 480px) 100vw, 420px"
-        unoptimized={src.startsWith("http")}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-cover object-center"
+          sizes="(max-width: 480px) 100vw, 420px"
+          unoptimized={src.startsWith("http")}
+        />
+      </div>
     </div>
   );
 }
@@ -51,14 +53,16 @@ export function MenuCategoryBannerImage({
     <div
       className={`relative mt-2 aspect-[2/1] max-h-36 w-full overflow-hidden bg-slate-100 ${editorInnerRadiusClassName}`}
     >
-      <Image
-        src={src}
-        alt={altText}
-        fill
-        className="object-cover"
-        sizes="(max-width: 480px) 100vw, 420px"
-        unoptimized={src.startsWith("http")}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src={src}
+          alt={altText}
+          fill
+          className="object-cover object-center"
+          sizes="(max-width: 480px) 100vw, 420px"
+          unoptimized={src.startsWith("http")}
+        />
+      </div>
     </div>
   );
 }
@@ -80,14 +84,16 @@ export function MenuItemThumb({
     <div
       className={`relative h-[76px] w-[76px] shrink-0 overflow-hidden bg-slate-100 ${editorInnerRadiusClassName}`}
     >
-      <Image
-        src={src}
-        alt={altText}
-        fill
-        className="object-cover"
-        sizes="76px"
-        unoptimized={src.startsWith("http")}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src={src}
+          alt={altText}
+          fill
+          className="object-cover object-center"
+          sizes="76px"
+          unoptimized={src.startsWith("http")}
+        />
+      </div>
     </div>
   );
 }

@@ -339,7 +339,7 @@ export function EditorTopBar({
               onClick={onPublish}
               disabled={publishing || qrPreparing}
               title="翻訳チェック・公開前確認のうえ、保存して公開します"
-              className="rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-semibold !text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ui-dark-label rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {publishing ? "処理中…" : publishActionLabel}
             </button>

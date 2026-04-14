@@ -47,7 +47,9 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
     <Card padding="none" className="">
       {src ? (
         <div data-inner-surface className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100`}>
-          <Image src={src} alt={alt} fill className="object-cover" unoptimized={src.startsWith("http")} />
+          <div className="absolute inset-0">
+            <Image src={src} alt={alt} fill className="object-cover object-center" unoptimized={src.startsWith("http")} />
+          </div>
         </div>
       ) : (
         <div className={`aspect-video w-full ${editorInnerRadiusClassName}`}>

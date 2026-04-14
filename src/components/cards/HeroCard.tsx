@@ -36,15 +36,24 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
       data-inner-surface
       className={`app-interactive relative overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 transition-transform duration-200 ease-out hover:-translate-y-0.5`}
     >
-      <div className="relative aspect-[2/1] min-h-[140px] w-full">
+      <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden">
         {image ? (
-          <Image src={image} alt="" fill className="object-cover" unoptimized={image.startsWith("http")} sizes="420px" />
+          <div className="absolute inset-0">
+            <Image
+              src={image}
+              alt=""
+              fill
+              className="object-cover object-center"
+              unoptimized={image.startsWith("http")}
+              sizes="420px"
+            />
+          </div>
         ) : (
-          <ImageUpload onUploaded={(url) => update("image", url)} className="h-full min-h-[140px]" />
+          <ImageUpload onUploaded={(url) => update("image", url)} className="relative z-0 h-full min-h-[140px] w-full" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 text-white">
         <h2 className="leading-tight" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => update("title", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder={labels.titlePlaceholder} />
         </h2>

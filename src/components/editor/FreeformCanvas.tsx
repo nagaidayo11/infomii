@@ -603,6 +603,11 @@ export function FreeformCanvas({
             const h = getRenderHeight(card, idx);
             const isDragging = dragState?.id === card.id;
             const isSelected = selectedCardId === card.id;
+            const measuredContentHeight = autoHeights[card.id];
+            const isOverflowing =
+              typeof measuredContentHeight === "number" &&
+              Number.isFinite(measuredContentHeight) &&
+              measuredContentHeight > h + 1;
             const blockStyle = getBlockStyle(card);
             const innerSurfaceMode =
               card.style && typeof card.style === "object"
@@ -658,7 +663,10 @@ export function FreeformCanvas({
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="flex w-full min-h-0 flex-col items-stretch justify-start overflow-x-hidden overflow-y-visible p-0 [&>*]:shrink-0"
+                      className={
+                        "flex h-full w-full min-h-0 flex-col items-stretch overflow-x-hidden overflow-y-visible p-0 [&>*]:shrink-0 " +
+                        (isOverflowing ? "justify-start" : "justify-center")
+                      }
                     >
                       <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
                     </div>

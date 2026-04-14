@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
 
 type CardLibraryProps = {
@@ -40,6 +42,185 @@ function BusinessBadge() {
       <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
       </svg>
+    </span>
+  );
+}
+
+type TooltipPlacement = "bottom" | "top";
+type TooltipPosition = {
+  left: number;
+  top: number;
+  placement: TooltipPlacement;
+};
+
+const TOOLTIP_VIEWPORT_MARGIN = 10;
+const TOOLTIP_DEFAULT_WIDTH = 352; // 22rem
+const TOOLTIP_GAP = 8;
+/** Motion rhythm aligned with onboarding UI timings. */
+const HOVER_OPEN_DELAY_MS = 150;
+const HOVER_CLOSE_DELAY_MS = 100;
+
+function useTruncation(text: string) {
+  const textRef = useRef<HTMLSpanElement | null>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+
+    const checkTruncate = () => {
+      const next = el.scrollWidth > el.clientWidth + 1;
+      setIsTruncated(next);
+    };
+
+    checkTruncate();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(checkTruncate);
+      resizeObserver.observe(el);
+    }
+
+    const onWindowResize = () => checkTruncate();
+    window.addEventListener("resize", onWindowResize);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", onWindowResize);
+    };
+  }, [text]);
+
+  return { textRef, isTruncated };
+}
+
+function LibraryTooltipPortal({
+  open,
+  tooltipId,
+  text,
+  anchorRef,
+}: {
+  open: boolean;
+  tooltipId: string;
+  text: string;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const [position, setPosition] = useState<TooltipPosition | null>(null);
+
+  useEffect(() => {
+    const anchorEl = anchorRef.current;
+    if (!open || !anchorEl) return;
+
+    const updatePosition = () => {
+      const rect = anchorEl.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const estimatedWidth = Math.min(TOOLTIP_DEFAULT_WIDTH, viewportWidth - TOOLTIP_VIEWPORT_MARGIN * 2);
+      let left = rect.left;
+      if (left + estimatedWidth > viewportWidth - TOOLTIP_VIEWPORT_MARGIN) {
+        left = viewportWidth - TOOLTIP_VIEWPORT_MARGIN - estimatedWidth;
+      }
+      if (left < TOOLTIP_VIEWPORT_MARGIN) left = TOOLTIP_VIEWPORT_MARGIN;
+
+      const estimatedHeight = 64;
+      const canShowBottom = rect.bottom + TOOLTIP_GAP + estimatedHeight <= viewportHeight - TOOLTIP_VIEWPORT_MARGIN;
+      const placement: TooltipPlacement = canShowBottom ? "bottom" : "top";
+      const top =
+        placement === "bottom"
+          ? rect.bottom + TOOLTIP_GAP
+          : Math.max(TOOLTIP_VIEWPORT_MARGIN, rect.top - TOOLTIP_GAP - estimatedHeight);
+      setPosition({ left, top, placement });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, anchorRef]);
+
+  if (!open || !position || typeof document === "undefined") return null;
+  return createPortal(
+    <div
+      id={tooltipId}
+      role="tooltip"
+      className="pointer-events-none fixed z-[9999] w-auto max-w-[min(22rem,calc(100vw-16px))] rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] leading-snug text-slate-700 shadow-lg"
+      style={{
+        left: position.left,
+        top: position.top,
+        transform: position.placement === "top" ? "translateY(-100%)" : undefined,
+      }}
+    >
+      {text}
+    </div>,
+    document.body
+  );
+}
+
+function DescriptionWithTooltip({
+  text,
+  parentOpen,
+  anchorRef,
+}: {
+  text: string;
+  parentOpen: boolean;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const { textRef, isTruncated } = useTruncation(text);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const tooltipId = useId();
+  const showTooltip = isTruncated && (parentOpen || mobileOpen);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-mobile-tooltip-trigger='true']")) return;
+      setMobileOpen(false);
+    };
+    const onEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, [mobileOpen]);
+
+  const toggleMobileTooltip = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isTruncated) return;
+    setMobileOpen((prev) => !prev);
+  };
+
+  return (
+    <span className="relative block">
+      <span
+        ref={textRef}
+        className={`block truncate text-xs text-slate-500 ${isTruncated ? "pr-6" : ""}`}
+      >
+        {text}
+      </span>
+      {isTruncated ? (
+        <>
+          <button
+            type="button"
+            data-mobile-tooltip-trigger="true"
+            aria-label="説明文を表示"
+            className="absolute right-0 top-0 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
+            onClick={toggleMobileTooltip}
+            aria-expanded={showTooltip}
+            aria-controls={tooltipId}
+          >
+            i
+          </button>
+          <LibraryTooltipPortal open={showTooltip} tooltipId={tooltipId} text={text} anchorRef={anchorRef} />
+        </>
+      ) : null}
     </span>
   );
 }
@@ -458,6 +639,97 @@ const QUICK_PRESETS: QuickPreset[] = [
   },
 ];
 
+function LibraryItemButton({
+  sectionId,
+  item,
+  isBusinessType,
+  disabled,
+  onAdd,
+}: {
+  sectionId: string;
+  item: LibraryItem;
+  isBusinessType: boolean;
+  disabled: boolean;
+  onAdd: (type: CardType) => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const openTimerRef = useRef<number | null>(null);
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
+
+  const clearTimers = () => {
+    if (openTimerRef.current) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearTimers(), []);
+
+  const handlePointerEnter = () => {
+    clearTimers();
+    openTimerRef.current = window.setTimeout(() => setHoverOpen(true), HOVER_OPEN_DELAY_MS);
+  };
+
+  const handlePointerLeave = () => {
+    clearTimers();
+    closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
+  };
+
+  return (
+    <button
+      ref={buttonRef}
+      key={`${sectionId}-${item.type}`}
+      type="button"
+      onClick={() => onAdd(item.type)}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onFocus={() => setFocusOpen(true)}
+      onBlur={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        setFocusOpen(false);
+      }}
+      className={
+        "ui-focus-ring group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:z-50 focus:z-50 focus-within:z-50 " +
+        (!disabled
+          ? "hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
+          : "cursor-not-allowed opacity-55")
+      }
+      aria-label={`${item.label}を追加`}
+      title={disabled ? "Businessプラン限定ブロックです" : undefined}
+    >
+      <span
+        className={
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round " +
+          (disabled
+            ? "border border-violet-300 bg-violet-100 text-violet-700"
+            : "bg-slate-100")
+        }
+      >
+        {CARD_ICONS[item.type] ?? CARD_ICONS.text}
+      </span>
+      <div className="min-w-0 flex-1">
+        <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-800">
+          <span className="truncate">{item.label}</span>
+          {isBusinessType ? (
+            <BusinessBadge />
+          ) : null}
+        </span>
+        <DescriptionWithTooltip
+          text={item.description}
+          parentOpen={hoverOpen || focusOpen}
+          anchorRef={buttonRef}
+        />
+      </div>
+    </button>
+  );
+}
+
 /**
  * Left panel: Card Library — grouped by purpose (main view, guides, safety, access, trust, layout).
  * Click inserts a card into the canvas.
@@ -486,7 +758,7 @@ export function CardLibrary({
     onAddPreset?.(preset.types);
   };
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-visible">
       <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
         <h2 className="text-sm font-semibold text-slate-700">
           ブロックライブラリ
@@ -499,8 +771,8 @@ export function CardLibrary({
         <div className="space-y-3">
           {onAddPreset && (
             <section aria-label="おすすめセット" className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                おすすめセット
+              <h3>
+                <span className="ui-kicker-label">おすすめセット</span>
               </h3>
               <div className="space-y-1">
                 {QUICK_PRESETS.map((preset) => (
@@ -523,7 +795,10 @@ export function CardLibrary({
                         <BusinessBadge />
                       ) : null}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-600">{preset.purpose}</span>
+                    <span className="mt-1 inline-flex">
+                      <span className="ui-kicker-label">Quick Set</span>
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-600">{preset.purpose}</span>
                     <span className="mt-0.5 block text-[11px] text-slate-500">{preset.description}</span>
                   </button>
                 ))}
@@ -534,50 +809,23 @@ export function CardLibrary({
             <section
               key={section.id}
               aria-label={section.title}
-              className="space-y-2"
+              className="relative isolate space-y-2"
             >
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {section.title}
+              <h3>
+                <span className="ui-kicker-label">{section.title}</span>
               </h3>
-              <div className="space-y-1">
+              <div className="relative space-y-1">
                 {section.items.map((item) => {
                   const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
                   return (
-                    <button
-                    key={`${section.id}-${item.type}`}
-                    type="button"
-                    onClick={() => handleAdd(item.type)}
-                    className={
-                      "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all " +
-                      (canAdd(item.type)
-                        ? "hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
-                        : "cursor-not-allowed opacity-55")
-                    }
-                    aria-label={`${item.label}を追加`}
-                    title={canAdd(item.type) ? undefined : "Businessプラン限定ブロックです"}
-                  >
-                    <span
-                      className={
-                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round " +
-                        (!canAdd(item.type)
-                          ? "border border-violet-300 bg-violet-100 text-violet-700"
-                          : "bg-slate-100")
-                      }
-                    >
-                      {CARD_ICONS[item.type] ?? CARD_ICONS.text}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-800">
-                        <span className="truncate">{item.label}</span>
-                        {isBusinessType ? (
-                          <BusinessBadge />
-                        ) : null}
-                      </span>
-                      <span className="block truncate text-xs text-slate-500">
-                        {item.description}
-                      </span>
-                    </div>
-                  </button>
+                    <LibraryItemButton
+                      key={`${section.id}-${item.type}`}
+                      sectionId={section.id}
+                      item={item}
+                      isBusinessType={isBusinessType}
+                      disabled={!canAdd(item.type)}
+                      onAdd={handleAdd}
+                    />
                   );
                 })}
               </div>

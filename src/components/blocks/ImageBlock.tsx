@@ -37,13 +37,15 @@ export function ImageBlock({
       className={`relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 ${className}`.trim()}
       data-block-type="image"
     >
-      <Image
-        src={src}
-        alt={data.alt ?? ""}
-        fill
-        className="object-cover"
-        unoptimized={unoptimized}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src={src}
+          alt={data.alt ?? ""}
+          fill
+          className="object-cover object-center"
+          unoptimized={unoptimized}
+        />
+      </div>
     </div>
   );
 }
