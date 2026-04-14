@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -48,8 +48,8 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
 
   return (
     <Card padding="md" className="">
-      <p className="mb-3 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
+      <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
       </p>
       <div
         className="grid gap-2"

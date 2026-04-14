@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -61,8 +61,8 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
           )}
         </div>
         <div className="min-w-0">
-          <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className="font-medium text-slate-800" />
+          <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className={CARD_BLOCK_TITLE_CLASS} />
           </p>
           <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
             <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.descriptionPlaceholder} className="text-slate-600" />

@@ -1334,15 +1334,18 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     : subscription ?? (overrideEnabled ? createDevBusinessOverrideSubscriptionFallback() : null);
 
   const existingPageSlugs = new Set((pagesRes.data ?? []).map((row) => (row as { slug: string }).slug));
-  const publishedPageCount = (infoRes.data ?? []).filter((row) => {
-    const typed = row as SupabaseInformationRow;
-    return typed.status === "published" && existingPageSlugs.has(typed.slug);
-  }).length;
+
+  /** deletePage は `pages` を削除するが `informations` 行は残るため、一覧では pages に slug が残るものだけを表示する */
+  const informations = (infoRes.data ?? [])
+    .map((row) => mapRow(row as SupabaseInformationRow))
+    .filter((info) => existingPageSlugs.has(info.slug));
+
+  const publishedPageCount = informations.filter((info) => info.status === "published").length;
 
   return {
     hotelName: hotelRes.data?.name ?? "Infomii",
     subscription: normalizedSubscription,
-    informations: (infoRes.data ?? []).map((row) => mapRow(row as SupabaseInformationRow)),
+    informations,
     publishedPageCount,
   };
 }

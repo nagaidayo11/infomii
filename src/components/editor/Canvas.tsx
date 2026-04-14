@@ -366,10 +366,10 @@ export function Canvas({
                 key={width}
                 type="button"
                 onClick={() => setViewportWidth(width)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                className={`rounded-lg px-2.5 py-1 text-xs transition ${
                   viewportWidth === width
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-slate-900 !text-white font-semibold"
+                    : "bg-slate-100 font-medium text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {label}

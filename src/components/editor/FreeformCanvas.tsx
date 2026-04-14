@@ -122,6 +122,13 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   progress_steps: 124,
   emergency_banner: 108,
   scheduled_banner: 108,
+  menu_categories: 140,
+  daily_special: 120,
+  drink_menu: 110,
+  salon_service_menu: 120,
+  combo_set_menu: 110,
+  menu_sheet_sync: 120,
+  menu_time_band: 130,
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
@@ -630,7 +637,7 @@ export function FreeformCanvas({
                 <div className="relative h-full w-full">
                   <div
                     className={
-                      "h-full w-full overflow-hidden rounded-xl transition-shadow " +
+                      "h-full w-full overflow-x-hidden overflow-y-visible rounded-xl transition-shadow " +
                       (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
@@ -644,10 +651,14 @@ export function FreeformCanvas({
                         : {}),
                     }}
                   >
+                    {/*
+                      カード本体を flex-shrink させない（既定の Rnd 高さに縮ませない）。
+                      そうしないとヒーロー画像や長いメニューが 1 行分の高さに潰れ、未表示に見える。
+                    */}
                     <div
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
-                      className="flex h-full min-h-0 flex-col items-stretch justify-center overflow-x-hidden overflow-y-visible p-0"
+                      className="flex w-full min-h-0 flex-col items-stretch justify-start overflow-x-hidden overflow-y-visible p-0 [&>*]:shrink-0"
                     >
                       <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
                     </div>

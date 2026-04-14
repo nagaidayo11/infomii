@@ -79,10 +79,10 @@ export function GuestCardPageView({
               }
             }}
             className={
-              "whitespace-nowrap rounded-md border px-2 py-1 text-[11px] font-medium leading-none transition " +
+              "whitespace-nowrap rounded-md border px-2 py-1 text-[11px] leading-none transition " +
               (active
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
+                ? "border-slate-900 bg-slate-900 !text-white font-semibold"
+                : "border-slate-300 bg-white font-medium text-slate-700 hover:bg-slate-50")
             }
           >
             {item.label}

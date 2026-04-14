@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -45,8 +45,8 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         >
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
-        <h3 className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="text-slate-800" placeholder={localeLabels.title} />
+        <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
         </h3>
       </div>
       <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
@@ -59,8 +59,8 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
               data-inner-surface
               className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
             >
-              <span className="text-slate-500 break-words">{row.label ?? "—"}</span>
-              <span className="text-right font-medium text-slate-800 break-all leading-snug">
+              <span className="break-words font-normal text-slate-500">{row.label ?? "—"}</span>
+              <span className="text-right break-all leading-snug">
                 <InlineEditable
                   value={row.value ?? ""}
                   onSave={(v) => {
@@ -70,7 +70,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
                   }}
                   editable={isSelected}
                   onActivate={onActivate}
-                  className="font-medium text-slate-800"
+                  className="text-right font-normal text-slate-800"
                   placeholder={localeLabels.value}
                 />
               </span>

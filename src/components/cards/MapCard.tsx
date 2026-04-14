@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -99,7 +99,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   return (
     <Card padding="md" className="">
       <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
       </p>
       {mapEmbedUrl ? (
         <div data-inner-surface className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>

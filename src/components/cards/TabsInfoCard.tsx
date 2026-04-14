@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 
@@ -37,7 +37,7 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         {title}
       </p>
       {tabs.length > 0 ? (
@@ -51,10 +51,10 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
                   type="button"
                   onClick={() => setActiveIndex(idx)}
                   className={
-                    `${editorInnerRadiusClassName} px-2.5 py-1 text-xs font-medium transition ` +
+                    `${editorInnerRadiusClassName} px-2.5 py-1 text-xs transition ` +
                     (activeTab
-                      ? "bg-slate-900 text-white"
-                      : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
+                      ? "bg-slate-900 !text-white font-semibold"
+                      : "border border-slate-300 bg-white font-normal text-slate-700 hover:bg-slate-50")
                   }
                 >
                   {tab.label}

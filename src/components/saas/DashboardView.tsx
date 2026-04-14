@@ -176,6 +176,16 @@ export function DashboardView() {
           <p className="app-page-subtitle">
             案内を1つ作って、QRでお客様に届けます
           </p>
+          <p className="mt-2 text-sm text-slate-500">
+            <Link
+              href="/dashboard/summary"
+              onClick={() => setNavigating(true)}
+              className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+            >
+              一覧・統計ビュー
+            </Link>
+            <span className="text-slate-400">（表形式）</span>
+          </p>
         </header>
       </FadeIn>
 
@@ -206,7 +216,7 @@ export function DashboardView() {
                     type="button"
                     onClick={handleCreatePage}
                     disabled={creating}
-                    className="app-button-native w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
+                    className="app-button-native w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
                   >
                     {creating ? "作成中…" : "ページを作成"}
                   </button>
@@ -237,7 +247,16 @@ export function DashboardView() {
       {/* Analytics summary */}
       <ScrollReveal>
       <section>
-        <h2 className="app-section-title">分析サマリー</h2>
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="app-section-title">分析サマリー</h2>
+          <Link
+            href="/dashboard/analytics"
+            onClick={() => setNavigating(true)}
+            className="text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
+            詳細レポートへ
+          </Link>
+        </div>
         {loading ? (
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
@@ -246,14 +265,23 @@ export function DashboardView() {
           </div>
         ) : (
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <AnalyticsSummaryCard label="総閲覧数（7日）" value={totalViews} />
-            <AnalyticsSummaryCard label="本日の閲覧" value={todayViews} />
+            <AnalyticsSummaryCard
+              label="総閲覧数（7日）"
+              value={totalViews}
+              href="/dashboard/analytics"
+            />
+            <AnalyticsSummaryCard label="本日の閲覧" value={todayViews} href="/dashboard/analytics" />
             <AnalyticsSummaryCard
               label="公開中"
               value={published.length}
               sub={bootstrap?.subscription ? `上限 ${bootstrap.subscription.maxPublishedPages} 件` : undefined}
+              href="/dashboard/analytics"
             />
-            <AnalyticsSummaryCard label="下書き" value={items.length - published.length} />
+            <AnalyticsSummaryCard
+              label="下書き"
+              value={items.length - published.length}
+              href="/dashboard/analytics"
+            />
           </div>
         )}
         {!loading && topPages.length > 0 && (
@@ -267,6 +295,13 @@ export function DashboardView() {
                 </li>
               ))}
             </ul>
+            <Link
+              href="/dashboard/analytics"
+              onClick={() => setNavigating(true)}
+              className="mt-3 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
+            >
+              分析ページでグラフを見る
+            </Link>
           </div>
         )}
       </section>

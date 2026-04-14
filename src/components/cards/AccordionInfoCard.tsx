@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 
@@ -14,7 +14,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
       <div className="mt-3 space-y-2">
         {items.map((item, idx) => {
           const open = idx === openIndex;
@@ -23,7 +23,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
               <button
                 type="button"
                 onClick={() => setOpenIndex(open ? -1 : idx)}
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-slate-800"
+                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-bold text-slate-800"
               >
                 <span>{item.title ?? `項目 ${idx + 1}`}</span>
                 <span>{open ? "−" : "+"}</span>

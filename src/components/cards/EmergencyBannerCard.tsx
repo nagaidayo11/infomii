@@ -19,7 +19,7 @@ export function EmergencyBannerCard({ card }: { card: EditorCard; isSelected?: b
   return (
     <Card padding="none">
       <section data-inner-surface className={`${editorInnerRadiusClassName} flex flex-col gap-1.5 border px-3 py-2.5 ${tone}`}>
-        <p className="font-medium leading-snug" style={getTitleFontSizeStyle()}>{title}</p>
+        <p className="leading-snug" style={getTitleFontSizeStyle()}>{title}</p>
         <p className="text-sm leading-snug" style={getBodyFontSizeStyle()}>{message}</p>
       </section>
     </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -54,13 +54,13 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
         />
       </p>
       <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
@@ -69,13 +69,13 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
         ) : (
           items.map((item, i) => (
             <div key={i} data-inner-surface className={`border border-slate-100 bg-slate-50/60 p-3 ${editorInnerRadiusClassName}`}>
-              <dt className="font-medium text-slate-700">
+              <dt className="font-bold text-slate-700">
                 <InlineEditable
                   value={item.q ?? ""}
                   onSave={(v) => updateItem(i, "q", v)}
                   editable={isSelected}
                   onActivate={onActivate}
-                  className="font-medium text-slate-700"
+                  className="font-bold text-slate-700"
                   placeholder={labels.q}
                 />
               </dt>

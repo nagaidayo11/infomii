@@ -162,7 +162,7 @@ export function PageCard({
           <Link
             href={resolvedEditHref}
             onClick={() => setNavigating(true)}
-            className="app-button-native inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-medium !text-white shadow-sm transition hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:py-2"
+            className="app-button-native inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:py-2"
           >
             編集
           </Link>

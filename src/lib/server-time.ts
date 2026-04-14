@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BUSINESS_ONLY_CARD_TYPES } from "@/components/editor/types";
 
 export function useServerNow(refreshMs = 60_000): number {
   const [serverNowMs, setServerNowMs] = useState<number>(() => Date.now());
@@ -69,15 +70,8 @@ export function hasInvalidRange(startAt?: string | null, endAt?: string | null):
 }
 
 export function detectBusinessTypeMisuse(cardTypes: string[], isBusinessEnabled: boolean): boolean {
-  const businessTypes = new Set([
-    "hero_slider",
-    "campaign_timer",
-    "notice_ticker",
-    "coupon",
-    "emergency_banner",
-    "scheduled_banner",
-  ]);
-  return !isBusinessEnabled && cardTypes.some((type) => businessTypes.has(type));
+  if (isBusinessEnabled) return false;
+  return cardTypes.some((type) => BUSINESS_ONLY_CARD_TYPES.includes(type as (typeof BUSINESS_ONLY_CARD_TYPES)[number]));
 }
 
 export function estimateTemplateConsistencyScore(title: string, cardsJson: string): number {

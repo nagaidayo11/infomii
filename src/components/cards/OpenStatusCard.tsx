@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 
@@ -21,9 +21,9 @@ export function OpenStatusCard({ card }: { card: EditorCard; isSelected?: boolea
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
       <div data-inner-surface className={`${editorInnerRadiusClassName} mt-3 border px-3 py-2 ${isOpen ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
-        <p className={`text-sm font-medium ${isOpen ? "text-emerald-700" : "text-slate-700"}`} style={getBodyFontSizeStyle()}>
+        <p className={`text-sm font-normal ${isOpen ? "text-emerald-700" : "text-slate-700"}`} style={getBodyFontSizeStyle()}>
           {isOpen ? openLabel : closedLabel}
         </p>
         <p className="mt-1 text-xs text-slate-600" style={getBodyFontSizeStyle()}>{hoursText}</p>

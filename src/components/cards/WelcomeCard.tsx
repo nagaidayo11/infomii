@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -48,13 +48,13 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
       padding="lg"
       className=""
     >
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => updateKey("title", v)}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
         />
       </p>
       <div data-inner-surface className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>

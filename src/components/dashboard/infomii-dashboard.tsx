@@ -74,6 +74,12 @@ export function InfomiiDashboard() {
               >
                 QR管理
               </Link>
+              <Link
+                href="/dashboard/qr-generator"
+                className="rounded-lg border border-ds-border bg-ds-card px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                QR作成・印刷
+              </Link>
             </div>
           </header>
 

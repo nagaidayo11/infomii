@@ -107,7 +107,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
             <button
               type="button"
               onClick={handleCopyUrl}
-              className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-medium text-white hover:bg-slate-800"
+              className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold !text-white hover:bg-slate-800"
             >
               {copyUrlStatus === "ok" ? (
                 <>
@@ -181,7 +181,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white hover:bg-slate-800"
           >
             閉じる
           </button>

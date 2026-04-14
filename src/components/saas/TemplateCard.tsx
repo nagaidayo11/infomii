@@ -53,7 +53,7 @@ export function TemplateCard({
             type="button"
             disabled={!!using}
             onClick={onUse}
-            className="app-button-native w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
+            className="app-button-native w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
           >
             {using ? "作成中…" : "テンプレートを使う"}
           </button>

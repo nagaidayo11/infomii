@@ -1257,7 +1257,7 @@ export function Editor2({
                   <button
                     type="button"
                     onClick={() => void handlePublishPastWarnings()}
-                    className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white hover:bg-slate-800"
+                    className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
                   >
                     このまま公開
                   </button>
@@ -1290,7 +1290,7 @@ export function Editor2({
                 </button>
                 <a
                   href="/login?ref=demo-editor&next=%2Fdashboard%3Ftab%3Dcreate"
-                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white no-underline hover:bg-slate-800"
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white no-underline hover:bg-slate-800"
                 >
                   無料登録して続ける
                 </a>
@@ -1331,7 +1331,7 @@ export function Editor2({
                     applyFontFamilyAll(bulkFontFamily || undefined);
                     setBulkFontOpen(false);
                   }}
-                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium !text-white hover:bg-slate-800"
+                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
                 >
                   一括適用
                 </button>

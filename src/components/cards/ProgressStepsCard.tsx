@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 
@@ -12,7 +12,7 @@ export function ProgressStepsCard({ card }: { card: EditorCard; isSelected?: boo
   const items = (Array.isArray(c.items) ? c.items : []) as Array<{ label?: string; done?: boolean }>;
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
       <ol className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {items.map((item, idx) => {
           const active = idx + 1 === currentStep;

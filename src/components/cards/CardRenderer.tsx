@@ -48,6 +48,13 @@ import { ContactHubCard } from "./ContactHubCard";
 import { ProgressStepsCard } from "./ProgressStepsCard";
 import { EmergencyBannerCard } from "./EmergencyBannerCard";
 import { ScheduledBannerCard } from "./ScheduledBannerCard";
+import { MenuCategoriesCard } from "./MenuCategoriesCard";
+import { DailySpecialCard } from "./DailySpecialCard";
+import { DrinkMenuCard } from "./DrinkMenuCard";
+import { SalonServiceMenuCard } from "./SalonServiceMenuCard";
+import { ComboSetMenuCard } from "./ComboSetMenuCard";
+import { MenuSheetSyncCard } from "./MenuSheetSyncCard";
+import { MenuTimeBandCard } from "./MenuTimeBandCard";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -256,6 +263,20 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
       return <EmergencyBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "scheduled_banner":
       return <ScheduledBannerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "menu_categories":
+      return <MenuCategoriesCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "daily_special":
+      return <DailySpecialCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "drink_menu":
+      return <DrinkMenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "salon_service_menu":
+      return <SalonServiceMenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "combo_set_menu":
+      return <ComboSetMenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "menu_sheet_sync":
+      return <MenuSheetSyncCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "menu_time_band":
+      return <MenuTimeBandCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     default:
       return <TextCard card={resolvedCard as EditorCard} isSelected={isSelected} locale={locale} />;
   }

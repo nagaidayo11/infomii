@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 
@@ -15,7 +15,7 @@ export function ContactHubCard({ card }: { card: EditorCard; isSelected?: boolea
   const note = typeof c.note === "string" ? c.note : "";
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
       <div className="mt-3 space-y-2 text-sm" style={getBodyFontSizeStyle()}>
         {phone ? <a data-inner-surface className={`${editorInnerRadiusClassName} block border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700`} href={`tel:${phone}`}>電話: {phone}</a> : null}
         {email ? <a data-inner-surface className={`${editorInnerRadiusClassName} block border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700`} href={`mailto:${email}`}>メール: {email}</a> : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -38,13 +38,13 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
           placeholder={labels.titlePlaceholder}
         />
       </p>
@@ -55,7 +55,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           items.map((item, i) => (
             <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
               <p className="text-xs text-slate-500">{item.label ?? ""}</p>
-              <p className="mt-1 text-lg font-medium text-slate-800">{item.value ?? ""}</p>
+              <p className="mt-1 text-lg font-normal text-slate-800">{item.value ?? ""}</p>
             </div>
           ))
         )}

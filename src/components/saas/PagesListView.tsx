@@ -304,7 +304,7 @@ export function PagesListView() {
             type="button"
             onClick={handleCreatePage}
             disabled={creating}
-            className="app-button-native inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
+            className="app-button-native inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
               +
@@ -319,8 +319,8 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("nodes")}
           className={
-            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs font-medium shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
-            (viewMode === "nodes" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
+            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+            (viewMode === "nodes" ? "bg-slate-900 !text-white font-semibold" : "text-slate-600 hover:bg-slate-100 font-medium")
           }
         >
           ノード表示
@@ -329,8 +329,8 @@ export function PagesListView() {
           type="button"
           onClick={() => setViewMode("table")}
           className={
-            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs font-medium shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
-            (viewMode === "table" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")
+            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+            (viewMode === "table" ? "bg-slate-900 !text-white font-semibold" : "text-slate-600 hover:bg-slate-100 font-medium")
           }
         >
           テーブル表示

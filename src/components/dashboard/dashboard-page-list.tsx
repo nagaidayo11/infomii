@@ -97,7 +97,7 @@ export function DashboardPageList({ rows, loading }: DashboardPageListProps) {
                   <td className="px-5 py-3 text-right">
                     <Link
                       href="/dashboard/pages"
-                      className="inline-flex rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                      className="inline-flex rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white hover:bg-slate-800"
                     >
                       ページ一覧
                     </Link>

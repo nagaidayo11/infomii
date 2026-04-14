@@ -179,10 +179,10 @@ export default function TemplatesPage() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={
-              "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition " +
+              "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm shadow-sm transition " +
               (category === c.id
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                ? "bg-slate-900 !text-white font-semibold"
+                : "bg-slate-100 font-medium text-slate-600 hover:bg-slate-200")
             }
           >
             {c.label}
@@ -214,7 +214,7 @@ export default function TemplatesPage() {
           </p>
           <Link
             href="/dashboard"
-            className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
+            className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
           >
             ダッシュボードに戻る
           </Link>

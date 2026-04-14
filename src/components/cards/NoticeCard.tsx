@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -51,13 +51,13 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
         data-inner-surface
         className={`${editorInnerRadiusClassName} flex flex-col gap-2 px-3 py-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
       >
-        <div className="min-w-0 font-medium leading-tight text-slate-800" style={getTitleFontSizeStyle()}>
+        <div className={`min-w-0 leading-tight ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
             editable={isSelected}
             onActivate={onActivate}
-            className="font-medium leading-tight text-slate-800"
+            className={`leading-tight ${CARD_BLOCK_TITLE_CLASS}`}
           />
         </div>
         <div className="min-w-0 leading-normal text-slate-600" style={getBodyFontSizeStyle()}>

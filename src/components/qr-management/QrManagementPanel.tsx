@@ -67,12 +67,20 @@ export function QrManagementPanel() {
                 ゲストページ用QRの発行・印刷とスキャン分析
               </p>
             </div>
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900"
-            >
-              ← ダッシュボード
-            </Link>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <Link
+                href="/dashboard/qr-generator"
+                className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+              >
+                QR作成・印刷
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+              >
+                ← ダッシュボード
+              </Link>
+            </div>
           </div>
 
           {error && (

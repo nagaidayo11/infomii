@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -49,21 +49,21 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
       padding="md"
       className=""
     >
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
       </p>
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
           {items.map((item, i) => (
             <li key={i} data-inner-surface className={`pt-2 first:pt-0 ${editorInnerRadiusClassName} border border-slate-100 bg-slate-50/70 px-3 py-2`}>
-              {item.name && <p className="font-medium text-slate-700">{item.name}</p>}
+              {item.name && <p className="font-bold text-slate-700">{item.name}</p>}
               {item.description && (
                 <p className="mt-0.5 text-slate-500">{item.description}</p>
               )}
               {item.link && (
                 <a
                   href={item.link}
-                  className="mt-1 inline-block font-medium text-slate-600 underline"
+                  className="mt-1 inline-block font-normal text-slate-600 underline"
                   onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
                   aria-disabled={isSelected !== undefined ? true : undefined}
                 >

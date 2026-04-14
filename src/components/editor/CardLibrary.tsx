@@ -306,6 +306,42 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v4m8-4v4m-8 6h8" />
     </svg>
   ),
+  menu_categories: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h6v4H4V6zm10 0h6v4h-6V6zM4 14h6v4H4v-4zm10 0h6v4h-6v-4z" />
+    </svg>
+  ),
+  daily_special: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  ),
+  drink_menu: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6v3l-1 9H10L9 6V3zM7 21h10" />
+    </svg>
+  ),
+  salon_service_menu: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-2-11a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  ),
+  combo_set_menu: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  ),
+  menu_sheet_sync: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h10M4 17h14M17 12l3 3m0 0l3-3m-3 3V4" />
+    </svg>
+  ),
+  menu_time_band: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2" />
+    </svg>
+  ),
 };
 
 const MAIN_ITEMS: LibraryItem[] = [
@@ -322,7 +358,14 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
   { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・詳細をまとめる" },
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧表示" },
-  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
+  { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
+  { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
+  { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
+  { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
+  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
+  { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
+  { type: "menu_sheet_sync", label: "メニュー（表連携）", description: "公開CSVから表示（Business）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Business限定）" },
   { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（Business限定）" },

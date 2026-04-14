@@ -309,7 +309,7 @@ export default function LpSaaSPage() {
             <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
-                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">おすすめ</span>
+                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold !text-white">おすすめ</span>
               </div>
               <p className="mt-3 text-4xl font-bold text-slate-900">
                 ¥1,980<span className="text-base font-normal text-slate-600">/月</span>

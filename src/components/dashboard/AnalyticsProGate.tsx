@@ -87,7 +87,7 @@ function AnalyticsUpgradePrompt() {
               type="button"
               variant="primary"
               size="md"
-              className="min-h-[44px] w-full !border-slate-800/30 !bg-slate-900 !text-white hover:!bg-slate-800 hover:!shadow-ds-md sm:min-h-0 sm:w-auto"
+              className="min-h-[44px] w-full !border-slate-800/30 !bg-slate-900 !font-semibold !text-white hover:!bg-slate-800 hover:!shadow-ds-md sm:min-h-0 sm:w-auto"
               onClick={handleUpgrade}
               disabled={loading}
             >

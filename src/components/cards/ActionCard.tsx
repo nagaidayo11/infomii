@@ -32,7 +32,7 @@ export function ActionCard({ card, isSelected = false, locale = "ja" }: ActionCa
     <div className={editorInnerRadiusClassName}>
       <a
         href={href}
-        className={`flex w-full items-center justify-center ${editorInnerRadiusClassName} bg-slate-800 px-6 py-4 text-base font-medium text-white transition hover:bg-slate-700`}
+        className={`flex w-full items-center justify-center ${editorInnerRadiusClassName} bg-slate-800 px-6 py-4 text-base font-semibold text-white transition hover:bg-slate-700`}
         style={{ boxShadow: "0 4px 14px rgba(15,23,42,0.2)" }}
         onClick={(e) => isSelected && e.preventDefault()}
         aria-disabled={isSelected ? true : undefined}

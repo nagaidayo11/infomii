@@ -35,6 +35,31 @@ function SettingsSection({
   );
 }
 
+function StyleGroup({
+  summary,
+  defaultOpen = true,
+  children,
+}: {
+  summary: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details
+      open={defaultOpen}
+      className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30">
+        <span>{summary}</span>
+        <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180" aria-hidden>
+          ▼
+        </span>
+      </summary>
+      <div className="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">{children}</div>
+    </details>
+  );
+}
+
 function isoToLocalInput(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) return "";
   const d = new Date(value);
@@ -158,7 +183,25 @@ type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
 type ScheduleItem = { day?: string; time?: string; label?: string };
-type MenuItem = { name?: string; price?: string; description?: string };
+type MenuItem = { name?: string; price?: string; description?: string; imageSrc?: string; imageAlt?: string };
+type MenuTagItem = {
+  name?: string;
+  price?: string;
+  description?: string;
+  tag?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+};
+type MenuCategoryRow = { title?: string; imageSrc?: string; imageAlt?: string; items?: MenuTagItem[] };
+type DrinkItem = { name?: string; sizes?: string; note?: string; imageSrc?: string; imageAlt?: string };
+type SalonItem = { name?: string; duration?: string; price?: string; description?: string; imageSrc?: string; imageAlt?: string };
+type ComboItem = { name?: string; includes?: string; price?: string; imageSrc?: string; imageAlt?: string };
+type TimeSlotRow = {
+  label?: string;
+  start?: string;
+  end?: string;
+  items?: MenuTagItem[];
+};
 type InfoRowItem = { label?: string; value?: string };
 type TabsInfoItem = { label?: string; body?: string };
 type HeroSliderItem = {
@@ -1119,6 +1162,39 @@ function ScheduleItemsEditor({
   );
 }
 
+function MenuHeroFields({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const heroSrc = typeof content.heroSrc === "string" ? content.heroSrc : "";
+  const heroAlt = typeof content.heroAlt === "string" ? content.heroAlt : "";
+
+  return (
+    <div className="space-y-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3">
+      <p className="text-xs font-medium text-slate-600">カード上部ヒーロー（任意）</p>
+      <ImageUpload
+        onUploaded={(url) => onUpdate("heroSrc", url)}
+        className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+      />
+      <Input
+        label="ヒーロー画像URL"
+        value={heroSrc}
+        onChange={(e) => onUpdate("heroSrc", e.target.value)}
+        placeholder="https://..."
+      />
+      <Input
+        label="ヒーロー代替テキスト"
+        value={heroAlt}
+        onChange={(e) => onUpdate("heroAlt", e.target.value)}
+        placeholder="任意（アクセシビリティ）"
+      />
+    </div>
+  );
+}
+
 function MenuItemsEditor({
   content,
   onUpdate,
@@ -1133,7 +1209,7 @@ function MenuItemsEditor({
     next[index] = { ...(next[index] ?? {}), [field]: value };
     setItems(next);
   };
-  const addItem = () => setItems([...items, { name: "", price: "", description: "" }]);
+  const addItem = () => setItems([...items, { name: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
@@ -1169,6 +1245,358 @@ function MenuItemsEditor({
             onChange={(e) => updateItem(i, "description", e.target.value)}
             placeholder="任意"
           />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input
+            label="品目画像URL"
+            value={item.imageSrc ?? ""}
+            onChange={(e) => updateItem(i, "imageSrc", e.target.value)}
+            placeholder="https://..."
+          />
+          <Input
+            label="品目画像の代替テキスト"
+            value={item.imageAlt ?? ""}
+            onChange={(e) => updateItem(i, "imageAlt", e.target.value)}
+            placeholder="任意"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MenuTagItemsEditor({
+  items,
+  onChange,
+}: {
+  items: MenuTagItem[];
+  onChange: (next: MenuTagItem[]) => void;
+}) {
+  const updateItem = (index: number, field: keyof MenuTagItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    onChange(next);
+  };
+  const addItem = () => onChange([...items, { name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }]);
+  const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">品目</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input label="名前" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
+          <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
+          <Input label="説明" value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} />
+          <Input label="タグ（任意）" value={item.tag ?? ""} onChange={(e) => updateItem(i, "tag", e.target.value)} placeholder="人気 / 新作" />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} placeholder="https://..." />
+          <Input
+            label="品目画像の代替テキスト"
+            value={item.imageAlt ?? ""}
+            onChange={(e) => updateItem(i, "imageAlt", e.target.value)}
+            placeholder="任意"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MenuCategoriesGroupsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const categories = (Array.isArray(content.categories) ? content.categories : []) as MenuCategoryRow[];
+  const setCategories = (next: MenuCategoryRow[]) => onUpdate("categories", next);
+  const updateCatTitle = (ci: number, title: string) => {
+    const next = [...categories];
+    next[ci] = { ...(next[ci] ?? {}), title };
+    setCategories(next);
+  };
+  const updateCatField = (ci: number, field: keyof MenuCategoryRow, value: string) => {
+    const next = [...categories];
+    next[ci] = { ...(next[ci] ?? {}), [field]: value };
+    setCategories(next);
+  };
+  const updateCatItems = (ci: number, items: MenuTagItem[]) => {
+    const next = [...categories];
+    next[ci] = { ...(next[ci] ?? {}), items };
+    setCategories(next);
+  };
+  const addCategory = () =>
+    setCategories([
+      ...categories,
+      {
+        title: "新規カテゴリ",
+        imageSrc: "",
+        imageAlt: "",
+        items: [{ name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }],
+      },
+    ]);
+  const removeCategory = (ci: number) => setCategories(categories.filter((_, i) => i !== ci));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">カテゴリ</span>
+        <button type="button" onClick={addCategory} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + カテゴリ追加
+        </button>
+      </div>
+      {categories.map((cat, ci) => (
+        <div key={ci} className="rounded-xl border border-slate-200 bg-white p-3">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeCategory(ci)} className="text-xs text-slate-400 hover:text-red-600">
+              カテゴリを削除
+            </button>
+          </div>
+          <Input
+            label="カテゴリ名"
+            value={cat.title ?? ""}
+            onChange={(e) => updateCatTitle(ci, e.target.value)}
+            placeholder="フード / ドリンク"
+          />
+          <p className="mt-3 text-[11px] font-medium text-slate-500">カテゴリ画像（任意・バナー）</p>
+          <ImageUpload
+            onUploaded={(url) => updateCatField(ci, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input
+            label="カテゴリ画像URL"
+            value={cat.imageSrc ?? ""}
+            onChange={(e) => updateCatField(ci, "imageSrc", e.target.value)}
+            placeholder="https://..."
+          />
+          <Input
+            label="カテゴリ画像の代替テキスト"
+            value={cat.imageAlt ?? ""}
+            onChange={(e) => updateCatField(ci, "imageAlt", e.target.value)}
+            placeholder="任意"
+          />
+          <div className="mt-3">
+            <MenuTagItemsEditor
+              items={Array.isArray(cat.items) ? cat.items : []}
+              onChange={(items) => updateCatItems(ci, items)}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DrinkItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as DrinkItem[];
+  const setItems = (next: DrinkItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof DrinkItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { name: "", sizes: "", note: "", imageSrc: "", imageAlt: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">ドリンク</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input label="名称" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
+          <Input label="サイズ・価格" value={item.sizes ?? ""} onChange={(e) => updateItem(i, "sizes", e.target.value)} placeholder="S 350円 / L 450円" />
+          <Input label="備考" value={item.note ?? ""} onChange={(e) => updateItem(i, "note", e.target.value)} placeholder="ICE/HOT" />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
+          <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SalonItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as SalonItem[];
+  const setItems = (next: SalonItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof SalonItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { name: "", duration: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">施術</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input label="施術名" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
+          <Input label="所要時間" value={item.duration ?? ""} onChange={(e) => updateItem(i, "duration", e.target.value)} placeholder="60分" />
+          <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
+          <Input label="説明" value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
+          <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ComboItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as ComboItem[];
+  const setItems = (next: ComboItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof ComboItem, value: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setItems(next);
+  };
+  const addItem = () => setItems([...items, { name: "", includes: "", price: "", imageSrc: "", imageAlt: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">セット</span>
+        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+              削除
+            </button>
+          </div>
+          <Input label="セット名" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
+          <Input label="内容" value={item.includes ?? ""} onChange={(e) => updateItem(i, "includes", e.target.value)} />
+          <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
+          <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MenuTimeBandSlotsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const slots = (Array.isArray(content.slots) ? content.slots : []) as TimeSlotRow[];
+  const setSlots = (next: TimeSlotRow[]) => onUpdate("slots", next);
+  const updateSlot = (si: number, patch: Partial<TimeSlotRow>) => {
+    const next = [...slots];
+    next[si] = { ...(next[si] ?? {}), ...patch };
+    setSlots(next);
+  };
+  const updateSlotItems = (si: number, items: MenuTagItem[]) => updateSlot(si, { items });
+  const addSlot = () =>
+    setSlots([
+      ...slots,
+      {
+        label: "ランチ",
+        start: "11:00",
+        end: "14:00",
+        items: [{ name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }],
+      },
+    ]);
+  const removeSlot = (si: number) => setSlots(slots.filter((_, i) => i !== si));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">時間帯スロット</span>
+        <button type="button" onClick={addSlot} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+          + 追加
+        </button>
+      </div>
+      {slots.map((slot, si) => (
+        <div key={si} className="rounded-xl border border-slate-200 bg-white p-3">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeSlot(si)} className="text-xs text-slate-400 hover:text-red-600">
+              スロット削除
+            </button>
+          </div>
+          <Input label="表示名" value={slot.label ?? ""} onChange={(e) => updateSlot(si, { label: e.target.value })} />
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Input label="開始 (HH:MM)" value={slot.start ?? ""} onChange={(e) => updateSlot(si, { start: e.target.value })} />
+            <Input label="終了 (HH:MM)" value={slot.end ?? ""} onChange={(e) => updateSlot(si, { end: e.target.value })} />
+          </div>
+          <p className="mt-2 text-[11px] text-slate-500">同日の範囲のみ対応（終了は含まない）</p>
+          <div className="mt-3">
+            <MenuTagItemsEditor
+              items={Array.isArray(slot.items) ? slot.items : []}
+              onChange={(items) => updateSlotItems(si, items)}
+            />
+          </div>
         </div>
       ))}
     </div>
@@ -1425,7 +1853,7 @@ export function CardSettings({
                 type="button"
                 onClick={handleBulkReplace}
                 disabled={!onBulkReplace}
-                className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 一括置換を実行
               </button>
@@ -1497,6 +1925,9 @@ export function CardSettings({
   const supportsGlobalFontSize = !["divider", "space"].includes(card.type);
   const supportsTitleFontSize = !["text", "image", "divider", "space"].includes(card.type);
   const supportsBodyFontSize = !["button", "action", "divider", "space"].includes(card.type);
+  const supportsGlobalFontWeight = supportsGlobalFontSize;
+  const supportsTitleFontWeight = supportsTitleFontSize;
+  const supportsBodyFontWeight = supportsBodyFontSize;
   const canEditCard = Boolean(onDuplicateCard || onRemoveCard);
   const handleDuplicateCard = () => {
     if (!card || !onDuplicateCard) return;
@@ -2804,7 +3235,185 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="メニュー"
               />
+              <MenuHeroFields content={content} onUpdate={update} />
               <MenuItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "menu_categories" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="メニュー"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <MenuCategoriesGroupsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "daily_special" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="本日のおすすめ"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={content.showDate === true}
+                  onChange={(e) => update("showDate", e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                日付を表示（自動：今日の日付。下記で上書き可）
+              </label>
+              <Input
+                label="日付の上書き（任意）"
+                value={typeof content.dateOverride === "string" ? content.dateOverride : ""}
+                onChange={(e) => update("dateOverride", e.target.value)}
+                placeholder="例: 2026年4月12日（空なら自動）"
+              />
+              <MenuTagItemsEditor
+                items={(Array.isArray(content.items) ? content.items : []) as MenuTagItem[]}
+                onChange={(items) => update("items", items)}
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "drink_menu" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="ドリンク"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <DrinkItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "salon_service_menu" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="施術メニュー"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <SalonItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "combo_set_menu" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="セット・コース"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <ComboItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "menu_sheet_sync" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="メニュー"
+              />
+              <Input
+                label="CSVのURL（https・公開リンク）"
+                value={typeof content.csvUrl === "string" ? content.csvUrl : ""}
+                onChange={(e) => update("csvUrl", e.target.value)}
+                placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0"
+              />
+              <Input
+                label="区切り文字"
+                value={typeof content.delimiter === "string" ? content.delimiter : ","}
+                onChange={(e) => update("delimiter", e.target.value.slice(0, 1) || ",")}
+                placeholder=","
+              />
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={content.hasHeader !== false}
+                  onChange={(e) => update("hasHeader", e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                1行目をヘッダーとしてスキップ
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  label="名前列（0始まり）"
+                  value={String(content.nameColumn ?? 0)}
+                  onChange={(e) => update("nameColumn", parseInt(e.target.value, 10) || 0)}
+                />
+                <Input
+                  label="価格列"
+                  value={String(content.priceColumn ?? 1)}
+                  onChange={(e) => update("priceColumn", parseInt(e.target.value, 10) || 0)}
+                />
+                <Input
+                  label="説明列（-1で無効）"
+                  value={String(content.descriptionColumn ?? 2)}
+                  onChange={(e) => update("descriptionColumn", parseInt(e.target.value, 10))}
+                />
+                <Input
+                  label="タグ列（-1で無効）"
+                  value={String(content.tagColumn ?? -1)}
+                  onChange={(e) => update("tagColumn", parseInt(e.target.value, 10))}
+                />
+              </div>
+              <Input
+                label="取得失敗時の文言"
+                value={display("fallbackText")}
+                onChange={(e) => updateLocalized("fallbackText", e.target.value)}
+              />
+              <Input
+                label="クライアントキャッシュ（秒）"
+                value={String(content.cacheTtlSec ?? 120)}
+                onChange={(e) => update("cacheTtlSec", Math.min(600, Math.max(30, parseInt(e.target.value, 10) || 120)))}
+              />
+            </SettingsSection>
+          )}
+
+          {card.type === "menu_time_band" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="時間帯別メニュー"
+              />
+              <MenuHeroFields content={content} onUpdate={update} />
+              <Input
+                label="タイムゾーン（IANA）"
+                value={typeof content.timezone === "string" ? content.timezone : "Asia/Tokyo"}
+                onChange={(e) => update("timezone", e.target.value.trim() || "Asia/Tokyo")}
+                placeholder="Asia/Tokyo"
+              />
+              <Input
+                label="アクティブ帯の見出し"
+                value={display("currentBandLabel")}
+                onChange={(e) => updateLocalized("currentBandLabel", e.target.value)}
+                placeholder="ただいまのメニュー"
+              />
+              <Input
+                label="該当なし時のメッセージ"
+                value={display("outsideMessage")}
+                onChange={(e) => updateLocalized("outsideMessage", e.target.value)}
+              />
+              <MenuTimeBandSlotsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
@@ -2821,33 +3430,39 @@ export function CardSettings({
               </button>
             ) : (
               <>
-            <div className="w-full">
-              <label className={labelClass}>編集モード</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setStyleMode("standard")}
-                  className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
-                    styleMode === "standard"
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  標準
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStyleMode("advanced")}
-                  className={`rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
-                    styleMode === "advanced"
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  詳細
-                </button>
-              </div>
-            </div>
+                <div className="w-full space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                  <label className={labelClass}>編集モード</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setStyleMode("standard")}
+                      className={`rounded-lg border px-2 py-1.5 text-xs transition ${
+                        styleMode === "standard"
+                          ? "border-slate-900 bg-slate-900 !text-white font-semibold"
+                          : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      標準
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStyleMode("advanced")}
+                      className={`rounded-lg border px-2 py-1.5 text-xs transition ${
+                        styleMode === "advanced"
+                          ? "border-slate-900 bg-slate-900 !text-white font-semibold"
+                          : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      詳細
+                    </button>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-500">
+                    「詳細」でサイズ・太さ・影・余白をまとめて調整できます。空欄の項目はブロック既定か「全体」に従います。
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <StyleGroup summary="プリセット・内側の角丸" defaultOpen>
             <div className="w-full">
               <label className={labelClass}>プリセット</label>
               <div className="grid grid-cols-3 gap-2">
@@ -2916,6 +3531,8 @@ export function CardSettings({
                 className={inputClass}
               />
             </div>
+                  </StyleGroup>
+                  <StyleGroup summary="タイポグラフィ" defaultOpen>
             <div className="w-full">
               <label className={labelClass}>フォント</label>
               <select
@@ -2933,6 +3550,30 @@ export function CardSettings({
                 ))}
               </select>
             </div>
+            <div className="w-full">
+              <label className={labelClass}>フォント色</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={(() => {
+                    const v = (style.textColor as string) ?? "#0f172a";
+                    const hex = v.startsWith("#") ? v.slice(1) : v;
+                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
+                  })()}
+                  onChange={(e) => updateStyle("textColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+                <input
+                  type="text"
+                  value={(style.textColor as string) ?? ""}
+                  onChange={(e) => updateStyle("textColor", e.target.value || undefined)}
+                  placeholder="#0f172a"
+                  className={inputClass + " flex-1"}
+                />
+              </div>
+            </div>
+                  </StyleGroup>
+                  <StyleGroup summary="背景・内部の色" defaultOpen>
             <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
@@ -3044,6 +3685,8 @@ export function CardSettings({
                 <p className="mt-1 text-[11px] text-slate-500">#RRGGBB 形式（例: #f8fafc）</p>
               </div>
             ) : null}
+                  </StyleGroup>
+                  <StyleGroup summary="枠線・保護" defaultOpen>
             <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
@@ -3104,29 +3747,9 @@ export function CardSettings({
                 削除保護（全削除/削除キー対象外）
               </label>
             </div>
-            <div className="w-full">
-              <label className={labelClass}>フォント色</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={(() => {
-                    const v = (style.textColor as string) ?? "#0f172a";
-                    const hex = v.startsWith("#") ? v.slice(1) : v;
-                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
-                  })()}
-                  onChange={(e) => updateStyle("textColor", e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                />
-                <input
-                  type="text"
-                  value={(style.textColor as string) ?? ""}
-                  onChange={(e) => updateStyle("textColor", e.target.value || undefined)}
-                  placeholder="#0f172a"
-                  className={inputClass + " flex-1"}
-                />
-              </div>
-            </div>
-            {styleMode === "advanced" && (
+                  </StyleGroup>
+            {styleMode === "advanced" ? (
+                  <StyleGroup summary="詳細（サイズ・太さ・影・余白）" defaultOpen>
               <>
                 {supportsGlobalFontSize ? (
                   <div className="w-full">
@@ -3154,7 +3777,7 @@ export function CardSettings({
                       onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">継承（上記に従う）</option>
+                      <option value="">全体に合わせる</option>
                       <option value="xs">極小 (12px)</option>
                       <option value="sm">小 (14px)</option>
                       <option value="base">標準 (16px)</option>
@@ -3172,13 +3795,61 @@ export function CardSettings({
                       onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">継承（上記に従う）</option>
+                      <option value="">全体に合わせる</option>
                       <option value="xs">極小 (12px)</option>
                       <option value="sm">小 (14px)</option>
                       <option value="base">標準 (16px)</option>
                       <option value="lg">大 (18px)</option>
                       <option value="xl">特大 (20px)</option>
                       <option value="2xl">最大 (24px)</option>
+                    </select>
+                  </div>
+                ) : null}
+                {supportsGlobalFontWeight ? (
+                  <div className="w-full">
+                    <label className={labelClass}>フォントウェイト（全体）</label>
+                    <select
+                      value={(style.fontWeight as string) ?? ""}
+                      onChange={(e) => updateStyle("fontWeight", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">既定（タイトル600／本文400）</option>
+                      <option value="normal">通常 (400)</option>
+                      <option value="medium">やや太字 (500)</option>
+                      <option value="semibold">太字 (600)</option>
+                      <option value="bold">特太 (700)</option>
+                    </select>
+                  </div>
+                ) : null}
+                {supportsTitleFontWeight ? (
+                  <div className="w-full">
+                    <label className={labelClass}>タイトルウェイト</label>
+                    <select
+                      value={(style.titleFontWeight as string) ?? ""}
+                      onChange={(e) => updateStyle("titleFontWeight", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">全体に合わせる</option>
+                      <option value="normal">通常 (400)</option>
+                      <option value="medium">やや太字 (500)</option>
+                      <option value="semibold">太字 (600)</option>
+                      <option value="bold">特太 (700)</option>
+                    </select>
+                  </div>
+                ) : null}
+                {supportsBodyFontWeight ? (
+                  <div className="w-full">
+                    <label className={labelClass}>本文ウェイト</label>
+                    <select
+                      value={(style.bodyFontWeight as string) ?? ""}
+                      onChange={(e) => updateStyle("bodyFontWeight", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">全体に合わせる</option>
+                      <option value="normal">通常 (400)</option>
+                      <option value="medium">やや太字 (500)</option>
+                      <option value="semibold">太字 (600)</option>
+                      <option value="bold">特太 (700)</option>
                     </select>
                   </div>
                 ) : null}
@@ -3238,7 +3909,9 @@ export function CardSettings({
                   </select>
                 </div>
               </>
-            )}
+                  </StyleGroup>
+            ) : null}
+                </div>
               </>
             )}
           </SettingsSection>

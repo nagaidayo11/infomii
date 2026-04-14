@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -38,13 +38,13 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
           placeholder={labels.titlePlaceholder}
         />
       </p>

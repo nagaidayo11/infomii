@@ -45,7 +45,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
     <Card padding="none" className="">
       <div
         data-inner-surface
-        className={`px-3 py-2.5 font-medium leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`}
+        className={`px-3 py-2.5 font-normal leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`}
         style={getBodyFontSizeStyle()}
       >
         <InlineEditable
@@ -54,7 +54,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
           editable={isSelected}
           onActivate={onActivate}
           multiline
-          className="font-medium text-slate-800"
+          className="font-normal text-slate-800"
           placeholder={labels.placeholder}
         />
       </div>

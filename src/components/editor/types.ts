@@ -54,7 +54,14 @@ export type CardType =
   | "contact_hub"
   | "progress_steps"
   | "emergency_banner"
-  | "scheduled_banner";
+  | "scheduled_banner"
+  | "menu_categories"
+  | "daily_special"
+  | "drink_menu"
+  | "salon_service_menu"
+  | "combo_set_menu"
+  | "menu_sheet_sync"
+  | "menu_time_band";
 
 /** Optional card appearance (e.g. background, padding). Stored with card. */
 export type CardStyle = Record<string, unknown>;
@@ -68,30 +75,59 @@ const FONT_SIZE_MAP: Record<string, string> = {
   "2xl": "1.5rem",
 };
 
+/** Optional font-weight keys for block style (maps to numeric CSS weight). */
+const FONT_WEIGHT_MAP: Record<string, string> = {
+  normal: "400",
+  medium: "500",
+  semibold: "600",
+  bold: "700",
+};
+
 /** CSS variable names for title/body font sizes (set on block wrapper, used by card components). */
 export const BLOCK_TITLE_FONT_SIZE_VAR = "--block-title-font-size";
 export const BLOCK_BODY_FONT_SIZE_VAR = "--block-body-font-size";
+
+/** CSS variable names for title/body/global font weights. */
+export const BLOCK_FONT_WEIGHT_VAR = "--block-font-weight";
+export const BLOCK_TITLE_FONT_WEIGHT_VAR = "--block-title-font-weight";
+export const BLOCK_BODY_FONT_WEIGHT_VAR = "--block-body-font-weight";
+
+/** Default title/body weights when block style does not set CSS vars (600 / 400). */
+export const DEFAULT_BLOCK_TITLE_FONT_WEIGHT = "600";
+export const DEFAULT_BLOCK_BODY_FONT_WEIGHT = "400";
 
 /** Resolve font size key to CSS value. */
 export function resolveFontSize(key: string | undefined): string | undefined {
   return key && FONT_SIZE_MAP[key] ? FONT_SIZE_MAP[key] : undefined;
 }
 
-/** Style for title elements - use var from block wrapper, fallback to block fontSize then 1rem. */
-export function getTitleFontSizeStyle(): import("react").CSSProperties {
-  return { fontSize: "var(--block-title-font-size, var(--block-font-size, 1rem))" };
+/** Resolve font weight key to numeric string (400–700). */
+export function resolveFontWeight(key: string | undefined): string | undefined {
+  return key && FONT_WEIGHT_MAP[key] ? FONT_WEIGHT_MAP[key] : undefined;
 }
 
-/** Style for body elements - use var from block wrapper, fallback to block fontSize then 0.875rem. */
+/** Style for title elements — font size + optional weight from block style CSS vars. */
+export function getTitleFontSizeStyle(): import("react").CSSProperties {
+  return {
+    fontSize: "var(--block-title-font-size, var(--block-font-size, 1rem))",
+    fontWeight: `var(${BLOCK_TITLE_FONT_WEIGHT_VAR}, var(${BLOCK_FONT_WEIGHT_VAR}, ${DEFAULT_BLOCK_TITLE_FONT_WEIGHT}))`,
+  };
+}
+
+/** Style for body elements — font size + optional weight from block style CSS vars. */
 export function getBodyFontSizeStyle(): import("react").CSSProperties {
-  return { fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))" };
+  return {
+    fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))",
+    fontWeight: `var(${BLOCK_BODY_FONT_WEIGHT_VAR}, var(${BLOCK_FONT_WEIGHT_VAR}, ${DEFAULT_BLOCK_BODY_FONT_WEIGHT}))`,
+  };
 }
 
 /**
- * Default guest card block title typography (Checkout / Notice / Wi‑Fi baseline).
- * Use with {@link getTitleFontSizeStyle}; merge with `leading-tight` etc. as needed.
+ * Default guest card block title **color** (slate). Font weight must come from
+ * {@link getTitleFontSizeStyle} / CSS vars — do not add `font-bold` here or nested
+ * `InlineEditable` will override block style font-weight.
  */
-export const CARD_BLOCK_TITLE_CLASS = "font-medium text-slate-800" as const;
+export const CARD_BLOCK_TITLE_CLASS = "text-slate-800" as const;
 
 /** Extract block style (boxShadow, backgroundColor, fontSize, innerBorderRadius CSS var, …) for the block wrapper. Block outer radius comes from the canvas frame; inner chips use --editor-inner-border-radius. */
 export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
@@ -104,6 +140,10 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   const fontSize = resolveFontSize(fontSizeKey);
   const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
   const bodyFontSize = resolveFontSize(s.bodyFontSize as string | undefined);
+  const fontWeightKey = s.fontWeight as string | undefined;
+  const fontWeight = resolveFontWeight(fontWeightKey);
+  const titleFontWeight = resolveFontWeight(s.titleFontWeight as string | undefined);
+  const bodyFontWeight = resolveFontWeight(s.bodyFontWeight as string | undefined);
   const innerR = (s as Record<string, unknown>).innerBorderRadius;
   const innerSurfaceModeRaw = (s as Record<string, unknown>).innerSurfaceMode;
   const innerSurfaceMode =
@@ -172,6 +212,9 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   }
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
   if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;
+  if (fontWeight) (style as Record<string, string>)[BLOCK_FONT_WEIGHT_VAR] = fontWeight;
+  if (titleFontWeight) (style as Record<string, string>)[BLOCK_TITLE_FONT_WEIGHT_VAR] = titleFontWeight;
+  if (bodyFontWeight) (style as Record<string, string>)[BLOCK_BODY_FONT_WEIGHT_VAR] = bodyFontWeight;
   if (innerRadiusPx) {
     (style as Record<string, string>)["--editor-inner-border-radius"] = innerRadiusPx;
   }
@@ -263,6 +306,13 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   progress_steps: "進捗ステップ",
   emergency_banner: "緊急告知バナー",
   scheduled_banner: "期間限定バナー",
+  menu_categories: "カテゴリ別メニュー",
+  daily_special: "本日のおすすめ",
+  drink_menu: "ドリンクメニュー",
+  salon_service_menu: "施術メニュー",
+  combo_set_menu: "セット・コース",
+  menu_sheet_sync: "メニュー（表連携）",
+  menu_time_band: "時間帯別メニュー",
 };
 
 /** Card types shown in the editor library (Canva-style). */
@@ -295,6 +345,14 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "emergency_banner",
   "scheduled_banner",
   "gallery",
+  "menu",
+  "menu_categories",
+  "daily_special",
+  "drink_menu",
+  "salon_service_menu",
+  "combo_set_menu",
+  "menu_sheet_sync",
+  "menu_time_band",
   "divider",
   "space",
 ];
@@ -329,6 +387,14 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
   { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
+  { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
+  { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
+  { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
+  { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
+  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
+  { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
+  { type: "menu_sheet_sync", label: "メニュー（表連携）", description: "公開CSV/スプレッドシートから取得（Business）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
 ];
@@ -366,7 +432,14 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "image", label: "画像", description: "写真" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
   { type: "schedule", label: "営業時間一覧", description: "曜日・時間・補足を一覧化" },
-  { type: "menu", label: "メニュー一覧", description: "メニュー名・価格・説明を表示" },
+  { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
+  { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
+  { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
+  { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
+  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
+  { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
+  { type: "menu_sheet_sync", label: "メニュー（表連携）", description: "公開CSV/スプレッドシートから取得（Business）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
@@ -396,11 +469,30 @@ export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
   "coupon",
   "emergency_banner",
   "scheduled_banner",
+  "menu_sheet_sync",
+  "menu_time_band",
 ];
 
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
 export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/hero-slider-default-2.png";
+
+/**
+ * Menu系カードの静的サンプル画像（`public/` 配置・追加ブロック時は API 呼び出しなし）。
+ * 飲食／ドリンク／サロンでテーマを分け、LP やアプリ UI のスクショは使わない。
+ */
+export const PRESET_MENU_HERO_DINING = "/preset-menu-hero-dining.jpg";
+export const PRESET_MENU_HERO_BEVERAGE = "/preset-menu-hero-beverage.jpg";
+export const PRESET_MENU_HERO_SALON = "/preset-menu-hero-salon.jpg";
+/** セット・コース向け（複数皿・飲み物のテーブルショット） */
+export const PRESET_MENU_HERO_COURSE = "/preset-menu-hero-course.jpg";
+export const PRESET_MENU_THUMB_FOOD = "/preset-menu-thumb-food.jpg";
+export const PRESET_MENU_THUMB_BEVERAGE = "/preset-menu-thumb-beverage.jpg";
+export const PRESET_MENU_THUMB_SALON = "/preset-menu-thumb-salon.jpg";
+/** カテゴリ帯（フード想定のダイニングテーブル） */
+export const PRESET_MENU_BANNER_CATEGORY = "/preset-menu-banner-category.jpg";
+/** ドリンクカテゴリ帯（飲料写真・ヒーローと同アセット可） */
+export const PRESET_MENU_BANNER_BEVERAGE = "/preset-menu-hero-beverage.jpg";
 
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
@@ -486,8 +578,16 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "menu":
       return {
         title: "メニュー",
+        heroSrc: PRESET_MENU_HERO_DINING,
+        heroAlt: "メニューのイメージ",
         items: [
-          { name: "朝食ビュッフェ", price: "1,800円", description: "和洋30種以上" },
+          {
+            name: "朝食ビュッフェ",
+            price: "1,800円",
+            description: "和洋30種以上",
+            imageSrc: PRESET_MENU_THUMB_FOOD,
+            imageAlt: "料理イメージ",
+          },
           { name: "ルームサービス", price: "900円〜", description: "22:00まで注文可能" },
         ],
       };
@@ -645,7 +745,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "compare":
       return {
-        title: "プラン比較",
+        title: "プランの比較",
         leftTitle: "スタンダード",
         leftBody: "朝食付き・通常チェックアウト",
         rightTitle: "プレミアム",
@@ -653,11 +753,149 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "kpi":
       return {
-        title: "施設情報",
+        title: "ご案内の要点",
         items: [
           { label: "チェックイン", value: "15:00" },
           { label: "チェックアウト", value: "11:00" },
           { label: "フロント内線", value: "9" },
+        ],
+      };
+    case "menu_categories":
+      return {
+        title: "メニュー",
+        heroSrc: PRESET_MENU_HERO_DINING,
+        heroAlt: "メニューのイメージ",
+        categories: [
+          {
+            title: "フード",
+            imageSrc: PRESET_MENU_BANNER_CATEGORY,
+            imageAlt: "フードカテゴリのイメージ",
+            items: [
+              { name: "本日のパスタ", price: "980円", description: "トマトソース", tag: "人気" },
+              { name: "季節のサラダ", price: "450円", description: "", tag: "" },
+            ],
+          },
+          {
+            title: "ドリンク",
+            imageSrc: PRESET_MENU_BANNER_BEVERAGE,
+            imageAlt: "ドリンクカテゴリのイメージ",
+            items: [
+              { name: "アイスコーヒー", price: "350円", description: "", tag: "" },
+            ],
+          },
+        ],
+      };
+    case "daily_special":
+      return {
+        title: "本日のおすすめ",
+        heroSrc: PRESET_MENU_HERO_DINING,
+        heroAlt: "本日のおすすめのイメージ",
+        showDate: true,
+        items: [
+          {
+            name: "漁港直送の刺身盛り",
+            price: "1,480円",
+            description: "数量限定",
+            imageSrc: PRESET_MENU_THUMB_FOOD,
+            imageAlt: "おすすめ料理のイメージ",
+          },
+          { name: "シェフ特製スープ", price: "380円", description: "" },
+        ],
+      };
+    case "drink_menu":
+      return {
+        title: "ドリンク",
+        heroSrc: PRESET_MENU_HERO_BEVERAGE,
+        heroAlt: "ドリンクメニューのイメージ",
+        items: [
+          {
+            name: "ブレンドコーヒー",
+            sizes: "S 350円 / L 450円",
+            note: "ICE / HOT",
+            imageSrc: PRESET_MENU_THUMB_BEVERAGE,
+            imageAlt: "ドリンクのイメージ",
+          },
+          { name: "オレンジジュース", sizes: "M 400円", note: "" },
+        ],
+      };
+    case "salon_service_menu":
+      return {
+        title: "施術メニュー",
+        heroSrc: PRESET_MENU_HERO_SALON,
+        heroAlt: "サロンのイメージ",
+        items: [
+          {
+            name: "カット",
+            duration: "60分",
+            price: "4,400円",
+            description: "シャンプー込み",
+            imageSrc: PRESET_MENU_THUMB_SALON,
+            imageAlt: "施術のイメージ",
+          },
+          { name: "カラー", duration: "90分", price: "8,800円〜", description: "" },
+        ],
+      };
+    case "combo_set_menu":
+      return {
+        title: "セット・コース",
+        heroSrc: PRESET_MENU_HERO_COURSE,
+        heroAlt: "セットメニューのイメージ",
+        items: [
+          {
+            name: "ランチセット",
+            includes: "メイン＋ドリンク＋サラダ",
+            price: "1,200円",
+            imageSrc: PRESET_MENU_THUMB_FOOD,
+            imageAlt: "セットのイメージ",
+          },
+          { name: "お得なペアコース", includes: "Wメイン＋デザート", price: "3,800円" },
+        ],
+      };
+    case "menu_sheet_sync":
+      return {
+        title: "メニュー",
+        csvUrl: "",
+        delimiter: ",",
+        hasHeader: true,
+        nameColumn: 0,
+        priceColumn: 1,
+        descriptionColumn: 2,
+        tagColumn: -1,
+        fallbackText: "メニューを読み込めませんでした。時間をおいて再度お試しください。",
+        cacheTtlSec: 120,
+      };
+    case "menu_time_band":
+      return {
+        title: "時間帯別メニュー",
+        heroSrc: PRESET_MENU_HERO_DINING,
+        heroAlt: "時間帯メニューのイメージ",
+        timezone: "Asia/Tokyo",
+        currentBandLabel: "ただいまのメニュー",
+        outsideMessage: "現在この時間帯の提供メニューはありません。",
+        slots: [
+          {
+            label: "ランチ",
+            start: "11:00",
+            end: "14:00",
+            items: [
+              {
+                name: "ランチプレート",
+                price: "980円",
+                description: "11:00〜14:00",
+                tag: "",
+                imageSrc: PRESET_MENU_THUMB_FOOD,
+                imageAlt: "ランチ料理のイメージ",
+              },
+            ],
+          },
+          {
+            label: "ディナー",
+            start: "17:00",
+            end: "21:00",
+            items: [
+              { name: "シェフおまかせコース", price: "4,800円", description: "要予約", tag: "" },
+            ],
+          },
         ],
       };
     default:

@@ -74,15 +74,15 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
         className={`${editorInnerRadiusClassName} flex flex-col gap-3 overflow-hidden border border-amber-200 bg-amber-50/80 px-3 py-2.5`}
       >
         <div className="flex flex-col gap-1">
-          <p className="text-base font-medium leading-snug text-amber-900" style={getTitleFontSizeStyle()}>{title}</p>
+          <p className="text-base leading-snug text-amber-900" style={getTitleFontSizeStyle()}>{title}</p>
           {description ? (
             <p className="text-sm leading-snug text-amber-900/90" style={getBodyFontSizeStyle()}>{description}</p>
           ) : null}
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium tracking-wide text-amber-800" style={getBodyFontSizeStyle()}>{statusLabel}</p>
+          <p className="text-xs font-normal tracking-wide text-amber-800" style={getBodyFontSizeStyle()}>{statusLabel}</p>
           {(state === "before" || state === "during") && (
-            <div className="flex items-center gap-1.5 font-mono text-sm font-medium tabular-nums text-amber-900" style={getBodyFontSizeStyle()}>
+            <div className="flex items-center gap-1.5 font-mono text-sm font-normal tabular-nums text-amber-900" style={getBodyFontSizeStyle()}>
               <span>{days}d</span>
               <span>{formatPart(hours)}h</span>
               <span>{formatPart(minutes)}m</span>
@@ -95,7 +95,7 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
             href={ctaUrl}
             target={ctaUrl.startsWith("/") ? undefined : "_blank"}
             rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
-            className={`inline-flex ${editorInnerRadiusClassName} bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800`}
+            className={`inline-flex ${editorInnerRadiusClassName} bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800`}
             style={getBodyFontSizeStyle()}
           >
             {ctaLabel}

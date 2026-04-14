@@ -60,6 +60,15 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
     ),
   },
   {
+    href: "/dashboard/qr",
+    label: "QR",
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h4v4H4V5zm6 0h4v4h-4V5zm6 0h4v4h-4V5zM4 11h4v4H4v-4zm12 0h4v4h-4v-4zM4 17h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM11 11h2v2h-2v-2z" />
+      </svg>
+    ),
+  },
+  {
     href: "/settings",
     label: "設定",
     icon: (

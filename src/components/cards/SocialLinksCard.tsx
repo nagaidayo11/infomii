@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 
@@ -11,7 +11,7 @@ export function SocialLinksCard({ card }: { card: EditorCard; isSelected?: boole
   const items = (Array.isArray(c.items) ? c.items : []) as Array<{ label?: string; href?: string; handle?: string }>;
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>{title}</p>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
       <div className="mt-3 grid grid-cols-1 gap-2">
         {items.map((item, idx) => {
           const href = typeof item.href === "string" ? item.href : "";
@@ -19,7 +19,7 @@ export function SocialLinksCard({ card }: { card: EditorCard; isSelected?: boole
           const handle = item.handle || "";
           const inner = (
             <div data-inner-surface className={`${editorInnerRadiusClassName} flex items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2`}>
-              <span className="text-sm font-medium text-slate-800" style={getBodyFontSizeStyle()}>{label}</span>
+              <span className="text-sm font-normal text-slate-800" style={getBodyFontSizeStyle()}>{label}</span>
               <span className="text-xs text-slate-500" style={getBodyFontSizeStyle()}>{handle}</span>
             </div>
           );

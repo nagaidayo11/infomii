@@ -122,7 +122,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openCheckout("pro")}
               disabled={busyAction !== null}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "pro" ? "処理中…" : "Proを申し込む"}
             </button>
@@ -142,7 +142,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "Businessへアップグレード"}
             </button>
@@ -162,7 +162,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
             </button>

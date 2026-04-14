@@ -57,14 +57,6 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
           {qrUrl}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <a
-            href={qrImageSrc}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
-          >
-            QRコード生成
-          </a>
           <button
             type="button"
             onClick={handleDownload}

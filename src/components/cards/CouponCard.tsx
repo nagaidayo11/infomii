@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 
@@ -43,11 +43,11 @@ export function CouponCard({ card }: CouponCardProps) {
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         {title}
       </p>
       <div data-inner-surface className={`mt-3 border border-amber-300 bg-amber-50 px-3 py-3 ${editorInnerRadiusClassName}`}>
-        <p className="text-xs font-medium uppercase tracking-wide text-amber-700" style={getBodyFontSizeStyle()}>
+        <p className="text-xs font-normal uppercase tracking-wide text-amber-700" style={getBodyFontSizeStyle()}>
           クーポンコード
         </p>
         <div className="mt-1 flex items-center justify-between gap-2">
@@ -57,7 +57,7 @@ export function CouponCard({ card }: CouponCardProps) {
           <button
             type="button"
             onClick={handleCopy}
-            className={`shrink-0 border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 ${editorInnerRadiusClassName}`}
+            className={`shrink-0 border border-amber-300 bg-white px-2 py-1 text-xs font-normal text-amber-800 hover:bg-amber-100 ${editorInnerRadiusClassName}`}
           >
             {copied ? "コピー済み" : "コピー"}
           </button>
@@ -79,7 +79,7 @@ export function CouponCard({ card }: CouponCardProps) {
             href={ctaUrl}
             target={ctaUrl.startsWith("/") ? undefined : "_blank"}
             rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
-            className={`mt-3 inline-flex px-3 py-2 text-sm font-medium ${editorInnerRadiusClassName}`}
+            className={`mt-3 inline-flex px-3 py-2 text-sm font-semibold ${editorInnerRadiusClassName}`}
             style={{
               ...getBodyFontSizeStyle(),
               backgroundColor: ctaBgColor,
@@ -91,7 +91,7 @@ export function CouponCard({ card }: CouponCardProps) {
         ) : (
           <button
             type="button"
-            className={`mt-3 inline-flex px-3 py-2 text-sm font-medium ${editorInnerRadiusClassName}`}
+            className={`mt-3 inline-flex px-3 py-2 text-sm font-semibold ${editorInnerRadiusClassName}`}
             style={{
               ...getBodyFontSizeStyle(),
               backgroundColor: ctaBgColor,

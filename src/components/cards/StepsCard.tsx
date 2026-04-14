@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -38,13 +38,13 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
           placeholder={labels.titlePlaceholder}
         />
       </p>
@@ -58,8 +58,8 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
                 {i + 1}
               </span>
               <div data-inner-surface className={`min-w-0 flex-1 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-2`}>
-                <p className="font-medium text-slate-800">{item.title ?? ""}</p>
-                <p className="mt-0.5 text-slate-600">{item.description ?? ""}</p>
+                <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{item.title ?? ""}</p>
+                <p className="mt-0.5 font-normal text-slate-600">{item.description ?? ""}</p>
               </div>
             </li>
           ))

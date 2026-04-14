@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -70,8 +70,8 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
 
   return (
     <Card padding="md" className="">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
       </p>
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
@@ -84,12 +84,12 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
       {linkUrl && (
         <a
           href={linkUrl}
-          className="mt-2 inline-block font-medium text-ds-primary underline"
+          className="mt-2 inline-block font-normal text-ds-primary underline"
           style={getBodyFontSizeStyle()}
           onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
           aria-disabled={isSelected !== undefined ? true : undefined}
         >
-          <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-ds-primary underline" placeholder={labels.detailPlaceholder} />
+          <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={isSelected} onActivate={onActivate} className="font-normal text-ds-primary underline" placeholder={labels.detailPlaceholder} />
         </a>
       )}
     </Card>

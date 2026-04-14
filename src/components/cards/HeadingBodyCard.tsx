@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -37,14 +37,14 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
   return (
     <Card padding="none" hover>
       <section data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-3`}>
-        <h3 className="font-medium leading-tight text-slate-800" style={getTitleFontSizeStyle()}>
+        <h3 className={`${CARD_BLOCK_TITLE_CLASS} leading-tight`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => update("title", v)}
             editable={isSelected}
             onActivate={onActivate}
             placeholder="見出しテキスト"
-            className="font-medium text-slate-800"
+            className={CARD_BLOCK_TITLE_CLASS}
           />
         </h3>
         {dividerEnabled ? <div className={`my-2.5 border-t ${dividerClass}`} style={dividerStyleObj} /> : null}

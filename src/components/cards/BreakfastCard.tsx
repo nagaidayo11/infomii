@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -46,8 +46,8 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
 
   return (
     <Card padding="md" className="">
-      <p className="text-sm font-medium text-slate-800" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="text-sm font-medium text-slate-800" placeholder={labels.titlePlaceholder} />
+      <p className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
       </p>
       <p className="mt-1 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}

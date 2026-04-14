@@ -155,7 +155,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={submitting || !hasSupabaseEnv}
-              className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "処理中..." : isSignUp ? "登録する" : "ログイン"}
             </button>

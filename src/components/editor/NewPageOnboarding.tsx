@@ -55,7 +55,7 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
             type="button"
             onClick={handleUseStarterCards}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-5 py-4 text-left text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-5 py-4 text-left text-sm font-semibold !text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
             {loading ? (
               <>

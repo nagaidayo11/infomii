@@ -39,7 +39,7 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
     <Card padding="md">
       <div className="flex items-center gap-2 text-slate-500">
         <LineIcon name="quote" className="h-4 w-4" />
-        <span className="text-xs font-medium tracking-wide">{labels.quote}</span>
+        <span className="text-xs font-normal tracking-wide">{labels.quote}</span>
       </div>
       <blockquote
         data-inner-surface

@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -72,18 +72,18 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
 
   return (
     <Card padding="md" className="">
-      <p className="flex flex-wrap items-center gap-1.5 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={`flex flex-wrap items-center gap-1.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
         <SosMark />
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" />
+        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
       </p>
       <ul data-inner-surface className={`mt-2 space-y-1 text-slate-600 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`} style={getBodyFontSizeStyle()}>
         <li>
           {labels.fire}:{" "}
-          <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-red-600" placeholder="119" />
+          <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-bold text-red-600" placeholder="119" />
         </li>
         <li>
           {labels.police}:{" "}
-          <InlineEditable value={police} onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })} editable={isSelected} onActivate={onActivate} className="font-medium text-slate-800" placeholder="110" />
+          <InlineEditable value={police} onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder="110" />
         </li>
         <li>
           {labels.hospital}:{" "}

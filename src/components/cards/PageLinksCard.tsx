@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -64,7 +64,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
 
   return (
     <Card padding="md">
-      <h3 className="mb-2.5 font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <h3 className={`mb-2.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
@@ -93,7 +93,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
                   <LineIcon name={iconDisplay} className={iconClass} />
                 </span>
                 <span
-                  className="w-full text-center font-medium leading-tight text-slate-700 break-words [word-break:keep-all]"
+                  className="w-full text-center font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
                   style={getBodyFontSizeStyle()}
                 >
                   {isSelected ? (

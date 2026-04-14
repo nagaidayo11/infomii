@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -39,24 +39,24 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
 
   return (
     <Card padding="md">
-      <p className="font-medium text-slate-800" style={getTitleFontSizeStyle()}>
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         <InlineEditable
           value={title}
           onSave={(v) => update({ title: v })}
           editable={isSelected}
           onActivate={onActivate}
-          className="font-medium text-slate-800"
+          className={CARD_BLOCK_TITLE_CLASS}
           placeholder={labels.placeholder}
         />
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
         <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
-          <p className="font-medium text-slate-800">{leftTitle}</p>
-          <p className="mt-1 text-slate-600">{leftBody}</p>
+          <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{leftTitle}</p>
+          <p className="mt-1 font-normal text-slate-600">{leftBody}</p>
         </div>
         <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
-          <p className="font-medium text-slate-800">{rightTitle}</p>
-          <p className="mt-1 text-slate-600">{rightBody}</p>
+          <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{rightTitle}</p>
+          <p className="mt-1 font-normal text-slate-600">{rightBody}</p>
         </div>
       </div>
     </Card>
