@@ -4,6 +4,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNavDrawer } from "./MobileNavDrawer";
+import { RouteProgressProvider } from "./RouteProgressContext";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -30,17 +31,19 @@ export function AppLayout({
 
   return (
     <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-slate-100/90">
-      <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
-        <main
-          className="app-page-enter flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
-          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-        >
-          {children}
-        </main>
-      </div>
+      <RouteProgressProvider>
+        <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
+          <main
+            className="app-page-enter flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          >
+            {children}
+          </main>
+        </div>
+      </RouteProgressProvider>
     </div>
   );
 }

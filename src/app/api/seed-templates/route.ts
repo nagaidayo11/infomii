@@ -9,22 +9,43 @@ type SeedTemplate = {
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
 };
 
-const STYLE_KEY = "_style";
 const DEFAULT_HERO_IMAGE = "/preset-hero-sample.png";
+const DEFAULT_PREVIEW_IMAGE = "/preset-hero-sample.png";
 
-const CATEGORY_GALLERY_IMAGES: Record<string, string[]> = {
-  business: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  resort: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  ryokan: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  airbnb: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  guide: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  inbound: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
-  default: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+const THEME_IMAGE_SETS: Record<string, { hero: string; details: string[] }> = {
+  business: {
+    hero: "/template-business-hero-01.jpg",
+    details: ["/template-business-detail-01.jpg", "/template-business-detail-02.jpg", "/template-business-detail-03.jpg"],
+  },
+  resort: {
+    hero: "/template-resort-hero-01.jpg",
+    details: ["/template-resort-detail-01.jpg", "/template-resort-detail-02.jpg", "/template-resort-detail-03.jpg"],
+  },
+  ryokan: {
+    hero: "/template-ryokan-hero-01.jpg",
+    details: ["/template-ryokan-detail-01.jpg", "/template-ryokan-detail-02.jpg", "/template-ryokan-detail-03.jpg"],
+  },
+  airbnb: {
+    hero: "/template-airbnb-hero-01.jpg",
+    details: ["/template-airbnb-detail-01.jpg", "/template-airbnb-detail-02.jpg", "/template-airbnb-detail-03.jpg"],
+  },
+  guide: {
+    hero: "/template-guide-hero-01.jpg",
+    details: ["/template-guide-detail-01.jpg", "/template-guide-detail-02.jpg", "/template-guide-detail-03.jpg"],
+  },
+  inbound: {
+    hero: "/template-inbound-hero-01.jpg",
+    details: ["/template-inbound-detail-01.jpg", "/template-inbound-detail-02.jpg", "/template-inbound-detail-03.jpg"],
+  },
+  default: {
+    hero: DEFAULT_HERO_IMAGE,
+    details: [DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE, DEFAULT_HERO_IMAGE],
+  },
 };
 
 function galleryItemsForCategory(category: string | null): Array<{ src: string; alt: string }> {
-  const key = category && CATEGORY_GALLERY_IMAGES[category] ? category : "default";
-  return CATEGORY_GALLERY_IMAGES[key].map((src, i) => ({ src, alt: `gallery-${i + 1}` }));
+  const key = category && THEME_IMAGE_SETS[category] ? category : "default";
+  return THEME_IMAGE_SETS[key].details.map((src, i) => ({ src, alt: `gallery-${i + 1}` }));
 }
 
 function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: string; label: string; description: string }> {
@@ -67,6 +88,8 @@ function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: str
 }
 
 function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
+  const key = template.category && THEME_IMAGE_SETS[template.category] ? template.category : "default";
+  const imageSet = THEME_IMAGE_SETS[key];
   const cards = template.cards.map((card) => ({
     ...card,
     content: { ...(card.content ?? {}) },
@@ -75,10 +98,7 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
   // Fill missing hero image.
   for (const card of cards) {
     if (card.type !== "hero") continue;
-    const image = typeof card.content.image === "string" ? card.content.image.trim() : "";
-    if (!image) {
-      card.content.image = DEFAULT_HERO_IMAGE;
-    }
+    card.content.image = imageSet.hero;
   }
 
   // Fill gallery image sources with category-aware samples.
@@ -157,27 +177,9 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
 
   return {
     ...template,
+    preview_image: imageSet.hero || DEFAULT_PREVIEW_IMAGE,
     cards: cards.map((card, index) => ({ ...card, order: index })),
   };
-}
-
-function getBaseCardStyle(type: string): Record<string, unknown> {
-  const shared = {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 12,
-    boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
-    borderColor: "#e2e8f0",
-  };
-  switch (type) {
-    case "hero":
-      return {
-        ...shared,
-        borderRadius: 18,
-      };
-    default:
-      return shared;
-  }
 }
 
 function rotate<T>(arr: T[], offset: number): T[] {
@@ -355,36 +357,22 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
   };
 }
 
-function applyTemplateVisualStyles(template: SeedTemplate): SeedTemplate {
-  const cards = template.cards.map((card, index) => {
-    const content = { ...(card.content ?? {}) };
-    const existingStyle =
-      STYLE_KEY in content && typeof content[STYLE_KEY] === "object" && content[STYLE_KEY] != null
-        ? (content[STYLE_KEY] as Record<string, unknown>)
-        : {};
-    const style = {
-      ...getBaseCardStyle(card.type),
-      ...existingStyle,
-    };
-    // Keep typography and block surface color on app defaults for visual consistency.
-    delete (style as Record<string, unknown>).fontSize;
-    delete (style as Record<string, unknown>).titleFontSize;
-    delete (style as Record<string, unknown>).bodyFontSize;
-    delete (style as Record<string, unknown>).backgroundColor;
-    delete (style as Record<string, unknown>).textColor;
-    delete (style as Record<string, unknown>).padding;
-    const nextContent: Record<string, unknown> = {
-      ...content,
-      [STYLE_KEY]: style,
-    };
-    return {
+function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
+  const importantTypes = new Set(["hero", "summary", "wifi", "breakfast", "checkout", "faq", "cta"]);
+  const cards = template.cards
+    .filter((card) => card && typeof card.type === "string")
+    .slice(0, 9)
+    .map((card, index) => ({
       ...card,
-      content: nextContent,
-    };
-  });
+      order: index,
+      content: { ...(card.content ?? {}) },
+    }));
+
+  const hasImportant = cards.some((card) => importantTypes.has(card.type));
+  if (hasImportant) return { ...template, cards };
   return {
     ...template,
-    cards,
+    cards: cards.slice(0, 8),
   };
 }
 
@@ -392,7 +380,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・即運用セット",
     description: "出張客向けに、Wi-Fi・朝食・ランドリー・チェックアウト導線を最適化した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "hero", content: { title: "Business Stay Guide", subtitle: "必要情報を1ページで確認", image: "/preset-hero-sample.png" }, order: 0 },
@@ -407,7 +395,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・体験訴求セット",
     description: "館内体験とアクティビティを中心に、滞在価値を伝える構成です。",
-    preview_image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Resort Experience", subtitle: "非日常の滞在を満喫", image: "/preset-hero-sample.png" }, order: 0 },
@@ -421,7 +409,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "旅館・おもてなし案内セット",
     description: "大浴場・食事処・館内作法を丁寧に伝える和風旅館向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "welcome", content: { title: "ご到着ありがとうございます", message: "湯と食を楽しむひとときをお過ごしください。" }, order: 0 },
@@ -435,7 +423,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "民泊・セルフチェックインセット",
     description: "セルフ運用に必要な手順、ハウスルール、緊急連絡をまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "hero", content: { title: "Welcome to Your Stay", subtitle: "セルフチェックイン案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -449,7 +437,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "観光ガイド・回遊促進セット",
     description: "周辺スポットと移動導線を整理し、滞在中の回遊を促す構成です。",
-    preview_image: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "hero", content: { title: "Local Guide", subtitle: "周辺のおすすめを厳選", image: "/preset-hero-sample.png" }, order: 0 },
@@ -463,7 +451,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ファミリー向け・館内回遊セット",
     description: "館内導線をわかりやすくし、子連れ滞在で必要な情報を網羅した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Family Stay Guide", subtitle: "お子さま連れでも安心", image: "/preset-hero-sample.png" }, order: 0 },
@@ -477,7 +465,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "駅前特化ビジホ・時短導線セット",
     description: "駅徒歩圏の強みを活かし、移動・チェックイン・朝の出発を最短化した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "hero", content: { title: "Station Access Smart Stay", subtitle: "駅徒歩3分・最短導線で迷わない", image: "/preset-hero-sample.png" }, order: 0 },
@@ -492,7 +480,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "インバウンド特化・多言語おもてなしセット",
     description: "海外ゲスト向けに、交通・決済・ハウスルールをわかりやすく伝える多言語運用向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "hero", content: { title: "Welcome International Guests", subtitle: "EN/JP対応の滞在ガイド", image: "/preset-hero-sample.png" }, order: 0 },
@@ -507,7 +495,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "連泊ゲスト向け・快適滞在セット",
     description: "2泊以上のゲスト向けに、清掃タイミング・ランドリー・周辺導線を強化した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1455587734955-081b22074882?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "welcome", content: { title: "Long Stay Guide", message: "連泊中に便利な情報をまとめています。" }, order: 0 },
@@ -521,7 +509,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "スパ&ウェルネス重視セット",
     description: "スパ・温浴・食事の時間設計を重視し、滞在満足を高める構成です。",
-    preview_image: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Wellness Stay", subtitle: "整える滞在体験をご案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -535,7 +523,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "旅館・食事時間重視セット",
     description: "夕朝食の導線と館内作法を中心に、和旅館運用に最適化した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "welcome", content: { title: "ご滞在のご案内", message: "お食事と温泉をゆったりお楽しみください。" }, order: 0 },
@@ -549,7 +537,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "Airbnb・ワーケーション向けセット",
     description: "長期滞在・リモートワーク利用向けに、設備情報と生活導線を重視した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "hero", content: { title: "Workation Home Guide", subtitle: "仕事も滞在も快適に", image: "/preset-hero-sample.png" }, order: 0 },
@@ -563,7 +551,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "インバウンド・空港アクセス重視セット",
     description: "海外ゲスト向けに、空港アクセス・決済・緊急時の英語導線を強化した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "welcome", content: { title: "Airport Access Guide", message: "International guests can check transport and payment info here." }, order: 0 },
@@ -577,7 +565,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・深夜到着対応セット",
     description: "深夜チェックインの案内を中心に、到着後の迷いを減らす構成です。",
-    preview_image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "welcome", content: { title: "深夜到着のお客様へ", message: "24時以降のご案内をまとめています。" }, order: 0 },
@@ -590,7 +578,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・会議参加者向けセット",
     description: "会場アクセス・朝食・領収書対応をまとめた出張参加者向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "hero", content: { title: "Conference Stay", subtitle: "会議参加をスムーズに", image: "/preset-hero-sample.png" }, order: 0 },
@@ -603,7 +591,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・女性出張安心セット",
     description: "セキュリティとアメニティ案内を強化した女性出張向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1496417263034-38ec4f0b665a?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "welcome", content: { title: "安心してご滞在ください", message: "セキュリティ・設備情報をまとめています。" }, order: 0 },
@@ -616,7 +604,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ビジネスホテル・朝活サポートセット",
     description: "早朝行動に必要な情報を集約した朝活・早朝移動向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "hero", content: { title: "Morning Smart Stay", subtitle: "早朝を有効活用", image: "/preset-hero-sample.png" }, order: 0 },
@@ -629,7 +617,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・連泊体験セット",
     description: "2〜3日滞在を想定し、日ごとの過ごし方を提案する構成です。",
-    preview_image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "3 Days Resort Plan", subtitle: "連泊で楽しむ滞在提案", image: "/preset-hero-sample.png" }, order: 0 },
@@ -642,7 +630,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・ハネムーンセット",
     description: "記念日滞在向けに、演出・食事・写真導線を整えた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Honeymoon Stay", subtitle: "特別な滞在をサポート", image: "/preset-hero-sample.png" }, order: 0 },
@@ -655,7 +643,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・雨の日満喫セット",
     description: "天候不良時でも館内で楽しめる導線をまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1534274867514-d5b47ef89ed7?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "welcome", content: { title: "Rainy Day Plan", message: "館内で快適に過ごせる情報をご案内します。" }, order: 0 },
@@ -668,7 +656,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "リゾートホテル・アクティビティ重視セット",
     description: "海・山・体験予約を主軸にしたアクティビティ訴求構成です。",
-    preview_image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Activity Base", subtitle: "外遊びを最大化する滞在案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -681,7 +669,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "旅館・温泉街散策セット",
     description: "温泉街の回遊と館内滞在を両立させる旅館向け構成です。",
-    preview_image: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "welcome", content: { title: "温泉街散策のご案内", message: "徒歩で楽しめる周辺情報をまとめました。" }, order: 0 },
@@ -694,7 +682,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "旅館・団体旅行向けセット",
     description: "団体客向けに、食事時間・移動・館内ルールを整理した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "hero", content: { title: "Group Stay Guide", subtitle: "団体様向け案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -707,7 +695,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "旅館・ファミリー三世代向けセット",
     description: "三世代旅行でも使いやすい導線・食事・温泉情報を整えた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "welcome", content: { title: "三世代でのご滞在へ", message: "年齢問わず快適に過ごせる情報をまとめています。" }, order: 0 },
@@ -720,7 +708,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "Airbnb・ファミリー滞在セット",
     description: "子連れ民泊で必要なルール・設備・周辺情報をまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "hero", content: { title: "Family Home Stay", subtitle: "ご家族向け案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -733,7 +721,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "Airbnb・一人旅ミニマルセット",
     description: "一人旅ゲスト向けに必要情報だけを簡潔にまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "welcome", content: { title: "Welcome Solo Traveler", message: "快適な一人旅をサポートします。" }, order: 0 },
@@ -746,7 +734,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "Airbnb・ペット同伴セット",
     description: "ペット同伴滞在で必要なルール・設備案内を整えた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "hero", content: { title: "Pet Friendly Stay", subtitle: "ペット同伴のご案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -759,7 +747,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "観光ガイド・半日モデルコースセット",
     description: "半日で回れる観光導線を提案するベーシック観光構成です。",
-    preview_image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "hero", content: { title: "Half-Day Guide", subtitle: "半日で楽しむおすすめ", image: "/preset-hero-sample.png" }, order: 0 },
@@ -772,7 +760,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "観光ガイド・グルメ巡りセット",
     description: "食べ歩き・地元名店を中心に構成したグルメ特化ガイドです。",
-    preview_image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "welcome", content: { title: "グルメガイド", message: "地元で人気の店を厳選しました。" }, order: 0 },
@@ -785,7 +773,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "観光ガイド・雨天代替スポットセット",
     description: "雨の日でも楽しめる屋内スポット中心の構成です。",
-    preview_image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "hero", content: { title: "Rainy Day Spots", subtitle: "天候不良でも楽しめる", image: "/preset-hero-sample.png" }, order: 0 },
@@ -798,7 +786,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "インバウンド・家族旅行セット",
     description: "海外ファミリー向けに、移動・食事・緊急対応をまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "welcome", content: { title: "Family Travel Guide", message: "EN support available for family guests." }, order: 0 },
@@ -811,7 +799,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "インバウンド・公共交通特化セット",
     description: "電車・バス移動を中心に説明する交通特化構成です。",
-    preview_image: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "hero", content: { title: "Public Transport Guide", subtitle: "Train & Bus Access", image: "/preset-hero-sample.png" }, order: 0 },
@@ -824,7 +812,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "インバウンド・長期滞在サポートセット",
     description: "1週間以上の海外滞在者向けに生活情報を重視した構成です。",
-    preview_image: "https://images.unsplash.com/photo-1496417263034-38ec4f0b665a?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "welcome", content: { title: "Long Stay Support", message: "Useful local info for extended stays." }, order: 0 },
@@ -837,7 +825,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・ビジネスホテル案内",
     description: "出張利用で最低限必要な情報を1ページにまとめた基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "welcome", content: { title: "ご案内", message: "ご滞在に必要な情報をまとめています。" }, order: 0 },
@@ -850,7 +838,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・リゾートホテル案内",
     description: "館内施設と基本動線をシンプルに伝えるリゾート向け基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1469796466635-455ede028aca?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "hero", content: { title: "Resort Basic Guide", subtitle: "滞在情報をシンプルにご案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -863,7 +851,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・旅館ご案内",
     description: "旅館滞在の基本情報（温泉・食事・出発）を網羅した基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "ryokan",
     cards: [
       { type: "welcome", content: { title: "旅館ご案内", message: "ご滞在の基本情報をご確認ください。" }, order: 0 },
@@ -876,7 +864,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・Airbnbゲスト案内",
     description: "民泊で必要なチェックイン・WiFi・退室情報をまとめた基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "welcome", content: { title: "Welcome", message: "チェックインから退室までのご案内です。" }, order: 0 },
@@ -889,7 +877,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・観光ガイド案内",
     description: "初めての来訪者向けに、主要スポットと移動方法をまとめた基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "hero", content: { title: "Basic Local Guide", subtitle: "まず押さえる定番情報", image: "/preset-hero-sample.png" }, order: 0 },
@@ -902,7 +890,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・インバウンド案内",
     description: "海外ゲスト向けに、交通・WiFi・緊急連絡先を整理した基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "welcome", content: { title: "Welcome Guests", message: "Basic information for your stay." }, order: 0 },
@@ -915,7 +903,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・ファミリー滞在案内",
     description: "家族旅行で必要な基本情報をシンプルにまとめた構成です。",
-    preview_image: "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
       { type: "welcome", content: { title: "ファミリー向け案内", message: "お子さま連れで必要な情報をご案内します。" }, order: 0 },
@@ -928,7 +916,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・長期滞在案内",
     description: "連泊・長期滞在で必要な生活情報をまとめた基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "business",
     cards: [
       { type: "welcome", content: { title: "Long Stay Basic", message: "連泊向け情報をご確認ください。" }, order: 0 },
@@ -941,7 +929,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・駅アクセス案内",
     description: "最寄駅からの導線を中心にしたシンプルな基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "guide",
     cards: [
       { type: "hero", content: { title: "Station Access Guide", subtitle: "最寄駅からの案内", image: "/preset-hero-sample.png" }, order: 0 },
@@ -954,7 +942,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   {
     name: "ベーシック・チェックイン案内セット",
     description: "チェックイン〜滞在開始までをわかりやすく伝える基本構成です。",
-    preview_image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600&q=80",
+    preview_image: "/preset-hero-sample.png",
     category: "airbnb",
     cards: [
       { type: "welcome", content: { title: "チェックイン案内", message: "ご到着後の流れをご確認ください。" }, order: 0 },
@@ -995,20 +983,20 @@ export async function GET(request: Request) {
       categoryIndexMap.set(categoryKey, categoryIndex + 1);
       const mediaTemplate = applyTemplateMediaDefaults(template);
       const diversifiedTemplate = diversifyTemplateBlocks(mediaTemplate, categoryIndex);
-      const visualTemplate = applyTemplateVisualStyles(diversifiedTemplate);
+      const normalizedTemplate = normalizeTemplateComposition(diversifiedTemplate);
       const found = existingByName.get(template.name);
       if (!found) {
-        toInsert.push(visualTemplate);
+        toInsert.push(normalizedTemplate);
         continue;
       }
       if (syncLatest) {
         const { error } = await supabase
           .from("templates")
           .update({
-            description: visualTemplate.description,
-            preview_image: visualTemplate.preview_image,
-            category: visualTemplate.category,
-            cards: visualTemplate.cards,
+            description: normalizedTemplate.description,
+            preview_image: normalizedTemplate.preview_image,
+            category: normalizedTemplate.category,
+            cards: normalizedTemplate.cards,
           })
           .eq("id", found.id);
         if (!error) updated += 1;

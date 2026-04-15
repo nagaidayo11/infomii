@@ -11,6 +11,7 @@ import {
   type PageViewAnalytics,
 } from "@/lib/storage";
 import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
 function formatDayLabel(isoDate: string): string {
@@ -65,6 +66,8 @@ export function AnalyticsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useRouteProgressLoading(loading);
+
   useEffect(() => {
     let mounted = true;
     Promise.all([
@@ -99,10 +102,31 @@ export function AnalyticsView() {
   const maxCountry = Math.max(1, ...byCountry.map((c) => c.count));
   const maxLanguage = Math.max(1, ...byLanguage.map((l) => l.count));
 
-  const plan = (bootstrap?.subscription?.plan ?? "free") as "free" | "pro" | "business";
+  const plan = (bootstrap?.subscription?.plan ?? null) as "free" | "pro" | "business" | null;
+
+  if (!bootstrap && loading) {
+    return (
+      <div className="app-main-container space-y-6">
+        <header className="app-page-header">
+          <h1 className="app-page-title">分析ダッシュボード</h1>
+          <p className="app-page-subtitle">データを読み込んでいます</p>
+        </header>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />
+          ))}
+        </div>
+        <div className="h-44 animate-pulse rounded-xl bg-slate-100" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="h-52 animate-pulse rounded-xl bg-slate-100" />
+          <div className="h-52 animate-pulse rounded-xl bg-slate-100" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AnalyticsProGate plan={plan}>
+    <AnalyticsProGate plan={plan ?? "free"}>
     <div className="app-main-container space-y-8">
       <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

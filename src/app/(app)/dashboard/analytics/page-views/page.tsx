@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
 import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { getDashboardBootstrapData, getPageViewAnalytics, type PageViewAnalytics } from "@/lib/storage";
 
 function formatDayLabel(isoDate: string): string {
@@ -21,9 +22,10 @@ export default function PageViewAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useRouteProgressLoading(loading);
+
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     Promise.all([getDashboardBootstrapData(), getPageViewAnalytics()])
       .then(([b, d]) => {
         if (!mounted) return;

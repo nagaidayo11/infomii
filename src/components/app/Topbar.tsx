@@ -5,7 +5,6 @@ import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
-import { getDashboardBootstrapData } from "@/lib/storage";
 
 type TopbarProps = {
   title?: string;
@@ -48,30 +47,10 @@ function getInitials(email: string | undefined): string {
 export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobileNav }: TopbarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const [workspaceTitle, setWorkspaceTitle] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    getDashboardBootstrapData()
-      .then((d) => {
-        if (alive) setWorkspaceTitle(d.hotelName || "施設");
-      })
-      .catch(() => {
-        if (alive) setWorkspaceTitle("施設");
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   const updateMenuPosition = () => {
     const el = triggerRef.current;
@@ -121,7 +100,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
   const initials = getInitials(email);
 
   const userMenu =
-    mounted && menuOpen ? (
+    menuOpen && typeof document !== "undefined" ? (
       createPortal(
         <div
           ref={panelRef}
@@ -180,20 +159,11 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
         )}
         <div className="min-w-0 flex-1">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
-            <span className="truncate text-sm font-medium text-slate-700">{workspaceTitle || "—"}</span>
             {sectionTitle && (
-              <>
-                <span className="shrink-0 text-slate-300" aria-hidden>
-                  /
-                </span>
-                <h1 className="truncate text-sm font-semibold text-slate-800">{sectionTitle}</h1>
-              </>
+              <h1 className="truncate text-sm font-semibold text-slate-800">{sectionTitle}</h1>
             )}
           </div>
           <div className="min-w-0 sm:hidden">
-            <span className="block truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              {workspaceTitle || "—"}
-            </span>
             {sectionTitle && (
               <h1 className="truncate text-sm font-semibold leading-tight text-slate-900">{sectionTitle}</h1>
             )}

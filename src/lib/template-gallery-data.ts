@@ -29,7 +29,7 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
     name: "ホテル基本",
     description: "シティホテル向けの標準テンプレートです。各セクションの文言を編集してご利用ください。",
     previewImage:
-      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
+      "/template-business-hero-01.jpg",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-slate-600 to-slate-800",
     industry: "ホテル",
@@ -45,7 +45,7 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
     name: "旅館",
     description: "旅館・和宿向け。おもてなしと館内の流れが伝わる構成です。",
     previewImage:
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80",
+      "/template-ryokan-hero-01.jpg",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-amber-700 to-stone-800",
     industry: "旅館",
@@ -61,7 +61,7 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
     name: "リゾートホテル",
     description: "リゾート施設向け。アクティビティや周辺情報を足しやすい構成です。",
     previewImage:
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
+      "/template-resort-hero-01.jpg",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-cyan-600 to-teal-700",
     industry: "リゾートホテル",
@@ -77,7 +77,7 @@ export const GALLERY_TEMPLATES: GalleryTemplate[] = [
     name: "民泊",
     description: "民泊・一棟貸し向け。ハウスルールと周辺をまとめやすい構成です。",
     previewImage:
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80",
+      "/template-airbnb-hero-01.jpg",
     pages: ["館内案内", "WiFi", "朝食", "チェックアウト", "周辺観光"],
     accent: "from-violet-600 to-indigo-800",
     industry: "民泊",

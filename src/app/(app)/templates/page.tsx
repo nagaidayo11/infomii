@@ -13,8 +13,8 @@ import { TemplateCard } from "@/components/saas/TemplateCard";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
-import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 /** Template marketplace categories. Filter by template.category when available. */
 const TEMPLATE_CATEGORIES = [
@@ -53,6 +53,8 @@ export default function TemplatesPage() {
   const [mounted, setMounted] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
+  useRouteProgressLoading(loading || !!usingId);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -69,33 +71,32 @@ export default function TemplatesPage() {
   }, [previewTemplate]);
 
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    fetch("/api/seed-templates?sync=1")
-      .catch(() => null)
-      .then(() => listTemplates())
-      .then(async (list) => {
-        if (!mounted) return;
-        if (list.length === 0) {
-          try {
-            await fetch("/api/seed-templates");
-            const again = await listTemplates();
-            if (mounted) setTemplates(again);
-          } catch {
-            if (mounted) setTemplates(list);
-          }
-        } else {
-          setTemplates(list);
+    let active = true;
+    const loadTemplates = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const first = await listTemplates();
+        if (!active) return;
+        if (first.length > 0) {
+          setTemplates(first);
+          return;
         }
-      })
-      .catch((e) => {
-        if (mounted) setError(e instanceof Error ? e.message : "読み込みに失敗しました");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+        await fetch("/api/seed-templates");
+        if (!active) return;
+        const seeded = await listTemplates();
+        if (!active) return;
+        setTemplates(seeded);
+      } catch (e) {
+        if (!active) return;
+        setError(e instanceof Error ? e.message : "読み込みに失敗しました");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void loadTemplates();
     return () => {
-      mounted = false;
+      active = false;
     };
   }, []);
 
@@ -111,7 +112,7 @@ export default function TemplatesPage() {
     try {
       const { pageId } = await createPageFromTemplate(templateId);
       if (pageId && typeof pageId === "string") {
-        router.push(`/editor/${pageId}?from=template`);
+        router.push(`/editor/${pageId}?from=template&focus=hero`);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "ページの作成に失敗しました");
@@ -229,6 +230,7 @@ export default function TemplatesPage() {
                 name={template.name}
                 description={template.description}
                 preview_image={template.preview_image}
+                category={template.category}
                 onUse={() => handleUseTemplate(template.id)}
                 onPreview={() => setPreviewTemplate(template)}
                 using={usingId === template.id}
@@ -267,6 +269,7 @@ export default function TemplatesPage() {
                         name={template.name}
                         description={template.description}
                         preview_image={template.preview_image}
+                        category={template.category}
                         onUse={() => handleUseTemplate(template.id)}
                         onPreview={() => setPreviewTemplate(template)}
                         using={usingId === template.id}
@@ -325,18 +328,6 @@ export default function TemplatesPage() {
               </div>
             </div>
           </div>,
-          document.body
-        )}
-
-      {mounted && (loading || usingId) &&
-        createPortal(
-          <FullScreenLoadingOverlay
-            title={usingId ? "テンプレートを適用中…" : "読み込み中…"}
-            subtitle={
-              usingId ? "エディタ用のページを作成しています" : "テンプレート一覧を読み込んでいます"
-            }
-            classNameZ="z-[90]"
-          />,
           document.body
         )}
 

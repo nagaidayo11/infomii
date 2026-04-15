@@ -190,7 +190,7 @@ function DescriptionWithTooltip({
     };
   }, [mobileOpen]);
 
-  const toggleMobileTooltip = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleMobileTooltip = (e: React.MouseEvent<HTMLSpanElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isTruncated) return;
@@ -207,17 +207,25 @@ function DescriptionWithTooltip({
       </span>
       {isTruncated ? (
         <>
-          <button
-            type="button"
+          <span
+            role="button"
+            tabIndex={0}
             data-mobile-tooltip-trigger="true"
             aria-label="説明文を表示"
             className="absolute right-0 top-0 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
             onClick={toggleMobileTooltip}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              e.stopPropagation();
+              if (!isTruncated) return;
+              setMobileOpen((prev) => !prev);
+            }}
             aria-expanded={showTooltip}
             aria-controls={tooltipId}
           >
             i
-          </button>
+          </span>
           <LibraryTooltipPortal open={showTooltip} tooltipId={tooltipId} text={text} anchorRef={anchorRef} />
         </>
       ) : null}

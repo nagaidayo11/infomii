@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { FadeIn } from "@/components/motion";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 type PublishApprovalRow = {
   id: string;
@@ -55,6 +56,8 @@ export default function TeamPage() {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState("");
   const [businessChecked, setBusinessChecked] = useState(false);
+
+  useRouteProgressLoading(loading);
 
   const fetchApprovals = useCallback(
     async (

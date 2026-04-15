@@ -9,6 +9,7 @@ import {
   type HotelViewMetrics,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { DashboardStatsCards } from "./dashboard-stats-cards";
 import { DashboardPageTable } from "./dashboard-page-table";
 
@@ -22,9 +23,10 @@ export function InfomiiDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useRouteProgressLoading(loading);
+
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     Promise.all([getDashboardBootstrapData(), getCurrentHotelViewMetrics()])
       .then(([boot, m]) => {
         if (!mounted) return;

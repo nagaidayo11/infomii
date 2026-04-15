@@ -26,6 +26,7 @@ import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverl
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FadeIn, ScrollReveal } from "@/components/motion";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
@@ -40,12 +41,13 @@ export function DashboardView() {
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null);
-  const [navigating, setNavigating] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
+
+  useRouteProgressLoading(loading);
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
 
@@ -179,7 +181,6 @@ export function DashboardView() {
           <p className="mt-2 text-sm text-slate-500">
             <Link
               href="/dashboard/summary"
-              onClick={() => setNavigating(true)}
               className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
             >
               一覧・統計ビュー
@@ -222,7 +223,6 @@ export function DashboardView() {
                   </button>
                   <Link
                     href="/templates"
-                    onClick={() => setNavigating(true)}
                     className="app-button-native inline-flex w-full min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto sm:min-h-0 sm:py-3"
                   >
                     テンプレートから作成
@@ -251,7 +251,6 @@ export function DashboardView() {
           <h2 className="app-section-title">分析サマリー</h2>
           <Link
             href="/dashboard/analytics"
-            onClick={() => setNavigating(true)}
             className="text-xs font-medium text-slate-500 hover:text-slate-700"
           >
             詳細レポートへ
@@ -297,7 +296,6 @@ export function DashboardView() {
             </ul>
             <Link
               href="/dashboard/analytics"
-              onClick={() => setNavigating(true)}
               className="mt-3 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
             >
               分析ページでグラフを見る
@@ -314,7 +312,6 @@ export function DashboardView() {
           <h2 className="app-section-title">最近編集したページ</h2>
           <Link
             href="/dashboard/pages"
-            onClick={() => setNavigating(true)}
             className="text-xs font-medium text-slate-500 hover:text-slate-700"
           >
             すべて見る
@@ -335,7 +332,6 @@ export function DashboardView() {
               </p>
               <Link
                 href="/templates"
-                onClick={() => setNavigating(true)}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
               >
                 テンプレートを選ぶ
@@ -408,7 +404,6 @@ export function DashboardView() {
           {published.length > 5 && (
             <Link
               href="/dashboard/pages"
-              onClick={() => setNavigating(true)}
               className="mt-2 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
             >
               他 {published.length - 5} 件
@@ -422,18 +417,16 @@ export function DashboardView() {
         onClose={() => setPlanLimitModalOpen(false)}
         currentPlan={bootstrap?.subscription?.plan}
       />
-      {mounted && (loading || navigating || creating) &&
+      {mounted && creating &&
         createPortal(
           <FullScreenLoadingOverlay
             title={
-              creating ? "作成中…" : loading ? "読み込み中…" : "ページ遷移中…"
+              creating ? "作成中…" : "処理中…"
             }
             subtitle={
               creating
                 ? "新しい案内ページを用意しています"
-                : loading
-                  ? "ダッシュボードを読み込んでいます"
-                  : "次の画面へ移動しています"
+                : "処理を実行しています"
             }
             classNameZ="z-40"
           />,

@@ -11,6 +11,7 @@ import {
   type QrScanDayBucket,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { QrCharts } from "./QrCharts";
 import { QrPageRow } from "./QrPageRow";
 
@@ -21,9 +22,10 @@ export function QrManagementPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useRouteProgressLoading(loading);
+
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     Promise.all([
       getDashboardBootstrapData(),
       getCurrentHotelViewMetrics(),

@@ -18,6 +18,7 @@ import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDes
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 function modeLabel(mode: PageConnectionSet["mode"]): string {
   return mode === "linked" ? "ページ連携" : "単発";
@@ -53,6 +54,8 @@ export function PagesListView() {
   const [mounted, setMounted] = useState(false);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
+
+  useRouteProgressLoading(loading);
 
   const load = useCallback(async () => {
     setLoading(true);

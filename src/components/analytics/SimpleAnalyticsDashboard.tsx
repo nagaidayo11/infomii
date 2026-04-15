@@ -9,6 +9,7 @@ import {
   type HotelViewMetrics,
   type QrScanDayBucket,
 } from "@/lib/storage";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 function formatDayLabel(isoDate: string): string {
   const d = new Date(isoDate + "T12:00:00");
@@ -24,6 +25,8 @@ export function SimpleAnalyticsDashboard() {
   const [dailyQr, setDailyQr] = useState<QrScanDayBucket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useRouteProgressLoading(loading);
 
   useEffect(() => {
     let mounted = true;

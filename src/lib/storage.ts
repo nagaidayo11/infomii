@@ -4022,7 +4022,12 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
     .select("id,name,cards")
     .eq("id", templateId)
     .single();
-  if (tError || !template) throw toError(tError ?? new Error("Not found"), "テンプレートの取得に失敗しました");
+  if (tError || !template) {
+    throw toError(
+      tError ?? new Error("Not found"),
+      "テンプレートを取得できませんでした。時間をおいて再度お試しください。"
+    );
+  }
 
   const title = (template.name as string) ?? "無題のページ";
   const baseSlug = createSlug(title);
@@ -4033,7 +4038,12 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
     .insert({ hotel_id: hotelId, title, slug })
     .select("id")
     .single();
-  if (pError || !newPage) throw toError(pError ?? new Error("Insert failed"), "ページの作成に失敗しました");
+  if (pError || !newPage) {
+    throw toError(
+      pError ?? new Error("Insert failed"),
+      "ページ作成に失敗しました。ページ上限・重複・権限設定をご確認ください。"
+    );
+  }
   const pageId = newPage.id as string;
 
   const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
@@ -4077,7 +4087,12 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
       order: c.order ?? i,
     }));
     const { error: cError } = await supabase.from("cards").insert(rows);
-    if (cError) throw toError(cError, "カードの挿入に失敗しました");
+    if (cError) {
+      throw toError(
+        cError,
+        "テンプレートの内容を反映できませんでした。カード定義を確認して再実行してください。"
+      );
+    }
   }
 
   return { pageId };

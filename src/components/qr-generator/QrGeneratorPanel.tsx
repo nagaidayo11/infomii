@@ -11,6 +11,7 @@ import {
   qrCodeImageUrl,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
+import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 const QR_DISPLAY_SIZE = 400;
 
@@ -24,6 +25,8 @@ export function QrGeneratorPanel() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useRouteProgressLoading(loading);
 
   const load = useCallback(async () => {
     setLoading(true);
