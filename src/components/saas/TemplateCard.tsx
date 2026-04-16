@@ -1,15 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import {
+  resolveTemplateCardImageSrc,
+  TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
+} from "@/lib/template-preview";
 
-const FALLBACK_IMAGES_BY_CATEGORY: Record<string, string> = {
-  business: "/template-business-hero-01.jpg",
-  resort: "/template-resort-hero-01.jpg",
-  ryokan: "/template-ryokan-hero-01.jpg",
-  airbnb: "/template-airbnb-hero-01.jpg",
-  guide: "/template-guide-hero-01.jpg",
-  inbound: "/template-inbound-hero-01.jpg",
-};
 const DEFAULT_FALLBACK = "/preset-hero-sample.png";
 
 export type TemplateCardProps = {
@@ -32,11 +28,9 @@ export function TemplateCard({
   onPreview,
   using,
 }: TemplateCardProps) {
-  const rawPreview = preview_image?.trim() ?? "";
-  const shouldUseFallback = !rawPreview || rawPreview.startsWith("http://") || rawPreview.startsWith("https://");
-  const imageSrc = shouldUseFallback
-    ? (category ? FALLBACK_IMAGES_BY_CATEGORY[category] : "") || DEFAULT_FALLBACK
-    : rawPreview;
+  const categoryFallback =
+    (category ? TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[category] : "") || DEFAULT_FALLBACK;
+  const imageSrc = resolveTemplateCardImageSrc(preview_image, category ?? null, name, categoryFallback);
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
       <div className="relative aspect-[5/3] overflow-hidden bg-slate-100">

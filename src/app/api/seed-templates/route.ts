@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { templatePreviewPublicPath } from "@/lib/template-preview";
 
 type SeedTemplate = {
   name: string;
@@ -43,9 +44,13 @@ const THEME_IMAGE_SETS: Record<string, { hero: string; details: string[] }> = {
   },
 };
 
-function galleryItemsForCategory(category: string | null): Array<{ src: string; alt: string }> {
+function galleryItemsForCategory(
+  category: string | null,
+  categoryIndex: number,
+): Array<{ src: string; alt: string }> {
   const key = category && THEME_IMAGE_SETS[category] ? category : "default";
-  return THEME_IMAGE_SETS[key].details.map((src, i) => ({ src, alt: `gallery-${i + 1}` }));
+  const base = THEME_IMAGE_SETS[key].details.map((src, i) => ({ src, alt: `gallery-${i + 1}` }));
+  return rotate(base, categoryIndex);
 }
 
 function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: string; label: string; description: string }> {
@@ -87,25 +92,24 @@ function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: str
   }
 }
 
-function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
-  const key = template.category && THEME_IMAGE_SETS[template.category] ? template.category : "default";
-  const imageSet = THEME_IMAGE_SETS[key];
+function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: number): SeedTemplate {
+  const previewPath = templatePreviewPublicPath(template.category, template.name);
   const cards = template.cards.map((card) => ({
     ...card,
     content: { ...(card.content ?? {}) },
   }));
 
-  // Fill missing hero image.
+  // Per-template hero + listing preview: same local path (see public/templates/previews/...).
   for (const card of cards) {
     if (card.type !== "hero") continue;
-    card.content.image = imageSet.hero;
+    card.content.image = previewPath;
   }
 
   // Fill gallery image sources with category-aware samples.
   for (const card of cards) {
     if (card.type !== "gallery") continue;
     const items = Array.isArray(card.content.items) ? card.content.items : [];
-    const sampleItems = galleryItemsForCategory(template.category);
+    const sampleItems = galleryItemsForCategory(template.category, categoryIndex);
     const nextItems =
       items.length > 0
         ? items.map((item, idx) => {
@@ -137,7 +141,7 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
       content: {
         title: template.name,
         subtitle: template.description,
-        image: DEFAULT_HERO_IMAGE,
+        image: previewPath,
       },
       order: 0,
     });
@@ -149,7 +153,7 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
       content: {
         title: "施設・周辺イメージ",
         columns: 2,
-        items: galleryItemsForCategory(template.category),
+        items: galleryItemsForCategory(template.category, categoryIndex),
       },
       order: 0,
     });
@@ -177,7 +181,7 @@ function applyTemplateMediaDefaults(template: SeedTemplate): SeedTemplate {
 
   return {
     ...template,
-    preview_image: imageSet.hero || DEFAULT_PREVIEW_IMAGE,
+    preview_image: previewPath || DEFAULT_PREVIEW_IMAGE,
     cards: cards.map((card, index) => ({ ...card, order: index })),
   };
 }
@@ -954,6 +958,11 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   },
 ];
 
+/**
+ * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.
+ * GET /api/seed-templates?sync=1 — also UPDATE existing rows (preview_image → /templates/previews/<category>/<slug>.jpg, cards, description, category).
+ * After deploying `public/templates/previews/**`, run sync once per environment so Supabase matches the on-disk assets.
+ */
 export async function GET(request: Request) {
   try {
     const supabase = getSupabaseAdminServerClient();
@@ -981,7 +990,7 @@ export async function GET(request: Request) {
       const categoryKey = template.category ?? "default";
       const categoryIndex = categoryIndexMap.get(categoryKey) ?? 0;
       categoryIndexMap.set(categoryKey, categoryIndex + 1);
-      const mediaTemplate = applyTemplateMediaDefaults(template);
+      const mediaTemplate = applyTemplateMediaDefaults(template, categoryIndex);
       const diversifiedTemplate = diversifyTemplateBlocks(mediaTemplate, categoryIndex);
       const normalizedTemplate = normalizeTemplateComposition(diversifiedTemplate);
       const found = existingByName.get(template.name);
