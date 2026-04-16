@@ -188,6 +188,22 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 
 セットアップ後も問題がある場合は、ブラウザの開発者ツールのコンソールやネットワークタブでエラー内容を確認してください。
 
+---
+
+## 5. テンプレート一覧サムネ（プレビュー画像）の運用
+
+`/templates` のテンプレートカードは **外部URLを使わず**、`public/` 配下のローカル画像のみを参照します。
+
+- **画像ファイル**: `public/templates/previews/<category>/<slug>.jpg`
+- **対応表**: `public/templates/previews/manifest.json`
+  - 各テンプレの `previewPath`（保存先）と、画像生成用の `prompt` が入っています
+
+### 画像は「一回だけ」生成して差し替える
+
+1. `public/templates/previews/manifest.json` の `entries[].prompt` を外部画像生成ツールに投入し、**ホテル外観が主役**の画像を生成する（料理・皿・ドリンク等は禁止）。
+2. 生成した JPG を `entries[].previewPath` の場所へ **上書き保存**する。
+3. 環境ごとに一度だけ、DB を最新に揃えるため `GET /api/seed-templates?sync=1` を実行する（`preview_image` が `/templates/previews/...` に統一されます）。
+
 ### 公開件数が実態より多い場合（孤児 informations の応急修正）
 
 `pages` を削除した後に、同じ `slug` の `informations` が `published` のまま残ると、公開件数表示だけ増え続ける場合があります。  
