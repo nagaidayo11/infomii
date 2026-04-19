@@ -200,6 +200,8 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 
 ### 画像は「一回だけ」生成して差し替える
 
+OpenAI Images API を使う場合は、`.env.local` に `OPENAI_API_KEY` を設定した上で `node scripts/generate-template-previews-openai.mjs` を実行すると、`manifest.json` の `entries[].prompt` と `entries[].previewPath` に従って `public/templates/previews/**/*.jpg` が一括上書きされます（生成はワンショット運用で、アプリ実行時には行いません）。
+
 1. `public/templates/previews/manifest.json` の `entries[].prompt` を外部画像生成ツールに投入し、**ホテル外観が主役**の画像を生成する（料理・皿・ドリンク等は禁止）。
 2. 生成した JPG を `entries[].previewPath` の場所へ **上書き保存**する。
 3. 環境ごとに一度だけ、DB を最新に揃えるため `GET /api/seed-templates?sync=1` を実行する（`preview_image` が `/templates/previews/...` に統一されます）。
