@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generated": "2026-04-16T04:00:56.981Z",
-  "note": "preview JPEG bytes copied from sourceAsset; paths match DB preview_image after seed sync Prompts added: exterior-focused, no food/drinks, no runtime generation. Generate once and overwrite files at previewPath.",
+  "generated": "2026-04-19T13:16:31.120Z",
+  "note": "Prompt set v2: diversified by category + scene axis (shot/time/season/weather/grade/context). Exterior remains primary, but includes approach/context cues. Keep local static preview files only.",
   "entries": [
     {
       "name": "ビジネスホテル・即運用セット",
@@ -9,9 +9,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/business/777cd9d3.jpg",
       "sourceAsset": "/template-business-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ビジネスホテル・即運用セット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: frontal symmetry, blue hour, spring fresh green, light rain reflections\n色調: cool steel-blue\n文脈要素: 駅前ロータリーからホテル正面へ一直線の動線\n追加ディテール: タクシー乗降スペースと庇の下の入口照明\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ビジネスホテル・即運用セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "リゾートホテル・体験訴求セット",
@@ -19,9 +19,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/resort/322bda48.jpg",
       "sourceAsset": "/template-resort-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: リゾートホテル・体験訴求セット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: elevated wide, golden hour, summer clear sky, clear\n色調: warm amber\n文脈要素: 海沿いの高台に建つリゾート到着動線\n追加ディテール: 車寄せから海風を感じる植栽帯\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: リゾートホテル・体験訴求セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "旅館・おもてなし案内セット",
@@ -29,9 +29,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/ryokan/6d0315b9.jpg",
       "sourceAsset": "/template-ryokan-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: 旅館・おもてなし案内セット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: gateway close-wide, blue hour, winter crisp air, light snow remnants\n色調: warm amber\n文脈要素: 門から玄関までの石畳導線\n追加ディテール: 行灯の柔らかな灯りと木格子\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: 旅館・おもてなし案内セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "民泊・セルフチェックインセット",
@@ -39,9 +39,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/airbnb/7bfd237b.jpg",
       "sourceAsset": "/template-business-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: 民泊・セルフチェックインセット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: street-level approach, golden hour, spring fresh green, clear\n色調: warm amber\n文脈要素: 住宅街の角地にある一棟貸し\n追加ディテール: 玄関までの短い導線と外構植栽\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: 民泊・セルフチェックインセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "観光ガイド・回遊促進セット",
@@ -49,9 +49,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/guide/b325ae5a.jpg",
       "sourceAsset": "/template-resort-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: 観光ガイド・回遊促進セット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: street-level approach, golden hour, spring fresh green, clear\n色調: warm amber\n文脈要素: 観光通りの先に見えるホテル入口\n追加ディテール: 街路の賑わいは背景として控えめ\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: 観光ガイド・回遊促進セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ファミリー向け・館内回遊セット",
@@ -59,9 +59,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/resort/ab668978.jpg",
       "sourceAsset": "/template-resort-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: ファミリー向け・館内回遊セット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: corner perspective, blue hour, spring fresh green, light rain reflections\n色調: soft cinematic\n文脈要素: 山裾のリゾートエントランス\n追加ディテール: 石畳アプローチと外観照明\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: ファミリー向け・館内回遊セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "駅前特化ビジホ・時短導線セット",
@@ -69,9 +69,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/business/ca2d4bba.jpg",
       "sourceAsset": "/template-business-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: 駅前特化ビジホ・時短導線セット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: corner perspective, early morning, summer clear sky, clear\n色調: neutral clean\n文脈要素: オフィス街の交差点角地\n追加ディテール: 歩道から見えるエントランスと街路樹\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: 駅前特化ビジホ・時短導線セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "インバウンド特化・多言語おもてなしセット",
@@ -79,9 +79,9 @@
       "categoryIndex": 0,
       "previewPath": "/templates/previews/inbound/4a5745cf.jpg",
       "sourceAsset": "/template-airbnb-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: インバウンド特化・多言語おもてなしセット\nVariation: rainy night with reflections"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: frontal symmetry, blue hour, summer clear sky, clear\n色調: neutral clean\n文脈要素: 空港バス降車後の到着導線を想起\n追加ディテール: 抽象ピクト風サイン形状と明るい入口\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: インバウンド特化・多言語おもてなしセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "連泊ゲスト向け・快適滞在セット",
@@ -89,9 +89,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/business/1285a06e.jpg",
       "sourceAsset": "/template-business-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: 連泊ゲスト向け・快適滞在セット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: street-level approach, rainy dusk, autumn warm foliage, after rain\n色調: warm amber\n文脈要素: 駅から徒歩3分の細い導線\n追加ディテール: 濡れた舗道に反射する外観照明\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: 連泊ゲスト向け・快適滞在セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "スパ&ウェルネス重視セット",
@@ -99,9 +99,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/resort/4ba56722.jpg",
       "sourceAsset": "/template-resort-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: スパ&ウェルネス重視セット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: street-level approach, early morning, summer clear sky, clear\n色調: neutral clean\n文脈要素: ビーチアクセス前のホテル正面\n追加ディテール: ヤシと庇の連続で到着体験を表現\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: スパ&ウェルネス重視セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "旅館・食事時間重視セット",
@@ -109,9 +109,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/ryokan/edd43943.jpg",
       "sourceAsset": "/template-ryokan-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: 旅館・食事時間重視セット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: frontal symmetry, early morning, spring fresh green, clear\n色調: neutral clean\n文脈要素: 庭越しに見える旅館正面\n追加ディテール: 瓦屋根と玄関のしつらえを主役化\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: 旅館・食事時間重視セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "Airbnb・ワーケーション向けセット",
@@ -119,9 +119,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/airbnb/53e75b6f.jpg",
       "sourceAsset": "/template-resort-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: Airbnb・ワーケーション向けセット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: corner perspective, early morning, summer clear sky, clear\n色調: neutral clean\n文脈要素: モダン戸建てのチェックイン動線\n追加ディテール: 門扉から玄関の見通しを重視\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: Airbnb・ワーケーション向けセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "インバウンド・空港アクセス重視セット",
@@ -129,9 +129,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/inbound/037a944e.jpg",
       "sourceAsset": "/template-airbnb-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: インバウンド・空港アクセス重視セット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: corner perspective, golden hour, spring fresh green, clear\n色調: warm amber\n文脈要素: 国際観光エリアの安心感あるホテル前\n追加ディテール: 視認性の高い車寄せと段差の少ない導線\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: インバウンド・空港アクセス重視セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ビジネスホテル・深夜到着対応セット",
@@ -139,9 +139,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/business/e1155a16.jpg",
       "sourceAsset": "/template-business-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ビジネスホテル・深夜到着対応セット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: elevated wide, overcast noon, winter crisp air, misty\n色調: neutral clean\n文脈要素: ビジネス街の複数棟の中で目的地が明確\n追加ディテール: 車寄せとエントランスの視認性を重視\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ビジネスホテル・深夜到着対応セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ビジネスホテル・会議参加者向けセット",
@@ -149,9 +149,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/business/1270b91a.jpg",
       "sourceAsset": "/template-resort-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ビジネスホテル・会議参加者向けセット\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: gateway close-wide, golden hour, spring fresh green, clear\n色調: warm amber\n文脈要素: 出張客が迷わない大通り沿い\n追加ディテール: 庇下サインの雰囲気は抽象形状のみ\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ビジネスホテル・会議参加者向けセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ビジネスホテル・女性出張安心セット",
@@ -159,9 +159,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/business/fd57e76a.jpg",
       "sourceAsset": "/template-resort-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ビジネスホテル・女性出張安心セット\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: corner perspective, blue hour, summer clear sky, clear\n色調: cool steel-blue\n文脈要素: 高層ビル街の中規模ホテル\n追加ディテール: ガラスエントランスとアプローチ植栽\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ビジネスホテル・女性出張安心セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ビジネスホテル・朝活サポートセット",
@@ -169,9 +169,9 @@
       "categoryIndex": 6,
       "previewPath": "/templates/previews/business/515b796d.jpg",
       "sourceAsset": "/template-resort-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ビジネスホテル・朝活サポートセット\nVariation: minimal signage business district"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: street-level approach, early morning, winter crisp air, clear\n色調: neutral clean\n文脈要素: 始発帯の静かな駅前通り\n追加ディテール: 明るいロビーが奥に見える構図\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ビジネスホテル・朝活サポートセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "リゾートホテル・連泊体験セット",
@@ -179,9 +179,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/resort/5c3df74d.jpg",
       "sourceAsset": "/template-ryokan-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: リゾートホテル・連泊体験セット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: frontal symmetry, overcast noon, autumn warm foliage, misty\n色調: neutral clean\n文脈要素: 森に囲まれた低層リゾート\n追加ディテール: 木立越しに見えるメインエントランス\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: リゾートホテル・連泊体験セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "リゾートホテル・ハネムーンセット",
@@ -189,9 +189,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/resort/f0c1548b.jpg",
       "sourceAsset": "/template-ryokan-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: リゾートホテル・ハネムーンセット\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: gateway close-wide, rainy dusk, winter crisp air, after rain\n色調: cool steel-blue\n文脈要素: 温暖地の海辺リゾートで雨上がり\n追加ディテール: 濡れた石床と暖色ロビー光\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: リゾートホテル・ハネムーンセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "リゾートホテル・雨の日満喫セット",
@@ -199,9 +199,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/resort/51e79210.jpg",
       "sourceAsset": "/template-ryokan-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: リゾートホテル・雨の日満喫セット\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: corner perspective, golden hour, autumn warm foliage, clear\n色調: warm amber\n文脈要素: 丘陵リゾートの曲線アプローチ\n追加ディテール: 植栽とファサードの奥行き\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: リゾートホテル・雨の日満喫セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "リゾートホテル・アクティビティ重視セット",
@@ -209,9 +209,9 @@
       "categoryIndex": 6,
       "previewPath": "/templates/previews/resort/69ce1fd3.jpg",
       "sourceAsset": "/template-ryokan-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: リゾートホテル・アクティビティ重視セット\nVariation: minimal signage business district"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: street-level approach, blue hour, summer clear sky, clear\n色調: soft cinematic\n文脈要素: サンセット後の到着シーン\n追加ディテール: 海側の抜け感を背景に外観主役\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: リゾートホテル・アクティビティ重視セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "旅館・温泉街散策セット",
@@ -219,9 +219,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/ryokan/185762e5.jpg",
       "sourceAsset": "/template-airbnb-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: 旅館・温泉街散策セット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: corner perspective, rainy dusk, autumn warm foliage, after rain\n色調: soft cinematic\n文脈要素: 温泉街の路地に面した旅館入口\n追加ディテール: 濡れた石畳と門灯の反射\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: 旅館・温泉街散策セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "旅館・団体旅行向けセット",
@@ -229,9 +229,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/ryokan/f270da26.jpg",
       "sourceAsset": "/template-airbnb-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: 旅館・団体旅行向けセット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: street-level approach, overcast noon, summer clear sky, misty\n色調: neutral clean\n文脈要素: 山間の静かな旅館アプローチ\n追加ディテール: 竹垣と庭石で到着体験を表現\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: 旅館・団体旅行向けセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "旅館・ファミリー三世代向けセット",
@@ -239,9 +239,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/ryokan/bc8ea4ce.jpg",
       "sourceAsset": "/template-airbnb-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: 旅館・ファミリー三世代向けセット\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: elevated wide, golden hour, autumn warm foliage, clear\n色調: warm amber\n文脈要素: 小さな温泉街全体の中で旅館が主役\n追加ディテール: 門前の導線と屋根シルエット\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: 旅館・ファミリー三世代向けセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "Airbnb・ファミリー滞在セット",
@@ -249,9 +249,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/airbnb/fbaaaf4f.jpg",
       "sourceAsset": "/template-resort-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: Airbnb・ファミリー滞在セット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: frontal symmetry, blue hour, autumn warm foliage, light rain reflections\n色調: soft cinematic\n文脈要素: 町家風外観の一棟貸し\n追加ディテール: 路地の文脈を少し含めつつ建物主役\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: Airbnb・ファミリー滞在セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "Airbnb・一人旅ミニマルセット",
@@ -259,9 +259,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/airbnb/ed075a0e.jpg",
       "sourceAsset": "/template-resort-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: Airbnb・一人旅ミニマルセット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: gateway close-wide, overcast noon, winter crisp air, clear\n色調: cool steel-blue\n文脈要素: 郊外の静かな貸別荘エリア\n追加ディテール: ポーチと玄関灯で到着感を演出\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: Airbnb・一人旅ミニマルセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "Airbnb・ペット同伴セット",
@@ -269,9 +269,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/airbnb/87410d61.jpg",
       "sourceAsset": "/template-resort-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: Airbnb・ペット同伴セット\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: elevated wide, rainy dusk, spring fresh green, after rain\n色調: warm amber\n文脈要素: 複数戸の中で対象棟が分かる導線\n追加ディテール: アプローチ床の反射とファサード\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: Airbnb・ペット同伴セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "観光ガイド・半日モデルコースセット",
@@ -279,9 +279,9 @@
       "categoryIndex": 1,
       "previewPath": "/templates/previews/guide/0099a24c.jpg",
       "sourceAsset": "/template-ryokan-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: 観光ガイド・半日モデルコースセット\nVariation: clear morning soft light"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: corner perspective, blue hour, summer clear sky, clear\n色調: soft cinematic\n文脈要素: 旧市街と新しいホテルの接点\n追加ディテール: 道の曲がり角から建物が主役で現れる\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: 観光ガイド・半日モデルコースセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "観光ガイド・グルメ巡りセット",
@@ -289,9 +289,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/guide/ce894f8e.jpg",
       "sourceAsset": "/template-ryokan-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: 観光ガイド・グルメ巡りセット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: elevated wide, early morning, autumn warm foliage, misty\n色調: neutral clean\n文脈要素: 駅と観光エリアの中間地点\n追加ディテール: 周辺文脈を少量入れて目的地性を強調\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: 観光ガイド・グルメ巡りセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "観光ガイド・雨天代替スポットセット",
@@ -299,9 +299,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/guide/41aeb22d.jpg",
       "sourceAsset": "/template-ryokan-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: 観光ガイド・雨天代替スポットセット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: frontal symmetry, overcast noon, winter crisp air, clear\n色調: cool steel-blue\n文脈要素: バス停前から見えるホテル正面\n追加ディテール: 到着導線が一目で分かる構図\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: 観光ガイド・雨天代替スポットセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "インバウンド・家族旅行セット",
@@ -309,9 +309,9 @@
       "categoryIndex": 2,
       "previewPath": "/templates/previews/inbound/0ecd91c9.jpg",
       "sourceAsset": "/template-airbnb-detail-02.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: インバウンド・家族旅行セット\nVariation: corner building wide canopy"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: street-level approach, rainy dusk, autumn warm foliage, light rain reflections\n色調: soft cinematic\n文脈要素: 夜間到着でも迷いにくい正面動線\n追加ディテール: 濡れた路面に暖色光が反射\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: インバウンド・家族旅行セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "インバウンド・公共交通特化セット",
@@ -319,9 +319,9 @@
       "categoryIndex": 3,
       "previewPath": "/templates/previews/inbound/ee6ecdd1.jpg",
       "sourceAsset": "/template-airbnb-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: インバウンド・公共交通特化セット\nVariation: narrow street vertical facade"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: gateway close-wide, early morning, winter crisp air, clear\n色調: cool steel-blue\n文脈要素: 早朝チェックアウト導線を想起\n追加ディテール: 玄関周りの案内要素は抽象記号のみ\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: インバウンド・公共交通特化セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "インバウンド・長期滞在サポートセット",
@@ -329,9 +329,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/inbound/bf4fd7c5.jpg",
       "sourceAsset": "/template-guide-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: インバウンド・長期滞在サポートセット\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: elevated wide, overcast noon, spring fresh green, misty\n色調: neutral clean\n文脈要素: 都市観光拠点としてのホテル立地\n追加ディテール: 周辺街区を少し入れて目的地性を強調\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: インバウンド・長期滞在サポートセット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・ビジネスホテル案内",
@@ -339,9 +339,9 @@
       "categoryIndex": 7,
       "previewPath": "/templates/previews/business/4bfe5cc6.jpg",
       "sourceAsset": "/template-resort-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ベーシック・ビジネスホテル案内\nVariation: mountain backdrop twilight"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: frontal symmetry, rainy dusk, autumn warm foliage, light rain reflections\n色調: cool steel-blue\n文脈要素: コンパクトな駅前ホテル街区\n追加ディテール: 路面反射と連続窓の規則性\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ベーシック・ビジネスホテル案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・リゾートホテル案内",
@@ -349,9 +349,9 @@
       "categoryIndex": 7,
       "previewPath": "/templates/previews/resort/1e839fe9.jpg",
       "sourceAsset": "/template-airbnb-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: ベーシック・リゾートホテル案内\nVariation: mountain backdrop twilight"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: elevated wide, early morning, spring fresh green, misty\n色調: neutral clean\n文脈要素: 緑地越しに望むリゾート全景\n追加ディテール: 建築と庭園導線の一体感\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: ベーシック・リゾートホテル案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・旅館ご案内",
@@ -359,9 +359,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/ryokan/fd3c3f68.jpg",
       "sourceAsset": "/template-airbnb-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 和風旅館の外観。門・行灯・木材・瓦屋根・石畳。夜の柔らかい灯り。雪景色または雨の石畳反射で旅館らしさ。文字は読めない。\nテンプレ名: ベーシック・旅館ご案内\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 和風旅館。門、瓦、木格子、行灯、石畳、庭のしつらえ。静けさと品格、和の到着体験。\nカテゴリ固有ビジュアル指紋: 静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。\n推奨カラーパレット: warm lantern amber, deep brown, muted indigo, moss green\n推奨マテリアル: wood lattice, tile roof, stone path, paper-lantern glow\nシーン: frontal symmetry, blue hour, spring fresh green, light rain reflections\n色調: cool steel-blue\n文脈要素: 静かな夕刻の到着シーン\n追加ディテール: 行灯と木扉まわりの奥行き\n必須要素: 門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ\n禁止要素(カテゴリ差別化): modern glass-box business architecture, tropical resort cues\nテンプレ名: ベーシック・旅館ご案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・Airbnbゲスト案内",
@@ -369,9 +369,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/airbnb/7c1b0976.jpg",
       "sourceAsset": "/template-ryokan-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: ベーシック・Airbnbゲスト案内\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: street-level approach, blue hour, summer clear sky, clear\n色調: neutral clean\n文脈要素: ワーケーション向け住宅地\n追加ディテール: 落ち着いた外観と玄関アクセス\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: ベーシック・Airbnbゲスト案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・観光ガイド案内",
@@ -379,9 +379,9 @@
       "categoryIndex": 4,
       "previewPath": "/templates/previews/guide/2b8d79c0.jpg",
       "sourceAsset": "/template-ryokan-detail-03.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: ベーシック・観光ガイド案内\nVariation: high-rise exterior skyline"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: gateway close-wide, rainy dusk, spring fresh green, light rain reflections\n色調: warm amber\n文脈要素: 商店街端部のホテル入口\n追加ディテール: 濡れた路面と庇照明で視線誘導\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: ベーシック・観光ガイド案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・インバウンド案内",
@@ -389,9 +389,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/inbound/c3b36a18.jpg",
       "sourceAsset": "/template-guide-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 国際旅行者向けホテル外観。入口に抽象的な多言語サイン風ピクト（文字は読めない）。夜の明るいロビーが外から見える。安心感。\nテンプレ名: ベーシック・インバウンド案内\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 国際旅行者が安心できる到着シーン。ユニバーサルな動線・ピクトの雰囲気（文字は不可読）と明るいエントランス。\nカテゴリ固有ビジュアル指紋: 安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。\n推奨カラーパレット: clean neutral base with welcoming warm entrance light\n推奨マテリアル: clear glazing, legible circulation geometry, barrier-free approach\nシーン: street-level approach, blue hour, autumn warm foliage, after rain\n色調: warm amber\n文脈要素: 多国籍ゲストの安心感を重視した外観\n追加ディテール: バリアフリーなアプローチと入口照明\n必須要素: 抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線\n禁止要素(カテゴリ差別化): local-only ambiguous alley mood, dark unsafe-looking entrance\nテンプレ名: ベーシック・インバウンド案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・ファミリー滞在案内",
@@ -399,9 +399,9 @@
       "categoryIndex": 8,
       "previewPath": "/templates/previews/resort/3b1ffc54.jpg",
       "sourceAsset": "/template-airbnb-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 海や緑に囲まれた開放的なリゾートホテル外観。広い車寄せ、ヤシや植栽、夕焼け空。高級感と非日常感。建物が主役（プールだけの絵は禁止）。\nテンプレ名: ベーシック・ファミリー滞在案内\nVariation: seaside sunset palm trees"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 海または緑に開くリゾートホテル。開放感、非日常、ランドスケープと建築の一体感。プール単体主役は不可。\nカテゴリ固有ビジュアル指紋: 非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。\n推奨カラーパレット: sunset gold, sea blue, lush green, warm highlights\n推奨マテリアル: natural stone, wood accents, lush landscape planting\nシーン: frontal symmetry, rainy dusk, autumn warm foliage, light rain reflections\n色調: warm amber\n文脈要素: 非日常感のあるエントランス前広場\n追加ディテール: 車寄せ照明と濡れた路面の反射\n必須要素: 海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー\n禁止要素(カテゴリ差別化): dense business district look, rigid office-like facade monotony\nテンプレ名: ベーシック・ファミリー滞在案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・長期滞在案内",
@@ -409,9 +409,9 @@
       "categoryIndex": 8,
       "previewPath": "/templates/previews/business/a444c83b.jpg",
       "sourceAsset": "/template-ryokan-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 都市部・駅近の機能的で清潔な中規模ビジネスホテル外観。直線的建築、ガラスのエントランス、夜の照明。雨上がりの路面反射が少しあると良い。タクシー乗り場や案内灯。看板は抽象ロゴ程度で文字は読めない。\nテンプレ名: ベーシック・長期滞在案内\nVariation: seaside sunset palm trees"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。\nカテゴリ固有ビジュアル指紋: 都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。\n推奨カラーパレット: slate gray, steel blue, neutral white, subtle amber accents only\n推奨マテリアル: glass, aluminum, clean stone, urban pavement\nシーン: gateway close-wide, overcast noon, spring fresh green, clear\n色調: neutral clean\n文脈要素: 会議会場徒歩圏の実用立地\n追加ディテール: 外観照明と車寄せの導線表示は抽象記号のみ\n必須要素: 駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置\n禁止要素(カテゴリ差別化): palm trees, beach mood, tropical vegetation, resort-like sunset romance\nテンプレ名: ベーシック・長期滞在案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・駅アクセス案内",
@@ -419,9 +419,9 @@
       "categoryIndex": 5,
       "previewPath": "/templates/previews/guide/acdc87e3.jpg",
       "sourceAsset": "/template-airbnb-hero-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 観光地の通りから見えるホテル外観＋周辺の街並みが少し入る。ホテルが主役。ランドマークは雰囲気程度。\nテンプレ名: ベーシック・駅アクセス案内\nVariation: courtyard entrance greenery"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 街歩き導線の中にあるホテル。周辺街並みを少し含め、目的地としてホテルが視線の中心。\nカテゴリ固有ビジュアル指紋: 回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。\n推奨カラーパレット: balanced urban tones with one clear accent color\n推奨マテリアル: street pavement, storefront rhythm, hotel facade focal point\nシーン: street-level approach, blue hour, autumn warm foliage, after rain\n色調: soft cinematic\n文脈要素: 夜の回遊導線上のランドマークホテル\n追加ディテール: 周辺はボケ気味で主役を分離\n必須要素: 街並み要素を背景に含む、視線誘導でホテルを中心化\n禁止要素(カテゴリ差別化): isolated building with no town context, empty abstract backdrop\nテンプレ名: ベーシック・駅アクセス案内\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     },
     {
       "name": "ベーシック・チェックイン案内セット",
@@ -429,9 +429,9 @@
       "categoryIndex": 6,
       "previewPath": "/templates/previews/airbnb/db61615e.jpg",
       "sourceAsset": "/template-ryokan-detail-01.jpg",
-      "styleNotes": "ホテル外観主役。料理/皿/ドリンク禁止。文字・ロゴ・透かし無し。5:3。",
+      "styleNotes": "主役は宿の建物/到着体験。料理・ドリンク・室内食事主役NG。文字/ロゴ/透かしNG。5:3、1920x1152想定。",
       "generator": "TBD (use your image tool/model; generate once, then save as JPG)",
-      "prompt": "目的: ホテル案内テンプレート一覧のサムネイル画像。主役はホテル外観。食べ物・料理・皿・ドリンクは写さない。\n構図: 建物外観がフレームの60%以上。入口/車寄せ/植栽/外観照明など“宿泊施設”と分かる要素を入れる。人物は写さない（写っても背中の小さなシルエット程度、顔は不可）。\nスタイル: フォトリアル、高品質、自然な色、商用サイトのヒーロー品質。ノイズ少なめ。白飛びなし。\n照明: 夕方〜夜のシネマティック照明 または 朝の柔らかい光。\nテキスト: 文字入れ無し。ロゴ無し。透かし無し。\nサイズ: 1920x1152 (5:3)。\nNG: 料理、レストランの卓上クローズアップ、スパの物撮り、室内食事、人物アップ、判読可能なブランド名や看板文字。\n\nカテゴリ差分: 住宅・一棟貸しの外観（モダン戸建てや町家風）。玄関が分かる。生活感は控えめで清潔。表札は読めない。室内キッチン/食卓が主役は禁止。\nテンプレ名: ベーシック・チェックイン案内セット\nVariation: minimal signage business district"
+      "prompt": "ホテル案内テンプレート一覧カード向けキービジュアル。\nフォトリアル、高解像度、商用品質、自然な質感。\n主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。\n建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。\n人物は豆粒シルエット程度のみ可、顔判別不可。\n文字・ロゴ・透かし・可読看板・ブランド要素は入れない。\n料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。\n5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。\nカテゴリ要件: 一棟貸し・戸建て宿。玄関アプローチ、私邸感、暮らしの延長にある滞在感。室内キッチン主役は不可。\nカテゴリ固有ビジュアル指紋: 私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。\n推奨カラーパレット: soft neutral, warm beige, natural green, gentle contrast\n推奨マテリアル: residential siding, wood deck, small garden, porch lighting\nシーン: corner perspective, golden hour, autumn warm foliage, misty\n色調: soft cinematic\n文脈要素: ファミリー向け一棟貸し\n追加ディテール: 前庭と玄関まわりを明確に見せる\n必須要素: 戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈\n禁止要素(カテゴリ差別化): large-scale hotel tower look, grand porte-cochere dominance\nテンプレ名: ベーシック・チェックイン案内セット\nNG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition"
     }
   ]
 }
