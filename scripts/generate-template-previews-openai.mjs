@@ -84,12 +84,13 @@ function loadManifest() {
 function appendSafetyPrompt(basePrompt) {
   const hardRules = [
     "Hard constraints:",
-    "Main subject is hotel exterior facade and entrance.",
+    "Main subject is the hotel stay journey scene, with hotel/building identity kept as a clear anchor.",
+    "Do not output a facade-only monotonous shot; include contextual cues such as approach path, neighborhood, semi-outdoor transition, or a subtle lobby glimpse through glass.",
     "No food, no drinks, no plated dishes, no restaurant table closeups.",
     "No spa product closeups, no interior dining as main subject.",
     "No readable text, no logos, no watermarks, no brand names.",
     "No close-up portrait faces.",
-    "Photorealistic commercial quality. Keep architecture dominant in frame.",
+    "Photorealistic commercial quality. Keep architecture/venue identity clear while preserving contextual storytelling.",
   ].join("\n");
   return `${basePrompt}\n\n${hardRules}`;
 }

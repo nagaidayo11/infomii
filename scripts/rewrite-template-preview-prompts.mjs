@@ -10,8 +10,9 @@ const MANIFEST_PATH = path.join(ROOT, "public/templates/previews/manifest.json")
 const BASE_PROMPT = [
   "ホテル案内テンプレート一覧カード向けキービジュアル。",
   "フォトリアル、高解像度、商用品質、自然な質感。",
-  "主題は宿泊体験が伝わる情景。建物外観だけに限定せず、アプローチ空間・エントランス・周辺文脈も含める。",
-  "建物または宿の識別要素が画面の主役であること（フレーム内の主占有）。",
+  "主題は宿泊体験が伝わる情景。外観単体に固定せず、アプローチ空間・エントランス・周辺文脈・到着後の利用シーンを同時に含める。",
+  "建物または宿の識別要素をアンカーとして保ちつつ、構図の30-45%は体験文脈（街/導線/半屋外空間/窓越しのロビーの気配など）で構成する。",
+  "外観“だけ”の単調な立面ショットは禁止。視線誘導があるストーリー構図にする。",
   "人物は豆粒シルエット程度のみ可、顔判別不可。",
   "文字・ロゴ・透かし・可読看板・ブランド要素は入れない。",
   "料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。",
@@ -28,42 +29,42 @@ const CATEGORY_STYLE_RULES = {
     fingerprint: "都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。",
     palette: "slate gray, steel blue, neutral white, subtle amber accents only",
     materials: "glass, aluminum, clean stone, urban pavement",
-    mustInclude: "駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置",
+    mustInclude: "駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置、移動導線の気配",
     mustAvoid: "palm trees, beach mood, tropical vegetation, resort-like sunset romance",
   },
   resort: {
     fingerprint: "非日常・開放的・景観一体型。自然との接続を強く感じる高揚感のある印象。",
     palette: "sunset gold, sea blue, lush green, warm highlights",
     materials: "natural stone, wood accents, lush landscape planting",
-    mustInclude: "海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー",
+    mustInclude: "海または豊かな緑、広い到着空間、リゾートらしい植栽レイヤー、体験導線の奥行き",
     mustAvoid: "dense business district look, rigid office-like facade monotony",
   },
   ryokan: {
     fingerprint: "静謐・和の品格・伝統意匠。余白と陰影で落ち着きを表現。",
     palette: "warm lantern amber, deep brown, muted indigo, moss green",
     materials: "wood lattice, tile roof, stone path, paper-lantern glow",
-    mustInclude: "門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ",
+    mustInclude: "門・行灯・瓦・石畳のうち複数、和風旅館らしい玄関のしつらえ、庭越しの導線",
     mustAvoid: "modern glass-box business architecture, tropical resort cues",
   },
   airbnb: {
     fingerprint: "私邸感・暮らしに近い滞在・親しみやすい外観。過度なホテル感を避ける。",
     palette: "soft neutral, warm beige, natural green, gentle contrast",
     materials: "residential siding, wood deck, small garden, porch lighting",
-    mustInclude: "戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈",
+    mustInclude: "戸建て/一棟貸しと分かる玄関アプローチ、住宅地文脈、暮らしの気配がある外構",
     mustAvoid: "large-scale hotel tower look, grand porte-cochere dominance",
   },
   guide: {
     fingerprint: "回遊性・街との接続・目的地性。街並みの中でホテルが主役として立つ。",
     palette: "balanced urban tones with one clear accent color",
     materials: "street pavement, storefront rhythm, hotel facade focal point",
-    mustInclude: "街並み要素を背景に含む、視線誘導でホテルを中心化",
+    mustInclude: "街並み要素を背景に含む、視線誘導でホテルを中心化、回遊導線の気配",
     mustAvoid: "isolated building with no town context, empty abstract backdrop",
   },
   inbound: {
     fingerprint: "安心感・国際対応感・明瞭導線。初訪日でも迷いにくい印象。",
     palette: "clean neutral base with welcoming warm entrance light",
     materials: "clear glazing, legible circulation geometry, barrier-free approach",
-    mustInclude: "抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線",
+    mustInclude: "抽象ピクト風の案内雰囲気（文字不可読）、明るい入口、分かりやすい導線、安心できる到着体験",
     mustAvoid: "local-only ambiguous alley mood, dark unsafe-looking entrance",
   },
 };
@@ -169,7 +170,7 @@ function main() {
 
   manifest.generated = new Date().toISOString();
   manifest.note =
-    "Prompt set v2: diversified by category + scene axis (shot/time/season/weather/grade/context). Exterior remains primary, but includes approach/context cues. Keep local static preview files only.";
+    "Prompt set v3.1: avoid exterior-only shots. Keep hotel/building as anchor while adding stay-journey context (approach, surroundings, semi-outdoor scenes, lobby glimpse). Local static preview files only.";
 
   for (const entry of manifest.entries) {
     const cat = CATEGORY_PROMPTS[entry.category];
