@@ -9,19 +9,14 @@ const MANIFEST_PATH = path.join(ROOT, "public/templates/previews/manifest.json")
 
 const BASE_PROMPT = [
   "ホテル案内テンプレート一覧カード向けキービジュアル。",
-  "フォトリアル、高解像度、商用品質、自然な質感。",
-  "主題は宿泊体験が伝わる情景。外観単体に固定せず、アプローチ空間・エントランス・周辺文脈・到着後の利用シーンを同時に含める。",
-  "建物または宿の識別要素をアンカーとして保ちつつ、構図の55-70%は体験文脈（導線/半屋外空間/窓越しのロビー/周辺街路）で構成する。",
-  "建物の正面全景・立面図のようなショットは禁止。ファサード単体で画面を埋めない。",
-  "必ず前景に体験要素（歩道導線、車寄せ動線、玄関まわり、植栽導線、窓越しロビーの気配）のいずれかを置く。",
-  "人物は豆粒シルエット程度のみ可、顔判別不可。",
-  "文字・ロゴ・透かし・可読看板・ブランド要素は入れない。",
-  "料理・皿・ドリンク・室内食事を主役にしない。スパ物撮り禁止。",
-  "5:3横構図、1920x1152想定、一覧カードで識別しやすい強いシルエットと奥行き。",
+  "フォトリアル、高解像度、商用品質。",
+  "外観だけの建物写真にせず、宿泊体験が伝わる情景（導線・周辺・半屋外・窓越しの気配）を入れる。",
+  "建物は識別アンカーとして残しつつ、体験文脈を構図の中心に置く。",
+  "5:3横構図、1920x1152想定。",
 ].join("\n");
 
 const NEGATIVE = [
-  "NG: readable text, logo, watermark, close-up face, food close-up, drink, table dining, spa product, indoor dining main subject, blurry, low contrast, overexposed, flat composition",
+  "NG: readable text, logos, watermark, blurry, flat composition",
 ].join("\n");
 
 /** @type {Record<string, {fingerprint: string, palette: string, materials: string, mustInclude: string, mustAvoid: string, requiredExperience: string}>} */
@@ -178,7 +173,7 @@ function main() {
 
   manifest.generated = new Date().toISOString();
   manifest.note =
-    "Prompt set v3.2: hard-ban facade-only composition. Force experience-forward scenes with non-exterior foreground context while keeping property identity anchor. Local static preview files only.";
+    "Prompt set v4: lighter shared constraints + category style cues. Encourage experience-forward compositions over facade-only imagery. Local static preview files only.";
 
   for (const entry of manifest.entries) {
     const cat = CATEGORY_PROMPTS[entry.category];
