@@ -958,6 +958,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   },
 ];
 
+// One-off hard removals from template marketplace. Deleted during sync=1.
+const REMOVED_TEMPLATE_NAMES = ["ビジネスホテル・館内案内"];
+
 /**
  * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.
  * GET /api/seed-templates?sync=1 — also UPDATE existing rows (preview_image → /templates/previews/<category>/<slug>.jpg, cards, description, category).
@@ -984,6 +987,7 @@ export async function GET(request: Request) {
 
     const toInsert: SeedTemplate[] = [];
     let updated = 0;
+    let removed = 0;
 
     const categoryIndexMap = new Map<string, number>();
     for (const template of SEED_TEMPLATES) {
@@ -1012,6 +1016,15 @@ export async function GET(request: Request) {
       }
     }
 
+    if (syncLatest && REMOVED_TEMPLATE_NAMES.length > 0) {
+      const { data: deletedRows, error } = await supabase
+        .from("templates")
+        .delete()
+        .in("name", REMOVED_TEMPLATE_NAMES)
+        .select("id");
+      if (!error) removed = deletedRows?.length ?? 0;
+    }
+
     let inserted = 0;
     if (toInsert.length > 0) {
       const rows = toInsert.map(({ name, description, preview_image, category, cards }) => ({
@@ -1032,6 +1045,7 @@ export async function GET(request: Request) {
       message: syncLatest ? "Templates synced to latest" : "Templates checked",
       inserted,
       updated,
+      removed,
       totalSeedTemplates: SEED_TEMPLATES.length,
     });
   } catch (e) {
