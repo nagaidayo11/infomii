@@ -85,7 +85,9 @@ function appendSafetyPrompt(basePrompt) {
   const hardRules = [
     "Hard constraints:",
     "Main subject is the hotel stay journey scene, with hotel/building identity kept as a clear anchor.",
-    "Do not output a facade-only monotonous shot; include contextual cues such as approach path, neighborhood, semi-outdoor transition, or a subtle lobby glimpse through glass.",
+    "Do not output a full-elevation facade-only shot. Avoid flat front-view architecture catalog composition.",
+    "Foreground must include non-exterior experience cues: approach path, neighborhood context, semi-outdoor transition, or subtle lobby glimpse through glass.",
+    "Ensure contextual scene occupies major frame area; architecture identity is anchor, not the only subject.",
     "No food, no drinks, no plated dishes, no restaurant table closeups.",
     "No spa product closeups, no interior dining as main subject.",
     "No readable text, no logos, no watermarks, no brand names.",
