@@ -235,3 +235,20 @@ where i.hotel_id = 'HOTEL_ID'
       and p.slug = i.slug
   );
 ```
+
+---
+
+## 6. テンプレート品質監査（S基準）
+
+テンプレート内容（カード構成・必須情報）を機械監査するスクリプトを追加しています。
+
+- 実行: `npm run templates:quality:audit`
+- 入力元: `src/app/api/seed-templates/route.ts` の `SEED_TEMPLATES`
+- 出力:
+  - `docs/template-quality-report.json`
+  - `docs/template-quality-report.md`
+
+評価ルールと運用手順は以下を参照してください。
+
+- `docs/TEMPLATE_QUALITY_SCORECARD.md`
+- `docs/TEMPLATE_BLOCK_ORDER_GUIDE.md`

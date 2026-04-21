@@ -10,7 +10,8 @@
     "lint": "eslint",
     "templates:previews:from-pool": "node scripts/generate-template-preview-files.mjs",
     "templates:previews:prompts": "node scripts/rewrite-template-preview-prompts.mjs",
-    "templates:previews:openai": "node scripts/generate-template-previews-openai.mjs"
+    "templates:previews:openai": "node scripts/generate-template-previews-openai.mjs",
+    "templates:quality:audit": "node scripts/audit-template-quality.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
