@@ -450,7 +450,7 @@ export function Editor2({
 
   const publishNow = useCallback(async () => {
     if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
     if (!pageId) return;
@@ -490,7 +490,7 @@ export function Editor2({
 
   const handlePublishClick = useCallback(async () => {
     if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
     const report = runPrepublishChecks();
@@ -508,7 +508,7 @@ export function Editor2({
   /** 公開済みページのみ: 保存してQR/URLモーダルを開く（初回公開は「公開」ボタンを使用） */
   const handleQrClick = useCallback(async () => {
     if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
     if (!pageId || !pageMeta.slug) return;
@@ -839,7 +839,7 @@ export function Editor2({
   );
 
   const handlePreviewClick = useCallback(async () => {
-    if (guardDemoAction("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。")) {
+    if (guardDemoAction("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
     }
     if (!pageMeta.publicUrl || !pageId) return;
@@ -890,7 +890,7 @@ export function Editor2({
   }, [guardDemoAction, pageMeta.publicUrl, pageId, ensureTranslationsBeforePublish]);
 
   const handlePublishClickStrict = useCallback(async () => {
-    if (guardDemoAction("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。")) {
+    if (guardDemoAction("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
     }
     setPublishFlowBusy(true);
@@ -930,7 +930,7 @@ export function Editor2({
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
   const handlePublishPastWarnings = useCallback(async () => {
     if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
     setPublishFlowBusy(true);

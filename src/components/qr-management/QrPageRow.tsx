@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import {
   buildPublicUrl,
   buildPublicQrUrl,
@@ -14,10 +15,17 @@ type QrPageRowProps = {
 };
 
 export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
+  const [copied, setCopied] = useState(false);
   const publicUrl = buildPublicUrl(slug);
   const qrUrl = buildPublicQrUrl(slug);
   const qrImageSrc = qrCodeImageUrl(qrUrl, 160);
   const printHref = `/print/a4-qr?title=${encodeURIComponent(title)}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrUrl)}`;
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(t);
+  }, [copied]);
 
   const handleDownload = () => {
     const a = document.createElement("a");
@@ -28,6 +36,15 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(qrUrl);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
@@ -72,13 +89,20 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
           >
             印刷用A4
           </a>
-          <button
-            type="button"
-            onClick={() => void navigator.clipboard.writeText(qrUrl)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            URLをコピー
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => void handleCopyUrl()}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              URLをコピー
+            </button>
+            {copied && (
+              <div className="pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white shadow-md">
+                URLをコピーしました
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

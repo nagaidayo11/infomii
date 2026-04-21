@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNavDrawer } from "./MobileNavDrawer";
@@ -28,6 +29,7 @@ export function AppLayout({
 }: AppLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+  const pathname = usePathname();
 
   return (
     <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-slate-100/90">
@@ -37,10 +39,12 @@ export function AppLayout({
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
           <main
-            className="app-page-enter flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+            className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
           >
-            {children}
+            <div key={pathname} className="app-page-enter">
+              {children}
+            </div>
           </main>
         </div>
       </RouteProgressProvider>
