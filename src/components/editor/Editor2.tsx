@@ -829,10 +829,17 @@ export function Editor2({
     [cards, translateAllCardsToMultilingual, translationEnabled]
   );
 
+  const guardDemoAction = useCallback(
+    (message: string): boolean => {
+      if (!isDemoMode) return false;
+      setDemoLockMessage(message);
+      return true;
+    },
+    [isDemoMode]
+  );
+
   const handlePreviewClick = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
-      window.open(demoPreviewUrl, "_blank", "noopener,noreferrer");
+    if (guardDemoAction("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
     }
     if (!pageMeta.publicUrl || !pageId) return;
@@ -880,11 +887,10 @@ export function Editor2({
     } finally {
       setPreviewBusy(false);
     }
-  }, [isDemoMode, demoPreviewUrl, pageMeta.publicUrl, pageId, ensureTranslationsBeforePublish]);
+  }, [guardDemoAction, pageMeta.publicUrl, pageId, ensureTranslationsBeforePublish]);
 
   const handlePublishClickStrict = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。");
+    if (guardDemoAction("デモモードでは公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
     }
     setPublishFlowBusy(true);
@@ -919,7 +925,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [isDemoMode, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval]);
+  }, [guardDemoAction, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval]);
 
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
   const handlePublishPastWarnings = useCallback(async () => {
