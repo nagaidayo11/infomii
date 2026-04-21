@@ -963,7 +963,8 @@ const REMOVED_TEMPLATE_NAMES = ["ビジネスホテル・館内案内", "リゾ�
 
 /**
  * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.
- * GET /api/seed-templates?sync=1 — also UPDATE existing rows (preview_image → /templates/previews/<category>/<slug>.jpg, cards, description, category).
+ * GET /api/seed-templates?sync=1 — also UPDATE existing rows (preview_image → /templates/previews/<category>/<slug>.jpg, cards, description, category),
+ *   and DELETE any `templates` row whose `name` is not in `SEED_TEMPLATES` (removes legacy marketplace titles / broken preview rows).
  * After deploying `public/templates/previews/**`, run sync once per environment so Supabase matches the on-disk assets.
  */
 export async function GET(request: Request) {
@@ -975,7 +976,7 @@ export async function GET(request: Request) {
     const { data: existing, error: existingError } = await supabase
       .from("templates")
       .select("id, name")
-      .limit(200);
+      .limit(500);
     if (existingError) {
       return NextResponse.json({ error: existingError.message }, { status: 500 });
     }
@@ -1022,7 +1023,17 @@ export async function GET(request: Request) {
         .delete()
         .in("name", REMOVED_TEMPLATE_NAMES)
         .select("id");
-      if (!error) removed = deletedRows?.length ?? 0;
+      if (!error) removed += deletedRows?.length ?? 0;
+    }
+
+    // Legacy rows like "○○・ゲスト向け案内" (not in current SEED_TEMPLATES).
+    if (syncLatest) {
+      const { data: guestGuideRows, error: guestGuideErr } = await supabase
+        .from("templates")
+        .delete()
+        .like("name", "%・ゲスト向け案内")
+        .select("id");
+      if (!guestGuideErr) removed += guestGuideRows?.length ?? 0;
     }
 
     let inserted = 0;
@@ -1037,6 +1048,23 @@ export async function GET(request: Request) {
       const { error } = await supabase.from("templates").insert(rows);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       inserted = rows.length;
+    }
+
+    // Drop any marketplace row whose name is not in the current seed (legacy titles, broken previews).
+    if (syncLatest) {
+      const allowedNames = new Set(SEED_TEMPLATES.map((t) => t.name));
+      const { data: allRows, error: allErr } = await supabase.from("templates").select("id, name").limit(500);
+      if (!allErr && allRows) {
+        const orphanIds = allRows.filter((row) => !allowedNames.has(row.name)).map((r) => r.id);
+        if (orphanIds.length > 0) {
+          const { data: orphanDeleted, error: orphanDelErr } = await supabase
+            .from("templates")
+            .delete()
+            .in("id", orphanIds)
+            .select("id");
+          if (!orphanDelErr) removed += orphanDeleted?.length ?? 0;
+        }
+      }
     }
 
     return NextResponse.json({
