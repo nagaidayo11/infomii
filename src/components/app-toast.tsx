@@ -34,7 +34,7 @@ export default function AppToast({
 
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-50">
-      <div className={`pointer-events-auto flex min-w-[260px] items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur ${toneClass}`}>
+      <div className={`ui-pop-in pointer-events-auto flex min-w-[260px] items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur ${toneClass}`}>
         <span className="mt-0.5 text-base leading-none">{kind === "success" ? "✓" : kind === "error" ? "!" : "i"}</span>
         <div className="min-w-0 flex-1">
           <p className="break-words">{message}</p>

@@ -208,91 +208,93 @@ export default function TemplatesPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm">
-              <div className="aspect-[5/3] animate-pulse rounded-lg bg-slate-100" />
-              <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
-              <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
-            </div>
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-          <p className="text-slate-600">テンプレートがまだありません。</p>
-          <p className="mt-1 text-sm text-slate-500">
-            管理者が Supabase の templates テーブルに登録するとここに表示されます。
-          </p>
-          <Link
-            href="/dashboard"
-            className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
-          >
-            ダッシュボードに戻る
-          </Link>
-        </div>
-      ) : category !== "all" ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((template) => {
-            return (
-              <TemplateCard
-                key={template.id}
-                id={template.id}
-                name={template.name}
-                description={template.description}
-                preview_image={template.preview_image}
-                category={template.category}
-                onUse={() => handleUseTemplate(template.id)}
-                onPreview={() => setPreviewTemplate(template)}
-                using={usingId === template.id}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {groupedWhenAll.map((group) => {
-            const expanded = !!expandedCategories[group.category];
-            const visible = expanded ? group.items : group.items.slice(0, 3);
-            const hiddenCount = Math.max(0, group.items.length - visible.length);
-            return (
-              <section key={group.category} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
-                  {group.items.length > 3 ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedCategories((prev) => ({ ...prev, [group.category]: !expanded }))
-                      }
-                      className="text-xs font-medium text-slate-500 hover:text-slate-700"
-                    >
-                      {expanded ? "折りたたむ" : `さらに表示（+${hiddenCount}）`}
-                    </button>
-                  ) : null}
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {visible.map((template) => {
-                    return (
-                      <TemplateCard
-                        key={template.id}
-                        id={template.id}
-                        name={template.name}
-                        description={template.description}
-                        preview_image={template.preview_image}
-                        category={template.category}
-                        onUse={() => handleUseTemplate(template.id)}
-                        onPreview={() => setPreviewTemplate(template)}
-                        using={usingId === template.id}
-                      />
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+      <div>
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm">
+                <div className="aspect-[5/3] animate-pulse rounded-lg bg-slate-100" />
+                <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
+                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
+            <p className="text-slate-600">テンプレートがまだありません。</p>
+            <p className="mt-1 text-sm text-slate-500">
+              管理者が Supabase の templates テーブルに登録するとここに表示されます。
+            </p>
+            <Link
+              href="/dashboard"
+              className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
+            >
+              ダッシュボードに戻る
+            </Link>
+          </div>
+        ) : category !== "all" ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((template) => {
+              return (
+                <TemplateCard
+                  key={template.id}
+                  id={template.id}
+                  name={template.name}
+                  description={template.description}
+                  preview_image={template.preview_image}
+                  category={template.category}
+                  onUse={() => handleUseTemplate(template.id)}
+                  onPreview={() => setPreviewTemplate(template)}
+                  using={usingId === template.id}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {groupedWhenAll.map((group) => {
+              const expanded = !!expandedCategories[group.category];
+              const visible = expanded ? group.items : group.items.slice(0, 3);
+              const hiddenCount = Math.max(0, group.items.length - visible.length);
+              return (
+                <section key={group.category} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
+                    {group.items.length > 3 ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedCategories((prev) => ({ ...prev, [group.category]: !expanded }))
+                        }
+                        className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                      >
+                        {expanded ? "折りたたむ" : `さらに表示（+${hiddenCount}）`}
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {visible.map((template) => {
+                      return (
+                        <TemplateCard
+                          key={template.id}
+                          id={template.id}
+                          name={template.name}
+                          description={template.description}
+                          preview_image={template.preview_image}
+                          category={template.category}
+                          onUse={() => handleUseTemplate(template.id)}
+                          onPreview={() => setPreviewTemplate(template)}
+                          using={usingId === template.id}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <p className="text-center text-sm text-slate-400">
         <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
@@ -303,14 +305,14 @@ export default function TemplatesPage() {
       {mounted && previewTemplate &&
         createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4 py-6"
+            className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4 py-6"
             role="dialog"
             aria-modal="true"
             aria-label={`${previewTemplate.name} テンプレートプレビュー`}
             onClick={() => setPreviewTemplate(null)}
           >
             <div
-              className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+              className="ui-pop-in max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">

@@ -25,14 +25,14 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="plan-limit-title"
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="ui-pop-in w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="plan-limit-title" className="text-lg font-semibold text-slate-900">

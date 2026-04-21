@@ -32,12 +32,12 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
     <div className="fixed inset-0 z-[100] lg:hidden" role="dialog" aria-modal="true" aria-label="メインメニュー">
       <button
         type="button"
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+        className="ui-overlay-fade absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
         onClick={onClose}
         aria-label="メニューを閉じる"
       />
       <nav
-        className="absolute inset-y-0 left-0 flex w-[min(100%,288px)] flex-col border-r border-slate-200/90 bg-slate-50 shadow-2xl"
+        className="ui-pop-in absolute inset-y-0 left-0 flex w-[min(100%,288px)] flex-col border-r border-slate-200/90 bg-slate-50 shadow-2xl"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <div className="border-b border-slate-200/60 px-4 pb-3">

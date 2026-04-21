@@ -63,14 +63,14 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+      className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal
       aria-labelledby="publish-modal-title"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-slate-200/80 bg-white shadow-2xl"
+        className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200/80 bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Success header — the reward moment */}

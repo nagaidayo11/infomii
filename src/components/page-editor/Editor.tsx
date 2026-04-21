@@ -299,12 +299,12 @@ export function Editor() {
 
       {showTemplateGallery && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm"
+          className="ui-overlay-fade fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal
           aria-labelledby="template-gallery-title"
         >
-          <div className="my-8 w-full max-w-5xl rounded-2xl border border-ds-border bg-ds-card p-6 shadow-[var(--shadow-ds-lg)]">
+          <div className="ui-pop-in my-8 w-full max-w-5xl rounded-2xl border border-ds-border bg-ds-card p-6 shadow-[var(--shadow-ds-lg)]">
             <div className="mb-4 flex items-center justify-between">
               <h2 id="template-gallery-title" className="text-lg font-semibold text-slate-900">
                 テンプレート

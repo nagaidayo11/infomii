@@ -617,11 +617,40 @@ a {
 @keyframes app-fade-up {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.995);
+    transform: translateY(10px) scale(0.995);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ui-tab-switch-in {
+  from {
+    transform: translateY(3px);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
@@ -645,7 +674,23 @@ a {
 }
 
 .app-page-enter {
-  animation: app-fade-up 480ms var(--ui-ease-out) both;
+  animation: app-fade-up 280ms var(--ui-ease-out) both;
+}
+
+.ui-fade-in {
+  animation: ui-fade-in 180ms var(--ui-ease-out) both;
+}
+
+.ui-overlay-fade {
+  animation: ui-fade-in 180ms var(--ui-ease-out) both;
+}
+
+.ui-pop-in {
+  animation: ui-pop-in 220ms var(--ui-ease-out) both;
+}
+
+.ui-tab-switch-in {
+  animation: ui-tab-switch-in 160ms var(--ui-ease-out) both;
 }
 
 /* Non-LP / non-editor app pages: unified container + heading scale */
@@ -735,6 +780,14 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-page-enter,
+  .ui-fade-in,
+  .ui-overlay-fade,
+  .ui-pop-in,
+  .ui-tab-switch-in {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
   html[data-app-buttonlift="true"] .app-button-native:hover:not(:disabled) {
     transform: none;
   }

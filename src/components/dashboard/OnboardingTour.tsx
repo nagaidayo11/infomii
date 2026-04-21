@@ -82,11 +82,11 @@ export function OnboardingTour() {
 
   const overlay = (
     <div
-      className="fixed inset-0 z-[9999] flex min-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-slate-900/30 p-4"
+      className="ui-overlay-fade fixed inset-0 z-[9999] flex min-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-slate-900/30 p-4"
       role="presentation"
     >
       <div
-        className="onboarding-surface relative my-auto max-w-md p-6"
+        className="ui-pop-in onboarding-surface relative my-auto max-w-md p-6"
         role="dialog"
         aria-labelledby="onboarding-title"
         aria-describedby="onboarding-desc"

@@ -98,7 +98,7 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
               URLをコピー
             </button>
             {copied && (
-              <div className="pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white shadow-md">
+              <div className="ui-pop-in pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white shadow-md">
                 URLをコピーしました
               </div>
             )}

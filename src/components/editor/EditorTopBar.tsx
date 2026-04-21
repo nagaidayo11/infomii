@@ -402,12 +402,12 @@ export function EditorTopBar({
             <>
               <button
                 type="button"
-                className="fixed inset-0 z-[55] bg-slate-900/30"
+                className="ui-overlay-fade fixed inset-0 z-[55] bg-slate-900/30"
                 aria-label="閉じる"
                 onClick={() => setMoreOpen(false)}
               />
               <div
-                className="fixed right-3 top-14 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                className="ui-pop-in fixed right-3 top-14 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
                 <button

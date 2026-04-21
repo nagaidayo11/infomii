@@ -76,8 +76,8 @@ export function InfoPageChat({ contextText, pageTitle }: InfoPageChatProps) {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-end sm:items-center sm:justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden />
-          <div className="relative flex h-[85vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:h-[520px] sm:max-h-[90vh] sm:rounded-2xl">
+          <div className="ui-overlay-fade absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden />
+          <div className="ui-pop-in relative flex h-[85vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-xl sm:h-[520px] sm:max-h-[90vh] sm:rounded-2xl">
             <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
               <h2 className="text-base font-semibold text-slate-800">ご案内アシスト</h2>
               <button

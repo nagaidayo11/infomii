@@ -1142,8 +1142,8 @@ export function Editor2({
           }}
         />
         {businessUpsellState.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="w-full max-w-lg rounded-2xl border border-violet-200 bg-white p-5 shadow-2xl">
+          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="ui-pop-in w-full max-w-lg rounded-2xl border border-violet-200 bg-white p-5 shadow-2xl">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">この機能はBusiness限定です</h3>
@@ -1207,8 +1207,8 @@ export function Editor2({
           />
         )}
         {prepublishState && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="ui-pop-in w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
               <h3 className="text-lg font-semibold text-slate-900">公開前チェック</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
                 公開直前に、ページの内容を自動で確認しています。
@@ -1282,8 +1282,8 @@ export function Editor2({
           </div>
         )}
         {demoLockMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
               <h3 className="text-lg font-semibold text-slate-900">デモモード制限</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{demoLockMessage}</p>
               <div className="mt-5 flex justify-end gap-2">
@@ -1305,8 +1305,8 @@ export function Editor2({
           </div>
         )}
         {bulkFontOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
               <h3 className="text-lg font-semibold text-slate-900">フォント一括変更</h3>
               <p className="mt-1 text-sm text-slate-500">ページ内すべてのブロックに同じフォントを適用します。</p>
               <div className="mt-4">

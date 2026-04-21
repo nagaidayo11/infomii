@@ -96,14 +96,14 @@ export function TemplateGallery({
 
       {previewTemplate && previewPage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-6"
+          className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-6"
           role="dialog"
           aria-modal="true"
           aria-label={`${previewTemplate.name} テンプレートの実プレビュー`}
           onClick={closePreview}
         >
           <div
-            className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            className="ui-pop-in max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">

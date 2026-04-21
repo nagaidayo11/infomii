@@ -104,7 +104,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
       createPortal(
         <div
           ref={panelRef}
-          className="fixed z-[200] min-w-[200px] max-w-[min(100vw-1rem,20rem)] rounded-xl border border-slate-200 bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
+          className="ui-pop-in fixed z-[200] min-w-[200px] max-w-[min(100vw-1rem,20rem)] rounded-xl border border-slate-200 bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
           role="menu"
           style={{
             top: menuPos.top,
