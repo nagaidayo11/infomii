@@ -959,7 +959,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
 ];
 
 // One-off hard removals from template marketplace. Deleted during sync=1.
-const REMOVED_TEMPLATE_NAMES = ["ビジネスホテル・館内案内"];
+const REMOVED_TEMPLATE_NAMES = ["ビジネスホテル・館内案内", "リゾートホテル・館内案内"];
 
 /**
  * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.
