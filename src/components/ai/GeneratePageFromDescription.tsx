@@ -86,8 +86,9 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
       });
       const data = (await res.json()) as ApiResponse;
       if (!res.ok) {
-        const msg = data.error ?? data.details ?? "生成に失敗しました";
-        setError(res.status === 503 ? `${msg}（OPENAI_API_KEY を設定してください）` : msg);
+        const msg = data.details ?? data.error ?? "生成に失敗しました";
+        const withStatus = `${msg} (HTTP ${res.status})`;
+        setError(res.status === 503 ? `${withStatus}（OPENAI_API_KEY を設定してください）` : withStatus);
         return;
       }
       const pageId = data.page_id ?? data.pageId;
