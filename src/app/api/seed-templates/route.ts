@@ -958,8 +958,13 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   },
 ];
 
-// One-off hard removals from template marketplace. Deleted during sync=1.
-const REMOVED_TEMPLATE_NAMES = ["ビジネスホテル・館内案内", "リゾートホテル・館内案内"];
+// One-off hard removals from template marketplace.
+const REMOVED_TEMPLATE_NAMES = [
+  "ビジネスホテル・館内案内",
+  "リゾートホテル・館内案内",
+  "旅館・ご案内",
+  "観光ガイド・スポット案内",
+];
 
 /**
  * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.
@@ -1017,7 +1022,7 @@ export async function GET(request: Request) {
       }
     }
 
-    if (syncLatest && REMOVED_TEMPLATE_NAMES.length > 0) {
+    if (REMOVED_TEMPLATE_NAMES.length > 0) {
       const { data: deletedRows, error } = await supabase
         .from("templates")
         .delete()
@@ -1027,14 +1032,12 @@ export async function GET(request: Request) {
     }
 
     // Legacy rows like "○○・ゲスト向け案内" (not in current SEED_TEMPLATES).
-    if (syncLatest) {
-      const { data: guestGuideRows, error: guestGuideErr } = await supabase
-        .from("templates")
-        .delete()
-        .like("name", "%・ゲスト向け案内")
-        .select("id");
-      if (!guestGuideErr) removed += guestGuideRows?.length ?? 0;
-    }
+    const { data: guestGuideRows, error: guestGuideErr } = await supabase
+      .from("templates")
+      .delete()
+      .like("name", "%・ゲスト向け案内")
+      .select("id");
+    if (!guestGuideErr) removed += guestGuideRows?.length ?? 0;
 
     let inserted = 0;
     if (toInsert.length > 0) {

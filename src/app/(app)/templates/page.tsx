@@ -27,6 +27,13 @@ const TEMPLATE_CATEGORIES = [
   { id: "inbound", label: "インバウンド" },
 ] as const;
 
+const HIDDEN_TEMPLATE_NAMES = new Set<string>([
+  "リゾートホテル・館内案内",
+  "旅館・ご案内",
+  "Airbnb・ゲスト向け案内",
+  "観光ガイド・スポット案内",
+]);
+
 function filterByCategory(
   templates: TemplateRow[],
   category: string
@@ -34,6 +41,10 @@ function filterByCategory(
   if (category === "all") return templates;
   const withCat = templates as (TemplateRow & { category?: string })[];
   return withCat.filter((t) => t.category === category);
+}
+
+function filterHiddenTemplates(templates: TemplateRow[]): TemplateRow[] {
+  return templates.filter((t) => !HIDDEN_TEMPLATE_NAMES.has(t.name));
 }
 
 /**
@@ -76,7 +87,7 @@ export default function TemplatesPage() {
       setLoading(true);
       setError(null);
       try {
-        const first = await listTemplates();
+        const first = filterHiddenTemplates(await listTemplates());
         if (!active) return;
         if (first.length > 0) {
           setTemplates(first);
@@ -84,7 +95,7 @@ export default function TemplatesPage() {
         }
         await fetch("/api/seed-templates");
         if (!active) return;
-        const seeded = await listTemplates();
+        const seeded = filterHiddenTemplates(await listTemplates());
         if (!active) return;
         setTemplates(seeded);
       } catch (e) {
