@@ -247,6 +247,42 @@ function buildCardContentByType(type: string): Record<string, unknown> {
           { name: "ドリンク", price: "500円", description: "ラウンジで提供" },
         ],
       };
+    case "wifi":
+      return {
+        title: "Wi-Fi案内",
+        ssid: "Infomii-Guest",
+        password: "guest2026",
+        description: "接続しづらい場合はフロントへご連絡ください。",
+      };
+    case "checkout":
+      return {
+        title: "チェックアウト手順",
+        time: "10:00",
+        note: "混雑を避ける場合は早めの手続きをお願いします。",
+        linkUrl: "",
+        linkLabel: "延長申請はこちら",
+      };
+    case "emergency":
+      return {
+        title: "緊急連絡先",
+        fire: "119",
+        police: "110",
+        hospital: "地域医療センター",
+        note: "体調不良時はフロントへご連絡ください。",
+      };
+    case "restaurant":
+      return {
+        title: "お食事のご案内",
+        breakfast: "7:00-9:30（1F レストラン）",
+        dinner: "18:00-21:00（ラストオーダー 20:30）",
+        note: "混雑時は時間をずらしてご利用ください。",
+      };
+    case "map":
+      return {
+        title: "アクセスマップ",
+        address: "施設住所を入力してください",
+        mapEmbedUrl: "",
+      };
     case "gallery":
       return { title: "ギャラリー", columns: 2, items: [] };
     case "pageLinks":
@@ -282,16 +318,16 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
   const blockedByCategory: Record<string, Set<string>> = {
     // ビジホは「温浴特化」を外して業務導線重視に
     business: new Set(["spa"]),
-    // リゾートは緊急連絡より体験訴求を優先
-    resort: new Set(["emergency"]),
+    // リゾートは体験訴求を優先しつつ、必須案内は残す
+    resort: new Set(),
     // 旅館はKPIよりも体験・作法を重視
     ryokan: new Set(["kpi"]),
     // Airbnbはホテル運用寄りの要素を除外
     airbnb: new Set(["kpi", "spa", "restaurant"]),
-    // 観光ガイドは宿泊運用ブロックを除外
-    guide: new Set(["checkout", "laundry", "wifi", "restaurant"]),
-    // インバウンドは運用系より言語・移動・連絡を重視
-    inbound: new Set(["laundry", "spa", "restaurant"]),
+    // 観光ガイドは重い運用ブロックを除外
+    guide: new Set(["laundry", "spa"]),
+    // インバウンドは言語・移動・連絡を重視（必須案内は残す）
+    inbound: new Set(["laundry", "spa"]),
     default: new Set(),
   };
   const blocked = blockedByCategory[categoryKey] ?? blockedByCategory.default;
@@ -302,13 +338,14 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
   const existingTypes = new Set(cards.map((card) => card.type));
 
   const requiredByCategory: Record<string, string[]> = {
-    business: ["hero", "kpi", "wifi", "schedule", "checkout", "faq"],
-    resort: ["hero", "gallery", "spa", "menu", "quote"],
-    ryokan: ["welcome", "notice", "spa", "restaurant", "steps"],
-    airbnb: ["hero", "steps", "checklist", "wifi", "emergency", "checkout"],
-    guide: ["hero", "nearby", "pageLinks", "map", "taxi"],
-    inbound: ["hero", "notice", "pageLinks", "wifi", "emergency", "faq"],
-    default: ["hero", "steps", "faq"],
+    // S基準の必須要素: 到着導線 + Wi-Fi + 食事 + checkout + emergency
+    business: ["hero", "steps", "wifi", "restaurant", "checkout", "emergency", "faq"],
+    resort: ["hero", "gallery", "wifi", "menu", "checkout", "emergency", "steps", "notice"],
+    ryokan: ["hero", "welcome", "wifi", "restaurant", "checkout", "emergency", "steps", "notice"],
+    airbnb: ["hero", "steps", "wifi", "menu", "checklist", "checkout", "emergency", "notice"],
+    guide: ["hero", "map", "wifi", "menu", "checkout", "emergency", "nearby", "faq"],
+    inbound: ["hero", "notice", "wifi", "menu", "checkout", "emergency", "pageLinks", "faq"],
+    default: ["hero", "steps", "wifi", "menu", "checkout", "emergency", "faq"],
   };
 
   const pools: Record<string, string[]> = {
@@ -333,8 +370,20 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
     (type) => !blocked.has(type),
   );
   for (const type of requiredSet) {
-    if (cards.length >= 10) break;
     if (existingTypes.has(type)) continue;
+    if (cards.length >= 10) {
+      // Keep hard-required cards even at max capacity by evicting a non-required tail card.
+      const removableIndex = [...cards]
+        .reverse()
+        .findIndex((card) => !requiredSet.includes(card.type) && card.type !== "hero");
+      if (removableIndex >= 0) {
+        const idx = cards.length - 1 - removableIndex;
+        const [removed] = cards.splice(idx, 1);
+        if (removed?.type) existingTypes.delete(removed.type);
+      } else {
+        continue;
+      }
+    }
     cards.push({
       type,
       content: buildCardContentByType(type),
@@ -365,19 +414,103 @@ function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
   const importantTypes = new Set(["hero", "summary", "wifi", "breakfast", "checkout", "faq", "cta"]);
   const cards = template.cards
     .filter((card) => card && typeof card.type === "string")
-    .slice(0, 9)
+    .slice(0, 10)
     .map((card, index) => ({
       ...card,
       order: index,
       content: { ...(card.content ?? {}) },
     }));
 
-  const hasImportant = cards.some((card) => importantTypes.has(card.type));
-  if (hasImportant) return { ...template, cards };
+  const reordered = reorderCardsByCategory(template.category, cards).map((card, index) => ({
+    ...card,
+    order: index,
+  }));
+  const enriched = enrichCriticalCardContent(reordered);
+
+  const hasImportant = enriched.some((card) => importantTypes.has(card.type));
+  if (hasImportant) return { ...template, cards: enriched };
   return {
     ...template,
-    cards: cards.slice(0, 8),
+    cards: enriched.slice(0, 9),
   };
+}
+
+function reorderCardsByCategory(
+  category: string | null,
+  cards: Array<{ type: string; content: Record<string, unknown>; order: number }>,
+): Array<{ type: string; content: Record<string, unknown>; order: number }> {
+  const priorityByCategory: Record<string, string[]> = {
+    business: ["hero", "kpi", "wifi", "schedule", "restaurant", "laundry", "checkout", "faq", "taxi", "nearby", "emergency"],
+    resort: ["hero", "gallery", "spa", "menu", "schedule", "nearby", "map", "pageLinks", "quote", "faq", "checkout", "emergency"],
+    ryokan: ["hero", "welcome", "notice", "spa", "restaurant", "menu", "steps", "schedule", "nearby", "map", "checkout", "faq", "emergency"],
+    airbnb: ["hero", "steps", "checklist", "wifi", "nearby", "map", "checkout", "emergency", "faq", "notice"],
+    guide: ["hero", "nearby", "map", "pageLinks", "taxi", "schedule", "notice", "faq", "quote", "emergency"],
+    inbound: ["hero", "welcome", "notice", "pageLinks", "map", "wifi", "steps", "checkout", "emergency", "faq", "taxi"],
+    default: ["hero", "steps", "wifi", "schedule", "checkout", "nearby", "map", "faq", "emergency"],
+  };
+  const key = category && priorityByCategory[category] ? category : "default";
+  const orderMap = new Map(priorityByCategory[key].map((type, idx) => [type, idx]));
+  return [...cards].sort((a, b) => {
+    const aRank = orderMap.has(a.type) ? orderMap.get(a.type)! : Number.MAX_SAFE_INTEGER;
+    const bRank = orderMap.has(b.type) ? orderMap.get(b.type)! : Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.order - b.order;
+  });
+}
+
+function enrichCriticalCardContent(
+  cards: Array<{ type: string; content: Record<string, unknown>; order: number }>,
+): Array<{ type: string; content: Record<string, unknown>; order: number }> {
+  return cards.map((card) => {
+    const content = { ...(card.content ?? {}) };
+    if (card.type === "wifi") {
+      if (typeof content.ssid !== "string" || !content.ssid.trim()) content.ssid = "Infomii-Guest";
+      if (typeof content.password !== "string" || !content.password.trim()) content.password = "guest2026";
+      if (typeof content.description !== "string" || !content.description.trim()) {
+        content.description = "接続しづらい場合はフロントへご連絡ください。";
+      }
+    }
+    if (card.type === "menu") {
+      if (typeof content.title !== "string" || !content.title.trim()) content.title = "朝食・お食事のご案内";
+      if (Array.isArray(content.items)) {
+        content.items = content.items.map((item) => {
+          const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+          if (typeof row.description !== "string" || !row.description.trim()) row.description = "朝食会場にて提供";
+          return row;
+        });
+      }
+    }
+    if (card.type === "restaurant") {
+      if (typeof content.breakfast !== "string" || !content.breakfast.trim()) {
+        content.breakfast = "7:00-9:30（会場はフロントでご案内）";
+      }
+    }
+    if (card.type === "checkout") {
+      if (typeof content.time !== "string" || !content.time.trim()) content.time = "10:00";
+      if (typeof content.note !== "string" || !content.note.trim()) {
+        content.note = "混雑回避のため、早めの手続きをおすすめします。";
+      }
+    }
+    if (card.type === "emergency") {
+      if (typeof content.fire !== "string" || !content.fire.trim()) content.fire = "119";
+      if (typeof content.police !== "string" || !content.police.trim()) content.police = "110";
+      if (typeof content.note !== "string" || !content.note.trim()) {
+        content.note = "体調不良・事故時はフロントへご連絡ください。";
+      }
+    }
+    if (card.type === "notice" && typeof content.body === "string" && content.body.length > 110) {
+      content.body = `${content.body.slice(0, 107)}...`;
+    }
+    if (card.type === "text" && typeof content.content === "string" && content.content.length > 100) {
+      content.content = `${content.content.slice(0, 97)}...`;
+    }
+    for (const [key, value] of Object.entries(content)) {
+      if (typeof value === "string" && value.length > 220) {
+        content[key] = `${value.slice(0, 217)}...`;
+      }
+    }
+    return { ...card, content };
+  });
 }
 
 const SEED_TEMPLATES: SeedTemplate[] = [
@@ -483,13 +616,13 @@ const SEED_TEMPLATES: SeedTemplate[] = [
   },
   {
     name: "インバウンド特化・多言語おもてなしセット",
-    description: "海外ゲスト向けに、交通・決済・ハウスルールをわかりやすく伝える多言語運用向け構成です。",
+    description: "海外ゲスト向けに、交通・決済・ルールを短く伝える多言語構成です。",
     preview_image: "/preset-hero-sample.png",
     category: "inbound",
     cards: [
       { type: "hero", content: { title: "Welcome International Guests", subtitle: "EN/JP対応の滞在ガイド", image: "/preset-hero-sample.png" }, order: 0 },
-      { type: "notice", content: { title: "Language Support", body: "Front desk supports English. Translation support available via QR.", variant: "info" }, order: 1 },
-      { type: "pageLinks", content: { title: "Travel Essentials", columns: 3, iconSize: "md", items: [{ label: "Transport", icon: "train", linkType: "page", pageSlug: "", link: "" }, { label: "Local Bus", icon: "bus", linkType: "page", pageSlug: "", link: "" }, { label: "Area Map", icon: "map-pin", linkType: "page", pageSlug: "", link: "" }, { label: "Payment", icon: "credit-card", linkType: "page", pageSlug: "", link: "" }, { label: "Emergency", icon: "phone", linkType: "page", pageSlug: "", link: "" }, { label: "Baggage", icon: "package", linkType: "page", pageSlug: "", link: "" }] }, order: 2 },
+      { type: "notice", content: { title: "Language Support", body: "English support at front desk. QR translation available.", variant: "info" }, order: 1 },
+      { type: "pageLinks", content: { title: "Travel Essentials", columns: 3, iconSize: "md", items: [{ label: "Transport", icon: "train", linkType: "page", pageSlug: "", link: "" }, { label: "Area Map", icon: "map-pin", linkType: "page", pageSlug: "", link: "" }, { label: "Emergency", icon: "phone", linkType: "page", pageSlug: "", link: "" }] }, order: 2 },
       { type: "wifi", content: { title: "Wi-Fi", ssid: "Infomii-Global", password: "global2026", description: "For support, contact front desk." }, order: 3 },
       { type: "checklist", content: { title: "Stay Rules", items: [{ text: "No smoking in rooms", checked: false }, { text: "Quiet hours after 22:00", checked: false }, { text: "Please separate trash", checked: false }] }, order: 4 },
       { type: "emergency", content: { title: "Emergency Contacts", fire: "119", police: "110", hospital: "City General Hospital +81-3-1111-2222", note: "Front desk: +81-3-9999-8888" }, order: 5 },
