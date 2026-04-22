@@ -1,19 +1,36 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { FadeIn } from "@/components/motion";
+
+const COOLDOWN_SECONDS = 60;
+
+function isRateLimitedError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("too many requests") || normalized.includes("rate limit");
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldownSeconds]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (cooldownSeconds > 0) return;
     const client = getBrowserSupabaseClient();
     if (!client) {
       setMessage("Supabase の設定が未完了です。.env.local を確認してください。");
@@ -30,7 +47,11 @@ export default function ForgotPasswordPage() {
     });
 
     if (error) {
-      setMessage("再設定メールの送信に失敗しました。時間をおいて再度お試しください。");
+      setMessage(
+        isRateLimitedError(error.message ?? "")
+          ? "送信回数が上限に達しました。しばらく時間をおいて再度お試しください。"
+          : "再設定メールの送信に失敗しました。時間をおいて再度お試しください。"
+      );
       setSubmitting(false);
       return;
     }
@@ -38,6 +59,7 @@ export default function ForgotPasswordPage() {
     // Avoid exposing whether the address exists in auth records.
     setSent(true);
     setMessage("再設定手順をメールで送信しました。メールをご確認ください。");
+    setCooldownSeconds(COOLDOWN_SECONDS);
     setSubmitting(false);
   }
 
@@ -90,10 +112,14 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 space-y-2">
             <button
               type="submit"
-              disabled={submitting || !hasSupabaseEnv}
+              disabled={submitting || !hasSupabaseEnv || cooldownSeconds > 0}
               className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "送信中..." : "再設定メールを送信"}
+              {submitting
+                ? "送信中..."
+                : cooldownSeconds > 0
+                  ? `再送まで ${cooldownSeconds}秒`
+                  : "再設定メールを送信"}
             </button>
             <Link
               href="/login"

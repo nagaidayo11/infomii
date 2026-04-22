@@ -163,6 +163,7 @@ create policy "authenticated cards via pages" on public.cards for all to authent
   上記のとおりテーブル・関数・RLS を作成する。
 3. **ログイン**
   `/login` でメールとパスワードで「新規登録」または「ログイン」する。
+   Google ログインを使う場合は、下記「Google OAuth 設定」を先に完了する。
 4. **初回ログイン時**
   アプリ側で「このユーザーに紐づく施設がない」と判定されると、自動で  
   - 施設（`hotels`）が1件作成され、  
@@ -174,12 +175,36 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 
 ---
 
+## 3.1 Google OAuth 設定（Google ログインを使う場合）
+
+`/login` の「Googleでログイン」を有効化するために、Google Cloud と Supabase の両方で設定します。
+
+1. **Google Cloud Console**
+   - OAuth 同意画面を作成（テスト中はテストユーザーを追加）
+   - OAuth 2.0 クライアント ID（Web アプリ）を作成
+   - 承認済みリダイレクト URI に Supabase の Callback URL を登録（通常: `https://<project-ref>.supabase.co/auth/v1/callback`）
+2. **Supabase ダッシュボード**
+   - **Authentication → Providers → Google** を有効化
+   - Google Cloud で作成した Client ID / Client Secret を入力
+3. **Redirect URLs**
+   - **Authentication → URL Configuration** で、アプリで使うURLを追加
+   - 例: `http://localhost:3000/login`, `https://your-domain.com/login`, `http://localhost:3000/settings`, `https://your-domain.com/settings`
+   - `signInWithOAuth` の `redirectTo` と一致していることを確認
+
+注意:
+- 新規登録はメール専用運用です。Google はログイン導線として扱います。
+- 同一メールは 1 ユーザー方針のため、アカウント統合ポリシー（Manual linking など）を Supabase 側で確認してください。
+- 設定画面の Google 連携は再認証（現在のパスワード入力）後にのみ開始されます。ログイン済みユーザーのみ利用できます。
+
+---
+
 ## 4. トラブルシューティング
 
 
 | 症状                 | 確認すること                                                                                                                    |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | ログインできない           | Supabase の **Authentication** → **Providers** で Email が有効か。**Settings** → **API** の URL/anon key が `.env.local` と一致しているか。 |
+| Googleログインが失敗する     | Supabase の **Authentication** → **Providers** で Google が有効か。Google Cloud の Client ID/Secret が一致しているか。Redirect URLs が `/login` を含んでいるか。 |
 | 「施設が選択されていません」     | 上記 2 のテーブルとポリシーがすべて実行されているか。RLS のポリシー名が重複していないか。                                                                          |
 | 「Supabase設定が未完了です」 | `.env.local` がルートにあり、`NEXT_PUBLIC_` の typo がないか。`npm run dev` をやり直したか。                                                    |
 

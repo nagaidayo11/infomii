@@ -1,4 +1,5 @@
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
+import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 
 /**
@@ -15,6 +16,8 @@ export default function SettingsPage() {
       </header>
 
       <BusinessPlanSection />
+
+      <AccountAuthLinkSection />
 
       <BusinessAuditLogExport />
     </div>

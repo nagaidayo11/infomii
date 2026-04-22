@@ -8,6 +8,45 @@ import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { FadeIn } from "@/components/motion";
 
+function isEmailCollisionMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("already registered") ||
+    normalized.includes("already exists") ||
+    normalized.includes("email exists") ||
+    normalized.includes("email address is already in use") ||
+    normalized.includes("identity already exists")
+  );
+}
+
+function formatEmailAuthError(message: string): string {
+  if (isEmailCollisionMessage(message)) {
+    return "このメールアドレスは既に使用されています。メールでログインしてください。";
+  }
+  const normalized = message.toLowerCase();
+  if (normalized.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが正しくありません。";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "メール確認が完了していません。受信メールをご確認ください。";
+  }
+  return "ログインに失敗しました。時間をおいて再度お試しください。";
+}
+
+function formatGoogleAuthError(message: string): string {
+  if (isEmailCollisionMessage(message)) {
+    return "同じメールアドレスのアカウントが既にあります。先にメールでログインしてからGoogle連携を行ってください。";
+  }
+  const normalized = message.toLowerCase();
+  if (normalized.includes("provider is not enabled")) {
+    return "Googleログインの設定が未完了です。管理者にお問い合わせください。";
+  }
+  if (normalized.includes("access_denied")) {
+    return "Googleログインがキャンセルされました。もう一度お試しください。";
+  }
+  return "Googleログインに失敗しました。時間をおいて再度お試しください。";
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,6 +60,12 @@ function LoginForm() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+
+  useEffect(() => {
+    const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
+    if (!oauthError) return;
+    setMessage(formatGoogleAuthError(oauthError));
+  }, [searchParams]);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -41,22 +86,46 @@ function LoginForm() {
     if (isSignUp) {
       const { error } = await client.auth.signUp({ email, password });
       if (error) {
-        setMessage(error.message);
+        setMessage(formatEmailAuthError(error.message ?? ""));
         setSubmitting(false);
         return;
       }
-      setMessage("登録しました。ログインしてダッシュボードへ移動します。");
+      setMessage("登録しました。確認メールをご確認の上、メールアドレスでログインしてください。");
       setIsSignUp(false);
     } else {
       const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) {
-        setMessage(error.message);
+        setMessage(formatEmailAuthError(error.message ?? ""));
         setSubmitting(false);
         return;
       }
       router.replace(next);
     }
     setSubmitting(false);
+  }
+
+  async function handleGoogleLogin() {
+    const client = getBrowserSupabaseClient();
+    if (!client) {
+      setMessage("Supabase の設定が未完了です。.env.local を確認してください。");
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage("");
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectPath = next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
+    const { error } = await client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${origin}${redirectPath}` },
+    });
+
+    if (error) {
+      setMessage(formatGoogleAuthError(error.message ?? ""));
+      setSubmitting(false);
+      return;
+    }
   }
 
   if (loading || user) {
@@ -106,7 +175,7 @@ function LoginForm() {
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
           <h1 className="text-lg font-semibold text-slate-900">
-            {isSignUp ? "新規登録" : "ログイン"}
+            {isSignUp ? "メールアドレスで新規登録" : "メールアドレスでログイン"}
           </h1>
 
           <div className="mt-4 space-y-4">
@@ -167,7 +236,39 @@ function LoginForm() {
               disabled={submitting || !hasSupabaseEnv}
               className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "処理中..." : isSignUp ? "登録する" : "ログイン"}
+              {submitting ? "処理中..." : isSignUp ? "メールで登録する" : "メールでログイン"}
+            </button>
+            <div className="relative py-1">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200" />
+              <span className="relative mx-auto block w-fit bg-white px-2 text-xs text-slate-400">または</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleGoogleLogin()}
+              aria-label="Googleでログイン"
+              disabled={submitting || !hasSupabaseEnv}
+              className="app-button-native flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[14px] font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]/30 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: "#ffffff", borderColor: "#dadce0" }}
+            >
+              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 18 18">
+                <path
+                  fill="#4285F4"
+                  d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2582h2.9086c1.7018-1.5668 2.6837-3.8741 2.6837-6.6155z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M9 18c2.43 0 4.4673-.8068 5.9564-2.1791l-2.9086-2.2582c-.8068.5409-1.8409.8591-3.0478.8591-2.3441 0-4.3282-1.5832-5.0364-3.7105H.9573v2.3318C2.4382 15.9845 5.4818 18 9 18z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M3.9636 10.7113c-.18-.5409-.2836-1.1186-.2836-1.7113s.1036-1.1705.2836-1.7113V4.9568H.9573C.3477 6.1718 0 7.5445 0 9s.3477 2.8282.9573 4.0432l3.0063-2.3319z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M9 3.5782c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5813C13.4632.8918 11.4268 0 9 0 5.4818 0 2.4382 2.0155.9573 4.9568l3.0063 2.3319C4.6718 5.1614 6.6559 3.5782 9 3.5782z"
+                />
+              </svg>
+              Googleでログイン
             </button>
             <button
               type="button"
@@ -178,8 +279,11 @@ function LoginForm() {
               disabled={submitting}
               className="app-button-native w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             >
-              {isSignUp ? "ログイン画面へ" : "新規登録"}
+              {isSignUp ? "ログイン画面へ" : "新規登録（メールアドレス）"}
             </button>
+            <p className="pt-1 text-center text-xs text-slate-500">
+              新規登録はメールアドレスで行います。Googleはログイン専用です。
+            </p>
           </div>
         </form>
 
