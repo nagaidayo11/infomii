@@ -142,6 +142,16 @@ function LoginForm() {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="6文字以上"
               />
+              {!isSignUp && (
+                <div className="mt-2 text-right">
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium text-slate-600 underline underline-offset-2 hover:text-slate-800"
+                  >
+                    パスワードをお忘れですか？
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
