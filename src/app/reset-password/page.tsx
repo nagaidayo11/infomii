@@ -7,6 +7,16 @@ import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { FadeIn } from "@/components/motion";
 
 type LinkState = "checking" | "valid" | "invalid";
+const RESET_LINK_EXPIRES_MINUTES = 5;
+
+function isSamePasswordError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("same password") ||
+    normalized.includes("new password should be different") ||
+    normalized.includes("different from the old password")
+  );
+}
 
 export default function ResetPasswordPage() {
   const client = getBrowserSupabaseClient();
@@ -66,7 +76,15 @@ export default function ResetPasswordPage() {
 
     const { error } = await client.auth.updateUser({ password });
     if (error) {
-      setMessage("パスワードの更新に失敗しました。リンクの有効期限をご確認ください。");
+      if (isSamePasswordError(error.message ?? "")) {
+        setMessage("以前と同じパスワードは設定できません。別のパスワードを入力してください。");
+      } else if ((error.message ?? "").toLowerCase().includes("expired")) {
+        setMessage(
+          `パスワードの更新に失敗しました。再設定リンクの有効期限（${RESET_LINK_EXPIRES_MINUTES}分）をご確認ください。`
+        );
+      } else {
+        setMessage("パスワードの更新に失敗しました。時間をおいて再度お試しください。");
+      }
       setSubmitting(false);
       return;
     }
@@ -106,7 +124,7 @@ export default function ResetPasswordPage() {
 
           {linkInvalid && (
             <p className="mt-3 text-sm text-rose-600">
-              リンクの有効期限が切れているか、無効です。再度お試しください。
+              再設定リンクの有効期限（{RESET_LINK_EXPIRES_MINUTES}分）が切れているか、無効です。再度お試しください。
             </p>
           )}
 
