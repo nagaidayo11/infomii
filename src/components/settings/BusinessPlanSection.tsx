@@ -39,7 +39,6 @@ export function BusinessPlanSection() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
@@ -135,7 +134,7 @@ export function BusinessPlanSection() {
           </p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {plan === "free" ? (
           <>
             <button

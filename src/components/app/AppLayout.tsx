@@ -32,7 +32,7 @@ export function AppLayout({
   const pathname = usePathname();
 
   return (
-    <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-slate-100/90">
+    <div className="app-ambient-bg flex min-h-[100dvh] w-full overflow-hidden bg-slate-100/90">
       <RouteProgressProvider>
         <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
         <Sidebar />

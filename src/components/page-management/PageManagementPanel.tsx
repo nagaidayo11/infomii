@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { AuthGate } from "@/components/auth-gate";
 import {
   buildPublicQrUrl,
-  buildPublicUrlV,
   createBlankPage,
   deletePage,
   getDashboardBootstrapData,
@@ -170,11 +169,11 @@ export function PageManagementPanel() {
 
           {/* ページ一覧（pages テーブル基準） */}
           <div className="overflow-hidden rounded-xl border border-ds-border bg-ds-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
-            <div className="border-b border-ds-border px-5 py-4">
+            <div className="border-b border-ds-border px-4 py-4 sm:px-5">
               <h2 className="text-[15px] font-semibold text-slate-900">
                 ページ一覧
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-sm text-slate-500">
                 作成・編集・公開・削除を1ページ単位で管理します
               </p>
             </div>
@@ -193,8 +192,54 @@ export function PageManagementPanel() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+              <>
+                <div className="space-y-3 p-3 sm:hidden">
+                  {cardPages.map((page) => (
+                    <article key={page.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="min-w-0 break-words text-sm font-semibold text-slate-900">
+                          {page.title?.trim() || ""}
+                        </h3>
+                        <span
+                          className={
+                            "inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium " +
+                            (statusBySlug[page.slug] === "published"
+                              ? "bg-emerald-600 text-white"
+                              : "bg-amber-50 text-amber-800")
+                          }
+                        >
+                          {statusBySlug[page.slug] === "published" ? "公開中" : "下書き"}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        <Link
+                          href={`/editor/${page.id}`}
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-ds-border bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                        >
+                          編集する
+                        </Link>
+                        <a
+                          href={buildPublicQrUrl(page.slug)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-ds-border bg-white px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          QRコードを開く
+                        </a>
+                        <button
+                          type="button"
+                          disabled={deletingCardPageId === page.id}
+                          onClick={() => void onDeleteCardPage(page)}
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {deletingCardPageId === page.id ? "削除中…" : "削除"}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto sm:block">
+                  <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-ds-border bg-slate-50/80">
                       <th className="px-5 py-3 text-xs font-semibold text-slate-600">
@@ -244,7 +289,7 @@ export function PageManagementPanel() {
                             href={buildPublicQrUrl(page.slug)}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex rounded-lg border border-ds-border bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            className="inline-flex min-h-[44px] items-center rounded-lg border border-ds-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                           >
                             QRコード
                           </a>
@@ -252,7 +297,7 @@ export function PageManagementPanel() {
                         <td className="px-4 py-3 text-center">
                           <Link
                             href={`/editor/${page.id}`}
-                            className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                            className="inline-flex min-h-[44px] items-center rounded-lg border border-ds-border bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
                           >
                             編集
                           </Link>
@@ -262,7 +307,7 @@ export function PageManagementPanel() {
                             type="button"
                             disabled={deletingCardPageId === page.id}
                             onClick={() => void onDeleteCardPage(page)}
-                            className="inline-flex rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            className="inline-flex min-h-[44px] items-center rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                           >
                             {deletingCardPageId === page.id ? "削除中…" : "削除"}
                           </button>
@@ -270,8 +315,9 @@ export function PageManagementPanel() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 

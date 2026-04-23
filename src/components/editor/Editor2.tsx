@@ -971,6 +971,25 @@ export function Editor2({
     }
   }, [isDemoMode, publishStatus, ensureTranslationsBeforePublish, handleTogglePublished]);
 
+  const publishActionLabel =
+    hotelRole === "editor"
+      ? hasPendingApproval
+        ? "再申請"
+        : "公開申請"
+      : hasPendingApproval
+        ? "承認して公開"
+        : "公開";
+  const mobileSaveStatusLabel = (() => {
+    if (saveError) return "保存に失敗しました";
+    if (isSaving) return "保存中…";
+    if (lastSavedAt == null) return "未保存";
+    const diffSec = Math.max(0, Math.floor((Date.now() - lastSavedAt) / 1000));
+    if (diffSec < 10) return "たった今保存";
+    if (diffSec < 60) return `${diffSec}秒前に保存`;
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}分前に保存`;
+    return "保存済み";
+  })();
   const topBar =
     pageId || isDemoMode ? (
       <EditorTopBar
@@ -1008,15 +1027,7 @@ export function Editor2({
         onPreview={handlePreviewClick}
         previewPreparing={previewBusy || localeTranslating}
         onPublish={handlePublishClickStrict}
-        publishActionLabel={
-          hotelRole === "editor"
-            ? hasPendingApproval
-              ? "再申請"
-              : "公開申請"
-            : hasPendingApproval
-              ? "承認して公開"
-              : "公開"
-        }
+        publishActionLabel={publishActionLabel}
         onQr={handleQrClick}
         onTogglePublished={isDemoMode || hotelRole === "editor" ? undefined : handleTogglePublishedStrict}
         publishToggleLoading={publishToggleLoading}
@@ -1024,6 +1035,58 @@ export function Editor2({
         onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
       />
     ) : null;
+  const mobilePrimaryActions = (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2">
+        <span
+          className={
+            "inline-flex rounded-full px-2 py-0.5 text-xs font-semibold " +
+            (publishStatus === "published"
+              ? "bg-emerald-600 text-white"
+              : "bg-amber-50 text-amber-800")
+          }
+        >
+          {publishStatus === "published" ? "公開中" : "公開OFF"}
+        </span>
+        <span
+          className={
+            "text-xs " +
+            (saveError ? "font-medium text-rose-600" : isSaving ? "text-amber-700" : "text-slate-600")
+          }
+          role="status"
+          aria-live="polite"
+        >
+          {mobileSaveStatusLabel}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={handlePreviewClick}
+          disabled={!pageMeta.publicUrl || previewBusy || localeTranslating}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
+        >
+          {previewBusy || localeTranslating ? "準備中…" : "プレビュー"}
+        </button>
+        <button
+          type="button"
+          onClick={handlePublishClickStrict}
+          disabled={publishing || publishFlowBusy || togglePublishBusy || qrModalPreparing}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold !text-white shadow-sm disabled:opacity-50"
+        >
+          {publishing || publishFlowBusy ? "処理中…" : publishActionLabel}
+        </button>
+        <button
+          type="button"
+          onClick={handleQrClick}
+          disabled={publishing || qrModalPreparing}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
+        >
+          {qrModalPreparing ? "表示中…" : "QR"}
+        </button>
+      </div>
+    </div>
+  );
 
   const showEditorBusyOverlay =
     previewBusy || publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
@@ -1063,6 +1126,7 @@ export function Editor2({
       <div ref={rootRef} className="h-[100dvh] w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
+          mobileActions={mobilePrimaryActions}
           library={
             <CardLibrary
               onAddCard={(type) => {
@@ -1089,6 +1153,9 @@ export function Editor2({
           }
           canvas={
             <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
+              <div className="mx-4 mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 lg:hidden">
+                3ステップ: ブロック追加、プレビュー、公開
+              </div>
               {!isDemoMode && publishStatus !== "published" && (
                 <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。

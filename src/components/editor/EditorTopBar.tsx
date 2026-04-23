@@ -157,7 +157,7 @@ export function EditorTopBar({
 
   return (
     <header
-      className="flex min-h-12 shrink-0 flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain border-b border-slate-200 bg-white px-2 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 sm:px-4 sm:py-0 [&::-webkit-scrollbar]:hidden"
+      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0"
       role="banner"
       aria-label="エディタツールバー"
     >
@@ -236,7 +236,7 @@ export function EditorTopBar({
       </div>
 
       {/* Autosave */}
-      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      <div className="hidden shrink-0 items-center gap-2 sm:flex sm:gap-3">
         <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
       </div>
 
@@ -290,7 +290,7 @@ export function EditorTopBar({
           type="button"
           onClick={onPreview}
           disabled={!publicUrl || previewPreparing}
-          className="min-h-10 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:py-1.5"
+          className="hidden min-h-10 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex lg:min-h-0 lg:py-1.5"
         >
           <span className="hidden items-center gap-1 sm:inline-flex">
             {previewPreparing ? "準備中…" : "プレビュー"}
@@ -351,7 +351,7 @@ export function EditorTopBar({
           disabled={publishing || qrPreparing}
           title="公開済みのページのQR・URLを表示（最新内容を保存してから開きます）"
           className={
-            "flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 " +
+            "hidden items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex " +
             (qrPreparing ? "border-slate-200" : "")
           }
           aria-label="QRコードを表示"
@@ -407,7 +407,7 @@ export function EditorTopBar({
                 onClick={() => setMoreOpen(false)}
               />
               <div
-                className="ui-pop-in fixed right-3 top-14 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                className="ui-pop-in fixed right-3 top-16 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
                 <button

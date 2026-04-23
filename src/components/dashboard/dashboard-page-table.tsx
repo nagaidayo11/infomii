@@ -33,7 +33,56 @@ export function DashboardPageTable({ rows, loading }: DashboardPageTableProps) {
           案内ページの閲覧状況とQR・編集へ
         </p>
       </div>
-      <div className="overflow-x-auto">
+      <div className="space-y-3 p-3 sm:hidden">
+        {loading ? (
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+            読み込み中…
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+            ページがありません。「ページ作成」から追加できます。
+          </div>
+        ) : (
+          rows.map((row) => (
+            <article key={row.id} className="rounded-xl border border-slate-200 bg-white p-3">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="min-w-0 break-words text-sm font-semibold text-slate-900">{row.title || ""}</h3>
+                <span
+                  className={
+                    "inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium " +
+                    (row.status === "published"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-amber-50 text-amber-800")
+                  }
+                >
+                  {row.status === "published" ? "公開" : "下書き"}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                閲覧数 <span className="tabular-nums font-semibold text-slate-900">{row.views7d}</span>
+                <span className="ml-1 text-xs text-slate-400">（7日）</span>
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <a
+                  href={buildPublicQrUrl(row.slug)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-ds-border bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+                >
+                  QRコード生成
+                </a>
+                <Link
+                  href="/dashboard/pages"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white hover:bg-slate-800"
+                >
+                  ページ一覧
+                </Link>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-ds-border bg-slate-50/80">
@@ -102,7 +151,7 @@ export function DashboardPageTable({ rows, loading }: DashboardPageTableProps) {
                       href={buildPublicQrUrl(row.slug)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex rounded-lg border border-ds-border bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+                    className="inline-flex min-h-[44px] items-center rounded-lg border border-ds-border bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                     >
                       QRコード生成
                     </a>
@@ -110,7 +159,7 @@ export function DashboardPageTable({ rows, loading }: DashboardPageTableProps) {
                   <td className="px-5 py-3 text-right">
                     <Link
                       href="/dashboard/pages"
-                      className="inline-flex rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold !text-white hover:bg-slate-800"
+                      className="inline-flex min-h-[44px] items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
                     >
                       ページ一覧
                     </Link>

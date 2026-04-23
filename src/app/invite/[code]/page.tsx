@@ -54,16 +54,16 @@ export default function InviteRedeemPage() {
         {error ? (
           <>
             <p className="mt-3 text-sm text-rose-700">{error}</p>
-            <div className="mt-5 flex gap-2">
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Link
                 href="/dashboard/team"
-                className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
                 チーム画面へ
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
               >
                 ログインへ
               </Link>

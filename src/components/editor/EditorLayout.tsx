@@ -12,11 +12,12 @@ export type EditorLayoutProps = {
   library: ReactNode;
   canvas: ReactNode;
   settings: ReactNode;
+  mobileActions?: ReactNode;
 };
 
 type MobileSheet = "none" | "library" | "settings";
 
-export function EditorLayout({ topBar, library, canvas, settings }: EditorLayoutProps) {
+export function EditorLayout({ topBar, library, canvas, settings, mobileActions }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
 
   return (
     <div
-      className="app-ambient-bg flex h-[100dvh] w-full flex-col overflow-hidden bg-slate-100/95"
+      className="app-ambient-bg flex min-h-[100dvh] w-full flex-col overflow-hidden bg-slate-100/95"
       role="application"
       aria-label="エディタ"
       data-editor-layout
@@ -55,7 +56,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
       {sheetOpen && (
         <button
           type="button"
-          className="fixed left-0 right-0 top-12 z-40 bg-slate-900/45 lg:hidden"
+          className="fixed left-0 right-0 top-14 z-40 bg-slate-900/45 lg:hidden"
           style={{
             bottom: "calc(3.65rem + env(safe-area-inset-bottom, 0px))",
           }}
@@ -72,7 +73,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm " +
             "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
             (sheet === "library"
-              ? "fixed inset-x-0 bottom-0 top-12 z-50 max-h-[min(90dvh,calc(100dvh-3rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "fixed inset-x-0 bottom-0 top-14 z-50 max-h-[min(90dvh,calc(100dvh-3.5rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
           style={{ animationDelay: "40ms" }}
@@ -85,7 +86,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           data-editor-column="canvas"
           className={
             "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-100 " +
-            "pb-[calc(3.75rem+env(safe-area-inset-bottom))] lg:pb-0"
+            "pb-[calc(8.9rem+env(safe-area-inset-bottom))] lg:pb-0"
           }
           aria-label="キャンバス"
           style={{ animationDelay: "90ms" }}
@@ -99,7 +100,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm " +
             "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-l " +
             (sheet === "settings"
-              ? "fixed inset-x-0 bottom-0 top-12 z-50 max-h-[min(90dvh,calc(100dvh-3rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "fixed inset-x-0 bottom-0 top-14 z-50 max-h-[min(90dvh,calc(100dvh-3.5rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
           style={{ animationDelay: "140ms" }}
@@ -110,6 +111,16 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
       </div>
 
       {/* Mobile bottom navigation */}
+      {mobileActions != null ? (
+        <div
+          className="fixed inset-x-0 z-30 px-2 lg:hidden"
+          style={{ bottom: "calc(3.9rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
+            {mobileActions}
+          </div>
+        </div>
+      ) : null}
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-slate-200/90 bg-white/95 px-1 pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden"
         style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom))" }}
@@ -119,7 +130,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           type="button"
           onClick={openLibrary}
           className={
-            "flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors " +
+            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "library"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
@@ -134,7 +145,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           type="button"
           onClick={focusCanvas}
           className={
-            "flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors " +
+            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "none"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
@@ -149,7 +160,7 @@ export function EditorLayout({ topBar, library, canvas, settings }: EditorLayout
           type="button"
           onClick={openSettings}
           className={
-            "flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors " +
+            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "settings"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")

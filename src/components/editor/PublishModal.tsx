@@ -63,18 +63,18 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
 
   return (
     <div
-      className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+      className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal
       aria-labelledby="publish-modal-title"
       onClick={onClose}
     >
       <div
-        className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200/80 bg-white shadow-2xl"
+        className="ui-pop-in w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl max-h-[85dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Success header — the reward moment */}
-        <div className="border-b border-slate-100 bg-gradient-to-b from-emerald-50/80 to-white px-6 py-5 text-center">
+        <div className="border-b border-slate-100 bg-gradient-to-b from-emerald-50/80 to-white px-4 py-4 text-center sm:px-6 sm:py-5">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
             <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -86,7 +86,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
           <p className="mt-1 text-sm text-slate-500">{pageTitle}</p>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-5 p-4 sm:p-6">
           {/* QR as hero */}
           <div className="flex flex-col items-center">
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">QRコード</p>
@@ -103,11 +103,11 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
           </div>
 
           {/* Primary actions: Copy link + Download QR */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={handleCopyUrl}
-              className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold !text-white hover:bg-slate-800"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold !text-white hover:bg-slate-800"
             >
               {copyUrlStatus === "ok" ? (
                 <>
@@ -126,7 +126,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
             <button
               type="button"
               onClick={handleDownloadQr}
-              className="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               QRをダウンロード
@@ -147,7 +147,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
               <button
                 type="button"
                 onClick={handleCopyUrl}
-                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
+                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50 min-h-[44px]"
                 title="Copy link"
                 aria-label="Copy link"
               >
@@ -161,7 +161,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
             <button
               type="button"
               onClick={handleCopyQrImage}
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 min-h-[44px]"
             >
               {copyImageStatus === "ok" ? "QR画像をコピーしました" : copyImageStatus === "fail" ? "コピーに失敗しました" : "QR画像をコピー"}
             </button>
@@ -171,17 +171,17 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
             href={publicUrl}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-xl border border-slate-200 bg-slate-50/50 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100"
+          className="block min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/50 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100"
           >
             ページを開く
           </a>
         </div>
 
-        <div className="flex justify-end border-t border-slate-100 px-6 py-4">
+        <div className="flex justify-end border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white hover:bg-slate-800"
+            className="min-h-[44px] rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white hover:bg-slate-800"
           >
             閉じる
           </button>

@@ -311,7 +311,7 @@ function LoginForm() {
           <h1 className="text-lg font-semibold text-slate-900">
             {isSignUp ? "メールアドレスで新規登録" : "メールでログイン"}
           </h1>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-sm leading-relaxed text-slate-500">
             施設参加に招待コードがある場合は、<strong className="font-medium text-slate-600">下の欄</strong>を開いてコードを入れてから、ここでメールまたは
             Google でログインできます。
           </p>
@@ -353,7 +353,7 @@ function LoginForm() {
                 <div className="mt-2 text-right">
                   <Link
                     href="/forgot-password"
-                    className="text-xs font-medium text-slate-600 underline underline-offset-2 hover:text-slate-800"
+                    className="inline-flex min-h-[44px] items-center text-sm font-medium text-slate-600 underline underline-offset-2 hover:text-slate-800"
                   >
                     パスワードをお忘れですか？
                   </Link>
@@ -366,7 +366,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={submitting || !hasSupabaseEnv}
-              className="app-button-native w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="app-button-native w-full min-h-[44px] rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "処理中..." : isSignUp ? "メールで登録する" : "メールでログイン"}
             </button>
@@ -379,7 +379,7 @@ function LoginForm() {
               onClick={() => void handleGoogleLogin()}
               aria-label="Googleでログイン"
               disabled={submitting || !hasSupabaseEnv}
-              className="app-button-native flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[14px] font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className="app-button-native flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[14px] font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]/30 disabled:cursor-not-allowed disabled:opacity-50"
               style={{ backgroundColor: "#ffffff", borderColor: "#dadce0" }}
             >
               <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 18 18">
@@ -409,7 +409,7 @@ function LoginForm() {
                 setMessage("");
               }}
               disabled={submitting}
-              className="app-button-native w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+              className="app-button-native w-full min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             >
               {isSignUp ? "ログイン画面へ" : "新規登録（メールアドレス）"}
             </button>
@@ -430,7 +430,7 @@ function LoginForm() {
             type="button"
             onClick={() => setInviteOpen((o) => !o)}
             aria-expanded={inviteOpen}
-            className="flex w-full items-center justify-between gap-2 px-5 py-3.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="flex min-h-[44px] w-full items-center justify-between gap-2 px-5 py-3.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             <span>招待コードでログイン</span>
             <span
@@ -472,7 +472,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={submitting || !hasSupabaseEnv || !inviteInput.trim()}
-                  className="app-button-native w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="app-button-native w-full min-h-[44px] rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? "参加処理中…" : "このコードでログイン"}
                 </button>
