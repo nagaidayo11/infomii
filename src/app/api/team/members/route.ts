@@ -5,10 +5,12 @@ import {
   getSupabaseAnonServerClient,
   isSupabaseServiceRoleConfigured,
 } from "@/lib/server/supabase-server";
+import { getDisplayNameMapByUserIds } from "@/lib/team-profiles";
 
 export type MemberRow = {
   userId: string;
   email: string | null;
+  displayName: string | null;
   role: "owner" | "admin" | "editor" | "viewer";
   createdAt: string;
 };
@@ -31,9 +33,15 @@ async function getMembers(hotelId: string, ownerUserId: string | null) {
     }
   }
 
+  const nameByUserId = await getDisplayNameMapByUserIds(
+    admin,
+    (members ?? []).map((m) => m.user_id),
+  );
+
   return (members ?? []).map((m) => ({
     userId: m.user_id,
     email: emailByUserId.get(m.user_id) ?? null,
+    displayName: nameByUserId.get(m.user_id) ?? null,
     role:
       m.user_id === ownerUserId
         ? "owner"

@@ -5,6 +5,8 @@ import {
   getSupabaseAnonServerClient,
   isSupabaseServiceRoleConfigured,
 } from "@/lib/server/supabase-server";
+import { getDisplayNameMapByUserIds } from "@/lib/team-profiles";
+import { resolveUserLabel } from "@/lib/user-label";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 
@@ -131,7 +133,12 @@ export async function GET(request: Request) {
   }
 
   const informationIds = Array.from(new Set((rows ?? []).map((r) => r.information_id)));
-  const requesterIds = Array.from(new Set((rows ?? []).map((r) => r.requested_by_user_id)));
+  const userIdSet = new Set<string>();
+  for (const r of rows ?? []) {
+    userIdSet.add(r.requested_by_user_id);
+    if (r.reviewed_by_user_id) userIdSet.add(r.reviewed_by_user_id);
+  }
+  const userIds = Array.from(userIdSet);
   const titleMap = new Map<string, string>();
   const emailMap = new Map<string, string | null>();
   if (informationIds.length > 0) {
@@ -143,24 +150,46 @@ export async function GET(request: Request) {
       titleMap.set(info.id, info.title ?? "");
     }
   }
-  for (const requesterId of requesterIds) {
-    const { data: authRes } = await admin.auth.admin.getUserById(requesterId);
-    emailMap.set(requesterId, authRes.user?.email ?? null);
+  for (const uid of userIds) {
+    const { data: authRes } = await admin.auth.admin.getUserById(uid);
+    emailMap.set(uid, authRes.user?.email ?? null);
   }
+  const displayNameMap = await getDisplayNameMapByUserIds(admin, userIds);
 
   return NextResponse.json({
-    approvals: (rows ?? []).map((row) => ({
-      id: row.id,
-      informationId: row.information_id,
-      pageTitle: titleMap.get(row.information_id) ?? "",
-      requestedByUserId: row.requested_by_user_id,
-      requestedByEmail: emailMap.get(row.requested_by_user_id) ?? null,
-      status: row.status,
-      requestedAt: row.requested_at,
-      reviewedByUserId: row.reviewed_by_user_id,
-      reviewedAt: row.reviewed_at,
-      reviewComment: row.review_comment,
-    })),
+    approvals: (rows ?? []).map((row) => {
+      const reqName = displayNameMap.get(row.requested_by_user_id) ?? null;
+      const revId = row.reviewed_by_user_id;
+      const revName = revId ? displayNameMap.get(revId) ?? null : null;
+      return {
+        id: row.id,
+        informationId: row.information_id,
+        pageTitle: titleMap.get(row.information_id) ?? "",
+        requestedByUserId: row.requested_by_user_id,
+        requestedByEmail: emailMap.get(row.requested_by_user_id) ?? null,
+        requestedByDisplayName: reqName,
+        requestedByLabel: resolveUserLabel({
+          displayName: reqName,
+          email: emailMap.get(row.requested_by_user_id) ?? null,
+          userId: row.requested_by_user_id,
+        }),
+        status: row.status,
+        requestedAt: row.requested_at,
+        reviewedByUserId: row.reviewed_by_user_id,
+        reviewedByEmail: revId ? (emailMap.get(revId) ?? null) : null,
+        reviewedByDisplayName: revName,
+        reviewedByLabel:
+          revId != null
+            ? resolveUserLabel({
+                displayName: revName,
+                email: emailMap.get(revId) ?? null,
+                userId: revId,
+              })
+            : null,
+        reviewedAt: row.reviewed_at,
+        reviewComment: row.review_comment,
+      };
+    }),
   });
 }
 
@@ -349,13 +378,20 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "公開申請の却下記録に失敗しました" }, { status: 500 });
   }
 
+  const { data: rejectedInfo } = await admin
+    .from("informations")
+    .select("id,title")
+    .eq("id", target.information_id)
+    .eq("hotel_id", ctx.hotelId)
+    .maybeSingle();
+
   await appendAuditLog(
     ctx.hotelId,
     ctx.userId,
     "information.publish_rejected",
-    "公開申請を却下しました",
-    "approval_request",
-    requestId,
+    `公開申請を却下しました（${rejectedInfo?.title ?? ""}）`,
+    "information",
+    target.information_id,
   );
 
   return NextResponse.json({ ok: true });

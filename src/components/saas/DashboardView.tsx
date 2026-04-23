@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { readAndClearDashboardInviteError, readAndClearDashboardInviteSuccess } from "@/lib/invite-pending";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -46,8 +47,20 @@ export function DashboardView() {
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
+  const [inviteNotice, setInviteNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   useRouteProgressLoading(loading);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (readAndClearDashboardInviteSuccess()) {
+      setInviteNotice({ type: "ok", text: "招待先に参加しました。" });
+    }
+    const err = readAndClearDashboardInviteError();
+    if (err) {
+      setInviteNotice({ type: "err", text: err });
+    }
+  }, []);
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
 
@@ -168,6 +181,18 @@ export function DashboardView() {
 
   return (
     <div className="app-main-container space-y-8">
+      {inviteNotice ? (
+        <div
+          className={
+            "rounded-xl border px-4 py-3 text-sm " +
+            (inviteNotice.type === "ok"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-rose-200 bg-rose-50 text-rose-900")
+          }
+        >
+          {inviteNotice.text}
+        </div>
+      ) : null}
       <OnboardingTour />
       <FadeIn>
         <header className="app-page-header">

@@ -584,6 +584,8 @@ export type HotelInvite = {
 export type HotelMember = {
   userId: string;
   email: string | null;
+  /** profiles.display_name。未作成の場合は null */
+  displayName?: string | null;
   role: "owner" | "admin" | "editor" | "viewer";
   createdAt: string;
 };
@@ -2385,10 +2387,6 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
   if (userError || !user) {
     throw new Error("ユーザー情報の取得に失敗しました");
   }
-  const sub = await getCurrentHotelSubscription().catch(() => null);
-  if (sub?.plan !== "business") {
-    throw new Error("チーム招待の参加はBusinessプランでご利用いただけます");
-  }
 
   const { data: hotelId, error } = await supabase.rpc("redeem_hotel_invite", {
     input_code: code,
@@ -2405,8 +2403,9 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
   await appendAuditLog({
     hotelId: safeHotelId,
     action: "invite.accepted",
-    message: `スタッフ招待を承認しました（${code}）`,
+    message: `招待コードで施設に参加しました（${code}）`,
     targetType: "invite",
+    targetId: code,
     metadata: { inviteCode: code },
   });
 }

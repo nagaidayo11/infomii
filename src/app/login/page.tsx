@@ -6,6 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { redeemHotelInvite } from "@/lib/storage";
+import { formatHotelInviteRedeemError } from "@/lib/invite-redeem-errors";
+import {
+  readPendingInviteCode,
+  writePendingInviteCode,
+  clearPendingInviteCode,
+  setDashboardInviteErrorFlash,
+  setDashboardInviteSuccessFlash,
+  INVITE_REDEEM_LOCK_KEY,
+} from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
 
 function isEmailCollisionMessage(message: string): boolean {
@@ -60,6 +70,25 @@ function LoginForm() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [inviteInput, setInviteInput] = useState("");
+
+  useEffect(() => {
+    const stored = readPendingInviteCode();
+    if (stored) {
+      setInviteInput(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    const q = searchParams.get("invite")?.trim();
+    if (!q) return;
+    const up = q.toUpperCase();
+    writePendingInviteCode(up);
+    setInviteInput(up);
+    const path =
+      next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
+    router.replace(path);
+  }, [searchParams, router, next]);
 
   useEffect(() => {
     const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
@@ -69,7 +98,30 @@ function LoginForm() {
 
   useEffect(() => {
     if (loading || !user) return;
-    router.replace(next);
+    if (typeof window === "undefined") return;
+    const pending = readPendingInviteCode();
+    if (!pending) {
+      router.replace(next);
+      return;
+    }
+    if (sessionStorage.getItem(INVITE_REDEEM_LOCK_KEY) === "1") {
+      return;
+    }
+    sessionStorage.setItem(INVITE_REDEEM_LOCK_KEY, "1");
+    void (async () => {
+      try {
+        await redeemHotelInvite(pending);
+        clearPendingInviteCode();
+        setDashboardInviteSuccessFlash();
+        router.replace("/dashboard");
+      } catch (e) {
+        clearPendingInviteCode();
+        setDashboardInviteErrorFlash(formatHotelInviteRedeemError(e));
+        router.replace("/dashboard");
+      } finally {
+        sessionStorage.removeItem(INVITE_REDEEM_LOCK_KEY);
+      }
+    })();
   }, [loading, user, next, router]);
 
   async function handleSubmit(e: FormEvent) {
@@ -91,15 +143,20 @@ function LoginForm() {
         return;
       }
       setMessage("登録しました。確認メールをご確認の上、メールアドレスでログインしてください。");
+      if (inviteInput.trim()) {
+        writePendingInviteCode(inviteInput);
+      }
       setIsSignUp(false);
     } else {
+      if (inviteInput.trim()) {
+        writePendingInviteCode(inviteInput);
+      }
       const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) {
         setMessage(formatEmailAuthError(error.message ?? ""));
         setSubmitting(false);
         return;
       }
-      router.replace(next);
     }
     setSubmitting(false);
   }
@@ -113,6 +170,10 @@ function LoginForm() {
 
     setSubmitting(true);
     setMessage("");
+
+    if (inviteInput.trim()) {
+      writePendingInviteCode(inviteInput);
+    }
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const redirectPath = next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
@@ -129,9 +190,10 @@ function LoginForm() {
   }
 
   if (loading || user) {
+    const showInvite = typeof window !== "undefined" && user && (Boolean(readPendingInviteCode()) || sessionStorage.getItem(INVITE_REDEEM_LOCK_KEY) === "1");
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">読み込み中...</p>
+        <p className="text-sm text-slate-500">{showInvite ? "招待コードを適用しています…" : "読み込み中..."}</p>
       </div>
     );
   }
@@ -229,6 +291,29 @@ function LoginForm() {
               {message}
             </p>
           )}
+
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+            <h2 className="text-sm font-medium text-slate-800">招待コードで参加</h2>
+            <p className="mt-1 text-xs text-slate-500">オーナーから共有された場合のみ入力し、ログインします。</p>
+            <input
+              type="text"
+              name="hotel-invite"
+              value={inviteInput}
+              onChange={(ev) => {
+                const v = ev.target.value.toUpperCase();
+                setInviteInput(v);
+                if (v.trim()) {
+                  writePendingInviteCode(v);
+                } else {
+                  clearPendingInviteCode();
+                }
+              }}
+              maxLength={20}
+              autoComplete="off"
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-mono uppercase tracking-wide placeholder:font-sans placeholder:normal-case"
+              placeholder="例: ABCD1234"
+            />
+          </div>
 
           <div className="mt-6 space-y-2">
             <button

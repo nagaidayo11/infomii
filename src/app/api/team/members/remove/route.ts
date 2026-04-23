@@ -104,5 +104,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "メンバーの削除に失敗しました" }, { status: 500 });
   }
 
+  await admin.from("audit_logs").insert({
+    hotel_id: membership.hotel_id,
+    actor_user_id: user.id,
+    action: "member.removed",
+    message: "メンバーを削除しました",
+    target_type: "user",
+    target_id: targetUserId,
+    metadata: {
+      removedUserId: targetUserId,
+      actorRole: isOwner ? "owner" : "admin",
+    },
+  });
+
   return NextResponse.json({ ok: true });
 }

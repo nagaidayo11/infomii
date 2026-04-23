@@ -11,6 +11,7 @@ import {
   type HotelMember,
 } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { resolveUserLabel } from "@/lib/user-label";
 import { FadeIn } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
@@ -20,12 +21,42 @@ type PublishApprovalRow = {
   pageTitle: string;
   requestedByUserId: string;
   requestedByEmail?: string | null;
+  requestedByDisplayName?: string | null;
+  requestedByLabel?: string;
   status: "pending" | "approved" | "rejected";
   requestedAt: string;
   reviewedByUserId: string | null;
+  reviewedByEmail?: string | null;
+  reviewedByLabel?: string | null;
   reviewedAt: string | null;
   reviewComment: string | null;
 };
+
+type TeamAuditLogRow = {
+  id: string;
+  action: string;
+  message: string;
+  targetType: string | null;
+  targetId: string | null;
+  actorUserId: string | null;
+  actorDisplayName?: string | null;
+  actorLabel?: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+};
+
+function roleLabelJa(role: "owner" | "admin" | "editor" | "viewer"): string {
+  switch (role) {
+    case "owner":
+      return "オーナー";
+    case "admin":
+      return "管理者";
+    case "viewer":
+      return "閲覧担当";
+    default:
+      return "編集担当";
+  }
+}
 
 async function readJsonSafe<T>(res: Response): Promise<T | null> {
   const text = await res.text();
@@ -56,6 +87,13 @@ export default function TeamPage() {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState("");
   const [businessChecked, setBusinessChecked] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<TeamAuditLogRow[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  const currentRole = members.find((m) => m.userId === currentUserId)?.role ?? null;
+  const canManageMembers = currentRole === "owner" || currentRole === "admin";
+  const canReviewApprovals = currentRole === "owner" || currentRole === "admin";
+  const canViewAuditLogs = currentRole === "owner" || currentRole === "admin";
 
   useRouteProgressLoading(loading);
 
@@ -91,6 +129,31 @@ export default function TeamPage() {
     [],
   );
 
+  const fetchAuditLogs = useCallback(async (token: string | null, businessEnabled: boolean) => {
+    if (!token || !businessEnabled) {
+      setAuditLogs([]);
+      return;
+    }
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/team/audit-logs", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = (await readJsonSafe<{ error?: string }>(res)) ?? {};
+        if (res.status !== 403) {
+          setError(data.error ?? "操作履歴の取得に失敗しました");
+        }
+        setAuditLogs([]);
+        return;
+      }
+      const data = (await readJsonSafe<{ logs?: TeamAuditLogRow[] }>(res)) ?? {};
+      setAuditLogs(Array.isArray(data.logs) ? data.logs : []);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -117,16 +180,18 @@ export default function TeamPage() {
         const invitesData = await listCurrentHotelInvites();
         setInvites(invitesData);
         await fetchApprovals(token ?? null, approvalFilter, true);
+        await fetchAuditLogs(token ?? null, true);
       } else {
         setInvites([]);
         setApprovals([]);
+        setAuditLogs([]);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "読み込みに失敗しました");
     } finally {
       setLoading(false);
     }
-  }, [approvalFilter, fetchApprovals]);
+  }, [approvalFilter, fetchApprovals, fetchAuditLogs]);
 
   useEffect(() => {
     void load();
@@ -140,6 +205,15 @@ export default function TeamPage() {
       await fetchApprovals(session?.access_token ?? null, approvalFilter, true);
     })();
   }, [approvalFilter, businessChecked, fetchApprovals, isBusiness]);
+
+  useEffect(() => {
+    if (!businessChecked || !isBusiness || !(currentRole === "owner" || currentRole === "admin")) return;
+    const supabase = getBrowserSupabaseClient();
+    void (async () => {
+      const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+      await fetchAuditLogs(session?.access_token ?? null, true);
+    })();
+  }, [businessChecked, currentRole, fetchAuditLogs, isBusiness]);
 
   async function handleCreateInvite() {
     if (!isBusiness) {
@@ -203,9 +277,13 @@ export default function TeamPage() {
     }
   }
 
-  const currentRole = members.find((m) => m.userId === currentUserId)?.role ?? null;
-  const canManageMembers = currentRole === "owner" || currentRole === "admin";
-  const canReviewApprovals = currentRole === "owner" || currentRole === "admin";
+  function formatAuditTarget(log: TeamAuditLogRow): string {
+    if (log.targetType === "information" && log.targetId) return `ページ: ${log.targetId.slice(0, 8)}…`;
+    if (log.targetType === "user" && log.targetId) return `ユーザー: ${log.targetId.slice(0, 8)}…`;
+    if (log.targetType === "invite" && log.targetId) return `招待: ${log.targetId}`;
+    if (log.targetType === "approval_request" && log.targetId) return `公開申請: ${log.targetId.slice(0, 8)}…`;
+    return "対象なし";
+  }
 
   async function handleApprovalAction(requestId: string, action: "approve" | "reject", comment = "") {
     setApprovalActingId(requestId);
@@ -352,8 +430,8 @@ export default function TeamPage() {
                     className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
                   >
                     <option value="admin">管理者（承認・メンバー管理）</option>
-                    <option value="editor">編集可</option>
-                    <option value="viewer">閲覧のみ</option>
+                    <option value="editor">編集担当（編集・公開申請）</option>
+                    <option value="viewer">閲覧担当（閲覧のみ）</option>
                   </select>
                   <button
                     type="button"
@@ -363,6 +441,30 @@ export default function TeamPage() {
                   >
                     {creating ? "発行中…" : "招待コードを発行"}
                   </button>
+                </div>
+              </section>
+            </FadeIn>
+
+            <FadeIn>
+              <section className="rounded-2xl border border-emerald-200/90 bg-emerald-50/60 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-6">
+                <h2 className="app-section-title text-emerald-900">ロールごとにできること</h2>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
+                    <p className="text-sm font-semibold text-emerald-900">オーナー</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">メンバー管理 / 承認 / 招待管理 / 履歴確認</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
+                    <p className="text-sm font-semibold text-emerald-900">管理者</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">承認 / 招待管理 / メンバー管理（オーナー除く）</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
+                    <p className="text-sm font-semibold text-emerald-900">編集担当</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">編集 / 公開申請</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
+                    <p className="text-sm font-semibold text-emerald-900">閲覧担当</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">閲覧のみ</p>
+                  </div>
                 </div>
               </section>
             </FadeIn>
@@ -387,7 +489,7 @@ export default function TeamPage() {
                         {inv.code}
                       </code>
                       <span className="text-xs text-slate-500">
-                        {inv.role === "viewer" ? "閲覧" : inv.role === "admin" ? "管理者" : "編集"} · {inv.consumedAt ? "使用済み" : "有効"}
+                        {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · {inv.consumedAt ? "使用済み" : "有効"}
                         {!inv.consumedAt && (
                           <span className="ml-2 text-[11px] text-slate-400">
                             / 招待リンク: {typeof window !== "undefined" ? `${window.location.origin}/invite/${inv.code}` : `/invite/${inv.code}`}
@@ -426,16 +528,17 @@ export default function TeamPage() {
                     className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   >
                     <div className="min-w-0">
-                      <p className="break-all font-medium text-slate-800">{m.email ?? "（メール未取得）"}</p>
-                      <p className="text-xs text-slate-500">
-                        {m.role === "owner"
-                          ? "オーナー"
-                          : m.role === "admin"
-                            ? "管理者"
-                            : m.role === "viewer"
-                              ? "閲覧のみ"
-                              : "編集可"}
+                      <p className="break-all font-medium text-slate-800">
+                        {resolveUserLabel({
+                          displayName: m.displayName,
+                          email: m.email,
+                          userId: m.userId,
+                        })}
                       </p>
+                      {m.displayName?.trim() && m.email ? (
+                        <p className="text-xs text-slate-500">{m.email}</p>
+                      ) : null}
+                      <p className="text-xs text-slate-500">{roleLabelJa(m.role)}</p>
                     </div>
                     {m.role !== "owner" && canManageMembers && (
                       <button
@@ -460,7 +563,7 @@ export default function TeamPage() {
                 <div>
                   <h2 className="app-section-title">公開申請</h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    editor からの公開申請を確認し、承認/却下できます（owner/adminのみ）。
+                    編集担当からの公開申請を確認し、承認/却下できます（オーナー/管理者のみ）。
                   </p>
                 </div>
                 <select
@@ -507,8 +610,17 @@ export default function TeamPage() {
                         {row.reviewedAt ? ` / 処理日時: ${new Date(row.reviewedAt).toLocaleString("ja-JP")}` : ""}
                       </p>
                       <p className="text-xs text-slate-500">
-                        申請者: {row.requestedByEmail?.trim() ? row.requestedByEmail : row.requestedByUserId}
+                        申請者:{" "}
+                        {row.requestedByLabel?.trim() ||
+                          resolveUserLabel({
+                            displayName: row.requestedByDisplayName,
+                            email: row.requestedByEmail,
+                            userId: row.requestedByUserId,
+                          })}
                       </p>
+                      {row.reviewedAt && row.reviewedByLabel ? (
+                        <p className="text-xs text-slate-500">処理者: {row.reviewedByLabel}</p>
+                      ) : null}
                       {row.reviewComment ? (
                         <p className="text-xs text-slate-500">コメント: {row.reviewComment}</p>
                       ) : null}
@@ -542,6 +654,32 @@ export default function TeamPage() {
               )}
               </section>
             </FadeIn>
+
+            {canViewAuditLogs ? (
+              <FadeIn>
+                <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+                  <h2 className="app-section-title">操作履歴</h2>
+                  <p className="mt-1 text-sm text-slate-500">チーム関連の操作を新しい順で表示します。</p>
+                  {auditLoading ? (
+                    <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+                  ) : auditLogs.length === 0 ? (
+                    <p className="mt-4 text-sm text-slate-500">表示できる操作履歴はありません</p>
+                  ) : (
+                    <ul className="mt-4 space-y-2">
+                      {auditLogs.map((log) => (
+                        <li key={log.id} className="rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3">
+                          <p className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString("ja-JP")}</p>
+                          <p className="mt-1 text-sm font-medium text-slate-900">{log.message}</p>
+                          <p className="mt-1 text-xs text-slate-600">
+                            操作: {log.actorLabel?.trim() || "不明"} / 対象: {formatAuditTarget(log)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              </FadeIn>
+            ) : null}
           </>
         ) : null}
       </div>

@@ -1,6 +1,7 @@
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 
 /**
  * 設定ページ — プラン・Business向け設定
@@ -14,6 +15,8 @@ export default function SettingsPage() {
           プランの案内と、Business向けの設定項目です。
         </p>
       </header>
+
+      <ProfileDisplayNameSection />
 
       <BusinessPlanSection />
 

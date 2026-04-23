@@ -361,6 +361,26 @@ export type Database = {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          user_id: string;
+          display_name: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          display_name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          display_name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       saas_editor_pages: {
         Row: {
           id: string;
