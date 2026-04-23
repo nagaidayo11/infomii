@@ -72,7 +72,7 @@ export function DashboardPageList({ rows, loading }: DashboardPageListProps) {
                         className={
                           "inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium " +
                           (row.status === "published"
-                            ? "bg-emerald-50 text-emerald-800"
+                            ? "bg-emerald-600 text-white"
                             : "bg-amber-50 text-amber-800")
                         }
                       >

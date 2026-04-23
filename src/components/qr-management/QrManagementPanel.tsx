@@ -10,6 +10,7 @@ import {
   type HotelViewMetrics,
   type QrScanDayBucket,
 } from "@/lib/storage";
+import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import type { Information } from "@/types/information";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { QrCharts } from "./QrCharts";
@@ -39,6 +40,10 @@ export function QrManagementPanel() {
       })
       .catch((e) => {
         if (!mounted) return;
+        if (isAccessRevokedError(e)) {
+          setError(ACCESS_REVOKED_MESSAGE);
+          return;
+        }
         setError(e instanceof Error ? e.message : "読み込みに失敗しました");
       })
       .finally(() => {

@@ -59,7 +59,7 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大10本</td>
             <td className="px-3 py-2.5 text-center tabular-nums">
-              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <span className="inline-flex items-center rounded-full bg-emerald-600 px-2.5 py-0.5 font-semibold text-white ring-1 ring-emerald-700">
                 無制限
               </span>
             </td>
@@ -110,7 +110,7 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
                 {yes} 対応
               </span>
             </td>
@@ -125,7 +125,7 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
                 {yes} 対応
               </span>
             </td>
@@ -140,7 +140,7 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
                 {yes} 対応
               </span>
             </td>

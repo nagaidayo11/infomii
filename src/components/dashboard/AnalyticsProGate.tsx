@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { createStripeCheckoutSession, trackUpgradeClick } from "@/lib/storage";
+import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
 import { Button } from "@/components/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Plan = "free" | "pro" | "business";
 
@@ -27,9 +27,35 @@ export function AnalyticsProGate({ plan, children }: AnalyticsProGateProps) {
 
 function AnalyticsUpgradePrompt() {
   const [loading, setLoading] = useState(false);
+  const [canManageBilling, setCanManageBilling] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void getCurrentUserHotelRole()
+      .then((role) => {
+        if (!mounted) return;
+        if (role === "admin" || role === "editor" || role === "viewer") {
+          setCanManageBilling(false);
+        } else {
+          setCanManageBilling(true);
+        }
+      })
+      .catch(() => {
+        if (mounted) setCanManageBilling(true);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleUpgrade = async () => {
     if (loading) return;
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
+    setMessage(null);
     setLoading(true);
     try {
       await trackUpgradeClick("dashboard-pro");
@@ -41,7 +67,7 @@ function AnalyticsUpgradePrompt() {
       window.location.href = url;
     } catch (e) {
       setLoading(false);
-      alert(e instanceof Error ? e.message : "申し込みの開始に失敗しました");
+      setMessage(e instanceof Error ? e.message : "申し込みの開始に失敗しました");
     }
   };
 
@@ -89,11 +115,15 @@ function AnalyticsUpgradePrompt() {
               size="md"
               className="min-h-[44px] w-full !border-slate-800/30 !bg-slate-900 !font-semibold !text-white hover:!bg-slate-800 hover:!shadow-ds-md sm:min-h-0 sm:w-auto"
               onClick={handleUpgrade}
-              disabled={loading}
+              disabled={loading || !canManageBilling}
             >
               {loading ? "処理中…" : "プランをアップグレードする"}
             </Button>
           </div>
+          {!canManageBilling ? (
+            <p className="text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
+          ) : null}
+          {message ? <p className="text-xs text-rose-600">{message}</p> : null}
           <p className="pt-2 text-xs text-slate-500">
             <Link href="/dashboard" className="font-medium text-slate-600 hover:text-slate-900">
               ← ダッシュボードに戻る

@@ -4,6 +4,7 @@ import {
   createStripeCheckoutSession,
   createStripePortalSession,
   getCurrentHotelSubscription,
+  getCurrentUserHotelRole,
   type HotelSubscription,
 } from "@/lib/storage";
 import { Card } from "@/components/ui/Card";
@@ -15,6 +16,8 @@ export function BusinessPlanSection() {
   const [subscription, setSubscription] = useState<HotelSubscription | null | undefined>(undefined);
   const [busyAction, setBusyAction] = useState<"pro" | "business" | "portal" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [canManageBilling, setCanManageBilling] = useState(false);
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   const plan = subscription?.plan ?? "free";
   const status = subscription?.status ?? null;
@@ -24,10 +27,14 @@ export function BusinessPlanSection() {
 
   const load = useCallback(async () => {
     try {
-      const sub = await getCurrentHotelSubscription();
+      const [sub, role] = await Promise.all([getCurrentHotelSubscription(), getCurrentUserHotelRole()]);
       setSubscription(sub);
+      setCanManageBilling(role === "owner");
     } catch {
       setSubscription(null);
+      setCanManageBilling(false);
+    } finally {
+      setRoleLoaded(true);
     }
   }, []);
 
@@ -37,6 +44,10 @@ export function BusinessPlanSection() {
   }, [load]);
 
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
     setMessage(null);
     setBusyAction(targetPlan);
     try {
@@ -55,9 +66,13 @@ export function BusinessPlanSection() {
       setMessage(msg || "決済ページの起動に失敗しました。");
       setBusyAction(null);
     }
-  }, []);
+  }, [canManageBilling]);
 
   const openPortal = useCallback(async () => {
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
     setMessage(null);
     setBusyAction("portal");
     try {
@@ -76,7 +91,7 @@ export function BusinessPlanSection() {
       }
       setBusyAction(null);
     }
-  }, []);
+  }, [canManageBilling]);
 
   const statusLabel =
     status === "active"
@@ -97,7 +112,7 @@ export function BusinessPlanSection() {
     ).padStart(2, "0")}`;
   })();
 
-  if (subscription === undefined) {
+  if (subscription === undefined || !roleLoaded) {
     return (
       <Card padding="lg">
         <div className="h-20 animate-pulse rounded-lg bg-slate-100" aria-hidden />
@@ -121,7 +136,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openCheckout("pro")}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "pro" ? "処理中…" : "Proを申し込む"}
@@ -129,7 +144,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openCheckout("business")}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "business" ? "処理中…" : "Businessを申し込む"}
@@ -141,7 +156,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openPortal()}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "Businessへアップグレード"}
@@ -149,7 +164,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openPortal()}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               サブスクリプションを管理 / 解約する
@@ -161,7 +176,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openPortal()}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
@@ -169,7 +184,7 @@ export function BusinessPlanSection() {
             <button
               type="button"
               onClick={() => void openPortal()}
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !canManageBilling}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               サブスクリプションを管理 / 解約する
@@ -198,7 +213,7 @@ export function BusinessPlanSection() {
             }`}
           >
             {plan === "free" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
                 現在のプラン
               </p>
             ) : null}
@@ -216,7 +231,7 @@ export function BusinessPlanSection() {
             }`}
           >
             {plan === "pro" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
                 現在のプラン
               </p>
             ) : null}
@@ -235,7 +250,7 @@ export function BusinessPlanSection() {
             }`}
           >
             {plan === "business" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
                 現在のプラン
               </p>
             ) : null}
@@ -255,6 +270,9 @@ export function BusinessPlanSection() {
       ) : null}
       {isPaid && isActiveLike ? (
         <p className="mt-2 text-xs text-slate-500">解約はStripeの管理画面でいつでも行えます。</p>
+      ) : null}
+      {!canManageBilling ? (
+        <p className="mt-2 text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
       ) : null}
       {message ? <p className="mt-2 text-xs text-rose-600">{message}</p> : null}
     </Card>

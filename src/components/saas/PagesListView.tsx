@@ -30,7 +30,7 @@ function PagePublishBadge({ page }: { page: PageRow }) {
     <span
       className={
         "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold " +
-        (published ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80")
+        (published ? "bg-emerald-600 text-white ring-1 ring-emerald-700/80" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80")
       }
     >
       {published ? "公開中" : "非公開"}
@@ -185,7 +185,7 @@ export function PagesListView() {
           <span
             className={
               "rounded-full px-2.5 py-1 text-xs font-medium " +
-              (set.mode === "linked" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700")
+              (set.mode === "linked" ? "bg-emerald-600 text-white" : "bg-blue-50 text-blue-700")
             }
           >
             {modeLabel(set.mode)}
@@ -297,7 +297,7 @@ export function PagesListView() {
             単発ページとページ連携をセット単位で管理できます。
           </p>
           {subscription ? (
-            <p className="mt-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900 shadow-[0_1px_2px_rgba(16,185,129,0.2)]">
+            <p className="mt-2 inline-flex items-center rounded-full border border-emerald-700 bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_1px_2px_rgba(16,185,129,0.2)]">
               公開中 {publishedCount}/{subscription.plan === "business" ? "∞" : subscription.maxPublishedPages} 件
             </p>
           ) : null}
@@ -375,7 +375,7 @@ export function PagesListView() {
         <section className="mt-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">セット {sets.length}</span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700">ページ連携 {linkedCount}</span>
+            <span className="rounded-full bg-emerald-600 px-3 py-1 font-medium text-white">ページ連携 {linkedCount}</span>
             <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">単発 {singleCount}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
           </div>
@@ -385,7 +385,7 @@ export function PagesListView() {
         <section className="mt-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">セット {sets.length}</span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700">ページ連携 {linkedCount}</span>
+            <span className="rounded-full bg-emerald-600 px-3 py-1 font-medium text-white">ページ連携 {linkedCount}</span>
             <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">単発 {singleCount}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
           </div>
@@ -404,7 +404,7 @@ export function PagesListView() {
                 <span
                   className={
                     "rounded-full px-2.5 py-1 text-xs font-medium " +
-                    (set.mode === "linked" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700")
+                    (set.mode === "linked" ? "bg-emerald-600 text-white" : "bg-blue-50 text-blue-700")
                   }
                 >
                   {modeLabel(set.mode)}

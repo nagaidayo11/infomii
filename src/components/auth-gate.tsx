@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
+import { ensureUserHotelScope } from "@/lib/storage";
+import { isAccessRevokedError } from "@/lib/access-revoked";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, enabled } = useAuth();
+  const [scopeChecked, setScopeChecked] = useState(false);
 
   useEffect(() => {
     if (!enabled || loading || user) {
@@ -15,6 +18,28 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
     router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [enabled, loading, user, router, pathname]);
+
+  useEffect(() => {
+    if (!enabled || loading || !user) return;
+    let active = true;
+    setScopeChecked(false);
+    void (async () => {
+      try {
+        await ensureUserHotelScope();
+        if (active) setScopeChecked(true);
+      } catch (error) {
+        if (!active) return;
+        if (isAccessRevokedError(error)) {
+          router.replace("/_not-found");
+          return;
+        }
+        setScopeChecked(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [enabled, loading, user, router]);
 
   if (!enabled) {
     return (
@@ -27,7 +52,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (loading || !user) {
+  if (loading || !user || (user && !scopeChecked)) {
     return (
       <main className="mx-auto min-h-screen w-full max-w-xl px-4 py-10 sm:px-6">
         <p className="text-sm text-slate-600">認証状態を確認しています...</p>

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
-import { redeemHotelInvite } from "@/lib/storage";
+import { ensureUserHotelScopeForOnboarding, redeemHotelInvite } from "@/lib/storage";
 import { formatHotelInviteRedeemError } from "@/lib/invite-redeem-errors";
 import {
   readPendingInviteCode,
@@ -58,6 +58,7 @@ function formatGoogleAuthError(message: string): string {
 }
 
 function LoginForm() {
+  const ONBOARDING_SCOPE_BOOTSTRAP_KEY = "infomii_onboarding_scope_bootstrap";
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -104,6 +105,16 @@ function LoginForm() {
     if (typeof window === "undefined") return;
     const pending = readPendingInviteCode();
     if (!pending) {
+      const needsBootstrap = localStorage.getItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY) === "1";
+      if (needsBootstrap) {
+        localStorage.removeItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY);
+        void ensureUserHotelScopeForOnboarding()
+          .catch(() => null)
+          .finally(() => {
+            router.replace(next);
+          });
+        return;
+      }
       router.replace(next);
       return;
     }
@@ -190,6 +201,9 @@ function LoginForm() {
         return;
       }
       setMessage("登録しました。確認メールをご確認の上、メールアドレスでログインしてください。");
+      if (typeof window !== "undefined") {
+        localStorage.setItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY, "1");
+      }
       if (inviteInput.trim()) {
         writePendingInviteCode(inviteInput);
       }

@@ -5,6 +5,7 @@ import {
   createStripeCheckoutSession,
   createStripePortalSession,
   getCurrentHotelSubscription,
+  getCurrentUserHotelRole,
   trackUpgradeClick,
 } from "@/lib/storage";
 import { Button } from "@/components/ui";
@@ -38,15 +39,26 @@ export function CheckoutButton({
 }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [subscription, setSubscription] = useState<Awaited<ReturnType<typeof getCurrentHotelSubscription>>>(null);
+  const [canManageBilling, setCanManageBilling] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    void getCurrentHotelSubscription()
-      .then((sub) => {
+    void Promise.all([getCurrentHotelSubscription(), getCurrentUserHotelRole()])
+      .then(([sub, role]) => {
         if (mounted) setSubscription(sub);
+        if (!mounted) return;
+        if (role === "admin" || role === "editor" || role === "viewer") {
+          setCanManageBilling(false);
+        } else {
+          setCanManageBilling(true);
+        }
       })
       .catch(() => {
-        if (mounted) setSubscription(null);
+        if (mounted) {
+          setSubscription(null);
+          setCanManageBilling(true);
+        }
       });
     return () => {
       mounted = false;
@@ -67,6 +79,11 @@ export function CheckoutButton({
 
   const handleClick = async () => {
     if (loading) return;
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
+    setMessage(null);
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
@@ -102,17 +119,17 @@ export function CheckoutButton({
             return;
           }
           setLoading(false);
-          alert(portalMsg || "決済ページの起動に失敗しました");
+          setMessage(portalMsg || "決済ページの起動に失敗しました");
           return;
         }
       }
       if (msg.includes("Stripe顧客情報")) {
         setLoading(false);
-        alert("契約情報の同期中です。しばらくしてからもう一度お試しください。");
+        setMessage("契約情報の同期中です。しばらくしてからもう一度お試しください。");
         return;
       }
       setLoading(false);
-      alert(msg || "申し込みの開始に失敗しました");
+      setMessage(msg || "申し込みの開始に失敗しました");
     }
   };
 
@@ -123,13 +140,17 @@ export function CheckoutButton({
         variant={variant}
         className={className}
         onClick={handleClick}
-        disabled={loading}
+        disabled={loading || !canManageBilling}
       >
         {loading ? "処理中…" : buttonLabel}
       </Button>
+      {!canManageBilling ? (
+        <p className="text-center text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
+      ) : null}
       {showUpgradeHint && plan === "business" && subscription?.plan === "pro" && isActive ? (
         <p className="text-center text-xs text-slate-500">現在の契約から決済ページでBusinessへ変更できます。</p>
       ) : null}
+      {message ? <p className="text-center text-xs text-rose-600">{message}</p> : null}
     </div>
   );
 }

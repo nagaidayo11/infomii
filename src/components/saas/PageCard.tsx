@@ -116,7 +116,7 @@ export function PageCard({
                 className={
                   "inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
                   (status === "published"
-                    ? "bg-emerald-50 text-emerald-700"
+                    ? "bg-emerald-600 text-white"
                     : "bg-slate-100 text-slate-600")
                 }
               >
@@ -130,7 +130,7 @@ export function PageCard({
                   className={
                     "app-button-native inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium shadow-sm transition " +
                     (status === "published"
-                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      ? "border-emerald-700 bg-emerald-600 text-white"
                       : "border-slate-200 bg-white text-slate-600") +
                     " disabled:opacity-50"
                   }

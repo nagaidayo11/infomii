@@ -5,16 +5,7 @@ import { sendOpsAlert } from "@/lib/server/ops-alert";
 
 export const runtime = "nodejs";
 
-function buildDefaultHotelName(email: string | null | undefined): string {
-  if (!email) {
-    return "My Store";
-  }
-  const label = email.split("@")[0]?.trim();
-  if (!label) {
-    return "My Store";
-  }
-  return `${label} Store`;
-}
+const OWNER_ONLY_BILLING_MESSAGE = "課金操作はオーナーのみ実行できます。オーナーに依頼してください。";
 
 async function appendBillingLog(hotelId: string, action: string, message: string, metadata?: Record<string, unknown>) {
   const admin = getSupabaseAdminServerClient();
@@ -62,31 +53,31 @@ export async function POST(request: NextRequest) {
     if (memberError) {
       return NextResponse.json({ message: memberError.message }, { status: 400 });
     }
-
-    let hotelId = membership?.hotel_id ?? null;
-
+    const hotelId = membership?.hotel_id ?? null;
     if (!hotelId) {
-      hotelId = crypto.randomUUID();
-
-      const { error: createHotelError } = await admin.from("hotels").insert({
-        id: hotelId,
-        name: buildDefaultHotelName(user.email),
-        owner_user_id: user.id,
-      });
-
-      if (createHotelError) {
-        return NextResponse.json({ message: createHotelError.message }, { status: 400 });
-      }
-
-      const { error: createMembershipError } = await admin
-        .from("hotel_memberships")
-        .insert({ user_id: user.id, hotel_id: hotelId });
-
-      if (createMembershipError) {
-        return NextResponse.json({ message: createMembershipError.message }, { status: 400 });
-      }
+      return NextResponse.json({ message: OWNER_ONLY_BILLING_MESSAGE }, { status: 403 });
     }
     auditHotelId = hotelId;
+
+    const { data: hotel, error: hotelError } = await admin
+      .from("hotels")
+      .select("owner_user_id")
+      .eq("id", hotelId)
+      .maybeSingle();
+    if (hotelError) {
+      return NextResponse.json({ message: hotelError.message }, { status: 400 });
+    }
+    if (hotel?.owner_user_id !== user.id) {
+      if (auditHotelId) {
+        await appendBillingLog(
+          auditHotelId,
+          "billing.portal_blocked_non_owner",
+          "Portal中止: 非オーナーによる課金操作",
+          { actorUserId: user.id },
+        );
+      }
+      return NextResponse.json({ message: OWNER_ONLY_BILLING_MESSAGE }, { status: 403 });
+    }
 
     const { error: ensureError } = await admin.rpc("ensure_hotel_subscription", {
       target_hotel_id: hotelId,

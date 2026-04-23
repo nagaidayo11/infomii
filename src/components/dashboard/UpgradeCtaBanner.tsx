@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createStripeCheckoutSession, trackUpgradeClick } from "@/lib/storage";
+import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
 import { Button } from "@/components/ui";
+import { useEffect } from "react";
 
 type Plan = "free" | "pro" | "business";
 
@@ -103,9 +104,35 @@ function DashboardCheckoutButton({
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(false);
+  const [canManageBilling, setCanManageBilling] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void getCurrentUserHotelRole()
+      .then((role) => {
+        if (!mounted) return;
+        if (role === "admin" || role === "editor" || role === "viewer") {
+          setCanManageBilling(false);
+        } else {
+          setCanManageBilling(true);
+        }
+      })
+      .catch(() => {
+        if (mounted) setCanManageBilling(true);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleClick = async () => {
     if (loading) return;
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
+    setMessage(null);
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "dashboard-business" : "dashboard-pro");
@@ -118,20 +145,26 @@ function DashboardCheckoutButton({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setLoading(false);
-      alert(msg || "申し込みの開始に失敗しました");
+      setMessage(msg || "申し込みの開始に失敗しました");
     }
   };
 
   return (
-    <Button
-      type="button"
-      variant={variant}
-      size="sm"
-      className={(variant === "primary" ? "!text-white " : "") + "min-h-[44px] sm:min-h-0 " + className}
-      onClick={handleClick}
-      disabled={loading}
-    >
-      {loading ? "処理中…" : children}
-    </Button>
+    <div className="space-y-1.5">
+      <Button
+        type="button"
+        variant={variant}
+        size="sm"
+        className={(variant === "primary" ? "!text-white " : "") + "min-h-[44px] sm:min-h-0 " + className}
+        onClick={handleClick}
+        disabled={loading || !canManageBilling}
+      >
+        {loading ? "処理中…" : children}
+      </Button>
+      {!canManageBilling ? (
+        <p className="text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
+      ) : null}
+      {message ? <p className="text-xs text-rose-600">{message}</p> : null}
+    </div>
   );
 }

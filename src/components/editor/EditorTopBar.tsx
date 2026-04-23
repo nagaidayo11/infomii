@@ -310,7 +310,7 @@ export function EditorTopBar({
           <span
             className={
               isPublished
-                ? "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                ? "rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white"
                 : "rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600"
             }
           >
@@ -324,7 +324,7 @@ export function EditorTopBar({
               className={
                 "rounded-full border px-2 py-0.5 text-xs font-medium transition " +
                 (publishToggleChecked
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                  ? "border-emerald-700 bg-emerald-600 text-white"
                   : "border-slate-200 bg-white text-slate-600") +
                 " disabled:opacity-50"
               }

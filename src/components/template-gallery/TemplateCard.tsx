@@ -49,7 +49,7 @@ export function TemplateCard({ template, onUse }: TemplateCardProps) {
         <div className="mt-2 flex flex-wrap gap-1">
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{template.industry}</span>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">{template.useCase}</span>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] text-emerald-700">推奨: {template.recommendedPlan}</span>
+          <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] text-white">推奨: {template.recommendedPlan}</span>
         </div>
         <p className={`mt-1 text-[11px] ${score >= 60 ? "text-slate-500" : "text-amber-700"}`}>
           タイトル/画像一致スコア: {score}{score < 60 ? "（要見直し）" : ""}

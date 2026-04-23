@@ -83,7 +83,7 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
                       {name}
                       {price ? ` — ${price}` : ""}
                       {tag ? (
-                        <span className="ml-2 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
+                        <span className="ml-2 inline-block rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-medium text-white">
                           {tag}
                         </span>
                       ) : null}

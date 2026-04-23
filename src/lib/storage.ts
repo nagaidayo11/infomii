@@ -10,6 +10,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
+import { AccessRevokedError } from "@/lib/access-revoked";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import type {
   MultiPageTemplateId,
@@ -20,10 +21,16 @@ const LOCAL_STORAGE_KEY = "hotel-informations";
 
 function toError(error: unknown, fallback: string): Error {
   if (error instanceof Error) {
+    if (error.message.includes("row-level security policy") && error.message.includes("hotel_memberships")) {
+      return new AccessRevokedError();
+    }
     return error;
   }
   if (typeof error === "object" && error && "message" in error) {
     const message = String((error as { message?: unknown }).message ?? fallback);
+    if (message.includes("row-level security policy") && message.includes("hotel_memberships")) {
+      return new AccessRevokedError();
+    }
     return new Error(message);
   }
   return new Error(fallback);
@@ -945,8 +952,43 @@ export async function ensureUserHotelScope(): Promise<string | null> {
     return membership.hotel_id;
   }
 
-  const hotelId = crypto.randomUUID();
+  throw new AccessRevokedError();
+}
 
+/**
+ * 初回オンボーディング専用:
+ * 所属がなければ施設と所属を作成して返す。
+ */
+export async function ensureUserHotelScopeForOnboarding(): Promise<string | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError) {
+    throw toError(userError, "ユーザー情報の取得に失敗しました");
+  }
+  if (!user) {
+    return null;
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("hotel_memberships")
+    .select("hotel_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (membershipError) {
+    throw toError(membershipError, "施設所属の確認に失敗しました");
+  }
+  if (membership?.hotel_id) {
+    return membership.hotel_id;
+  }
+
+  const hotelId = crypto.randomUUID();
   const { error: hotelError } = await supabase
     .from("hotels")
     .insert({
@@ -954,7 +996,6 @@ export async function ensureUserHotelScope(): Promise<string | null> {
       name: buildDefaultHotelName(user.email),
       owner_user_id: user.id,
     });
-
   if (hotelError) {
     throw toError(hotelError, "施設作成に失敗しました");
   }
@@ -962,16 +1003,13 @@ export async function ensureUserHotelScope(): Promise<string | null> {
   const { error: insertMembershipError } = await supabase
     .from("hotel_memberships")
     .insert({ user_id: user.id, hotel_id: hotelId });
-
   if (insertMembershipError) {
     throw toError(insertMembershipError, "施設所属の作成に失敗しました");
   }
 
-  const { error: ensureSubscriptionError } = await supabase.rpc(
-    "ensure_hotel_subscription",
-    { target_hotel_id: hotelId },
-  );
-
+  const { error: ensureSubscriptionError } = await supabase.rpc("ensure_hotel_subscription", {
+    target_hotel_id: hotelId,
+  });
   if (ensureSubscriptionError) {
     throw toError(ensureSubscriptionError, "サブスクリプション初期化に失敗しました");
   }

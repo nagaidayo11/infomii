@@ -340,7 +340,7 @@ export function AccountAuthLinkSection() {
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5">
             <p className="text-sm font-medium text-slate-700">メールログイン</p>
-            <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+            <span className="rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">
               連携済み
             </span>
           </div>
@@ -350,7 +350,7 @@ export function AccountAuthLinkSection() {
             {checking ? (
               <span className="text-xs text-slate-500">確認中...</span>
             ) : googleLinked ? (
-              <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+              <span className="rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">
                 連携済み
               </span>
             ) : (
@@ -380,7 +380,7 @@ export function AccountAuthLinkSection() {
               <button
                 type="button"
                 disabled
-                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 disabled:cursor-not-allowed"
+                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-700 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed"
               >
                 Google連携済み
               </button>

@@ -686,7 +686,7 @@ export default function TeamPage() {
                             (row.status === "pending"
                               ? "bg-amber-50 text-amber-800"
                               : row.status === "approved"
-                                ? "bg-emerald-50 text-emerald-800"
+                                ? "bg-emerald-600 text-white"
                                 : "bg-rose-50 text-rose-700")
                           }
                         >
