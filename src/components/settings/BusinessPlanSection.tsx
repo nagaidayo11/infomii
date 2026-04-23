@@ -120,6 +120,11 @@ export function BusinessPlanSection() {
     );
   }
 
+  // 招待ユーザーには課金情報（料金表・請求導線）を表示しない
+  if (!canManageBilling) {
+    return null;
+  }
+
   return (
     <Card padding="lg" className="border-slate-200">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -270,9 +275,6 @@ export function BusinessPlanSection() {
       ) : null}
       {isPaid && isActiveLike ? (
         <p className="mt-2 text-xs text-slate-500">解約はStripeの管理画面でいつでも行えます。</p>
-      ) : null}
-      {!canManageBilling ? (
-        <p className="mt-2 text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
       ) : null}
       {message ? <p className="mt-2 text-xs text-rose-600">{message}</p> : null}
     </Card>
