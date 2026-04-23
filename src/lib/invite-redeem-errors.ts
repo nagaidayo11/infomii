@@ -1,3 +1,5 @@
+import { HOTEL_TEAM_MAX_MEMBERS } from "@/lib/team-constants";
+
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "object" && error && "message" in error) {
@@ -25,6 +27,9 @@ export function formatHotelInviteRedeemError(error: unknown): string {
   }
   if (m.includes("not_authenticated")) {
     return "ログインの状態を確認できませんでした。再度お試しください。";
+  }
+  if (m.includes("team_member_limit")) {
+    return `この施設のメンバー数が上限（${HOTEL_TEAM_MAX_MEMBERS}名）に達しています。オーナーにご確認ください。`;
   }
   return "招待コードの適用に失敗しました。時間をおいて再度お試しください。";
 }

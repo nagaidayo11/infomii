@@ -684,6 +684,9 @@ declare
   invite_row public.hotel_invites%rowtype;
   current_user_id uuid;
   normalized_code text;
+  invite_role text;
+  member_count int;
+  max_members int := 10;
 begin
   current_user_id := auth.uid();
   if current_user_id is null then
@@ -714,8 +717,25 @@ begin
     raise exception 'invite_expired';
   end if;
 
+  select count(*)::int
+  into member_count
+  from public.hotel_memberships
+  where hotel_id = invite_row.hotel_id;
+
+  if not exists (
+    select 1 from public.hotel_memberships
+    where user_id = current_user_id and hotel_id = invite_row.hotel_id
+  ) and member_count >= max_members then
+    raise exception 'team_member_limit';
+  end if;
+
+  invite_role := coalesce(invite_row.role, 'editor');
+  if invite_role not in ('admin', 'editor', 'viewer') then
+    invite_role := 'editor';
+  end if;
+
   insert into public.hotel_memberships (user_id, hotel_id, role)
-  values (current_user_id, invite_row.hotel_id, case when invite_row.role in ('admin', 'editor', 'viewer') then invite_row.role else 'editor' end)
+  values (current_user_id, invite_row.hotel_id, invite_role)
   on conflict (user_id) do update
   set hotel_id = excluded.hotel_id, role = excluded.role;
 

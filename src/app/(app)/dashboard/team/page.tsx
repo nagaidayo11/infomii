@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import {
   createHotelInvite,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { resolveUserLabel } from "@/lib/user-label";
+import { HOTEL_TEAM_MAX_MEMBERS } from "@/lib/team-constants";
 import { FadeIn } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
@@ -68,6 +69,61 @@ async function readJsonSafe<T>(res: Response): Promise<T | null> {
   }
 }
 
+const JST = "Asia/Tokyo";
+
+/** 操作履歴の日付まとまり用キー YYYY-MM-DD（日本時間） */
+function jstDayKeyFromIso(iso: string): string {
+  return new Date(iso).toLocaleDateString("sv-SE", { timeZone: JST });
+}
+
+function nowJstDayKey(): string {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: JST });
+}
+
+/** 見出し: 同じ年なら年省略、年をまたぐ場合は年付き */
+function formatAuditDayHeading(dayKey: string, todayKey: string): string {
+  const anchor = new Date(`${dayKey}T12:00:00+09:00`);
+  const yLog = dayKey.slice(0, 4);
+  const yNow = todayKey.slice(0, 4);
+  if (yLog === yNow) {
+    return new Intl.DateTimeFormat("ja-JP", { timeZone: JST, month: "long", day: "numeric", weekday: "short" }).format(anchor);
+  }
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: JST,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }).format(anchor);
+}
+
+function formatAuditTimeJst(iso: string): string {
+  return new Intl.DateTimeFormat("ja-JP", { timeZone: JST, hour: "2-digit", minute: "2-digit", hour12: false }).format(
+    new Date(iso),
+  );
+}
+
+type AuditLogDayGroup = { dayKey: string; label: string; items: TeamAuditLogRow[] };
+
+/** API の新しい順（＝JST 日付も新しい日が先）を維持しつつ日付で束ねる */
+function groupAuditLogsByDay(logs: TeamAuditLogRow[], todayJst: string): AuditLogDayGroup[] {
+  const order: string[] = [];
+  const byDay = new Map<string, TeamAuditLogRow[]>();
+  for (const log of logs) {
+    const k = jstDayKeyFromIso(log.createdAt);
+    if (!byDay.has(k)) {
+      order.push(k);
+      byDay.set(k, []);
+    }
+    byDay.get(k)!.push(log);
+  }
+  return order.map((dayKey) => ({
+    dayKey,
+    label: formatAuditDayHeading(dayKey, todayJst),
+    items: byDay.get(dayKey) ?? [],
+  }));
+}
+
 export default function TeamPage() {
   const [members, setMembers] = useState<HotelMember[]>([]);
   const [invites, setInvites] = useState<HotelInvite[]>([]);
@@ -89,11 +145,37 @@ export default function TeamPage() {
   const [businessChecked, setBusinessChecked] = useState(false);
   const [auditLogs, setAuditLogs] = useState<TeamAuditLogRow[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
+  /** 日付キー(YYYY-MM-DD)を開いているか。直近3日は初期展開。 */
+  const [auditDayOpen, setAuditDayOpen] = useState<Set<string>>(() => new Set());
 
   const currentRole = members.find((m) => m.userId === currentUserId)?.role ?? null;
   const canManageMembers = currentRole === "owner" || currentRole === "admin";
   const canReviewApprovals = currentRole === "owner" || currentRole === "admin";
   const canViewAuditLogs = currentRole === "owner" || currentRole === "admin";
+
+  const auditLogGroups = useMemo(() => groupAuditLogsByDay(auditLogs, nowJstDayKey()), [auditLogs]);
+  const auditLogSig = useMemo(() => auditLogs.map((l) => l.id).join(","), [auditLogs]);
+
+  useEffect(() => {
+    if (auditLogGroups.length === 0) {
+      setAuditDayOpen(new Set());
+      return;
+    }
+    // 最新データ取得のたびに「直近3日分を開く」に戻し、一覧のスキャン負担を下げる
+    setAuditDayOpen(new Set(auditLogGroups.slice(0, 3).map((g) => g.dayKey)));
+  }, [auditLogGroups, auditLogSig]);
+
+  const toggleAuditDay = useCallback((dayKey: string) => {
+    setAuditDayOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(dayKey)) {
+        next.delete(dayKey);
+      } else {
+        next.add(dayKey);
+      }
+      return next;
+    });
+  }, []);
 
   useRouteProgressLoading(loading);
 
@@ -421,7 +503,7 @@ export default function TeamPage() {
               <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
                 <h2 className="app-section-title">招待コードを発行</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  コードを共有すると、相手がログイン後に施設に参加できます。
+                  コードを共有すると、相手がログイン後に施設に参加できます。1施設のメンバーは最大{HOTEL_TEAM_MAX_MEMBERS}名までです（オーナー含む）。
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <select
@@ -659,23 +741,73 @@ export default function TeamPage() {
               <FadeIn>
                 <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
                   <h2 className="app-section-title">操作履歴</h2>
-                  <p className="mt-1 text-sm text-slate-500">チーム関連の操作を新しい順で表示します。</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    日付でまとめて表示します。直近3日分は最初から開いています（新しい日が上）。
+                  </p>
                   {auditLoading ? (
                     <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
                   ) : auditLogs.length === 0 ? (
                     <p className="mt-4 text-sm text-slate-500">表示できる操作履歴はありません</p>
                   ) : (
-                    <ul className="mt-4 space-y-2">
-                      {auditLogs.map((log) => (
-                        <li key={log.id} className="rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3">
-                          <p className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString("ja-JP")}</p>
-                          <p className="mt-1 text-sm font-medium text-slate-900">{log.message}</p>
-                          <p className="mt-1 text-xs text-slate-600">
-                            操作: {log.actorLabel?.trim() || "不明"} / 対象: {formatAuditTarget(log)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-4 space-y-2" role="list" aria-label="操作履歴（日付別）">
+                      {auditLogGroups.map((group) => {
+                        const open = auditDayOpen.has(group.dayKey);
+                        const count = group.items.length;
+                        const panelId = `audit-day-panel-${group.dayKey}`;
+                        return (
+                          <div
+                            key={group.dayKey}
+                            role="listitem"
+                            className="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/40"
+                          >
+                            <button
+                              type="button"
+                              id={`${panelId}-toggle`}
+                              aria-expanded={open}
+                              aria-controls={panelId}
+                              onClick={() => toggleAuditDay(group.dayKey)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  toggleAuditDay(group.dayKey);
+                                }
+                              }}
+                              className="app-button-native flex w-full min-h-[44px] items-center justify-between gap-2 bg-slate-50/80 px-3 py-2.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+                            >
+                              <span>{group.label}</span>
+                              <span className="flex shrink-0 items-center gap-2 text-xs font-normal text-slate-500">
+                                <span className="tabular-nums">{count}件</span>
+                                <span className="text-slate-400" aria-hidden>
+                                  {open ? "▲" : "▼"}
+                                </span>
+                              </span>
+                            </button>
+                            {open ? (
+                              <ul id={panelId} className="divide-y divide-slate-100 border-t border-slate-100" role="list">
+                                {group.items.map((log) => (
+                                  <li key={log.id} className="bg-white/90 px-3 py-2.5 sm:px-4" role="listitem">
+                                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                      <time
+                                        dateTime={log.createdAt}
+                                        className="shrink-0 text-xs text-slate-500 tabular-nums"
+                                      >
+                                        {formatAuditTimeJst(log.createdAt)}
+                                      </time>
+                                      <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900">
+                                        {log.message}
+                                      </p>
+                                    </div>
+                                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                      操作: {log.actorLabel?.trim() || "不明"} ／ 対象: {formatAuditTarget(log)}
+                                    </p>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </section>
               </FadeIn>

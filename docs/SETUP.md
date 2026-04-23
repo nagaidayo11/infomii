@@ -162,8 +162,7 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 2. **Supabase**
   上記のとおりテーブル・関数・RLS を作成する。
 3. **ログイン**
-  `/login` でメールとパスワードで「新規登録」または「ログイン」する。
-   Google ログインを使う場合は、下記「Google OAuth 設定」を先に完了する。
+  `/login` では、招待コードだけで施設に参加する（**「招待コードでログイン」**）か、メールとパスワードで新規登録・ログインするかを選べます。招待コードのみの導線を使う場合は、下記「3.2 Anonymous サインイン」の設定が必要です。Google ログインを使う場合は「3.1 Google OAuth 設定」を先に完了する。
 4. **初回ログイン時**
   アプリ側で「このユーザーに紐づく施設がない」と判定されると、自動で  
   - 施設（`hotels`）が1件作成され、  
@@ -196,6 +195,14 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 - 同一メールは 1 ユーザー方針のため、アカウント統合ポリシー（Manual linking など）を Supabase 側で確認してください。
 - 設定画面の Google 連携は再認証（現在のパスワード入力）後にのみ開始されます。ログイン済みユーザーのみ利用できます。
 
+## 3.2 Anonymous サインイン（招待コードのみでログインを使う場合）
+
+`/login` の「招待コードでログイン」は、Supabase の匿名認証でセッションを発行し、その後 `redeem_hotel_invite` を呼び出して施設に紐づけます。次を有効にしてください。
+
+1. **Supabase ダッシュボード** → **Authentication** → **Providers** → **Anonymous** を有効化する。
+
+匿名ユーザーは施設参加後、通常のダッシュボード利用と同じセッションで動作します。メールとパスワードは不要です（招待コード欄にコードを入れて「このコードでログイン」）。
+
 ---
 
 ## 4. トラブルシューティング
@@ -205,6 +212,7 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | ログインできない           | Supabase の **Authentication** → **Providers** で Email が有効か。**Settings** → **API** の URL/anon key が `.env.local` と一致しているか。 |
 | Googleログインが失敗する     | Supabase の **Authentication** → **Providers** で Google が有効か。Google Cloud の Client ID/Secret が一致しているか。Redirect URLs が `/login` を含んでいるか。 |
+| 招待コードのみでログインできない | **Authentication** → **Providers** で **Anonymous** が有効か。招待コードの形式・有効期限・施設のメンバー上限（1施設あたり最大10名、オーナー含む）に達していないか。 |
 | 「施設が選択されていません」     | 上記 2 のテーブルとポリシーがすべて実行されているか。RLS のポリシー名が重複していないか。                                                                          |
 | 「Supabase設定が未完了です」 | `.env.local` がルートにあり、`NEXT_PUBLIC_` の typo がないか。`npm run dev` をやり直したか。                                                    |
 
