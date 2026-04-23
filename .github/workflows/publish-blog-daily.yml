@@ -1,0 +1,63 @@
+name: Publish Blog Daily
+
+on:
+  schedule:
+    # Daily at 00:10 JST
+    - cron: "10 15 * * *"
+  workflow_dispatch:
+
+jobs:
+  publish-next-post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish next queued post
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          queue_dir="content/blog/queue"
+          publish_dir="content/blog"
+
+          if [ ! -d "$queue_dir" ]; then
+            echo "No queue directory found."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          next_post="$(ls "$queue_dir"/*.md 2>/dev/null | sort | head -n 1 || true)"
+          if [ -z "${next_post}" ]; then
+            echo "No queued posts."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          base_name="$(basename "$next_post")"
+          target_name="$(echo "$base_name" | sed -E 's/^[0-9]{2}-//')"
+          target_path="$publish_dir/$target_name"
+
+          mv "$next_post" "$target_path"
+          echo "Published: $target_path"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "target_path=$target_path" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.publish.outputs.published == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add content/blog
+          git commit -m "chore(blog): publish scheduled post"
+          git push
