@@ -71,11 +71,13 @@ function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [inviteInput, setInviteInput] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     const stored = readPendingInviteCode();
     if (stored) {
       setInviteInput(stored);
+      setInviteOpen(true);
     }
   }, []);
 
@@ -85,6 +87,7 @@ function LoginForm() {
     const up = q.toUpperCase();
     writePendingInviteCode(up);
     setInviteInput(up);
+    setInviteOpen(true);
     const path =
       next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
     router.replace(path);
@@ -287,59 +290,16 @@ function LoginForm() {
           </p>
         ) : null}
 
-        {/* 招待コードのみ（匿名ログイン＋redeem） */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-lg font-semibold text-slate-900">招待コードでログイン</h1>
-          <p className="mt-1 text-sm leading-relaxed text-slate-500">
-            メールアドレス・パスワードは不要です。オーナーから共有されたコードを入力し、参加を確定します。
-          </p>
-          <label htmlFor="hotel-invite-main" className="mt-4 block text-sm font-medium text-slate-700">
-            招待コード
-          </label>
-          <input
-            id="hotel-invite-main"
-            name="hotel-invite-main"
-            type="text"
-            value={inviteInput}
-            onChange={(ev) => {
-              const v = ev.target.value.toUpperCase();
-              setInviteInput(v);
-              if (v.trim()) {
-                writePendingInviteCode(v);
-              } else {
-                clearPendingInviteCode();
-              }
-            }}
-            maxLength={20}
-            autoComplete="one-time-code"
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-mono uppercase tracking-wide placeholder:font-sans placeholder:normal-case"
-            placeholder="例: JZL6LBCH"
-          />
-          <form onSubmit={(e) => void handleInviteOnlyLogin(e)} className="mt-4">
-            <button
-              type="submit"
-              disabled={submitting || !hasSupabaseEnv || !inviteInput.trim()}
-              className="app-button-native w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? "参加処理中…" : "このコードでログイン"}
-            </button>
-          </form>
-        </div>
-
-        <div className="relative my-5 py-1">
-          <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200" />
-          <span className="relative mx-auto block w-fit bg-slate-50 px-2 text-xs text-slate-400">または</span>
-        </div>
-
         <form
           onSubmit={handleSubmit}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <h2 className="text-base font-semibold text-slate-900">
+          <h1 className="text-lg font-semibold text-slate-900">
             {isSignUp ? "メールアドレスで新規登録" : "メールでログイン"}
-          </h2>
+          </h1>
           <p className="mt-1 text-xs text-slate-500">
-            施設参加コードは<strong className="font-medium text-slate-600">上の欄</strong>に入れたまま、ここでログインすると適用できます。
+            施設参加に招待コードがある場合は、<strong className="font-medium text-slate-600">下の欄</strong>を開いてコードを入れてから、ここでメールまたは
+            Google でログインできます。
           </p>
 
           <div className="mt-4 space-y-4">
@@ -444,6 +404,68 @@ function LoginForm() {
             </p>
           </div>
         </form>
+
+        <div className="relative my-5 py-1">
+          <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200" />
+          <span className="relative mx-auto block w-fit bg-slate-50 px-2 text-xs text-slate-400">または</span>
+        </div>
+
+        {/* 招待コードのみ（匿名ログイン＋redeem）— メイン導線はメールのため折りたたみ */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <button
+            type="button"
+            onClick={() => setInviteOpen((o) => !o)}
+            aria-expanded={inviteOpen}
+            className="flex w-full items-center justify-between gap-2 px-5 py-3.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <span>招待コードでログイン</span>
+            <span
+              className="text-slate-400 transition-transform"
+              style={{ transform: inviteOpen ? "rotate(180deg)" : undefined }}
+              aria-hidden
+            >
+              ▼
+            </span>
+          </button>
+          {inviteOpen ? (
+            <div className="border-t border-slate-200 px-5 pb-5 pt-1">
+              <p className="text-sm leading-relaxed text-slate-500">
+                メールアドレス・パスワードは不要です。オーナーから共有されたコードを入力し、参加を確定します。
+              </p>
+              <label htmlFor="hotel-invite-main" className="mt-4 block text-sm font-medium text-slate-700">
+                招待コード
+              </label>
+              <input
+                id="hotel-invite-main"
+                name="hotel-invite-main"
+                type="text"
+                value={inviteInput}
+                onChange={(ev) => {
+                  const v = ev.target.value.toUpperCase();
+                  setInviteInput(v);
+                  if (v.trim()) {
+                    writePendingInviteCode(v);
+                  } else {
+                    clearPendingInviteCode();
+                  }
+                }}
+                maxLength={20}
+                autoComplete="one-time-code"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-mono uppercase tracking-wide placeholder:font-sans placeholder:normal-case"
+                placeholder="例: JZL6LBCH"
+              />
+              <form onSubmit={(e) => void handleInviteOnlyLogin(e)} className="mt-4">
+                <button
+                  type="submit"
+                  disabled={submitting || !hasSupabaseEnv || !inviteInput.trim()}
+                  className="app-button-native w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {submitting ? "参加処理中…" : "このコードでログイン"}
+                </button>
+              </form>
+            </div>
+          ) : null}
+        </div>
 
         <p className="mt-6 text-center text-xs text-slate-500">
           公開ページはログイン不要です。

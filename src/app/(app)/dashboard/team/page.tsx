@@ -156,6 +156,12 @@ export default function TeamPage() {
   const auditLogGroups = useMemo(() => groupAuditLogsByDay(auditLogs, nowJstDayKey()), [auditLogs]);
   const auditLogSig = useMemo(() => auditLogs.map((l) => l.id).join(","), [auditLogs]);
 
+  /** 一覧は「使える」コードのみ。無効化・使用済みは出さない */
+  const activePendingInvites = useMemo(
+    () => invites.filter((inv) => inv.isActive && !inv.consumedAt),
+    [invites],
+  );
+
   useEffect(() => {
     if (auditLogGroups.length === 0) {
       setAuditDayOpen(new Set());
@@ -557,11 +563,15 @@ export default function TeamPage() {
             <h2 className="app-section-title">発行済み招待コード</h2>
             {loading ? (
               <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
-            ) : invites.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">まだ招待コードは発行されていません</p>
+            ) : activePendingInvites.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">
+                {invites.length === 0
+                  ? "まだ招待コードは発行されていません"
+                  : "有効な招待コードはありません。新しいコードを発行できます。"}
+              </p>
             ) : (
               <ul className="mt-4 space-y-2">
-                {invites.map((inv) => (
+                {activePendingInvites.map((inv) => (
                   <li
                     key={inv.id}
                     className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
@@ -571,24 +581,20 @@ export default function TeamPage() {
                         {inv.code}
                       </code>
                       <span className="text-xs text-slate-500">
-                        {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · {inv.consumedAt ? "使用済み" : "有効"}
-                        {!inv.consumedAt && (
-                          <span className="ml-2 text-[11px] text-slate-400">
-                            / 招待リンク: {typeof window !== "undefined" ? `${window.location.origin}/invite/${inv.code}` : `/invite/${inv.code}`}
-                          </span>
-                        )}
+                        {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · 有効
+                        <span className="ml-2 text-[11px] text-slate-400">
+                          / 招待リンク: {typeof window !== "undefined" ? `${window.location.origin}/invite/${inv.code}` : `/invite/${inv.code}`}
+                        </span>
                       </span>
                     </div>
-                    {inv.isActive && !inv.consumedAt && (
-                      <button
-                        type="button"
-                        onClick={() => handleRevoke(inv.id)}
-                        disabled={!isBusiness}
-                        className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
-                      >
-                        無効化
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(inv.id)}
+                      disabled={!isBusiness}
+                      className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
+                    >
+                      無効化
+                    </button>
                   </li>
                 ))}
               </ul>
