@@ -125,8 +125,8 @@ QRで自己解決できる導線を作れるため、フロント負荷が減り
 
 ## 内部リンク候補
 
-- EXISTING_TITLE_1
-- EXISTING_TITLE_2
+- [Infomiiができることを現場目線で解説｜導入前に知るべき活用シーン](/blog/infomii-features-overview)
+- [Infomiiのブロック機能とは？現場で使える編集の仕組みを解説](/blog/infomii-block-editor)
 
 ## 自己チェック
 
