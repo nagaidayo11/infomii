@@ -163,7 +163,7 @@ export default function LpSaaSPage() {
     "sm:px-3 sm:text-sm";
 
   return (
-    <main className="min-h-screen bg-[#fafafa] text-slate-900 antialiased">
+    <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['Noto_Sans_JP',system-ui,sans-serif]">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-shadow duration-300 motion-safe:hover:shadow-sm">
         <Container className="flex h-14 items-center justify-between gap-2">
           <span className="text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800">
@@ -307,12 +307,12 @@ export default function LpSaaSPage() {
                 </Button>
               </div>
 
-              <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
+              <div className="lux-section-card scale-[1.02] rounded-2xl border-2 border-emerald-300 bg-gradient-to-b from-emerald-50/90 to-[#ECFDF5] p-8 shadow-lg motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-400 motion-safe:hover:shadow-xl">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
-                  <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold !text-white">おすすめ</span>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Pro</p>
+                  <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-semibold !text-white">人気No.1</span>
                 </div>
-                <p className="mt-3 text-4xl font-bold text-slate-900">
+                <p className="mt-3 text-5xl font-extrabold text-emerald-600">
                   ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
                 </p>
                 <p className="mt-1 text-sm text-slate-500">1拠点を安定運用したい方向け</p>

@@ -208,48 +208,48 @@ export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor
     : `${demoEditorHref}?lp=1`;
 
   return (
-    <section className="border-b border-ds-border/80 bg-ds-card overflow-x-hidden">
+    <section className="overflow-x-hidden border-b border-emerald-100 bg-gradient-to-b from-[#F2FBF7] via-[#FAFFFC] to-[#F2FBF7]">
       {/* コピー・CTAは従来どおりコンテナ幅 */}
       <Container className="pt-16 sm:pt-20 lg:pt-24">
         <div className="mx-auto max-w-5xl text-center">
           <FadeIn>
-            <p className="text-sm font-semibold uppercase tracking-wider text-ds-accent-strong">
-              ビジネスホテル・少人数運営・外国人対応に強い
+            <p className="mt-5 text-sm font-semibold uppercase tracking-wider text-emerald-700">
+              ホテル業務をもっとスマートに
             </p>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-ds-foreground sm:text-4xl lg:text-5xl">
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
               <span className="block text-2xl sm:text-3xl lg:text-4xl">
-                フロント対応、まだ口頭でやってますか？
+                紙の館内案内、まだ配っていますか？
               </span>
-              <span className="mt-5 block">
+              <span className="mt-5 block leading-tight">
                 QRひとつで
-                <span className="text-ds-accent">「全部伝わる館内案内」</span>
-                を3分で。
+                <span className="text-emerald-600">「紙→スマホ案内」</span>
+                へ、最短3分。
               </span>
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-ds-muted-fg sm:text-xl">
+            <p className="mt-6 text-lg leading-relaxed text-slate-600 sm:text-xl">
               WiFi・朝食・設備案内を1ページに集約。
               <br className="hidden sm:block" />
-              説明・紙・更新の手間をゼロに近づけます。
+              フロントの説明負担と紙更新をぐっと減らします。
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Button
-                href={demoEditorHref}
+                href={ctaHref}
                 size="lg"
-                className="!border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                className="!border-emerald-300 !bg-emerald-500 px-7 hover:!bg-emerald-600 hover:!shadow-[0_8px_18px_rgba(16,185,129,0.28)] motion-safe:animate-[pulse_2.4s_ease-in-out_infinite]"
               >
-                30秒で試す（登録なし）
+                1ページ無料で公開してみる
               </Button>
               <Button href="#live-demo" variant="secondary" size="lg">
-                実際の画面を見る
+                30秒デモを見る
               </Button>
             </div>
             <p className="mt-4 text-sm text-ds-muted">
-              すぐに作成するなら{" "}
+              すぐに体験するなら{" "}
               <a
-                href={ctaHref}
-                className="font-semibold text-ds-accent-strong underline decoration-ds-accent/35 underline-offset-2 hover:text-ds-accent-fg"
+                href={demoEditorHref}
+                className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-800"
               >
-                無料でページを作成
+                登録なしデモ
               </a>
             </p>
           </FadeIn>
@@ -263,7 +263,7 @@ export function LpHero({ ctaHref, samplePageHref, demoEditorHref = "/demo/editor
       >
         <div className="mx-auto w-[90%] max-w-[100%] px-4 sm:px-6">
           <HeroVisuals demoEditorHref={lpEditorPreviewHref} samplePageHref={samplePageHref} />
-          <p className="mt-3 text-center text-xs text-ds-muted">※デモ環境の実画面を表示しています</p>
+          <p className="mt-3 text-center text-xs text-slate-500">※デモ環境の実画面を表示しています</p>
         </div>
       </div>
     </section>
