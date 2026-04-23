@@ -2,8 +2,8 @@ name: Publish Blog Daily
 
 on:
   schedule:
-    # Daily at 00:10 JST
-    - cron: "10 15 * * *"
+    # Daily at 10:00 JST
+    - cron: "0 1 * * *"
   workflow_dispatch:
 
 jobs:
