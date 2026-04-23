@@ -77,7 +77,7 @@ export function CheckoutButton({
           plan,
           interval,
           successPath: "/dashboard?billing=success",
-          cancelPath: "/lp/saas#pricing",
+          cancelPath: "/lp/saas#pricing-plans",
         });
       window.location.href = url;
     } catch (e) {

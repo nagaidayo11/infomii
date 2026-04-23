@@ -52,7 +52,7 @@ export function Sidebar() {
       </nav>
       <div className="border-t border-slate-200/60 p-3">
         <Link
-          href="/"
+          href="/lp/saas"
           className="app-interactive flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-700"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>

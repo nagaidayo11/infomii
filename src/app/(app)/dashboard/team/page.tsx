@@ -286,7 +286,7 @@ export default function TeamPage() {
                 現在のプランではこの画面の操作はできません。
               </p>
               <a
-                href="/lp/saas#pricing"
+                href="/lp/saas#pricing-plans"
                 className="app-button-native mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 hover:!text-white"
               >
                 Businessプランを見る

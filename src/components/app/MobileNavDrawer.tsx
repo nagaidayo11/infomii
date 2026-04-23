@@ -80,7 +80,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
           <Link
-            href="/"
+            href="/lp/saas"
             className="app-interactive flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-700"
             onClick={onClose}
           >

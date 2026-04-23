@@ -290,97 +290,99 @@ export default function LpSaaSPage() {
             </div>
           </div>
 
-          <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
-            <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
-              <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
-              <p className="mt-1 text-sm text-slate-500">まず試したい方向け（1ページ公開）</p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 公開ページ数: 1本</li>
-                <li>✓ 編集プレビュー（PC / スマホ）</li>
-                <li>✓ QR発行 / 共有URL</li>
-                <li>✓ 下書き / 公開切り替え</li>
-              </ul>
-              <Button href={ctaHref} variant="secondary" className="mt-6">
-                Freeで始める
-              </Button>
-            </div>
+          <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Business）">
+            <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
+              <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
+                <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
+                <p className="mt-1 text-sm text-slate-500">まず試したい方向け（1ページ公開）</p>
+                <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                  <li>✓ 公開ページ数: 1本</li>
+                  <li>✓ 編集プレビュー（PC / スマホ）</li>
+                  <li>✓ QR発行 / 共有URL</li>
+                  <li>✓ 下書き / 公開切り替え</li>
+                </ul>
+                <Button href={ctaHref} variant="secondary" className="mt-6">
+                  Freeで始める
+                </Button>
+              </div>
 
-            <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
-                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold !text-white">おすすめ</span>
-              </div>
-              <p className="mt-3 text-4xl font-bold text-slate-900">
-                ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
-              </p>
-              <p className="mt-1 text-sm text-slate-500">1拠点を安定運用したい方向け</p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 公開ページ数: 最大10本</li>
-                <li>✓ 用途別にページを分けて更新しやすい</li>
-                <li>✓ 公開前チェック</li>
-                <li>✓ 閲覧分析</li>
-              </ul>
-              <p className="mt-4 text-sm leading-relaxed text-slate-600">
-                案内を用途ごとに分けて更新できるため、1名運用でも差し替え作業の手戻りを減らせます。
-              </p>
-              <div className="mt-6 flex flex-col gap-2">
-                <a
-                  href="#pricing-comparison"
-                  className="text-center text-xs font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-700 hover:decoration-emerald-400"
-                >
-                  比較表の詳細を見る
-                </a>
-                <CheckoutButton
-                  plan="pro"
-                  className="w-full !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
-                >
-                  Proを申し込む{hasProAnnual ? "（月払い）" : ""}
-                </CheckoutButton>
-                {hasProAnnual ? (
-                  <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full">
-                    年払い ¥19,800（2ヶ月分お得）
+              <div className="lux-section-card rounded-2xl border-2 border-slate-900 bg-slate-50/50 p-8 motion-safe:hover:border-emerald-700 motion-safe:hover:shadow-xl">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Pro</p>
+                  <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold !text-white">おすすめ</span>
+                </div>
+                <p className="mt-3 text-4xl font-bold text-slate-900">
+                  ¥1,980<span className="text-base font-normal text-slate-600">/月</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-500">1拠点を安定運用したい方向け</p>
+                <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                  <li>✓ 公開ページ数: 最大10本</li>
+                  <li>✓ 用途別にページを分けて更新しやすい</li>
+                  <li>✓ 公開前チェック</li>
+                  <li>✓ 閲覧分析</li>
+                </ul>
+                <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                  案内を用途ごとに分けて更新できるため、1名運用でも差し替え作業の手戻りを減らせます。
+                </p>
+                <div className="mt-6 flex flex-col gap-2">
+                  <a
+                    href="#pricing-comparison"
+                    className="text-center text-xs font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-700 hover:decoration-emerald-400"
+                  >
+                    比較表の詳細を見る
+                  </a>
+                  <CheckoutButton
+                    plan="pro"
+                    className="w-full !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                  >
+                    Proを申し込む{hasProAnnual ? "（月払い）" : ""}
                   </CheckoutButton>
-                ) : null}
+                  {hasProAnnual ? (
+                    <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full">
+                      年払い ¥19,800（2ヶ月分お得）
+                    </CheckoutButton>
+                  ) : null}
+                </div>
               </div>
-            </div>
 
-            <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
-              <p className="mt-3 text-4xl font-bold text-slate-900">
-                ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
-              </p>
-              <p className="mt-1 text-sm text-slate-500">複数拠点・複数担当のチーム運用向け</p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-700">
-                <li>✓ 公開ページ数: <span className="font-semibold text-emerald-700">無制限</span></li>
-                <li>✓ 公開前チェック</li>
-                <li>✓ 閲覧分析</li>
-                <li>✓ チーム招待（引き継ぎしやすい）</li>
-                <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（公開時）</li>
-                <li>✓ 拠点ごとの更新漏れを防ぎやすい</li>
-                <li>✓ 担当交代時も引き継ぎしやすい</li>
-              </ul>
-              <p className="mt-4 text-sm leading-relaxed text-slate-600">
-                担当者と拠点が増えても、翻訳反映と更新ルールをそろえやすく、案内品質の統一を維持できます。
-              </p>
-              <div className="mt-6 flex flex-col gap-2">
-                <CheckoutButton
-                  plan="business"
-                  variant="secondary"
-                  className="w-full"
-                  adaptiveBusinessCta
-                  showUpgradeHint
-                >
-                  Businessを申し込む
-                </CheckoutButton>
-                {hasBusinessAnnual ? (
-                  <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">
-                    年払い ¥49,800（2ヶ月分お得）
+              <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
+                <p className="mt-3 text-4xl font-bold text-slate-900">
+                  ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-500">複数拠点・複数担当のチーム運用向け</p>
+                <ul className="mt-6 space-y-2 text-sm text-slate-700">
+                  <li>✓ 公開ページ数: <span className="font-semibold text-emerald-700">無制限</span></li>
+                  <li>✓ 公開前チェック</li>
+                  <li>✓ 閲覧分析</li>
+                  <li>✓ チーム招待（引き継ぎしやすい）</li>
+                  <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（公開時）</li>
+                  <li>✓ 拠点ごとの更新漏れを防ぎやすい</li>
+                  <li>✓ 担当交代時も引き継ぎしやすい</li>
+                </ul>
+                <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                  担当者と拠点が増えても、翻訳反映と更新ルールをそろえやすく、案内品質の統一を維持できます。
+                </p>
+                <div className="mt-6 flex flex-col gap-2">
+                  <CheckoutButton
+                    plan="business"
+                    variant="secondary"
+                    className="w-full"
+                    adaptiveBusinessCta
+                    showUpgradeHint
+                  >
+                    Businessを申し込む
                   </CheckoutButton>
-                ) : null}
+                  {hasBusinessAnnual ? (
+                    <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">
+                      年払い ¥49,800（2ヶ月分お得）
+                    </CheckoutButton>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          </StaggerReveal>
+            </StaggerReveal>
+          </div>
           <p className="mt-5 text-center text-sm font-medium text-slate-600">
             迷ったらPro：1名運用で最も選ばれています
           </p>

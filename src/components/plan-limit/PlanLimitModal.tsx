@@ -10,7 +10,7 @@ type PlanLimitModalProps = {
   currentPlan?: "free" | "pro" | "business";
 };
 
-const pricingHref = "/lp/saas#pricing";
+const pricingHref = "/lp/saas#pricing-plans";
 
 /**
  * ページ数上限到達時に表示するモーダル。Pro/Business プランへのアップグレードを促す。

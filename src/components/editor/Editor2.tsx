@@ -1186,7 +1186,7 @@ export function Editor2({
                   閉じる
                 </button>
                 <a
-                  href="/lp/saas#pricing"
+                  href="/lp/saas#pricing-plans"
                   onClick={() => {
                     void trackUpgradeClick("editor");
                   }}

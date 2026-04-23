@@ -42,12 +42,16 @@ export function UpgradeCtaBanner({
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
-              href="/lp/saas#pricing"
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-ds-accent/30 bg-ds-accent px-3 py-2.5 text-center text-sm font-medium !text-white shadow-sm transition hover:bg-ds-accent-strong sm:min-h-0 sm:py-2"
+              href="/lp/saas#pricing-plans"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>
-            <DashboardCheckoutButton plan="pro" className="w-full justify-center sm:w-auto">
+            <DashboardCheckoutButton
+              plan="pro"
+              variant="secondary"
+              className="w-full justify-center !rounded-xl !border-emerald-600 !bg-emerald-600 !px-3 !py-2.5 !text-sm !font-medium !text-white shadow-sm hover:!border-emerald-700 hover:!bg-emerald-700 sm:w-auto sm:!py-2"
+            >
               Proを申し込む（¥1,980/月）
             </DashboardCheckoutButton>
           </div>
@@ -70,8 +74,8 @@ export function UpgradeCtaBanner({
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
-              href="/lp/saas#pricing"
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-ds-accent/30 bg-ds-accent px-3 py-2.5 text-center text-sm font-medium !text-white shadow-sm transition hover:bg-ds-accent-strong sm:min-h-0 sm:py-2"
+              href="/lp/saas#pricing-plans"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
             >
               料金を見る
             </Link>
@@ -123,7 +127,7 @@ function DashboardCheckoutButton({
       type="button"
       variant={variant}
       size="sm"
-      className={(plan === "business" ? "" : "!text-white") + " min-h-[44px] sm:min-h-0 " + className}
+      className={(variant === "primary" ? "!text-white " : "") + "min-h-[44px] sm:min-h-0 " + className}
       onClick={handleClick}
       disabled={loading}
     >

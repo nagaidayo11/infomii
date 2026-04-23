@@ -78,7 +78,7 @@ function AnalyticsUpgradePrompt() {
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
-              href="/lp/saas#pricing"
+              href="/lp/saas#pricing-plans"
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 sm:min-h-0"
             >
               料金を見る
