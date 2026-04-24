@@ -37,7 +37,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
 
   return (
     <div
-      className="app-ambient-bg flex min-h-[100dvh] w-full flex-col overflow-hidden bg-slate-100/95"
+      className="app-ambient-bg flex h-[100dvh] w-full flex-col overflow-hidden bg-slate-100/95"
       role="application"
       aria-label="エディタ"
       data-editor-layout
