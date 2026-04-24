@@ -37,8 +37,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          git pull --rebase origin main
           git add content/blog
           git commit -m "chore(blog): publish scheduled post"
-          git push
+          git push origin HEAD:main
