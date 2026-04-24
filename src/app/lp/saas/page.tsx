@@ -34,28 +34,35 @@ function PricingComparisonTable() {
   const yes = <span className="font-medium text-emerald-700">✓</span>;
 
   return (
-    <div className="lux-section-card overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
-      <table className="w-full min-w-[760px] border-collapse text-sm">
+    <div className="lux-section-card rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
+      <p className="px-4 pt-3 text-xs text-slate-500 sm:hidden" aria-live="polite">
+        横にスクロールして比較できます
+      </p>
+      <div className="max-h-[70dvh] overflow-auto overscroll-x-contain scroll-smooth px-2 pb-2 sm:max-h-none sm:px-0 sm:pb-0">
+        <table className="w-full min-w-[860px] border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50">
-            <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <th
+              scope="col"
+              className="sticky left-0 top-0 z-30 bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 shadow-[1px_0_0_rgba(148,163,184,0.25)]"
+            >
               比較項目
             </th>
-            <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
+            <th scope="col" className="sticky top-0 z-20 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600">
               Free
             </th>
-            <th scope="col" className="border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900">
+            <th scope="col" className="sticky top-0 z-20 border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900">
               Pro
             </th>
-            <th scope="col" className="px-3 py-3 text-center text-xs font-semibold text-slate-600">
+            <th scope="col" className="sticky top-0 z-20 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600">
               Business
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 text-slate-800">
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">作成規模: 公開ページ数</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">作成規模: 公開ページ数</th>
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大10本</td>
             <td className="px-3 py-2.5 text-center tabular-nums">
@@ -65,43 +72,43 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">テンプレート適用</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">テンプレート適用</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">編集プレビュー（PC / スマホ）</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">編集プレビュー（PC / スマホ）</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">下書き / 公開切り替え</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">下書き / 公開切り替え</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">QR発行 / 共有URL</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">QR発行 / 共有URL</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">運用効率: 公開前チェック</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">運用効率: 公開前チェック</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-medium text-slate-700">運用効率: 閲覧分析</th>
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">運用効率: 閲覧分析</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
               <span className="block">チーム統制: チーム招待</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 更新漏れ防止・引き継ぎ容易
@@ -116,7 +123,7 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
               <span className="block">公開時の多言語自動翻訳</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 公開操作にあわせて主要言語へまとめて反映
@@ -131,7 +138,7 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="px-4 py-2.5 text-left text-sm font-semibold text-emerald-800">
+            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
               <span className="block">動的ブロック</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 ヒーロースライド / キャンペーンタイマー / 緊急バナー など
@@ -146,7 +153,8 @@ function PricingComparisonTable() {
             </td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }
@@ -158,9 +166,9 @@ export default function LpSaaSPage() {
   const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
   const navLinkClass =
-    "rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition-colors duration-200 " +
+    "inline-flex min-h-[44px] items-center rounded-lg px-2 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 " +
     "motion-safe:hover:-translate-y-px motion-safe:hover:bg-emerald-50/60 motion-safe:hover:text-emerald-800 " +
-    "sm:px-3 sm:text-sm";
+    "sm:px-3";
 
   return (
     <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['Noto_Sans_JP',system-ui,sans-serif]">
@@ -179,13 +187,13 @@ export default function LpSaaSPage() {
             <a href="#pricing" className={navLinkClass}>
               料金
             </a>
-            <Button href={loginHref} variant="ghost" size="md" className="rounded-lg px-2 sm:px-4">
+            <Button href={loginHref} variant="ghost" size="md" className="min-h-[44px] rounded-lg px-2 sm:px-4">
               ログイン
             </Button>
             <Button
               href={ctaHref}
               size="md"
-              className="px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+              className="min-h-[44px] px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
             >
               1ページ無料で公開してみる
             </Button>
@@ -234,14 +242,14 @@ export default function LpSaaSPage() {
               <Button
                 href={DEMO_EDITOR_HREF}
                 size="lg"
-                className="!border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                className="min-h-[44px] !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
               >
                 30秒デモで運用イメージを見る
               </Button>
-              <Button href={SAMPLE_PAGE_DEMO_HREF} variant="secondary" size="lg">
+              <Button href={SAMPLE_PAGE_DEMO_HREF} variant="secondary" size="lg" className="min-h-[44px]">
                 サンプルページを見る
               </Button>
-              <Button href={ctaHref} variant="secondary" size="lg">
+              <Button href={ctaHref} variant="secondary" size="lg" className="min-h-[44px]">
                 1ページ無料で公開を始める
               </Button>
             </div>
@@ -285,6 +293,37 @@ export default function LpSaaSPage() {
           >
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
             <p className="mt-1 text-sm text-slate-600">比較軸: 作成規模 / 運用効率 / チーム統制（詳細は横スクロールで確認）</p>
+            <div className="mt-4 sm:hidden">
+              <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
+                <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Free</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">¥0</p>
+                  <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
+                    <li>・公開1ページ</li>
+                    <li>・QR共有 / 公開切替</li>
+                    <li>・まず試す導入向け</li>
+                  </ul>
+                </article>
+                <article className="min-w-[240px] snap-start rounded-xl border border-emerald-300 bg-emerald-50/80 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Pro（人気）</p>
+                  <p className="mt-1 text-xl font-bold text-emerald-700">¥1,980/月</p>
+                  <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
+                    <li>・最大10ページ</li>
+                    <li>・公開前チェック / 閲覧分析</li>
+                    <li>・1拠点の安定運用向け</li>
+                  </ul>
+                </article>
+                <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Business</p>
+                  <p className="mt-1 text-xl font-bold text-slate-900">¥4,980/月</p>
+                  <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
+                    <li>・公開ページ無制限</li>
+                    <li>・チーム招待 / 多言語自動翻訳</li>
+                    <li>・複数拠点・チーム運用向け</li>
+                  </ul>
+                </article>
+              </div>
+            </div>
             <div className="mt-4">
               <PricingComparisonTable />
             </div>
@@ -302,7 +341,7 @@ export default function LpSaaSPage() {
                   <li>✓ QR発行 / 共有URL</li>
                   <li>✓ 下書き / 公開切り替え</li>
                 </ul>
-                <Button href={ctaHref} variant="secondary" className="mt-6">
+                <Button href={ctaHref} variant="secondary" className="mt-6 min-h-[44px]">
                   Freeで始める
                 </Button>
               </div>
@@ -334,12 +373,12 @@ export default function LpSaaSPage() {
                   </a>
                   <CheckoutButton
                     plan="pro"
-                    className="w-full !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                    className="w-full min-h-[44px] !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
                   >
                     Proを申し込む{hasProAnnual ? "（月払い）" : ""}
                   </CheckoutButton>
                   {hasProAnnual ? (
-                    <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full">
+                    <CheckoutButton plan="pro" interval="yearly" variant="secondary" className="w-full min-h-[44px]">
                       年払い ¥19,800（2ヶ月分お得）
                     </CheckoutButton>
                   ) : null}
@@ -368,14 +407,14 @@ export default function LpSaaSPage() {
                   <CheckoutButton
                     plan="business"
                     variant="secondary"
-                    className="w-full"
+                    className="w-full min-h-[44px]"
                     adaptiveBusinessCta
                     showUpgradeHint
                   >
                     Businessを申し込む
                   </CheckoutButton>
                   {hasBusinessAnnual ? (
-                    <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full">
+                    <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full min-h-[44px]">
                       年払い ¥49,800（2ヶ月分お得）
                     </CheckoutButton>
                   ) : null}
@@ -444,14 +483,14 @@ export default function LpSaaSPage() {
               クレジットカード不要。サンプルを触ってから始めてもOKです。
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button href={ctaHref} variant="inverted" size="lg" className="px-8">
+              <Button href={ctaHref} variant="inverted" size="lg" className="min-h-[44px] px-8">
                 今すぐ無料で作成
               </Button>
               <Button
                 href={DEMO_EDITOR_HREF}
                 variant="secondary"
                 size="lg"
-                className="border-slate-600 bg-transparent !text-white hover:bg-white/10 hover:!text-white"
+                className="min-h-[44px] border-slate-600 bg-transparent !text-white hover:bg-white/10 hover:!text-white"
               >
                 30秒で試す（登録なし）
               </Button>
