@@ -63,13 +63,18 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
 
   const { data: infoRow } = await supabase
     .from("informations")
-    .select("status")
+    .select("status,hotel_id")
     .eq("slug", slug)
     .maybeSingle();
+  const hotelIdForLocaleToggle =
+    page.hotel_id ??
+    (infoRow && typeof infoRow === "object" && "hotel_id" in infoRow
+      ? ((infoRow as { hotel_id?: string | null }).hotel_id ?? null)
+      : null);
   const { data: subRows } = await supabase
     .from("subscriptions")
     .select("plan")
-    .eq("hotel_id", page.hotel_id)
+    .eq("hotel_id", hotelIdForLocaleToggle)
     .order("updated_at", { ascending: false })
     .limit(1);
   const canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";

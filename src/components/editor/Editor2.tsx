@@ -59,6 +59,22 @@ const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
 const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
 const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / 한국어";
 
+function buildEditorContentSignature(payload: {
+  cards: { id: string; type: string; order: number; content: unknown; style?: unknown }[];
+  background: { mode: "solid" | "gradient"; color: string; from: string; to: string; angle: number };
+}): string {
+  return JSON.stringify({
+    cards: payload.cards.map((card) => ({
+      id: card.id,
+      type: card.type,
+      order: card.order,
+      content: card.content,
+      style: card.style ?? null,
+    })),
+    background: payload.background,
+  });
+}
+
 export function Editor2({
   pageId,
   mode = "full",
@@ -94,6 +110,7 @@ export function Editor2({
   const [previewBusy, setPreviewBusy] = useState(false);
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
+  const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
   const [businessUpsellState, setBusinessUpsellState] = useState<{
     open: boolean;
     lockedType: CardType | null;
@@ -342,6 +359,34 @@ export function Editor2({
     () => cards.find((c) => c.id === selectedCardId) ?? null,
     [cards, selectedCardId]
   );
+  const currentContentSignature = useMemo(
+    () =>
+      buildEditorContentSignature({
+        cards,
+        background: {
+          mode: pageBackgroundMode,
+          color: pageBackgroundColor,
+          from: pageGradientFrom,
+          to: pageGradientTo,
+          angle: pageGradientAngle,
+        },
+      }),
+    [cards, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]
+  );
+  const hasUnpublishedChanges =
+    publishStatus === "published" &&
+    publishedBaselineSignature != null &&
+    currentContentSignature !== publishedBaselineSignature;
+
+  useEffect(() => {
+    if (publishStatus !== "published") {
+      setPublishedBaselineSignature(null);
+      return;
+    }
+    if (publishedBaselineSignature == null) {
+      setPublishedBaselineSignature(currentContentSignature);
+    }
+  }, [publishStatus, publishedBaselineSignature, currentContentSignature]);
 
   const handleSlashKey = useCallback((e: KeyboardEvent) => {
     if (e.key !== "/") return;
@@ -475,6 +520,7 @@ export function Editor2({
       }
       await setInformationStatusBySlug(page.slug, "published");
       setPublishStatus("published");
+      setPublishedBaselineSignature(currentContentSignature);
       const publicUrl = buildPublicUrlV(page.slug);
       setPublishState({
         publicUrl,
@@ -486,7 +532,7 @@ export function Editor2({
     } finally {
       setPublishing(false);
     }
-  }, [isDemoMode, pageId]);
+  }, [isDemoMode, pageId, currentContentSignature]);
 
   const handlePublishClick = useCallback(async () => {
     if (isDemoMode) {
@@ -605,12 +651,17 @@ export function Editor2({
     try {
       await setInformationStatusBySlug(pageMeta.slug, nextStatus);
       setPublishStatus(nextStatus);
+      if (nextStatus === "published") {
+        setPublishedBaselineSignature(currentContentSignature);
+      } else {
+        setPublishedBaselineSignature(null);
+      }
     } catch (e) {
       alert(e instanceof Error ? e.message : "公開状態の変更に失敗しました。");
     } finally {
       setPublishToggleLoading(false);
     }
-  }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading]);
+  }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading, currentContentSignature]);
 
   const translateAllCardsToMultilingual = useCallback(async (): Promise<number> => {
     if (cards.length === 0) return 0;
@@ -814,14 +865,14 @@ export function Editor2({
       );
       if (remainingTargets.length > 0) {
         return flow === "preview"
-          ? `未翻訳項目が ${remainingTargets.length} 件残っているためプレビューできません。編集内容を確認してください。`
-          : `未翻訳項目が ${remainingTargets.length} 件残っているため公開できません。編集内容を確認してください。`;
+          ? `未翻訳項目が ${remainingTargets.length} 件残っています。失敗言語: EN / 中文 / 한국어。編集内容を確認して再試行してください。`
+          : `未翻訳項目が ${remainingTargets.length} 件残っています。失敗言語: EN / 中文 / 한국어。公開更新を中断しました。編集内容を確認して再試行してください。`;
       }
       return null;
     } catch {
       return flow === "preview"
-        ? "自動翻訳に失敗したためプレビューできません。時間をおいて再試行してください。"
-        : "自動翻訳に失敗したため公開できません。時間をおいて再試行してください。";
+        ? "自動翻訳に失敗しました。失敗言語: EN / 中文 / 한국어。時間をおいて再試行してください。"
+        : "自動翻訳に失敗したため公開更新を中断しました。失敗言語: EN / 中文 / 한국어。時間をおいて再試行してください。";
     } finally {
       setLocaleTranslating(false);
     }
@@ -895,7 +946,10 @@ export function Editor2({
     }
     setPublishFlowBusy(true);
     try {
-      const translationError = await ensureTranslationsBeforePublish();
+      const translationError =
+        publishStatus === "published" && !hasUnpublishedChanges
+          ? null
+          : await ensureTranslationsBeforePublish();
       if (translationError) {
         setPrepublishState({
           errors: [translationError],
@@ -918,6 +972,7 @@ export function Editor2({
         await approvePublishApprovalBySlug(pageMeta.slug);
         setHasPendingApproval(false);
         setPublishStatus("published");
+        setPublishedBaselineSignature(currentContentSignature);
         window.alert("公開申請を承認し、公開しました。");
         return;
       }
@@ -925,7 +980,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval]);
+  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature]);
 
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
   const handlePublishPastWarnings = useCallback(async () => {
@@ -976,6 +1031,8 @@ export function Editor2({
       ? hasPendingApproval
         ? "再申請"
         : "公開申請"
+      : publishStatus === "published" && !hasPendingApproval
+        ? "公開更新"
       : hasPendingApproval
         ? "承認して公開"
         : "公開";
@@ -1095,7 +1152,7 @@ export function Editor2({
   let editorBusySubtitle = "保存と公開設定を実行しています";
   if (previewBusy && showBusinessTranslationOverlay) {
     editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
-    editorBusySubtitle = "公開前に多言語データを整えています";
+    editorBusySubtitle = "プレビュー用に翻訳確認中です";
   } else if (previewBusy) {
     editorBusyTitle = "プレビュー準備中...";
     editorBusySubtitle = "保存してプレビューを開きます";
@@ -1114,11 +1171,18 @@ export function Editor2({
     editorBusyTitle = "QRを表示しています";
     editorBusySubtitle = "最新の編集内容を保存しています";
   } else if (publishFlowBusy && showBusinessTranslationOverlay) {
-    editorBusyTitle = `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
-    editorBusySubtitle = "公開前に多言語データを取得・反映しています";
+    editorBusyTitle =
+      publishStatus === "published" ? "公開中の内容を更新しています" : `${TRANSLATION_OVERLAY_LABELS} 一括翻訳中...`;
+    editorBusySubtitle =
+      publishStatus === "published"
+        ? `多言語を再生成しています（${TRANSLATION_OVERLAY_LABELS}）`
+        : "公開前に多言語データを取得・反映しています";
   } else if (publishFlowBusy) {
-    editorBusyTitle = "公開準備中...";
-    editorBusySubtitle = "保存と公開前チェックを実行しています";
+    editorBusyTitle = publishStatus === "published" ? "公開中の内容を更新しています" : "公開準備中...";
+    editorBusySubtitle =
+      publishStatus === "published"
+        ? "保存と公開内容の反映を実行しています"
+        : "保存と公開前チェックを実行しています";
   }
 
   return (
@@ -1159,6 +1223,11 @@ export function Editor2({
               {!isDemoMode && publishStatus !== "published" && (
                 <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。
+                </div>
+              )}
+              {!isDemoMode && publishStatus === "published" && hasUnpublishedChanges && (
+                <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                  未反映の変更があります。「公開更新」で公開ページへ反映されます。
                 </div>
               )}
               <div className="min-h-0 flex-1 overflow-auto">

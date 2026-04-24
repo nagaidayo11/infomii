@@ -650,13 +650,15 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   }
 
   let cardRows: Array<{ id: string; type: string; content: unknown; order: number | null }> = [];
+  let pageHotelId: string | null = null;
   try {
     const admin = getSupabaseAdminServerClient();
     const { data: pageRow } = await admin
       .from("pages")
-      .select("id")
+      .select("id,hotel_id")
       .eq("slug", slug)
       .maybeSingle();
+    pageHotelId = pageRow?.hotel_id ?? null;
     if (pageRow?.id) {
       const { data: cards } = await admin
         .from("cards")
@@ -676,13 +678,14 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     order: typeof c.order === "number" ? c.order : idx,
   }));
   let canShowLocaleToggle = false;
-  if (row.hotel_id) {
+  const hotelIdForLocaleToggle = row.hotel_id ?? pageHotelId;
+  if (hotelIdForLocaleToggle) {
     try {
       const admin = getSupabaseAdminServerClient();
       const { data: subRows } = await admin
         .from("subscriptions")
         .select("plan")
-        .eq("hotel_id", row.hotel_id)
+        .eq("hotel_id", hotelIdForLocaleToggle)
         .order("updated_at", { ascending: false })
         .limit(1);
       canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
