@@ -2,9 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { nanoid } from "nanoid";
 import { Editor2 } from "@/components/editor";
-import { createEmptyCard, STARTER_CARD_TYPES } from "@/components/editor/types";
 import type { CardType } from "@/components/editor/types";
 import { useEditor2Store } from "@/components/editor/store";
 import {
@@ -14,7 +12,6 @@ import {
   getPageStyleFromRows,
   listPagesForHotel,
   rowToCard,
-  savePageCards,
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
@@ -87,22 +84,10 @@ function EditorWithPageId() {
       }
 
       if (page) {
-        const starterCards = STARTER_CARD_TYPES.map((type, i) =>
-          createEmptyCard(type, nanoid(10), i)
-        );
-        try {
-          const { updatedIds } = await savePageCards(pageId, starterCards);
-          const merged = starterCards.map((c) => ({
-            ...c,
-            id: updatedIds[c.id] ?? c.id,
-          }));
-          setCards(merged);
-          selectCard(merged[0]?.id ?? null);
-          setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
-        } catch {
-          setCards(starterCards);
-          selectCard(starterCards[0]?.id ?? null);
-        }
+        // Empty pages should stay empty. Do not auto-seed starter blocks (e.g. hero).
+        setCards([]);
+        selectCard(null);
+        setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
       }
       setLoaded(true);
     });
