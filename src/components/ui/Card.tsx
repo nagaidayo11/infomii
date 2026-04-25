@@ -26,7 +26,7 @@ export function Card({
   hover = false,
 }: CardProps) {
   const interactiveClass = hover
-    ? "app-interactive transition-[transform] duration-200 ease-out hover:-translate-y-0.5"
+    ? "app-interactive ui-pop-card transition-[transform] duration-200 ease-out hover:-translate-y-0.5"
     : "";
   return (
     <div

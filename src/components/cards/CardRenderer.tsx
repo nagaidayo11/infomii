@@ -311,7 +311,7 @@ export function CardRenderer(props: CardRendererProps) {
     const sorted = [...cards].sort((a, b) => a.order - b.order);
     return (
       <>
-        {sorted.map((card) => {
+        {sorted.map((card, idx) => {
           const blockStyle = getBlockStyle(card);
           const textColor =
             card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
@@ -329,7 +329,7 @@ export function CardRenderer(props: CardRendererProps) {
               className={
                 (textColor ? "editor-card-colorized " : "") +
                 (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "") +
-                "rounded-2xl"
+                "rounded-2xl ui-pop-appear"
               }
               style={{
                 ...blockStyle,
@@ -338,6 +338,7 @@ export function CardRenderer(props: CardRendererProps) {
                       ["--editor-card-text-color"]: textColor,
                     } as Record<string, string>)
                   : {}),
+                animationDelay: `${Math.min(idx, 5) * 40}ms`,
               }}
             >
               <SingleCardRenderer

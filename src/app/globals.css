@@ -57,8 +57,16 @@
   --ui-duration-fast: 150ms;
   --ui-duration: 200ms;
   --ui-duration-slow: 250ms;
+  --motion-duration-180: 180ms;
+  --motion-duration-240: 240ms;
+  --motion-duration-320: 320ms;
   --ui-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --motion-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-press-scale: 0.985;
+  --motion-hover-lift-y: -1.5px;
+  --motion-pop-scale: 1.02;
   /* Legacy lux (gradual migration) — align to theme colors */
   --lux-accent: #2563eb;
   --lux-accent-soft: #dbeafe;
@@ -105,6 +113,92 @@ body {
 .ui-transition-slow {
   transition-duration: var(--ui-duration-slow);
   transition-timing-function: var(--ui-ease-out);
+}
+
+/* POP foundation: subtle interaction feedback */
+.ui-pop-tap {
+  transition:
+    transform var(--motion-duration-180) var(--motion-ease-pop),
+    filter var(--motion-duration-180) var(--motion-ease-standard),
+    background-color var(--motion-duration-180) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-240) var(--motion-ease-standard),
+    border-color var(--motion-duration-180) var(--motion-ease-standard),
+    color var(--motion-duration-180) var(--motion-ease-standard);
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .ui-pop-tap:hover {
+    transform: translateY(var(--motion-hover-lift-y));
+    filter: saturate(1.03);
+  }
+}
+
+.ui-pop-tap:active {
+  transform: scale(var(--motion-press-scale));
+}
+
+.ui-pop-card {
+  transition:
+    transform var(--motion-duration-240) var(--motion-ease-pop),
+    box-shadow var(--motion-duration-240) var(--motion-ease-standard),
+    border-color var(--motion-duration-180) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .ui-pop-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -16px rgba(15, 23, 42, 0.28);
+  }
+}
+
+.ui-pop-badge {
+  animation: ui-badge-pop var(--motion-duration-320) var(--motion-ease-pop) both;
+}
+
+.ui-pop-appear {
+  animation: ui-appear-up var(--motion-duration-320) var(--motion-ease-pop) both;
+}
+
+.ui-pop-modal-enter {
+  animation: ui-modal-pop var(--motion-duration-240) var(--motion-ease-pop) both;
+}
+
+@keyframes ui-badge-pop {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  60% {
+    transform: scale(var(--motion-pop-scale));
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ui-appear-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ui-modal-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 /* Card elevation levels (Stripe/Linear-style) */
 .ui-shadow-card {
@@ -459,6 +553,17 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ui-pop-tap,
+  .ui-pop-card,
+  .ui-pop-badge,
+  .ui-pop-appear,
+  .ui-pop-modal-enter {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
   .app-page-enter,
   .app-stagger > *,
   .app-ambient-bg::before {
