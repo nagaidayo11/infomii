@@ -74,5 +74,5 @@ description: ホテル・民泊運営者向けに、Infomiiが業務効率化、
 
 ## 内部リンク候補
 
-- [ホテル館内案内をQRコード化する方法｜紙案内の手間を減らす実践ガイド](/blog/hotel-kannai-annai-qr-code)
+- [他の記事を見る（ブログ一覧）](/blog)
 - [Infomiiができることを現場目線で解説｜導入前に知るべき活用シーン](/blog/infomii-features-overview)
