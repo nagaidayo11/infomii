@@ -475,7 +475,7 @@ export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
 
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
-export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/hero-slider-default-2.png";
+export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/templates/previews/business/515b796d.jpg";
 
 /**
  * Menu系カードの静的サンプル画像（`public/` 配置・追加ブロック時は API 呼び出しなし）。

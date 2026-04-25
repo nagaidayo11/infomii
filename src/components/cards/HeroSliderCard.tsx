@@ -186,11 +186,40 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
     setIndex(nextIndex);
   };
 
-  const animationName =
-    transitionType === "fade" ? "heroSliderFadeIn" : transitionType === "zoom" ? "heroSliderZoomIn" : direction === 1 ? "heroSliderSlideInNext" : "heroSliderSlideInPrev";
+  /** Incoming slide sits underneath at full opacity; only the outgoing layer animates (reduces iOS/Safari flicker). */
+  const slideInAnimationName =
+    transitionType === "slide" ? (direction === 1 ? "heroSliderSlideInNext" : "heroSliderSlideInPrev") : null;
   const slideOutAnimationName = direction === 1 ? "heroSliderSlideOutNext" : "heroSliderSlideOutPrev";
   const fadeOutAnimationName = "heroSliderFadeOut";
   const zoomOutAnimationName = "heroSliderZoomOut";
+  const zoomInAnimationName = "heroSliderZoomIn";
+
+  const outgoingAnimation =
+    transitionType === "slide"
+      ? slideOutAnimationName
+      : transitionType === "zoom"
+        ? zoomOutAnimationName
+        : fadeOutAnimationName;
+
+  const incomingAnimationStyle =
+    isTransitioning && previous && transitionType !== "fade"
+      ? ({
+          animation: `${transitionType === "zoom" ? zoomInAnimationName : slideInAnimationName} ${transitionDurationMs}ms ease-out both`,
+          transform: "translateZ(0)",
+          WebkitBackfaceVisibility: "hidden" as const,
+        } as const)
+      : undefined;
+
+  const outgoingAnimationStyle =
+    isTransitioning && previous
+      ? {
+          animation: `${outgoingAnimation} ${transitionDurationMs}ms ease-out both`,
+          transform: "translateZ(0)",
+          WebkitBackfaceVisibility: "hidden" as const,
+        }
+      : undefined;
+
+  const layerGpu = "pointer-events-none absolute inset-0 [backface-visibility:hidden] [transform:translateZ(0)]";
 
   return (
     <section className="app-interactive space-y-3 transition-transform duration-200 ease-out hover:-translate-y-0.5">
@@ -210,49 +239,57 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
         }}
       >
         {isTransitioning && previous ? (
-          <div className="pointer-events-none absolute inset-0 z-[1] will-change-[opacity,transform] [backface-visibility:hidden]">
+          <>
+            <div className={`${layerGpu} z-[1] will-change-transform`}>
+              <div className="relative h-full w-full">
+                <Image
+                  key={`hero-in-${currentIndex}`}
+                  src={current.src}
+                  alt={current.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 640px"
+                  unoptimized={unoptimizedRemote(current.src)}
+                  className="object-cover object-center"
+                  style={incomingAnimationStyle}
+                  priority={currentIndex === 0}
+                  loading="eager"
+                />
+              </div>
+            </div>
+            <div className={`${layerGpu} z-[2] will-change-[opacity,transform]`}>
+              <div className="relative h-full w-full">
+                <Image
+                  key={`hero-out-${prevIndex}-${animationSeed}`}
+                  src={previous.src}
+                  alt={previous.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 640px"
+                  unoptimized={unoptimizedRemote(previous.src)}
+                  className="object-cover object-center"
+                  style={outgoingAnimationStyle}
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className={`${layerGpu} z-[1]`}>
             <div className="relative h-full w-full">
               <Image
-                key={`hero-out-${prevIndex}-${animationSeed}`}
-                src={previous.src}
-                alt={previous.alt}
+                key={`hero-in-${currentIndex}`}
+                src={current.src}
+                alt={current.alt}
                 fill
                 sizes="(max-width: 640px) 100vw, 640px"
-                unoptimized={unoptimizedRemote(previous.src)}
+                unoptimized={unoptimizedRemote(current.src)}
                 className="object-cover object-center"
-                style={{
-                  animation: `${
-                    transitionType === "slide"
-                      ? slideOutAnimationName
-                      : transitionType === "zoom"
-                        ? zoomOutAnimationName
-                        : fadeOutAnimationName
-                  } ${transitionDurationMs}ms ease-out both`,
-                }}
+                style={{ transform: "translateZ(0)", WebkitBackfaceVisibility: "hidden" }}
+                priority={currentIndex === 0}
+                loading="eager"
               />
             </div>
           </div>
-        ) : null}
-        <div
-          className={`pointer-events-none absolute inset-0 [backface-visibility:hidden] ${isTransitioning ? "z-[2] will-change-[opacity,transform]" : "z-[1]"}`}
-        >
-          <div className="relative h-full w-full">
-            <Image
-              key={`hero-in-${currentIndex}`}
-              src={current.src}
-              alt={current.alt}
-              fill
-              sizes="(max-width: 640px) 100vw, 640px"
-              unoptimized={unoptimizedRemote(current.src)}
-              className="object-cover object-center"
-              style={
-                isTransitioning
-                  ? { animation: `${animationName} ${transitionDurationMs}ms ease-out both` }
-                  : undefined
-              }
-            />
-          </div>
-        </div>
+        )}
         {currentLink ? (
           <a
             href={currentLink.href}
