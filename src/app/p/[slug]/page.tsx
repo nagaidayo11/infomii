@@ -20,6 +20,20 @@ type PublicPageProps = {
   searchParams: Promise<{ src?: string; embed?: string }>;
 };
 
+function hasLocalizedPayload(value: unknown): boolean {
+  if (!value) return false;
+  if (Array.isArray(value)) return value.some((item) => hasLocalizedPayload(item));
+  if (typeof value !== "object") return false;
+  const obj = value as Record<string, unknown>;
+  const hasLocaleShape =
+    typeof obj.ja === "string" &&
+    ((typeof obj.en === "string" && obj.en.trim().length > 0) ||
+      (typeof obj.zh === "string" && obj.zh.trim().length > 0) ||
+      (typeof obj.ko === "string" && obj.ko.trim().length > 0));
+  if (hasLocaleShape) return true;
+  return Object.values(obj).some((item) => hasLocalizedPayload(item));
+}
+
 /** Derive device category from User-Agent. */
 function getDeviceFromUserAgent(ua: string | null): string {
   if (!ua) return "desktop";
@@ -677,6 +691,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     content: typeof c.content === "object" && c.content && !Array.isArray(c.content) ? (c.content as Record<string, unknown>) : {},
     order: typeof c.order === "number" ? c.order : idx,
   }));
+  const hasMultilingualContent = cardViewData.some((card) => hasLocalizedPayload(card.content));
   let canShowLocaleToggle = false;
   const hotelIdForLocaleToggle = row.hotel_id ?? pageHotelId;
   if (hotelIdForLocaleToggle) {
@@ -693,6 +708,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       canShowLocaleToggle = false;
     }
   }
+  const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
 
   const themeStyle = {
     backgroundColor: theme.backgroundColor || "#ffffff",
@@ -1216,7 +1232,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           cards={cardViewData}
           initialLocale={initialLocale}
           isEmbed={isEmbed}
-          showLocaleToggle={canShowLocaleToggle}
+          showLocaleToggle={showLocaleToggle}
           backButton={
             isChildPage ? (
               <PublicFooterBackButton

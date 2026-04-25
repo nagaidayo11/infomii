@@ -25,14 +25,16 @@ export function Card({
   padding = "md",
   hover = false,
 }: CardProps) {
+  const interactiveClass = hover
+    ? "app-interactive transition-[transform] duration-200 ease-out hover:-translate-y-0.5"
+    : "";
   return (
     <div
       style={{ backgroundColor: "var(--editor-block-surface, var(--color-ds-card))" }}
       className={
-        "app-interactive rounded-[inherit] " +
-        "transition-[transform] duration-200 ease-out " +
+        "rounded-[inherit] " +
         paddingClass[padding] +
-        (hover ? " hover:-translate-y-0.5" : "") +
+        (interactiveClass ? ` ${interactiveClass}` : "") +
         " " +
         className
       }

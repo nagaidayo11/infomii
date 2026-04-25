@@ -13,6 +13,20 @@ type PageProps = {
   searchParams: Promise<{ preview?: string; lang?: string }>;
 };
 
+function hasLocalizedPayload(value: unknown): boolean {
+  if (!value) return false;
+  if (Array.isArray(value)) return value.some((item) => hasLocalizedPayload(item));
+  if (typeof value !== "object") return false;
+  const obj = value as Record<string, unknown>;
+  const hasLocaleShape =
+    typeof obj.ja === "string" &&
+    ((typeof obj.en === "string" && obj.en.trim().length > 0) ||
+      (typeof obj.zh === "string" && obj.zh.trim().length > 0) ||
+      (typeof obj.ko === "string" && obj.ko.trim().length > 0));
+  if (hasLocaleShape) return true;
+  return Object.values(obj).some((item) => hasLocalizedPayload(item));
+}
+
 function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): {
   mode: "solid" | "gradient";
   color: string;
@@ -122,6 +136,8 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
         : {},
     order: r.order ?? 0,
   }));
+  const hasMultilingualContent = cards.some((card) => hasLocalizedPayload(card.content));
+  const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
 
   return (
     <GuestCardPageView
@@ -131,7 +147,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       localeLocked={Boolean(forcedFromUrl)}
       pageBackground={pageBackground}
       unpublishedPreview={!isPublished && isPreviewRequest}
-      showLocaleToggle={canShowLocaleToggle}
+      showLocaleToggle={showLocaleToggle}
     />
   );
 }

@@ -329,7 +329,7 @@ export function CardRenderer(props: CardRendererProps) {
               className={
                 (textColor ? "editor-card-colorized " : "") +
                 (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "") +
-                "overflow-hidden rounded-2xl"
+                "rounded-2xl"
               }
               style={{
                 ...blockStyle,
