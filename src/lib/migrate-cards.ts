@@ -1,6 +1,4 @@
-import { nanoid } from "nanoid";
 import type { EditorCard, CardType } from "@/components/editor/types";
-import { createEmptyCard } from "@/components/editor/types";
 
 const LEGACY_ICON_TOKEN_MAP: Record<string, string> = {
   "📶": "wifi",
@@ -28,12 +26,11 @@ function normalizeLegacyIcon(raw: unknown, fallback = "info"): string {
 
 /**
  * Migrate legacy card types to new Canva-style types (wifi→info, breakfast→highlight).
- * Ensures at least one hero card exists (prepends if none).
+ * Does not auto-insert hero cards; persisted order/content is source of truth.
  * Call this when loading cards from DB before setCards().
 */
 export function migrateCardsForEditor(cards: Array<{ id: string; type: string; content: Record<string, unknown>; style?: Record<string, unknown>; order: number }>): EditorCard[] {
-  const hasHero = cards.some((c) => c.type === "hero");
-  let migrated = cards.map((card, index): EditorCard => {
+  const migrated = cards.map((card, index): EditorCard => {
     const id = card.id;
     let type = card.type as CardType;
     let content = { ...card.content };
@@ -73,16 +70,6 @@ export function migrateCardsForEditor(cards: Array<{ id: string; type: string; c
       order: index,
     };
   });
-
-  if (!hasHero) {
-    const heroCard = createEmptyCard("hero", nanoid(10), 0);
-    heroCard.content = {
-      title: "Infomii Hotel",
-      image: "/preset-hero-sample.png",
-      subtitle: "館内案内をスマートにまとめました",
-    };
-    migrated = [heroCard, ...migrated.map((c) => ({ ...c, order: c.order + 1 }))];
-  }
 
   return migrated.map((c, i) => ({ ...c, order: i }));
 }

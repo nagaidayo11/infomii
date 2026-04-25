@@ -178,21 +178,6 @@ export function AccountAuthLinkSection() {
 
   async function handleGoogleUnlink() {
     const client = getBrowserSupabaseClient();
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "unlink-debug-1",
-        hypothesisId: "H1",
-        location: "AccountAuthLinkSection.tsx:177",
-        message: "handleGoogleUnlink invoked",
-        data: { hasClient: Boolean(client), hasUserEmail: Boolean(user?.email) },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!client) {
       setMessageTone("error");
       setMessage("Supabase の設定が未完了です。.env.local を確認してください。");
@@ -226,24 +211,6 @@ export function AccountAuthLinkSection() {
         error: { message?: string } | null;
       }>;
     };
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "unlink-debug-1",
-        hypothesisId: "H2",
-        location: "AccountAuthLinkSection.tsx:204",
-        message: "unlinkIdentity inspected",
-        data: {
-          unlinkIdentityType: typeof authWithOptionalUnlink.unlinkIdentity,
-          authKeys: Object.keys(client.auth ?? {}).slice(0, 25),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
 
     if (typeof authWithOptionalUnlink.unlinkIdentity !== "function" || typeof authWithOptionalUnlink.getUserIdentities !== "function") {
       setUnlinkBusy(false);
@@ -256,25 +223,6 @@ export function AccountAuthLinkSection() {
 
     const identitiesResult = await authWithOptionalUnlink.getUserIdentities();
     const googleIdentity = identitiesResult.data?.identities?.find((identity) => identity.provider === "google");
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "post-fix-1",
-        hypothesisId: "H5",
-        location: "AccountAuthLinkSection.tsx:getUserIdentities",
-        message: "resolved google identity before unlink",
-        data: {
-          identitiesError: identitiesResult.error?.message ?? null,
-          hasGoogleIdentity: Boolean(googleIdentity),
-          googleIdentityIdPresent: Boolean(googleIdentity?.identity_id),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!googleIdentity?.identity_id) {
       setUnlinkBusy(false);
       setUnlinkModalOpen(false);
@@ -283,38 +231,7 @@ export function AccountAuthLinkSection() {
       setMessage("Google連携情報を取得できませんでした。時間をおいて再度お試しください。");
       return;
     }
-
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "post-fix-1",
-        hypothesisId: "H3",
-        location: "AccountAuthLinkSection.tsx:217",
-        message: "calling unlinkIdentity",
-        data: { argShape: { identity_id: googleIdentity.identity_id } },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     const { error } = await authWithOptionalUnlink.unlinkIdentity({ identity_id: googleIdentity.identity_id });
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "unlink-debug-1",
-        hypothesisId: "H4",
-        location: "AccountAuthLinkSection.tsx:218",
-        message: "unlinkIdentity returned",
-        data: { hasError: Boolean(error), errorMessage: error?.message ?? null },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     if (error) {
       setUnlinkBusy(false);
       setUnlinkError(formatGoogleLinkError(error.message ?? ""));
