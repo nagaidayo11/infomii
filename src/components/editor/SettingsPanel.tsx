@@ -2135,9 +2135,10 @@ export function CardSettings({
   const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
   const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
   const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
-  const supportsGlobalFontSize = !["divider", "space"].includes(card.type);
+  const supportsTextFormatting = !["image", "divider", "space"].includes(card.type);
+  const supportsGlobalFontSize = supportsTextFormatting;
   const supportsTitleFontSize = !["text", "image", "divider", "space"].includes(card.type);
-  const supportsBodyFontSize = !["button", "action", "divider", "space"].includes(card.type);
+  const supportsBodyFontSize = !["button", "action", "image", "divider", "space"].includes(card.type);
   const supportsGlobalFontWeight = supportsGlobalFontSize;
   const supportsTitleFontWeight = supportsTitleFontSize;
   const supportsBodyFontWeight = supportsBodyFontSize;
@@ -3746,45 +3747,51 @@ export function CardSettings({
             </div>
                   </StyleGroup>
                   <StyleGroup summary="タイポグラフィ" defaultOpen>
-            <div className="w-full">
-              <label className={labelClass}>フォント</label>
-              <select
-                value={(style.fontFamily as string) ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  updateStyle("fontFamily", v === "" ? undefined : v);
-                }}
-                className={inputClass}
-              >
-                {EDITOR_FONT_OPTIONS.map((opt) => (
-                  <option key={opt.label + opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>フォント色</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={(() => {
-                    const v = (style.textColor as string) ?? "#0f172a";
-                    const hex = v.startsWith("#") ? v.slice(1) : v;
-                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
-                  })()}
-                  onChange={(e) => updateStyle("textColor", e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                />
-                <input
-                  type="text"
-                  value={(style.textColor as string) ?? ""}
-                  onChange={(e) => updateStyle("textColor", e.target.value || undefined)}
-                  placeholder="#0f172a"
-                  className={inputClass + " flex-1"}
-                />
-              </div>
-            </div>
+            {supportsTextFormatting ? (
+              <>
+                <div className="w-full">
+                  <label className={labelClass}>フォント</label>
+                  <select
+                    value={(style.fontFamily as string) ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateStyle("fontFamily", v === "" ? undefined : v);
+                    }}
+                    className={inputClass}
+                  >
+                    {EDITOR_FONT_OPTIONS.map((opt) => (
+                      <option key={opt.label + opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>フォント色</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={(() => {
+                        const v = (style.textColor as string) ?? "#0f172a";
+                        const hex = v.startsWith("#") ? v.slice(1) : v;
+                        return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#0f172a";
+                      })()}
+                      onChange={(e) => updateStyle("textColor", e.target.value)}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={(style.textColor as string) ?? ""}
+                      onChange={(e) => updateStyle("textColor", e.target.value || undefined)}
+                      placeholder="#0f172a"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
+            )}
                   </StyleGroup>
                   <StyleGroup summary="背景・内部の色" defaultOpen>
             <div className="w-full">
@@ -4094,33 +4101,37 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
-                <div className="w-full">
-                  <label className={labelClass}>寄せ</label>
-                  <select
-                    value={(style.textAlign as string) ?? ""}
-                    onChange={(e) => updateStyle("textAlign", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">標準</option>
-                    <option value="left">左寄せ</option>
-                    <option value="center">中央寄せ</option>
-                    <option value="right">右寄せ</option>
-                  </select>
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>行間</label>
-                  <select
-                    value={(style.lineHeight as string) ?? ""}
-                    onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">標準</option>
-                    <option value="1.3">狭め</option>
-                    <option value="1.5">標準</option>
-                    <option value="1.7">広め</option>
-                    <option value="2">広い</option>
-                  </select>
-                </div>
+                {supportsTextFormatting ? (
+                  <>
+                    <div className="w-full">
+                      <label className={labelClass}>寄せ</label>
+                      <select
+                        value={(style.textAlign as string) ?? ""}
+                        onChange={(e) => updateStyle("textAlign", e.target.value || undefined)}
+                        className={inputClass}
+                      >
+                        <option value="">標準</option>
+                        <option value="left">左寄せ</option>
+                        <option value="center">中央寄せ</option>
+                        <option value="right">右寄せ</option>
+                      </select>
+                    </div>
+                    <div className="w-full">
+                      <label className={labelClass}>行間</label>
+                      <select
+                        value={(style.lineHeight as string) ?? ""}
+                        onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
+                        className={inputClass}
+                      >
+                        <option value="">標準</option>
+                        <option value="1.3">狭め</option>
+                        <option value="1.5">標準</option>
+                        <option value="1.7">広め</option>
+                        <option value="2">広い</option>
+                      </select>
+                    </div>
+                  </>
+                ) : null}
               </>
                   </StyleGroup>
             ) : null}
