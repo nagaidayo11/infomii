@@ -181,7 +181,7 @@ export default function LpSaaSPage() {
             <a href="#live-demo" className={navLinkClass}>
               デモ
             </a>
-            <a href="#how-it-works" className={`hidden sm:block ${navLinkClass}`}>
+            <a href="#how-it-works" className={`hidden sm:inline-flex ${navLinkClass}`}>
               使い方
             </a>
             <a href="#pricing" className={navLinkClass}>
