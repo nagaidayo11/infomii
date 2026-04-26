@@ -138,7 +138,7 @@ export function CheckoutButton({
       <Button
         type="button"
         variant={variant}
-        className={className}
+        className={`ui-pop-tap ${className}`.trim()}
         onClick={handleClick}
         disabled={loading || !canManageBilling}
       >

@@ -148,6 +148,8 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       pageBackground={pageBackground}
       unpublishedPreview={!isPublished && isPreviewRequest}
       showLocaleToggle={showLocaleToggle}
+      businessFeaturesEnabled={canShowLocaleToggle}
+      localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
     />
   );
 }

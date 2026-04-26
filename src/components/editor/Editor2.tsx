@@ -1094,10 +1094,10 @@ export function Editor2({
     ) : null;
   const mobilePrimaryActions = (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2">
+      <div className="ui-pop-appear flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2">
         <span
           className={
-            "inline-flex rounded-full px-2 py-0.5 text-xs font-semibold " +
+            "ui-pop-badge inline-flex rounded-full px-2 py-0.5 text-xs font-semibold " +
             (publishStatus === "published"
               ? "bg-emerald-600 text-white"
               : "bg-amber-50 text-amber-800")
@@ -1121,7 +1121,7 @@ export function Editor2({
           type="button"
           onClick={handlePreviewClick}
           disabled={!pageMeta.publicUrl || previewBusy || localeTranslating}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
+          className="ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
         >
           {previewBusy || localeTranslating ? "準備中…" : "プレビュー"}
         </button>
@@ -1129,7 +1129,7 @@ export function Editor2({
           type="button"
           onClick={handlePublishClickStrict}
           disabled={publishing || publishFlowBusy || togglePublishBusy || qrModalPreparing}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold !text-white shadow-sm disabled:opacity-50"
+          className="ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold !text-white shadow-sm disabled:opacity-50"
         >
           {publishing || publishFlowBusy ? "処理中…" : publishActionLabel}
         </button>
@@ -1137,7 +1137,7 @@ export function Editor2({
           type="button"
           onClick={handleQrClick}
           disabled={publishing || qrModalPreparing}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
+          className="ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50"
         >
           {qrModalPreparing ? "表示中…" : "QR"}
         </button>

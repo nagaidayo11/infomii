@@ -76,7 +76,7 @@ function AutosaveStatus({
   }
   if (saving) {
     return (
-      <span className="flex items-center gap-1.5 text-xs text-amber-600">
+      <span className="ui-pop-badge flex items-center gap-1.5 text-xs text-amber-600">
         <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-amber-500" />
         保存中…
       </span>
@@ -84,7 +84,7 @@ function AutosaveStatus({
   }
   if (lastSavedAt != null) {
     return (
-      <span className="flex items-center gap-1.5 text-xs text-slate-500">
+      <span className="ui-pop-badge flex items-center gap-1.5 text-xs text-slate-500">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
         {formatSavedAt(lastSavedAt)}に保存
       </span>
@@ -246,7 +246,7 @@ export function EditorTopBar({
           type="button"
           onClick={onUndo}
           disabled={!canUndo || !onUndo}
-          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ui-pop-tap rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
           title="ひとつ前に戻す"
         >
           戻る
@@ -255,7 +255,7 @@ export function EditorTopBar({
           type="button"
           onClick={onRedo}
           disabled={!canRedo || !onRedo}
-          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ui-pop-tap rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
           title="ひとつ先に進む"
         >
           進む
@@ -264,7 +264,7 @@ export function EditorTopBar({
           type="button"
           onClick={onClearAll}
           disabled={!canClearAll || !onClearAll}
-          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ui-pop-tap rounded-md px-2.5 py-1.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
           title="ページ内ブロックを全削除"
         >
           全削除
@@ -276,7 +276,7 @@ export function EditorTopBar({
           <button
             type="button"
             onClick={onBulkFont}
-            className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+            className="ui-pop-tap rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
             title="ページ内ブロックのフォントを一括変更"
           >
             一括フォント切替
@@ -290,7 +290,7 @@ export function EditorTopBar({
           type="button"
           onClick={onPreview}
           disabled={!publicUrl || previewPreparing}
-          className="hidden min-h-10 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex lg:min-h-0 lg:py-1.5"
+          className="ui-pop-tap hidden min-h-10 rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex lg:min-h-0 lg:py-1.5"
         >
           <span className="hidden items-center gap-1 sm:inline-flex">
             {previewPreparing ? "準備中…" : "プレビュー"}
@@ -339,7 +339,7 @@ export function EditorTopBar({
               onClick={onPublish}
               disabled={publishing || qrPreparing}
               title="翻訳チェック・公開前確認のうえ、保存して公開します"
-              className="ui-dark-label rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ui-pop-tap ui-dark-label rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {publishing ? "処理中…" : publishActionLabel}
             </button>
@@ -351,7 +351,7 @@ export function EditorTopBar({
           disabled={publishing || qrPreparing}
           title="公開済みのページのQR・URLを表示（最新内容を保存してから開きます）"
           className={
-            "hidden items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex " +
+            "ui-pop-tap hidden items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex " +
             (qrPreparing ? "border-slate-200" : "")
           }
           aria-label="QRコードを表示"
@@ -387,7 +387,7 @@ export function EditorTopBar({
               e.stopPropagation();
               setMoreOpen((o) => !o);
             }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="ui-pop-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
             aria-expanded={moreOpen}
             aria-haspopup="true"
             aria-label="その他の操作"

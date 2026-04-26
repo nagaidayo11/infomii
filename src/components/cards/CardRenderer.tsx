@@ -60,6 +60,7 @@ type SingleCardRendererProps = {
   card: EditorCard;
   isSelected?: boolean;
   showSpaceLabel?: boolean;
+  businessFeaturesEnabled?: boolean;
 };
 
 function isLocalizedObject(value: unknown): value is Record<string, unknown> {
@@ -94,7 +95,12 @@ function resolveContentByLocale(value: unknown, locale: string): unknown {
 /**
  * Renders a single card by type. Used by CardRenderer for both single and list modes.
  */
-function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }: SingleCardRendererProps) {
+function SingleCardRenderer({
+  card,
+  isSelected = false,
+  showSpaceLabel = false,
+  businessFeaturesEnabled = false,
+}: SingleCardRendererProps) {
   const locale = useLocale();
   const resolvedCard: EditorCard = {
     ...card,
@@ -222,7 +228,14 @@ function SingleCardRenderer({ card, isSelected = false, showSpaceLabel = false }
     case "icon":
       return <IconCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "schedule":
-      return <ScheduleCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+      return (
+        <ScheduleCard
+          card={resolvedCard}
+          isSelected={isSelected}
+          locale={locale}
+          businessFeaturesEnabled={businessFeaturesEnabled}
+        />
+      );
     case "menu":
       return <MenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "divider":
@@ -292,6 +305,7 @@ export type CardRendererListProps = {
   cards: EditorCard[];
   selectedCardId?: string | null;
   showSpaceLabel?: boolean;
+  businessFeaturesEnabled?: boolean;
 };
 
 export type CardRendererProps = CardRendererSingleProps | CardRendererListProps;
@@ -307,7 +321,7 @@ function isListProps(props: CardRendererProps): props is CardRendererListProps {
  */
 export function CardRenderer(props: CardRendererProps) {
   if (isListProps(props)) {
-    const { cards, selectedCardId = null, showSpaceLabel = false } = props;
+    const { cards, selectedCardId = null, showSpaceLabel = false, businessFeaturesEnabled = false } = props;
     const sorted = [...cards].sort((a, b) => a.order - b.order);
     return (
       <>
@@ -345,6 +359,7 @@ export function CardRenderer(props: CardRendererProps) {
                 card={card}
                 isSelected={selectedCardId === card.id}
                 showSpaceLabel={showSpaceLabel}
+                businessFeaturesEnabled={businessFeaturesEnabled}
               />
             </div>
           );

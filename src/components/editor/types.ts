@@ -431,7 +431,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "text", label: "テキスト", description: "見出し・本文" },
   { type: "image", label: "画像", description: "写真" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
-  { type: "schedule", label: "営業時間一覧", description: "曜日・時間・補足を一覧化" },
+  { type: "schedule", label: "営業時間一覧", description: "時間割を一覧化（動的強調はBusiness）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
@@ -570,6 +570,9 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "schedule":
       return {
         title: "営業時間",
+        dynamicEnabled: false,
+        timezone: "Asia/Tokyo",
+        rules: [],
         items: [
           { day: "レストラン", time: "7:00-22:00", label: "ラストオーダー 21:30" },
           { day: "大浴場", time: "15:00-24:00", label: "朝 6:00-10:00 も利用可" },

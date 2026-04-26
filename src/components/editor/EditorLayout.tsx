@@ -116,7 +116,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           className="fixed inset-x-0 z-30 px-2 lg:hidden"
           style={{ bottom: "calc(3.9rem + env(safe-area-inset-bottom))" }}
         >
-          <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
+          <div className="ui-pop-modal-enter mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
             {mobileActions}
           </div>
         </div>
@@ -130,7 +130,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           type="button"
           onClick={openLibrary}
           className={
-            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "library"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
@@ -145,7 +145,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           type="button"
           onClick={focusCanvas}
           className={
-            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "none"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
@@ -160,7 +160,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           type="button"
           onClick={openSettings}
           className={
-            "flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "settings"
               ? "text-slate-900"
               : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")

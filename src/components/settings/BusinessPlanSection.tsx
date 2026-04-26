@@ -141,7 +141,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openCheckout("pro")}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "pro" ? "処理中…" : "Proを申し込む"}
             </button>
@@ -149,7 +149,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openCheckout("business")}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "business" ? "処理中…" : "Businessを申し込む"}
             </button>
@@ -161,7 +161,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "Businessへアップグレード"}
             </button>
@@ -169,7 +169,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               サブスクリプションを管理 / 解約する
             </button>
@@ -181,7 +181,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
             </button>
@@ -189,7 +189,7 @@ export function BusinessPlanSection() {
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
               サブスクリプションを管理 / 解約する
             </button>
@@ -258,7 +258,12 @@ export function BusinessPlanSection() {
                 現在のプラン
               </p>
             ) : null}
-            <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-emerald-700" : "text-slate-500"}`}>Business</p>
+            <div className="flex items-center gap-2">
+              <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-emerald-700" : "text-slate-500"}`}>Business</p>
+              <span className="ui-pop-badge inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-sky-700">
+                人気
+              </span>
+            </div>
             <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "business" ? "text-emerald-900" : "text-slate-900"}`}>¥4,980 / 月</p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-emerald-800" : "text-slate-600"}`}>
               <li>・公開ページ無制限</li>

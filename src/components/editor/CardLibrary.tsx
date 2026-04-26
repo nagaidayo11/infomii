@@ -546,7 +546,7 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "wifi", label: "WiFi案内", description: "SSID・パスワードを掲載" },
   { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
   { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・詳細をまとめる" },
-  { type: "schedule", label: "営業時間一覧", description: "施設ごとの営業時間を一覧表示" },
+  { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusiness）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },

@@ -25,6 +25,8 @@ type GuestCardPageViewProps = {
   disableLocaleSwitch?: boolean;
   /** false のとき言語トグル自体を表示しない */
   showLocaleToggle?: boolean;
+  /** true のとき Business 動的機能を有効化 */
+  businessFeaturesEnabled?: boolean;
   /** Optional back button (for child pages). */
   backButton?: ReactNode;
 };
@@ -43,6 +45,7 @@ export function GuestCardPageView({
   localeToggleHint = null,
   disableLocaleSwitch = false,
   showLocaleToggle = true,
+  businessFeaturesEnabled = false,
   backButton,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(() => {
@@ -51,6 +54,7 @@ export function GuestCardPageView({
     return normalized ?? initialLocale;
   });
   const [hintVisible, setHintVisible] = useState(false);
+  const [hintNonce, setHintNonce] = useState(0);
 
   const locales: Array<{ code: SupportedLocale; label: string }> = [
     { code: "ja", label: "JA" },
@@ -72,14 +76,12 @@ export function GuestCardPageView({
                 setLocale(item.code);
               }
               if (localeToggleHint && localeToggleHint.trim().length > 0) {
+                setHintNonce((prev) => prev + 1);
                 setHintVisible(true);
-                if (typeof window !== "undefined") {
-                  window.setTimeout(() => setHintVisible(false), 4000);
-                }
               }
             }}
             className={
-              "whitespace-nowrap rounded-md border px-2 py-1 text-[11px] leading-none transition " +
+              "ui-pop-tap whitespace-nowrap rounded-md border px-2 py-1 text-[11px] leading-none transition " +
               (active
                 ? "border-slate-900 bg-slate-900 !text-white font-semibold"
                 : "border-slate-300 bg-white font-medium text-slate-700 hover:bg-slate-50")
@@ -102,7 +104,11 @@ export function GuestCardPageView({
         isEmbed={isEmbed}
       >
         {hintVisible && localeToggleHint && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+          <div
+            key={hintNonce}
+            onAnimationEnd={() => setHintVisible(false)}
+            className="toast-slide-in-out rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900"
+          >
             {localeToggleHint}
           </div>
         )}
@@ -112,7 +118,7 @@ export function GuestCardPageView({
               現在公開OFFになっています（これはプレビュー表示です）。
             </div>
           )}
-          <CardRenderer cards={cards} />
+          <CardRenderer cards={cards} businessFeaturesEnabled={businessFeaturesEnabled} />
         </div>
       </PublicPageShell>
     </LocaleProvider>

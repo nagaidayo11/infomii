@@ -1233,6 +1233,8 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           initialLocale={initialLocale}
           isEmbed={isEmbed}
           showLocaleToggle={showLocaleToggle}
+          businessFeaturesEnabled={canShowLocaleToggle}
+          localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
           backButton={
             isChildPage ? (
               <PublicFooterBackButton

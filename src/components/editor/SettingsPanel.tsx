@@ -183,6 +183,14 @@ type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
 type ScheduleItem = { day?: string; time?: string; label?: string };
+type ScheduleRule = {
+  itemIndex?: number;
+  days?: number[];
+  start?: string;
+  end?: string;
+  startDate?: string;
+  endDate?: string;
+};
 type MenuItem = { name?: string; price?: string; description?: string; imageSrc?: string; imageAlt?: string };
 type MenuTagItem = {
   name?: string;
@@ -1109,12 +1117,17 @@ function KpiItemsEditor({
 function ScheduleItemsEditor({
   content,
   onUpdate,
+  isBusinessEnabled,
 }: {
   content: Record<string, unknown>;
   onUpdate: (key: string, value: unknown) => void;
+  isBusinessEnabled: boolean;
 }) {
   const items = (Array.isArray(content.items) ? content.items : []) as ScheduleItem[];
+  const rules = (Array.isArray(content.rules) ? content.rules : []) as ScheduleRule[];
+  const dynamicEnabled = content.dynamicEnabled === true;
   const setItems = (next: ScheduleItem[]) => onUpdate("items", next);
+  const setRules = (next: ScheduleRule[]) => onUpdate("rules", next);
   const updateItem = (index: number, field: keyof ScheduleItem, value: string) => {
     const next = [...items];
     next[index] = { ...(next[index] ?? {}), [field]: value };
@@ -1122,6 +1135,49 @@ function ScheduleItemsEditor({
   };
   const addItem = () => setItems([...items, { day: "", time: "", label: "" }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    const tmp = next[index];
+    next[index] = next[target];
+    next[target] = tmp;
+    setItems(next);
+    // Keep rules aligned with item reorder.
+    const remapped = rules.map((rule) => {
+      if (typeof rule.itemIndex !== "number") return rule;
+      if (rule.itemIndex === index) return { ...rule, itemIndex: target };
+      if (rule.itemIndex === target) return { ...rule, itemIndex: index };
+      return rule;
+    });
+    setRules(remapped);
+  };
+  const updateRule = (index: number, patch: Partial<ScheduleRule>) => {
+    const next = [...rules];
+    next[index] = { ...(next[index] ?? {}), ...patch };
+    setRules(next);
+  };
+  const addRule = () =>
+    setRules([
+      ...rules,
+      { itemIndex: 0, days: [1, 2, 3, 4, 5, 6, 0], start: "09:00", end: "18:00", startDate: "", endDate: "" },
+    ]);
+  const removeRule = (index: number) => setRules(rules.filter((_, i) => i !== index));
+  const dayOptions = [
+    { v: 0, label: "日" },
+    { v: 1, label: "月" },
+    { v: 2, label: "火" },
+    { v: 3, label: "水" },
+    { v: 4, label: "木" },
+    { v: 5, label: "金" },
+    { v: 6, label: "土" },
+  ] as const;
+  const daySummary = (days: number[] | undefined): string => {
+    const normalized = Array.isArray(days) ? days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6) : [];
+    if (normalized.length === 7) return "毎日";
+    if (normalized.length === 0) return "未指定";
+    return normalized.map((d) => dayOptions.find((opt) => opt.v === d)?.label ?? "").join("・");
+  };
 
   return (
     <div className="space-y-3">
@@ -1133,7 +1189,23 @@ function ScheduleItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => moveItem(i, -1)}
+              disabled={i === 0}
+              className="text-xs text-slate-500 hover:text-slate-800 disabled:opacity-40"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              onClick={() => moveItem(i, 1)}
+              disabled={i === items.length - 1}
+              className="text-xs text-slate-500 hover:text-slate-800 disabled:opacity-40"
+            >
+              ↓
+            </button>
             <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
               削除
             </button>
@@ -1158,6 +1230,147 @@ function ScheduleItemsEditor({
           />
         </div>
       ))}
+      <div className="rounded-xl border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-slate-700">動的強調（Business限定）</p>
+          <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+            <input
+              type="checkbox"
+              checked={dynamicEnabled}
+              disabled={!isBusinessEnabled}
+              onChange={(e) => onUpdate("dynamicEnabled", e.target.checked)}
+              className="rounded border-slate-300"
+            />
+            有効
+          </label>
+        </div>
+        {!isBusinessEnabled ? (
+          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-800">
+            この機能はBusinessプランで利用できます。非Businessでは静的表示にフォールバックします。
+          </p>
+        ) : null}
+        <div className="mt-3 space-y-2">
+          <Input
+            label="タイムゾーン"
+            value={typeof content.timezone === "string" ? content.timezone : "Asia/Tokyo"}
+            onChange={(e) => onUpdate("timezone", e.target.value.trim() || "Asia/Tokyo")}
+            placeholder="Asia/Tokyo"
+            disabled={!isBusinessEnabled}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">動的ルール</span>
+            <button
+              type="button"
+              onClick={addRule}
+              disabled={!isBusinessEnabled}
+              className="text-xs font-medium text-slate-600 hover:text-slate-800 disabled:opacity-40"
+            >
+              + ルール追加
+            </button>
+          </div>
+          {rules.map((rule, i) => {
+            const selectedDays = Array.isArray(rule.days) ? rule.days : [];
+            return (
+              <div key={i} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="flex justify-between">
+                  <p className="text-xs font-medium text-slate-700">ルール {i + 1}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeRule(i)}
+                    disabled={!isBusinessEnabled}
+                    className="text-xs text-slate-400 hover:text-red-600 disabled:opacity-40"
+                  >
+                    削除
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2">
+                    <label className={labelClass}>対象行</label>
+                    <select
+                      value={typeof rule.itemIndex === "number" ? rule.itemIndex : 0}
+                      onChange={(e) => updateRule(i, { itemIndex: parseInt(e.target.value, 10) || 0 })}
+                      disabled={!isBusinessEnabled}
+                      className={inputClass}
+                    >
+                      {items.map((item, idx) => (
+                        <option key={idx} value={idx}>
+                          {item.day || `行 ${idx + 1}`} / {item.time || "-"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <Input
+                    label="開始時刻"
+                    value={typeof rule.start === "string" ? rule.start : ""}
+                    onChange={(e) => updateRule(i, { start: e.target.value })}
+                    placeholder="09:00"
+                    disabled={!isBusinessEnabled}
+                  />
+                  <Input
+                    label="終了時刻"
+                    value={typeof rule.end === "string" ? rule.end : ""}
+                    onChange={(e) => updateRule(i, { end: e.target.value })}
+                    placeholder="18:00"
+                    disabled={!isBusinessEnabled}
+                  />
+                  <div>
+                    <label className={labelClass}>開始日（任意）</label>
+                    <input
+                      type="date"
+                      value={typeof rule.startDate === "string" ? rule.startDate : ""}
+                      onChange={(e) => updateRule(i, { startDate: e.target.value })}
+                      className={inputClass}
+                      disabled={!isBusinessEnabled}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>終了日（任意）</label>
+                    <input
+                      type="date"
+                      value={typeof rule.endDate === "string" ? rule.endDate : ""}
+                      onChange={(e) => updateRule(i, { endDate: e.target.value })}
+                      className={inputClass}
+                      disabled={!isBusinessEnabled}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-slate-500">曜日</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {dayOptions.map((opt) => {
+                      const checked = selectedDays.includes(opt.v);
+                      return (
+                        <label
+                          key={opt.v}
+                          className={
+                            "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs " +
+                            (checked ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700")
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? Array.from(new Set([...selectedDays, opt.v]))
+                                : selectedDays.filter((d) => d !== opt.v);
+                              updateRule(i, { days: next });
+                            }}
+                            disabled={!isBusinessEnabled}
+                            className="sr-only"
+                          />
+                          {opt.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-slate-500">選択: {daySummary(selectedDays)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -3223,7 +3436,7 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="営業時間"
               />
-              <ScheduleItemsEditor content={content} onUpdate={update} />
+              <ScheduleItemsEditor content={content} onUpdate={update} isBusinessEnabled={isBusinessEnabled} />
             </SettingsSection>
           )}
 
