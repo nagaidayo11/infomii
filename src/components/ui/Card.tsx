@@ -30,7 +30,7 @@ export function Card({
     : "";
   return (
     <div
-      style={{ backgroundColor: "var(--editor-block-surface, var(--color-ds-card))" }}
+      style={{ backgroundColor: "var(--editor-card-surface, var(--editor-block-surface, var(--color-ds-card)))" }}
       className={
         "rounded-[inherit] " +
         paddingClass[padding] +

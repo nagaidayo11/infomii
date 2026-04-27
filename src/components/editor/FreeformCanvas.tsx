@@ -319,6 +319,7 @@ export function FreeformCanvas({
     };
   }, [setAutoHeightForCard]);
 
+
   const getRenderHeight = useCallback(
     (card: EditorCard, index: number) => {
       const pos = getPosition(card, index, contentWidth, cards);
@@ -609,6 +610,10 @@ export function FreeformCanvas({
               Number.isFinite(measuredContentHeight) &&
               measuredContentHeight > h + 1;
             const blockStyle = getBlockStyle(card);
+            const shellBackgroundColor =
+              (blockStyle as Record<string, unknown>).backgroundColor === undefined
+                ? "var(--editor-block-surface, var(--color-ds-card))"
+                : (blockStyle as Record<string, unknown>).backgroundColor;
             const innerSurfaceMode =
               card.style && typeof card.style === "object"
                 ? (card.style as Record<string, unknown>).innerSurfaceMode
@@ -642,12 +647,14 @@ export function FreeformCanvas({
                 <div className="relative h-full w-full">
                   <div
                     className={
-                      "editor-card-selected h-full w-full overflow-x-hidden overflow-y-visible rounded-xl border border-slate-200 transition-[transform,border-color,box-shadow,background-color] duration-200 " +
-                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 shadow-[0_10px_24px_-12px_rgba(37,99,235,0.55)] " : "hover:border-slate-300 hover:shadow-[0_8px_16px_-12px_rgba(15,23,42,0.45)] ") +
+                      "editor-card-selected h-full w-full overflow-hidden rounded-xl transition-shadow " +
+                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
                     }
                     style={{
+                      backgroundColor: shellBackgroundColor as string,
+                      ["--editor-card-surface"]: "transparent",
                       ...blockStyle,
                       ...((card.style as Record<string, unknown> | undefined)?.textColor
                         ? ({

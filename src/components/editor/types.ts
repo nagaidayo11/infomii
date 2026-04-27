@@ -477,7 +477,7 @@ export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
 export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/templates/previews/business/515b796d.jpg";
 export const PRESET_HERO_SLIDER_THIRD_SAMPLE_IMAGE = "/templates/previews/business/4bfe5cc6.jpg";
-export const PRESET_HERO_SLIDER_FOURTH_SAMPLE_IMAGE = "/templates/previews/business/a444c83b.jpg";
+export const PRESET_HERO_SLIDER_FOURTH_SAMPLE_IMAGE = "/templates/previews/guide/b325ae5a.jpg";
 export const PRESET_HERO_SLIDER_FIFTH_SAMPLE_IMAGE = "/templates/previews/business/fd57e76a.jpg";
 export const HERO_SLIDER_MAX_ITEMS = 5;
 
@@ -941,7 +941,7 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     style:
       type === "space"
         ? { backgroundTransparent: true, borderEnabled: false, padding: 0 }
-        : { innerBorderRadius: 8 },
+        : { innerBorderRadius: 8, borderEnabled: false },
     order,
   };
 }
