@@ -61,8 +61,12 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
                 {i + 1}
               </span>
               <div data-inner-surface className={`min-w-0 flex-1 ${editorInnerRadiusClassName} bg-slate-50 px-2 py-2`}>
-                <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{item.title ?? ""}</p>
-                <p className="mt-0.5 font-normal text-slate-600">{item.description ?? ""}</p>
+                <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+                  {getLocalizedContent(item.title as LocalizedString | undefined, locale)}
+                </p>
+                <p className="mt-0.5 font-normal text-slate-600">
+                  {getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+                </p>
               </div>
             </li>
           ))

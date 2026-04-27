@@ -1032,7 +1032,10 @@ function StepsItemsEditor({
   const setItems = (next: StepsItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof StepsItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    const current = (next[index] ?? {}) as Record<string, unknown>;
+    const prevField = current[field];
+    const localizedValue = isLocalizedObject(prevField) ? { ...prevField, ja: value } : value;
+    next[index] = { ...(next[index] ?? {}), [field]: localizedValue };
     setItems(next);
   };
   const addItem = () => setItems([...items, { title: "", description: "" }]);
@@ -1055,14 +1058,14 @@ function StepsItemsEditor({
           </div>
           <Input
             label={`Step ${i + 1} タイトル`}
-            value={item.title ?? ""}
+            value={getLocalizedContent(item.title as LocalizedString | undefined, "ja")}
             onChange={(e) => updateItem(i, "title", e.target.value)}
             placeholder="手順名"
           />
           <div className="w-full">
             <label className={labelClass}>説明</label>
             <textarea
-              value={item.description ?? ""}
+              value={getLocalizedContent(item.description as LocalizedString | undefined, "ja")}
               onChange={(e) => updateItem(i, "description", e.target.value)}
               placeholder="手順の説明"
               rows={2}
