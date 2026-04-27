@@ -108,6 +108,7 @@ export function GuestCardPageView({
             key={hintNonce}
             onAnimationEnd={() => setHintVisible(false)}
             className="toast-slide-in-out rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900"
+            style={{ animationDuration: "2s" }}
           >
             {localeToggleHint}
           </div>

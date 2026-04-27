@@ -7,6 +7,7 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
+const SAMPLE_PAGE_OPEN_HREF = "/demo/guest-live";
 const SAMPLE_PAGE_DEMO_HREF = "/demo/guest?frame=1";
 const DEMO_EDITOR_HREF = "/demo/editor";
 
@@ -171,7 +172,7 @@ export default function LpSaaSPage() {
     "sm:px-3";
 
   return (
-    <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['Noto_Sans_JP',system-ui,sans-serif]">
+    <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] [&_p]:font-medium [&_li]:font-medium [&_button]:font-bold [&_a]:font-semibold">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-shadow duration-300 motion-safe:hover:shadow-sm">
         <Container className="flex h-14 items-center justify-between gap-2">
           <span className="text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800">
@@ -201,7 +202,12 @@ export default function LpSaaSPage() {
         </Container>
       </header>
 
-      <LpHero ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} demoEditorHref={DEMO_EDITOR_HREF} />
+      <LpHero
+        ctaHref={ctaHref}
+        samplePageHref={SAMPLE_PAGE_HREF}
+        samplePageOpenHref={SAMPLE_PAGE_OPEN_HREF}
+        demoEditorHref={DEMO_EDITOR_HREF}
+      />
 
       <Section
         id="value"
@@ -209,6 +215,7 @@ export default function LpSaaSPage() {
         title="フロントでの「同じ説明」を減らします"
         description="WiFi・朝食・館内設備を1ページにまとめて、1つのQRで案内。紙の差し替えや口頭説明の負担を軽くします。"
         variant="muted"
+        popTitle
       >
         <ScrollReveal>
           <StaggerReveal className="grid gap-4 sm:grid-cols-3" staggerDelay={0.08}>
@@ -235,6 +242,7 @@ export default function LpSaaSPage() {
         kicker="デモ"
         title="まず30秒だけ触ってください"
         description="登録なしでデモ編集画面、または公開サンプルページを体験できます。"
+        popTitle
       >
         <ScrollReveal>
           <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
@@ -260,7 +268,7 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </Section>
 
-      <Section id="how-it-works" kicker="使い方" title="3ステップで公開まで進める" variant="muted">
+      <Section id="how-it-works" kicker="使い方" title="3ステップで公開まで進める" variant="muted" popTitle>
         <ScrollReveal>
           <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.1}>
             {[
@@ -285,6 +293,7 @@ export default function LpSaaSPage() {
         kicker="料金"
         title="用途で選べる3プラン"
         description="Freeはまず試す1ページ運用。Proは1拠点を安定運用。Businessは複数拠点・複数担当で、多言語と運用統制まで一括対応。"
+        popTitle
       >
         <ScrollReveal>
           <div
@@ -428,7 +437,7 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </Section>
 
-      <Section id="faq" kicker="FAQ" title="よくある質問" variant="muted">
+      <Section id="faq" kicker="FAQ" title="よくある質問" variant="muted" popTitle>
         <ScrollReveal>
           <div className="mx-auto max-w-3xl space-y-3">
             {[

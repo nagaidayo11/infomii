@@ -15,6 +15,8 @@ type SectionProps = {
   description?: string;
   /** Background: card or shell (muted) */
   variant?: "white" | "muted";
+  /** LP向けPOP見出しを適用 */
+  popTitle?: boolean;
   className?: string;
 };
 
@@ -22,6 +24,8 @@ const kickerClass =
   "text-xs font-semibold uppercase tracking-wider text-ds-muted";
 const titleClass =
   "mt-3 text-3xl font-bold tracking-tight text-ds-foreground sm:text-4xl";
+const popTitleClass =
+  "[font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] font-black tracking-tight drop-shadow-[0_4px_0_rgba(16,185,129,0.2)]";
 const descriptionClass = "mt-4 max-w-2xl text-lg leading-relaxed text-ds-muted-fg";
 
 /**
@@ -35,6 +39,7 @@ export function Section({
   title,
   description,
   variant = "white",
+  popTitle = false,
   className = "",
 }: SectionProps) {
   const bgClass = variant === "muted" ? "bg-ds-shell" : "bg-ds-card";
@@ -49,7 +54,7 @@ export function Section({
             {kicker != null && kicker !== "" && (
               <p className={kickerClass}>{kicker}</p>
             )}
-            <h2 className={titleClass}>{title}</h2>
+            <h2 className={`${titleClass} ${popTitle ? popTitleClass : ""}`.trim()}>{title}</h2>
             {description != null && description !== "" && (
               <p className={descriptionClass}>{description}</p>
             )}

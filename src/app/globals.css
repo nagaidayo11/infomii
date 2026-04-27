@@ -605,7 +605,7 @@ a {
 }
 
 .toast-slide-in-out {
-  animation: toast-slide-in-out 5s ease both;
+  animation: toast-slide-in-out 2s ease both;
 }
 
 .ux-route-fade {
