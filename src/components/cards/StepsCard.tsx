@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type StepsItem = { title?: string; description?: string };
 
@@ -28,7 +29,7 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
         : locale === "en"
           ? { empty: "Add steps", titlePlaceholder: "Steps" }
           : { empty: "手順を追加してください", titlePlaceholder: "ステップ" };
-  const title = (c?.title as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

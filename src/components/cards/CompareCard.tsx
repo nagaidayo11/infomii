@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type CompareCardProps = {
   card: EditorCard;
@@ -25,11 +26,11 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
         : locale === "en"
           ? { title: "Compare", left: "Left", right: "Right", placeholder: "Compare" }
           : { title: "比較", left: "左", right: "右", placeholder: "比較" };
-  const title = (c?.title as string) ?? "";
-  const leftTitle = (c?.leftTitle as string) ?? labels.left;
-  const leftBody = (c?.leftBody as string) ?? "";
-  const rightTitle = (c?.rightTitle as string) ?? labels.right;
-  const rightBody = (c?.rightBody as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
+  const leftTitle = getLocalizedContent(c?.leftTitle as LocalizedString | undefined, locale) || labels.left;
+  const leftBody = getLocalizedContent(c?.leftBody as LocalizedString | undefined, locale);
+  const rightTitle = getLocalizedContent(c?.rightTitle as LocalizedString | undefined, locale) || labels.right;
+  const rightBody = getLocalizedContent(c?.rightBody as LocalizedString | undefined, locale);
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

@@ -8,6 +8,7 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type PageLinksItem = {
   label?: string;
@@ -35,7 +36,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
         : locale === "en"
           ? { title: "Menu", empty: "Add links", item: "Item", titlePlaceholder: "Title", labelPlaceholder: "Label" }
           : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
-  const title = (c?.title as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";

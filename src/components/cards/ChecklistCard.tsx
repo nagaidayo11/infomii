@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type ChecklistItem = { text?: string; checked?: boolean };
 
@@ -28,7 +29,7 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
         : locale === "en"
           ? { empty: "Add items", titlePlaceholder: "Checklist" }
           : { empty: "項目を追加してください", titlePlaceholder: "チェックリスト" };
-  const title = (c?.title as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

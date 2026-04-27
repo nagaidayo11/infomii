@@ -7,6 +7,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -14,9 +15,9 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const title = (c?.title as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const image = (c?.image as string) ?? "";
-  const subtitle = (c?.subtitle as string) ?? "";
+  const subtitle = getLocalizedContent(c?.subtitle as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }

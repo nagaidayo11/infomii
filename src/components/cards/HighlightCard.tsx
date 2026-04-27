@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type HighlightCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -38,8 +39,8 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
               titlePlaceholder: "タイトル",
               bodyPlaceholder: "内容",
             };
-  const title = (c?.title as string) ?? "";
-  const body = (c?.body as string) ?? "";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
+  const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
   const accent = (c?.accent as string) ?? "amber";
   const accentClass = ACCENT_CLASS[accent] ?? ACCENT_CLASS.amber;
 
