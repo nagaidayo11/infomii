@@ -136,7 +136,7 @@ function SingleCardRenderer({
         ...resolvedCard,
         type: "info",
         content: {
-          title: (c?.title as string) || "Wi-Fi",
+          title: (c?.title as string) || "",
           icon: "wifi",
           rows: [
             { label: wifiLabels.network, value: (c?.ssid as string) ?? "" },
@@ -164,7 +164,7 @@ function SingleCardRenderer({
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || breakfastLabels.title,
+          title: (c?.title as string) || "",
           body: detailLines.join("\n") || breakfastLabels.body,
           accent: "amber",
         },
@@ -188,7 +188,7 @@ function SingleCardRenderer({
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || spaLabels.title,
+          title: (c?.title as string) || "",
           body: [time, location, menu].filter(Boolean).join(" · ") || spaLabels.body,
           accent: "blue",
         },

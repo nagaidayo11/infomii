@@ -85,8 +85,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
           ? { titlePlaceholder: "Map", addressPlaceholder: "Address" }
           : { titlePlaceholder: "地図", addressPlaceholder: "住所" };
 
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -98,9 +97,11 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
-      </p>
+      {title ? (
+        <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+        </p>
+      ) : null}
       {mapEmbedUrl ? (
         <div data-inner-surface className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
           <iframe

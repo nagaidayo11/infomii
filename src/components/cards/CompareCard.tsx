@@ -25,7 +25,7 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
         : locale === "en"
           ? { title: "Compare", left: "Left", right: "Right", placeholder: "Compare" }
           : { title: "比較", left: "左", right: "右", placeholder: "比較" };
-  const title = (c?.title as string) ?? labels.title;
+  const title = (c?.title as string) ?? "";
   const leftTitle = (c?.leftTitle as string) ?? labels.left;
   const leftBody = (c?.leftBody as string) ?? "";
   const rightTitle = (c?.rightTitle as string) ?? labels.right;
@@ -39,16 +39,18 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
 
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => update({ title: v })}
-          editable={isSelected}
-          onActivate={onActivate}
-          className={CARD_BLOCK_TITLE_CLASS}
-          placeholder={labels.placeholder}
-        />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={isSelected}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={labels.placeholder}
+          />
+        </p>
+      ) : null}
       <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
         <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
           <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{leftTitle}</p>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { HERO_SLIDER_MAX_ITEMS } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 
@@ -94,7 +95,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
     () =>
       rawSlides
         .filter((s) => typeof s?.src === "string" && s.src.trim().length > 0)
-        .slice(0, 10)
+        .slice(0, HERO_SLIDER_MAX_ITEMS)
         .map((s) => ({
           src: (s.src as string).trim(),
           alt: typeof s.alt === "string" && s.alt.trim() ? s.alt : "スライド画像",
@@ -169,8 +170,11 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const currentLink = resolveSlideLink(current);
   const previous = prevIndex != null && normalizedSlides[prevIndex] ? normalizedSlides[prevIndex] : null;
   const canMove = normalizedSlides.length > 1;
+  const hasCaption = showCaptions && current.caption.trim().length > 0;
   const shouldAnimate = transitionEnabled && !reducedMotion;
   const isTransitioning = shouldAnimate && previous != null;
+  const dotBottomClass = hasCaption ? "bottom-1.5 sm:bottom-2" : "bottom-2";
+  const titleFontWeight = getTitleFontSizeStyle().fontWeight;
 
   const moveTo = async (nextIndex: number, dir: 1 | -1) => {
     if (nextIndex === currentIndex) return;
@@ -302,10 +306,10 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
             }}
           />
         ) : null}
-        {showCaptions && current.caption ? (
+        {hasCaption ? (
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/65 to-transparent px-3 py-2 text-sm text-white"
-            style={getBodyFontSizeStyle()}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-14 items-end bg-gradient-to-t from-black/65 to-transparent px-3 pb-4 pt-2 text-sm text-white sm:pb-5"
+            style={{ ...getBodyFontSizeStyle(), fontWeight: titleFontWeight }}
           >
             {current.caption}
           </div>
@@ -328,7 +332,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
             >
               ›
             </button>
-            <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+            <div className={`absolute left-1/2 z-20 flex -translate-x-1/2 gap-1.5 ${dotBottomClass}`}>
               {normalizedSlides.map((_, i) => (
                 <button
                   key={`dot-${i}`}

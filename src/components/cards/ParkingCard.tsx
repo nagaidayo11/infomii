@@ -31,7 +31,7 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
         : locale === "en"
           ? { title: "Parking", capacity: "Capacity", fee: "Fee", location: "Location", note: "Note", titlePlaceholder: "Parking", capacityPlaceholder: "50 spaces", feePlaceholder: "Free", locationPlaceholder: "On-site" }
           : { title: "駐車場", capacity: "台数", fee: "料金", location: "場所", note: "備考", titlePlaceholder: "駐車場", capacityPlaceholder: "50台", feePlaceholder: "無料", locationPlaceholder: "敷地内" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const capacity = getLocalizedContent(c?.capacity as LocalizedString | undefined, locale);
   const fee = getLocalizedContent(c?.fee as LocalizedString | undefined, locale);
   const note = getLocalizedContent(c?.note as LocalizedString | undefined, locale);
@@ -46,9 +46,11 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.capacity}: <InlineEditable value={capacity} onSave={(v) => updateKey("capacity", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.capacityPlaceholder} />

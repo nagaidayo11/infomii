@@ -31,31 +31,26 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
       ? {
           notePlaceholder: "보충",
           detailPlaceholder: "상세",
-          defaultTitle: "체크아웃",
           defaultLinkLabel: "상세",
         }
       : locale === "zh"
         ? {
             notePlaceholder: "补充",
             detailPlaceholder: "详情",
-            defaultTitle: "退房",
             defaultLinkLabel: "详情",
           }
         : locale === "en"
           ? {
               notePlaceholder: "Note",
               detailPlaceholder: "Details",
-              defaultTitle: "Check-out",
               defaultLinkLabel: "Details",
             }
           : {
               notePlaceholder: "補足",
               detailPlaceholder: "詳細",
-              defaultTitle: "チェックアウト",
               defaultLinkLabel: "詳細",
             };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const linkLabel =
     getLocalizedContent(c?.linkLabel as LocalizedString | undefined, locale) ||
     labels.defaultLinkLabel;
@@ -70,9 +65,11 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder="11:00" />

@@ -10,6 +10,7 @@ import { ImageUpload } from "./ImageUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS } from "./types";
+import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import { useEditor2Store } from "./store";
 
 const TRANSLATE_DEBOUNCE_MS = 1200;
@@ -380,13 +381,17 @@ function HeroSliderItemsEditor({
   onUpdate: (key: string, value: unknown) => void;
 }) {
   const items = (Array.isArray(content.slides) ? content.slides : []) as HeroSliderItem[];
-  const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next);
+  const visibleItems = items.slice(0, HERO_SLIDER_MAX_ITEMS);
+  const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next.slice(0, HERO_SLIDER_MAX_ITEMS));
   const updateItem = (index: number, field: keyof HeroSliderItem, value: unknown) => {
     const next = [...items];
     next[index] = { ...(next[index] ?? {}), [field]: value };
     setItems(next);
   };
-  const addItem = () => setItems([...items, { src: "", alt: "", caption: "", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false }]);
+  const addItem = () => {
+    if (items.length >= HERO_SLIDER_MAX_ITEMS) return;
+    setItems([...items, createDefaultHeroSliderSlide(items.length) as HeroSliderItem]);
+  };
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const moveItem = (index: number, dir: -1 | 1) => {
     const to = index + dir;
@@ -400,11 +405,17 @@ function HeroSliderItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">スライド画像</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button
+          type="button"
+          onClick={addItem}
+          disabled={items.length >= HERO_SLIDER_MAX_ITEMS}
+          className="text-xs font-medium text-slate-600 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+        >
           + 追加
         </button>
       </div>
-      {items.slice(0, 10).map((_, i) => (
+      <p className="text-[11px] text-slate-500">最大 {HERO_SLIDER_MAX_ITEMS} 枚まで。3〜5枚目はテンプレ画像と既定キャプションを自動で追加します。</p>
+      {visibleItems.map((_, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex items-center justify-end gap-2">
             <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
@@ -2135,10 +2146,43 @@ export function CardSettings({
   const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
   const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
   const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
-  const supportsTextFormatting = !["image", "divider", "space"].includes(card.type);
+  const noTextFormattingCardTypes: Array<EditorCard["type"]> = ["image", "divider", "space"];
+  const noTitleTypographyCardTypes: Array<EditorCard["type"]> = ["text", "image", "divider", "space"];
+  const noBodyTypographyCardTypes: Array<EditorCard["type"]> = ["button", "action", "image", "divider", "space"];
+  const noTextAlignCardTypes: Array<EditorCard["type"]> = [
+    "action",
+    "button",
+    "pageLinks",
+    "schedule",
+    "kpi",
+    "compare",
+    "campaign_timer",
+    "social_links",
+    "progress_steps",
+    "image",
+    "divider",
+    "space",
+  ];
+  const noLineHeightCardTypes: Array<EditorCard["type"]> = [
+    "action",
+    "button",
+    "pageLinks",
+    "schedule",
+    "kpi",
+    "compare",
+    "campaign_timer",
+    "social_links",
+    "progress_steps",
+    "image",
+    "divider",
+    "space",
+  ];
+  const supportsTextFormatting = !noTextFormattingCardTypes.includes(card.type);
+  const supportsTextAlign = !noTextAlignCardTypes.includes(card.type);
+  const supportsLineHeight = !noLineHeightCardTypes.includes(card.type);
   const supportsGlobalFontSize = supportsTextFormatting;
-  const supportsTitleFontSize = !["text", "image", "divider", "space"].includes(card.type);
-  const supportsBodyFontSize = !["button", "action", "image", "divider", "space"].includes(card.type);
+  const supportsTitleFontSize = !noTitleTypographyCardTypes.includes(card.type);
+  const supportsBodyFontSize = !noBodyTypographyCardTypes.includes(card.type);
   const supportsGlobalFontWeight = supportsGlobalFontSize;
   const supportsTitleFontWeight = supportsTitleFontSize;
   const supportsBodyFontWeight = supportsBodyFontSize;
@@ -2290,8 +2334,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="Infomii Hotel"
               />
               <div className="w-full">
@@ -2300,8 +2344,8 @@ export function CardSettings({
               </div>
               <Input
                 label="サブタイトル"
-                value={(content.subtitle as string) ?? ""}
-                onChange={(e) => update("subtitle", e.target.value)}
+                value={display("subtitle")}
+                onChange={(e) => updateLocalized("subtitle", e.target.value)}
                 placeholder="任意"
               />
             </SettingsSection>
@@ -2311,8 +2355,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="おすすめ案内"
               />
               <HeroSliderItemsEditor content={content} onUpdate={update} />
@@ -2426,15 +2470,15 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="重要なお知らせ"
               />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
                 <textarea
-                  value={(content.body as string) ?? ""}
-                  onChange={(e) => update("body", e.target.value)}
+                  value={display("body")}
+                  onChange={(e) => updateLocalized("body", e.target.value)}
                   placeholder="強調したい内容"
                   rows={3}
                   className={inputClass}
@@ -2459,13 +2503,13 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="ラベル"
-                value={(content.label as string) ?? ""}
+                value={display("label")}
                 onChange={(e) => update("label", e.target.value)}
                 placeholder="詳しく見る"
               />
               <Input
                 label="リンクURL"
-                value={(content.href as string) ?? ""}
+                value={display("href")}
                 onChange={(e) => update("href", e.target.value)}
                 placeholder="https://... or #"
               />
@@ -2491,15 +2535,15 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="見出しテキスト"
               />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
                 <textarea
-                  value={(content.body as string) ?? ""}
-                  onChange={(e) => update("body", e.target.value)}
+                  value={display("body")}
+                  onChange={(e) => updateLocalized("body", e.target.value)}
                   placeholder="本文テキスト"
                   rows={4}
                   className={inputClass}
@@ -2650,7 +2694,7 @@ export function CardSettings({
               />
               <Input
                 label="リンクURL"
-                value={(content.linkUrl as string) ?? ""}
+                value={display("linkUrl")}
                 onChange={(e) => update("linkUrl", e.target.value)}
                 placeholder="https://..."
               />
@@ -2673,7 +2717,7 @@ export function CardSettings({
               />
               <Input
                 label="電話番号"
-                value={(content.phone as string) ?? ""}
+                value={display("phone")}
                 onChange={(e) => update("phone", e.target.value)}
                 placeholder="03-1234-5678"
               />
@@ -2793,8 +2837,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="メニュー"
               />
               <PageLinksItemsEditor content={content} onUpdate={update} />
@@ -2811,13 +2855,13 @@ export function CardSettings({
               />
               <Input
                 label="消防"
-                value={(content.fire as string) ?? ""}
+                value={display("fire")}
                 onChange={(e) => update("fire", e.target.value)}
                 placeholder="119"
               />
               <Input
                 label="警察"
-                value={(content.police as string) ?? ""}
+                value={display("police")}
                 onChange={(e) => update("police", e.target.value)}
                 placeholder="110"
               />
@@ -2857,7 +2901,7 @@ export function CardSettings({
                 <div className="w-full">
                   <label className={labelClass}>Googleマップ埋め込み</label>
                   <textarea
-                    value={(content.mapEmbedUrl as string) ?? ""}
+                    value={display("mapEmbedUrl")}
                     onChange={(e) => update("mapEmbedUrl", e.target.value)}
                     placeholder="Googleマップの共有URL または iframe埋め込みコードを貼り付け"
                     rows={3}
@@ -2903,7 +2947,7 @@ export function CardSettings({
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="表示">
+              <SettingsSection title="表示オプション">
                 <div className="w-full">
                   <label className={labelClass}>Priority style</label>
                   <select
@@ -2940,7 +2984,7 @@ export function CardSettings({
               />
               <Input
                 label="リンク"
-                value={(content.href as string) ?? ""}
+                value={display("href")}
                 onChange={(e) => update("href", e.target.value)}
                 placeholder="https://..."
               />
@@ -2951,15 +2995,15 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="キャンペーン名"
               />
               <div className="w-full">
                 <label className={labelClass}>説明</label>
                 <textarea
-                  value={(content.description as string) ?? ""}
-                  onChange={(e) => update("description", e.target.value)}
+                  value={display("description")}
+                  onChange={(e) => updateLocalized("description", e.target.value)}
                   placeholder="任意"
                   rows={3}
                   className={inputClass}
@@ -2997,8 +3041,8 @@ export function CardSettings({
                   秒を表示
                 </label>
               </div>
-              <Input label="CTAラベル" value={(content.ctaLabel as string) ?? ""} onChange={(e) => update("ctaLabel", e.target.value)} placeholder="詳細を見る" />
-              <Input label="CTA URL" value={(content.ctaUrl as string) ?? ""} onChange={(e) => update("ctaUrl", e.target.value)} placeholder="https://..." />
+              <Input label="CTAラベル" value={display("ctaLabel")} onChange={(e) => update("ctaLabel", e.target.value)} placeholder="詳細を見る" />
+              <Input label="CTA URL" value={display("ctaUrl")} onChange={(e) => update("ctaUrl", e.target.value)} placeholder="https://..." />
             </SettingsSection>
           )}
 
@@ -3015,7 +3059,7 @@ export function CardSettings({
           )}
 
           {card.type === "divider" && (
-            <SettingsSection title="表示">
+            <SettingsSection title="表示オプション">
               <div className="w-full">
                 <label className={labelClass}>Style</label>
                 <select
@@ -3069,7 +3113,7 @@ export function CardSettings({
               />
               <Input
                 label="検索プレースホルダ"
-                value={(content.placeholder as string) ?? ""}
+                value={display("placeholder")}
                 onChange={(e) => update("placeholder", e.target.value)}
                 placeholder="キーワードで検索"
               />
@@ -3126,8 +3170,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="館内案内タブ"
               />
               <div className="w-full">
@@ -3196,8 +3240,8 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="お知らせ"
               />
               <div className="w-full">
@@ -3229,26 +3273,26 @@ export function CardSettings({
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
-                value={(content.title as string) ?? ""}
-                onChange={(e) => update("title", e.target.value)}
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="ご宿泊者限定クーポン"
               />
               <Input
                 label="クーポンコード"
-                value={(content.code as string) ?? ""}
+                value={display("code")}
                 onChange={(e) => update("code", e.target.value)}
                 placeholder="WELCOME10"
               />
               <Input
                 label="有効期限"
-                value={(content.expiryText as string) ?? ""}
+                value={display("expiryText")}
                 onChange={(e) => update("expiryText", e.target.value)}
                 placeholder="有効期限: 2026/12/31"
               />
               <div className="w-full">
                 <label className={labelClass}>注意事項</label>
                 <textarea
-                  value={(content.notes as string) ?? ""}
+                  value={display("notes")}
                   onChange={(e) => update("notes", e.target.value)}
                   placeholder="利用条件や注意点"
                   rows={2}
@@ -3257,13 +3301,13 @@ export function CardSettings({
               </div>
               <Input
                 label="CTAラベル（任意）"
-                value={(content.ctaLabel as string) ?? ""}
+                value={display("ctaLabel")}
                 onChange={(e) => update("ctaLabel", e.target.value)}
                 placeholder="詳細を見る"
               />
               <Input
                 label="CTAリンクURL（任意）"
-                value={(content.ctaUrl as string) ?? ""}
+                value={display("ctaUrl")}
                 onChange={(e) => update("ctaUrl", e.target.value)}
                 placeholder="https://..."
               />
@@ -3316,14 +3360,14 @@ export function CardSettings({
 
           {card.type === "accordion_info" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="よくあるご案内" />
+              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="よくあるご案内" />
               <AccordionItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
           {card.type === "open_status" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="営業時間" />
+              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="営業時間" />
               <div className="w-full">
                 <label className={labelClass}>判定モード</label>
                 <select value={(content.mode as string) ?? "manual"} onChange={(e) => update("mode", e.target.value)} className={inputClass}>
@@ -3342,36 +3386,36 @@ export function CardSettings({
                   <Input label="終了時刻" value={String(content.endHour ?? 23)} onChange={(e) => update("endHour", Number(e.target.value) || 24)} placeholder="23" />
                 </div>
               )}
-              <Input label="営業時間テキスト" value={(content.hoursText as string) ?? ""} onChange={(e) => update("hoursText", e.target.value)} placeholder="7:00-23:00" />
-              <Input label="営業中ラベル" value={(content.openLabel as string) ?? ""} onChange={(e) => update("openLabel", e.target.value)} placeholder="営業中" />
-              <Input label="営業時間外ラベル" value={(content.closedLabel as string) ?? ""} onChange={(e) => update("closedLabel", e.target.value)} placeholder="営業時間外" />
+              <Input label="営業時間テキスト" value={display("hoursText")} onChange={(e) => updateLocalized("hoursText", e.target.value)} placeholder="7:00-23:00" />
+              <Input label="営業中ラベル" value={display("openLabel")} onChange={(e) => updateLocalized("openLabel", e.target.value)} placeholder="営業中" />
+              <Input label="営業時間外ラベル" value={display("closedLabel")} onChange={(e) => updateLocalized("closedLabel", e.target.value)} placeholder="営業時間外" />
             </SettingsSection>
           )}
 
           {card.type === "social_links" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="公式SNS" />
+              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="公式SNS" />
               <SocialLinksItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
           {card.type === "contact_hub" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="お問い合わせ" />
-              <Input label="電話番号" value={(content.phone as string) ?? ""} onChange={(e) => update("phone", e.target.value)} placeholder="03-1234-5678" />
-              <Input label="メール" value={(content.email as string) ?? ""} onChange={(e) => update("email", e.target.value)} placeholder="front@example.com" />
-              <Input label="LINE URL" value={(content.lineUrl as string) ?? ""} onChange={(e) => update("lineUrl", e.target.value)} placeholder="https://..." />
-              <Input label="地図URL" value={(content.mapUrl as string) ?? ""} onChange={(e) => update("mapUrl", e.target.value)} placeholder="https://..." />
+              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="お問い合わせ" />
+              <Input label="電話番号" value={display("phone")} onChange={(e) => update("phone", e.target.value)} placeholder="03-1234-5678" />
+              <Input label="メール" value={display("email")} onChange={(e) => update("email", e.target.value)} placeholder="front@example.com" />
+              <Input label="LINE URL" value={display("lineUrl")} onChange={(e) => update("lineUrl", e.target.value)} placeholder="https://..." />
+              <Input label="地図URL" value={display("mapUrl")} onChange={(e) => update("mapUrl", e.target.value)} placeholder="https://..." />
               <div className="w-full">
                 <label className={labelClass}>補足</label>
-                <textarea value={(content.note as string) ?? ""} onChange={(e) => update("note", e.target.value)} rows={2} className={inputClass} />
+                <textarea value={display("note")} onChange={(e) => updateLocalized("note", e.target.value)} rows={2} className={inputClass} />
               </div>
             </SettingsSection>
           )}
 
           {card.type === "progress_steps" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => update("title", e.target.value)} placeholder="ご利用の流れ" />
+              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="ご利用の流れ" />
               <Input label="現在ステップ" value={String(content.currentStep ?? 1)} onChange={(e) => update("currentStep", Number(e.target.value) || 1)} placeholder="1" />
               <ProgressItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
@@ -3379,13 +3423,13 @@ export function CardSettings({
 
           {card.type === "emergency_banner" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
-                update("title", e.target.value);
+              <Input label="タイトル" value={display("title")} onChange={(e) => {
+                updateLocalized("title", e.target.value);
               }} placeholder="緊急のお知らせ" />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
-                <textarea value={(content.message as string) ?? ""} onChange={(e) => {
-                  update("message", e.target.value);
+                <textarea value={display("message")} onChange={(e) => {
+                  updateLocalized("message", e.target.value);
                 }} rows={3} className={inputClass} />
               </div>
               <div className="w-full">
@@ -3403,13 +3447,13 @@ export function CardSettings({
 
           {card.type === "scheduled_banner" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={(content.title as string) ?? ""} onChange={(e) => {
-                update("title", e.target.value);
+              <Input label="タイトル" value={display("title")} onChange={(e) => {
+                updateLocalized("title", e.target.value);
               }} placeholder="期間限定のお知らせ" />
               <div className="w-full">
                 <label className={labelClass}>本文</label>
-                <textarea value={(content.message as string) ?? ""} onChange={(e) => {
-                  update("message", e.target.value);
+                <textarea value={display("message")} onChange={(e) => {
+                  updateLocalized("message", e.target.value);
                 }} rows={3} className={inputClass} />
               </div>
               <div className="w-full">
@@ -3631,7 +3675,7 @@ export function CardSettings({
             </SettingsSection>
           )}
 
-          <SettingsSection title="ブロックスタイル">
+          <SettingsSection title="見た目の調整">
             {demoMode ? (
               <button
                 type="button"
@@ -3645,7 +3689,7 @@ export function CardSettings({
             ) : (
               <>
                 <div className="w-full space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-                  <label className={labelClass}>編集モード</label>
+                  <label className={labelClass}>調整レベル</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -3656,7 +3700,7 @@ export function CardSettings({
                           : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
                       }`}
                     >
-                      標準
+                      かんたん
                     </button>
                     <button
                       type="button"
@@ -3667,16 +3711,16 @@ export function CardSettings({
                           : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
                       }`}
                     >
-                      詳細
+                      こだわる
                     </button>
                   </div>
                   <p className="text-[11px] leading-relaxed text-slate-500">
-                    「詳細」でサイズ・太さ・影・余白をまとめて調整できます。空欄の項目はブロック既定か「全体」に従います。
+                    「こだわる」ではサイズ・太さ・影・余白まで調整できます。未入力の項目はブロック既定か全体設定を使います。
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <StyleGroup summary="プリセット・内側の角丸" defaultOpen>
+                  <StyleGroup summary="まずは全体の見た目を決める" defaultOpen>
             <div className="w-full">
               <label className={labelClass}>プリセット</label>
               <div className="grid grid-cols-3 gap-2">
@@ -3746,7 +3790,7 @@ export function CardSettings({
               />
             </div>
                   </StyleGroup>
-                  <StyleGroup summary="タイポグラフィ" defaultOpen>
+                  <StyleGroup summary="文字の見やすさを整える" defaultOpen>
             {supportsTextFormatting ? (
               <>
                 <div className="w-full">
@@ -3793,7 +3837,7 @@ export function CardSettings({
               <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
             )}
                   </StyleGroup>
-                  <StyleGroup summary="背景・内部の色" defaultOpen>
+                  <StyleGroup summary="背景と内部パーツの見え方" defaultOpen>
             <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
@@ -3906,7 +3950,7 @@ export function CardSettings({
               </div>
             ) : null}
                   </StyleGroup>
-                  <StyleGroup summary="枠線・保護" defaultOpen>
+                  <StyleGroup summary="枠線と誤削除防止" defaultOpen>
             <div className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
@@ -3969,7 +4013,7 @@ export function CardSettings({
             </div>
                   </StyleGroup>
             {styleMode === "advanced" ? (
-                  <StyleGroup summary="詳細（サイズ・太さ・影・余白）" defaultOpen>
+                  <StyleGroup summary="細かい調整（サイズ・太さ・影・余白）" defaultOpen>
               <>
                 {supportsGlobalFontSize ? (
                   <div className="w-full">
@@ -4101,7 +4145,7 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
-                {supportsTextFormatting ? (
+                {supportsTextAlign ? (
                   <>
                     <div className="w-full">
                       <label className={labelClass}>寄せ</label>
@@ -4116,20 +4160,22 @@ export function CardSettings({
                         <option value="right">右寄せ</option>
                       </select>
                     </div>
-                    <div className="w-full">
-                      <label className={labelClass}>行間</label>
-                      <select
-                        value={(style.lineHeight as string) ?? ""}
-                        onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
-                        className={inputClass}
-                      >
-                        <option value="">標準</option>
-                        <option value="1.3">狭め</option>
-                        <option value="1.5">標準</option>
-                        <option value="1.7">広め</option>
-                        <option value="2">広い</option>
-                      </select>
-                    </div>
+                    {supportsLineHeight ? (
+                      <div className="w-full">
+                        <label className={labelClass}>行間</label>
+                        <select
+                          value={(style.lineHeight as string) ?? ""}
+                          onChange={(e) => updateStyle("lineHeight", e.target.value || undefined)}
+                          className={inputClass}
+                        >
+                          <option value="">標準</option>
+                          <option value="1.3">狭め</option>
+                          <option value="1.5">標準</option>
+                          <option value="1.7">広め</option>
+                          <option value="2">広い</option>
+                        </select>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
               </>

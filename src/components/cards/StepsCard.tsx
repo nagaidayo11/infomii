@@ -28,7 +28,7 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
         : locale === "en"
           ? { empty: "Add steps", titlePlaceholder: "Steps" }
           : { empty: "手順を追加してください", titlePlaceholder: "ステップ" };
-  const title = (c?.title as string) ?? labels.titlePlaceholder;
+  const title = (c?.title as string) ?? "";
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -38,16 +38,18 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
 
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => update({ title: v })}
-          editable={isSelected}
-          onActivate={onActivate}
-          className={CARD_BLOCK_TITLE_CLASS}
-          placeholder={labels.titlePlaceholder}
-        />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={isSelected}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={labels.titlePlaceholder}
+          />
+        </p>
+      ) : null}
       <ol className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
           <li className="text-slate-500">{labels.empty}</li>

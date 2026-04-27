@@ -20,14 +20,13 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
   const c = card.content as Record<string, unknown> | undefined;
   const localeLabels =
     locale === "ko"
-      ? { empty: "라벨과 값을 추가", title: "제목", value: "값", defaultTitle: "정보" }
+      ? { empty: "라벨과 값을 추가", title: "제목", value: "값" }
       : locale === "zh"
-        ? { empty: "请添加标签和值", title: "标题", value: "值", defaultTitle: "信息" }
+        ? { empty: "请添加标签和值", title: "标题", value: "值" }
         : locale === "en"
-          ? { empty: "Add label and value", title: "Title", value: "Value", defaultTitle: "Information" }
-          : { empty: "ラベルと値を追加", title: "タイトル", value: "値", defaultTitle: "情報" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || localeLabels.defaultTitle;
+          ? { empty: "Add label and value", title: "Title", value: "Value" }
+          : { empty: "ラベルと値を追加", title: "タイトル", value: "値" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const icon = normalizeIconToken(c?.icon, "info");
   const rows = (c?.rows as InfoRow[]) ?? [];
 
@@ -45,9 +44,11 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         >
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
-        <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
-        </h3>
+        {title ? (
+          <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+            <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
+          </h3>
+        ) : null}
       </div>
       <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {rows.length === 0 ? (

@@ -35,7 +35,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
         : locale === "en"
           ? { title: "Menu", empty: "Add links", item: "Item", titlePlaceholder: "Title", labelPlaceholder: "Label" }
           : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
-  const title = (c?.title as string) ?? labels.title;
+  const title = (c?.title as string) ?? "";
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
@@ -64,16 +64,18 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
 
   return (
     <Card padding="md">
-      <h3 className={`mb-2.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => update({ title: v })}
-          editable={isSelected}
-          onActivate={onActivate}
-          className="text-slate-800"
-          placeholder={labels.titlePlaceholder}
-        />
-      </h3>
+      {title ? (
+        <h3 className={`mb-2.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={isSelected}
+            onActivate={onActivate}
+            className="text-slate-800"
+            placeholder={labels.titlePlaceholder}
+          />
+        </h3>
+      ) : null}
       <div
         className="grid auto-rows-min gap-2"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}

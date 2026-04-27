@@ -33,7 +33,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
         : locale === "en"
           ? { title: "FAQ", empty: "Add Q&A in settings", q: "Question", a: "Answer" }
           : { title: "よくある質問", empty: "Q&Aを右のパネルで追加", q: "質問", a: "回答" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawItems = (c?.items as FaqItem[] | undefined) ?? [];
   const items = Array.isArray(rawItems) ? rawItems : [];
 
@@ -54,15 +54,17 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => updateKey("title", v)}
-          editable={isSelected}
-          onActivate={onActivate}
-          className={CARD_BLOCK_TITLE_CLASS}
-        />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={isSelected}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+          />
+        </p>
+      ) : null}
       <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
           <p className="text-slate-500">{labels.empty}</p>

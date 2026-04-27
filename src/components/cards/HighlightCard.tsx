@@ -23,26 +23,22 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
       ? {
           titlePlaceholder: "제목",
           bodyPlaceholder: "내용",
-          defaultTitle: "중요 안내",
         }
       : locale === "zh"
         ? {
             titlePlaceholder: "标题",
             bodyPlaceholder: "内容",
-            defaultTitle: "重要通知",
           }
         : locale === "en"
           ? {
               titlePlaceholder: "Title",
               bodyPlaceholder: "Content",
-              defaultTitle: "Important notice",
             }
           : {
               titlePlaceholder: "タイトル",
               bodyPlaceholder: "内容",
-              defaultTitle: "重要なお知らせ",
             };
-  const title = (c?.title as string) ?? labels.defaultTitle;
+  const title = (c?.title as string) ?? "";
   const body = (c?.body as string) ?? "";
   const accent = (c?.accent as string) ?? "amber";
   const accentClass = ACCENT_CLASS[accent] ?? ACCENT_CLASS.amber;
@@ -58,9 +54,11 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
       className={`${editorInnerRadiusClassName} border-l-4 px-4 py-4 ${accentClass}`}
       style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
     >
-      <h3 className="leading-snug" style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder={labels.titlePlaceholder} />
-      </h3>
+      {title ? (
+        <h3 className="leading-snug" style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className="inherit" placeholder={labels.titlePlaceholder} />
+        </h3>
+      ) : null}
       <p className="mt-2 whitespace-pre-line leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
         <InlineEditable value={body} onSave={(v) => update({ body: v })} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh]" placeholder={labels.bodyPlaceholder} />
       </p>

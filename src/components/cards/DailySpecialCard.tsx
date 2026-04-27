@@ -10,7 +10,7 @@ import { MenuCardHeroImage, MenuItemThumb } from "@/components/cards/menu-card-v
 
 export function DailySpecialCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "本日のおすすめ";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const showDate = c?.showDate === true;
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
@@ -29,9 +29,11 @@ export function DailySpecialCard({ card, locale = "ja" }: { card: EditorCard; is
 
   const body = (
     <>
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          {title}
+        </p>
+      ) : null}
       {dateStr ? (
         <p className="mt-1 text-xs font-medium text-amber-900/70" style={getBodyFontSizeStyle()}>
           {dateStr}

@@ -10,7 +10,7 @@ import { MenuCardHeroImage, MenuItemThumb } from "@/components/cards/menu-card-v
 
 export function SalonServiceMenuCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "施術メニュー";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
   const heroAlt = c?.heroAlt as LocalizedString | undefined;
@@ -18,9 +18,11 @@ export function SalonServiceMenuCard({ card, locale = "ja" }: { card: EditorCard
 
   const body = (
     <>
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          {title}
+        </p>
+      ) : null}
       <div className="mt-3 space-y-2.5">
         {items.map((item, index) => {
           const name = getLocalizedContent(item.name as LocalizedString | undefined, locale) || "";

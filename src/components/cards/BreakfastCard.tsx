@@ -33,8 +33,7 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
         : locale === "en"
           ? { time: "Time", location: "Venue", titlePlaceholder: "Breakfast", menuPlaceholder: "Menu", locationPlaceholder: "1F Dining" }
           : { time: "時間", location: "会場", titlePlaceholder: "朝食", menuPlaceholder: "メニュー", locationPlaceholder: "1F ダイニング" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -46,9 +45,11 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
 
   return (
     <Card padding="md" className="">
-      <p className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
-      </p>
+      {title ? (
+        <p className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
+        </p>
+      ) : null}
       <p className="mt-1 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}
         <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="7:00–9:30" />

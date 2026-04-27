@@ -107,7 +107,7 @@ export function ScheduleCard({
     locale === "zh" ? { title: "营业时间", day: "分类" } :
     locale === "en" ? { title: "Opening Hours", day: "Category" } :
     { title: "営業時間", day: "区分" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const dynamicEnabled = c?.dynamicEnabled === true && businessFeaturesEnabled;
   const timezone = typeof c?.timezone === "string" && c.timezone.trim() ? c.timezone.trim() : "Asia/Tokyo";
@@ -127,7 +127,7 @@ export function ScheduleCard({
   return (
     <Card padding="md" className="">
       <div className="flex items-center justify-between gap-2">
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
+        {title ? <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p> : null}
         {dynamicEnabled ? (
           <span
             className={

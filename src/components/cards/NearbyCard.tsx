@@ -33,7 +33,7 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
         : locale === "en"
           ? { title: "Nearby Info", detail: "Details", empty: "You can add nearby spots" }
           : { title: "周辺案内", detail: "詳細", empty: "周辺スポットを追加できます" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = (Array.isArray(c?.items) ? c.items : []) as NearbyItem[];
 
   const updateKey = (key: string, nextValue: string) => {
@@ -49,9 +49,11 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
       padding="md"
       className=""
     >
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+        </p>
+      ) : null}
       {items.length > 0 ? (
         <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
           {items.map((item, i) => (

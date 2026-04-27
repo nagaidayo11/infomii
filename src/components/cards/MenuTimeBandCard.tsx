@@ -21,7 +21,7 @@ const EMPTY_SLOTS: Slot[] = [];
 
 export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "メニュー";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const bandLabel =
     getLocalizedContent(c?.currentBandLabel as LocalizedString | undefined, locale) || "ただいまのメニュー";
   const outsideMessage =
@@ -52,9 +52,11 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
 
   const inner = (
     <>
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          {title}
+        </p>
+      ) : null}
       {active ? (
         <>
           <p

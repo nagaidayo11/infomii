@@ -185,7 +185,7 @@ function SortableCardWrapper({
 
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: transition ?? "transform 200ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+    transition: transition ?? "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)",
     pointerEvents: isDragging ? ("none" as const) : undefined,
   };
 
@@ -193,7 +193,7 @@ function SortableCardWrapper({
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative"
+      className="group relative editor-reorder-smooth"
       data-card-id={card.id}
     >
       {isDragging ? (
@@ -210,8 +210,8 @@ function SortableCardWrapper({
       ) : (
         <div
           className={
-            "relative overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
-            (isNewlyAdded ? "card-insert " : "") +
+            "editor-card-selected relative overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            (isNewlyAdded ? "editor-card-enter " : "") +
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
               ? "border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"

@@ -34,8 +34,7 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
         : locale === "en"
           ? { hours: "Hours", contact: "Contact", titlePlaceholder: "Laundry", priceNotePlaceholder: "Price / Note", contactPlaceholder: "Extension" }
           : { hours: "営業時間", contact: "連絡先", titlePlaceholder: "ランドリー", priceNotePlaceholder: "料金・備考", contactPlaceholder: "内線" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -46,9 +45,11 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.hours}:{" "}

@@ -24,7 +24,7 @@ export function MenuCard({ card, locale = "ja" }: MenuCardProps) {
         : locale === "en"
           ? { title: "Menu", itemName: "Menu item" }
           : { title: "メニュー", itemName: "メニュー名" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
   const heroAlt = c?.heroAlt as LocalizedString | undefined;
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
@@ -32,9 +32,11 @@ export function MenuCard({ card, locale = "ja" }: MenuCardProps) {
 
   const body = (
     <>
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          {title}
+        </p>
+      ) : null}
       <div className="mt-3 space-y-2.5">
         {items.slice(0, 12).map((item, index) => {
           const name = getLocalizedContent(item.name as LocalizedString | undefined, locale) || labels.itemName;

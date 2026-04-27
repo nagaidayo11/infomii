@@ -1131,7 +1131,11 @@ a {
 @keyframes card-insert {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.99);
+    transform: translateY(-12px) scale(0.985);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.004);
   }
   to {
     opacity: 1;
@@ -1140,7 +1144,23 @@ a {
 }
 
 .card-insert {
-  animation: card-insert 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: card-insert 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.editor-card-enter {
+  animation: card-insert 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.editor-card-selected {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editor-reorder-smooth {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Editor: drop placeholder — subtle pulse so drop location feels alive */
@@ -1208,7 +1228,7 @@ a {
 @keyframes heroSliderSlideInNext {
   from {
     opacity: 1;
-    transform: translate3d(14%, 0, 0);
+    transform: translate3d(100%, 0, 0);
   }
   to {
     opacity: 1;
@@ -1219,7 +1239,7 @@ a {
 @keyframes heroSliderSlideInPrev {
   from {
     opacity: 1;
-    transform: translate3d(-14%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
   }
   to {
     opacity: 1;
@@ -1234,7 +1254,7 @@ a {
   }
   to {
     opacity: 1;
-    transform: translate3d(-14%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 
@@ -1245,7 +1265,7 @@ a {
   }
   to {
     opacity: 1;
-    transform: translate3d(14%, 0, 0);
+    transform: translate3d(100%, 0, 0);
   }
 }
 

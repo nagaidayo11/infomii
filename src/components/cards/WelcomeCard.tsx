@@ -26,14 +26,13 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"
-      ? { messagePlaceholder: "환영 메시지", defaultTitle: "환영합니다" }
+      ? { messagePlaceholder: "환영 메시지" }
       : locale === "zh"
-        ? { messagePlaceholder: "欢迎信息", defaultTitle: "欢迎" }
+        ? { messagePlaceholder: "欢迎信息" }
         : locale === "en"
-          ? { messagePlaceholder: "Welcome message", defaultTitle: "Welcome" }
-          : { messagePlaceholder: "おもてなしメッセージ", defaultTitle: "ようこそ" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
+          ? { messagePlaceholder: "Welcome message" }
+          : { messagePlaceholder: "おもてなしメッセージ" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -48,15 +47,17 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
       padding="lg"
       className=""
     >
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => updateKey("title", v)}
-          editable={isSelected}
-          onActivate={onActivate}
-          className={CARD_BLOCK_TITLE_CLASS}
-        />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={isSelected}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+          />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>
         <InlineEditable
           value={message}

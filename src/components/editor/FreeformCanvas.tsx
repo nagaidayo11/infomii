@@ -631,7 +631,7 @@ export function FreeformCanvas({
                 dragGrid={[1, 1]}
                 resizeGrid={[GRID, GRID]}
                 bounds="parent"
-                className="!cursor-move"
+                className="!cursor-move editor-reorder-smooth"
                 style={{ zIndex: isSelected || isDragging ? 200 : 1 }}
                 enableResizing={isSelected}
                 onClick={(e: MouseEvent) => {
@@ -642,8 +642,8 @@ export function FreeformCanvas({
                 <div className="relative h-full w-full">
                   <div
                     className={
-                      "h-full w-full overflow-x-hidden overflow-y-visible rounded-xl transition-shadow " +
-                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
+                      "editor-card-selected h-full w-full overflow-x-hidden overflow-y-visible rounded-xl border border-slate-200 transition-[transform,border-color,box-shadow,background-color] duration-200 " +
+                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 shadow-[0_10px_24px_-12px_rgba(37,99,235,0.55)] " : "hover:border-slate-300 hover:shadow-[0_8px_16px_-12px_rgba(15,23,42,0.45)] ") +
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
                     }

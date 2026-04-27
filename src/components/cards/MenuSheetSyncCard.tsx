@@ -14,7 +14,7 @@ const cache = new Map<string, { at: number; rows: string[][] }>();
 
 export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "メニュー";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const csvUrl = typeof c?.csvUrl === "string" ? c.csvUrl.trim() : "";
   const delimiter = typeof c?.delimiter === "string" && c.delimiter.length > 0 ? c.delimiter : ",";
   const hasHeader = c?.hasHeader !== false;
@@ -91,7 +91,7 @@ export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; i
 
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p>
+      {title ? <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p> : null}
       {loading ? (
         <p className="mt-3 text-sm text-slate-500" style={getBodyFontSizeStyle()}>
           読み込み中…

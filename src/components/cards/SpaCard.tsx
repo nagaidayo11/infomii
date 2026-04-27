@@ -35,8 +35,7 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
         : locale === "en"
           ? { time: "Time", location: "Location", titlePlaceholder: "Spa / Onsen", descPlaceholder: "Description", notePlaceholder: "Note" }
           : { time: "時間", location: "場所", titlePlaceholder: "スパ・温泉", descPlaceholder: "説明", notePlaceholder: "備考" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -47,9 +46,11 @@ export function SpaCard({ card, isSelected, locale = "ja" }: SpaCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}

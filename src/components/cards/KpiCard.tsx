@@ -28,7 +28,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
         : locale === "en"
           ? { empty: "Add metric items", titlePlaceholder: "KPI" }
           : { empty: "数値項目を追加してください", titlePlaceholder: "KPI" };
-  const title = (c?.title as string) ?? labels.titlePlaceholder;
+  const title = (c?.title as string) ?? "";
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -38,16 +38,18 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
 
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable
-          value={title}
-          onSave={(v) => update({ title: v })}
-          editable={isSelected}
-          onActivate={onActivate}
-          className={CARD_BLOCK_TITLE_CLASS}
-          placeholder={labels.titlePlaceholder}
-        />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={isSelected}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={labels.titlePlaceholder}
+          />
+        </p>
+      ) : null}
       <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
           <p className="col-span-full text-slate-500">{labels.empty}</p>

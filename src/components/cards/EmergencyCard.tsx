@@ -56,7 +56,7 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
         : locale === "en"
           ? { title: "Emergency Contacts", fire: "Fire", police: "Police", hospital: "Hospital", note: "Note", hospitalPlaceholder: "Contact" }
           : { title: "緊急連絡先", fire: "火災", police: "警察", hospital: "病院", note: "備考", hospitalPlaceholder: "連絡先" };
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.title;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const fire = (c?.fire as string) ?? "";
   const police = (c?.police as string) ?? "";
   const hospital = getLocalizedContent(c?.hospital as LocalizedString | undefined, locale);
@@ -72,10 +72,12 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
 
   return (
     <Card padding="md" className="">
-      <p className={`flex flex-wrap items-center gap-1.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-        <SosMark />
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
-      </p>
+      {title ? (
+        <p className={`flex flex-wrap items-center gap-1.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          <SosMark />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+        </p>
+      ) : null}
       <ul data-inner-surface className={`mt-2 space-y-1 text-slate-600 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`} style={getBodyFontSizeStyle()}>
         <li>
           {labels.fire}:{" "}

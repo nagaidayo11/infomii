@@ -20,7 +20,7 @@ type Category = { title?: string; imageSrc?: string; imageAlt?: LocalizedString;
 
 export function MenuCategoriesCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const c = card.content as Record<string, unknown> | undefined;
-  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale) || "メニュー";
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const categories = (Array.isArray(c?.categories) ? c?.categories : []) as Category[];
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
   const heroAlt = c?.heroAlt as LocalizedString | undefined;
@@ -28,9 +28,11 @@ export function MenuCategoriesCard({ card, locale = "ja" }: { card: EditorCard; 
 
   const body = (
     <>
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          {title}
+        </p>
+      ) : null}
       <div className="mt-4 space-y-6">
         {categories.map((cat, ci) => {
           const catTitle = getLocalizedContent(cat.title as LocalizedString | undefined, locale);

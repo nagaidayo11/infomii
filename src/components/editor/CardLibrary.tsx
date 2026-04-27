@@ -703,7 +703,7 @@ function LibraryItemButton({
         setFocusOpen(false);
       }}
       className={
-        "ui-focus-ring group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:z-50 focus:z-50 focus-within:z-50 " +
+        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:z-50 focus:z-50 focus-within:z-50 " +
         (!disabled
           ? "hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
           : "cursor-not-allowed opacity-55")
@@ -789,7 +789,7 @@ export function CardLibrary({
                     type="button"
                     onClick={() => handleAddPreset(preset)}
                     className={
-                      "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-all " +
+                      "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-all " +
                       (canAddPreset(preset.types)
                         ? "hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
                         : "border-violet-300 bg-violet-50/70")

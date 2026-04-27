@@ -476,6 +476,30 @@ export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
 export const PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE = "/templates/previews/business/515b796d.jpg";
+export const PRESET_HERO_SLIDER_THIRD_SAMPLE_IMAGE = "/templates/previews/business/4bfe5cc6.jpg";
+export const PRESET_HERO_SLIDER_FOURTH_SAMPLE_IMAGE = "/templates/previews/business/a444c83b.jpg";
+export const PRESET_HERO_SLIDER_FIFTH_SAMPLE_IMAGE = "/templates/previews/business/fd57e76a.jpg";
+export const HERO_SLIDER_MAX_ITEMS = 5;
+
+export function createDefaultHeroSliderSlide(index: number): Record<string, unknown> {
+  const presets = [
+    { src: PRESET_HERO_SAMPLE_IMAGE, alt: "メインイメージ", caption: "チェックインのご案内" },
+    { src: PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE, alt: "朝食イメージ", caption: "朝食ビュッフェのご案内" },
+    { src: PRESET_HERO_SLIDER_THIRD_SAMPLE_IMAGE, alt: "館内施設イメージ", caption: "館内施設のご案内" },
+    { src: PRESET_HERO_SLIDER_FOURTH_SAMPLE_IMAGE, alt: "周辺観光イメージ", caption: "周辺観光のご案内" },
+    { src: PRESET_HERO_SLIDER_FIFTH_SAMPLE_IMAGE, alt: "ご滞在サポートイメージ", caption: "ご滞在サポートのご案内" },
+  ] as const;
+  const picked = presets[Math.max(0, Math.min(index, presets.length - 1))];
+  return {
+    src: picked.src,
+    alt: picked.alt,
+    caption: picked.caption,
+    linkEnabled: false,
+    linkType: "internal",
+    href: "",
+    openInNewTab: false,
+  };
+}
 
 /**
  * Menu系カードの静的サンプル画像（`public/` 配置・追加ブロック時は API 呼び出しなし）。
@@ -509,8 +533,11 @@ function defaultContent(type: CardType): Record<string, unknown> {
         showCaptions: true,
         height: "s",
         slides: [
-          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "メインイメージ", caption: "チェックインのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
-          { src: PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE, alt: "朝食イメージ", caption: "朝食ビュッフェのご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+          createDefaultHeroSliderSlide(0),
+          createDefaultHeroSliderSlide(1),
+          createDefaultHeroSliderSlide(2),
+          createDefaultHeroSliderSlide(3),
+          createDefaultHeroSliderSlide(4),
         ],
       };
     case "heading_body":

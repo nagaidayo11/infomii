@@ -54,8 +54,7 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
               notePlaceholder: "備考",
               titlePlaceholder: "タクシー",
             };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.titlePlaceholder;
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -67,9 +66,11 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
 
   return (
     <Card padding="md" className="">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
-      </p>
+      {title ? (
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+        </p>
+      ) : null}
       <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
       <p className="text-slate-600" style={getBodyFontSizeStyle()}>
         <InlineEditable value={companyName} onSave={(v) => updateKey("companyName", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.companyPlaceholder} />

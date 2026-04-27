@@ -28,14 +28,13 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
   const isWarning = variant === "warning";
   const labels =
     locale === "ko"
-      ? { bodyPlaceholder: "본문", defaultTitle: "공지" }
+      ? { bodyPlaceholder: "본문" }
       : locale === "zh"
-        ? { bodyPlaceholder: "正文", defaultTitle: "通知" }
+        ? { bodyPlaceholder: "正文" }
         : locale === "en"
-          ? { bodyPlaceholder: "Body", defaultTitle: "Notice" }
-          : { bodyPlaceholder: "本文", defaultTitle: "お知らせ" };
-  const title =
-    getLocalizedContent(c?.title as LocalizedString | undefined, locale) || labels.defaultTitle;
+          ? { bodyPlaceholder: "Body" }
+          : { bodyPlaceholder: "本文" };
+  const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = c?.[key];
@@ -51,15 +50,17 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
         data-inner-surface
         className={`${editorInnerRadiusClassName} flex flex-col gap-2 px-3 py-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
       >
-        <div className={`min-w-0 leading-tight ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable
-            value={title}
-            onSave={(v) => updateKey("title", v)}
-            editable={isSelected}
-            onActivate={onActivate}
-            className={`leading-tight ${CARD_BLOCK_TITLE_CLASS}`}
-          />
-        </div>
+        {title ? (
+          <div className={`min-w-0 leading-tight ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+            <InlineEditable
+              value={title}
+              onSave={(v) => updateKey("title", v)}
+              editable={isSelected}
+              onActivate={onActivate}
+              className={`leading-tight ${CARD_BLOCK_TITLE_CLASS}`}
+            />
+          </div>
+        ) : null}
         <div className="min-w-0 leading-normal text-slate-600" style={getBodyFontSizeStyle()}>
           <InlineEditable
             value={body}
