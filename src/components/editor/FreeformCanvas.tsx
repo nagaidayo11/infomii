@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
@@ -319,7 +319,6 @@ export function FreeformCanvas({
     };
   }, [setAutoHeightForCard]);
 
-
   const getRenderHeight = useCallback(
     (card: EditorCard, index: number) => {
       const pos = getPosition(card, index, contentWidth, cards);
@@ -614,6 +613,16 @@ export function FreeformCanvas({
               (blockStyle as Record<string, unknown>).backgroundColor === undefined
                 ? "var(--editor-block-surface, var(--color-ds-card))"
                 : (blockStyle as Record<string, unknown>).backgroundColor;
+            const shellStyle: CSSProperties & { "--editor-card-surface": string } = {
+              backgroundColor: shellBackgroundColor as string,
+              "--editor-card-surface": "transparent",
+              ...blockStyle,
+              ...((card.style as Record<string, unknown> | undefined)?.textColor
+                ? ({
+                    ["--editor-card-text-color"]: (card.style as Record<string, unknown>).textColor as string,
+                  } as Record<string, string>)
+                : {}),
+            };
             const innerSurfaceMode =
               card.style && typeof card.style === "object"
                 ? (card.style as Record<string, unknown>).innerSurfaceMode
@@ -652,16 +661,7 @@ export function FreeformCanvas({
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
                     }
-                    style={{
-                      backgroundColor: shellBackgroundColor as string,
-                      ["--editor-card-surface"]: "transparent",
-                      ...blockStyle,
-                      ...((card.style as Record<string, unknown> | undefined)?.textColor
-                        ? ({
-                            ["--editor-card-text-color"]: (card.style as Record<string, unknown>).textColor as string,
-                          } as Record<string, string>)
-                        : {}),
-                    }}
+                    style={shellStyle}
                   >
                     {/*
                       カード本体を flex-shrink させない（既定の Rnd 高さに縮ませない）。
