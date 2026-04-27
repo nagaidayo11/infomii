@@ -365,6 +365,26 @@ function HeroSliderItemsEditor({
   const visibleItems = items.slice(0, HERO_SLIDER_MAX_ITEMS);
   const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next.slice(0, HERO_SLIDER_MAX_ITEMS));
   const updateItem = (index: number, field: keyof HeroSliderItem, value: unknown) => {
+    // #region agent log
+    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
+      body: JSON.stringify({
+        sessionId: "a2a66c",
+        runId: "pre-fix",
+        hypothesisId: "H1-H4",
+        location: "src/components/editor/SettingsPanel.tsx:367",
+        message: "HeroSlider updateItem value type snapshot",
+        data: {
+          index,
+          field,
+          incomingType: typeof value,
+          previousType: typeof (items[index] as Record<string, unknown> | undefined)?.[field],
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     const next = [...items];
     next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
