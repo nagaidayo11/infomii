@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
@@ -29,6 +29,8 @@ type GuestCardPageViewProps = {
   businessFeaturesEnabled?: boolean;
   /** Optional back button (for child pages). */
   backButton?: ReactNode;
+  /** true のときリンク・ボタンなどの操作を無効化（LP埋め込みプレビュー用） */
+  disableInteractions?: boolean;
 };
 
 /**
@@ -47,6 +49,7 @@ export function GuestCardPageView({
   showLocaleToggle = true,
   businessFeaturesEnabled = false,
   backButton,
+  disableInteractions = false,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(() => {
     if (localeLocked || typeof navigator === "undefined") return initialLocale;
@@ -94,6 +97,16 @@ export function GuestCardPageView({
     </div>
   ) : null;
 
+  const stopInteractiveAction = (event: MouseEvent<HTMLDivElement> | FormEvent<HTMLDivElement>) => {
+    if (!disableInteractions) return;
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    const actionable = target.closest("a, button, input, select, textarea, [role='button'], form");
+    if (!actionable) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
     <LocaleProvider value={locale}>
       <PublicPageShell
@@ -113,7 +126,12 @@ export function GuestCardPageView({
             {localeToggleHint}
           </div>
         )}
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          onClickCapture={stopInteractiveAction}
+          onSubmitCapture={stopInteractiveAction}
+          aria-disabled={disableInteractions || undefined}
+        >
           {unpublishedPreview && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               現在公開OFFになっています（これはプレビュー表示です）。

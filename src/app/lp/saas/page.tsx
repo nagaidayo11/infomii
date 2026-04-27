@@ -160,6 +160,96 @@ function PricingComparisonTable() {
   );
 }
 
+function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
+  const rows = [
+    {
+      axis: "作成〜公開",
+      legacy: "半日〜数日",
+      cms: "数時間〜半日",
+      infomii: "最短3分で公開",
+    },
+    {
+      axis: "更新反映",
+      legacy: "紙差し替え / 都度案内",
+      cms: "編集後の確認作業が必要",
+      infomii: "編集後すぐ反映",
+    },
+    {
+      axis: "フロント説明負荷",
+      legacy: "高い",
+      cms: "中程度",
+      infomii: "低い（QRで自己解決）",
+    },
+    {
+      axis: "追加売上導線",
+      legacy: "ほぼなし",
+      cms: "設計次第",
+      infomii: "標準で設置しやすい",
+    },
+  ] as const;
+
+  return (
+    <Section
+      id="impact-compare"
+      kicker="比較"
+      title="従来運用と比べると、ここが違う"
+      description="公開までの速さ、日々の運用負荷、売上導線をひと目で比較"
+      variant="muted"
+      popTitle
+    >
+      <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+        <p className="mb-2 text-xs text-slate-500 sm:hidden">横にスクロールして比較できます</p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
+            <caption className="sr-only">従来運用・一般的なCMS・Infomiiの比較表</caption>
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
+                  比較軸
+                </th>
+                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
+                  従来運用
+                </th>
+                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
+                  一般的なCMS（Canva/Notion）
+                </th>
+                <th scope="col" className="bg-emerald-50 px-3 py-4 text-left font-semibold text-emerald-700">
+                  Infomii
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((row) => (
+                <tr key={row.axis} className="align-top">
+                  <th scope="row" className="w-[22%] px-3 py-5 font-semibold text-slate-900">
+                    {row.axis}
+                  </th>
+                  <td className="w-[26%] px-3 py-5 text-slate-600">{row.legacy}</td>
+                  <td className="w-[26%] px-3 py-5 text-slate-600">{row.cms}</td>
+                  <td className="w-[26%] bg-emerald-50 px-3 py-5 font-semibold text-emerald-700">{row.infomii}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <Button
+          href={ctaHref}
+          size="lg"
+          className="min-h-[48px] !border-emerald-700 !bg-emerald-600 px-6 !text-white hover:!bg-emerald-700 hover:!shadow-[0_10px_24px_rgba(5,150,105,0.35)]"
+        >
+          無料でQR案内を作る
+        </Button>
+        <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="min-h-[48px] border-2">
+          30秒デモを見る
+        </Button>
+      </div>
+      <p className="mt-2 text-sm text-slate-500">登録なしで体験できます</p>
+    </Section>
+  );
+}
+
 export default function LpSaaSPage() {
   const loginHref = "/login?ref=lp-saas";
   const ctaHref = "/login?ref=lp-saas&next=%2Fdashboard%3Ftab%3Dcreate";
@@ -208,6 +298,7 @@ export default function LpSaaSPage() {
         samplePageOpenHref={SAMPLE_PAGE_OPEN_HREF}
         demoEditorHref={DEMO_EDITOR_HREF}
       />
+      <HeroImpactComparison ctaHref={ctaHref} />
 
       <Section
         id="value"
