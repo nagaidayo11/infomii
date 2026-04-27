@@ -141,8 +141,8 @@ function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
 }
 
-function writeJaTextPreserving(prev: unknown, value: string): string | Record<string, string> {
-  return isLocalizedObject(prev) ? { ...prev, ja: value } : value;
+function writeJaTextPreserving<T extends string | boolean>(_prev: unknown, value: T): T {
+  return value;
 }
 
 async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: string; ko: string } | null> {
@@ -386,7 +386,7 @@ function HeroSliderItemsEditor({
     }).catch(() => {});
     // #endregion
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
+    next[index] = { ...(next[index] ?? {}), [field]: value };
     setItems(next);
   };
   const addItem = () => {
