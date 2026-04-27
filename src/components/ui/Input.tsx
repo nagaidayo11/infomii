@@ -1,6 +1,7 @@
 "use client";
 
 import type { InputHTMLAttributes } from "react";
+import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
@@ -15,6 +16,16 @@ const baseClass =
  */
 export function Input({ label, error, className = "", id, ...rest }: InputProps) {
   const inputId = id ?? label?.replace(/\s/g, "-").toLowerCase();
+  const { value, ...inputRest } = rest;
+  const normalizedValue = (() => {
+    if (value === undefined || value === null) return undefined;
+    if (typeof value === "string" || typeof value === "number") return value;
+    if (Array.isArray(value)) return value.map((entry) => String(entry));
+    if (typeof value === "object") {
+      return getLocalizedContent(value as LocalizedString | undefined, "ja");
+    }
+    return String(value);
+  })();
   return (
     <div className="w-full">
       {label && (
@@ -25,7 +36,8 @@ export function Input({ label, error, className = "", id, ...rest }: InputProps)
       <input
         id={inputId}
         className={baseClass + " " + (error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20 " : "") + className}
-        {...rest}
+        {...inputRest}
+        {...(normalizedValue !== undefined ? { value: normalizedValue } : {})}
       />
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

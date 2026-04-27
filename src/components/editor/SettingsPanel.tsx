@@ -18,20 +18,32 @@ const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
+const compactGridClass = "grid grid-cols-1 gap-2 md:grid-cols-2";
+const contentSectionId = "settings-content";
+const displaySectionId = "settings-display";
+const appearanceSectionId = "settings-appearance";
+const appearanceTypographyId = "appearance-typography";
+const appearanceBackgroundId = "appearance-background";
+const appearanceBorderId = "appearance-border";
+const appearanceSpacingId = "appearance-spacing";
 
 function SettingsSection({
   title,
   children,
+  sectionId,
+  contentClassName,
 }: {
   title: string;
   children: React.ReactNode;
+  sectionId?: string;
+  contentClassName?: string;
 }) {
   return (
-    <div className="space-y-3">
+    <div id={sectionId} className="space-y-3 scroll-mt-28">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         {title}
       </h3>
-      <div className="space-y-2">{children}</div>
+      <div className={`space-y-2 ${contentClassName ?? ""}`.trim()}>{children}</div>
     </div>
   );
 }
@@ -94,52 +106,13 @@ const NOTICE_PRIORITY_PRESETS = [
   { value: "warning", label: "警告" },
 ];
 
-const BLOCK_STYLE_PRESETS: Array<{
-  id: string;
-  label: string;
-  style: Record<string, string | number | undefined>;
-}> = [
-  {
-    id: "clean",
-    label: "クリーン",
-    style: {
-      backgroundColor: "#ffffff",
-      borderWidth: 1,
-      borderColor: "#e2e8f0",
-      innerBorderRadius: 8,
-      boxShadow: "",
-      padding: 0,
-    },
-  },
-  {
-    id: "soft",
-    label: "ソフト",
-    style: {
-      backgroundColor: "#f8fafc",
-      borderWidth: 0,
-      borderColor: "",
-      innerBorderRadius: 8,
-      boxShadow: "0 4px 12px rgba(15,23,42,0.08)",
-      padding: 0,
-    },
-  },
-  {
-    id: "emphasis",
-    label: "強調",
-    style: {
-      backgroundColor: "#fff7ed",
-      borderWidth: 1,
-      borderColor: "#fdba74",
-      innerBorderRadius: 8,
-      boxShadow: "0 8px 24px rgba(249,115,22,0.12)",
-      padding: 0,
-    },
-  },
-];
-
-const CUSTOM_PRESET_STORAGE_KEY = "editor:block-style-custom-presets:v1";
-
 type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
+type SettingsPalette =
+  | "content"
+  | "appearance"
+  | "appearance-background"
+  | "appearance-border"
+  | "appearance-spacing";
 
 export type CardSettingsProps = {
   card: EditorCard | null;
@@ -162,6 +135,14 @@ function isLocalizedObject(v: unknown): v is Record<string, string> {
     !Array.isArray(v) &&
     ("ja" in v || "en" in v || "zh" in v || "ko" in v)
   );
+}
+
+function readJaText(value: unknown): string {
+  return getLocalizedContent(value as LocalizedString | undefined, "ja");
+}
+
+function writeJaTextPreserving(prev: unknown, value: string): string | Record<string, string> {
+  return isLocalizedObject(prev) ? { ...prev, ja: value } : value;
 }
 
 async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: string; ko: string } | null> {
@@ -249,7 +230,7 @@ function InfoRowsEditor({
   const setRows = (next: InfoRowItem[]) => onUpdate("rows", next);
   const updateRow = (index: number, field: keyof InfoRowItem, value: string) => {
     const next = [...rows];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setRows(next);
   };
   const addRow = () => setRows([...rows, { label: "", value: "" }]);
@@ -274,13 +255,13 @@ function InfoRowsEditor({
         <div key={i} className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/90 p-3">
           <Input
             label="ラベル"
-            value={row.label ?? ""}
+            value={readJaText(row.label)}
             onChange={(e) => updateRow(i, "label", e.target.value)}
             placeholder="例: ネットワーク名"
           />
           <Input
             label="値"
-            value={row.value ?? ""}
+            value={readJaText(row.value)}
             onChange={(e) => updateRow(i, "value", e.target.value)}
             placeholder="表示する値"
           />
@@ -310,7 +291,7 @@ function GalleryItemsEditor({
   const setItems = (next: GalleryImageItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof GalleryImageItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { src: "", alt: "" }]);
@@ -385,7 +366,7 @@ function HeroSliderItemsEditor({
   const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next.slice(0, HERO_SLIDER_MAX_ITEMS));
   const updateItem = (index: number, field: keyof HeroSliderItem, value: unknown) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => {
@@ -492,7 +473,7 @@ function NearbyItemsEditor({
   const setItems = (next: NearbyItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof NearbyItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", description: "", link: "" }]);
@@ -522,19 +503,19 @@ function NearbyItemsEditor({
           </div>
           <Input
             label="名前"
-            value={item.name ?? ""}
+            value={readJaText(item.name)}
             onChange={(e) => updateItem(i, "name", e.target.value)}
             placeholder="スポット名"
           />
           <Input
             label="説明"
-            value={item.description ?? ""}
+            value={readJaText(item.description)}
             onChange={(e) => updateItem(i, "description", e.target.value)}
             placeholder="任意"
           />
           <Input
             label="リンクURL"
-            value={item.link ?? ""}
+            value={readJaText(item.link)}
             onChange={(e) => updateItem(i, "link", e.target.value)}
             placeholder="https://..."
           />
@@ -555,7 +536,7 @@ function FaqItemsEditor({
   const setItems = (next: FaqItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof FaqItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { q: "", a: "" }]);
@@ -585,14 +566,14 @@ function FaqItemsEditor({
           </div>
           <Input
             label="質問"
-            value={item.q ?? ""}
+            value={readJaText(item.q)}
             onChange={(e) => updateItem(i, "q", e.target.value)}
             placeholder="Q"
           />
           <div className="w-full">
             <label className={labelClass}>回答</label>
             <textarea
-              value={item.a ?? ""}
+              value={readJaText(item.a)}
               onChange={(e) => updateItem(i, "a", e.target.value)}
               placeholder="A"
               rows={2}
@@ -616,7 +597,7 @@ function TabsInfoItemsEditor({
   const setItems = (next: TabsInfoItem[]) => onUpdate("tabs", next);
   const updateItem = (index: number, field: keyof TabsInfoItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { label: "", body: "" }]);
@@ -646,14 +627,14 @@ function TabsInfoItemsEditor({
           </div>
           <Input
             label="タブラベル"
-            value={item.label ?? ""}
+            value={readJaText(item.label)}
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder={`タブ ${i + 1}`}
           />
           <div className="w-full">
             <label className={labelClass}>本文</label>
             <textarea
-              value={item.body ?? ""}
+              value={readJaText(item.body)}
               onChange={(e) => updateItem(i, "body", e.target.value)}
               placeholder="タブに表示する内容"
               rows={2}
@@ -728,7 +709,7 @@ function AccordionItemsEditor({
   const setItems = (next: Array<{ title?: string; body?: string }>) => onUpdate("items", next);
   const updateItem = (index: number, field: "title" | "body", value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   return (
@@ -764,7 +745,7 @@ function SocialLinksItemsEditor({
   const setItems = (next: Array<{ label?: string; href?: string; handle?: string }>) => onUpdate("items", next);
   const updateItem = (index: number, field: "label" | "href" | "handle", value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   return (
@@ -807,9 +788,9 @@ function ProgressItemsEditor({
           <div className="flex justify-end">
             <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
           </div>
-          <Input label="ラベル" value={item.label ?? ""} onChange={(e) => {
+          <Input label="ラベル" value={readJaText(item.label)} onChange={(e) => {
             const next = [...items];
-            next[i] = { ...(next[i] ?? {}), label: e.target.value };
+            next[i] = { ...(next[i] ?? {}), label: writeJaTextPreserving((next[i] as Record<string, unknown> | undefined)?.label, e.target.value) };
             setItems(next);
           }} placeholder={`ステップ ${i + 1}`} />
           <label className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -846,7 +827,7 @@ function PageLinksItemsEditor({
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () =>
@@ -908,7 +889,7 @@ function PageLinksItemsEditor({
           </div>
           <Input
             label="ラベル"
-            value={item.label ?? ""}
+            value={readJaText(item.label)}
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder="WiFi"
           />
@@ -934,7 +915,7 @@ function PageLinksItemsEditor({
             <div className="w-full">
               <label className={labelClass}>ページを選択</label>
               <select
-                value={item.pageSlug ?? ""}
+                value={readJaText(item.pageSlug)}
                 onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
                 className={inputClass}
               >
@@ -957,7 +938,7 @@ function PageLinksItemsEditor({
           ) : (
             <Input
               label="URL"
-              value={item.link ?? ""}
+              value={readJaText(item.link)}
               onChange={(e) => updateItem(i, "link", e.target.value)}
               placeholder="https://..."
             />
@@ -979,7 +960,7 @@ function ChecklistItemsEditor({
   const setItems = (next: ChecklistItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof ChecklistItem, value: string | boolean) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { text: "", checked: false }]);
@@ -1002,7 +983,7 @@ function ChecklistItemsEditor({
           </div>
           <Input
             label="項目"
-            value={item.text ?? ""}
+            value={readJaText(item.text)}
             onChange={(e) => updateItem(i, "text", e.target.value)}
             placeholder="内容"
           />
@@ -1089,7 +1070,7 @@ function KpiItemsEditor({
   const setItems = (next: KpiItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof KpiItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { label: "", value: "" }]);
@@ -1112,13 +1093,13 @@ function KpiItemsEditor({
           </div>
           <Input
             label="ラベル"
-            value={item.label ?? ""}
+            value={readJaText(item.label)}
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder="項目名"
           />
           <Input
             label="値"
-            value={item.value ?? ""}
+            value={readJaText(item.value)}
             onChange={(e) => updateItem(i, "value", e.target.value)}
             placeholder="15:00 / 120 / 95%"
           />
@@ -1144,7 +1125,7 @@ function ScheduleItemsEditor({
   const setRules = (next: ScheduleRule[]) => onUpdate("rules", next);
   const updateItem = (index: number, field: keyof ScheduleItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { day: "", time: "", label: "" }]);
@@ -1433,7 +1414,7 @@ function MenuItemsEditor({
   const setItems = (next: MenuItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof MenuItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
@@ -1503,7 +1484,7 @@ function MenuTagItemsEditor({
 }) {
   const updateItem = (index: number, field: keyof MenuTagItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     onChange(next);
   };
   const addItem = () => onChange([...items, { name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }]);
@@ -1561,7 +1542,7 @@ function MenuCategoriesGroupsEditor({
   };
   const updateCatField = (ci: number, field: keyof MenuCategoryRow, value: string) => {
     const next = [...categories];
-    next[ci] = { ...(next[ci] ?? {}), [field]: value };
+    next[ci] = { ...(next[ci] ?? {}), [field]: writeJaTextPreserving((next[ci] as Record<string, unknown> | undefined)?.[field], value) };
     setCategories(next);
   };
   const updateCatItems = (ci: number, items: MenuTagItem[]) => {
@@ -1642,7 +1623,7 @@ function DrinkItemsEditor({
   const setItems = (next: DrinkItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof DrinkItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", sizes: "", note: "", imageSrc: "", imageAlt: "" }]);
@@ -1688,7 +1669,7 @@ function SalonItemsEditor({
   const setItems = (next: SalonItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof SalonItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", duration: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
@@ -1735,7 +1716,7 @@ function ComboItemsEditor({
   const setItems = (next: ComboItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof ComboItem, value: string) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: value };
+    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", includes: "", price: "", imageSrc: "", imageAlt: "" }]);
@@ -1846,23 +1827,10 @@ export function CardSettings({
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [styleMode, setStyleMode] = useState<"standard" | "advanced">("standard");
+  const [activePalette, setActivePalette] = useState<SettingsPalette>("content");
   const [bulkFind, setBulkFind] = useState("");
   const [bulkReplaceTo, setBulkReplaceTo] = useState("");
   const [bulkStatus, setBulkStatus] = useState<string | null>(null);
-  const [customPresets, setCustomPresets] = useState<
-    Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>
-  >(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem(CUSTOM_PRESET_STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>;
-      return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
-    } catch {
-      return [];
-    }
-  });
   const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
   const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
@@ -1907,34 +1875,6 @@ export function CardSettings({
       if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
     };
   }, []);
-
-  const persistCustomPresets = useCallback(
-    (next: Array<{ id: string; label: string; style: Record<string, string | number | undefined> }>) => {
-      setCustomPresets(next);
-      if (typeof window === "undefined") return;
-      window.localStorage.setItem(CUSTOM_PRESET_STORAGE_KEY, JSON.stringify(next));
-    },
-    []
-  );
-
-  const saveCurrentStyleAsPreset = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const label = window.prompt("プリセット名を入力してください", "マイプリセット");
-    if (!label) return;
-    const styleSnapshot = { ...((card?.style ?? {}) as Record<string, string | number | undefined>) };
-    const next = [
-      { id: `custom-${Date.now()}`, label: label.slice(0, 20), style: styleSnapshot },
-      ...customPresets,
-    ].slice(0, 5);
-    persistCustomPresets(next);
-  }, [card?.style, customPresets, persistCustomPresets]);
-
-  const removeCustomPreset = useCallback(
-    (id: string) => {
-      persistCustomPresets(customPresets.filter((p) => p.id !== id));
-    },
-    [customPresets, persistCustomPresets]
-  );
 
   const handleBulkReplace = useCallback(() => {
     if (!onBulkReplace) return;
@@ -2131,17 +2071,6 @@ export function CardSettings({
     }
     onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
   };
-  const applyStylePreset = (preset: Record<string, string | number | undefined>) => {
-    const nextStyle = { ...style } as Record<string, unknown>;
-    for (const [key, value] of Object.entries(preset)) {
-      if (value === undefined || value === "") {
-        delete nextStyle[key];
-      } else {
-        nextStyle[key] = value;
-      }
-    }
-    onUpdate(card.id, { style: nextStyle } as CardUpdatePatch);
-  };
   /** 多言語フィールドの表示値（日本語を優先） */
   const display = (key: string) =>
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
@@ -2190,6 +2119,24 @@ export function CardSettings({
   const supportsTitleFontWeight = supportsTitleFontSize;
   const supportsBodyFontWeight = supportsBodyFontSize;
   const canEditCard = Boolean(onDuplicateCard || onRemoveCard);
+  const jumpToSection = (sectionId: string) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const target = container.querySelector<HTMLElement>(`#${sectionId}`);
+    if (!target) return;
+    const details = target.closest("details");
+    if (details instanceof HTMLDetailsElement) {
+      details.open = true;
+    }
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const nextTop = container.scrollTop + (targetRect.top - containerRect.top) - 8;
+    container.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
+  };
+  const activatePalette = (palette: SettingsPalette, sectionId: string) => {
+    setActivePalette(palette);
+    jumpToSection(sectionId);
+  };
   const handleDuplicateCard = () => {
     if (!card || !onDuplicateCard) return;
     onDuplicateCard(card.id);
@@ -2308,10 +2255,67 @@ export function CardSettings({
             ) : null}
           </div>
           <p className="text-xs text-slate-500">変更はリアルタイムで反映されます</p>
+          <div className="flex flex-wrap gap-1.5 rounded-lg border border-slate-200 bg-slate-50 p-1">
+            <button
+              type="button"
+              onClick={() => activatePalette("content", contentSectionId)}
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+                activePalette === "content"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              コンテンツ
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance", appearanceSectionId)}
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+                activePalette === "appearance"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              見た目
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance-background", appearanceBackgroundId)}
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+                activePalette === "appearance-background"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              色・背景
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance-border", appearanceBorderId)}
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+                activePalette === "appearance-border"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              枠線
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+                activePalette === "appearance-spacing"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              サイズ・影
+            </button>
+          </div>
         </div>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="space-y-6">
+        <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
             <SettingsSection title="コンテンツ">
               <Input
@@ -2341,16 +2345,16 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="Infomii Hotel"
               />
-              <div className="w-full">
-                <label className={labelClass}>画像</label>
-                <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
-              </div>
               <Input
                 label="サブタイトル"
                 value={display("subtitle")}
                 onChange={(e) => updateLocalized("subtitle", e.target.value)}
                 placeholder="任意"
               />
+              <div className="w-full">
+                <label className={labelClass}>画像</label>
+                <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
+              </div>
             </SettingsSection>
           )}
 
@@ -2950,7 +2954,7 @@ export function CardSettings({
                   />
                 </div>
               </SettingsSection>
-              <SettingsSection title="表示オプション">
+              <SettingsSection title="表示オプション" sectionId={displaySectionId}>
                 <div className="w-full">
                   <label className={labelClass}>Priority style</label>
                   <select
@@ -3062,7 +3066,7 @@ export function CardSettings({
           )}
 
           {card.type === "divider" && (
-            <SettingsSection title="表示オプション">
+            <SettingsSection title="表示オプション" sectionId={displaySectionId}>
               <div className="w-full">
                 <label className={labelClass}>Style</label>
                 <select
@@ -3078,7 +3082,7 @@ export function CardSettings({
           )}
 
           {card.type === "space" && (
-            <SettingsSection title="コンテンツ">
+            <SettingsSection title="コンテンツ" contentClassName={compactGridClass}>
               <div className="w-full">
                 <label className={labelClass}>現在の余白 (px)</label>
                 <input
@@ -3200,30 +3204,32 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="比較"
               />
-              <Input
-                label="左タイトル"
-                value={display("leftTitle")}
-                onChange={(e) => updateLocalized("leftTitle", e.target.value)}
-                placeholder="スタンダード"
-              />
-              <Input
-                label="左説明"
-                value={display("leftBody")}
-                onChange={(e) => updateLocalized("leftBody", e.target.value)}
-                placeholder="内容"
-              />
-              <Input
-                label="右タイトル"
-                value={display("rightTitle")}
-                onChange={(e) => updateLocalized("rightTitle", e.target.value)}
-                placeholder="プレミアム"
-              />
-              <Input
-                label="右説明"
-                value={display("rightBody")}
-                onChange={(e) => updateLocalized("rightBody", e.target.value)}
-                placeholder="内容"
-              />
+              <div className={compactGridClass}>
+                <Input
+                  label="左タイトル"
+                  value={display("leftTitle")}
+                  onChange={(e) => updateLocalized("leftTitle", e.target.value)}
+                  placeholder="スタンダード"
+                />
+                <Input
+                  label="右タイトル"
+                  value={display("rightTitle")}
+                  onChange={(e) => updateLocalized("rightTitle", e.target.value)}
+                  placeholder="プレミアム"
+                />
+                <Input
+                  label="左説明"
+                  value={display("leftBody")}
+                  onChange={(e) => updateLocalized("leftBody", e.target.value)}
+                  placeholder="内容"
+                />
+                <Input
+                  label="右説明"
+                  value={display("rightBody")}
+                  onChange={(e) => updateLocalized("rightBody", e.target.value)}
+                  placeholder="内容"
+                />
+              </div>
             </SettingsSection>
           )}
 
@@ -3405,10 +3411,12 @@ export function CardSettings({
           {card.type === "contact_hub" && (
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="お問い合わせ" />
-              <Input label="電話番号" value={display("phone")} onChange={(e) => update("phone", e.target.value)} placeholder="03-1234-5678" />
-              <Input label="メール" value={display("email")} onChange={(e) => update("email", e.target.value)} placeholder="front@example.com" />
-              <Input label="LINE URL" value={display("lineUrl")} onChange={(e) => update("lineUrl", e.target.value)} placeholder="https://..." />
-              <Input label="地図URL" value={display("mapUrl")} onChange={(e) => update("mapUrl", e.target.value)} placeholder="https://..." />
+              <div className={compactGridClass}>
+                <Input label="電話番号" value={display("phone")} onChange={(e) => update("phone", e.target.value)} placeholder="03-1234-5678" />
+                <Input label="メール" value={display("email")} onChange={(e) => update("email", e.target.value)} placeholder="front@example.com" />
+                <Input label="LINE URL" value={display("lineUrl")} onChange={(e) => update("lineUrl", e.target.value)} placeholder="https://..." />
+                <Input label="地図URL" value={display("mapUrl")} onChange={(e) => update("mapUrl", e.target.value)} placeholder="https://..." />
+              </div>
               <div className="w-full">
                 <label className={labelClass}>補足</label>
                 <textarea value={display("note")} onChange={(e) => updateLocalized("note", e.target.value)} rows={2} className={inputClass} />
@@ -3678,7 +3686,7 @@ export function CardSettings({
             </SettingsSection>
           )}
 
-          <SettingsSection title="見た目の調整">
+          <SettingsSection title="見た目の調整" sectionId={appearanceSectionId}>
             {demoMode ? (
               <button
                 type="button"
@@ -3691,112 +3699,11 @@ export function CardSettings({
               </button>
             ) : (
               <>
-                <div className="w-full space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-                  <label className={labelClass}>調整レベル</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setStyleMode("standard")}
-                      className={`rounded-lg border px-2 py-1.5 text-xs transition ${
-                        styleMode === "standard"
-                          ? "border-slate-900 bg-slate-900 !text-white font-semibold"
-                          : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      かんたん
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStyleMode("advanced")}
-                      className={`rounded-lg border px-2 py-1.5 text-xs transition ${
-                        styleMode === "advanced"
-                          ? "border-slate-900 bg-slate-900 !text-white font-semibold"
-                          : "border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      こだわる
-                    </button>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-slate-500">
-                    「こだわる」ではサイズ・太さ・影・余白まで調整できます。未入力の項目はブロック既定か全体設定を使います。
-                  </p>
-                </div>
-
                 <div className="space-y-2">
-                  <StyleGroup summary="まずは全体の見た目を決める" defaultOpen>
-            <div className="w-full">
-              <label className={labelClass}>プリセット</label>
-              <div className="grid grid-cols-3 gap-2">
-                {BLOCK_STYLE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => applyStylePreset(preset.style)}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="w-full">
-              <button
-                type="button"
-                onClick={saveCurrentStyleAsPreset}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                現在の見た目をマイプリセット保存
-              </button>
-            </div>
-            {customPresets.length > 0 && (
-              <div className="w-full">
-                <label className={labelClass}>マイプリセット</label>
-                <div className="space-y-2">
-                  {customPresets.map((preset) => (
-                    <div key={preset.id} className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => applyStylePreset(preset.style)}
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        {preset.label}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeCustomPreset(preset.id)}
-                        className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-500 hover:bg-slate-50 hover:text-rose-600"
-                        aria-label={`${preset.label}を削除`}
-                      >
-                        削除
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="w-full">
-              <label className={labelClass}>内側要素の角丸 (px)</label>
-              <p className="mb-1.5 text-[11px] leading-snug text-slate-400">
-                KPI・ギャラリー・ページリンク・ボタンなど、ブロック内の箱・ラベルに適用されます（外枠の角丸ではありません）。
-              </p>
-              <input
-                type="number"
-                min={0}
-                max={32}
-                value={(style.innerBorderRadius as number | string) ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  updateStyle("innerBorderRadius", v === "" ? undefined : parseInt(v, 10) || 0);
-                }}
-                placeholder="8"
-                className={inputClass}
-              />
-            </div>
-                  </StyleGroup>
                   <StyleGroup summary="文字の見やすさを整える" defaultOpen>
             {supportsTextFormatting ? (
               <>
-                <div className="w-full">
+                <div id={appearanceTypographyId} className="w-full">
                   <label className={labelClass}>フォント</label>
                   <select
                     value={(style.fontFamily as string) ?? ""}
@@ -3840,8 +3747,8 @@ export function CardSettings({
               <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
             )}
                   </StyleGroup>
-                  <StyleGroup summary="背景と内部パーツの見え方" defaultOpen>
-            <div className="w-full">
+                  <StyleGroup summary="背景と内部パーツの見え方" defaultOpen={false}>
+            <div id={appearanceBackgroundId} className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -3953,8 +3860,8 @@ export function CardSettings({
               </div>
             ) : null}
                   </StyleGroup>
-                  <StyleGroup summary="枠線と誤削除防止" defaultOpen>
-            <div className="w-full">
+                  <StyleGroup summary="枠線と誤削除防止" defaultOpen={false}>
+            <div id={appearanceBorderId} className="w-full">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -4015,9 +3922,13 @@ export function CardSettings({
               </label>
             </div>
                   </StyleGroup>
-            {styleMode === "advanced" ? (
-                  <StyleGroup summary="細かい調整（サイズ・太さ・影・余白）" defaultOpen>
+                  <StyleGroup summary="細かい調整（サイズ・太さ・影）" defaultOpen={false}>
               <>
+                <div id={appearanceSpacingId} className={compactGridClass}>
+                {supportsGlobalFontSize || supportsTitleFontSize || supportsBodyFontSize ? (
+                  <div className="w-full rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 md:col-span-2">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">サイズ</p>
+                    <div className={compactGridClass}>
                 {supportsGlobalFontSize ? (
                   <div className="w-full">
                     <label className={labelClass}>フォントサイズ（全体）</label>
@@ -4072,6 +3983,13 @@ export function CardSettings({
                     </select>
                   </div>
                 ) : null}
+                    </div>
+                  </div>
+                ) : null}
+                {supportsGlobalFontWeight || supportsTitleFontWeight || supportsBodyFontWeight ? (
+                  <div className="w-full rounded-lg border border-slate-200 bg-slate-50/60 p-2.5 md:col-span-2">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">ウェイト</p>
+                    <div className={compactGridClass}>
                 {supportsGlobalFontWeight ? (
                   <div className="w-full">
                     <label className={labelClass}>フォントウェイト（全体）</label>
@@ -4120,6 +4038,10 @@ export function CardSettings({
                     </select>
                   </div>
                 ) : null}
+                    </div>
+                  </div>
+                ) : null}
+                </div>
                 <div className="w-full">
                   <label className={labelClass}>影</label>
                   <select
@@ -4133,23 +4055,8 @@ export function CardSettings({
                     <option value="0 8px 24px rgba(0,0,0,0.12)">強め</option>
                   </select>
                 </div>
-                <div className="w-full">
-                  <label className={labelClass}>余白 (px)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={40}
-                    value={(style.padding as number | string) ?? ""}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      updateStyle("padding", v === "" ? undefined : parseInt(v, 10) || 0);
-                    }}
-                    placeholder="0"
-                    className={inputClass}
-                  />
-                </div>
                 {supportsTextAlign ? (
-                  <>
+                  <div className={compactGridClass}>
                     <div className="w-full">
                       <label className={labelClass}>寄せ</label>
                       <select
@@ -4179,11 +4086,10 @@ export function CardSettings({
                         </select>
                       </div>
                     ) : null}
-                  </>
+                  </div>
                 ) : null}
               </>
                   </StyleGroup>
-            ) : null}
                 </div>
               </>
             )}

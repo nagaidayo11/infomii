@@ -98,7 +98,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           data-editor-column="settings"
           className={
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm " +
-            "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-l " +
+            "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
             (sheet === "settings"
               ? "ui-pop-in fixed inset-x-0 bottom-0 top-14 z-50 max-h-[min(90dvh,calc(100dvh-3.5rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
