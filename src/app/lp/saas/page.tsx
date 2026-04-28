@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
   description:
     "口頭説明・紙更新の手間を減らすホテル向けSaaS。WiFi・朝食・設備を1つのQRに集約。まずは無料で1ページから。",
-  alternates: { canonical: "/lp/saas" },
+  alternates: { canonical: "https://www.infomii.com/lp/saas" },
   openGraph: {
     url: `${appUrl}/lp/saas`,
     title: "Infomii | QRひとつで館内案内を3分で",
