@@ -191,17 +191,17 @@ export function LpHero({
               <p className={`text-2xl leading-none text-emerald-700 sm:text-3xl lg:text-4xl ${popHeadingClass}`}>
                 ホテル・旅館のフロント/運営担当向け
               </p>
-              <p className={`mt-20 text-xl text-slate-800 sm:text-2xl ${popHeadingClass}`}>紙の館内案内、まだ配ってますか？</p>
-              <h1 className={`mt-3 text-3xl leading-tight text-slate-900 sm:text-4xl lg:text-5xl ${popHeadingClass}`}>
+              <p className={`mt-9 text-xl text-slate-800 sm:mt-14 sm:text-2xl lg:mt-20 ${popHeadingClass}`}>紙の館内案内、まだ配ってますか？</p>
+              <h1 className={`mt-2 text-3xl leading-tight text-slate-900 sm:mt-3 sm:text-4xl lg:text-5xl ${popHeadingClass}`}>
                 <span className="block lg:text-[0.92em]">QRひとつで「紙→スマホ案内」へ</span>
                 <span className="mt-1 block text-emerald-700 lg:whitespace-nowrap lg:text-[0.92em]">最短3分で公開＆売上導線も作れる</span>
               </h1>
-              <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
+              <p className="mt-4 text-base leading-relaxed text-slate-600 sm:mt-5 sm:text-lg">
                 WiFi・朝食・注文・設備案内を1ページに集約。
                 <br />
                 フロントの説明負担を減らしながら、追加売上も実現。
               </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:mt-7 sm:gap-3">
                 <Button
                   href={ctaHref}
                   size="lg"

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button, Card, Container, Section } from "@/components/ui";
 import { CheckoutButton } from "@/components/lp/CheckoutButton";
+import { HorizontalScrollHint } from "@/components/lp/HorizontalScrollHint";
 import { LpHero } from "@/components/lp/LpHero";
+import { LpSaasHeader } from "@/components/lp/LpSaasHeader";
 import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
@@ -38,8 +40,8 @@ function PricingComparisonTable() {
       <p className="px-4 pt-3 text-xs text-slate-500 sm:hidden" aria-live="polite">
         横にスクロールして比較できます
       </p>
-      <div className="max-h-[70dvh] overflow-auto overscroll-x-contain scroll-smooth px-2 pb-2 sm:max-h-none sm:px-0 sm:pb-0">
-        <table className="w-full min-w-[860px] border-collapse text-sm">
+      <HorizontalScrollHint className="relative px-2 pb-2 sm:px-0 sm:pb-0" viewportClassName="max-h-[70dvh] overflow-auto overscroll-x-contain scroll-smooth sm:max-h-none">
+          <table className="w-full min-w-[860px] border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50">
@@ -153,8 +155,8 @@ function PricingComparisonTable() {
             </td>
           </tr>
         </tbody>
-        </table>
-      </div>
+          </table>
+      </HorizontalScrollHint>
     </div>
   );
 }
@@ -198,12 +200,12 @@ function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
     >
       <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
         <p className="mb-2 text-xs text-slate-500 sm:hidden">横にスクロールして比較できます</p>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-sm">
+        <HorizontalScrollHint>
+            <table className="w-full min-w-[760px] border-collapse text-sm">
             <caption className="sr-only">従来運用・一般的なCMS・Infomiiの比較表</caption>
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
+                <th scope="col" className="sticky left-0 z-10 bg-slate-50 px-3 py-4 text-left font-semibold text-slate-600 shadow-[1px_0_0_rgba(148,163,184,0.22)]">
                   比較軸
                 </th>
                 <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
@@ -220,7 +222,7 @@ function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
             <tbody className="divide-y divide-slate-100">
               {rows.map((row) => (
                 <tr key={row.axis} className="align-top">
-                  <th scope="row" className="w-[22%] px-3 py-5 font-semibold text-slate-900">
+                  <th scope="row" className="sticky left-0 z-10 w-[22%] bg-white px-3 py-5 font-semibold text-slate-900 shadow-[1px_0_0_rgba(148,163,184,0.18)]">
                     {row.axis}
                   </th>
                   <td className="w-[26%] px-3 py-5 text-slate-600">{row.legacy}</td>
@@ -229,8 +231,8 @@ function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+        </HorizontalScrollHint>
       </div>
       <div className="mt-6 flex flex-wrap items-start gap-3">
         <Button
@@ -257,44 +259,9 @@ export default function LpSaaSPage() {
   const hasProAnnual = !!process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
   const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
-  const navLinkClass =
-    "inline-flex min-h-[44px] items-center rounded-lg px-2 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 " +
-    "motion-safe:hover:-translate-y-px motion-safe:hover:bg-emerald-50/60 motion-safe:hover:text-emerald-800 " +
-    "sm:px-3";
-
   return (
     <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] [&_p]:font-medium [&_li]:font-medium [&_button]:font-bold [&_a]:font-semibold">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-shadow duration-300 motion-safe:hover:shadow-sm">
-        <Container className="flex h-14 items-center justify-between gap-2">
-          <span className="text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800">
-            Infomii
-          </span>
-          <nav className="flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
-            <a href="#live-demo" className={navLinkClass}>
-              デモ
-            </a>
-            <a href="#how-it-works" className={`hidden sm:inline-flex ${navLinkClass}`}>
-              使い方
-            </a>
-            <a href="#pricing" className={navLinkClass}>
-              料金
-            </a>
-            <Link href="/blog" className={navLinkClass}>
-              ブログ
-            </Link>
-            <Button href={loginHref} variant="ghost" size="md" className="min-h-[44px] rounded-lg px-2 sm:px-4">
-              ログイン
-            </Button>
-            <Button
-              href={ctaHref}
-              size="md"
-              className="min-h-[44px] px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
-            >
-              1ページ無料で公開してみる
-            </Button>
-          </nav>
-        </Container>
-      </header>
+      <LpSaasHeader loginHref={loginHref} ctaHref={ctaHref} />
 
       <LpHero
         ctaHref={ctaHref}
@@ -396,8 +363,9 @@ export default function LpSaaSPage() {
           >
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
             <p className="mt-1 text-sm text-slate-600">比較軸: 作成規模 / 運用効率 / チーム統制（詳細は横スクロールで確認）</p>
-            <div className="mt-4 sm:hidden">
-              <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
+            <HorizontalScrollHint className="mt-4 md:hidden">
+                <p className="mb-2 text-xs text-slate-500">横にスクロールして比較できます</p>
+                <div className="flex snap-x snap-mandatory gap-3 pb-1">
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Free</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">¥0</p>
@@ -406,6 +374,9 @@ export default function LpSaaSPage() {
                     <li>・QR共有 / 公開切替</li>
                     <li>・まず試す導入向け</li>
                   </ul>
+                  <Button href={ctaHref} variant="secondary" className="mt-3 min-h-[44px] w-full">
+                    Freeで始める
+                  </Button>
                 </article>
                 <article className="min-w-[240px] snap-start rounded-xl border border-emerald-300 bg-emerald-50/80 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Pro（人気）</p>
@@ -415,6 +386,12 @@ export default function LpSaaSPage() {
                     <li>・公開前チェック / 閲覧分析</li>
                     <li>・1拠点の安定運用向け</li>
                   </ul>
+                  <CheckoutButton
+                    plan="pro"
+                    className="mt-3 min-h-[44px] w-full !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
+                  >
+                    Proを申し込む{hasProAnnual ? "（月払い）" : ""}
+                  </CheckoutButton>
                 </article>
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Business</p>
@@ -424,16 +401,25 @@ export default function LpSaaSPage() {
                     <li>・チーム招待 / 多言語自動翻訳</li>
                     <li>・複数拠点・チーム運用向け</li>
                   </ul>
+                  <CheckoutButton
+                    plan="business"
+                    variant="secondary"
+                    className="mt-3 min-h-[44px] w-full"
+                    adaptiveBusinessCta
+                    showUpgradeHint
+                  >
+                    Businessを申し込む
+                  </CheckoutButton>
                 </article>
-              </div>
-            </div>
+                </div>
+            </HorizontalScrollHint>
             <div className="mt-4">
               <PricingComparisonTable />
             </div>
           </div>
 
           <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Business）">
-            <StaggerReveal className="grid gap-6 lg:grid-cols-3" staggerDelay={0.1}>
+            <StaggerReveal className="hidden gap-6 lg:grid-cols-3 md:grid" staggerDelay={0.1}>
               <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
                 <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
