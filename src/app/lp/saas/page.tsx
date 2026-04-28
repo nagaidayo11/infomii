@@ -34,6 +34,7 @@ export const metadata: Metadata = {
 function PricingComparisonTable() {
   const no = <span className="text-slate-300">—</span>;
   const yes = <span className="font-medium text-emerald-700">✓</span>;
+  const yesBadge = <span className="font-medium text-white">✓</span>;
 
   return (
     <div className="lux-section-card rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
@@ -120,7 +121,7 @@ function PricingComparisonTable() {
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
-                {yes} 対応
+                {yesBadge} 対応
               </span>
             </td>
           </tr>
@@ -135,7 +136,7 @@ function PricingComparisonTable() {
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
-                {yes} 対応
+                {yesBadge} 対応
               </span>
             </td>
           </tr>
@@ -150,7 +151,7 @@ function PricingComparisonTable() {
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{no}</td>
             <td className="px-3 py-2.5 text-center">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-emerald-700">
-                {yes} 対応
+                {yesBadge} 対応
               </span>
             </td>
           </tr>

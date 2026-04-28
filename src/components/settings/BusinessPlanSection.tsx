@@ -134,7 +134,12 @@ export function BusinessPlanSection() {
   const showNextRenewal = Boolean(
     isPaid && status !== "canceled" && currentPeriodEndLabel && hasFuturePeriodEnd
   );
-  const showValidUntil = Boolean(isPaid && periodLabel && (status === "canceled" || !showNextRenewal));
+  const showValidUntil = Boolean(
+    isPaid &&
+      periodLabel &&
+      hasFuturePeriodEnd &&
+      (status === "canceled" || scheduledCancel || !showNextRenewal)
+  );
 
   if (subscription === undefined || !roleLoaded) {
     return (
