@@ -704,11 +704,7 @@ a {
   font-family: "M PLUS Rounded 1c", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Keep canvas area neutral/readable */
-[data-editor-layout] [data-editor-column="canvas"],
-[data-editor-layout] [data-editor-column="canvas"] :is(button, input, select, textarea, label, p, span, h1, h2, h3, h4, h5, h6, a, li, summary, details) {
-  font-family: "Inter", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", ui-sans-serif, system-ui, sans-serif;
-}
+/* Canvas area now follows unified POP font as well. */
 
 /* Override internal chip/cardlet backgrounds from block style (card defines data-inner-surface). */
 .editor-inner-surface-overridden [data-inner-surface] {

@@ -128,7 +128,7 @@ export function QrManagementPanel() {
                     return (
                       <QrPageRow
                         key={info.id}
-                        title={info.title}
+                        title={stat?.title || info.title}
                         slug={info.slug}
                         qrScans7d={stat?.qrViews ?? 0}
                       />

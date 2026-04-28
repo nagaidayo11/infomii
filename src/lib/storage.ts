@@ -2008,7 +2008,7 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
       .eq("hotel_id", hotelId)
       .gte("created_at", startOfToday.toISOString()),
     supabase.from("informations").select("id,title,slug").eq("hotel_id", hotelId),
-    supabase.from("pages").select("slug").eq("hotel_id", hotelId),
+    supabase.from("pages").select("slug,title").eq("hotel_id", hotelId),
   ]);
 
   if (views7dError) {
@@ -2024,8 +2024,12 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
     throw toError(pagesError, "ページ一覧の取得に失敗しました");
   }
 
-  /** ページ一覧から削除済みの informations は人気ページ等に含めない（pages に slug が残るもののみ） */
-  const activeSlugs = new Set((pageSlugRows ?? []).map((row) => (row as { slug: string }).slug));
+  /** pages.title を最新の表示名ソースとして扱い、slug で informations と突合する。 */
+  const pageRows = (pageSlugRows ?? []) as Array<{ slug: string; title: string | null }>;
+  const activeSlugs = new Set(pageRows.map((row) => row.slug));
+  const pageTitleBySlug = new Map(
+    pageRows.map((row) => [row.slug, String(row.title ?? "").trim()] as const)
+  );
   const infosForStats = (infos ?? []).filter((row) => activeSlugs.has(row.slug));
 
   const rows = views7d ?? [];
@@ -2058,9 +2062,10 @@ export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {
   const allPageStats = infosForStats
     .map((row) => {
       const agg = aggregate.get(row.id) ?? { views: 0, qrViews: 0 };
+      const latestPageTitle = pageTitleBySlug.get(row.slug) ?? "";
       return {
         informationId: row.id,
-        title: row.title ?? "",
+        title: latestPageTitle || row.title || "無題ページ",
         views: agg.views,
         qrViews: agg.qrViews,
       };
@@ -2151,7 +2156,9 @@ export type PageViewAnalytics = {
 };
 
 /**
- * QR analytics: page_views for current hotel's pages (last 30 days).
+ * Page view analytics for current hotel's pages.
+ * - totalViews / byCountry / byLanguage: last 30 days
+ * - byDay: last 90 days (for selectable 7/30/60/90 day chart)
  */
 export async function getPageViewAnalytics(): Promise<PageViewAnalytics> {
   const empty: PageViewAnalytics = {
@@ -2165,8 +2172,12 @@ export async function getPageViewAnalytics(): Promise<PageViewAnalytics> {
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) return empty;
 
-  const thirtyDaysAgo = new Date();
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const ninetyDaysAgo = new Date(now);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  const thirtyDaysAgoMs = thirtyDaysAgo.getTime();
 
   const { data: infoRows, error: infoError } = await supabase
     .from("informations")
@@ -2179,19 +2190,25 @@ export async function getPageViewAnalytics(): Promise<PageViewAnalytics> {
     .from("page_views")
     .select("country, language, viewed_at, device")
     .in("page_id", pageIds)
-    .gte("viewed_at", thirtyDaysAgo.toISOString());
+    .gte("viewed_at", ninetyDaysAgo.toISOString());
   if (error) throw toError(error, "ページビュー分析の取得に失敗しました");
 
   const rows = views ?? [];
-  const totalViews = rows.length;
+  const rowsLast30 = rows.filter((r) => {
+    const viewedAt = new Date(String(r.viewed_at)).getTime();
+    return Number.isFinite(viewedAt) && viewedAt >= thirtyDaysAgoMs;
+  });
+  const totalViews = rowsLast30.length;
   const countryCount = new Map<string, number>();
   const languageCount = new Map<string, number>();
   const dayCount = new Map<string, number>();
-  for (const r of rows) {
+  for (const r of rowsLast30) {
     const c = (r.country as string) || "不明";
     countryCount.set(c, (countryCount.get(c) ?? 0) + 1);
     const lang = (r.language as string) || "不明";
     languageCount.set(lang, (languageCount.get(lang) ?? 0) + 1);
+  }
+  for (const r of rows) {
     const dateKey = (r.viewed_at as string).slice(0, 10);
     dayCount.set(dateKey, (dayCount.get(dateKey) ?? 0) + 1);
   }

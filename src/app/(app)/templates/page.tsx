@@ -33,6 +33,7 @@ const HIDDEN_TEMPLATE_NAMES = new Set<string>([
   "Airbnb・ゲスト向け案内",
   "観光ガイド・スポット案内",
 ]);
+const MAX_VISIBLE_PER_CATEGORY = 6;
 
 function filterByCategory(
   templates: TemplateRow[],
@@ -116,6 +117,14 @@ export default function TemplatesPage() {
     .filter((c) => c.id !== "all")
     .map((c) => ({ category: c.id, label: c.label, items: filterByCategory(templates, c.id) }))
     .filter((g) => g.items.length > 0);
+  const selectedCategoryLabel =
+    TEMPLATE_CATEGORIES.find((c) => c.id === category)?.label ?? "選択中カテゴリ";
+  const groupsToRender =
+    category === "all"
+      ? groupedWhenAll
+      : filtered.length > 0
+        ? [{ category, label: selectedCategoryLabel, items: filtered }]
+        : [];
 
   async function handleUseTemplate(templateId: string) {
     setUsingId(templateId);
@@ -232,62 +241,58 @@ export default function TemplatesPage() {
               ダッシュボードに戻る
             </Link>
           </div>
-        ) : category !== "all" ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((template) => {
-              return (
-                <TemplateCard
-                  key={template.id}
-                  id={template.id}
-                  name={template.name}
-                  description={template.description}
-                  preview_image={template.preview_image}
-                  category={template.category}
-                  onUse={() => handleUseTemplate(template.id)}
-                  onPreview={() => setPreviewTemplate(template)}
-                  using={usingId === template.id}
-                />
-              );
-            })}
-          </div>
         ) : (
           <div className="space-y-5">
-            {groupedWhenAll.map((group) => {
+            {groupsToRender.map((group) => {
               const expanded = !!expandedCategories[group.category];
-              const visible = expanded ? group.items : group.items.slice(0, 3);
+              const visible = expanded ? group.items : group.items.slice(0, MAX_VISIBLE_PER_CATEGORY);
               const hiddenCount = Math.max(0, group.items.length - visible.length);
               return (
                 <section key={group.category} className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
-                    {group.items.length > 3 ? (
+                    {group.items.length > MAX_VISIBLE_PER_CATEGORY ? (
                       <button
                         type="button"
                         onClick={() =>
                           setExpandedCategories((prev) => ({ ...prev, [group.category]: !expanded }))
                         }
-                        className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                        className="app-button-native min-h-[44px] rounded-lg px-2.5 text-xs font-medium text-slate-500 hover:text-slate-700"
                       >
-                        {expanded ? "折りたたむ" : `さらに表示（+${hiddenCount}）`}
+                        {expanded ? "折りたたむ" : `もっと見る（+${hiddenCount}）`}
                       </button>
                     ) : null}
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="relative">
+                    <p className="mb-2 text-xs text-slate-500 sm:hidden">横にスワイプして閲覧できます</p>
+                    <div
+                      className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0"
+                      role="region"
+                      aria-label={`${group.label} テンプレート一覧`}
+                      tabIndex={0}
+                    >
+                      <div className="flex items-stretch snap-x snap-mandatory gap-3 sm:gap-4">
                     {visible.map((template) => {
                       return (
-                        <TemplateCard
-                          key={template.id}
-                          id={template.id}
-                          name={template.name}
-                          description={template.description}
-                          preview_image={template.preview_image}
-                          category={template.category}
-                          onUse={() => handleUseTemplate(template.id)}
-                          onPreview={() => setPreviewTemplate(template)}
-                          using={usingId === template.id}
-                        />
+                            <div
+                              key={template.id}
+                              className="flex h-full min-w-[240px] snap-start sm:min-w-[280px] lg:min-w-[320px] lg:max-w-[360px]"
+                            >
+                              <TemplateCard
+                                id={template.id}
+                                name={template.name}
+                                description={template.description}
+                                preview_image={template.preview_image}
+                                category={template.category}
+                                onUse={() => handleUseTemplate(template.id)}
+                                onPreview={() => setPreviewTemplate(template)}
+                                using={usingId === template.id}
+                              />
+                            </div>
                       );
                     })}
+                      </div>
+                    </div>
                   </div>
                 </section>
               );

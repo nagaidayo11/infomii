@@ -14,9 +14,28 @@ import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
+const DAY_RANGE_OPTIONS = [7, 30, 60, 90] as const;
+type DayRange = (typeof DAY_RANGE_OPTIONS)[number];
+
 function formatDayLabel(isoDate: string): string {
   const d = new Date(isoDate + "T12:00:00");
   return new Intl.DateTimeFormat("ja-JP", { month: "short", day: "numeric" }).format(d);
+}
+
+function buildDayBuckets(
+  byDay: Array<{ date: string; count: number }>,
+  days: DayRange
+): Array<{ date: string; count: number }> {
+  const countByDate = new Map(byDay.map((row) => [row.date, row.count] as const));
+  const now = new Date();
+  const buckets: Array<{ date: string; count: number }> = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const date = d.toISOString().slice(0, 10);
+    buckets.push({ date, count: countByDate.get(date) ?? 0 });
+  }
+  return buckets;
 }
 
 /**
@@ -63,6 +82,7 @@ export function AnalyticsView() {
   const [bootstrap, setBootstrap] = useState<{ subscription: { plan: string } | null } | null>(null);
   const [metrics, setMetrics] = useState<HotelViewMetrics | null>(null);
   const [pageViews, setPageViews] = useState<PageViewAnalytics | null>(null);
+  const [dayRange, setDayRange] = useState<DayRange>(7);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,10 +115,11 @@ export function AnalyticsView() {
   const totalViews = pageViews?.totalViews ?? metrics?.totalViews7d ?? 0;
   const todayViews = metrics?.totalViewsToday ?? 0;
   const topPages = [...(metrics?.pageStats ?? [])].sort((a, b) => b.views - a.views).slice(0, 10);
-  const byDay = pageViews?.byDay ?? [];
+  const byDay = buildDayBuckets(pageViews?.byDay ?? [], dayRange);
   const byCountry = pageViews?.byCountry ?? [];
   const byLanguage = pageViews?.byLanguage ?? [];
   const maxDay = Math.max(1, ...byDay.map((d) => d.count));
+  const hasDayData = byDay.some((d) => d.count > 0);
   const maxCountry = Math.max(1, ...byCountry.map((c) => c.count));
   const maxLanguage = Math.max(1, ...byLanguage.map((l) => l.count));
 
@@ -181,19 +202,45 @@ export function AnalyticsView() {
 
       {/* Views by day — simple bar chart */}
       <section>
-        <h2 className="app-section-title">日別ビュー</h2>
-        <p className="mt-1 text-sm text-slate-500">直近30日間の日別閲覧数</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="app-section-title">日別ビュー</h2>
+            <p className="mt-1 text-sm text-slate-500">直近{dayRange}日間の日別閲覧数</p>
+          </div>
+          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+            {DAY_RANGE_OPTIONS.map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setDayRange(days)}
+                className={`app-button-native min-h-[36px] rounded-md px-2.5 text-xs font-semibold sm:px-3 ${
+                  dayRange === days
+                    ? "bg-emerald-600 !text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+                aria-pressed={dayRange === days}
+              >
+                {days}日
+              </button>
+            ))}
+          </div>
+        </div>
         {loading ? (
           <div className="mt-3 h-40 animate-pulse rounded-xl bg-slate-100" />
-        ) : byDay.length > 0 ? (
+        ) : hasDayData ? (
           <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-4">
-            <div className="-mx-1 flex min-h-[140px] items-end gap-0.5 overflow-x-auto pb-1 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:gap-1 [&::-webkit-scrollbar]:h-1.5">
+            <div className="-mx-1 overflow-x-auto px-1 pb-1">
+              <div className={`flex h-40 items-end ${dayRange <= 14 ? "justify-between gap-1" : "gap-1.5"}`}>
               {byDay.map(({ date, count }) => {
                 const h = maxDay > 0 ? Math.round((count / maxDay) * 100) : 0;
                 return (
                   <div
                     key={date}
-                    className="flex w-8 min-w-[2rem] shrink-0 flex-col items-center gap-1 sm:w-auto sm:min-w-0 sm:flex-1"
+                    className={`flex flex-col items-center gap-2 ${
+                      dayRange <= 14
+                        ? "min-w-0 flex-1"
+                        : "w-8 min-w-[2rem] shrink-0"
+                    }`}
                     title={`${date}: ${count} 回`}
                   >
                     <span className="text-[10px] font-medium tabular-nums text-slate-600">
@@ -201,10 +248,10 @@ export function AnalyticsView() {
                     </span>
                     <div className="flex w-full flex-1 items-end justify-center">
                       <div
-                        className="w-full max-w-[20px] rounded-t bg-slate-600"
+                        className="w-full max-w-[28px] rounded-t-md bg-emerald-500 transition-all"
                         style={{
-                          height: `${Math.max(6, h)}%`,
-                          minHeight: count > 0 ? 10 : 4,
+                          height: `${Math.max(8, h)}%`,
+                          minHeight: count > 0 ? 12 : 4,
                         }}
                       />
                     </div>
@@ -214,6 +261,7 @@ export function AnalyticsView() {
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         ) : (

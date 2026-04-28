@@ -41,30 +41,30 @@ function PricingComparisonTable() {
         横にスクロールして比較できます
       </p>
       <HorizontalScrollHint className="relative px-2 pb-2 sm:px-0 sm:pb-0" viewportClassName="max-h-[70dvh] overflow-auto overscroll-x-contain scroll-smooth sm:max-h-none">
-          <table className="w-full min-w-[860px] border-collapse text-sm">
+          <table className="w-full min-w-[860px] table-fixed border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50">
             <th
               scope="col"
-              className="sticky left-0 top-0 z-30 bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 shadow-[1px_0_0_rgba(148,163,184,0.25)]"
+              className="w-[38%] bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:w-[34%]"
             >
               比較項目
             </th>
-            <th scope="col" className="sticky top-0 z-20 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600">
+            <th scope="col" className="w-[20.5%] bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600 sm:w-[22%]">
               Free
             </th>
-            <th scope="col" className="sticky top-0 z-20 border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900">
+            <th scope="col" className="w-[20.5%] border-x border-slate-200 bg-slate-100/90 px-3 py-3 text-center text-xs font-semibold text-slate-900 sm:w-[22%]">
               Pro
             </th>
-            <th scope="col" className="sticky top-0 z-20 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600">
+            <th scope="col" className="w-[20.5%] bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600 sm:w-[22%]">
               Business
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 text-slate-800">
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">作成規模: 公開ページ数</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">作成規模: 公開ページ数</th>
             <td className="px-3 py-2.5 text-center tabular-nums">1本</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center tabular-nums">最大10本</td>
             <td className="px-3 py-2.5 text-center tabular-nums">
@@ -74,43 +74,43 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">テンプレート適用</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">テンプレート適用</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">編集プレビュー（PC / スマホ）</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">編集プレビュー（PC / スマホ）</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">下書き / 公開切り替え</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">下書き / 公開切り替え</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">QR発行 / 共有URL</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">QR発行 / 共有URL</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">運用効率: 公開前チェック</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">運用効率: 公開前チェック</th>
             <td className="px-3 py-2.5 text-center">{yes}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 shadow-[1px_0_0_rgba(148,163,184,0.2)]">運用効率: 閲覧分析</th>
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">運用効率: 閲覧分析</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 sm:w-[34%]">
               <span className="block">チーム統制: チーム招待</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 更新漏れ防止・引き継ぎ容易
@@ -125,7 +125,7 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 sm:w-[34%]">
               <span className="block">公開時の多言語自動翻訳</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 公開操作にあわせて主要言語へまとめて反映
@@ -140,7 +140,7 @@ function PricingComparisonTable() {
             </td>
           </tr>
           <tr>
-            <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 shadow-[1px_0_0_rgba(148,163,184,0.2)]">
+            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-semibold text-emerald-800 sm:w-[34%]">
               <span className="block">動的ブロック</span>
               <span className="mt-1 block text-xs font-medium text-emerald-700/90">
                 ヒーロースライド / キャンペーンタイマー / 緊急バナー など

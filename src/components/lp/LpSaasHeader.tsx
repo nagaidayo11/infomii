@@ -115,9 +115,9 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
             <Link href="/blog" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
               ブログ
             </Link>
-            <Button href={loginHref} variant="ghost" size="md" className="min-h-[44px] justify-start rounded-lg px-3">
+            <Link href={loginHref} className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
               ログイン
-            </Button>
+            </Link>
             <Button
               href={ctaHref}
               size="md"
