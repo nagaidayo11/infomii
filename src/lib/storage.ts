@@ -1114,7 +1114,13 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false })
       .limit(1);
-    rows = fallback.data;
+    rows = fallback.data
+      ? fallback.data.map((row) => ({
+          ...row,
+          cancel_at_period_end: false,
+          cancel_at: null,
+        }))
+      : null;
     error = fallback.error;
   }
 
@@ -1365,24 +1371,33 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       .order("updated_at", { ascending: false }),
     supabase.from("pages").select("slug").eq("hotel_id", hotelId),
   ]);
-  let subRes = subResInitial;
+  let subRows = subResInitial.data;
+  let subError = subResInitial.error;
   const bootstrapMissingCancelColumns =
-    (subRes.error as { code?: string; message?: string } | null)?.code === "42703" &&
-    Boolean((subRes.error as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
+    (subError as { code?: string; message?: string } | null)?.code === "42703" &&
+    Boolean((subError as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
   if (bootstrapMissingCancelColumns) {
-    subRes = await supabase
+    const fallback = await supabase
       .from("subscriptions")
       .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false })
       .limit(1);
+    subRows = fallback.data
+      ? fallback.data.map((row) => ({
+          ...row,
+          cancel_at_period_end: false,
+          cancel_at: null,
+        }))
+      : null;
+    subError = fallback.error;
   }
 
   if (hotelRes.error) {
     throw toError(hotelRes.error, "施設名の取得に失敗しました");
   }
-  if (subRes.error) {
-    throw toError(subRes.error, "プラン情報の取得に失敗しました");
+  if (subError) {
+    throw toError(subError, "プラン情報の取得に失敗しました");
   }
   if (infoRes.error) {
     throw toError(infoRes.error, "一覧取得に失敗しました");
@@ -1391,7 +1406,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     throw toError(pagesRes.error, "ページ一覧の取得に失敗しました");
   }
 
-  const latestSub = subRes.data?.[0] ?? null;
+  const latestSub = subRows?.[0] ?? null;
   const subscription = latestSub
     ? {
       id: latestSub.id,
