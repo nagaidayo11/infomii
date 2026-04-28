@@ -33,6 +33,20 @@ const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
 export function EditorLayout({ topBar, library, canvas, settings, mobileActions }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
   const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
+  const [dragTopPx, setDragTopPx] = useState<number | null>(null);
+  const [dragState, setDragState] = useState<{
+    startY: number;
+    startTopPx: number;
+    startSize: MobileSheetSize;
+  } | null>(null);
+
+  const getViewportHeight = () => (typeof window !== "undefined" ? window.innerHeight : 800);
+  const getSnapTopPx = (size: MobileSheetSize, viewportHeight: number) => {
+    if (size === "full") return Math.max(56, 56);
+    if (size === "comfortable") return Math.max(56, Math.round(viewportHeight * 0.2));
+    return Math.max(56, Math.round(viewportHeight * 0.42));
+  };
+  const closeTopPx = (viewportHeight: number) => Math.round(viewportHeight * 0.82);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -43,11 +57,28 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
     return () => mq.removeEventListener("change", clear);
   }, []);
 
-  const openLibrary = () => setSheet((s) => (s === "library" ? "none" : "library"));
-  const openSettings = () => setSheet((s) => (s === "settings" ? "none" : "settings"));
-  const focusCanvas = () => setSheet("none");
-  const cycleMobileSheetSize = () => {
-    setMobileSheetSize((prev) => (prev === "compact" ? "comfortable" : prev === "comfortable" ? "full" : "compact"));
+  const openLibrary = () =>
+    setSheet((s) => {
+      const next = s === "library" ? "none" : "library";
+      if (next === "none") {
+        setDragTopPx(null);
+        setDragState(null);
+      }
+      return next;
+    });
+  const openSettings = () =>
+    setSheet((s) => {
+      const next = s === "settings" ? "none" : "settings";
+      if (next === "none") {
+        setDragTopPx(null);
+        setDragState(null);
+      }
+      return next;
+    });
+  const focusCanvas = () => {
+    setSheet("none");
+    setDragTopPx(null);
+    setDragState(null);
   };
 
   const sheetOpen = sheet !== "none";
@@ -63,6 +94,63 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
       document.documentElement.style.overflow = previousHtmlOverflow;
     };
   }, [sheetOpen]);
+
+  useEffect(() => {
+    if (!dragState) return;
+    const onMove = (event: PointerEvent) => {
+      const viewportHeight = getViewportHeight();
+      const minTop = getSnapTopPx("full", viewportHeight);
+      const maxTop = Math.max(minTop + 24, viewportHeight - 96);
+      const nextTop = Math.min(maxTop, Math.max(minTop, dragState.startTopPx + (event.clientY - dragState.startY)));
+      setDragTopPx(nextTop);
+    };
+
+    const onUp = (event: PointerEvent) => {
+      const viewportHeight = getViewportHeight();
+      const minTop = getSnapTopPx("full", viewportHeight);
+      const maxTop = Math.max(minTop + 24, viewportHeight - 96);
+      const finalTop = Math.min(maxTop, Math.max(minTop, dragState.startTopPx + (event.clientY - dragState.startY)));
+      if (finalTop >= closeTopPx(viewportHeight)) {
+        setSheet("none");
+        setMobileSheetSize("comfortable");
+        setDragTopPx(null);
+        setDragState(null);
+        return;
+      }
+
+      const candidates: Array<{ size: MobileSheetSize; top: number }> = [
+        { size: "full", top: getSnapTopPx("full", viewportHeight) },
+        { size: "comfortable", top: getSnapTopPx("comfortable", viewportHeight) },
+        { size: "compact", top: getSnapTopPx("compact", viewportHeight) },
+      ];
+      const nearest = candidates.reduce((best, current) =>
+        Math.abs(current.top - finalTop) < Math.abs(best.top - finalTop) ? current : best
+      );
+      setMobileSheetSize(nearest.size);
+      setDragTopPx(finalTop);
+      setDragState(null);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragState]);
+
+  const startHandleDrag = (event: { clientY: number }) => {
+    if (sheet === "none") return;
+    const viewportHeight = getViewportHeight();
+    const currentTop = dragTopPx ?? getSnapTopPx(mobileSheetSize, viewportHeight);
+    setDragState({
+      startY: event.clientY,
+      startTopPx: currentTop,
+      startSize: mobileSheetSize,
+    });
+  };
 
   return (
     <div
@@ -90,7 +178,11 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
             bottom: "calc(3.65rem + env(safe-area-inset-bottom, 0px))",
           }}
           aria-label="パネルを閉じる"
-          onClick={() => setSheet("none")}
+          onClick={() => {
+            setSheet("none");
+            setDragTopPx(null);
+            setDragState(null);
+          }}
         />
       )}
 
@@ -107,23 +199,18 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           }
           style={{
             animationDelay: "40ms",
-            top: sheet === "library" ? `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})` : undefined,
+            top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
           }}
           aria-label="ブロックライブラリ"
         >
           {sheet === "library" ? (
-            <div className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden">
-              <div className="mx-auto mb-1 h-1.5 w-12 rounded-full bg-slate-200" aria-hidden />
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={cycleMobileSheetSize}
-                  className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                  aria-label="パネルサイズを切り替え"
-                >
-                  サイズ: {MOBILE_SHEET_LABEL[mobileSheetSize]}
-                </button>
-              </div>
+            <div
+              className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden touch-none"
+              onPointerDown={startHandleDrag}
+              role="presentation"
+              aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
+            >
+              <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
             </div>
           ) : null}
           {library}
@@ -133,7 +220,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           data-editor-column="canvas"
           className={
             "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100 " +
-            "pb-[calc(8.9rem+env(safe-area-inset-bottom))] lg:pb-0"
+            "pb-[calc(3.9rem+env(safe-area-inset-bottom))] lg:pb-0"
           }
           aria-label="キャンバス"
           style={{ animationDelay: "90ms" }}
@@ -152,23 +239,18 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           }
           style={{
             animationDelay: "140ms",
-            top: sheet === "settings" ? `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})` : undefined,
+            top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
           }}
           aria-label="ブロック設定"
         >
           {sheet === "settings" ? (
-            <div className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden">
-              <div className="mx-auto mb-1 h-1.5 w-12 rounded-full bg-slate-200" aria-hidden />
-              <div className="flex items-center justify-end">
-                <button
-                  type="button"
-                  onClick={cycleMobileSheetSize}
-                  className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                  aria-label="パネルサイズを切り替え"
-                >
-                  サイズ: {MOBILE_SHEET_LABEL[mobileSheetSize]}
-                </button>
-              </div>
+            <div
+              className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden touch-none"
+              onPointerDown={startHandleDrag}
+              role="presentation"
+              aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
+            >
+              <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
             </div>
           ) : null}
           {settings}
@@ -205,7 +287,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          追加
+          ブロック追加
         </button>
         <button
           type="button"
@@ -221,12 +303,12 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          編集
+          キャンバス
         </button>
         <button
           type="button"
           onClick={openSettings}
-          aria-label="ページタブを開く"
+          aria-label="ブロック設定タブを開く"
           className={
             "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "settings"
@@ -237,7 +319,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
           </svg>
-          ページ
+          ブロック設定
         </button>
       </nav>
     </div>

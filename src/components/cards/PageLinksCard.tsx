@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -27,6 +28,8 @@ type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: str
 export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageLinksCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -51,7 +54,17 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
   const getHref = (item: PageLinksItem): string => {
     const linkType = item.linkType ?? "page";
     if (linkType === "url" && item.link) return item.link;
-    if (linkType === "page" && item.pageSlug) return `/v/${item.pageSlug}`;
+    if (linkType === "page" && item.pageSlug) {
+      const parentSlug = pathname?.startsWith("/v/") ? pathname.replace(/^\/v\//, "").split("/")[0] : "";
+      const next = new URLSearchParams();
+      if (parentSlug) next.set("from", parentSlug);
+      const lang = searchParams?.get("lang");
+      if (lang) next.set("lang", lang);
+      const preview = searchParams?.get("preview");
+      if (preview === "1") next.set("preview", "1");
+      const qs = next.toString();
+      return `/v/${item.pageSlug}${qs ? `?${qs}` : ""}`;
+    }
     return "#";
   };
 

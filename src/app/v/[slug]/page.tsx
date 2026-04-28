@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard, CardType } from "@/components/editor/types";
@@ -10,7 +11,7 @@ const PAGE_STYLE_KEY = "_pageStyle";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string; lang?: string }>;
+  searchParams: Promise<{ preview?: string; lang?: string; from?: string }>;
 };
 
 function hasLocalizedPayload(value: unknown): boolean {
@@ -57,6 +58,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const { slug } = await params;
   const query = await searchParams;
   const isPreviewRequest = query.preview === "1";
+  const fromSlug = typeof query.from === "string" && query.from.trim() ? query.from.trim() : "";
   const requestHeaders = await headers();
   const acceptLanguage = requestHeaders.get("accept-language");
   const forcedFromUrl =
@@ -138,6 +140,14 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   }));
   const hasMultilingualContent = cards.some((card) => hasLocalizedPayload(card.content));
   const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
+  const backHref = (() => {
+    if (!fromSlug) return null;
+    const q = new URLSearchParams();
+    if (isPreviewRequest) q.set("preview", "1");
+    if (typeof query.lang === "string" && query.lang.trim()) q.set("lang", query.lang.trim());
+    const qs = q.toString();
+    return `/v/${fromSlug}${qs ? `?${qs}` : ""}`;
+  })();
 
   return (
     <GuestCardPageView
@@ -150,6 +160,16 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       showLocaleToggle={showLocaleToggle}
       businessFeaturesEnabled={canShowLocaleToggle}
       localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
+      backButton={
+        backHref ? (
+          <Link
+            href={backHref}
+            className="inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
+          >
+            ← 戻る
+          </Link>
+        ) : null
+      }
     />
   );
 }

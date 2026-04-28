@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export type EditorTopBarProps = {
   backHref?: string;
@@ -34,6 +35,8 @@ export type EditorTopBarProps = {
   publishToggleLoading?: boolean;
   publishToggleChecked?: boolean;
   onRenamePageTitle?: (nextTitle: string) => Promise<void> | void;
+  scrollPriorityMode?: boolean;
+  onToggleScrollPriority?: () => void;
 };
 
 function formatSavedAt(ms: number): string {
@@ -125,6 +128,8 @@ export function EditorTopBar({
   publishToggleLoading = false,
   publishToggleChecked = false,
   onRenamePageTitle,
+  scrollPriorityMode = true,
+  onToggleScrollPriority,
 }: EditorTopBarProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
@@ -274,6 +279,52 @@ export function EditorTopBar({
 
       {/* Actions: Preview, Publish group, QR */}
       <div className="flex shrink-0 items-center gap-1.5 pr-1">
+        <div className="flex items-center gap-1.5 lg:hidden">
+          <span
+            className={
+              "rounded-full px-2 py-0.5 text-[11px] font-semibold " +
+              (isPublished ? "bg-emerald-600 text-white" : "bg-amber-50 text-amber-800")
+            }
+          >
+            {isPublished ? "公開中" : "公開OFF"}
+          </span>
+          <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
+          <button
+            type="button"
+            onClick={onToggleScrollPriority}
+            disabled={!onToggleScrollPriority}
+            className={
+              "ui-pop-tap rounded-full border px-2 py-0.5 text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 " +
+              (scrollPriorityMode
+                ? "border-blue-200 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white text-slate-600")
+            }
+            aria-pressed={scrollPriorityMode}
+            aria-label="スクロール優先を切り替え"
+          >
+            {scrollPriorityMode ? "スクロール優先" : "編集優先"}
+          </button>
+        </div>
+        <div className="flex items-center gap-1 lg:hidden">
+          <button
+            type="button"
+            onClick={onUndo}
+            disabled={!canUndo || !onUndo}
+            className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            title="ひとつ前に戻す"
+          >
+            戻る
+          </button>
+          <button
+            type="button"
+            onClick={onRedo}
+            disabled={!canRedo || !onRedo}
+            className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            title="ひとつ先に進む"
+          >
+            進む
+          </button>
+        </div>
         <button
           type="button"
           onClick={onPreview}
@@ -386,16 +437,10 @@ export function EditorTopBar({
               <circle cx="12" cy="18" r="1.5" />
             </svg>
           </button>
-          {moreOpen && (
-            <>
-              <button
-                type="button"
-                className="ui-overlay-fade fixed inset-0 z-[55] bg-slate-900/30"
-                aria-label="閉じる"
-                onClick={() => setMoreOpen(false)}
-              />
+          {moreOpen && typeof document !== "undefined" &&
+            createPortal(
               <div
-                className="ui-pop-in fixed right-3 top-16 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
                 <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">ページ操作</div>
@@ -529,9 +574,9 @@ export function EditorTopBar({
                     </button>
                   </>
                 )}
-              </div>
-            </>
-          )}
+              </div>,
+              document.body
+            )}
         </div>
       </div>
     </header>

@@ -830,8 +830,9 @@ function PageLinksItemsEditor({
     next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
+  const defaultPageSlug = pages[0]?.slug ?? "";
   const addItem = () =>
-    setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: "", link: "" }]);
+    setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: defaultPageSlug, link: "" }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const openLinkedPageEditor = (slug: string) => {
     if (typeof window === "undefined") return;
@@ -888,7 +889,7 @@ function PageLinksItemsEditor({
             </button>
           </div>
           <Input
-            label="ラベル"
+            label={(item.linkType ?? "page") === "url" ? "URLラベル" : "ラベル"}
             value={readJaText(item.label)}
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder="WiFi"
@@ -904,10 +905,23 @@ function PageLinksItemsEditor({
             <label className={labelClass}>リンク先</label>
             <select
               value={item.linkType ?? "page"}
-              onChange={(e) => updateItem(i, "linkType", e.target.value as "page" | "url")}
+              onChange={(e) => {
+                const nextType = e.target.value as "page" | "url";
+                const next = [...items];
+                const current = next[i] ?? {};
+                next[i] = {
+                  ...current,
+                  linkType: nextType,
+                  pageSlug:
+                    nextType === "page"
+                      ? (typeof current.pageSlug === "string" && current.pageSlug) || defaultPageSlug
+                      : current.pageSlug,
+                };
+                setItems(next);
+              }}
               className={inputClass}
             >
-              <option value="page">この施設のページ</option>
+              <option value="page">Infomii内で作成したページと連携する</option>
               <option value="url">外部URL</option>
             </select>
           </div>
@@ -915,11 +929,11 @@ function PageLinksItemsEditor({
             <div className="w-full">
               <label className={labelClass}>ページを選択</label>
               <select
-                value={readJaText(item.pageSlug)}
+                value={readJaText(item.pageSlug) || defaultPageSlug}
                 onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
                 className={inputClass}
               >
-                <option value="">— 選択 —</option>
+                {pages.length === 0 ? <option value="">ページがありません</option> : null}
                 {pages.map((p) => (
                   <option key={p.id} value={p.slug}>
                     {p.title || p.slug || ""}
@@ -936,12 +950,20 @@ function PageLinksItemsEditor({
               </button>
             </div>
           ) : (
-            <Input
-              label="URL"
-              value={readJaText(item.link)}
-              onChange={(e) => updateItem(i, "link", e.target.value)}
-              placeholder="https://..."
-            />
+            <>
+              <Input
+                label="URLラベル"
+                value={readJaText(item.label)}
+                onChange={(e) => updateItem(i, "label", e.target.value)}
+                placeholder="例: 公式サイト"
+              />
+              <Input
+                label="URL"
+                value={readJaText(item.link)}
+                onChange={(e) => updateItem(i, "link", e.target.value)}
+                placeholder="https://..."
+              />
+            </>
           )}
         </div>
       ))}

@@ -237,6 +237,7 @@ type FreeformCanvasProps = {
   onSelectCard: (id: string | null) => void;
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onReorderCards?: (cards: EditorCard[]) => void;
+  scrollPriorityMode?: boolean;
   pageBackground?: {
     mode: "solid" | "gradient";
     color: string;
@@ -252,6 +253,7 @@ export function FreeformCanvas({
   onSelectCard,
   onUpdateCard,
   onReorderCards,
+  scrollPriorityMode = false,
   pageBackground,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -645,15 +647,24 @@ export function FreeformCanvas({
                 dragGrid={[1, 1]}
                 resizeGrid={[GRID, GRID]}
                 bounds="parent"
-                className="!cursor-move editor-reorder-smooth"
+                className={(scrollPriorityMode ? "!cursor-default " : "!cursor-move ") + "editor-reorder-smooth"}
                 style={{ zIndex: isSelected || isDragging ? 200 : 1 }}
-                enableResizing={isSelected}
+                disableDragging={scrollPriorityMode}
+                enableResizing={isSelected && !scrollPriorityMode}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
+                  if (scrollPriorityMode) return;
                   onSelectCard(card.id);
                 }}
               >
-                <div className="relative h-full w-full">
+                <div
+                  className="relative h-full w-full"
+                  onPointerDown={(e) => {
+                    if (scrollPriorityMode) return;
+                    e.stopPropagation();
+                    onSelectCard(card.id);
+                  }}
+                >
                   <div
                     className={
                       "editor-card-selected h-full w-full overflow-hidden rounded-xl transition-shadow " +
