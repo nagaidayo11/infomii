@@ -2197,7 +2197,7 @@ export function CardSettings({
                     type="button"
                     onClick={handleDuplicateCard}
                     disabled={!onDuplicateCard}
-                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
                   >
                     コピー
                   </button>
@@ -2205,7 +2205,7 @@ export function CardSettings({
                     type="button"
                     onClick={handleRemoveCard}
                     disabled={!onRemoveCard}
-                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
                   >
                     削除
                   </button>
@@ -2239,7 +2239,7 @@ export function CardSettings({
                   type="button"
                   onClick={handleDuplicateCard}
                   disabled={!onDuplicateCard}
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
                 >
                   コピー
                 </button>
@@ -2247,7 +2247,7 @@ export function CardSettings({
                   type="button"
                   onClick={handleRemoveCard}
                   disabled={!onRemoveCard}
-                  className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
                 >
                   削除
                 </button>
@@ -2255,11 +2255,11 @@ export function CardSettings({
             ) : null}
           </div>
           <p className="text-xs text-slate-500">変更はリアルタイムで反映されます</p>
-          <div className="flex flex-wrap gap-1.5 rounded-lg border border-slate-200 bg-slate-50 p-1">
+          <div className="flex gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-1">
             <button
               type="button"
               onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "content"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2270,7 +2270,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2281,7 +2281,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-background", appearanceBackgroundId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-background"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2292,7 +2292,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-border", appearanceBorderId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-border"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2303,7 +2303,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-spacing"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"

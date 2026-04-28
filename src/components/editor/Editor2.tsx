@@ -1230,7 +1230,7 @@ export function Editor2({
                   未反映の変更があります。「公開更新」で公開ページへ反映されます。
                 </div>
               )}
-              <div className="min-h-0 flex-1 overflow-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y">
                 <FreeformCanvas
                   cards={cards}
                   selectedCardId={selectedCardId}

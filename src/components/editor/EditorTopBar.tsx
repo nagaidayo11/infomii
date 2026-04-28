@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 export type EditorTopBarProps = {
   backHref?: string;
@@ -134,18 +134,6 @@ export function EditorTopBar({
   const canTogglePublish = !demoMode && typeof onTogglePublished === "function";
   const showPublishActionButton =
     !demoMode && (!canTogglePublish || publishActionLabel !== "公開");
-
-  useEffect(() => {
-    function handleDocClick(e: MouseEvent) {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
-        setMoreOpen(false);
-      }
-    }
-    if (moreOpen) {
-      document.addEventListener("click", handleDocClick);
-      return () => document.removeEventListener("click", handleDocClick);
-    }
-  }, [moreOpen]);
 
   async function commitTitle() {
     const next = titleValue.trim();
@@ -387,7 +375,7 @@ export function EditorTopBar({
               e.stopPropagation();
               setMoreOpen((o) => !o);
             }}
-            className="ui-pop-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="ui-pop-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
             aria-expanded={moreOpen}
             aria-haspopup="true"
             aria-label="その他の操作"
@@ -410,6 +398,7 @@ export function EditorTopBar({
                 className="ui-pop-in fixed right-3 top-16 z-[60] max-h-[min(320px,70vh)] w-[min(calc(100vw-1.5rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
+                <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">ページ操作</div>
                 <button
                   type="button"
                   role="menuitem"
@@ -458,6 +447,18 @@ export function EditorTopBar({
                     {publishing ? "処理中…" : publishActionLabel}
                   </button>
                 )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={publishing || qrPreparing}
+                  className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    onQr();
+                  }}
+                >
+                  {qrPreparing ? "QRを準備中…" : "QRを表示"}
+                </button>
                 {!demoMode && onRenamePageTitle && (
                   <button
                     type="button"
@@ -472,13 +473,14 @@ export function EditorTopBar({
                     ページ名を変更
                   </button>
                 )}
+                <div className="border-t border-slate-100" />
+                <div className="px-4 pb-1 pt-2 text-[11px] font-semibold tracking-wide text-slate-500">編集操作</div>
                 <button
                   type="button"
                   role="menuitem"
                   disabled={!canUndo || !onUndo}
                   className={
-                    "flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40 " +
-                    (!demoMode && onRenamePageTitle ? " border-t border-slate-100" : "")
+                    "flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                   }
                   onClick={() => {
                     onUndo?.();

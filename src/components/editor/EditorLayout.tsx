@@ -16,9 +16,23 @@ export type EditorLayoutProps = {
 };
 
 type MobileSheet = "none" | "library" | "settings";
+type MobileSheetSize = "compact" | "comfortable" | "full";
+
+const MOBILE_SHEET_TOP_MAP: Record<MobileSheetSize, string> = {
+  compact: "42dvh",
+  comfortable: "20dvh",
+  full: "3.5rem",
+};
+
+const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
+  compact: "小",
+  comfortable: "中",
+  full: "全画面",
+};
 
 export function EditorLayout({ topBar, library, canvas, settings, mobileActions }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
+  const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
@@ -32,8 +46,23 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
   const openLibrary = () => setSheet((s) => (s === "library" ? "none" : "library"));
   const openSettings = () => setSheet((s) => (s === "settings" ? "none" : "settings"));
   const focusCanvas = () => setSheet("none");
+  const cycleMobileSheetSize = () => {
+    setMobileSheetSize((prev) => (prev === "compact" ? "comfortable" : prev === "comfortable" ? "full" : "compact"));
+  };
 
   const sheetOpen = sheet !== "none";
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [sheetOpen]);
 
   return (
     <div
@@ -70,22 +99,40 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
         <aside
           data-editor-column="library"
           className={
-            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
             (sheet === "library"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 top-14 z-50 max-h-[min(90dvh,calc(100dvh-3.5rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "ui-pop-in fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
-          style={{ animationDelay: "40ms" }}
+          style={{
+            animationDelay: "40ms",
+            top: sheet === "library" ? `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})` : undefined,
+          }}
           aria-label="ブロックライブラリ"
         >
+          {sheet === "library" ? (
+            <div className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden">
+              <div className="mx-auto mb-1 h-1.5 w-12 rounded-full bg-slate-200" aria-hidden />
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={cycleMobileSheetSize}
+                  className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  aria-label="パネルサイズを切り替え"
+                >
+                  サイズ: {MOBILE_SHEET_LABEL[mobileSheetSize]}
+                </button>
+              </div>
+            </div>
+          ) : null}
           {library}
         </aside>
 
         <section
           data-editor-column="canvas"
           className={
-            "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-100 " +
+            "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100 " +
             "pb-[calc(8.9rem+env(safe-area-inset-bottom))] lg:pb-0"
           }
           aria-label="キャンバス"
@@ -97,15 +144,33 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
         <aside
           data-editor-column="settings"
           className={
-            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
             (sheet === "settings"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 top-14 z-50 max-h-[min(90dvh,calc(100dvh-3.5rem))] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "ui-pop-in fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
-          style={{ animationDelay: "140ms" }}
+          style={{
+            animationDelay: "140ms",
+            top: sheet === "settings" ? `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})` : undefined,
+          }}
           aria-label="ブロック設定"
         >
+          {sheet === "settings" ? (
+            <div className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden">
+              <div className="mx-auto mb-1 h-1.5 w-12 rounded-full bg-slate-200" aria-hidden />
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={cycleMobileSheetSize}
+                  className="ui-pop-tap rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  aria-label="パネルサイズを切り替え"
+                >
+                  サイズ: {MOBILE_SHEET_LABEL[mobileSheetSize]}
+                </button>
+              </div>
+            </div>
+          ) : null}
           {settings}
         </aside>
       </div>
@@ -124,11 +189,12 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-slate-200/90 bg-white/95 px-1 pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden"
         style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom))" }}
-        aria-label="エディタ表示"
+        aria-label="エディタ操作"
       >
         <button
           type="button"
           onClick={openLibrary}
+          aria-label="追加タブを開く"
           className={
             "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "library"
@@ -139,11 +205,12 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          ブロック
+          追加
         </button>
         <button
           type="button"
           onClick={focusCanvas}
+          aria-label="編集タブを開く"
           className={
             "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "none"
@@ -154,11 +221,12 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
-          キャンバス
+          編集
         </button>
         <button
           type="button"
           onClick={openSettings}
+          aria-label="ページタブを開く"
           className={
             "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
             (sheet === "settings"
@@ -169,7 +237,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
           </svg>
-          設定
+          ページ
         </button>
       </nav>
     </div>
