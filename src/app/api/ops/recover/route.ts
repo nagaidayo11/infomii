@@ -254,6 +254,11 @@ export async function POST(request: NextRequest) {
     const plan = mapPlanByStatus(stripeSub.status);
     const status = mapStripeStatus(stripeSub.status);
     const firstItem = stripeSub.items.data[0];
+    const cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
+    const cancelAtIso =
+      typeof stripeSub.cancel_at === "number" && Number.isFinite(stripeSub.cancel_at)
+        ? new Date(stripeSub.cancel_at * 1000).toISOString()
+        : null;
     const currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, stripeSub);
 
     const { error: updateError } = await admin
@@ -265,6 +270,8 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: typeof stripeSub.customer === "string" ? stripeSub.customer : null,
         stripe_subscription_id: stripeSub.id,
         stripe_price_id: firstItem?.price?.id ?? null,
+        cancel_at_period_end: cancelAtPeriodEnd,
+        cancel_at: cancelAtIso,
         current_period_end: currentPeriodEndIso,
         updated_at: new Date().toISOString(),
       })

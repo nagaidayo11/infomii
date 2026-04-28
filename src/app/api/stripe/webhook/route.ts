@@ -154,6 +154,8 @@ async function upsertStripeSubscription(params: {
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
   stripePriceId?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  cancelAt?: string | null;
   currentPeriodEnd?: string | null;
 }) {
   const admin = getSupabaseAdminServerClient();
@@ -171,6 +173,8 @@ async function upsertStripeSubscription(params: {
       stripe_customer_id: params.stripeCustomerId ?? null,
       stripe_subscription_id: params.stripeSubscriptionId ?? null,
       stripe_price_id: params.stripePriceId ?? null,
+      cancel_at_period_end: params.cancelAtPeriodEnd ?? false,
+      cancel_at: params.cancelAt ?? null,
       current_period_end: params.currentPeriodEnd ?? null,
       updated_at: new Date().toISOString(),
     })
@@ -226,6 +230,8 @@ export async function POST(request: NextRequest) {
           let mappedStatus: "trialing" | "active" | "past_due" | "canceled" = "active";
           let mappedPlan: PlanType = "pro";
           let stripePriceId: string | null = null;
+          let cancelAtPeriodEnd = false;
+          let cancelAtIso: string | null = null;
 
           if (subscriptionId) {
             const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -233,6 +239,8 @@ export async function POST(request: NextRequest) {
             stripePriceId = stripeSubscription.items.data[0]?.price?.id ?? null;
             mappedPlan =
               mappedStatus === "canceled" ? "free" : mapPlanByPriceId(stripePriceId);
+            cancelAtPeriodEnd = Boolean(stripeSubscription.cancel_at_period_end);
+            cancelAtIso = toIsoOrNull(stripeSubscription.cancel_at ?? null);
             currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, stripeSubscription);
           }
 
@@ -244,6 +252,8 @@ export async function POST(request: NextRequest) {
             stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
             stripeSubscriptionId: subscriptionId,
             stripePriceId,
+            cancelAtPeriodEnd,
+            cancelAt: cancelAtIso,
             currentPeriodEnd: currentPeriodEndIso,
           });
           await appendBillingLog({
@@ -270,6 +280,8 @@ export async function POST(request: NextRequest) {
         const stripePriceId = firstItem?.price?.id ?? null;
         const mappedPlan =
           mappedStatus === "canceled" ? "free" : mapPlanByPriceId(stripePriceId);
+        const cancelAtPeriodEnd = Boolean(subscription.cancel_at_period_end);
+        const cancelAtIso = toIsoOrNull(subscription.cancel_at ?? null);
         const currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, subscription);
 
         await upsertStripeSubscription({
@@ -281,6 +293,8 @@ export async function POST(request: NextRequest) {
             typeof subscription.customer === "string" ? subscription.customer : null,
           stripeSubscriptionId: subscription.id,
           stripePriceId: firstItem?.price?.id ?? null,
+          cancelAtPeriodEnd,
+          cancelAt: cancelAtIso,
           currentPeriodEnd: currentPeriodEndIso,
         });
         await appendBillingLog({

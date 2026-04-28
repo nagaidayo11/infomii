@@ -527,6 +527,8 @@ export type HotelSubscription = {
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
   maxPublishedPages: number;
+  cancelAtPeriodEnd: boolean;
+  cancelAt: string | null;
   currentPeriodEnd: string | null;
   hasStripeCustomer: boolean;
   updatedAt: string;
@@ -827,6 +829,8 @@ function createDevBusinessOverrideSubscriptionFallback(): HotelSubscription {
     plan: "business",
     status: "active",
     maxPublishedPages: resolveLimitByPlan("business"),
+    cancelAtPeriodEnd: false,
+    cancelAt: null,
     currentPeriodEnd: null,
     hasStripeCustomer: false,
     updatedAt: new Date().toISOString(),
@@ -1091,12 +1095,28 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     return null;
   }
 
-  const { data: rows, error } = await supabase
+  let { data: rows, error } = await supabase
     .from("subscriptions")
-    .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
+    .select(
+      "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,updated_at"
+    )
     .eq("hotel_id", hotelId)
     .order("updated_at", { ascending: false })
     .limit(1);
+
+  const missingCancelColumns =
+    (error as { code?: string; message?: string } | null)?.code === "42703" &&
+    Boolean((error as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
+  if (missingCancelColumns) {
+    const fallback = await supabase
+      .from("subscriptions")
+      .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
+      .eq("hotel_id", hotelId)
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    rows = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     throw toError(error, "プラン情報の取得に失敗しました");
@@ -1115,6 +1135,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     plan: data.plan,
     status: data.status,
     maxPublishedPages: data.max_published_pages,
+    cancelAtPeriodEnd: Boolean((data as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
+    cancelAt: (data as { cancel_at?: string | null }).cancel_at ?? null,
     currentPeriodEnd: data.current_period_end,
     hasStripeCustomer: Boolean(data.stripe_customer_id),
     updatedAt: data.updated_at,
@@ -1326,11 +1348,13 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     };
   }
 
-  const [hotelRes, subRes, infoRes, pagesRes] = await Promise.all([
+  const [hotelRes, subResInitial, infoRes, pagesRes] = await Promise.all([
     supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle(),
     supabase
       .from("subscriptions")
-      .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
+      .select(
+        "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,updated_at"
+      )
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false })
       .limit(1),
@@ -1341,6 +1365,18 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       .order("updated_at", { ascending: false }),
     supabase.from("pages").select("slug").eq("hotel_id", hotelId),
   ]);
+  let subRes = subResInitial;
+  const bootstrapMissingCancelColumns =
+    (subRes.error as { code?: string; message?: string } | null)?.code === "42703" &&
+    Boolean((subRes.error as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
+  if (bootstrapMissingCancelColumns) {
+    subRes = await supabase
+      .from("subscriptions")
+      .select("id,plan,status,max_published_pages,current_period_end,stripe_customer_id,updated_at")
+      .eq("hotel_id", hotelId)
+      .order("updated_at", { ascending: false })
+      .limit(1);
+  }
 
   if (hotelRes.error) {
     throw toError(hotelRes.error, "施設名の取得に失敗しました");
@@ -1362,6 +1398,8 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       plan: latestSub.plan,
       status: latestSub.status,
       maxPublishedPages: latestSub.max_published_pages,
+      cancelAtPeriodEnd: Boolean((latestSub as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
+      cancelAt: (latestSub as { cancel_at?: string | null }).cancel_at ?? null,
       currentPeriodEnd: latestSub.current_period_end,
       hasStripeCustomer: Boolean(latestSub.stripe_customer_id),
       updatedAt: latestSub.updated_at,

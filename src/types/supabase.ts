@@ -13,6 +13,8 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           stripe_price_id: string | null;
+          cancel_at_period_end: boolean;
+          cancel_at: string | null;
           current_period_end: string | null;
           created_at: string;
           updated_at: string;
@@ -26,6 +28,8 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
+          cancel_at_period_end?: boolean;
+          cancel_at?: string | null;
           current_period_end?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -38,6 +42,8 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
+          cancel_at_period_end?: boolean;
+          cancel_at?: string | null;
           current_period_end?: string | null;
           created_at?: string;
           updated_at?: string;

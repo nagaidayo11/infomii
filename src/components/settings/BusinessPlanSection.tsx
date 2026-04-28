@@ -22,8 +22,25 @@ export function BusinessPlanSection() {
   const plan = subscription?.plan ?? "free";
   const status = subscription?.status ?? null;
   const currentPeriodEnd = subscription?.currentPeriodEnd ?? null;
+  const cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd ?? false;
+  const cancelAt = subscription?.cancelAt ?? null;
   const isPaid = plan === "pro" || plan === "business";
   const isActiveLike = status === "active" || status === "trialing";
+  const formatDateYmd = (value: string | null): string | null => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+      date.getDate(),
+    ).padStart(2, "0")}`;
+  };
+  const currentPeriodEndLabel = formatDateYmd(currentPeriodEnd);
+  const cancelAtLabel = formatDateYmd(cancelAt);
+  const hasFuturePeriodEnd = (() => {
+    if (!currentPeriodEnd) return false;
+    const end = new Date(currentPeriodEnd).getTime();
+    return Number.isFinite(end) && end > Date.now();
+  })();
 
   const load = useCallback(async () => {
     try {
@@ -92,24 +109,32 @@ export function BusinessPlanSection() {
     }
   }, [canManageBilling]);
 
+  const scheduledCancel = Boolean(cancelAtPeriodEnd && status !== "canceled");
   const statusLabel =
     status === "active"
-      ? "active"
+      ? scheduledCancel
+        ? "解約予約中"
+        : "加入中"
       : status === "trialing"
-        ? "trialing"
+        ? "トライアル中"
         : status === "past_due"
-          ? "past_due"
+          ? "要お支払い確認"
           : status === "canceled"
-            ? "canceled"
+            ? "解約済み"
             : null;
-  const nextRenewalLabel = (() => {
-    if (!currentPeriodEnd) return "なし";
-    const date = new Date(currentPeriodEnd);
-    if (Number.isNaN(date.getTime())) return "なし";
-    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
-      date.getDate(),
-    ).padStart(2, "0")}`;
+  const periodLabel = (() => {
+    if (status === "canceled" && currentPeriodEndLabel && hasFuturePeriodEnd) {
+      return `${currentPeriodEndLabel}まで有効`;
+    }
+    if (scheduledCancel && (cancelAtLabel || currentPeriodEndLabel)) {
+      return `${cancelAtLabel ?? currentPeriodEndLabel}まで有効`;
+    }
+    return currentPeriodEndLabel;
   })();
+  const showNextRenewal = Boolean(
+    isPaid && status !== "canceled" && currentPeriodEndLabel && hasFuturePeriodEnd
+  );
+  const showValidUntil = Boolean(isPaid && periodLabel && (status === "canceled" || !showNextRenewal));
 
   if (subscription === undefined || !roleLoaded) {
     return (
@@ -200,9 +225,16 @@ export function BusinessPlanSection() {
         <div className="flex flex-col gap-2 border-b border-emerald-100/80 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800/90 sm:text-base">料金表</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 sm:text-[15px]">
-            <span>
-              次回更新日: <span className="font-medium text-slate-800">{nextRenewalLabel}</span>
-            </span>
+            {showNextRenewal ? (
+              <span>
+                次回更新日: <span className="font-medium text-slate-800">{currentPeriodEndLabel}</span>
+              </span>
+            ) : null}
+            {showValidUntil ? (
+              <span>
+                有効期限: <span className="font-medium text-slate-800">{periodLabel}</span>
+              </span>
+            ) : null}
             {statusLabel ? (
               <span>
                 ステータス: <span className="font-medium text-slate-800">{statusLabel}</span>

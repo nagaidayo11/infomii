@@ -38,6 +38,8 @@ create table if not exists public.subscriptions (
   stripe_customer_id text,
   stripe_subscription_id text,
   stripe_price_id text,
+  cancel_at_period_end boolean not null default false,
+  cancel_at timestamptz,
   current_period_end timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
