@@ -40,7 +40,7 @@ function SettingsSection({
 }) {
   return (
     <div id={sectionId} className="space-y-3 scroll-mt-28">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         {title}
       </h3>
       <div className={`space-y-2 ${contentClassName ?? ""}`.trim()}>{children}</div>
@@ -62,7 +62,7 @@ function StyleGroup({
       open={defaultOpen}
       className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         <span>{summary}</span>
         <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180" aria-hidden>
           ▼
@@ -365,26 +365,6 @@ function HeroSliderItemsEditor({
   const visibleItems = items.slice(0, HERO_SLIDER_MAX_ITEMS);
   const setItems = (next: HeroSliderItem[]) => onUpdate("slides", next.slice(0, HERO_SLIDER_MAX_ITEMS));
   const updateItem = (index: number, field: keyof HeroSliderItem, value: unknown) => {
-    // #region agent log
-    fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a2a66c" },
-      body: JSON.stringify({
-        sessionId: "a2a66c",
-        runId: "pre-fix",
-        hypothesisId: "H1-H4",
-        location: "src/components/editor/SettingsPanel.tsx:367",
-        message: "HeroSlider updateItem value type snapshot",
-        data: {
-          index,
-          field,
-          incomingType: typeof value,
-          previousType: typeof (items[index] as Record<string, unknown> | undefined)?.[field],
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     const next = [...items];
     next[index] = { ...(next[index] ?? {}), [field]: value };
     setItems(next);
@@ -1915,8 +1895,8 @@ export function CardSettings({
   if (!card) {
     return (
       <>
-        <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-700">
+        <div className="border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+          <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
             ブロック設定
           </h2>
           <p className="mt-3 text-sm text-slate-500">
@@ -2204,9 +2184,9 @@ export function CardSettings({
   if (businessLocked) {
     return (
       <>
-        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+            <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
             <div className="flex items-center justify-between gap-2">
               <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
                 {CARD_TYPE_LABELS[card.type]}
@@ -2235,7 +2215,7 @@ export function CardSettings({
             <p className="text-xs text-slate-500">Businessプラン限定ブロック</p>
           </div>
         </div>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
             このブロックの編集は Business プランでご利用いただけます。公開ページでの表示は維持されます。
           </section>
@@ -2246,9 +2226,9 @@ export function CardSettings({
 
   return (
     <>
-      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4">
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+          <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
               {CARD_TYPE_LABELS[card.type]}
@@ -2279,7 +2259,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "content"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2290,7 +2270,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2301,7 +2281,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-background", appearanceBackgroundId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-background"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2312,7 +2292,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-border", appearanceBorderId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-border"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2323,7 +2303,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium whitespace-nowrap transition [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-spacing"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2334,7 +2314,7 @@ export function CardSettings({
           </div>
         </div>
       </div>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
             <SettingsSection title="コンテンツ">

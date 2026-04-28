@@ -157,7 +157,7 @@ export function EditorTopBar({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0"
+      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
       role="banner"
       aria-label="エディタツールバー"
     >
@@ -209,7 +209,7 @@ export function EditorTopBar({
             />
           ) : (
             <h1
-              className="truncate text-sm font-semibold text-slate-900"
+              className="truncate text-sm font-semibold text-slate-900 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
               title={pageTitle}
             >
               {pageTitle || ""}
@@ -264,7 +264,7 @@ export function EditorTopBar({
           type="button"
           onClick={onClearAll}
           disabled={!canClearAll || !onClearAll}
-          className="ui-pop-tap rounded-md px-2.5 py-1.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="ui-pop-tap rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
           title="ページ内ブロックを全削除"
         >
           全削除

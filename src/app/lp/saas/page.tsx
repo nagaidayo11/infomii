@@ -7,8 +7,7 @@ import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
-const SAMPLE_PAGE_OPEN_HREF = "/demo/guest-live";
-const SAMPLE_PAGE_DEMO_HREF = "/demo/guest?frame=1";
+const SAMPLE_PAGE_DEMO_HREF = "/lp/saas?focus=templates";
 const DEMO_EDITOR_HREF = "/demo/editor";
 
 export const metadata: Metadata = {
@@ -233,7 +232,7 @@ function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
           </table>
         </div>
       </div>
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-start gap-3">
         <Button
           href={ctaHref}
           size="lg"
@@ -241,11 +240,13 @@ function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
         >
           無料でQR案内を作る
         </Button>
-        <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="min-h-[48px] border-2">
-          30秒デモを見る
-        </Button>
+        <div className="flex min-h-[48px] flex-col items-start">
+          <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="min-h-[48px] border-2">
+            30秒デモを見る
+          </Button>
+          <p className="mt-2 text-sm text-slate-500">登録なしで体験できます</p>
+        </div>
       </div>
-      <p className="mt-2 text-sm text-slate-500">登録なしで体験できます</p>
     </Section>
   );
 }
@@ -278,6 +279,9 @@ export default function LpSaaSPage() {
             <a href="#pricing" className={navLinkClass}>
               料金
             </a>
+            <Link href="/blog" className={navLinkClass}>
+              ブログ
+            </Link>
             <Button href={loginHref} variant="ghost" size="md" className="min-h-[44px] rounded-lg px-2 sm:px-4">
               ログイン
             </Button>
@@ -295,7 +299,6 @@ export default function LpSaaSPage() {
       <LpHero
         ctaHref={ctaHref}
         samplePageHref={SAMPLE_PAGE_HREF}
-        samplePageOpenHref={SAMPLE_PAGE_OPEN_HREF}
         demoEditorHref={DEMO_EDITOR_HREF}
       />
       <HeroImpactComparison ctaHref={ctaHref} />

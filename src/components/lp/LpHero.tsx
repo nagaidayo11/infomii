@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
 
@@ -125,8 +125,6 @@ type LpHeroProps = {
   ctaHref: string;
   /** 登録なしで触れるサンプル（公開ゲストページ） */
   samplePageHref: string;
-  /** 「ホテル完成イメージを開く」遷移先（スマホ幅プレビュー用） */
-  samplePageOpenHref?: string;
   /** 登録なしで触れるデモエディタ */
   demoEditorHref?: string;
 };
@@ -134,17 +132,55 @@ type LpHeroProps = {
 export function LpHero({
   ctaHref,
   samplePageHref,
-  samplePageOpenHref,
   demoEditorHref = "/demo/editor",
 }: LpHeroProps) {
   const popHeadingClass =
     "[font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] font-black tracking-tight drop-shadow-[0_4px_0_rgba(16,185,129,0.2)]";
   const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+  const [highlightTemplateButton, setHighlightTemplateButton] = useState(false);
+  const [showTemplateGuide, setShowTemplateGuide] = useState(false);
 
   const activeTemplate = useMemo(
     () => HERO_TEMPLATE_PREVIEWS[activeTemplateIndex] ?? HERO_TEMPLATE_PREVIEWS[0],
     [activeTemplateIndex]
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldFocusTemplate = params.get("focus") === "templates";
+    if (!shouldFocusTemplate) return;
+    let cancelled = false;
+
+    const focusTarget = () => {
+      if (cancelled) return;
+      const target = document.getElementById("template-focus-anchor");
+      if (!target) {
+        window.requestAnimationFrame(focusTarget);
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightTemplateButton(true);
+      setShowTemplateGuide(true);
+    };
+
+    const scrollId = window.setTimeout(() => {
+      focusTarget();
+    }, 160);
+
+    const clearHighlightId = window.setTimeout(() => {
+      setHighlightTemplateButton(false);
+    }, 3600);
+    const clearGuideId = window.setTimeout(() => {
+      setShowTemplateGuide(false);
+    }, 4200);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(scrollId);
+      window.clearTimeout(clearHighlightId);
+      window.clearTimeout(clearGuideId);
+    };
+  }, []);
 
   return (
     <section className="overflow-x-hidden border-b border-emerald-100 bg-gradient-to-b from-[#F2FBF7] via-[#FAFFFC] to-[#F2FBF7]">
@@ -178,25 +214,31 @@ export function LpHero({
                 </Button>
               </div>
               <p className="mt-3 text-sm font-medium text-slate-500">登録なしで体験できます</p>
-              <p className="mt-3 text-sm text-slate-600">
-                実際のデモページ：
-                <a
-                  href={samplePageOpenHref ?? "/demo/guest-live"}
-                  className="ml-1 font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-800"
-                >
-                  ホテル完成イメージを開く
-                </a>
-              </p>
             </div>
           </FadeIn>
           <FadeIn delay={0.08}>
-            <div className="mx-auto w-full max-w-[390px]">
+            <div id="template-focus-anchor" className="mx-auto w-full max-w-[390px]">
               <GuestPhoneFrame src={activeTemplate?.previewHref || samplePageHref} />
               <div className="mt-3 text-center">
+                {showTemplateGuide ? (
+                  <div className="mb-1.5 flex flex-col items-center">
+                    <span className="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold text-white shadow-[0_8px_18px_rgba(5,150,105,0.3)] animate-pulse">
+                      ここをタップでテンプレート切替
+                    </span>
+                    <span className="mt-0.5 text-emerald-600 animate-bounce" aria-hidden>
+                      ↓
+                    </span>
+                  </div>
+                ) : null}
                 <button
+                  id="template-cycle-trigger"
                   type="button"
                   onClick={() => setActiveTemplateIndex((prev) => (prev + 1) % HERO_TEMPLATE_PREVIEWS.length)}
-                  className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+                  className={`inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 ${
+                    highlightTemplateButton
+                      ? "animate-pulse border-emerald-500 bg-emerald-50 shadow-[0_0_0_6px_rgba(16,185,129,0.28),0_12px_24px_rgba(5,150,105,0.2)]"
+                      : ""
+                  }`}
                 >
                   クリックして別パターンを見る
                 </button>

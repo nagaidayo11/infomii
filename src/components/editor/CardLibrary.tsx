@@ -766,9 +766,9 @@ export function CardLibrary({
     onAddPreset?.(preset.types);
   };
   return (
-    <div className="flex h-full flex-col overflow-visible">
+    <div className="flex h-full flex-col overflow-visible [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
       <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
-        <h2 className="text-sm font-semibold text-slate-700">
+        <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           ブロックライブラリ
         </h2>
         <p className="mt-1 text-xs text-slate-500">
@@ -779,7 +779,7 @@ export function CardLibrary({
         <div className="space-y-3">
           {onAddPreset && (
             <section aria-label="おすすめセット" className="space-y-2">
-              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
                 おすすめセット
               </h3>
               <div className="space-y-1">
@@ -816,7 +816,7 @@ export function CardLibrary({
               aria-label={section.title}
               className="relative isolate space-y-1 pt-3 first:pt-0"
             >
-              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
                 {section.title}
               </h3>
               <div className="relative space-y-1">
