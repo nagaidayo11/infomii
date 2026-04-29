@@ -57,15 +57,28 @@ async function main() {
     return a.name.localeCompare(b.name);
   });
 
-  const chosen = candidates[0];
-  const targetName = normalizeTargetName(chosen.name);
-  const targetPath = path.join(PUBLISH_DIR, targetName);
+  const published = [];
+  for (const chosen of candidates) {
+    const targetName = normalizeTargetName(chosen.name);
+    const targetPath = path.join(PUBLISH_DIR, targetName);
 
-  await fs.rename(chosen.full, targetPath);
+    try {
+      await fs.access(targetPath);
+      throw new Error(`Target already exists: ${targetName}`);
+    } catch (error) {
+      if (error && error.code !== "ENOENT") {
+        throw error;
+      }
+    }
 
-  const rel = path.relative(ROOT, targetPath).replaceAll(path.sep, "/");
+    await fs.rename(chosen.full, targetPath);
+    const rel = path.relative(ROOT, targetPath).replaceAll(path.sep, "/");
+    published.push(rel);
+  }
+
   console.log("published=true");
-  console.log(`target_path=${rel}`);
+  console.log(`published_count=${published.length}`);
+  console.log(`target_paths=${published.join(",")}`);
 }
 
 main().catch((error) => {
