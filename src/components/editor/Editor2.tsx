@@ -108,6 +108,7 @@ export function Editor2({
   const [scrollPriorityMode, setScrollPriorityMode] = useState(true);
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
   const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
@@ -297,6 +298,15 @@ export function Editor2({
     pageGradientAngle,
     setAutosaveStatus,
   ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const apply = () => setIsMobileViewport(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (isDemoMode) return;
@@ -1173,7 +1183,7 @@ export function Editor2({
                   onSelectCard={selectCard}
                   onUpdateCard={updateCard}
                   onReorderCards={reorderCards}
-                  scrollPriorityMode={scrollPriorityMode}
+                  scrollPriorityMode={isMobileViewport && scrollPriorityMode}
                   pageBackground={{
                     mode: pageBackgroundMode,
                     color: pageBackgroundColor,

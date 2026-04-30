@@ -653,14 +653,12 @@ export function FreeformCanvas({
                 enableResizing={isSelected && !scrollPriorityMode}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
-                  if (scrollPriorityMode) return;
                   onSelectCard(card.id);
                 }}
               >
                 <div
                   className="relative h-full w-full"
                   onPointerDown={(e) => {
-                    if (scrollPriorityMode) return;
                     e.stopPropagation();
                     onSelectCard(card.id);
                   }}
