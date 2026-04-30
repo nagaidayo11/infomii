@@ -127,6 +127,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   drink_menu: 110,
   salon_service_menu: 120,
   combo_set_menu: 110,
+  menu_grid: 136,
   menu_sheet_sync: 120,
   menu_time_band: 130,
 };

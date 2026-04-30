@@ -24,11 +24,26 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
+      siteName: "Infomii",
       title: post.title,
       description: post.description,
       type: "article",
       url: `${appUrl}/blog/${post.slug}`,
       publishedTime: `${post.date}T00:00:00.000Z`,
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: "Infomii | ホテル案内ページ作成SaaS",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+      images: ["/twitter-image"],
     },
   };
 }

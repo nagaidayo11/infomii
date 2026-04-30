@@ -53,6 +53,7 @@ import { DailySpecialCard } from "./DailySpecialCard";
 import { DrinkMenuCard } from "./DrinkMenuCard";
 import { SalonServiceMenuCard } from "./SalonServiceMenuCard";
 import { ComboSetMenuCard } from "./ComboSetMenuCard";
+import { MenuGridCard } from "./MenuGridCard";
 import { MenuSheetSyncCard } from "./MenuSheetSyncCard";
 import { MenuTimeBandCard } from "./MenuTimeBandCard";
 
@@ -286,6 +287,8 @@ function SingleCardRenderer({
       return <SalonServiceMenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "combo_set_menu":
       return <ComboSetMenuCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "menu_grid":
+      return <MenuGridCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "menu_sheet_sync":
       return <MenuSheetSyncCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "menu_time_band":

@@ -29,6 +29,8 @@ const checkboxRowClass =
 const checkboxInlineRowClass =
   "inline-flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm text-slate-700";
 const compactGridClass = "grid grid-cols-1 gap-2.5 md:grid-cols-2";
+const MENU_GRID_MIN_COLUMNS = 2;
+const MENU_GRID_MAX_COLUMNS = 6;
 const contentSectionId = "settings-content";
 const displaySectionId = "settings-display";
 const appearanceSectionId = "settings-appearance";
@@ -1843,6 +1845,17 @@ function MenuTimeBandSlotsEditor({
   );
 }
 
+function normalizeMenuGridRows(rawRows: unknown, columns: number): string[][] {
+  if (!Array.isArray(rawRows)) return [];
+  return rawRows
+    .filter((row) => Array.isArray(row))
+    .map((row) => {
+      const next = (row as unknown[]).slice(0, columns).map((cell) => String(cell ?? ""));
+      while (next.length < columns) next.push("");
+      return next;
+    });
+}
+
 /** CardSettings panel: shows Content, Appearance, and Behavior for the selected card. Updates the canvas in real time. */
 export function CardSettings({
   card,
@@ -3624,6 +3637,167 @@ export function CardSettings({
             </SettingsSection>
           )}
 
+          {card.type === "menu_grid" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="メニュー表"
+              />
+              {(() => {
+                const rawColumns = Number(content.columns ?? 3);
+                const columns = Math.min(MENU_GRID_MAX_COLUMNS, Math.max(MENU_GRID_MIN_COLUMNS, Number.isFinite(rawColumns) ? Math.round(rawColumns) : 3));
+                const rows = normalizeMenuGridRows(content.rows, columns);
+                const hasHeader = content.hasHeader !== false;
+                const showBorder = content.showBorder !== false;
+                const cellPadding = content.cellPadding === "sm" || content.cellPadding === "lg" ? content.cellPadding : "md";
+                const setColumns = (nextColumns: number) => {
+                  const clamped = Math.min(MENU_GRID_MAX_COLUMNS, Math.max(MENU_GRID_MIN_COLUMNS, nextColumns));
+                  const nextRows = normalizeMenuGridRows(content.rows, clamped).map((row) => {
+                    const cells = row.slice(0, clamped);
+                    while (cells.length < clamped) cells.push("");
+                    return cells;
+                  });
+                  onUpdate(card.id, { content: { ...content, columns: clamped, rows: nextRows } });
+                };
+                const setRows = (nextRows: string[][]) => onUpdate(card.id, { content: { ...content, columns, rows: nextRows } });
+                const addRow = () => {
+                  const blank = Array.from({ length: columns }, () => "");
+                  setRows([...rows, blank]);
+                };
+                const removeRow = (rowIndex: number) => setRows(rows.filter((_, idx) => idx !== rowIndex));
+                const moveRow = (rowIndex: number, dir: -1 | 1) => {
+                  const to = rowIndex + dir;
+                  if (to < 0 || to >= rows.length) return;
+                  const next = [...rows];
+                  const [picked] = next.splice(rowIndex, 1);
+                  next.splice(to, 0, picked);
+                  setRows(next);
+                };
+                const updateCell = (rowIndex: number, colIndex: number, value: string) => {
+                  const next = rows.map((row) => [...row]);
+                  if (!next[rowIndex]) return;
+                  next[rowIndex][colIndex] = value;
+                  setRows(next);
+                };
+                return (
+                  <>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-slate-500">列数</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setColumns(columns - 1)}
+                            disabled={columns <= MENU_GRID_MIN_COLUMNS}
+                            className={`${reorderButtonClass} disabled:opacity-40`}
+                            aria-label="列を減らす"
+                          >
+                            - 列
+                          </button>
+                          <span className="min-w-[3rem] text-center text-sm font-semibold text-slate-700">{columns}列</span>
+                          <button
+                            type="button"
+                            onClick={() => setColumns(columns + 1)}
+                            disabled={columns >= MENU_GRID_MAX_COLUMNS}
+                            className={`${reorderButtonClass} disabled:opacity-40`}
+                            aria-label="列を増やす"
+                          >
+                            + 列
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <label className={checkboxInlineRowClass}>
+                          <input
+                            type="checkbox"
+                            checked={hasHeader}
+                            onChange={(e) => update("hasHeader", e.target.checked)}
+                            className="rounded border-slate-300"
+                          />
+                          先頭行をヘッダーにする
+                        </label>
+                        <label className={checkboxInlineRowClass}>
+                          <input
+                            type="checkbox"
+                            checked={showBorder}
+                            onChange={(e) => update("showBorder", e.target.checked)}
+                            className="rounded border-slate-300"
+                          />
+                          罫線を表示
+                        </label>
+                      </div>
+                      <div className="mt-2 w-full">
+                        <label className={labelClass}>セル余白</label>
+                        <select value={cellPadding} onChange={(e) => update("cellPadding", e.target.value)} className={inputClass}>
+                          <option value="sm">小</option>
+                          <option value="md">標準</option>
+                          <option value="lg">大</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-slate-500">行データ</span>
+                      <button type="button" onClick={addRow} className={addButtonClass}>
+                        + 行を追加
+                      </button>
+                    </div>
+                    {rows.map((row, rowIndex) => (
+                      <div key={`menu-grid-row-${rowIndex}`} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-slate-500">行 {rowIndex + 1}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => moveRow(rowIndex, -1)}
+                              disabled={rowIndex === 0}
+                              className={`${reorderButtonClass} disabled:opacity-40`}
+                              aria-label="行を上へ移動"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveRow(rowIndex, 1)}
+                              disabled={rowIndex === rows.length - 1}
+                              className={`${reorderButtonClass} disabled:opacity-40`}
+                              aria-label="行を下へ移動"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeRow(rowIndex)}
+                              disabled={rows.length <= 1}
+                              className={`${removeButtonClass} disabled:opacity-40`}
+                            >
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+                          {row.map((cell, colIndex) => (
+                            <div key={`menu-grid-cell-${rowIndex}-${colIndex}`} className="w-full">
+                              <label className={labelClass}>列 {colIndex + 1}</label>
+                              <textarea
+                                value={cell}
+                                onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
+                                rows={2}
+                                className={`${inputClass} min-h-[44px]`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                );
+              })()}
+            </SettingsSection>
+          )}
+
           {card.type === "menu_sheet_sync" && (
             <SettingsSection title="コンテンツ">
               <Input
@@ -3638,6 +3812,9 @@ export function CardSettings({
                 onChange={(e) => update("csvUrl", e.target.value)}
                 placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0"
               />
+              <p className="text-xs text-slate-500">
+                公開CSVからメニュー一覧を自動表示します。URLは公開されたCSVリンクを指定してください。
+              </p>
               <Input
                 label="区切り文字"
                 value={typeof content.delimiter === "string" ? content.delimiter : ","}

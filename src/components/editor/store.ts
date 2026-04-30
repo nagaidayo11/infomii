@@ -245,6 +245,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "drink_menu",
       "salon_service_menu",
       "combo_set_menu",
+      "menu_grid",
       "menu_sheet_sync",
       "menu_time_band",
     ];
@@ -314,7 +315,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       "drink_menu",
       "salon_service_menu",
       "combo_set_menu",
-      "menu_sheet_sync",
+      "menu_grid",
       "menu_time_band",
     ];
     if (!allowed.includes(type)) return;

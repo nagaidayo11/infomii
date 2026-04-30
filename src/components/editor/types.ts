@@ -60,6 +60,8 @@ export type CardType =
   | "drink_menu"
   | "salon_service_menu"
   | "combo_set_menu"
+  | "menu_grid"
+  /** @deprecated Existing pages only. New insertion is hidden from library. */
   | "menu_sheet_sync"
   | "menu_time_band";
 
@@ -311,7 +313,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   drink_menu: "ドリンクメニュー",
   salon_service_menu: "施術メニュー",
   combo_set_menu: "セット・コース",
-  menu_sheet_sync: "メニュー（表連携）",
+  menu_grid: "メニュー表（グリッド）",
+  menu_sheet_sync: "メニュー（CSV連携）",
   menu_time_band: "時間帯別メニュー",
 };
 
@@ -351,7 +354,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "drink_menu",
   "salon_service_menu",
   "combo_set_menu",
-  "menu_sheet_sync",
+  "menu_grid",
   "menu_time_band",
   "divider",
   "space",
@@ -393,7 +396,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
   { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
-  { type: "menu_sheet_sync", label: "メニュー（表連携）", description: "公開CSV/スプレッドシートから取得（Business）" },
+  { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
   { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
@@ -438,7 +441,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
   { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
-  { type: "menu_sheet_sync", label: "メニュー（表連携）", description: "公開CSV/スプレッドシートから取得（Business）" },
+  { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
   { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
@@ -880,6 +883,19 @@ function defaultContent(type: CardType): Record<string, unknown> {
           },
           { name: "お得なペアコース", includes: "Wメイン＋デザート", price: "3,800円" },
         ],
+      };
+    case "menu_grid":
+      return {
+        title: "メニュー表",
+        columns: 3,
+        rows: [
+          ["品名", "価格", "備考"],
+          ["ブレンドコーヒー", "450円", "HOT/ICE"],
+          ["ミックスサンド", "680円", "数量限定"],
+        ],
+        hasHeader: true,
+        showBorder: true,
+        cellPadding: "md",
       };
     case "menu_sheet_sync":
       return {
