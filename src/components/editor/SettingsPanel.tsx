@@ -18,7 +18,17 @@ const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
-const compactGridClass = "grid grid-cols-1 gap-2 md:grid-cols-2";
+const addButtonClass =
+  "rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[44px]";
+const removeButtonClass =
+  "rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 min-h-[44px]";
+const reorderButtonClass =
+  "rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[44px] min-w-[44px]";
+const checkboxRowClass =
+  "flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm text-slate-700";
+const checkboxInlineRowClass =
+  "inline-flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm text-slate-700";
+const compactGridClass = "grid grid-cols-1 gap-2.5 md:grid-cols-2";
 const contentSectionId = "settings-content";
 const displaySectionId = "settings-display";
 const appearanceSectionId = "settings-appearance";
@@ -43,7 +53,7 @@ function SettingsSection({
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         {title}
       </h3>
-      <div className={`space-y-2 ${contentClassName ?? ""}`.trim()}>{children}</div>
+      <div className={`space-y-2.5 ${contentClassName ?? ""}`.trim()}>{children}</div>
     </div>
   );
 }
@@ -243,7 +253,7 @@ function InfoRowsEditor({
         <button
           type="button"
           onClick={addRow}
-          className="shrink-0 text-xs font-medium text-slate-600 hover:text-slate-800"
+          className={`shrink-0 ${addButtonClass}`}
         >
           + 行を追加
         </button>
@@ -316,7 +326,7 @@ function GalleryItemsEditor({
         <button
           type="button"
           onClick={addItem}
-          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+          className={addButtonClass}
         >
           + 追加
         </button>
@@ -327,7 +337,7 @@ function GalleryItemsEditor({
             <button
               type="button"
               onClick={() => removeItem(i)}
-              className="text-xs text-slate-400 hover:text-red-600"
+              className={removeButtonClass}
             >
               削除
             </button>
@@ -390,7 +400,7 @@ function HeroSliderItemsEditor({
           type="button"
           onClick={addItem}
           disabled={items.length >= HERO_SLIDER_MAX_ITEMS}
-          className="text-xs font-medium text-slate-600 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className={`${addButtonClass} disabled:cursor-not-allowed disabled:opacity-40`}
         >
           + 追加
         </button>
@@ -399,14 +409,14 @@ function HeroSliderItemsEditor({
       {visibleItems.map((_, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex items-center justify-end gap-2">
-            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
-            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => moveItem(i, -1)} className={reorderButtonClass}>↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className={reorderButtonClass}>↓</button>
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>削除</button>
           </div>
           <ImageUpload onUploaded={(url) => updateItem(i, "src", url)} className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3" />
           <Input label="代替テキスト" value={items[i]?.alt ?? ""} onChange={(e) => updateItem(i, "alt", e.target.value)} placeholder="任意" />
           <Input label="キャプション" value={items[i]?.caption ?? ""} onChange={(e) => updateItem(i, "caption", e.target.value)} placeholder="任意" />
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className={checkboxRowClass}>
             <input
               type="checkbox"
               checked={items[i]?.linkEnabled === true}
@@ -444,7 +454,7 @@ function HeroSliderItemsEditor({
                 );
               })()}
               {items[i]?.linkType === "external" ? (
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input
                     type="checkbox"
                     checked={items[i]?.openInNewTab === true}
@@ -485,7 +495,7 @@ function NearbyItemsEditor({
         <button
           type="button"
           onClick={addItem}
-          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+          className={addButtonClass}
         >
           + 追加
         </button>
@@ -496,7 +506,7 @@ function NearbyItemsEditor({
             <button
               type="button"
               onClick={() => removeItem(i)}
-              className="text-xs text-slate-400 hover:text-red-600"
+              className={removeButtonClass}
             >
               削除
             </button>
@@ -548,7 +558,7 @@ function FaqItemsEditor({
         <button
           type="button"
           onClick={addItem}
-          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+          className={addButtonClass}
         >
           + 追加
         </button>
@@ -559,7 +569,7 @@ function FaqItemsEditor({
             <button
               type="button"
               onClick={() => removeItem(i)}
-              className="text-xs text-slate-400 hover:text-red-600"
+              className={removeButtonClass}
             >
               削除
             </button>
@@ -614,16 +624,16 @@ function TabsInfoItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">タブ項目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex items-center justify-end gap-2">
-            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
-            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => moveItem(i, -1)} className={reorderButtonClass}>↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className={reorderButtonClass}>↓</button>
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>削除</button>
           </div>
           <Input
             label="タブラベル"
@@ -675,16 +685,16 @@ function TickerItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">お知らせ文</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex items-center justify-end gap-2">
-            <button type="button" onClick={() => moveItem(i, -1)} className="text-xs text-slate-500 hover:text-slate-700">↑</button>
-            <button type="button" onClick={() => moveItem(i, 1)} className="text-xs text-slate-500 hover:text-slate-700">↓</button>
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => moveItem(i, -1)} className={reorderButtonClass}>↑</button>
+            <button type="button" onClick={() => moveItem(i, 1)} className={reorderButtonClass}>↓</button>
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>削除</button>
           </div>
           <Input
             label={`メッセージ ${i + 1}`}
@@ -716,12 +726,12 @@ function AccordionItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">項目</span>
-        <button type="button" onClick={() => setItems([...items, { title: "", body: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+        <button type="button" onClick={() => setItems([...items, { title: "", body: "" }])} className={addButtonClass}>+ 追加</button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
           </div>
           <Input label="見出し" value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`項目 ${i + 1}`} />
           <div className="w-full">
@@ -752,12 +762,12 @@ function SocialLinksItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">SNS項目</span>
-        <button type="button" onClick={() => setItems([...items, { label: "", href: "", handle: "" }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+        <button type="button" onClick={() => setItems([...items, { label: "", href: "", handle: "" }])} className={addButtonClass}>+ 追加</button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
           </div>
           <Input label="名称" value={item.label ?? ""} onChange={(e) => updateItem(i, "label", e.target.value)} placeholder="Instagram" />
           <Input label="ハンドル" value={item.handle ?? ""} onChange={(e) => updateItem(i, "handle", e.target.value)} placeholder="@example" />
@@ -781,19 +791,19 @@ function ProgressItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">ステップ</span>
-        <button type="button" onClick={() => setItems([...items, { label: "", done: false }])} className="text-xs font-medium text-slate-600 hover:text-slate-800">+ 追加</button>
+        <button type="button" onClick={() => setItems([...items, { label: "", done: false }])} className={addButtonClass}>+ 追加</button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className="text-xs text-slate-400 hover:text-red-600">削除</button>
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
           </div>
           <Input label="ラベル" value={readJaText(item.label)} onChange={(e) => {
             const next = [...items];
             next[i] = { ...(next[i] ?? {}), label: writeJaTextPreserving((next[i] as Record<string, unknown> | undefined)?.label, e.target.value) };
             setItems(next);
           }} placeholder={`ステップ ${i + 1}`} />
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+          <label className={checkboxInlineRowClass}>
             <input type="checkbox" checked={item.done === true} onChange={(e) => {
               const next = [...items];
               next[i] = { ...(next[i] ?? {}), done: e.target.checked };
@@ -872,7 +882,7 @@ function PageLinksItemsEditor({
         <button
           type="button"
           onClick={addItem}
-          className="text-xs font-medium text-slate-600 hover:text-slate-800"
+          className={addButtonClass}
         >
           + 追加
         </button>
@@ -883,7 +893,7 @@ function PageLinksItemsEditor({
             <button
               type="button"
               onClick={() => removeItem(i)}
-              className="text-xs text-slate-400 hover:text-red-600"
+              className={removeButtonClass}
             >
               削除
             </button>
@@ -944,7 +954,7 @@ function PageLinksItemsEditor({
                 type="button"
                 onClick={() => openLinkedPageEditor(item.pageSlug ?? "")}
                 disabled={!item.pageSlug}
-                className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 min-h-[44px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 リンク先ページを編集する
               </button>
@@ -992,14 +1002,14 @@ function ChecklistItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">チェック項目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1048,14 +1058,14 @@ function StepsItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">ステップ</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1102,14 +1112,14 @@ function KpiItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">数値項目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1200,7 +1210,7 @@ function ScheduleItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">営業時間項目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
@@ -1211,7 +1221,7 @@ function ScheduleItemsEditor({
               type="button"
               onClick={() => moveItem(i, -1)}
               disabled={i === 0}
-              className="text-xs text-slate-500 hover:text-slate-800 disabled:opacity-40"
+              className={`${reorderButtonClass} disabled:opacity-40`}
             >
               ↑
             </button>
@@ -1219,11 +1229,11 @@ function ScheduleItemsEditor({
               type="button"
               onClick={() => moveItem(i, 1)}
               disabled={i === items.length - 1}
-              className="text-xs text-slate-500 hover:text-slate-800 disabled:opacity-40"
+              className={`${reorderButtonClass} disabled:opacity-40`}
             >
               ↓
             </button>
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1280,7 +1290,7 @@ function ScheduleItemsEditor({
               type="button"
               onClick={addRule}
               disabled={!isBusinessEnabled}
-              className="text-xs font-medium text-slate-600 hover:text-slate-800 disabled:opacity-40"
+              className={`${addButtonClass} disabled:opacity-40`}
             >
               + ルール追加
             </button>
@@ -1295,7 +1305,7 @@ function ScheduleItemsEditor({
                     type="button"
                     onClick={() => removeRule(i)}
                     disabled={!isBusinessEnabled}
-                    className="text-xs text-slate-400 hover:text-red-600 disabled:opacity-40"
+                    className={`${removeButtonClass} disabled:opacity-40`}
                   >
                     削除
                   </button>
@@ -1446,14 +1456,14 @@ function MenuItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">メニュー項目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1516,14 +1526,14 @@ function MenuTagItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">品目</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1588,14 +1598,14 @@ function MenuCategoriesGroupsEditor({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">カテゴリ</span>
-        <button type="button" onClick={addCategory} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addCategory} className={addButtonClass}>
           + カテゴリ追加
         </button>
       </div>
       {categories.map((cat, ci) => (
         <div key={ci} className="rounded-xl border border-slate-200 bg-white p-3">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeCategory(ci)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeCategory(ci)} className={removeButtonClass}>
               カテゴリを削除
             </button>
           </div>
@@ -1654,14 +1664,14 @@ function DrinkItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">ドリンク</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1700,14 +1710,14 @@ function SalonItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">施術</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1747,14 +1757,14 @@ function ComboItemsEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">セット</span>
-        <button type="button" onClick={addItem} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
           </div>
@@ -1804,14 +1814,14 @@ function MenuTimeBandSlotsEditor({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">時間帯スロット</span>
-        <button type="button" onClick={addSlot} className="text-xs font-medium text-slate-600 hover:text-slate-800">
+        <button type="button" onClick={addSlot} className={addButtonClass}>
           + 追加
         </button>
       </div>
       {slots.map((slot, si) => (
         <div key={si} className="rounded-xl border border-slate-200 bg-white p-3">
           <div className="flex justify-end">
-            <button type="button" onClick={() => removeSlot(si)} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={() => removeSlot(si)} className={removeButtonClass}>
               スロット削除
             </button>
           </div>
@@ -2234,12 +2244,12 @@ export function CardSettings({
                 </div>
               ) : null}
             </div>
-            <p className="text-xs text-slate-500">Businessプラン限定ブロック</p>
+            <p className="text-xs text-slate-500">ビジネスプラン限定ブロック</p>
           </div>
         </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-            このブロックの編集は Business プランでご利用いただけます。公開ページでの表示は維持されます。
+            このブロックの編集はビジネスプランでご利用いただけます。公開ページでの表示は維持されます。
           </section>
         </div>
       </>
@@ -2402,15 +2412,15 @@ export function CardSettings({
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.autoplay !== false} onChange={(e) => update("autoplay", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   自動再生
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.showCaptions !== false} onChange={(e) => update("showCaptions", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   キャプション表示
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.transitionEnabled !== false} onChange={(e) => update("transitionEnabled", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   トランジション
                 </label>
@@ -2422,9 +2432,9 @@ export function CardSettings({
                   onChange={(e) => update("transitionType", e.target.value)}
                   className={inputClass}
                 >
-                  <option value="fade">フワッと（fade）</option>
-                  <option value="slide">スクロール（slide）</option>
-                  <option value="zoom">ズーム（zoom）</option>
+                  <option value="fade">フワッと</option>
+                  <option value="slide">スクロール</option>
+                  <option value="zoom">ズーム</option>
                 </select>
               </div>
               <Input
@@ -2520,9 +2530,9 @@ export function CardSettings({
                   onChange={(e) => update("accent", e.target.value)}
                   className={inputClass}
                 >
-                  <option value="amber">Amber</option>
-                  <option value="blue">Blue</option>
-                  <option value="emerald">Emerald</option>
+                  <option value="amber">アンバー</option>
+                  <option value="blue">ブルー</option>
+                  <option value="emerald">エメラルド</option>
                 </select>
               </div>
             </SettingsSection>
@@ -2540,7 +2550,7 @@ export function CardSettings({
                 label="リンクURL"
                 value={display("href")}
                 onChange={(e) => update("href", e.target.value)}
-                placeholder="https://... or #"
+                placeholder="https://... または #"
               />
             </SettingsSection>
           )}
@@ -2548,11 +2558,11 @@ export function CardSettings({
           {card.type === "text" && (
             <SettingsSection title="コンテンツ">
                 <div className="w-full">
-                  <label className={labelClass}>Text</label>
+                  <label className={labelClass}>テキスト</label>
                   <textarea
                     value={display("content")}
                     onChange={(e) => updateLocalized("content", e.target.value)}
-                    placeholder="Heading or body text"
+                    placeholder="見出しまたは本文"
                     rows={3}
                     className={inputClass}
                   />
@@ -2578,7 +2588,7 @@ export function CardSettings({
                   className={inputClass}
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className={checkboxRowClass}>
                 <input
                   type="checkbox"
                   checked={content.dividerEnabled === true}
@@ -2616,7 +2626,7 @@ export function CardSettings({
                   label="代替テキスト"
                   value={display("alt")}
                   onChange={(e) => updateLocalized("alt", e.target.value)}
-                  placeholder="Image description"
+                  placeholder="画像の説明"
                 />
             </SettingsSection>
           )}
@@ -2651,19 +2661,19 @@ export function CardSettings({
                   label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="e.g. Guest WiFi"
+                  placeholder="例: ゲストWi-Fi"
                 />
                 <Input
-                  label="SSID"
+                  label="Wi-Fi名（SSID）"
                   value={display("ssid")}
                   onChange={(e) => updateLocalized("ssid", e.target.value)}
-                  placeholder="Network name"
+                  placeholder="ネットワーク名"
                 />
                 <Input
                   label="パスワード"
                   value={display("password")}
                   onChange={(e) => updateLocalized("password", e.target.value)}
-                  placeholder="Password"
+                  placeholder="パスワード"
                 />
             </SettingsSection>
           )}
@@ -2686,7 +2696,7 @@ export function CardSettings({
                   label="場所"
                   value={display("location")}
                   onChange={(e) => updateFacilityLocalized("location", e.target.value)}
-                  placeholder="1F Dining"
+                  placeholder="1F ダイニング"
                 />
                 <div className="w-full">
                   <label className={labelClass}>詳細</label>
@@ -2915,14 +2925,14 @@ export function CardSettings({
                   label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="e.g. Location"
+                  placeholder="例: 場所"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Address</label>
+                  <label className={labelClass}>住所</label>
                   <textarea
                     value={display("address")}
                     onChange={(e) => updateLocalized("address", e.target.value)}
-                    placeholder="Address or place name"
+                    placeholder="住所または場所名"
                     rows={2}
                     className={inputClass}
                   />
@@ -2963,14 +2973,14 @@ export function CardSettings({
                   label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="Notice"
+                  placeholder="お知らせ"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>Text</label>
+                  <label className={labelClass}>本文</label>
                   <textarea
                     value={display("body")}
                     onChange={(e) => updateLocalized("body", e.target.value)}
-                    placeholder="Announcement content"
+                    placeholder="お知らせ内容"
                     rows={3}
                     className={inputClass}
                   />
@@ -2978,7 +2988,7 @@ export function CardSettings({
               </SettingsSection>
               <SettingsSection title="表示オプション" sectionId={displaySectionId}>
                 <div className="w-full">
-                  <label className={labelClass}>Priority style</label>
+                  <label className={labelClass}>重要度スタイル</label>
                   <select
                     value={(content.variant as string) ?? "info"}
                     onChange={(e) => {
@@ -3009,7 +3019,7 @@ export function CardSettings({
                 label="ラベル"
                 value={display("label")}
                 onChange={(e) => updateLocalized("label", e.target.value)}
-                placeholder="Button text"
+                placeholder="ボタンテキスト"
               />
               <Input
                 label="リンク"
@@ -3057,15 +3067,15 @@ export function CardSettings({
                 />
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.hideBeforeStart === true} onChange={(e) => update("hideBeforeStart", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   開始前は非表示
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.hideAfterEnd === true} onChange={(e) => update("hideAfterEnd", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   終了後は非表示
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxRowClass}>
                   <input type="checkbox" checked={content.showSeconds !== false} onChange={(e) => update("showSeconds", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   秒を表示
                 </label>
@@ -3090,14 +3100,14 @@ export function CardSettings({
           {card.type === "divider" && (
             <SettingsSection title="表示オプション" sectionId={displaySectionId}>
               <div className="w-full">
-                <label className={labelClass}>Style</label>
+                <label className={labelClass}>スタイル</label>
                 <select
                   value={(content.style as string) ?? "line"}
                   onChange={(e) => update("style", e.target.value)}
                   className={inputClass}
                 >
-                  <option value="line">Line</option>
-                  <option value="dotted">Dotted</option>
+                  <option value="line">実線</option>
+                  <option value="dotted">点線</option>
                 </select>
               </div>
             </SettingsSection>
@@ -3287,7 +3297,7 @@ export function CardSettings({
                   <option value="fast">はやい</option>
                 </select>
               </div>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <label className={checkboxInlineRowClass}>
                 <input
                   type="checkbox"
                   checked={content.pauseOnHover !== false}
@@ -3407,7 +3417,7 @@ export function CardSettings({
                 </select>
               </div>
               {(content.mode as string) !== "hours" ? (
-                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <label className={checkboxInlineRowClass}>
                   <input type="checkbox" checked={content.openNow !== false} onChange={(e) => update("openNow", e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary" />
                   現在営業中
                 </label>
@@ -3771,7 +3781,7 @@ export function CardSettings({
                   </StyleGroup>
                   <StyleGroup summary="背景と内部パーツの見え方" defaultOpen={false}>
             <div id={appearanceBackgroundId} className="w-full">
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <label className={checkboxInlineRowClass}>
                 <input
                   type="checkbox"
                   checked={Boolean(style.backgroundTransparent)}
@@ -3834,7 +3844,7 @@ export function CardSettings({
               >
                 <option value="default">デフォルト</option>
                 <option value="transparent">透過</option>
-                <option value="custom">カスタム（任意色）</option>
+                <option value="custom">カスタム</option>
               </select>
             </div>
             <div className="w-full">
@@ -3884,7 +3894,7 @@ export function CardSettings({
                   </StyleGroup>
                   <StyleGroup summary="枠線と誤削除防止" defaultOpen={false}>
             <div id={appearanceBorderId} className="w-full">
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <label className={checkboxInlineRowClass}>
                 <input
                   type="checkbox"
                   checked={(style.borderEnabled as boolean | undefined) ?? true}
@@ -3933,7 +3943,7 @@ export function CardSettings({
               </div>
             </div>
             <div className="w-full">
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+              <label className={checkboxInlineRowClass}>
                 <input
                   type="checkbox"
                   checked={Boolean(style.deleteProtected)}
@@ -3960,12 +3970,12 @@ export function CardSettings({
                       className={inputClass}
                     >
                       <option value="">標準</option>
-                      <option value="xs">極小 (12px)</option>
-                      <option value="sm">小 (14px)</option>
-                      <option value="base">標準 (16px)</option>
-                      <option value="lg">大 (18px)</option>
-                      <option value="xl">特大 (20px)</option>
-                      <option value="2xl">最大 (24px)</option>
+                      <option value="xs">12px</option>
+                      <option value="sm">14px</option>
+                      <option value="base">16px</option>
+                      <option value="lg">18px</option>
+                      <option value="xl">20px</option>
+                      <option value="2xl">24px</option>
                     </select>
                   </div>
                 ) : null}
@@ -3977,13 +3987,13 @@ export function CardSettings({
                       onChange={(e) => updateStyle("titleFontSize", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">全体に合わせる</option>
-                      <option value="xs">極小 (12px)</option>
-                      <option value="sm">小 (14px)</option>
-                      <option value="base">標準 (16px)</option>
-                      <option value="lg">大 (18px)</option>
-                      <option value="xl">特大 (20px)</option>
-                      <option value="2xl">最大 (24px)</option>
+                      <option value="">自動</option>
+                      <option value="xs">12px</option>
+                      <option value="sm">14px</option>
+                      <option value="base">16px</option>
+                      <option value="lg">18px</option>
+                      <option value="xl">20px</option>
+                      <option value="2xl">24px</option>
                     </select>
                   </div>
                 ) : null}
@@ -3995,13 +4005,13 @@ export function CardSettings({
                       onChange={(e) => updateStyle("bodyFontSize", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">全体に合わせる</option>
-                      <option value="xs">極小 (12px)</option>
-                      <option value="sm">小 (14px)</option>
-                      <option value="base">標準 (16px)</option>
-                      <option value="lg">大 (18px)</option>
-                      <option value="xl">特大 (20px)</option>
-                      <option value="2xl">最大 (24px)</option>
+                      <option value="">自動</option>
+                      <option value="xs">12px</option>
+                      <option value="sm">14px</option>
+                      <option value="base">16px</option>
+                      <option value="lg">18px</option>
+                      <option value="xl">20px</option>
+                      <option value="2xl">24px</option>
                     </select>
                   </div>
                 ) : null}
@@ -4020,11 +4030,11 @@ export function CardSettings({
                       onChange={(e) => updateStyle("fontWeight", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">既定（タイトル600／本文400）</option>
-                      <option value="normal">通常 (400)</option>
-                      <option value="medium">やや太字 (500)</option>
-                      <option value="semibold">太字 (600)</option>
-                      <option value="bold">特太 (700)</option>
+                      <option value="">標準</option>
+                      <option value="normal">400</option>
+                      <option value="medium">500</option>
+                      <option value="semibold">600</option>
+                      <option value="bold">700</option>
                     </select>
                   </div>
                 ) : null}
@@ -4036,11 +4046,11 @@ export function CardSettings({
                       onChange={(e) => updateStyle("titleFontWeight", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">全体に合わせる</option>
-                      <option value="normal">通常 (400)</option>
-                      <option value="medium">やや太字 (500)</option>
-                      <option value="semibold">太字 (600)</option>
-                      <option value="bold">特太 (700)</option>
+                      <option value="">自動</option>
+                      <option value="normal">400</option>
+                      <option value="medium">500</option>
+                      <option value="semibold">600</option>
+                      <option value="bold">700</option>
                     </select>
                   </div>
                 ) : null}
@@ -4052,11 +4062,11 @@ export function CardSettings({
                       onChange={(e) => updateStyle("bodyFontWeight", e.target.value || undefined)}
                       className={inputClass}
                     >
-                      <option value="">全体に合わせる</option>
-                      <option value="normal">通常 (400)</option>
-                      <option value="medium">やや太字 (500)</option>
-                      <option value="semibold">太字 (600)</option>
-                      <option value="bold">特太 (700)</option>
+                      <option value="">自動</option>
+                      <option value="normal">400</option>
+                      <option value="medium">500</option>
+                      <option value="semibold">600</option>
+                      <option value="bold">700</option>
                     </select>
                   </div>
                 ) : null}
