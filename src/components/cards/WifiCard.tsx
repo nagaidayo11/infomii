@@ -82,17 +82,19 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           placeholder={labels.password}
         />
       </p>
-      <p className="text-xs leading-snug text-slate-500">
-        <InlineEditable
-          value={description}
-          onSave={(v) => updateKey("description", v)}
-          editable={isSelected}
-          onActivate={onActivate}
-          multiline
-          className="block w-full min-h-[1lh] text-xs text-slate-500"
-          placeholder={labels.desc}
-        />
-      </p>
+      {(isSelected || description.trim().length > 0) && (
+        <p className="text-xs leading-snug text-slate-500">
+          <InlineEditable
+            value={description}
+            onSave={(v) => updateKey("description", v)}
+            editable={isSelected}
+            onActivate={onActivate}
+            multiline
+            className="block w-full min-h-[1lh] text-xs text-slate-500"
+            placeholder={labels.desc}
+          />
+        </p>
+      )}
       </div>
     </Card>
   );

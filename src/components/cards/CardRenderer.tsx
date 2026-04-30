@@ -64,6 +64,21 @@ type SingleCardRendererProps = {
   businessFeaturesEnabled?: boolean;
 };
 
+function hasNonEmptyTextValue(value: unknown): boolean {
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.some((item) => hasNonEmptyTextValue(item));
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).some((child) => hasNonEmptyTextValue(child));
+  }
+  return false;
+}
+
+function shouldHideEmptyCard(card: EditorCard): boolean {
+  // Layout-only blocks must stay visible even without text content.
+  if (card.type === "space" || card.type === "divider") return false;
+  return !hasNonEmptyTextValue(card.content);
+}
+
 function isLocalizedObject(value: unknown): value is Record<string, unknown> {
   return (
     !!value &&
@@ -107,6 +122,8 @@ function SingleCardRenderer({
     ...card,
     content: resolveContentByLocale(card.content, locale) as Record<string, unknown>,
   };
+
+  if (shouldHideEmptyCard(resolvedCard)) return null;
 
   switch (resolvedCard.type) {
     case "hero":

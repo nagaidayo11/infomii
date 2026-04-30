@@ -14,7 +14,6 @@ import {
   rowToCard,
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
-import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -102,13 +101,7 @@ function EditorWithPageId() {
   }
 
   if (!loaded) {
-    return (
-      <FullScreenLoadingOverlay
-        title="読み込み中…"
-        subtitle="ページとブロックを読み込んでいます"
-        classNameZ="z-[100]"
-      />
-    );
+    return null;
   }
 
   if (pageFound === false) {
@@ -128,15 +121,7 @@ function EditorWithPageId() {
  */
 export default function EditorPage() {
   return (
-    <Suspense
-      fallback={
-        <FullScreenLoadingOverlay
-          title="読み込み中…"
-          subtitle="ページとブロックを読み込んでいます"
-          classNameZ="z-[100]"
-        />
-      }
-    >
+    <Suspense fallback={null}>
       <EditorWithPageId />
     </Suspense>
   );

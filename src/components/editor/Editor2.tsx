@@ -109,6 +109,7 @@ export function Editor2({
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [initialEditorLoading, setInitialEditorLoading] = useState<boolean>(() => !isDemoMode && Boolean(pageId));
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
   const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
@@ -309,28 +310,48 @@ export function Editor2({
   }, []);
 
   useEffect(() => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      setInitialEditorLoading(false);
+      return;
+    }
     if (!pageId) {
+      setInitialEditorLoading(false);
       setPageMeta({ pageId: null, title: "", slug: "", publicUrl: null });
       return;
     }
-    getPage(pageId).then((page) => {
-      if (page) {
+    setInitialEditorLoading(true);
+    let cancelled = false;
+    void (async () => {
+      try {
+        const page = await getPage(pageId);
+        if (cancelled) return;
+        if (!page) {
+          setPageMeta({ pageId: null, title: "", slug: "", publicUrl: null });
+          setPublishStatus("draft");
+          return;
+        }
         setPageMeta({
           pageId,
           title: page.title ?? "",
           slug: page.slug,
           publicUrl: buildPublicUrlV(page.slug),
         });
-        getInformationBySlug(page.slug)
-          .then((info) => {
+        try {
+          const info = await getInformationBySlug(page.slug);
+          if (!cancelled) {
             setPublishStatus(info?.status === "published" ? "published" : "draft");
-          })
-          .catch(() => {
+          }
+        } catch {
+          if (!cancelled) {
             setPublishStatus("draft");
-          });
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setInitialEditorLoading(false);
+        }
       }
-    });
+    })();
     getCurrentHotelSubscription()
       .then((sub) => {
         setTranslationEnabled(Boolean(sub && sub.plan === "business"));
@@ -339,6 +360,9 @@ export function Editor2({
         setTranslationEnabled(false);
       });
     getCurrentUserHotelRole().then(setHotelRole).catch(() => setHotelRole(null));
+    return () => {
+      cancelled = true;
+    };
   }, [isDemoMode, pageId, setPageMeta]);
 
   useEffect(() => {
@@ -1165,13 +1189,14 @@ export function Editor2({
             />
           }
           canvas={
-            <div ref={canvasRef} className="flex h-full flex-col overflow-hidden">
-              {!isDemoMode && publishStatus !== "published" && (
+            <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
+              <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
+              {!isDemoMode && !initialEditorLoading && publishStatus !== "published" && (
                 <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。
                 </div>
               )}
-              {!isDemoMode && publishStatus === "published" && hasUnpublishedChanges && (
+              {!isDemoMode && !initialEditorLoading && publishStatus === "published" && hasUnpublishedChanges && (
                 <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                   未反映の変更があります。「公開更新」で公開ページへ反映されます。
                 </div>
@@ -1193,6 +1218,14 @@ export function Editor2({
                   }}
                 />
               </div>
+              </div>
+              {!isDemoMode && initialEditorLoading && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/35 backdrop-blur-sm">
+                  <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
+                    読み込み中…
+                  </div>
+                </div>
+              )}
             </div>
           }
           settings={
@@ -1356,11 +1389,11 @@ export function Editor2({
           </div>
         )}
         {showEditorBusyOverlay && (
-          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45">
-            <div className="rounded-2xl border border-white/40 bg-slate-900/80 px-10 py-8 text-center shadow-2xl backdrop-blur-sm">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-              <p className="mt-4 text-3xl font-bold tracking-wide text-white">{editorBusyTitle}</p>
-              <p className="mt-2 text-sm font-medium text-slate-200">{editorBusySubtitle}</p>
+          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-white/30 backdrop-blur-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white/92 px-6 py-5 text-center shadow-xl">
+              <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-slate-300 border-t-slate-700" />
+              <p className="mt-3 text-base font-semibold tracking-wide text-slate-800">{editorBusyTitle}</p>
+              <p className="mt-1 text-xs font-medium text-slate-600">{editorBusySubtitle}</p>
             </div>
           </div>
         )}

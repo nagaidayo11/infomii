@@ -56,7 +56,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
           <ImageUpload onUploaded={updateSrc} className="h-full min-h-[120px]" />
         </div>
       )}
-      {(src || isSelected) && (
+      {(src || isSelected) && (isSelected || alt.trim().length > 0) && (
         <p className="mt-2 px-1 text-xs text-slate-500">
           <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-500" placeholder={labels.altPlaceholder} />
         </p>
