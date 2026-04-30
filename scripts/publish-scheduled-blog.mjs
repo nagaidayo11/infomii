@@ -14,11 +14,27 @@ function getTodayJst() {
   }).format(new Date());
 }
 
+/**
+ * Read date: from frontmatter.
+ * Supports standard `---` … `---` blocks and tolerates missing closing `---`
+ * (broken frontmatter would otherwise skip scheduled posts).
+ */
 function getFrontmatterDate(markdown) {
-  const m = markdown.match(/^---\n[\s\S]*?\n---/);
-  if (!m) return null;
-  const dateLine = m[0].match(/^date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s*$/m);
-  return dateLine?.[1] ?? null;
+  const trimmed = markdown.replace(/^\uFEFF/, "");
+  if (!trimmed.startsWith("---")) return null;
+
+  const lines = trimmed.split(/\r?\n/);
+  if (lines[0] !== "---") return null;
+
+  for (let i = 1; i < lines.length && i < 120; i++) {
+    const line = lines[i];
+    if (line === "---") break;
+    const m = line.match(/^date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s*$/);
+    if (m) return m[1];
+    if (/^#+\s/.test(line) || line.startsWith("「")) break;
+  }
+
+  return null;
 }
 
 function normalizeTargetName(name) {

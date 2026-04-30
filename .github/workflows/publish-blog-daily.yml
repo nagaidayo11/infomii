@@ -23,14 +23,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Publish due scheduled post
+      - name: Publish due scheduled posts
         id: publish
         shell: bash
         run: |
           set -euo pipefail
-          result="$(node scripts/publish-scheduled-blog.mjs)"
-          echo "$result"
-          echo "$result" >> "$GITHUB_OUTPUT"
+          node scripts/publish-scheduled-blog.mjs 2>&1 | tee publish.log
+          if grep -qx "published=true" publish.log; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit and push
         if: steps.publish.outputs.published == 'true'
@@ -38,5 +41,9 @@ jobs:
         run: |
           set -euo pipefail
           git add content/blog
-          git commit -m "chore(blog): publish scheduled post"
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(blog): publish scheduled post(s)"
           git push origin HEAD:main
