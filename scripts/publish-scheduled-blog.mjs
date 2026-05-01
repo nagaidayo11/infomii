@@ -16,8 +16,9 @@ function getTodayJst() {
 
 /**
  * Read date: from frontmatter.
- * Supports standard `---` … `---` blocks and tolerates missing closing `---`
- * (broken frontmatter would otherwise skip scheduled posts).
+ * Supports standard `---` … `---` blocks and tolerates missing closing `---`.
+ * Scans for the first standalone `date: YYYY-MM-DD` line before the closing delimiter;
+ * malformed keys like ``## title:`` must not hide a valid `date:` line below — keep YAML `title:` in drafts.
  */
 function getFrontmatterDate(markdown) {
   const trimmed = markdown.replace(/^\uFEFF/, "");
@@ -31,7 +32,6 @@ function getFrontmatterDate(markdown) {
     if (line === "---") break;
     const m = line.match(/^date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s*$/);
     if (m) return m[1];
-    if (/^#+\s/.test(line) || line.startsWith("「")) break;
   }
 
   return null;

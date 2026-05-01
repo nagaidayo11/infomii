@@ -2,9 +2,15 @@ name: Publish Blog Daily
 
 on:
   schedule:
-    # Daily at 10:00 JST
+    # Daily at ~10:00 JST (GitHub may delay cron by hours; see second slot).
     - cron: "0 1 * * *"
+    # Same calendar day retry ~19:00 JST — reduces misses from schedule jitter/off-hours skip.
+    - cron: "0 10 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish-next-post:

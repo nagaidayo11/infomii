@@ -1,0 +1,29 @@
+---
+description: Scheduled blog drafts must stay valid YAML frontmatter so daily GitHub Actions can read date: (scripts/publish-scheduled-blog.mjs).
+globs: content/blog/**/*.md
+alwaysApply: false
+---
+
+# Scheduled / blog Markdown (Infomii)
+
+## Frontmatter rules (automatic publish)
+
+Posts under `content/blog/scheduled/` are moved to `content/blog/` when `date` is **on or before “today” in Asia/Tokyo**, by Actions workflow `publish-blog-daily.yml` + `scripts/publish-scheduled-blog.mjs`.
+
+**Do not** break frontmatter formatting when editing titles or headings:
+
+1. Always start with a valid YAML fence:
+   ```yaml
+   ---
+   title: …
+   date: YYYY-MM-DD
+   description: …
+   ---
+   ```
+2. **`title:` must be YAML** — never turn it into a Markdown heading (`# …` / `## title:`). That has caused `date:` not to be found and scheduled posts never to publish.
+3. **`date:` format** — single line, exact pattern `YYYY-MM-DD` after `date:` (no prose on the same line).
+4. **Closing `---`** — keep it before body text whenever possible. If omitted, parsers still tolerate it, but do not intentionally remove it.
+5. **Body starts after** closing `---` (or blank lines right after YAML); do not interleave headings between frontmatter keys and the body unless you preserve the YAML block above unchanged.
+
+Before finishing edits to a scheduled file, skim the header: opening `---`, `title:`, `date:`, `description:`, closing `---`.
+
