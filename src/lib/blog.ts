@@ -21,24 +21,55 @@ function parseFrontmatter(raw: string): { frontmatter: Record<string, string>; b
   }
 
   const lines = raw.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") {
+    return { frontmatter: {}, body: raw };
+  }
+
   let idx = 1;
   const frontmatter: Record<string, string> = {};
   while (idx < lines.length) {
     const line = lines[idx];
     if (line.trim() === "---") {
       idx += 1;
-      break;
+      return { frontmatter, body: lines.slice(idx).join("\n").trim() };
+    }
+    const brokenTitle = line.match(/^##\s*title:\s*(.+)$/);
+    if (brokenTitle) {
+      frontmatter.title = brokenTitle[1].trim();
+      idx += 1;
+      continue;
     }
     const sep = line.indexOf(":");
     if (sep > 0) {
       const key = line.slice(0, sep).trim();
       const value = line.slice(sep + 1).trim();
-      frontmatter[key] = value;
+      if (key && !key.startsWith("#")) {
+        frontmatter[key] = value;
+      }
     }
     idx += 1;
   }
 
-  return { frontmatter, body: lines.slice(idx).join("\n").trim() };
+  // No closing `---` before EOF (common accident): keep title/date/description and treat the rest as body.
+  let bodyStart = lines.length;
+  for (let i = 1; i < lines.length; i++) {
+    if (/^description:\s*/.test(lines[i])) {
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() === "") j++;
+      if (j >= lines.length) {
+        bodyStart = lines.length;
+      } else if (lines[j].trim() === "---") {
+        j += 1;
+        while (j < lines.length && lines[j].trim() === "") j++;
+        bodyStart = j;
+      } else {
+        bodyStart = j;
+      }
+      break;
+    }
+  }
+
+  return { frontmatter, body: lines.slice(bodyStart).join("\n").trim() };
 }
 
 function escapeHtml(text: string): string {
