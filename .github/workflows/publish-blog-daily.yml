@@ -2,7 +2,9 @@ name: Publish Blog Daily
 
 on:
   schedule:
-    # Daily at ~10:00 JST (GitHub may delay cron by hours; see second slot).
+    # ~07:00 JST (22:00 UTC previous calendar day in UTC) — same-day posts go live before the 10:00 slot.
+    - cron: "0 22 * * *"
+    # Daily at ~10:00 JST (GitHub may delay cron by hours; see other slots).
     - cron: "0 1 * * *"
     # Same calendar day retry ~19:00 JST — reduces misses from schedule jitter/off-hours skip.
     - cron: "0 10 * * *"
