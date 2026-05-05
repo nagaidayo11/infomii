@@ -34,6 +34,9 @@ function mapStripeStatus(status: Stripe.Subscription.Status): "trialing" | "acti
 }
 
 function mapPlanByStatus(status: Stripe.Subscription.Status): "free" | "pro" {
+  // #region agent log
+  fetch('http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b8df48'},body:JSON.stringify({sessionId:'b8df48',runId:'build-fail-1',hypothesisId:'H1',location:'src/app/api/ops/recover/route.ts:37',message:'mapPlanByStatus called',data:{status},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   if (status === "active" || status === "trialing" || status === "past_due" || status === "unpaid") {
     return "pro";
   }
@@ -253,6 +256,9 @@ export async function POST(request: NextRequest) {
     }
     const plan = mapPlanByStatus(stripeSub.status);
     const status = mapStripeStatus(stripeSub.status);
+    // #region agent log
+    fetch('http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b8df48'},body:JSON.stringify({sessionId:'b8df48',runId:'build-fail-1',hypothesisId:'H2',location:'src/app/api/ops/recover/route.ts:258',message:'resolved plan/status before subscription update',data:{plan,status,stripeStatus:stripeSub.status},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const firstItem = stripeSub.items.data[0];
     const cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
     const cancelAtIso =
@@ -261,6 +267,9 @@ export async function POST(request: NextRequest) {
         : null;
     const currentPeriodEndIso = await resolveCurrentPeriodEndIso(stripe, stripeSub);
 
+    // #region agent log
+    fetch('http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b8df48'},body:JSON.stringify({sessionId:'b8df48',runId:'build-fail-1',hypothesisId:'H3',location:'src/app/api/ops/recover/route.ts:269',message:'about to compute max_published_pages from plan',data:{plan,branchPro:plan==="pro",branchBusiness:(plan as "free" | "pro" | "business")==="business"},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const { error: updateError } = await admin
       .from("subscriptions")
       .update({
