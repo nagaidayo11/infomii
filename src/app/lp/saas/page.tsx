@@ -427,7 +427,7 @@ export default function LpSaaSPage() {
                 <p className="mt-1 text-sm text-slate-500">まずは3ページまで無料で公開して試す</p>
                 <ul className="mt-6 space-y-2 text-sm text-slate-700">
                   <li>✓ 公開ページ数: 3本</li>
-                  <li>✓ 編集プレビュー（PC / スマホ）</li>
+                  <li>✓ 編集プレビュー</li>
                   <li>✓ QR発行 / 共有URL</li>
                   <li>✓ 下書き / 公開切り替え</li>
                   <li>✓ 小規模な案内運用の開始に</li>
@@ -455,7 +455,7 @@ export default function LpSaaSPage() {
                   <li>✓ 日々の更新が発生する拠点向け</li>
                 </ul>
                 <p className="mt-4 text-sm leading-relaxed text-slate-600">
-                  2ページ目以降の運用や用途分けが必要になったら、Proが最適です。
+                  4ページ目以降の運用や用途分けが必要になったら、Proが最適です。
                 </p>
                 <div className="mt-6 flex flex-col gap-2">
                   <a
