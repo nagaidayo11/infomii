@@ -71,7 +71,7 @@ create table if not exists public.subscriptions (
   hotel_id uuid not null unique references public.hotels(id) on delete cascade,
   plan text not null default 'free' check (plan in ('free', 'pro')),
   status text not null default 'active' check (status in ('trialing', 'active', 'past_due', 'canceled')),
-  max_published_pages integer not null default 1 check (max_published_pages >= 0),
+  max_published_pages integer not null default 3 check (max_published_pages >= 0),
   stripe_customer_id text,
   stripe_subscription_id text,
   stripe_price_id text,

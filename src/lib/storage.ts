@@ -809,7 +809,7 @@ function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBl
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
   if (plan === "business") return 999;
   if (plan === "pro") return 10;
-  return 1;
+  return 3;
 }
 
 function applyDevBusinessOverrideToSubscription(

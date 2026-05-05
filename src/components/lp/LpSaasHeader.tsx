@@ -64,7 +64,7 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
             size="md"
             className="min-h-[44px] px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
           >
-            1ページ無料で公開してみる
+            3ページ無料で公開してみる
           </Button>
         </nav>
 
@@ -123,7 +123,7 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
               size="md"
               className="min-h-[44px] justify-center !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
             >
-              1ページ無料で公開してみる
+              3ページ無料で公開してみる
             </Button>
           </div>
         </div>

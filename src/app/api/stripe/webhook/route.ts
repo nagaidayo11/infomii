@@ -46,7 +46,7 @@ function mapPlanByPriceId(priceId: string | null): PlanType {
 function resolveMaxPagesByPlan(plan: PlanType): number {
   if (plan === "business") return 999;
   if (plan === "pro") return 10;
-  return 1;
+  return 3;
 }
 
 function toIsoOrNull(unixSeconds: number | null | undefined): string | null {

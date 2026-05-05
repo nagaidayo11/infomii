@@ -21,7 +21,7 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
   const isPro = currentPlan === "pro";
   const defaultMessage = isPro
     ? "Proプランでは10ページまでです。Businessプランにアップグレードすると無制限で作成できます。"
-    : "無料プランでは1ページまで作成できます。Proプランで10ページ、Businessプランで無制限まで拡張できます。";
+    : "無料プランでは3ページまで作成できます。Proプランで10ページ、Businessプランで無制限まで拡張できます。";
 
   return (
     <div

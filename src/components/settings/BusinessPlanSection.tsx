@@ -261,7 +261,7 @@ export function BusinessPlanSection() {
             <p className={`text-sm font-semibold sm:text-base ${plan === "free" ? "text-emerald-700" : "text-slate-500"}`}>Free</p>
             <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "free" ? "text-emerald-900" : "text-slate-900"}`}>¥0</p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "free" ? "text-emerald-800" : "text-slate-600"}`}>
-              <li>・1ページ公開</li>
+              <li>・3ページ公開</li>
               <li>・基本編集（PC/スマホプレビュー）</li>
               <li>・QR共有 / 下書き公開切替</li>
             </ul>

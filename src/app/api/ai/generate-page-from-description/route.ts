@@ -339,7 +339,7 @@ export async function POST(request: Request) {
     .select("max_published_pages")
     .eq("hotel_id", membership.hotel_id)
     .maybeSingle();
-  const maxPages = sub?.max_published_pages ?? 1;
+  const maxPages = sub?.max_published_pages ?? 3;
   const { count } = await supabase
     .from("pages")
     .select("id", { count: "exact", head: true })
