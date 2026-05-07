@@ -230,7 +230,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       {title ? <h3 className={`px-1 text-base ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>{title}</h3> : null}
       <div
         data-inner-surface
-        className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 ${heightClass}`}
+        className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent ${heightClass}`}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (!canMove || touchStartX == null) return;

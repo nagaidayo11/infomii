@@ -35,8 +35,6 @@ const contentSectionId = "settings-content";
 const displaySectionId = "settings-display";
 const appearanceSectionId = "settings-appearance";
 const appearanceTypographyId = "appearance-typography";
-const appearanceBackgroundId = "appearance-background";
-const appearanceBorderId = "appearance-border";
 const appearanceSpacingId = "appearance-spacing";
 
 function SettingsSection({
@@ -100,31 +98,13 @@ function localInputToIso(value: string): string {
   return d.toISOString();
 }
 
-function normalizeHexColor(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  const v = value.trim();
-  if (/^#([0-9a-fA-F]{6})$/.test(v)) return v;
-  return undefined;
-}
-
-const INNER_SURFACE_PRESETS = [
-  { label: "薄灰", value: "#f8fafc" },
-  { label: "薄青", value: "#eff6ff" },
-  { label: "薄緑", value: "#ecfdf5" },
-] as const;
-
 const NOTICE_PRIORITY_PRESETS = [
   { value: "info", label: "情報" },
   { value: "warning", label: "警告" },
 ];
 
 type CardUpdatePatch = { content?: Record<string, unknown>; style?: Record<string, unknown> };
-type SettingsPalette =
-  | "content"
-  | "appearance"
-  | "appearance-background"
-  | "appearance-border"
-  | "appearance-spacing";
+type SettingsPalette = "content" | "appearance" | "appearance-spacing";
 
 export type CardSettingsProps = {
   card: EditorCard | null;
@@ -2190,6 +2170,10 @@ export function CardSettings({
     if (!card || !onRemoveCard) return;
     onRemoveCard(card.id);
   };
+  const isDeleteProtected = Boolean(style.deleteProtected);
+  const toggleDeleteProtection = () => {
+    updateStyle("deleteProtected", !isDeleteProtected);
+  };
   const facilityTime = card.type === "spa" ? display("time") || display("hours") : display("time");
   const facilityDetail =
     card.type === "spa"
@@ -2231,7 +2215,35 @@ export function CardSettings({
       <>
         <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+              <button
+                type="button"
+                onClick={toggleDeleteProtection}
+                disabled
+                aria-label={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+                title={isDeleteProtected ? "削除保護: ロック中（このブロックは編集不可）" : "削除保護: ロック解除中（このブロックは編集不可）"}
+                className={
+                  "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
+                  (isDeleteProtected
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-300 bg-white text-slate-500") +
+                  " cursor-not-allowed opacity-60"
+                }
+              >
+                {isDeleteProtected ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 7-2" />
+                  </svg>
+                )}
+              </button>
+            </div>
             <div className="flex items-center justify-between gap-2">
               <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
                 {CARD_TYPE_LABELS[card.type]}
@@ -2273,7 +2285,34 @@ export function CardSettings({
     <>
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+            <button
+              type="button"
+              onClick={toggleDeleteProtection}
+              aria-pressed={isDeleteProtected}
+              aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
+              title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+              className={
+                "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
+                (isDeleteProtected
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-slate-300 bg-white text-slate-500 hover:bg-slate-50")
+              }
+            >
+              {isDeleteProtected ? (
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 0 1 7-2" />
+                </svg>
+              )}
+            </button>
+          </div>
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
               {CARD_TYPE_LABELS[card.type]}
@@ -2322,28 +2361,6 @@ export function CardSettings({
               }`}
             >
               見た目
-            </button>
-            <button
-              type="button"
-              onClick={() => activatePalette("appearance-background", appearanceBackgroundId)}
-              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
-                activePalette === "appearance-background"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              色・背景
-            </button>
-            <button
-              type="button"
-              onClick={() => activatePalette("appearance-border", appearanceBorderId)}
-              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
-                activePalette === "appearance-border"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              枠線
             </button>
             <button
               type="button"
@@ -3923,7 +3940,11 @@ export function CardSettings({
                     className={inputClass}
                   >
                     {EDITOR_FONT_OPTIONS.map((opt) => (
-                      <option key={opt.label + opt.value} value={opt.value}>
+                      <option
+                        key={opt.label + opt.value}
+                        value={opt.value}
+                        style={opt.value ? { fontFamily: opt.value } : undefined}
+                      >
                         {opt.label}
                       </option>
                     ))}
@@ -3955,181 +3976,6 @@ export function CardSettings({
             ) : (
               <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
             )}
-                  </StyleGroup>
-                  <StyleGroup summary="背景と内部パーツの見え方" defaultOpen={false}>
-            <div id={appearanceBackgroundId} className="w-full">
-              <label className={checkboxInlineRowClass}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(style.backgroundTransparent)}
-                  onChange={(e) => updateStyle("backgroundTransparent", e.target.checked ? true : undefined)}
-                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
-                />
-                ブロック透過
-              </label>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>ブロックカラー</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={(() => {
-                    const v = (style.backgroundColor as string) ?? "#ffffff";
-                    const hex = v.startsWith("#") ? v.slice(1) : v;
-                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#ffffff";
-                  })()}
-                  onChange={(e) => {
-                    updateStyle("backgroundTransparent", undefined);
-                    updateStyle("backgroundColor", e.target.value);
-                  }}
-                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                />
-                <input
-                  type="text"
-                  value={(style.backgroundColor as string) ?? ""}
-                  onChange={(e) => {
-                    updateStyle("backgroundTransparent", undefined);
-                    updateStyle("backgroundColor", e.target.value || undefined);
-                  }}
-                  placeholder="#ffffff（ブロック全体）"
-                  className={inputClass + " flex-1"}
-                />
-              </div>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>内部要素の背景</label>
-              <select
-                value={
-                  (style.innerSurfaceMode as string) === "transparent" || (style.innerSurfaceMode as string) === "custom"
-                    ? (style.innerSurfaceMode as string)
-                    : "default"
-                }
-                onChange={(e) => {
-                  const mode = e.target.value as "default" | "transparent" | "custom";
-                  if (mode === "default") {
-                    updateStyles({ innerSurfaceMode: undefined, innerSurfaceColor: undefined });
-                    return;
-                  }
-                  if (mode === "transparent") {
-                    updateStyles({ innerSurfaceMode: "transparent", innerSurfaceColor: undefined });
-                    return;
-                  }
-                  const current = normalizeHexColor(style.innerSurfaceColor as string | undefined) ?? "#f8fafc";
-                  updateStyles({ innerSurfaceMode: "custom", innerSurfaceColor: current });
-                }}
-                className={inputClass}
-              >
-                <option value="default">デフォルト</option>
-                <option value="transparent">透過</option>
-                <option value="custom">カスタム</option>
-              </select>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>背景プリセット</label>
-              <div className="flex flex-wrap gap-2">
-                {INNER_SURFACE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    onClick={() => {
-                      updateStyles({ innerSurfaceMode: "custom", innerSurfaceColor: preset.value });
-                    }}
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                  >
-                    <span className="inline-block h-3 w-3 rounded-sm border border-slate-200" style={{ backgroundColor: preset.value }} />
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-500">カスタム = 内部要素背景に任意色（#RRGGBB）を適用</p>
-            {((style.innerSurfaceMode as string) ?? "default") === "custom" ? (
-              <div className="w-full">
-                <label className={labelClass}>内部要素の背景色</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={normalizeHexColor(style.innerSurfaceColor as string | undefined) ?? "#f8fafc"}
-                    onChange={(e) => updateStyle("innerSurfaceColor", e.target.value)}
-                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                  />
-                  <input
-                    type="text"
-                    value={(style.innerSurfaceColor as string) ?? ""}
-                    onChange={(e) => updateStyle("innerSurfaceColor", e.target.value || undefined)}
-                    onBlur={(e) => {
-                      const normalized = normalizeHexColor(e.target.value || undefined);
-                      updateStyle("innerSurfaceColor", normalized ?? undefined);
-                    }}
-                    placeholder="#f8fafc"
-                    className={inputClass + " flex-1"}
-                  />
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">#RRGGBB 形式（例: #f8fafc）</p>
-              </div>
-            ) : null}
-                  </StyleGroup>
-                  <StyleGroup summary="枠線と誤削除防止" defaultOpen={false}>
-            <div id={appearanceBorderId} className="w-full">
-              <label className={checkboxInlineRowClass}>
-                <input
-                  type="checkbox"
-                  checked={(style.borderEnabled as boolean | undefined) ?? true}
-                  onChange={(e) => updateStyle("borderEnabled", e.target.checked ? true : false)}
-                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
-                />
-                枠線を表示
-              </label>
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>枠線 (px)</label>
-              <input
-                type="number"
-                min={0}
-                max={8}
-                value={(style.borderWidth as number | string) ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  updateStyle("borderEnabled", true);
-                  updateStyle("borderWidth", v === "" ? undefined : parseInt(v, 10) || 0);
-                }}
-                placeholder="0"
-                className={inputClass}
-              />
-            </div>
-            <div className="w-full">
-              <label className={labelClass}>枠線色</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={(() => {
-                    const v = (style.borderColor as string) ?? "#e2e8f0";
-                    const hex = v.startsWith("#") ? v.slice(1) : v;
-                    return hex.length >= 6 ? `#${hex.slice(0, 6)}` : "#e2e8f0";
-                  })()}
-                  onChange={(e) => updateStyle("borderColor", e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                />
-                <input
-                  type="text"
-                  value={(style.borderColor as string) ?? ""}
-                  onChange={(e) => updateStyle("borderColor", e.target.value || undefined)}
-                  placeholder="#e2e8f0"
-                  className={inputClass + " flex-1"}
-                />
-              </div>
-            </div>
-            <div className="w-full">
-              <label className={checkboxInlineRowClass}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(style.deleteProtected)}
-                  onChange={(e) => updateStyle("deleteProtected", e.target.checked ? true : false)}
-                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
-                />
-                削除保護（全削除/削除キー対象外）
-              </label>
-            </div>
                   </StyleGroup>
                   <StyleGroup summary="細かい調整（サイズ・太さ・影）" defaultOpen={false}>
               <>

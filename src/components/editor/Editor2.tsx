@@ -9,7 +9,6 @@ import { CardLibrary } from "./CardLibrary";
 import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
 import { PublishModal } from "./PublishModal";
-import { SaveToast } from "./SaveToast";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
@@ -39,7 +38,6 @@ import {
 } from "@/lib/storage";
 import {
   detectBusinessTypeMisuse,
-  estimateTemplateConsistencyScore,
   hasInvalidRange,
 } from "@/lib/server-time";
 
@@ -160,6 +158,9 @@ export function Editor2({
     }
     const hasWifi = cards.some((c) => c.type === "wifi");
     const hasCheckout = cards.some((c) => c.type === "checkout");
+    const hasFaq = cards.some((c) => c.type === "faq");
+    const hasMap = cards.some((c) => c.type === "map");
+    const hasEmergency = cards.some((c) => c.type === "emergency");
     if (!hasWifi) {
       warnings.push(
         "「Wi-Fi」ブロックがまだありません。接続手順やSSIDを載せると、宿泊客が迷いにくくなります（任意・後から追加可）。",
@@ -168,6 +169,21 @@ export function Editor2({
     if (!hasCheckout) {
       warnings.push(
         "「チェックアウト」ブロックがまだありません。退室時刻や手順を載せると安心です（任意・後から追加可）。",
+      );
+    }
+    if (!hasFaq) {
+      warnings.push(
+        "「よくある質問」ブロックがまだありません。問い合わせ前に自己解決しやすくなります（任意・後から追加可）。",
+      );
+    }
+    if (!hasMap) {
+      warnings.push(
+        "「地図」ブロックがまだありません。アクセス案内を載せると初めての宿泊客にも親切です（任意・後から追加可）。",
+      );
+    }
+    if (!hasEmergency) {
+      warnings.push(
+        "「緊急連絡先」ブロックがまだありません。万一の連絡先を載せると安心です（任意・後から追加可）。",
       );
     }
     const placeholderPattern = /\[[^\]]+\]|ここに|入力してください|記載してください/;
@@ -204,15 +220,11 @@ export function Editor2({
         }
       }
     });
-    const lowConsistencyScore = estimateTemplateConsistencyScore(pageMeta.title || "", JSON.stringify(cards));
-    if (lowConsistencyScore < 60) {
-      warnings.push(`テンプレート整合スコアが低めです（${lowConsistencyScore}）。タイトルと画像/本文の一致を見直してください。`);
-    }
     if (detectBusinessTypeMisuse(cards.map((c) => c.type), translationEnabled)) {
       warnings.push("Business限定ブロックが含まれています。現在のプランで公開時表示が制限される可能性があります。");
     }
     return { errors, warnings };
-  }, [cards, pageMeta.title, translationEnabled]);
+  }, [cards, translationEnabled]);
 
   useEffect(() => {
     if (!isDemoMode) return;
@@ -1433,7 +1445,11 @@ export function Editor2({
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none"
                 >
                   {EDITOR_FONT_OPTIONS.map((opt) => (
-                    <option key={opt.label + opt.value} value={opt.value}>
+                    <option
+                      key={opt.label + opt.value}
+                      value={opt.value}
+                      style={opt.value ? { fontFamily: opt.value } : undefined}
+                    >
                       {opt.label}
                     </option>
                   ))}
@@ -1461,7 +1477,6 @@ export function Editor2({
             </div>
           </div>
         )}
-        <SaveToast lastSavedAt={lastSavedAt} />
       </div>
     </LocaleProvider>
   );

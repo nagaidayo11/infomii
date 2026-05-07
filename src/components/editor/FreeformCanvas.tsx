@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Mous
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
-import { getBlockStyle, type CardType, type EditorCard } from "./types";
+import { getBlockStyle, isMediaCardType, type CardType, type EditorCard } from "./types";
 
 const FIXED_VIEWPORT_WIDTH = 375;
 
@@ -15,27 +15,17 @@ function MobileCanvasFrame({
   children: React.ReactNode;
   width?: number;
 }) {
-  const bezel = 12;
   return (
-    <div
-      className="flex shrink-0 flex-col items-center"
-      aria-label="モバイルプレビュー（ゲスト表示）"
-    >
+    <div className="flex shrink-0 flex-col items-center" aria-label="モバイルプレビュー（ゲスト表示）">
       <div
-        className="flex flex-col rounded-[2rem] border border-slate-200/90 bg-slate-100/80 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
-        style={{ width: width + bezel * 2 }}
+        className="flex min-h-[480px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/65 bg-white shadow-[0_12px_36px_-8px_rgba(15,23,42,0.12)]"
+        style={{ width }}
       >
-        <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
         <div
-          className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
-          style={{ width }}
+          className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-scroll"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <div
-            className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-scroll"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </div>
@@ -544,15 +534,10 @@ export function FreeformCanvas({
       tabIndex={-1}
       onClick={() => onSelectCard(null)}
     >
-      <div
-        className="editor-canvas-outer-scroll flex min-w-0 flex-1 justify-center overflow-auto p-6"
-        style={{
-          background: "#eef0f3",
-        }}
-      >
+      <div className="editor-canvas-outer-scroll flex min-w-0 flex-1 justify-center overflow-auto bg-slate-100 p-5">
         <MobileCanvasFrame width={viewportWidth}>
           <div
-            className="relative rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
+            className="relative"
             style={{ width: canvasW, height: canvasH, minHeight: canvasH, background: pageBackgroundStyle }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
@@ -613,7 +598,9 @@ export function FreeformCanvas({
               measuredContentHeight > h + 1;
             const blockStyle = getBlockStyle(card);
             const shellBackgroundColor =
-              (blockStyle as Record<string, unknown>).backgroundColor === undefined
+              isMediaCardType(card.type)
+                ? "transparent"
+                : (blockStyle as Record<string, unknown>).backgroundColor === undefined
                 ? "var(--editor-block-surface, var(--color-ds-card))"
                 : (blockStyle as Record<string, unknown>).backgroundColor;
             const shellStyle: CSSProperties & { "--editor-card-surface": string } = {
@@ -626,12 +613,6 @@ export function FreeformCanvas({
                   } as Record<string, string>)
                 : {}),
             };
-            const innerSurfaceMode =
-              card.style && typeof card.style === "object"
-                ? (card.style as Record<string, unknown>).innerSurfaceMode
-                : undefined;
-            const hasInnerSurfaceOverride =
-              innerSurfaceMode === "transparent" || innerSurfaceMode === "custom";
             return (
               <Rnd
                 key={card.id}
@@ -668,8 +649,7 @@ export function FreeformCanvas({
                     className={
                       "editor-card-selected h-full w-full overflow-hidden rounded-xl transition-shadow " +
                       (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
-                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
-                      (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "")
+                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "")
                     }
                     style={shellStyle}
                   >

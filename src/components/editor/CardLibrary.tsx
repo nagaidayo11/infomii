@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
+import { CardRenderer } from "@/components/cards/CardRenderer";
+import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
@@ -46,137 +47,248 @@ function BusinessBadge() {
   );
 }
 
-type TooltipPlacement = "bottom" | "top";
 type TooltipPosition = {
   left: number;
   top: number;
-  placement: TooltipPlacement;
+  side: "right" | "left";
 };
 
 const TOOLTIP_VIEWPORT_MARGIN = 10;
-const TOOLTIP_DEFAULT_WIDTH = 352; // 22rem
+/** Layout width passed to blocks before the mild uniform scale below (readable “phone-ish” preview). */
+const LIVE_PREVIEW_NATURAL_WIDTH =300;
+/** Slightly shrink live block chrome (typography/media) inside the tooltip without changing relative layout between block types. */
+const LIVE_PREVIEW_DETAIL_SCALE = 0.935;
+/**
+ * Fallback width for horizontal placement before the tooltip first measures — approx. preview column + paddings/chrome.
+ */
+const TOOLTIP_PLACEHOLDER_WIDTH = LIVE_PREVIEW_NATURAL_WIDTH + 88;
 const TOOLTIP_GAP = 8;
 /** Motion rhythm aligned with onboarding UI timings. */
 const HOVER_OPEN_DELAY_MS = 150;
 const HOVER_CLOSE_DELAY_MS = 100;
 
-function useTruncation(text: string) {
-  const textRef = useRef<HTMLSpanElement | null>(null);
-  const [isTruncated, setIsTruncated] = useState(false);
+type PreviewMode = "live" | "image" | "text";
+type PreviewSpec = {
+  mode: PreviewMode;
+  title: string;
+  previewData?: { card: EditorCard };
+  imageSrc?: string;
+  imageAlt?: string;
+  showImage?: boolean;
+};
 
-  useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
+const PREVIEW_SPEC_BY_TYPE: Record<CardType, PreviewSpec> = (Object.keys(CARD_TYPE_LABELS) as CardType[]).reduce(
+  (acc, type) => {
+    const previewCard = createEmptyCard(type, `preview-${type}`, 0);
+    acc[type] = {
+      mode: "live",
+      title: CARD_TYPE_LABELS[type],
+      previewData: { card: previewCard },
+      showImage: false,
+    };
+    return acc;
+  },
+  {} as Record<CardType, PreviewSpec>
+);
 
-    const checkTruncate = () => {
-      const next = el.scrollWidth > el.clientWidth + 1;
-      setIsTruncated(next);
+function LiveCardPreview({ card }: { card: EditorCard }) {
+  const scaledRef = useRef<HTMLDivElement | null>(null);
+  const [clipBox, setClipBox] = useState<{ w: number; h: number }>(() => ({
+    w: LIVE_PREVIEW_NATURAL_WIDTH * LIVE_PREVIEW_DETAIL_SCALE,
+    h: 480,
+  }));
+
+  useLayoutEffect(() => {
+    const scaled = scaledRef.current;
+    if (!scaled) return;
+
+    const fit = () => {
+      const r = scaled.getBoundingClientRect();
+      const w = r.width;
+      const h = r.height;
+      if (w <= 1 || h <= 1) return;
+      setClipBox({ w, h });
     };
 
-    checkTruncate();
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(checkTruncate);
-      resizeObserver.observe(el);
-    }
-
-    const onWindowResize = () => checkTruncate();
-    window.addEventListener("resize", onWindowResize);
-
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(scaled);
+    window.addEventListener("resize", fit);
     return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", onWindowResize);
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
     };
-  }, [text]);
+  }, [card.type, card.id]);
 
-  return { textRef, isTruncated };
+  return (
+    <div className="box-border flex w-fit max-w-full justify-center bg-transparent p-0">
+      <div className="max-w-full overflow-hidden" style={{ width: clipBox.w, height: clipBox.h }}>
+        <div
+          ref={scaledRef}
+          style={{
+            width: LIVE_PREVIEW_NATURAL_WIDTH,
+            transform: `scale(${LIVE_PREVIEW_DETAIL_SCALE})`,
+            transformOrigin: "top left",
+          }}
+        >
+          <div className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
+            <CardRenderer card={card} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderPreviewVisual(item: LibraryItem, spec: PreviewSpec) {
+  const previewCard = spec.previewData?.card;
+  if (!previewCard) {
+    return (
+      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-slate-500">
+        <span className="text-xs">プレビューを読み込めません</span>
+      </div>
+    );
+  }
+  return (
+    <div className="w-fit max-w-full">
+      <LiveCardPreview card={previewCard} />
+    </div>
+  );
 }
 
 function LibraryTooltipPortal({
   open,
   tooltipId,
-  text,
+  item,
+  spec,
   anchorRef,
 }: {
   open: boolean;
   tooltipId: string;
-  text: string;
+  item: LibraryItem;
+  spec: PreviewSpec;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }) {
-  const [position, setPosition] = useState<TooltipPosition | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const [position, setPosition] = useState<TooltipPosition>({ left: -99999, top: -99999, side: "right" });
+  /** After first clamp pass, avoids a one-frame flicker at the origin. */
+  const [placed, setPlaced] = useState(false);
 
-  useEffect(() => {
-    const anchorEl = anchorRef.current;
-    if (!open || !anchorEl) return;
+  useLayoutEffect(() => {
+    if (!open) {
+      setPlaced(false);
+      return;
+    }
+
+    let raf = 0;
 
     const updatePosition = () => {
-      const rect = anchorEl.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const estimatedWidth = Math.min(TOOLTIP_DEFAULT_WIDTH, viewportWidth - TOOLTIP_VIEWPORT_MARGIN * 2);
-      let left = rect.left;
-      if (left + estimatedWidth > viewportWidth - TOOLTIP_VIEWPORT_MARGIN) {
-        left = viewportWidth - TOOLTIP_VIEWPORT_MARGIN - estimatedWidth;
-      }
-      if (left < TOOLTIP_VIEWPORT_MARGIN) left = TOOLTIP_VIEWPORT_MARGIN;
+      const anchorEl = anchorRef.current;
+      if (!anchorEl) return;
+      cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const rect = anchorEl.getBoundingClientRect();
+        const tipEl = tooltipRef.current;
+        const tipRect = tipEl?.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
 
-      const estimatedHeight = 64;
-      const canShowBottom = rect.bottom + TOOLTIP_GAP + estimatedHeight <= viewportHeight - TOOLTIP_VIEWPORT_MARGIN;
-      const placement: TooltipPlacement = canShowBottom ? "bottom" : "top";
-      const top =
-        placement === "bottom"
-          ? rect.bottom + TOOLTIP_GAP
-          : Math.max(TOOLTIP_VIEWPORT_MARGIN, rect.top - TOOLTIP_GAP - estimatedHeight);
-      setPosition({ left, top, placement });
+        let tw = tipRect && tipRect.width > 48 ? tipRect.width : TOOLTIP_PLACEHOLDER_WIDTH;
+        let th = tipRect && tipRect.height > 48 ? tipRect.height : 250;
+
+        tw = Math.min(tw, vw - TOOLTIP_VIEWPORT_MARGIN * 2);
+
+        const preferRight = rect.right + TOOLTIP_GAP + tw <= vw - TOOLTIP_VIEWPORT_MARGIN;
+        const side: "right" | "left" = preferRight ? "right" : "left";
+
+        let left =
+          side === "right" ? rect.right + TOOLTIP_GAP : rect.left - tw - TOOLTIP_GAP;
+        left = Math.max(TOOLTIP_VIEWPORT_MARGIN, Math.min(left, vw - tw - TOOLTIP_VIEWPORT_MARGIN));
+
+        const maxTop = vh - th - TOOLTIP_VIEWPORT_MARGIN;
+        const top = Math.max(
+          TOOLTIP_VIEWPORT_MARGIN,
+          Number.isFinite(maxTop) ? Math.min(rect.top, maxTop) : rect.top
+        );
+
+        setPosition({ left, top, side });
+        setPlaced(true);
+      });
     };
 
     updatePosition();
+
+    let roTip: ResizeObserver | null = null;
+    const attachRo = () => {
+      roTip?.disconnect();
+      const el = tooltipRef.current;
+      if (!el) return false;
+      roTip = new ResizeObserver(updatePosition);
+      roTip.observe(el);
+      return true;
+    };
+    let attachRaf = 0;
+    if (!attachRo()) {
+      attachRaf = requestAnimationFrame(() => {
+        attachRo();
+      });
+    }
+
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
     return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(attachRaf);
+      roTip?.disconnect();
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, anchorRef]);
+  }, [open, item.type]);
 
-  if (!open || !position || typeof document === "undefined") return null;
+  if (!open || typeof document === "undefined") return null;
+
+  const visibilityStyle: CSSProperties = placed ? {} : { opacity: 0, pointerEvents: "none" };
+
   return createPortal(
     <div
+      ref={tooltipRef}
       id={tooltipId}
       role="tooltip"
-      className="pointer-events-none fixed z-[9999] w-auto max-w-[min(22rem,calc(100vw-16px))] rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] leading-snug text-slate-700 shadow-lg"
+      className="pointer-events-none fixed z-[9999] box-border w-max max-w-[min(calc(100vw-20px),588px)] min-w-[min(232px,calc(100vw-28px))] rounded-xl border border-slate-200 bg-white p-2.5 text-[11px] leading-snug text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.2)]"
       style={{
         left: position.left,
         top: position.top,
-        transform: position.placement === "top" ? "translateY(-100%)" : undefined,
+        ...visibilityStyle,
       }}
     >
-      {text}
+      <div className="pointer-events-auto max-h-[calc(100vh-40px)] min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="flex justify-center overflow-hidden">{renderPreviewVisual(item, spec)}</div>
+        <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
+      </div>
     </div>,
     document.body
   );
 }
 
 function DescriptionWithTooltip({
-  text,
+  item,
   parentOpen,
   anchorRef,
 }: {
-  text: string;
+  item: LibraryItem;
   parentOpen: boolean;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }) {
-  const { textRef, isTruncated } = useTruncation(text);
+  const spec = PREVIEW_SPEC_BY_TYPE[item.type];
   const [mobileOpen, setMobileOpen] = useState(false);
   const tooltipId = useId();
-  const showTooltip = isTruncated && (parentOpen || mobileOpen);
+  const showTooltip = parentOpen || mobileOpen;
 
   useEffect(() => {
     if (!mobileOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest("[data-mobile-tooltip-trigger='true']")) return;
+      if (target?.closest("[data-mobile-tooltip-trigger='true']") || target?.closest("[data-mobile-tooltip-panel='true']")) return;
       setMobileOpen(false);
     };
     const onEsc = (event: KeyboardEvent) => {
@@ -193,41 +305,49 @@ function DescriptionWithTooltip({
   const toggleMobileTooltip = (e: React.MouseEvent<HTMLSpanElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isTruncated) return;
     setMobileOpen((prev) => !prev);
   };
 
   return (
     <span className="relative block">
       <span
-        ref={textRef}
-        className={`block truncate text-xs text-slate-500 ${isTruncated ? "pr-6" : ""}`}
+        className="block truncate pr-6 text-xs text-slate-500"
       >
-        {text}
+        {item.description}
       </span>
-      {isTruncated ? (
-        <>
-          <span
-            role="button"
-            tabIndex={0}
-            data-mobile-tooltip-trigger="true"
-            aria-label="説明文を表示"
-            className="absolute right-0 top-0 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
-            onClick={toggleMobileTooltip}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter" && e.key !== " ") return;
-              e.preventDefault();
-              e.stopPropagation();
-              if (!isTruncated) return;
-              setMobileOpen((prev) => !prev);
-            }}
-            aria-expanded={showTooltip}
-            aria-controls={tooltipId}
-          >
-            i
-          </span>
-          <LibraryTooltipPortal open={showTooltip} tooltipId={tooltipId} text={text} anchorRef={anchorRef} />
-        </>
+      <span
+        role="button"
+        tabIndex={0}
+        data-mobile-tooltip-trigger="true"
+        aria-label="説明文を表示"
+        className="absolute right-0 top-0 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
+        onClick={toggleMobileTooltip}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          e.preventDefault();
+          e.stopPropagation();
+          setMobileOpen((prev) => !prev);
+        }}
+        aria-expanded={showTooltip}
+        aria-controls={tooltipId}
+      >
+        i
+      </span>
+      <LibraryTooltipPortal open={parentOpen} tooltipId={tooltipId} item={item} spec={spec} anchorRef={anchorRef} />
+      {mobileOpen ? (
+        createPortal(
+          <div className="fixed inset-0 z-[9998] bg-black/35 p-4 sm:hidden" onClick={() => setMobileOpen(false)} role="dialog" aria-modal="true">
+            <div
+              data-mobile-tooltip-panel="true"
+              className="mx-auto mt-[14vh] w-full max-w-sm rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="overflow-hidden">{renderPreviewVisual(item, spec)}</div>
+              <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
+            </div>
+          </div>,
+          document.body
+        )
       ) : null}
     </span>
   );
@@ -695,12 +815,20 @@ function LibraryItemButton({
     closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
   };
 
+  const handleAddClick = () => {
+    // Close preview immediately on add, and cancel delayed open from a prior hover-enter.
+    clearTimers();
+    setHoverOpen(false);
+    setFocusOpen(false);
+    onAdd(item.type);
+  };
+
   return (
     <button
       ref={buttonRef}
       key={`${sectionId}-${item.type}`}
       type="button"
-      onClick={() => onAdd(item.type)}
+      onClick={handleAddClick}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onFocus={() => setFocusOpen(true)}
@@ -735,7 +863,7 @@ function LibraryItemButton({
           ) : null}
         </span>
         <DescriptionWithTooltip
-          text={item.description}
+          item={item}
           parentOpen={hoverOpen || focusOpen}
           anchorRef={buttonRef}
         />

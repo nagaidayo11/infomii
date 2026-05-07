@@ -35,7 +35,7 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   return (
     <div
       data-inner-surface
-      className={`app-interactive relative overflow-hidden ${editorInnerRadiusClassName} bg-slate-100 transition-transform duration-200 ease-out hover:-translate-y-0.5`}
+      className={`app-interactive relative overflow-hidden ${editorInnerRadiusClassName} bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5`}
     >
       <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden">
         {image ? (

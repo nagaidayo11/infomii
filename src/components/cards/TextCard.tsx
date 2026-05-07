@@ -45,7 +45,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
     <Card padding="none" className="">
       <div
         data-inner-surface
-        className={`px-3 py-2.5 font-normal leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-slate-50/80`}
+        className={`px-3 py-2.5 font-normal leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-white`}
         style={getBodyFontSizeStyle()}
       >
         <InlineEditable

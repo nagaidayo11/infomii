@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
-import { getBlockStyle, type EditorCard } from "./types";
+import { getBlockStyle, isMediaCardType, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
 const VIEWPORT_SIZES = [
@@ -27,7 +27,7 @@ const VIEWPORT_SIZES = [
   { label: "414px", width: 414 },
 ] as const;
 
-/** Mobile phone-style frame: rounded corners, light border, subtle shadow. */
+/** Single-sheet mobile preview on the canvas (no gray “chassis” / notch stack). */
 function MobileCanvasFrame({
   children,
   width = 375,
@@ -35,23 +35,13 @@ function MobileCanvasFrame({
   children: React.ReactNode;
   width?: number;
 }) {
-  const bezel = 12;
   return (
-    <div
-      className="flex shrink-0 flex-col items-center"
-      aria-label="モバイルプレビュー（ゲスト表示）"
-    >
+    <div className="flex shrink-0 flex-col items-center" aria-label="モバイルプレビュー（ゲスト表示）">
       <div
-        className="flex flex-col rounded-[2rem] border border-slate-200/90 bg-slate-100/80 p-3 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
-        style={{ width: width + bezel * 2 }}
+        className="flex min-h-[480px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/65 bg-white shadow-[0_12px_36px_-8px_rgba(15,23,42,0.12)]"
+        style={{ width }}
       >
-        <div className="mx-auto mb-1 h-2 w-16 shrink-0 rounded-full bg-slate-300/70" aria-hidden />
-        <div
-          className="flex min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white"
-          style={{ width }}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
@@ -239,11 +229,8 @@ function SortableCardWrapper({
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card relative min-w-0 w-full overflow-hidden border-0 bg-white transition-[background-color] duration-250 ease-out " +
-              ((((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "transparent") ||
-              ((card.style as Record<string, unknown> | undefined)?.innerSurfaceMode === "custom"))
-                ? "editor-inner-surface-overridden "
-                : "")
+              "editor-card relative min-w-0 w-full overflow-hidden border-0 transition-[background-color] duration-250 ease-out " +
+              (card.type === "space" || isMediaCardType(card.type) ? "bg-transparent " : "bg-white ")
             }
             style={getBlockStyle(card)}
             onClick={(e) => {
@@ -359,7 +346,7 @@ export function Canvas({
         onClick={() => onSelectCard(null)}
       >
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/80 bg-white/80 py-2">
+          <div className="flex shrink-0 items-center justify-center gap-2 border-b border-slate-200/60 bg-slate-100 py-2">
             <span className="text-xs font-medium text-slate-500">プレビュー幅</span>
             {VIEWPORT_SIZES.map(({ label, width }) => (
               <button
@@ -376,21 +363,15 @@ export function Canvas({
               </button>
             ))}
           </div>
-          <div className="editor-canvas-outer-scroll flex w-full min-w-0 flex-1 justify-center overflow-y-auto p-6">
+          <div className="editor-canvas-outer-scroll flex w-full min-w-0 flex-1 justify-center overflow-y-auto p-5">
           <MobileCanvasFrame width={viewportWidth}>
-            <div
-              className="flex min-h-[480px] min-w-0 flex-1 flex-col bg-white"
-              data-mobile-preview
-              onClick={(e) => e.stopPropagation()}
-            >
               <div
                 ref={scrollContainerRef}
-                className="editor-phone-body-scroll template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-white"
+                className="editor-phone-body-scroll template-preview-scroll flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-white"
+                data-mobile-preview
+                onClick={(e) => e.stopPropagation()}
               >
-                <div
-                  className="mx-auto box-border w-full min-w-0 px-4 py-4"
-                  style={{ maxWidth: viewportWidth }}
-                >
+                <div className="mx-auto box-border min-h-0 w-full min-w-0 px-4 py-4">
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
@@ -440,7 +421,6 @@ export function Canvas({
                 </SortableContext>
                 </div>
               </div>
-            </div>
           </MobileCanvasFrame>
           </div>
         </div>

@@ -351,20 +351,10 @@ export function CardRenderer(props: CardRendererProps) {
             card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
               ? card.style.textColor
               : undefined;
-          const innerSurfaceMode =
-            card.style && typeof card.style === "object"
-              ? (card.style as Record<string, unknown>).innerSurfaceMode
-              : undefined;
-          const hasInnerSurfaceOverride =
-            innerSurfaceMode === "transparent" || innerSurfaceMode === "custom";
           return (
             <div
               key={card.id}
-              className={
-                (textColor ? "editor-card-colorized " : "") +
-                (hasInnerSurfaceOverride ? "editor-inner-surface-overridden " : "") +
-                "rounded-2xl ui-pop-appear"
-              }
+              className={(textColor ? "editor-card-colorized " : "") + "rounded-2xl ui-pop-appear"}
               style={{
                 ...blockStyle,
                 ...(textColor

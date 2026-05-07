@@ -36,7 +36,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
 
   return (
     <Card padding="none" hover>
-      <section data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-3`}>
+      <section data-inner-surface className={`${editorInnerRadiusClassName} bg-white px-3 py-3`}>
         <h3 className={`${CARD_BLOCK_TITLE_CLASS} leading-tight`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

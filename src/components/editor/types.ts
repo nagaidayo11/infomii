@@ -65,7 +65,7 @@ export type CardType =
   | "menu_sheet_sync"
   | "menu_time_band";
 
-/** Optional card appearance (e.g. background, padding). Stored with card. */
+/** Optional card chrome (padding, borders, typography, shadow). Stored with card. Legacy color keys in JSON are ignored by the renderer. */
 export type CardStyle = Record<string, unknown>;
 
 const FONT_SIZE_MAP: Record<string, string> = {
@@ -131,13 +131,20 @@ export function getBodyFontSizeStyle(): import("react").CSSProperties {
  */
 export const CARD_BLOCK_TITLE_CLASS = "text-slate-800" as const;
 
-/** Extract block style (boxShadow, backgroundColor, fontSize, innerBorderRadius CSS var, …) for the block wrapper. Block outer radius comes from the canvas frame; inner chips use --editor-inner-border-radius. */
-export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSProperties {
+const DEFAULT_TRANSPARENT_MEDIA_TYPES: readonly CardType[] = ["hero", "hero_slider", "image", "gallery"] as const;
+export const TRANSPARENT_MEDIA_CARD_TYPES = new Set<CardType>(DEFAULT_TRANSPARENT_MEDIA_TYPES);
+
+export function isMediaCardType(type: CardType | undefined): type is CardType {
+  return Boolean(type && TRANSPARENT_MEDIA_CARD_TYPES.has(type));
+}
+
+/**
+ * Block wrapper styles for the editor / guest preview (padding, typography, shadow, inner radius).
+ * Block background / transparency / inner-surface colors are not user-configurable; use default surfaces from components.
+ */
+export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): import("react").CSSProperties {
   const s = card.style;
   if (!s || typeof s !== "object") return {};
-  const transparentOn = Boolean((s as Record<string, unknown>).backgroundTransparent);
-  const borderEnabledRaw = (s as Record<string, unknown>).borderEnabled;
-  const borderEnabled = borderEnabledRaw === undefined ? true : Boolean(borderEnabledRaw);
   const fontSizeKey = s.fontSize as string | undefined;
   const fontSize = resolveFontSize(fontSizeKey);
   const titleFontSize = resolveFontSize(s.titleFontSize as string | undefined);
@@ -147,16 +154,6 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   const titleFontWeight = resolveFontWeight(s.titleFontWeight as string | undefined);
   const bodyFontWeight = resolveFontWeight(s.bodyFontWeight as string | undefined);
   const innerR = (s as Record<string, unknown>).innerBorderRadius;
-  const innerSurfaceModeRaw = (s as Record<string, unknown>).innerSurfaceMode;
-  const innerSurfaceMode =
-    innerSurfaceModeRaw === "transparent" || innerSurfaceModeRaw === "custom"
-      ? innerSurfaceModeRaw
-      : "default";
-  const innerSurfaceColorRaw = (s as Record<string, unknown>).innerSurfaceColor;
-  const innerSurfaceColor =
-    typeof innerSurfaceColorRaw === "string" && /^#([0-9a-fA-F]{6})$/.test(innerSurfaceColorRaw.trim())
-      ? innerSurfaceColorRaw.trim()
-      : undefined;
   const innerRadiusPx =
     typeof innerR === "number" && Number.isFinite(innerR)
       ? `${innerR}px`
@@ -165,33 +162,12 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
         : undefined;
   const style: Record<string, string | number | undefined> = {
     boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
-    borderWidth: borderEnabled
-      ? (
-      typeof s.borderWidth === "number"
-        ? `${s.borderWidth}px`
-        : typeof s.borderWidth === "string"
-          ? s.borderWidth
-          : undefined
-        )
-      : "0px",
-    borderColor: typeof s.borderColor === "string" ? s.borderColor : undefined,
-    borderStyle:
-      typeof s.borderWidth === "number" && s.borderWidth > 0
-        ? "solid"
-        : typeof s.borderStyle === "string"
-          ? s.borderStyle
-          : undefined,
     padding:
       typeof s.padding === "number"
         ? `${s.padding}px`
         : typeof s.padding === "string"
           ? s.padding
           : undefined,
-    backgroundColor: transparentOn
-      ? "transparent"
-      : typeof s.backgroundColor === "string"
-        ? s.backgroundColor
-        : undefined,
     color: typeof s.textColor === "string" ? s.textColor : undefined,
     textAlign:
       s.textAlign === "left" || s.textAlign === "center" || s.textAlign === "right"
@@ -207,11 +183,6 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
     fontSize,
   };
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
-  if (transparentOn) {
-    (style as Record<string, string>)["--editor-block-surface"] = "transparent";
-  } else if (typeof s.backgroundColor === "string") {
-    (style as Record<string, string>)["--editor-block-surface"] = s.backgroundColor;
-  }
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
   if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;
   if (fontWeight) (style as Record<string, string>)[BLOCK_FONT_WEIGHT_VAR] = fontWeight;
@@ -220,10 +191,10 @@ export function getBlockStyle(card: { style?: CardStyle }): import("react").CSSP
   if (innerRadiusPx) {
     (style as Record<string, string>)["--editor-inner-border-radius"] = innerRadiusPx;
   }
-  if (innerSurfaceMode === "transparent") {
-    (style as Record<string, string>)["--editor-inner-surface-bg"] = "transparent";
-  } else if (innerSurfaceMode === "custom") {
-    (style as Record<string, string>)["--editor-inner-surface-bg"] = innerSurfaceColor ?? "#f8fafc";
+  if (isMediaCardType(card.type)) {
+    // Media blocks should blend with page background by default.
+    (style as Record<string, string>)["--editor-block-surface"] = "transparent";
+    (style as Record<string, string>)["--editor-card-surface"] = "transparent";
   }
   return style as import("react").CSSProperties;
 }
@@ -954,10 +925,7 @@ export function createEmptyCard(type: CardType, id: string, order: number): Edit
     id,
     type,
     content: defaultContent(type),
-    style:
-      type === "space"
-        ? { backgroundTransparent: true, borderEnabled: false, padding: 0 }
-        : { innerBorderRadius: 8, borderEnabled: false },
+    style: type === "space" ? { padding: 0 } : { innerBorderRadius: 8 },
     order,
   };
 }

@@ -86,10 +86,12 @@ function AutosaveStatus({
     );
   }
   if (lastSavedAt != null) {
+    const savedAgoMs = Date.now() - lastSavedAt;
+    const justSaved = savedAgoMs >= 0 && savedAgoMs < 4000;
     return (
       <span className="ui-pop-badge flex items-center gap-1.5 text-xs text-slate-500">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-        {formatSavedAt(lastSavedAt)}に保存
+        {justSaved ? "保存しました" : `${formatSavedAt(lastSavedAt)}に保存`}
       </span>
     );
   }
