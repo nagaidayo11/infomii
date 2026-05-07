@@ -17,6 +17,7 @@ import {
   CARD_TYPE_LABELS,
   createEmptyCard,
   STARTER_CARD_TYPES,
+  type EditorCard,
   type CardType,
 } from "./types";
 import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
@@ -95,6 +96,7 @@ export function Editor2({
   } | null>(null);
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
+  const [bulkFontAnchor, setBulkFontAnchor] = useState<{ top: number; left: number } | null>(null);
   const editorLocale: SupportedLocale = "ja";
   const [localeTranslating, setLocaleTranslating] = useState(false);
   const [translationEnabled, setTranslationEnabled] = useState(false);
@@ -115,6 +117,9 @@ export function Editor2({
     open: boolean;
     lockedType: CardType | null;
   }>({ open: false, lockedType: null });
+  const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
+  const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
+  const copiedCardRef = useRef<EditorCard | null>(null);
   const openBusinessUpsell = useCallback((type: CardType) => {
     void trackUpgradeClick("editor");
     setBusinessUpsellState({ open: true, lockedType: type });
@@ -138,6 +143,7 @@ export function Editor2({
   const selectCard = useEditor2Store((s) => s.selectCard);
   const removeCard = useEditor2Store((s) => s.removeCard);
   const duplicateCard = useEditor2Store((s) => s.duplicateCard);
+  const pasteCard = useEditor2Store((s) => s.pasteCard);
   const undo = useEditor2Store((s) => s.undo);
   const redo = useEditor2Store((s) => s.redo);
   const clearCards = useEditor2Store((s) => s.clearCards);
@@ -149,6 +155,86 @@ export function Editor2({
   const setPageBackground = useEditor2Store((s) => s.setPageBackground);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
   const setCards = useEditor2Store((s) => s.setCards);
+
+  const cloneCardsSnapshot = useCallback(
+    (source: EditorCard[]) =>
+      source.map((card) => ({
+        ...card,
+        content: (() => {
+          try {
+            return JSON.parse(JSON.stringify(card.content ?? {})) as Record<string, unknown>;
+          } catch {
+            return { ...(card.content ?? {}) };
+          }
+        })(),
+        style: (() => {
+          if (!card.style) return undefined;
+          try {
+            return JSON.parse(JSON.stringify(card.style)) as Record<string, unknown>;
+          } catch {
+            return { ...(card.style as Record<string, unknown>) };
+          }
+        })(),
+      })),
+    []
+  );
+
+  const previewBulkFontFamily = useCallback(
+    (fontFamily: string) => {
+      const base = bulkFontSnapshotRef.current;
+      if (!base) return;
+      const next = cloneCardsSnapshot(base).map((card) => {
+        const prevStyle = (card.style ?? {}) as Record<string, unknown>;
+        const style = { ...prevStyle };
+        if (!fontFamily) delete style.fontFamily;
+        else style.fontFamily = fontFamily;
+        return { ...card, style };
+      });
+      setCards(next);
+    },
+    [cloneCardsSnapshot, setCards]
+  );
+
+  const cancelBulkFontModal = useCallback(() => {
+    if (bulkFontSnapshotRef.current) {
+      setCards(cloneCardsSnapshot(bulkFontSnapshotRef.current));
+    }
+    bulkFontSnapshotRef.current = null;
+    setBulkFontOpen(false);
+    setBulkFontAnchor(null);
+  }, [cloneCardsSnapshot, setCards]);
+
+  const applyBulkFontModal = useCallback(() => {
+    const snapshot = bulkFontSnapshotRef.current;
+    if (!snapshot) {
+      setBulkFontOpen(false);
+      return;
+    }
+    setCards(cloneCardsSnapshot(snapshot));
+    applyFontFamilyAll(bulkFontFamily || undefined);
+    bulkFontSnapshotRef.current = null;
+    setBulkFontOpen(false);
+    setBulkFontAnchor(null);
+  }, [applyFontFamilyAll, bulkFontFamily, cloneCardsSnapshot, setCards]);
+
+  useEffect(() => {
+    if (!bulkFontOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-bulk-font-anchor='true']")) return;
+      if (bulkFontPanelRef.current?.contains(target as Node)) return;
+      cancelBulkFontModal();
+    };
+    const onEsc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") cancelBulkFontModal();
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, [bulkFontOpen, cancelBulkFontModal]);
 
   const runPrepublishChecks = useCallback(() => {
     const errors: string[] = [];
@@ -496,10 +582,32 @@ export function Editor2({
       }
       const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
       const mod = isMac ? e.metaKey : e.ctrlKey;
+      const isTypingTarget =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
       if (mod && e.key === "z") {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "c") {
+        if (isTypingTarget || !selectedCardId) return;
+        const selected = cards.find((c) => c.id === selectedCardId);
+        if (!selected) return;
+        e.preventDefault();
+        copiedCardRef.current = selected;
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "v") {
+        if (isTypingTarget) return;
+        const copied = copiedCardRef.current;
+        if (!copied) return;
+        e.preventDefault();
+        pasteCard(copied, selectedCardId ?? null);
         return;
       }
       if (mod && e.key === "d") {
@@ -515,7 +623,7 @@ export function Editor2({
         }
       }
     },
-    [undo, redo, duplicateCard, removeCard, addCard, selectedCardId, slashMenuOpen, cards]
+    [undo, redo, duplicateCard, pasteCard, removeCard, addCard, selectedCardId, slashMenuOpen, cards]
   );
 
   useEffect(() => {
@@ -1111,11 +1219,21 @@ export function Editor2({
           }
           selectCard(null);
         }}
-        onBulkFont={() => {
+        onBulkFont={(anchorEl) => {
           if (isDemoMode) {
             setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
             return;
           }
+          const rect = anchorEl.getBoundingClientRect();
+          const panelWidth = 420;
+          const maxLeft = Math.max(10, window.innerWidth - panelWidth - 10);
+          const left = Math.max(10, Math.min(rect.left, maxLeft));
+          const top = Math.min(rect.bottom + 8, window.innerHeight - 80);
+          bulkFontSnapshotRef.current = cloneCardsSnapshot(cards);
+          const first = cards[0]?.style as Record<string, unknown> | undefined;
+          const current = typeof first?.fontFamily === "string" ? first.fontFamily : "";
+          setBulkFontFamily(current);
+          setBulkFontAnchor({ top, left });
           setBulkFontOpen(true);
         }}
         onPreview={handlePreviewClick}
@@ -1432,49 +1550,51 @@ export function Editor2({
             </div>
           </div>
         )}
-        {bulkFontOpen && (
-          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-              <h3 className="text-lg font-semibold text-slate-900">フォント一括変更</h3>
-              <p className="mt-1 text-sm text-slate-500">ページ内すべてのブロックに同じフォントを適用します。</p>
-              <div className="mt-4">
-                <label className="mb-1.5 block text-xs font-medium text-slate-500">フォント</label>
-                <select
-                  value={bulkFontFamily}
-                  onChange={(e) => setBulkFontFamily(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none"
+        {bulkFontOpen && bulkFontAnchor && (
+          <div
+            ref={bulkFontPanelRef}
+            className="ui-pop-in fixed z-[90] w-[min(420px,calc(100vw-20px))] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            style={{ top: bulkFontAnchor.top, left: bulkFontAnchor.left }}
+          >
+            <h3 className="text-lg font-semibold text-slate-900">フォント一括変更</h3>
+            <p className="mt-1 text-sm text-slate-500">候補を選ぶと即時プレビューされます。確定は「一括適用」です。</p>
+            <div className="mt-4 max-h-56 space-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2">
+              {EDITOR_FONT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label + opt.value}
+                  type="button"
+                  onClick={() => {
+                    setBulkFontFamily(opt.value);
+                    previewBulkFontFamily(opt.value);
+                  }}
+                  className={
+                    "w-full rounded-lg px-2.5 py-2 text-left text-sm transition " +
+                    (bulkFontFamily === opt.value
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-700 hover:bg-slate-100")
+                  }
+                  style={opt.value ? { fontFamily: opt.value } : undefined}
                 >
-                  {EDITOR_FONT_OPTIONS.map((opt) => (
-                    <option
-                      key={opt.label + opt.value}
-                      value={opt.value}
-                      style={opt.value ? { fontFamily: opt.value } : undefined}
-                    >
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
               <div className="mt-5 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setBulkFontOpen(false)}
+                  onClick={cancelBulkFontModal}
                   className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   閉じる
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    applyFontFamilyAll(bulkFontFamily || undefined);
-                    setBulkFontOpen(false);
-                  }}
+                  onClick={applyBulkFontModal}
                   className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
                 >
                   一括適用
                 </button>
               </div>
-            </div>
           </div>
         )}
       </div>

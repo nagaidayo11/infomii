@@ -182,6 +182,9 @@ export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): imp
     fontFamily: typeof s.fontFamily === "string" ? s.fontFamily : undefined,
     fontSize,
   };
+  if (typeof s.fontFamily === "string") {
+    (style as Record<string, string>)["--editor-card-font-family"] = s.fontFamily;
+  }
   if (fontSize) (style as Record<string, string>)["--block-font-size"] = fontSize;
   if (titleFontSize) style[BLOCK_TITLE_FONT_SIZE_VAR] = titleFontSize;
   if (bodyFontSize) style[BLOCK_BODY_FONT_SIZE_VAR] = bodyFontSize;

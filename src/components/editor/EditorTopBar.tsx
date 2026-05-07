@@ -20,7 +20,7 @@ export type EditorTopBarProps = {
   /** True while saving / translating before opening preview */
   previewPreparing?: boolean;
   onEditPageBackground?: () => void;
-  onBulkFont?: () => void;
+  onBulkFont?: (anchorEl: HTMLElement) => void;
   canUndo?: boolean;
   canRedo?: boolean;
   canClearAll?: boolean;
@@ -270,7 +270,8 @@ export function EditorTopBar({
         <div className="hidden shrink-0 flex-wrap items-center gap-1.5 lg:flex">
           <button
             type="button"
-            onClick={onBulkFont}
+            onClick={(e) => onBulkFont(e.currentTarget)}
+            data-bulk-font-anchor="true"
             className="ui-pop-tap rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
             title="ページ内ブロックのフォントを一括変更"
           >
@@ -566,9 +567,10 @@ export function EditorTopBar({
                     <button
                       type="button"
                       role="menuitem"
+                      data-bulk-font-anchor="true"
                       className="flex w-full px-4 py-3 text-left text-sm text-slate-700 hover:bg-slate-50"
-                      onClick={() => {
-                        onBulkFont();
+                      onClick={(e) => {
+                        onBulkFont(e.currentTarget);
                         setMoreOpen(false);
                       }}
                     >

@@ -76,6 +76,7 @@ export type Editor2State = {
   selectCard: (id: string | null) => void;
   removeCard: (id: string) => void;
   duplicateCard: (id: string) => void;
+  pasteCard: (source: EditorCard, afterId?: string | null) => void;
   clearCards: () => void;
   /** Replace text in all card contents on current page. */
   replaceTextAll: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
@@ -140,6 +141,15 @@ function replaceInUnknown(
 function isDeleteProtected(card: EditorCard): boolean {
   const s = (card.style ?? {}) as Record<string, unknown>;
   return s.deleteProtected === true;
+}
+
+function cloneRecord(value: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!value) return {};
+  try {
+    return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  } catch {
+    return { ...value };
+  }
 }
 
 export const useEditor2Store = create<Editor2State>((set, get) => ({
@@ -386,6 +396,27 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     };
     const next = [...cards];
     next.splice(idx + 1, 0, copy);
+    const withOrder = next.map((c, i) => ({ ...c, order: i }));
+    set({ cards: withOrder, selectedCardId: newId, historyPast: pushHistory(historyPast, cards), historyFuture: [] });
+    setTimeout(() => set({ lastAddedCardId: newId }), 0);
+    setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
+  },
+
+  pasteCard: (source, afterId = null) => {
+    const { cards, historyPast } = get();
+    const insertBase =
+      afterId == null ? cards.length - 1 : cards.findIndex((c) => c.id === afterId);
+    const insertAt = Math.max(0, Math.min(cards.length, insertBase + 1));
+    const newId = nanoid(10);
+    const copy: EditorCard = {
+      ...source,
+      id: newId,
+      order: insertAt,
+      content: cloneRecord(source.content),
+      style: source.style ? cloneRecord(source.style as Record<string, unknown>) : undefined,
+    };
+    const next = [...cards];
+    next.splice(insertAt, 0, copy);
     const withOrder = next.map((c, i) => ({ ...c, order: i }));
     set({ cards: withOrder, selectedCardId: newId, historyPast: pushHistory(historyPast, cards), historyFuture: [] });
     setTimeout(() => set({ lastAddedCardId: newId }), 0);

@@ -701,7 +701,7 @@ a {
 /* Editor typography rule: non-canvas uses LP POP font */
 [data-editor-layout],
 [data-editor-layout] :is(header, aside, nav, button, input, select, textarea, label, p, span, h1, h2, h3, h4, h5, h6, a, li, summary, details) {
-  font-family: "M PLUS Rounded 1c", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--editor-card-font-family, "M PLUS Rounded 1c", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif);
 }
 
 /* Canvas area now follows unified POP font as well. */
