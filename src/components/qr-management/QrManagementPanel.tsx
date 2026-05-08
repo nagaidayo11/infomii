@@ -5,10 +5,12 @@ import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
 import {
   getDashboardBootstrapData,
+  getCurrentHotelSubscription,
   getCurrentHotelViewMetrics,
   getQrScansLast7Days,
   type HotelViewMetrics,
   type QrScanDayBucket,
+  type SubscriptionPlan,
 } from "@/lib/storage";
 import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import type { Information } from "@/types/information";
@@ -20,6 +22,7 @@ export function QrManagementPanel() {
   const [informations, setInformations] = useState<Information[]>([]);
   const [metrics, setMetrics] = useState<HotelViewMetrics | null>(null);
   const [daily, setDaily] = useState<QrScanDayBucket[]>([]);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +34,14 @@ export function QrManagementPanel() {
       getDashboardBootstrapData(),
       getCurrentHotelViewMetrics(),
       getQrScansLast7Days(),
+      getCurrentHotelSubscription(),
     ])
-      .then(([boot, m, d]) => {
+      .then(([boot, m, d, sub]) => {
         if (!mounted) return;
         setInformations(boot.informations);
         setMetrics(m);
         setDaily(d);
+        setPlan(sub?.plan ?? "free");
       })
       .catch((e) => {
         if (!mounted) return;
@@ -131,6 +136,7 @@ export function QrManagementPanel() {
                         title={stat?.title || info.title}
                         slug={info.slug}
                         qrScans7d={stat?.qrViews ?? 0}
+                        plan={plan}
                       />
                     );
                   })}

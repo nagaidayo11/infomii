@@ -7,19 +7,24 @@ import {
   buildPublicQrUrl,
   qrCodeImageUrl,
 } from "@/lib/storage";
+import {
+  canUseAdvancedPrintTemplate,
+} from "@/lib/qr-print-options";
 
 type QrPageRowProps = {
   title: string;
   slug: string;
   qrScans7d: number;
+  plan: "free" | "pro" | "business" | null;
 };
 
-export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
+export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
   const [copied, setCopied] = useState(false);
   const publicUrl = buildPublicUrl(slug);
   const qrUrl = buildPublicQrUrl(slug);
   const qrImageSrc = qrCodeImageUrl(qrUrl, 160);
-  const printHref = `/print/a4-qr?title=${encodeURIComponent(title)}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrUrl)}`;
+  const canUseTemplate = canUseAdvancedPrintTemplate(plan);
+  const printHref = `/print/a4-qr?title=${encodeURIComponent(title)}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrUrl)}&pro=${canUseTemplate ? "1" : "0"}`;
 
   useEffect(() => {
     if (!copied) return;
@@ -27,15 +32,28 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
     return () => window.clearTimeout(t);
   }, [copied]);
 
-  const handleDownload = () => {
-    const a = document.createElement("a");
-    a.href = qrImageSrc;
-    a.download = `infomii-qr-${slug}.png`;
-    a.target = "_blank";
-    a.rel = "noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(qrImageSrc, { cache: "no-store" });
+      if (!response.ok) throw new Error(`QR download failed: ${response.status}`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `infomii-qr-${slug}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // Fallback: still attempt browser-level download behavior.
+      const a = document.createElement("a");
+      a.href = qrImageSrc;
+      a.download = `infomii-qr-${slug}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const handleCopyUrl = async () => {
@@ -76,19 +94,11 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={handleDownload}
+            onClick={() => void handleDownload()}
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             ダウンロード
           </button>
-          <a
-            href={printHref}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            印刷用A4
-          </a>
           <div className="relative">
             <button
               type="button"
@@ -103,7 +113,20 @@ export function QrPageRow({ title, slug, qrScans7d }: QrPageRowProps) {
               </div>
             )}
           </div>
+          <a
+            href={printHref}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            印刷設定
+          </a>
         </div>
+        {!canUseTemplate ? (
+          <p className="mt-2 text-[11px] text-slate-500">
+            印刷テンプレートはProプラン以上で利用できます（印刷設定画面で選択）。
+          </p>
+        ) : null}
       </div>
     </div>
   );

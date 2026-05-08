@@ -8,10 +8,15 @@ import {
   buildPublicUrl,
   buildPublicQrUrl,
   getDashboardBootstrapData,
+  getCurrentHotelSubscription,
   qrCodeImageUrl,
+  type SubscriptionPlan,
 } from "@/lib/storage";
 import type { Information } from "@/types/information";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import {
+  canUseAdvancedPrintTemplate,
+} from "@/lib/qr-print-options";
 
 const QR_DISPLAY_SIZE = 400;
 
@@ -25,6 +30,7 @@ export function QrGeneratorPanel() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
 
   useRouteProgressLoading(loading);
 
@@ -32,8 +38,12 @@ export function QrGeneratorPanel() {
     setLoading(true);
     setError(null);
     try {
-      const boot = await getDashboardBootstrapData();
+      const [boot, sub] = await Promise.all([
+        getDashboardBootstrapData(),
+        getCurrentHotelSubscription(),
+      ]);
       setItems(boot.informations);
+      setPlan(sub?.plan ?? "free");
       setSelectedId((prev) => {
         if (prev && boot.informations.some((i) => i.id === prev)) return prev;
         return boot.informations[0]?.id ?? "";
@@ -57,20 +67,33 @@ export function QrGeneratorPanel() {
   const publicUrl = selected ? buildPublicUrl(selected.slug) : "";
   const qrLink = selected ? buildPublicQrUrl(selected.slug) : "";
   const qrImageSrc = qrLink ? qrCodeImageUrl(qrLink, QR_DISPLAY_SIZE) : "";
+  const canUseTemplate = canUseAdvancedPrintTemplate(plan);
   const printHref = selected
-    ? `/print/a4-qr?title=${encodeURIComponent(selected.title || "ご案内")}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrLink)}`
+    ? `/print/a4-qr?title=${encodeURIComponent(selected.title || "ご案内")}&url=${encodeURIComponent(publicUrl)}&qr=${encodeURIComponent(qrLink)}&pro=${canUseTemplate ? "1" : "0"}`
     : "";
 
-  function handleDownload() {
+  async function handleDownload() {
     if (!qrImageSrc || !selected) return;
-    const a = document.createElement("a");
-    a.href = qrImageSrc;
-    a.download = `infomii-qr-${selected.slug}.png`;
-    a.target = "_blank";
-    a.rel = "noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      const response = await fetch(qrImageSrc, { cache: "no-store" });
+      if (!response.ok) throw new Error(`QR download failed: ${response.status}`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `infomii-qr-${selected.slug}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      const a = document.createElement("a");
+      a.href = qrImageSrc;
+      a.download = `infomii-qr-${selected.slug}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }
 
   async function handleCopyLink() {
@@ -160,6 +183,28 @@ export function QrGeneratorPanel() {
 
               {/* アクション */}
               <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
+                <button
+                  type="button"
+                  onClick={() => void handleDownload()}
+                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  ダウンロード
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleCopyLink()}
+                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  {copied ? "コピーしました" : "URLをコピー"}
+                </button>
+                <a
+                  href={printHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  印刷設定
+                </a>
                 <a
                   href={qrImageSrc}
                   target="_blank"
@@ -168,29 +213,12 @@ export function QrGeneratorPanel() {
                 >
                   QRコード生成
                 </a>
-                <button
-                  type="button"
-                  onClick={handleDownload}
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  ダウンロード
-                </button>
-                <a
-                  href={printHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  印刷
-                </a>
-                <button
-                  type="button"
-                  onClick={() => void handleCopyLink()}
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  {copied ? "コピーしました" : "QRリンクをコピー"}
-                </button>
               </div>
+              {!canUseTemplate ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  印刷テンプレートはProプラン以上で利用できます（印刷設定画面で選択）。
+                </p>
+              ) : null}
 
               <div className="mt-6 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                 <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
