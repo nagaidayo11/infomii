@@ -182,6 +182,8 @@ export default function TemplatesPage() {
   }
 
   const previewCards = previewTemplate ? buildPreviewCards(previewTemplate) : [];
+  const previewFrameClassName =
+    "mx-auto w-full max-w-[375px] rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.12)]";
 
   return (
     <div className="app-main-container space-y-4">
@@ -317,7 +319,7 @@ export default function TemplatesPage() {
             onClick={() => setPreviewTemplate(null)}
           >
             <div
-              className="ui-pop-in max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+              className="ui-pop-in max-h-[92vh] w-full max-w-[600px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
@@ -336,7 +338,7 @@ export default function TemplatesPage() {
                 </div>
               </div>
               <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-4">
-                <div className="mx-auto w-full max-w-[420px] rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+                <div className={previewFrameClassName}>
                   <LocaleProvider value="ja">
                     <div className="space-y-3">
                       <CardRenderer cards={previewCards} />

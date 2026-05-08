@@ -91,7 +91,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
         <p className="mt-2 truncate text-xs text-slate-400" title={qrUrl}>
           {qrUrl}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => void handleDownload()}
@@ -117,7 +117,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
             href={printHref}
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            className="app-button-native inline-flex min-h-[36px] items-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:ml-auto"
           >
             印刷設定
           </a>

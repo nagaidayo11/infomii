@@ -182,7 +182,7 @@ export function QrGeneratorPanel() {
               </p>
 
               {/* アクション */}
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                 <button
                   type="button"
                   onClick={() => void handleDownload()}
@@ -201,7 +201,7 @@ export function QrGeneratorPanel() {
                   href={printHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  className="app-button-native inline-flex justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:ml-auto"
                 >
                   印刷設定
                 </a>
