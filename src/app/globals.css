@@ -710,7 +710,9 @@ a {
 .editor-inner-surface-overridden [data-inner-surface] {
   background-color: var(--editor-inner-surface-bg, transparent) !important;
   background-image: none !important;
+  border-color: var(--editor-inner-surface-border, currentColor) !important;
 }
+
 
 @keyframes app-shell-drift {
   0% {

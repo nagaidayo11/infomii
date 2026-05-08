@@ -2102,6 +2102,8 @@ export function CardSettings({
 
   const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
   const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
+  const supportsBusinessTonePreset =
+    isBusinessOnlyCard && card.type !== "hero_slider" && card.type !== "menu_time_band";
   const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
   const noTextFormattingCardTypes: Array<EditorCard["type"]> = ["image", "divider", "space"];
   const noTitleTypographyCardTypes: Array<EditorCard["type"]> = ["text", "image", "divider", "space"];
@@ -3972,6 +3974,27 @@ export function CardSettings({
                     />
                   </div>
                 </div>
+                {supportsBusinessTonePreset ? (
+                  <div className="w-full">
+                    <label className={labelClass}>要素カラー（Business限定）</label>
+                    <select
+                      value={(style.innerTonePreset as string) ?? ""}
+                      onChange={(e) => updateStyle("innerTonePreset", e.target.value || undefined)}
+                      className={inputClass}
+                    >
+                      <option value="">標準</option>
+                      <option value="slate">落ち着き（グレー）</option>
+                      <option value="blue">案内（ブルー）</option>
+                      <option value="emerald">完了/推奨（グリーン）</option>
+                      <option value="amber">注意（アンバー）</option>
+                      <option value="rose">重要（ローズ）</option>
+                      <option value="violet">特集（バイオレット）</option>
+                    </select>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      重要度のようにプリセット色を選べます。標準で既定色に戻ります。
+                    </p>
+                  </div>
+                ) : null}
               </>
             ) : (
               <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>

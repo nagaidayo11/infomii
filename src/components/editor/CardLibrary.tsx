@@ -170,6 +170,7 @@ function LibraryTooltipPortal({
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
   const [position, setPosition] = useState<TooltipPosition>({ left: -99999, top: -99999, side: "right" });
   /** After first clamp pass, avoids a one-frame flicker at the origin. */
   const [placed, setPlaced] = useState(false);
@@ -264,6 +265,9 @@ function LibraryTooltipPortal({
       <div className="pointer-events-auto max-h-[calc(100vh-40px)] min-h-0 overflow-y-auto overflow-x-hidden">
         <div className="flex justify-center overflow-hidden">{renderPreviewVisual(item, spec)}</div>
         <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
+        <p className={"mt-1 text-[11px] leading-[1.45] " + (isBusinessType ? "text-violet-600" : "text-slate-500")}>
+          {item.description}
+        </p>
       </div>
     </div>,
     document.body
@@ -309,18 +313,13 @@ function DescriptionWithTooltip({
   };
 
   return (
-    <span className="relative block">
-      <span
-        className="block truncate pr-6 text-xs text-slate-500"
-      >
-        {item.description}
-      </span>
+    <span className="relative block h-4 w-4 shrink-0">
       <span
         role="button"
         tabIndex={0}
         data-mobile-tooltip-trigger="true"
         aria-label="説明文を表示"
-        className="absolute right-0 top-0 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
         onClick={toggleMobileTooltip}
         onKeyDown={(e) => {
           if (e.key !== "Enter" && e.key !== " ") return;
@@ -344,6 +343,14 @@ function DescriptionWithTooltip({
             >
               <div className="overflow-hidden">{renderPreviewVisual(item, spec)}</div>
               <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
+              <p
+                className={
+                  "mt-1 text-[11px] leading-[1.45] " +
+                  (BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "text-violet-600" : "text-slate-500")
+                }
+              >
+                {item.description}
+              </p>
             </div>
           </div>,
           document.body
@@ -672,6 +679,13 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "wifi", label: "WiFi案内", description: "SSID・パスワードを掲載" },
   { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
   { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・詳細をまとめる" },
+  { type: "map", label: "地図", description: "アクセス・所在地を表示" },
+  { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
+  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
+  { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
+  { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
+  { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
+  { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusiness）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
@@ -695,10 +709,6 @@ const OPERATION_ITEMS: LibraryItem[] = [
   { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Business限定）" },
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Business限定）" },
-  { type: "map", label: "地図", description: "アクセス・所在地を表示" },
-  { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
-  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
-  { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
   { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図リンクを集約" },
 ];
@@ -718,9 +728,6 @@ const MEDIA_ITEMS: LibraryItem[] = [
   { type: "image", label: "画像", description: "写真を1枚表示" },
   { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
   { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
-  { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
-  { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
-  { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
   { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
   { type: "space", label: "スペース", description: "上下の余白を調整" },
 ];
@@ -855,18 +862,25 @@ function LibraryItemButton({
       >
         {CARD_ICONS[item.type] ?? CARD_ICONS.text}
       </span>
-      <div className="min-w-0 flex-1">
-        <span className="flex items-center gap-1 truncate text-sm font-medium text-slate-800">
+      <div className="relative min-w-0 flex-1 pr-6">
+        <span
+          className={
+            "flex h-9 items-center gap-1 truncate text-[15px] font-medium leading-none " +
+            (isBusinessType ? "text-violet-700" : "text-slate-800")
+          }
+        >
           <span className="truncate">{item.label}</span>
           {isBusinessType ? (
             <BusinessBadge />
           ) : null}
         </span>
-        <DescriptionWithTooltip
-          item={item}
-          parentOpen={hoverOpen || focusOpen}
-          anchorRef={buttonRef}
-        />
+        <span className="absolute inset-y-0 right-0 flex items-center">
+          <DescriptionWithTooltip
+            item={item}
+            parentOpen={hoverOpen || focusOpen}
+            anchorRef={buttonRef}
+          />
+        </span>
       </div>
     </button>
   );

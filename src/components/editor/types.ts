@@ -194,6 +194,28 @@ export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): imp
   if (innerRadiusPx) {
     (style as Record<string, string>)["--editor-inner-border-radius"] = innerRadiusPx;
   }
+  if (
+    card.type &&
+    BUSINESS_ONLY_CARD_TYPES.includes(card.type) &&
+    card.type !== "hero_slider" &&
+    card.type !== "menu_time_band" &&
+    typeof (s as Record<string, unknown>).innerTonePreset === "string"
+  ) {
+    const tone = ((s as Record<string, unknown>).innerTonePreset as string).trim();
+    const toneMap: Record<string, { bg: string; border: string }> = {
+      slate: { bg: "#f8fafc", border: "#e2e8f0" },
+      blue: { bg: "#eff6ff", border: "#bfdbfe" },
+      emerald: { bg: "#ecfdf5", border: "#a7f3d0" },
+      amber: { bg: "#fffbeb", border: "#fde68a" },
+      rose: { bg: "#fff1f2", border: "#fecdd3" },
+      violet: { bg: "#f5f3ff", border: "#ddd6fe" },
+    };
+    const resolved = toneMap[tone];
+    if (resolved) {
+      (style as Record<string, string>)["--editor-inner-surface-bg"] = resolved.bg;
+      (style as Record<string, string>)["--editor-inner-surface-border"] = resolved.border;
+    }
+  }
   if (isMediaCardType(card.type)) {
     // Media blocks should blend with page background by default.
     (style as Record<string, string>)["--editor-block-surface"] = "transparent";

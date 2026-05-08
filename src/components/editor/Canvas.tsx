@@ -230,6 +230,7 @@ function SortableCardWrapper({
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
               "editor-card relative min-w-0 w-full overflow-hidden border-0 transition-[background-color] duration-250 ease-out " +
+              ((card.style as Record<string, unknown> | undefined)?.innerTonePreset ? "editor-inner-surface-overridden " : "") +
               (card.type === "space" || isMediaCardType(card.type) ? "bg-transparent " : "bg-white ")
             }
             style={getBlockStyle(card)}

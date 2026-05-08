@@ -36,6 +36,7 @@ const DEFAULT_W = 280;
 const DEFAULT_H = 96;
 const MIN_W = 120;
 const MIN_H = 48;
+const MAP_AUTO_MAX_H = 320;
 /** 観測要素の scrollHeight が親高さと再帰し暴走するのを防ぐ上限（px） */
 const MAX_AUTO_BLOCK_H = 2400;
 const GRID = 8;
@@ -331,6 +332,13 @@ export function FreeformCanvas({
         return pos.h ?? getCardDefaultHeight(card);
       }
       const auto = autoHeights[card.id];
+      if (card.type === "map") {
+        if (typeof auto === "number" && Number.isFinite(auto)) {
+          return Math.max(MIN_H, Math.min(MAP_AUTO_MAX_H, auto));
+        }
+        const fallback = pos.h ?? getCardDefaultHeight(card);
+        return Math.max(MIN_H, Math.min(MAP_AUTO_MAX_H, fallback));
+      }
       if (typeof auto === "number" && Number.isFinite(auto)) {
         return Math.max(MIN_H, auto);
       }
@@ -649,7 +657,8 @@ export function FreeformCanvas({
                     className={
                       "editor-card-selected h-full w-full overflow-hidden rounded-xl transition-shadow " +
                       (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
-                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "")
+                      ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
+                      ((card.style as Record<string, unknown> | undefined)?.innerTonePreset ? "editor-inner-surface-overridden " : "")
                     }
                     style={shellStyle}
                   >
