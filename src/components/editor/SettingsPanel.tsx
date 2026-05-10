@@ -329,12 +329,6 @@ function GalleryItemsEditor({
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
           <Input
-            label={`画像 ${i + 1} URL`}
-            value={items[i]?.src ?? ""}
-            onChange={(e) => updateItem(i, "src", e.target.value)}
-            placeholder="https://..."
-          />
-          <Input
             label="代替テキスト"
             value={items[i]?.alt ?? ""}
             onChange={(e) => updateItem(i, "alt", e.target.value)}
@@ -1391,7 +1385,6 @@ function MenuHeroFields({
   content: Record<string, unknown>;
   onUpdate: (key: string, value: unknown) => void;
 }) {
-  const heroSrc = typeof content.heroSrc === "string" ? content.heroSrc : "";
   const heroAlt = typeof content.heroAlt === "string" ? content.heroAlt : "";
 
   return (
@@ -1400,12 +1393,6 @@ function MenuHeroFields({
       <ImageUpload
         onUploaded={(url) => onUpdate("heroSrc", url)}
         className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
-      />
-      <Input
-        label="ヒーロー画像URL"
-        value={heroSrc}
-        onChange={(e) => onUpdate("heroSrc", e.target.value)}
-        placeholder="https://..."
       />
       <Input
         label="ヒーロー代替テキスト"
@@ -1472,12 +1459,6 @@ function MenuItemsEditor({
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
           <Input
-            label="品目画像URL"
-            value={item.imageSrc ?? ""}
-            onChange={(e) => updateItem(i, "imageSrc", e.target.value)}
-            placeholder="https://..."
-          />
-          <Input
             label="品目画像の代替テキスト"
             value={item.imageAlt ?? ""}
             onChange={(e) => updateItem(i, "imageAlt", e.target.value)}
@@ -1527,7 +1508,6 @@ function MenuTagItemsEditor({
             onUploaded={(url) => updateItem(i, "imageSrc", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
-          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} placeholder="https://..." />
           <Input
             label="品目画像の代替テキスト"
             value={item.imageAlt ?? ""}
@@ -1603,12 +1583,6 @@ function MenuCategoriesGroupsEditor({
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
           <Input
-            label="カテゴリ画像URL"
-            value={cat.imageSrc ?? ""}
-            onChange={(e) => updateCatField(ci, "imageSrc", e.target.value)}
-            placeholder="https://..."
-          />
-          <Input
             label="カテゴリ画像の代替テキスト"
             value={cat.imageAlt ?? ""}
             onChange={(e) => updateCatField(ci, "imageAlt", e.target.value)}
@@ -1664,7 +1638,6 @@ function DrinkItemsEditor({
             onUploaded={(url) => updateItem(i, "imageSrc", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
-          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
           <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
         </div>
       ))}
@@ -1711,7 +1684,6 @@ function SalonItemsEditor({
             onUploaded={(url) => updateItem(i, "imageSrc", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
-          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
           <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
         </div>
       ))}
@@ -1757,7 +1729,6 @@ function ComboItemsEditor({
             onUploaded={(url) => updateItem(i, "imageSrc", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
           />
-          <Input label="品目画像URL" value={item.imageSrc ?? ""} onChange={(e) => updateItem(i, "imageSrc", e.target.value)} />
           <Input label="品目画像の代替テキスト" value={item.imageAlt ?? ""} onChange={(e) => updateItem(i, "imageAlt", e.target.value)} placeholder="任意" />
         </div>
       ))}

@@ -28,7 +28,7 @@ export function SaasImageBlock({ block }: { block: SaasBlock }) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center rounded-[16px] border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500" style={{ margin: 8 }}>
-            <span className="text-sm font-medium">画像URLを追加</span>
+            <span className="text-sm font-medium">右パネルから画像をアップロード</span>
           </div>
         )}
       </div>

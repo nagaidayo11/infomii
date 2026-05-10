@@ -46,7 +46,7 @@ export function SaasGalleryBlock({ block }: { block: SaasBlock }) {
                   alt={item.alt ?? ""}
                   fill
                   className="object-cover"
-                  unoptimized={item.src?.startsWith("http")}
+                  unoptimized={item.src?.startsWith("http") || item.src?.startsWith("data:")}
                   sizes="160px"
                 />
               </div>

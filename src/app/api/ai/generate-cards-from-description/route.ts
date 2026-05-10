@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import {
+  gallerySlotSrc,
+  getAiPageDefaultImages,
+  inferAiPageImageTheme,
+  normalizeGeneratedImageSrc,
+  type AiPageImageDefaults,
+} from "@/lib/ai-page-theme-images";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_SAMPLE_IMAGE = "/preset-hero-sample.png";
 
 const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider"] as const;
 
@@ -20,7 +26,8 @@ const CARD_SCHEMAS: Record<string, string> = {
 /** Generate cards from a natural-language description using AI. */
 async function generateCardsFromDescription(
   apiKey: string,
-  description: string
+  description: string,
+  imageDefaults: AiPageImageDefaults
 ): Promise<Array<{ type: string; content: Record<string, unknown>; order: number }>> {
   const schemas = ALLOWED_TYPES.map((t) => `${t}: ${CARD_SCHEMAS[t]}`).join("\n");
 
@@ -77,7 +84,7 @@ JSON配列のみ出力。マークダウン・説明禁止。`;
         const base =
           typeof c.content === "object" && c.content !== null ? ({ ...(c.content as Record<string, unknown>) }) : {};
         if ((c.type as string) === "image") {
-          if (typeof base.src !== "string" || !base.src.trim()) base.src = DEFAULT_SAMPLE_IMAGE;
+          base.src = normalizeGeneratedImageSrc(base.src, imageDefaults.primary);
           if (typeof base.alt !== "string" || !base.alt.trim()) base.alt = "施設イメージ";
         }
         if ((c.type as string) === "gallery") {
@@ -85,7 +92,7 @@ JSON配列のみ出力。マークダウン・説明禁止。`;
           const items = rawItems
             .map((item, index) => {
               const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
-              if (typeof row.src !== "string" || !row.src.trim()) row.src = DEFAULT_SAMPLE_IMAGE;
+              row.src = normalizeGeneratedImageSrc(row.src, gallerySlotSrc(index, imageDefaults));
               if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${index + 1}`;
               return row;
             })
@@ -94,8 +101,8 @@ JSON配列のみ出力。マークダウン・説明禁止。`;
             items.length > 0
               ? items
               : [
-                  { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-1" },
-                  { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-2" },
+                  { src: gallerySlotSrc(0, imageDefaults), alt: "gallery-1" },
+                  { src: gallerySlotSrc(1, imageDefaults), alt: "gallery-2" },
                 ];
         }
         return base;
@@ -138,7 +145,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const cards = await generateCardsFromDescription(apiKey, description);
+    const imageDefaults = getAiPageDefaultImages(inferAiPageImageTheme(description));
+    const cards = await generateCardsFromDescription(apiKey, description, imageDefaults);
     return NextResponse.json({ cards });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";

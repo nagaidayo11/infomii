@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAiPageDefaultImages, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
@@ -228,7 +229,21 @@ export async function POST(request: Request) {
     }
 
     const extracted = await extractHotelData(apiKey, url, pageText);
-    const cards = buildCardsFromExtracted(extracted);
+    const themeHint = [extracted.hotelName, extracted.address, extracted.nearbyInfo, url].filter(Boolean).join(" ");
+    const imageDefaults = getAiPageDefaultImages(inferAiPageImageTheme(themeHint));
+    const baseCards = buildCardsFromExtracted(extracted);
+    const cards = [
+      {
+        type: "hero",
+        content: {
+          title: extracted.hotelName || "ご案内",
+          subtitle: "公式サイトの情報をもとに案内カードを生成しました。内容は編集画面でご確認ください。",
+          image: imageDefaults.primary,
+        },
+        order: 0,
+      },
+      ...baseCards.map((c, i) => ({ ...c, order: i + 1 })),
+    ];
 
     if (cards.length === 0) {
       return NextResponse.json(

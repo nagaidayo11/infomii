@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { IconTokenSelect } from "@/components/editor/IconTokenSelect";
+import { ImageUpload } from "@/components/editor/ImageUpload";
 import { useSaasEditorStore } from "./store";
 import { BLOCK_TYPE_LABELS } from "./types";
 import type { SaasBlockType } from "./types";
@@ -64,13 +65,10 @@ export function StylePanel() {
         {selected.type === "hero" && (
           <>
             <div>
-              <label className={labelClass}>画像URL</label>
-              <input
-                type="url"
-                value={(content.imageSrc as string) ?? ""}
-                onChange={(e) => updateContent({ imageSrc: e.target.value })}
-                className={inputClass}
-                placeholder="https://..."
+              <label className={labelClass}>画像</label>
+              <ImageUpload
+                onUploaded={(url) => updateContent({ imageSrc: url })}
+                className="!items-start !rounded-[16px] !border !border-slate-200 !bg-white !p-3"
               />
             </div>
             <div>
@@ -259,13 +257,10 @@ export function StylePanel() {
         {selected.type === "image" && (
           <>
             <div>
-              <label className={labelClass}>画像URL</label>
-              <input
-                type="url"
-                value={(content.src as string) ?? ""}
-                onChange={(e) => updateContent({ src: e.target.value })}
-                className={inputClass}
-                placeholder="https://..."
+              <label className={labelClass}>画像</label>
+              <ImageUpload
+                onUploaded={(url) => updateContent({ src: url })}
+                className="!items-start !rounded-[16px] !border !border-slate-200 !bg-white !p-3"
               />
             </div>
             <div>
@@ -360,18 +355,15 @@ export function StylePanel() {
               />
             </div>
             <div>
-              <label className={labelClass}>画像URL（1枚目）</label>
-              <input
-                type="url"
-                value={((content.items as GalleryItem[])?.[0]?.src as string) ?? ""}
-                onChange={(e) => {
+              <label className={labelClass}>画像（1枚目）</label>
+              <ImageUpload
+                onUploaded={(url) => {
                   const items = (content.items as GalleryItem[]) ?? [{ id: "1", src: "", alt: "", caption: "" }];
                   const next = [...items];
-                  next[0] = { ...(next[0] ?? { id: "1", src: "", alt: "", caption: "" }), src: e.target.value };
+                  next[0] = { ...(next[0] ?? { id: "1", src: "", alt: "", caption: "" }), src: url };
                   updateContent({ items: next });
                 }}
-                className={inputClass}
-                placeholder="https://..."
+                className="!items-start !rounded-[16px] !border !border-slate-200 !bg-white !p-3"
               />
             </div>
             <div>

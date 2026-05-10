@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { createSlug } from "@/lib/slug";
+import {
+  gallerySlotSrc,
+  getAiPageDefaultImages,
+  inferAiPageImageTheme,
+  normalizeGeneratedImageSrc,
+  type AiPageImageDefaults,
+} from "@/lib/ai-page-theme-images";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
 const FALLBACK_AI_MODEL = process.env.OPENAI_FALLBACK_MODEL ?? "gpt-4o-mini";
-const DEFAULT_SAMPLE_IMAGE = "/preset-hero-sample.png";
 
 const ALLOWED_TYPES = ["wifi", "breakfast", "notice", "map", "button", "image", "text", "gallery", "divider", "welcome", "checkout", "nearby", "emergency", "taxi"] as const;
 
@@ -30,7 +36,17 @@ function normalizeText(value: unknown, maxLen = 300): string {
   return String(value ?? "").trim().slice(0, maxLen);
 }
 
-function sanitizeCardContent(type: string, content: Record<string, unknown>): Record<string, unknown> {
+function buildDefaultHeroContent(description: string, img: AiPageImageDefaults): Record<string, unknown> {
+  const t = description.replace(/\s+/g, " ").trim();
+  const title = t.length >= 6 ? `${t.slice(0, 30)}${t.length > 30 ? "…" : ""}` : "ご案内";
+  return {
+    title,
+    subtitle: "主要な案内をこのページにまとめました。内容は編集画面で自由に調整できます。",
+    image: img.primary,
+  };
+}
+
+function sanitizeCardContent(type: string, content: Record<string, unknown>, img: AiPageImageDefaults): Record<string, unknown> {
   switch (type) {
     case "welcome":
       return {
@@ -101,7 +117,7 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>): Re
       };
     case "image":
       return {
-        src: normalizeText(content.src, 300) || DEFAULT_SAMPLE_IMAGE,
+        src: normalizeGeneratedImageSrc(content.src, img.primary),
         alt: normalizeText(content.alt, 120) || "施設イメージ",
       };
     case "gallery": {
@@ -112,7 +128,7 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>): Re
         .map((item, index) => {
           const row = item as Record<string, unknown>;
           return {
-            src: normalizeText(row.src, 300) || DEFAULT_SAMPLE_IMAGE,
+            src: normalizeGeneratedImageSrc(row.src, gallerySlotSrc(index, img)),
             alt: normalizeText(row.alt, 120) || `gallery-${index + 1}`,
           };
         });
@@ -122,8 +138,8 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>): Re
           normalizedItems.length > 0
             ? normalizedItems
             : [
-                { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-1" },
-                { src: DEFAULT_SAMPLE_IMAGE, alt: "gallery-2" },
+                { src: gallerySlotSrc(0, img), alt: "gallery-1" },
+                { src: gallerySlotSrc(1, img), alt: "gallery-2" },
               ],
       };
     }
@@ -230,7 +246,8 @@ function buildDescriptionQualityReport(
 /** Generate cards from a natural-language description using AI. */
 async function generateCardsFromDescription(
   apiKey: string,
-  description: string
+  description: string,
+  imageDefaults: AiPageImageDefaults
 ): Promise<{
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
   modelUsed: string;
@@ -271,7 +288,8 @@ JSON配列のみを出力してください。マークダウンや説明は含�
       type: c.type as string,
       content: sanitizeCardContent(
         c.type as string,
-        typeof c.content === "object" && c.content !== null ? (c.content as Record<string, unknown>) : {}
+        typeof c.content === "object" && c.content !== null ? (c.content as Record<string, unknown>) : {},
+        imageDefaults
       ),
       order: typeof c.order === "number" ? c.order : i,
     }));
@@ -281,7 +299,13 @@ JSON配列のみを出力してください。マークダウンや説明は含�
   }
 
   const ordered = cards.sort((a, b) => a.order - b.order).map((c, i) => ({ ...c, order: i }));
-  const completed = ensureCoreHotelCards(ordered, description);
+  const withHero = ordered.some((c) => c.type === "hero")
+    ? ordered
+    : [
+        { type: "hero", content: buildDefaultHeroContent(description, imageDefaults), order: 0 },
+        ...ordered.map((c, i) => ({ ...c, order: i + 1 })),
+      ];
+  const completed = ensureCoreHotelCards(withHero, description);
   return { cards: completed, modelUsed: aiResult.modelUsed, fallbackUsed: aiResult.fallbackUsed };
 }
 
@@ -352,12 +376,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const generated = await generateCardsFromDescription(apiKey, description);
+    const imageDefaults = getAiPageDefaultImages(inferAiPageImageTheme(description));
+    const generated = await generateCardsFromDescription(apiKey, description, imageDefaults);
     const cards = generated.cards;
     const quality = buildDescriptionQualityReport(cards);
-    const title = cards[0]?.content?.content
-      ? String(cards[0].content.content).slice(0, 40) + (String(cards[0].content.content).length > 40 ? "…" : "")
-      : "AIで作成したページ";
+    const firstText = cards.find((c) => c.type === "text");
+    const textBody =
+      firstText &&
+      typeof firstText.content === "object" &&
+      firstText.content !== null &&
+      typeof (firstText.content as Record<string, unknown>).content === "string"
+        ? String((firstText.content as Record<string, unknown>).content).trim()
+        : "";
+    const condensed = description.replace(/\s+/g, " ").trim();
+    const title =
+      textBody.length > 0
+        ? textBody.slice(0, 40) + (textBody.length > 40 ? "…" : "")
+        : (condensed.slice(0, 50) + (condensed.length > 50 ? "…" : "") || "AIで作成したページ");
     const slug = `${createSlug(description.slice(0, 30))}-${Date.now().toString(36)}`;
 
     const { data: newPage, error: pageError } = await supabase

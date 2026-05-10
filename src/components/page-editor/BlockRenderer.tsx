@@ -87,18 +87,10 @@ export function BlockRenderer({
               </div>
             ) : (
               <div className="flex aspect-video items-center justify-center rounded-lg bg-slate-100 text-sm text-slate-500">
-                画像URLを入力
+                右パネルから画像をアップロード
               </div>
             )}
-            <input
-              type="text"
-              value={block.src}
-              onChange={(e) =>
-                updateBlock(block.id, { src: e.target.value } as Partial<PageBlock>)
-              }
-              placeholder="画像のURLを貼り付け"
-              className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-            />
+            <p className="mt-2 text-center text-xs text-slate-500">画像は右の設定パネルから追加できます</p>
           </div>
         );
       }
@@ -268,20 +260,29 @@ export function BlockRenderer({
             onClick={() => selectBlock(block.id)}
           >
             <p className="text-xs font-medium text-slate-500">ギャラリー</p>
-            {block.items.map((item, i) => (
-              <input
-                key={item.id}
-                type="text"
-                value={item.src}
-                onChange={(e) => {
-                  const items = [...block.items];
-                  items[i] = { ...items[i], src: e.target.value };
-                  updateBlock(block.id, { items } as Partial<PageBlock>);
-                }}
-                placeholder={`画像${i + 1}のURLを貼り付け`}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              />
-            ))}
+            <p className="text-xs text-slate-500">右パネルから各画像をアップロードしてください</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {block.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative aspect-square overflow-hidden rounded-lg bg-slate-100"
+                >
+                  {item.src ? (
+                    <Image
+                      src={item.src}
+                      alt={item.caption ?? ""}
+                      fill
+                      className="object-cover object-center"
+                      unoptimized={item.src.startsWith("http") || item.src.startsWith("data:")}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center p-2 text-center text-[10px] text-slate-400">
+                      未設定
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         );
       }

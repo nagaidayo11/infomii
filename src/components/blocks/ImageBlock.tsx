@@ -9,7 +9,7 @@ export type ImageBlockProps = {
 };
 
 /**
- * Renders image from JSON: { "type": "image", "src": "https://..." }
+ * Renders image from JSON: { "type": "image", "src": "..." } (アップロードURLまたは data URL)
  */
 export function ImageBlock({
   data,
@@ -25,12 +25,12 @@ export function ImageBlock({
         className={`flex aspect-video items-center justify-center rounded-xl bg-slate-100 text-sm text-slate-500 ${className}`.trim()}
         data-block-type="image"
       >
-        画像URLなし
+        画像未設定
       </div>
     );
   }
 
-  const unoptimized = src.startsWith("http");
+  const unoptimized = src.startsWith("http") || src.startsWith("data:");
 
   return (
     <div

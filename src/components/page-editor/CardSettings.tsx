@@ -83,16 +83,7 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "image" && (
             <>
-              <label className={labelClass}>画像URLまたはアップロード</label>
-              <input
-                type="text"
-                value={block.src}
-                onChange={(e) =>
-                  updateBlock(block.id, { src: e.target.value } as Partial<PageBlock>)
-                }
-                className={inputClass}
-                placeholder="https://..."
-              />
+              <label className={labelClass}>画像</label>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -538,20 +529,40 @@ export function CardSettings({ block }: CardSettingsProps) {
 
           {block.type === "gallery" && (
             <>
-              <label className={labelClass}>画像URL</label>
+              <label className={labelClass}>画像（各スロット）</label>
               {(block.items ?? []).map((item, i) => (
-                <input
-                  key={item.id}
-                  type="text"
-                  value={item.src}
-                  onChange={(e) => {
-                    const items = [...block.items];
-                    items[i] = { ...items[i], src: e.target.value };
-                    updateBlock(block.id, { items } as Partial<PageBlock>);
-                  }}
-                  className={inputClass + " mt-2"}
-                  placeholder={`画像${i + 1}のURL`}
-                />
+                <div key={item.id} className="mt-2 space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id={`gallery-upload-${block.id}-${i}`}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const dataUrl = reader.result as string;
+                        const items = [...block.items];
+                        items[i] = { ...items[i], src: dataUrl };
+                        updateBlock(block.id, { items } as Partial<PageBlock>);
+                      };
+                      reader.readAsDataURL(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <label
+                    htmlFor={`gallery-upload-${block.id}-${i}`}
+                    className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 py-2.5 text-xs font-medium text-slate-600 transition hover:border-ds-primary hover:bg-blue-50/50 hover:text-ds-primary"
+                  >
+                    画像{i + 1}をアップロード
+                  </label>
+                  {item.src ? (
+                    <div className="relative aspect-video overflow-hidden rounded-lg bg-slate-100">
+                      <Image src={item.src} alt="" fill className="object-contain" unoptimized />
+                    </div>
+                  ) : null}
+                </div>
               ))}
               <button
                 type="button"
