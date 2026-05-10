@@ -6,6 +6,13 @@ import {
   PRESET_HERO_SLIDER_THIRD_SAMPLE_IMAGE,
 } from "@/components/editor/types";
 
+/** Hero copy for AI-generated pages (same as editor `defaultContent("hero")`). */
+export const AI_DEFAULT_HERO_TITLE = "Infomii Hotel";
+export const AI_DEFAULT_HERO_SUBTITLE = "館内案内をスマートにまとめました";
+
+/** `pages.title` when creating a page via AI (description or URL import). */
+export const AI_GENERATED_PAGE_TITLE = "AIで作ったページ";
+
 /** Visual preset bucket for AI-generated pages (maps to `/public/templates/previews/...`). */
 export type AiPageImageTheme = "business" | "resort" | "ryokan" | "airbnb" | "guide" | "inbound";
 

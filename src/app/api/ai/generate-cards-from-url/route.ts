@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { getAiPageDefaultImages, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
+import {
+  AI_DEFAULT_HERO_SUBTITLE,
+  AI_DEFAULT_HERO_TITLE,
+  AI_GENERATED_PAGE_TITLE,
+  getAiPageDefaultImages,
+  inferAiPageImageTheme,
+} from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
@@ -236,8 +242,8 @@ export async function POST(request: Request) {
       {
         type: "hero",
         content: {
-          title: extracted.hotelName || "ご案内",
-          subtitle: "公式サイトの情報をもとに案内カードを生成しました。内容は編集画面でご確認ください。",
+          title: AI_DEFAULT_HERO_TITLE,
+          subtitle: AI_DEFAULT_HERO_SUBTITLE,
           image: imageDefaults.primary,
         },
         order: 0,
@@ -300,7 +306,7 @@ export async function POST(request: Request) {
           { status: 403 }
         );
       }
-      const title = extracted.hotelName ? `${extracted.hotelName} 館内案内` : "館内案内";
+      const title = AI_GENERATED_PAGE_TITLE;
       const slug = `${createSlug(extracted.hotelName || "info")}-${Date.now().toString(36)}`;
       const { data: newPage, error: pageError } = await supabase
         .from("pages")
