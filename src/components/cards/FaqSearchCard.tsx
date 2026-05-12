@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
@@ -17,10 +17,6 @@ type FaqItem = { q?: string; a?: string };
 export function FaqSearchCard({ card }: FaqSearchCardProps) {
   const content = (card.content ?? {}) as Record<string, unknown>;
   const title = typeof content.title === "string" ? content.title : "よくあるご質問";
-  const placeholder =
-    typeof content.placeholder === "string" && content.placeholder.trim()
-      ? content.placeholder
-      : "キーワードで検索";
   const items = useMemo(
     () =>
       ((Array.isArray(content.items) ? content.items : []) as FaqItem[])
@@ -32,33 +28,15 @@ export function FaqSearchCard({ card }: FaqSearchCardProps) {
         .slice(0, 50),
     [content.items]
   );
-  const [query, setQuery] = useState("");
-  const normalized = query.trim().toLowerCase();
-  const visibleItems =
-    normalized.length === 0
-      ? items
-      : items.filter(
-          (it) =>
-            it.q.toLowerCase().includes(normalized) ||
-            it.a.toLowerCase().includes(normalized)
-        );
 
   return (
     <Card padding="md">
       <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
         {title}
       </p>
-      <input
-        data-inner-surface
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
-        className={`mt-3 w-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-300 ${editorInnerRadiusClassName}`}
-      />
       <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
-        {visibleItems.length > 0 ? (
-          visibleItems.map((item, idx) => (
+        {items.length > 0 ? (
+          items.map((item, idx) => (
             <div
               key={`${item.q}-${idx}`}
               data-inner-surface
@@ -69,9 +47,7 @@ export function FaqSearchCard({ card }: FaqSearchCardProps) {
             </div>
           ))
         ) : (
-          <p className="text-sm text-slate-500">
-            該当する質問がありません。
-          </p>
+          <p className="text-sm text-slate-500">質問がまだありません。</p>
         )}
       </div>
     </Card>

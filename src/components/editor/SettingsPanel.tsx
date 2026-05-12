@@ -19,11 +19,11 @@ const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
 const addButtonClass =
-  "rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[44px]";
+  "rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[34px]";
 const removeButtonClass =
-  "rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 min-h-[44px]";
+  "rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 min-h-[34px]";
 const reorderButtonClass =
-  "rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[44px] min-w-[44px]";
+  "rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[34px] min-w-[34px]";
 const checkboxRowClass =
   "flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm text-slate-700";
 const checkboxInlineRowClass =
@@ -2246,8 +2246,8 @@ export function CardSettings({
   if (businessLocked) {
     return (
       <>
-        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
-          <div className="flex flex-col gap-3">
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
               <button
@@ -2287,7 +2287,7 @@ export function CardSettings({
                     type="button"
                     onClick={handleDuplicateCard}
                     disabled={!onDuplicateCard}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                    className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
                   >
                     コピー
                   </button>
@@ -2295,7 +2295,7 @@ export function CardSettings({
                     type="button"
                     onClick={handleRemoveCard}
                     disabled={!onRemoveCard}
-                    className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                    className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
                   >
                     削除
                   </button>
@@ -2316,8 +2316,8 @@ export function CardSettings({
 
   return (
     <>
-      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
-        <div className="flex flex-col gap-3">
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
             <button
@@ -2356,7 +2356,7 @@ export function CardSettings({
                   type="button"
                   onClick={handleDuplicateCard}
                   disabled={!onDuplicateCard}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
                 >
                   コピー
                 </button>
@@ -2364,7 +2364,7 @@ export function CardSettings({
                   type="button"
                   onClick={handleRemoveCard}
                   disabled={!onRemoveCard}
-                  className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+                  className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
                 >
                   削除
                 </button>
@@ -2372,11 +2372,11 @@ export function CardSettings({
             ) : null}
           </div>
           <p className="text-xs text-slate-500">変更はリアルタイムで反映されます</p>
-          <div className="flex gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-1">
+          <div className="flex gap-0.5 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 px-0.5 py-px">
             <button
               type="button"
               onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "content"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2387,7 +2387,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2398,7 +2398,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap transition min-h-[40px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-spacing"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -3212,12 +3212,6 @@ export function CardSettings({
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="よくあるご質問"
-              />
-              <Input
-                label="検索プレースホルダ"
-                value={display("placeholder")}
-                onChange={(e) => update("placeholder", e.target.value)}
-                placeholder="キーワードで検索"
               />
               <FaqItemsEditor content={content} onUpdate={update} />
             </SettingsSection>

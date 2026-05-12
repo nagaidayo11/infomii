@@ -375,7 +375,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
-  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
+  { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
@@ -448,7 +448,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
-  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワード検索" },
+  { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
@@ -658,7 +658,6 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "faq_search":
       return {
         title: "よくあるご質問",
-        placeholder: "キーワードで検索",
         items: [
           { q: "チェックインは何時からですか？", a: "15:00からです。" },
           { q: "WiFiは利用できますか？", a: "客室・ロビーでご利用いただけます。" },

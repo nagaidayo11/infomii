@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
@@ -66,6 +66,8 @@ const TOOLTIP_GAP = 8;
 /** Motion rhythm aligned with onboarding UI timings. */
 const HOVER_OPEN_DELAY_MS = 150;
 const HOVER_CLOSE_DELAY_MS = 100;
+/** Hover preview fade out duration (matches CSS transition). */
+const TOOLTIP_FADE_MS = 220;
 
 type PreviewMode = "live" | "image" | "text";
 type PreviewSpec = {
@@ -93,10 +95,12 @@ const PREVIEW_SPEC_BY_TYPE: Record<CardType, PreviewSpec> = (Object.keys(CARD_TY
 
 function LiveCardPreview({ card }: { card: EditorCard }) {
   const scaledRef = useRef<HTMLDivElement | null>(null);
-  const [clipBox, setClipBox] = useState<{ w: number; h: number }>(() => ({
-    w: LIVE_PREVIEW_NATURAL_WIDTH * LIVE_PREVIEW_DETAIL_SCALE,
-    h: 480,
-  }));
+  /**
+   * Avoid a tall placeholder height (previously 480px): it inflated the tooltip on first layout,
+   * then `ResizeObserver` recomputed a smaller height and `top` jumped downward.
+   * Until the first measure, only fix width so natural height matches content immediately.
+   */
+  const [clipBox, setClipBox] = useState<{ w: number; h: number } | null>(null);
 
   useLayoutEffect(() => {
     const scaled = scaledRef.current;
@@ -120,9 +124,15 @@ function LiveCardPreview({ card }: { card: EditorCard }) {
     };
   }, [card.type, card.id]);
 
+  const clipWidth = clipBox?.w ?? LIVE_PREVIEW_NATURAL_WIDTH * LIVE_PREVIEW_DETAIL_SCALE;
+  const clipStyle =
+    clipBox != null
+      ? { width: clipBox.w, height: clipBox.h }
+      : { width: clipWidth };
+
   return (
     <div className="box-border flex w-fit max-w-full justify-center bg-transparent p-0">
-      <div className="max-w-full overflow-hidden" style={{ width: clipBox.w, height: clipBox.h }}>
+      <div className="max-w-full overflow-hidden" style={clipStyle}>
         <div
           ref={scaledRef}
           style={{
@@ -170,13 +180,52 @@ function LibraryTooltipPortal({
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const exitTimerRef = useRef<number | null>(null);
+  const wasPlacedRef = useRef(false);
   const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
+  const [mounted, setMounted] = useState(false);
+  const [entered, setEntered] = useState(false);
   const [position, setPosition] = useState<TooltipPosition>({ left: -99999, top: -99999, side: "right" });
   /** After first clamp pass, avoids a one-frame flicker at the origin. */
   const [placed, setPlaced] = useState(false);
 
+  useEffect(() => {
+    if (open) {
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+      setMounted(true);
+      return;
+    }
+    const delay = wasPlacedRef.current ? TOOLTIP_FADE_MS : 0;
+    exitTimerRef.current = window.setTimeout(() => {
+      setMounted(false);
+      wasPlacedRef.current = false;
+      exitTimerRef.current = null;
+    }, delay);
+    return () => {
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!mounted || !placed || !open) {
+      setEntered(false);
+      return;
+    }
+    let rafIn = 0;
+    rafIn = window.requestAnimationFrame(() => setEntered(true));
+    return () => {
+      window.cancelAnimationFrame(rafIn);
+    };
+  }, [mounted, placed, open]);
+
   useLayoutEffect(() => {
-    if (!open) {
+    if (!mounted) {
       setPlaced(false);
       return;
     }
@@ -213,6 +262,7 @@ function LibraryTooltipPortal({
         );
 
         setPosition({ left, top, side });
+        wasPlacedRef.current = true;
         setPlaced(true);
       });
     };
@@ -244,22 +294,22 @@ function LibraryTooltipPortal({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, item.type]);
+  }, [mounted, item.type]);
 
-  if (!open || typeof document === "undefined") return null;
-
-  const visibilityStyle: CSSProperties = placed ? {} : { opacity: 0, pointerEvents: "none" };
+  if (!mounted || typeof document === "undefined") return null;
 
   return createPortal(
     <div
       ref={tooltipRef}
       id={tooltipId}
       role="tooltip"
-      className="pointer-events-none fixed z-[9999] box-border w-max max-w-[min(calc(100vw-20px),588px)] min-w-[min(232px,calc(100vw-28px))] rounded-xl border border-slate-200 bg-white p-2.5 text-[11px] leading-snug text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.2)]"
+      className={
+        "pointer-events-none fixed z-[9999] box-border w-max max-w-[min(calc(100vw-20px),588px)] min-w-[min(232px,calc(100vw-28px))] rounded-xl border border-slate-200 bg-white p-2.5 text-[11px] leading-snug text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.2)] transition-opacity duration-200 ease-out will-change-[opacity] motion-reduce:transition-none " +
+        (entered ? "opacity-100" : "opacity-0")
+      }
       style={{
         left: position.left,
         top: position.top,
-        ...visibilityStyle,
       }}
     >
       <div className="pointer-events-auto max-h-[calc(100vh-40px)] min-h-0 overflow-y-auto overflow-x-hidden">
@@ -721,7 +771,7 @@ const COMPARISON_ITEMS: LibraryItem[] = [
   { type: "steps", label: "ステップ", description: "手順を段階的に表示" },
   { type: "progress_steps", label: "進捗ステップ", description: "現在進捗を視覚化" },
   { type: "tabs_info", label: "タブ切替案内", description: "複数案内をタブで切替表示" },
-  { type: "faq_search", label: "FAQ検索", description: "FAQをキーワードで絞り込み" },
+  { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
 ];
 
 const MEDIA_ITEMS: LibraryItem[] = [
