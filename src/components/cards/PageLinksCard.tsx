@@ -23,6 +23,21 @@ function getIconDisplay(icon: string | undefined) {
   return normalizeIconToken(icon, "link");
 }
 
+/** Box shadow presets for page link tiles / circle icons (`none` | `sm` | `md` | `lg`). */
+function pageLinkShadowClass(strength: string): string {
+  switch (strength) {
+    case "none":
+      return "shadow-none";
+    case "sm":
+      return "shadow-[0_2px_8px_rgba(2,6,23,0.1)]";
+    case "lg":
+      return "shadow-[0_10px_28px_rgba(2,6,23,0.24)]";
+    case "md":
+    default:
+      return "shadow-[0_4px_12px_rgba(2,6,23,0.16)]";
+  }
+}
+
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
 export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageLinksCardProps) {
@@ -44,6 +59,20 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
+  const rawStyleVariant = typeof c?.styleVariant === "string" ? c.styleVariant : "";
+  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
+  const rawCircleShadow =
+    typeof c?.circleIconShadowStrength === "string" ? c.circleIconShadowStrength : "";
+  const circleShadowStrength =
+    rawCircleShadow === "none" || rawCircleShadow === "sm" || rawCircleShadow === "lg"
+      ? rawCircleShadow
+      : "md";
+  const rawTileShadow =
+    typeof c?.tileShadowStrength === "string" ? c.tileShadowStrength : "";
+  const tileShadowStrength =
+    rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
+      ? rawTileShadow
+      : "none";
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
 
   const update = (patch: Record<string, unknown>) => {
@@ -73,7 +102,18 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
 
-  const iconWrapClass = iconSize === "sm" ? "h-8 w-8" : iconSize === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const iconWrapClass =
+    styleVariant === "circle"
+      ? iconSize === "sm"
+        ? "h-12 w-12"
+        : iconSize === "lg"
+          ? "h-16 w-16"
+          : "h-14 w-14"
+      : iconSize === "sm"
+        ? "h-8 w-8"
+        : iconSize === "lg"
+          ? "h-10 w-10"
+          : "h-9 w-9";
   const iconClass = iconSize === "sm" ? "h-4.5 w-4.5" : iconSize === "lg" ? "h-6 w-6" : "h-5.5 w-5.5";
 
   return (
@@ -103,13 +143,35 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
             const content = (
               <div
                 data-inner-surface
-                className={`flex min-h-[76px] flex-col items-center justify-center gap-1 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100`}
+                className={
+                  styleVariant === "circle"
+                    ? "flex min-h-[90px] flex-col items-center justify-center gap-2 px-1.5 py-1.5"
+                    : [
+                        `flex min-h-[76px] flex-col items-center justify-center gap-1 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100`,
+                        tileShadowStrength !== "none"
+                          ? `border border-slate-200/80 ${pageLinkShadowClass(tileShadowStrength)}`
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                }
               >
-                <span data-inner-surface className={`flex shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-white text-slate-700 ${iconWrapClass}`}>
+                <span
+                  data-inner-surface
+                  className={
+                    styleVariant === "circle"
+                      ? `flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 ${pageLinkShadowClass(circleShadowStrength)} ${iconWrapClass}`
+                      : `flex shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-white text-slate-700 ${iconWrapClass}`
+                  }
+                >
                   <LineIcon name={iconDisplay} className={iconClass} />
                 </span>
                 <span
-                  className="w-full text-center font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
+                  className={
+                    styleVariant === "circle"
+                      ? "w-full text-center text-[12px] font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
+                      : "w-full text-center font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
+                  }
                   style={getBodyFontSizeStyle()}
                 >
                   {isSelected ? (

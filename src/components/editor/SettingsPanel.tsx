@@ -810,6 +810,20 @@ function PageLinksItemsEditor({
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
+  const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
+  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
+  const rawCircleShadow =
+    typeof content.circleIconShadowStrength === "string" ? content.circleIconShadowStrength : "";
+  const circleShadowStrength =
+    rawCircleShadow === "none" || rawCircleShadow === "sm" || rawCircleShadow === "lg"
+      ? rawCircleShadow
+      : "md";
+  const rawTileShadow =
+    typeof content.tileShadowStrength === "string" ? content.tileShadowStrength : "";
+  const tileShadowStrength =
+    rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
+      ? rawTileShadow
+      : "none";
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
@@ -841,18 +855,64 @@ function PageLinksItemsEditor({
           <option value="4">4列</option>
         </select>
       </div>
-      <div className="w-full">
-        <label className={labelClass}>アイコンサイズ</label>
-        <select
-          value={iconSize}
-          onChange={(e) => onUpdate("iconSize", e.target.value)}
-          className={inputClass}
-        >
-          <option value="sm">小</option>
-          <option value="md">標準</option>
-          <option value="lg">大</option>
-        </select>
-      </div>
+      <StyleGroup summary="アイコン・表示・影" defaultOpen={false}>
+        <div className="w-full">
+          <label className={labelClass}>アイコンサイズ</label>
+          <select
+            aria-label="アイコンサイズ"
+            value={iconSize}
+            onChange={(e) => onUpdate("iconSize", e.target.value)}
+            className={inputClass}
+          >
+            <option value="sm">小</option>
+            <option value="md">標準</option>
+            <option value="lg">大</option>
+          </select>
+        </div>
+        <div className="w-full">
+          <label className={labelClass}>表示スタイル</label>
+          <select
+            aria-label="表示スタイル"
+            value={styleVariant}
+            onChange={(e) => onUpdate("styleVariant", e.target.value)}
+            className={inputClass}
+          >
+            <option value="tile">カード</option>
+            <option value="circle">サークル（丸アイコン）</option>
+          </select>
+        </div>
+        {styleVariant === "circle" ? (
+          <div className="w-full">
+            <label className={labelClass}>丸アイコンの影</label>
+            <select
+              aria-label="丸アイコンの影の強さ"
+              value={circleShadowStrength}
+              onChange={(e) => onUpdate("circleIconShadowStrength", e.target.value)}
+              className={inputClass}
+            >
+              <option value="none">なし</option>
+              <option value="sm">弱い</option>
+              <option value="md">標準</option>
+              <option value="lg">強い</option>
+            </select>
+          </div>
+        ) : (
+          <div className="w-full">
+            <label className={labelClass}>カードタイルの影</label>
+            <select
+              aria-label="カードタイルの影の強さ"
+              value={tileShadowStrength}
+              onChange={(e) => onUpdate("tileShadowStrength", e.target.value)}
+              className={inputClass}
+            >
+              <option value="none">なし</option>
+              <option value="sm">弱い</option>
+              <option value="md">標準</option>
+              <option value="lg">強い</option>
+            </select>
+          </div>
+        )}
+      </StyleGroup>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">リンク項目</span>
         <button
