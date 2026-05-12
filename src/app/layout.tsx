@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { AuthProvider } from "@/components/auth-provider";
 import { ButtonLiftProvider } from "@/components/providers/ButtonLiftProvider";
 import "./globals.css";
@@ -82,6 +83,7 @@ export default function RootLayout({
         <link rel="stylesheet" href={editorGoogleFontsHref} />
       </head>
       <body className="font-sans lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-ds-foreground antialiased [-webkit-tap-highlight-color:transparent]">
+        <GoogleAnalytics />
         <AuthProvider>
           <ButtonLiftProvider>{children}</ButtonLiftProvider>
         </AuthProvider>
