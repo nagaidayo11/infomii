@@ -7,6 +7,7 @@ import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
+import { VideoUpload } from "./VideoUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS } from "./types";
@@ -1177,6 +1178,248 @@ function KpiItemsEditor({
   );
 }
 
+const MIN_PRICING_COLS = 2;
+const MAX_PRICING_COLS = 4;
+
+type ComparePricingRow = { label?: unknown; values?: unknown };
+
+function ComparePricingSettings({
+  content,
+  patchContent,
+}: {
+  content: Record<string, unknown>;
+  patchContent: (patch: Record<string, unknown>) => void;
+}) {
+  const headers = Array.isArray(content.pricingColumnHeaders)
+    ? ([...content.pricingColumnHeaders] as unknown[])
+    : [];
+  const rows = (Array.isArray(content.pricingRows) ? content.pricingRows : []) as ComparePricingRow[];
+  const cols = Math.min(MAX_PRICING_COLS, Math.max(MIN_PRICING_COLS, headers.length));
+
+  const padRowsToHeaders = (newHeaders: unknown[]) => {
+    const c = newHeaders.length;
+    return rows.map((row) => {
+      const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
+      const nextVals = [...vals];
+      while (nextVals.length < c) nextVals.push("");
+      return { ...row, values: nextVals.slice(0, c) };
+    });
+  };
+
+  const setHeaders = (newHeaders: unknown[]) => {
+    patchContent({
+      pricingColumnHeaders: newHeaders,
+      pricingRows: padRowsToHeaders(newHeaders),
+    });
+  };
+
+  const updateHeader = (i: number, v: string) => {
+    const next = [...headers];
+    next[i] = writeJaTextPreserving(next[i], v);
+    setHeaders(next);
+  };
+
+  const addColumn = () => {
+    if (headers.length >= MAX_PRICING_COLS) return;
+    setHeaders([...headers, ""]);
+  };
+
+  const removeColumn = () => {
+    if (headers.length <= MIN_PRICING_COLS) return;
+    setHeaders(headers.slice(0, -1));
+  };
+
+  const addRow = () => {
+    const blank = Array.from({ length: cols }, () => "");
+    patchContent({ pricingRows: [...rows, { label: "", values: blank }] });
+  };
+
+  const removeRow = (i: number) => {
+    patchContent({ pricingRows: rows.filter((_, idx) => idx !== i) });
+  };
+
+  const moveRow = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= rows.length) return;
+    const next = [...rows];
+    const tmp = next[i];
+    next[i] = next[j];
+    next[j] = tmp;
+    patchContent({ pricingRows: next });
+  };
+
+  const duplicateRow = (i: number) => {
+    const row = rows[i];
+    const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
+    const padded = [...vals];
+    while (padded.length < cols) padded.push("");
+    const labelJa = readJaText((row as Record<string, unknown>).label);
+    const copy: ComparePricingRow = {
+      label: labelJa ? `${labelJa}（複製）` : "",
+      values: [...padded],
+    };
+    patchContent({ pricingRows: [...rows.slice(0, i + 1), copy, ...rows.slice(i + 1)] });
+  };
+
+  const updateRowLabel = (i: number, v: string) => {
+    const next = [...rows];
+    const cur = next[i] ?? {};
+    next[i] = { ...cur, label: writeJaTextPreserving((cur as Record<string, unknown>).label, v) };
+    patchContent({ pricingRows: next });
+  };
+
+  const updateCell = (ri: number, ci: number, v: string) => {
+    const next = rows.map((row, idx) => {
+      if (idx !== ri) return row;
+      const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
+      const nv = [...vals];
+      while (nv.length < cols) nv.push("");
+      nv[ci] = v;
+      return { ...row, values: nv };
+    });
+    patchContent({ pricingRows: next });
+  };
+
+  const highlightRaw = content.highlightColumnIndex;
+  const highlightSelectValue =
+    typeof highlightRaw === "number" && Number.isFinite(highlightRaw) ? String(Math.max(0, Math.floor(highlightRaw))) : "";
+
+  const cellInputClass = inputClass + " !min-h-[36px] !py-1.5 text-xs";
+  const planPlaceholders = ["シングル", "ダブル", "ツイン", "スイート"] as const;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] leading-relaxed text-slate-500">
+        見出しと各セルを下の表でまとめて編集できます。行の並びは「↑」「↓」、同じ内容を増やすときは「複製」が便利です。
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={addColumn} disabled={headers.length >= MAX_PRICING_COLS} className={addButtonClass}>
+          列を追加（最大4）
+        </button>
+        <button type="button" onClick={removeColumn} disabled={headers.length <= MIN_PRICING_COLS} className={removeButtonClass}>
+          右端の列を削除
+        </button>
+        <button type="button" onClick={addRow} className={addButtonClass}>
+          + 行を追加
+        </button>
+      </div>
+      <div className="w-full">
+        <label className={labelClass}>おすすめ列の強調（公開ページでハイライト）</label>
+        <select
+          value={highlightSelectValue}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "") patchContent({ highlightColumnIndex: null });
+            else patchContent({ highlightColumnIndex: Number(v) });
+          }}
+          className={inputClass}
+        >
+          <option value="">なし</option>
+          {Array.from({ length: cols }, (_, i) => (
+            <option key={i} value={i}>
+              {readJaText(headers[i]) || `列${i + 1}`}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[480px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th className="w-[min(28vw,140px)] px-2 py-2 align-bottom text-[10px] font-semibold text-slate-500">項目</th>
+              {Array.from({ length: cols }, (_, i) => (
+                <th key={i} className="min-w-[104px] px-2 py-2 align-bottom font-normal">
+                  <span className="mb-1 block text-[10px] font-medium text-slate-500">プラン {i + 1}</span>
+                  <input
+                    type="text"
+                    value={readJaText(headers[i])}
+                    onChange={(e) => updateHeader(i, e.target.value)}
+                    placeholder={planPlaceholders[i] ?? "見出し"}
+                    className={cellInputClass}
+                    aria-label={`列${i + 1}の見出し`}
+                  />
+                </th>
+              ))}
+              <th className="w-[108px] px-1 py-2 align-bottom text-[10px] font-medium text-slate-400">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={cols + 2} className="px-3 py-6 text-center text-xs text-slate-500">
+                  行がありません。「+ 行を追加」から追加してください。
+                </td>
+              </tr>
+            ) : (
+              rows.map((row, ri) => {
+                const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
+                const padded = [...vals];
+                while (padded.length < cols) padded.push("");
+                return (
+                  <tr key={ri} className="border-b border-slate-100 last:border-0">
+                    <td className="px-2 py-1.5 align-top">
+                      <input
+                        type="text"
+                        value={readJaText((row as Record<string, unknown>).label)}
+                        onChange={(e) => updateRowLabel(ri, e.target.value)}
+                        placeholder="例: 定員"
+                        className={cellInputClass}
+                        aria-label={`行${ri + 1}の見出し`}
+                      />
+                    </td>
+                    {Array.from({ length: cols }, (_, ci) => (
+                      <td key={ci} className="px-2 py-1.5 align-top">
+                        <textarea
+                          value={padded[ci] ?? ""}
+                          onChange={(e) => updateCell(ri, ci, e.target.value)}
+                          placeholder="内容"
+                          rows={2}
+                          className={cellInputClass + " min-h-[52px] resize-y"}
+                          aria-label={`行${ri + 1}・列${ci + 1}`}
+                        />
+                      </td>
+                    ))}
+                    <td className="px-1 py-1.5 align-top">
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => moveRow(ri, -1)}
+                          disabled={ri === 0}
+                          className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveRow(ri, 1)}
+                          disabled={ri >= rows.length - 1}
+                          className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => duplicateRow(ri)}
+                          className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                          複製
+                        </button>
+                        <button type="button" onClick={() => removeRow(ri)} className={`${removeButtonClass} !min-h-[30px] text-[11px]`}>
+                          削除
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function ScheduleItemsEditor({
   content,
   onUpdate,
@@ -2136,9 +2379,9 @@ export function CardSettings({
   const supportsBusinessTonePreset =
     isBusinessOnlyCard && card.type !== "hero_slider" && card.type !== "menu_time_band";
   const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
-  const noTextFormattingCardTypes: Array<EditorCard["type"]> = ["image", "divider", "space"];
-  const noTitleTypographyCardTypes: Array<EditorCard["type"]> = ["text", "image", "divider", "space"];
-  const noBodyTypographyCardTypes: Array<EditorCard["type"]> = ["button", "action", "image", "divider", "space"];
+  const noTextFormattingCardTypes: Array<EditorCard["type"]> = ["image", "video", "divider", "space"];
+  const noTitleTypographyCardTypes: Array<EditorCard["type"]> = ["text", "image", "video", "divider", "space"];
+  const noBodyTypographyCardTypes: Array<EditorCard["type"]> = ["button", "action", "image", "video", "divider", "space"];
   const noTextAlignCardTypes: Array<EditorCard["type"]> = [
     "action",
     "button",
@@ -2150,6 +2393,7 @@ export function CardSettings({
     "social_links",
     "progress_steps",
     "image",
+    "video",
     "divider",
     "space",
   ];
@@ -2164,6 +2408,7 @@ export function CardSettings({
     "social_links",
     "progress_steps",
     "image",
+    "video",
     "divider",
     "space",
   ];
@@ -2691,6 +2936,50 @@ export function CardSettings({
                   onChange={(e) => updateLocalized("alt", e.target.value)}
                   placeholder="画像の説明"
                 />
+            </SettingsSection>
+          )}
+
+          {card.type === "video" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="館内のご案内"
+              />
+              <div className="w-full">
+                <label className={labelClass}>動画ファイル</label>
+                <VideoUpload onUploaded={(url) => update("videoUrl", url)} className="mt-1.5" />
+                <p className="mt-1.5 text-[11px] text-slate-500">ヒーローと同じく Supabase に保存されます。アップロード後は下のURL欄に反映されます。</p>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>動画のURL（アップロード・埋め込み）</label>
+                <textarea
+                  value={typeof content.videoUrl === "string" ? content.videoUrl : ""}
+                  onChange={(e) => update("videoUrl", e.target.value)}
+                  placeholder="アップロードで自動入力されるか、YouTube / Vimeo / mp4 直リンクを貼り付け"
+                  rows={2}
+                  className={inputClass}
+                />
+                <p className="mt-1 text-[11px] text-slate-500">
+                  アップロード済みの直リンクの確認・差し替え、または YouTube・Vimeo の埋め込みURLを指定できます。
+                </p>
+              </div>
+              {typeof content.videoUrl === "string" && content.videoUrl.trim().length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => update("videoUrl", "")}
+                  className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  動画をクリア
+                </button>
+              ) : null}
+              <Input
+                label="キャプション"
+                value={display("caption")}
+                onChange={(e) => updateLocalized("caption", e.target.value)}
+                placeholder="任意"
+              />
             </SettingsSection>
           )}
 
@@ -3291,34 +3580,76 @@ export function CardSettings({
                 label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="比較"
+                placeholder="比較・料金"
               />
-              <div className={compactGridClass}>
-                <Input
-                  label="左タイトル"
-                  value={display("leftTitle")}
-                  onChange={(e) => updateLocalized("leftTitle", e.target.value)}
-                  placeholder="スタンダード"
-                />
-                <Input
-                  label="右タイトル"
-                  value={display("rightTitle")}
-                  onChange={(e) => updateLocalized("rightTitle", e.target.value)}
-                  placeholder="プレミアム"
-                />
-                <Input
-                  label="左説明"
-                  value={display("leftBody")}
-                  onChange={(e) => updateLocalized("leftBody", e.target.value)}
-                  placeholder="内容"
-                />
-                <Input
-                  label="右説明"
-                  value={display("rightBody")}
-                  onChange={(e) => updateLocalized("rightBody", e.target.value)}
-                  placeholder="内容"
-                />
+              <div className="w-full">
+                <label className={labelClass}>レイアウト</label>
+                <select
+                  value={content.layout === "pricing" ? "pricing" : "twoColumn"}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "twoColumn") {
+                      update("layout", "twoColumn");
+                      return;
+                    }
+                    const h = Array.isArray(content.pricingColumnHeaders) ? content.pricingColumnHeaders : [];
+                    if (h.length < 2) {
+                      onUpdate(card.id, {
+                        content: {
+                          ...content,
+                          layout: "pricing",
+                          pricingColumnHeaders: ["シングル", "ダブル", "ツイン"],
+                          pricingRows: [
+                            { label: "おすすめポイント", values: ["1名向け", "カップル向け", "2ベッド"] },
+                            { label: "定員", values: ["1名", "2名", "2名"] },
+                            { label: "料金（税サ込・目安）", values: ["7,800円〜", "9,800円〜", "10,800円〜"] },
+                          ],
+                          highlightColumnIndex: 1,
+                        },
+                      });
+                    } else {
+                      update("layout", "pricing");
+                    }
+                  }}
+                  className={inputClass}
+                >
+                  <option value="twoColumn">2列で比較（シンプル）</option>
+                  <option value="pricing">料金表・比較表（複数列）</option>
+                </select>
               </div>
+              {content.layout === "pricing" ? (
+                <ComparePricingSettings
+                  content={content}
+                  patchContent={(patch) => onUpdate(card.id, { content: { ...content, ...patch } })}
+                />
+              ) : (
+                <div className={compactGridClass}>
+                  <Input
+                    label="左タイトル"
+                    value={display("leftTitle")}
+                    onChange={(e) => updateLocalized("leftTitle", e.target.value)}
+                    placeholder="スタンダード"
+                  />
+                  <Input
+                    label="右タイトル"
+                    value={display("rightTitle")}
+                    onChange={(e) => updateLocalized("rightTitle", e.target.value)}
+                    placeholder="プレミアム"
+                  />
+                  <Input
+                    label="左説明"
+                    value={display("leftBody")}
+                    onChange={(e) => updateLocalized("leftBody", e.target.value)}
+                    placeholder="内容"
+                  />
+                  <Input
+                    label="右説明"
+                    value={display("rightBody")}
+                    onChange={(e) => updateLocalized("rightBody", e.target.value)}
+                    placeholder="内容"
+                  />
+                </div>
+              )}
             </SettingsSection>
           )}
 

@@ -489,6 +489,11 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
   ),
+  video: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  ),
   gallery: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth={2} />
@@ -764,7 +769,7 @@ const OPERATION_ITEMS: LibraryItem[] = [
 ];
 
 const COMPARISON_ITEMS: LibraryItem[] = [
-  { type: "compare", label: "比較", description: "2列で内容を比較表示" },
+  { type: "compare", label: "比較・料金表", description: "2列比較または料金表（最大4列）" },
   { type: "kpi", label: "数字強調", description: "時間・数値情報を強く見せる" },
   { type: "quote", label: "引用", description: "レビュー・口コミ掲載" },
   { type: "checklist", label: "チェックリスト", description: "持ち物・手続き確認" },
@@ -776,6 +781,7 @@ const COMPARISON_ITEMS: LibraryItem[] = [
 
 const MEDIA_ITEMS: LibraryItem[] = [
   { type: "image", label: "画像", description: "写真を1枚表示" },
+  { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
   { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
   { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
   { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },

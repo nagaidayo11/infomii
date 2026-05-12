@@ -22,6 +22,7 @@ import { LaundryCard } from "./LaundryCard";
 import { TextCard } from "./TextCard";
 import { IconCard } from "./IconCard";
 import { ImageCard } from "./ImageCard";
+import { VideoCard } from "./VideoCard";
 import { ButtonCard } from "./ButtonCard";
 import { FaqCard } from "./FaqCard";
 import { ScheduleCard } from "./ScheduleCard";
@@ -229,6 +230,8 @@ function SingleCardRenderer({
       return <ButtonCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image":
       return <ImageCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "video":
+      return <VideoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "gallery":
       return <GalleryCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "faq":

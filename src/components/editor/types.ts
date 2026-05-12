@@ -29,6 +29,7 @@ export type CardType =
   | "text"
   | "icon"
   | "image"
+  | "video"
   | "button"
   | "faq"
   | "schedule"
@@ -278,6 +279,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   text: "テキスト",
   icon: "アイコン",
   image: "画像",
+  video: "動画",
   button: "ボタン",
   faq: "よくある質問",
   schedule: "営業時間一覧",
@@ -325,6 +327,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "notice",
   "map",
   "image",
+  "video",
   "text",
   "quote",
   "checklist",
@@ -367,11 +370,12 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "notice", label: "お知らせ", description: "告知・注意" },
   { type: "map", label: "地図", description: "住所・地図" },
   { type: "image", label: "画像", description: "写真" },
+  { type: "video", label: "動画", description: "YouTube・Vimeo・直リンク" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
   { type: "checklist", label: "チェックリスト", description: "タスク・持ち物確認" },
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
-  { type: "compare", label: "比較", description: "2列比較・プラン比較" },
+  { type: "compare", label: "比較・料金表", description: "2列比較または料金・プラン表（最大4列）" },
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
@@ -429,6 +433,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "spa", label: "スパ・温泉", description: "時間・場所・説明" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
   { type: "image", label: "画像", description: "写真" },
+  { type: "video", label: "動画", description: "YouTube・Vimeo・mp4/webm" },
   { type: "button", label: "ボタン", description: "リンクボタン" },
   { type: "schedule", label: "営業時間一覧", description: "時間割を一覧化（動的強調はBusiness）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
@@ -444,7 +449,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "quote", label: "引用", description: "引用文・レビュー" },
   { type: "checklist", label: "チェックリスト", description: "チェック項目" },
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
-  { type: "compare", label: "比較", description: "2カラム比較" },
+  { type: "compare", label: "比較・料金表", description: "2列比較または料金表" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
@@ -589,6 +594,8 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { icon: "info", label: "ラベル", description: "" };
     case "image":
       return { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" };
+    case "video":
+      return { title: "館内のご案内", videoUrl: "", caption: "" };
     case "button":
       return { label: "予約サイトへ", href: "#" };
     case "faq":
@@ -776,7 +783,15 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "compare":
       return {
-        title: "プランの比較",
+        layout: "pricing",
+        title: "客室タイプ・料金",
+        pricingColumnHeaders: ["シングル", "ダブル", "ツイン"],
+        pricingRows: [
+          { label: "おすすめポイント", values: ["1名向け", "カップル向け", "2ベッド"] },
+          { label: "定員", values: ["1名", "2名", "2名"] },
+          { label: "料金（税サ込・目安）", values: ["7,800円〜", "9,800円〜", "10,800円〜"] },
+        ],
+        highlightColumnIndex: 1,
         leftTitle: "スタンダード",
         leftBody: "朝食付き・通常チェックアウト",
         rightTitle: "プレミアム",
