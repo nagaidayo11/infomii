@@ -88,6 +88,24 @@ export function useAutoSaveCards(pageId: string | null) {
   const pageIdRef = useRef(pageId);
   const lastSignatureRef = useRef<string>("");
 
+  /** デバウンス待ちを捨て、直ちにサーバーへ保存（プレビュー・公開・QR 前などに使用） */
+  const flushAutosaveNow = useCallback(async () => {
+    if (!pageId) return;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    await saveAndMerge(pageId, isMountedRef);
+    const s = useEditor2Store.getState();
+    lastSignatureRef.current = cardsSignature(s.cards, {
+      mode: s.pageBackgroundMode,
+      color: s.pageBackgroundColor,
+      from: s.pageGradientFrom,
+      to: s.pageGradientTo,
+      angle: s.pageGradientAngle,
+    });
+  }, [pageId]);
+
   useEffect(() => {
     pageIdRef.current = pageId;
   }, [pageId]);
@@ -159,5 +177,5 @@ export function useAutoSaveCards(pageId: string | null) {
     };
   }, [pageId]);
 
-  return { retry };
+  return { retry, flushAutosaveNow };
 }

@@ -485,7 +485,7 @@ export function Editor2({
     );
   }, [isDemoMode, pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]);
 
-  const { retry } = useAutoSaveCards(pageId ?? null);
+  const { retry, flushAutosaveNow } = useAutoSaveCards(pageId ?? null);
 
   const selectedCard = useMemo(
     () => cards.find((c) => c.id === selectedCardId) ?? null,
@@ -647,7 +647,7 @@ export function Editor2({
     [addCard, translationEnabled, isDemoMode, openBusinessUpsell]
   );
 
-  const publishNow = useCallback(async () => {
+  const publishNow = useCallback(async (opts?: { silent?: boolean }) => {
     if (isDemoMode) {
       setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
@@ -676,11 +676,13 @@ export function Editor2({
       setPublishStatus("published");
       setPublishedBaselineSignature(currentContentSignature);
       const publicUrl = buildPublicUrlV(page.slug);
-      setPublishState({
-        publicUrl,
-        pageTitle: page.title ?? "",
-        slug: page.slug,
-      });
+      if (!opts?.silent) {
+        setPublishState({
+          publicUrl,
+          pageTitle: page.title ?? "",
+          slug: page.slug,
+        });
+      }
     } catch (e) {
       alert(e instanceof Error ? e.message : "公開処理に失敗しました。");
     } finally {
@@ -704,46 +706,6 @@ export function Editor2({
     }
     await publishNow();
   }, [isDemoMode, publishNow, runPrepublishChecks]);
-
-  /** 公開済みページのみ: 保存してQR/URLモーダルを開く（初回公開は「公開」ボタンを使用） */
-  const handleQrClick = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
-      return;
-    }
-    if (!pageId || !pageMeta.slug) return;
-    if (publishStatus !== "published") {
-      window.alert(
-        "QRコードを表示するには、先にページを公開してください。\n「公開」ボタンから公開すると、URLとQRを確認できます。",
-      );
-      return;
-    }
-    setQrModalPreparing(true);
-    try {
-      const state = useEditor2Store.getState();
-      await savePageCards(pageId, state.cards, {
-        pageStyle: {
-          background: {
-            mode: state.pageBackgroundMode,
-            color: state.pageBackgroundColor,
-            from: state.pageGradientFrom,
-            to: state.pageGradientTo,
-            angle: state.pageGradientAngle,
-          },
-        },
-      });
-      const publicUrl = buildPublicUrlV(pageMeta.slug);
-      setPublishState({
-        publicUrl,
-        pageTitle: pageMeta.title ?? "",
-        slug: pageMeta.slug,
-      });
-    } catch (e) {
-      window.alert(e instanceof Error ? e.message : "保存に失敗しました。");
-    } finally {
-      setQrModalPreparing(false);
-    }
-  }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus]);
 
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
@@ -1036,6 +998,118 @@ export function Editor2({
     [cards, translateAllCardsToMultilingual, translationEnabled]
   );
 
+  /**
+   * プレビュー／QR 前に、公開済みページで未反映なら公開更新相当を自動実行する。
+   * 編集者は自動公開できないため案内のみ。公開前チェックのエラー時は false（モーダル表示）。
+   */
+  const ensurePublishSyncedForGuest = useCallback(async (): Promise<boolean> => {
+    if (publishStatus !== "published" || !hasUnpublishedChanges) return true;
+
+    if (hotelRole === "editor") {
+      window.alert(
+        "未反映の編集があります。反映にはオーナー／管理者の承認が必要な場合、ツールバーの「公開申請」から依頼してください。\n\n保存済みの内容で続行します。",
+      );
+      return true;
+    }
+
+    if ((hotelRole === "owner" || hotelRole === "admin") && hasPendingApproval && pageMeta.slug) {
+      try {
+        await approvePublishApprovalBySlug(pageMeta.slug);
+        setHasPendingApproval(false);
+        setPublishStatus("published");
+        setPublishedBaselineSignature(currentContentSignature);
+      } catch (e) {
+        window.alert(e instanceof Error ? e.message : "承認に失敗しました。");
+        return false;
+      }
+      return true;
+    }
+
+    const translationError = await ensureTranslationsBeforePublish();
+    if (translationError) {
+      window.alert(translationError);
+      return false;
+    }
+
+    const report = runPrepublishChecks();
+    if (report.errors.length > 0) {
+      setPrepublishState({
+        errors: report.errors,
+        warnings: report.warnings,
+        allowContinue: false,
+      });
+      return false;
+    }
+
+    if (report.warnings.length > 0) {
+      await publishNow({ silent: true });
+      return true;
+    }
+
+    await publishNow({ silent: true });
+    return true;
+  }, [
+    publishStatus,
+    hasUnpublishedChanges,
+    hotelRole,
+    hasPendingApproval,
+    pageMeta.slug,
+    currentContentSignature,
+    ensureTranslationsBeforePublish,
+    runPrepublishChecks,
+    publishNow,
+  ]);
+
+  /** 公開済みページのみ: 保存してQR/URLモーダルを開く（初回公開は「公開」ボタンを使用） */
+  const handleQrClick = useCallback(async () => {
+    if (isDemoMode) {
+      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
+      return;
+    }
+    if (!pageId || !pageMeta.slug) return;
+    if (publishStatus !== "published") {
+      window.alert(
+        "QRコードを表示するには、先にページを公開してください。\n「公開」ボタンから公開すると、URLとQRを確認できます。",
+      );
+      return;
+    }
+    await flushAutosaveNow();
+    const saveErr = useEditor2Store.getState().saveError;
+    if (saveErr) {
+      window.alert(
+        `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度 QR / URL を押してください。`,
+      );
+      return;
+    }
+    const synced = await ensurePublishSyncedForGuest();
+    if (!synced) return;
+    setQrModalPreparing(true);
+    try {
+      const state = useEditor2Store.getState();
+      await savePageCards(pageId, state.cards, {
+        pageStyle: {
+          background: {
+            mode: state.pageBackgroundMode,
+            color: state.pageBackgroundColor,
+            from: state.pageGradientFrom,
+            to: state.pageGradientTo,
+            angle: state.pageGradientAngle,
+          },
+        },
+      });
+      const publicUrl = buildPublicUrlV(pageMeta.slug);
+      setPublishState({
+        publicUrl,
+        pageTitle: pageMeta.title ?? "",
+        slug: pageMeta.slug,
+      });
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "保存に失敗しました。");
+    } finally {
+      setQrModalPreparing(false);
+    }
+  }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus, flushAutosaveNow, ensurePublishSyncedForGuest]);
+
   const guardDemoAction = useCallback(
     (message: string): boolean => {
       if (!isDemoMode) return false;
@@ -1050,6 +1124,42 @@ export function Editor2({
       return;
     }
     if (!pageMeta.publicUrl || !pageId) return;
+
+    await flushAutosaveNow();
+    const saveErr = useEditor2Store.getState().saveError;
+    if (saveErr) {
+      window.alert(
+        `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度プレビューを押してください。`,
+      );
+      return;
+    }
+
+    const synced = await ensurePublishSyncedForGuest();
+    if (!synced) return;
+
+    // 同期後はすぐタブを開き、続く await のあとでもブロックされにくくする
+    const previewWindow = window.open("about:blank", "_blank");
+    if (!previewWindow) {
+      window.alert(
+        "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
+      );
+      return;
+    }
+    previewWindow.opener = null;
+    try {
+      previewWindow.document.open();
+      previewWindow.document.write(
+        "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>プレビュー準備中</title></head>" +
+          "<body style=\"margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#475569;\">" +
+          "<div style=\"display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;\">" +
+          "<div><p style=\"margin:0;font-size:1rem;font-weight:600;color:#334155;\">プレビューを準備しています…</p>" +
+          "<p style=\"margin:0.75rem 0 0;font-size:0.875rem;\">このタブはまもなくゲスト表示に切り替わります。</p></div></div></body></html>"
+      );
+      previewWindow.document.close();
+    } catch {
+      /* 表示できなくても続行し、後で location で遷移する */
+    }
+
     setPreviewBusy(true);
     try {
       const state = useEditor2Store.getState();
@@ -1070,6 +1180,11 @@ export function Editor2({
       }
       const translationError = await ensureTranslationsBeforePublish({ translationSource: "preview" });
       if (translationError) {
+        try {
+          previewWindow.close();
+        } catch {
+          /* ignore */
+        }
         window.alert(translationError);
         return;
       }
@@ -1090,15 +1205,36 @@ export function Editor2({
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
       const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
-      window.open(previewUrl, "_blank", "noopener,noreferrer");
+      try {
+        previewWindow.location.href = previewUrl;
+      } catch {
+        window.open(previewUrl, "_blank", "noopener,noreferrer");
+      }
     } finally {
       setPreviewBusy(false);
     }
-  }, [guardDemoAction, pageMeta.publicUrl, pageId, ensureTranslationsBeforePublish]);
+  }, [
+    guardDemoAction,
+    pageMeta.publicUrl,
+    pageId,
+    ensureTranslationsBeforePublish,
+    flushAutosaveNow,
+    ensurePublishSyncedForGuest,
+  ]);
 
   const handlePublishClickStrict = useCallback(async () => {
     if (guardDemoAction("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
+    }
+    if (pageId) {
+      await flushAutosaveNow();
+      const err = useEditor2Store.getState().saveError;
+      if (err) {
+        window.alert(
+          `最新の編集がサーバーに保存できていません。\n${err}\n\nツールバーの保存エラー横「再試行」で保存してから、もう一度お試しください。`
+        );
+        return;
+      }
     }
     setPublishFlowBusy(true);
     try {
@@ -1136,7 +1272,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature]);
+  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId]);
 
   /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
   const handlePublishPastWarnings = useCallback(async () => {
