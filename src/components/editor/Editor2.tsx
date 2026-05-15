@@ -997,67 +997,22 @@ export function Editor2({
     [cards, translateAllCardsToMultilingual, translationEnabled]
   );
 
-  /**
-   * プレビュー／QR 前に、公開済みページで未反映なら公開更新相当を自動実行する。
-   * 編集者は自動公開できないため案内のみ。公開前チェックのエラー時は false（モーダル表示）。
-   */
-  const ensurePublishSyncedForGuest = useCallback(async (): Promise<boolean> => {
+  /** 公開済みで未反映のとき、プレビュー／QR は開かず公開更新（または公開申請）を促す */
+  const guardPublishedBeforeGuestView = useCallback((): boolean => {
     if (publishStatus !== "published" || !hasUnpublishedChanges) return true;
 
     if (hotelRole === "editor") {
       window.alert(
-        "未反映の編集があります。反映にはオーナー／管理者の承認が必要な場合、ツールバーの「公開申請」から依頼してください。\n\n保存済みの内容で続行します。",
+        "未反映の編集があります。プレビュー・QRを表示するには、先にツールバーの「公開申請」を送信するか、承認後に公開ページへ反映してください。",
       );
-      return true;
-    }
-
-    if ((hotelRole === "owner" || hotelRole === "admin") && hasPendingApproval && pageMeta.slug) {
-      try {
-        await approvePublishApprovalBySlug(pageMeta.slug);
-        setHasPendingApproval(false);
-        setPublishStatus("published");
-        setPublishedBaselineSignature(currentContentSignature);
-      } catch (e) {
-        window.alert(e instanceof Error ? e.message : "承認に失敗しました。");
-        return false;
-      }
-      return true;
-    }
-
-    const translationError = await ensureTranslationsBeforePublish();
-    if (translationError) {
-      window.alert(translationError);
       return false;
     }
 
-    const report = runPrepublishChecks();
-    if (report.errors.length > 0) {
-      setPrepublishState({
-        errors: report.errors,
-        warnings: report.warnings,
-        allowContinue: false,
-      });
-      return false;
-    }
-
-    if (report.warnings.length > 0) {
-      await publishNow({ silent: true });
-      return true;
-    }
-
-    await publishNow({ silent: true });
-    return true;
-  }, [
-    publishStatus,
-    hasUnpublishedChanges,
-    hotelRole,
-    hasPendingApproval,
-    pageMeta.slug,
-    currentContentSignature,
-    ensureTranslationsBeforePublish,
-    runPrepublishChecks,
-    publishNow,
-  ]);
+    window.alert(
+      "未反映の変更があります。プレビュー・QRを表示するには、先にツールバーの「公開更新」で公開ページへ反映してください。",
+    );
+    return false;
+  }, [publishStatus, hasUnpublishedChanges, hotelRole]);
 
   /** 公開済みページのみ: 保存してQR/URLモーダルを開く（初回公開は「公開」ボタンを使用） */
   const handleQrClick = useCallback(async () => {
@@ -1080,8 +1035,7 @@ export function Editor2({
       );
       return;
     }
-    const synced = await ensurePublishSyncedForGuest();
-    if (!synced) return;
+    if (!guardPublishedBeforeGuestView()) return;
     setQrModalPreparing(true);
     try {
       const state = useEditor2Store.getState();
@@ -1107,7 +1061,7 @@ export function Editor2({
     } finally {
       setQrModalPreparing(false);
     }
-  }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus, flushAutosaveNow, ensurePublishSyncedForGuest]);
+  }, [isDemoMode, pageId, pageMeta.slug, pageMeta.title, publishStatus, flushAutosaveNow, guardPublishedBeforeGuestView]);
 
   const guardDemoAction = useCallback(
     (message: string): boolean => {
@@ -1133,10 +1087,9 @@ export function Editor2({
       return;
     }
 
-    const synced = await ensurePublishSyncedForGuest();
-    if (!synced) return;
+    if (!guardPublishedBeforeGuestView()) return;
 
-    // 同期後はすぐタブを開き、続く await のあとでもブロックされにくくする
+    // ユーザー操作の直後にタブを開き、続く await のあとでもブロックされにくくする
     const previewWindow = window.open("about:blank", "_blank");
     if (!previewWindow) {
       window.alert(
@@ -1218,7 +1171,7 @@ export function Editor2({
     pageId,
     ensureTranslationsBeforePublish,
     flushAutosaveNow,
-    ensurePublishSyncedForGuest,
+    guardPublishedBeforeGuestView,
   ]);
 
   const handlePublishClickStrict = useCallback(async () => {
