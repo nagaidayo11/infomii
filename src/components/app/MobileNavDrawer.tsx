@@ -4,6 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { APP_NAV_ITEMS, PRODUCT_TAGLINE } from "./app-nav-items";
+import {
+  TEAM_PENDING_RED_DOT_PREVIEW,
+  usePendingPublishApprovalCount,
+} from "./usePendingPublishApprovalCount";
 
 type MobileNavDrawerProps = {
   open: boolean;
@@ -16,6 +20,7 @@ type MobileNavDrawerProps = {
  */
 export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const pathname = usePathname();
+  const teamPendingApprovals = usePendingPublishApprovalCount();
 
   useEffect(() => {
     if (!open) return;
@@ -50,11 +55,28 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           {APP_NAV_ITEMS.map((item) => {
             const isActive =
               pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
+            const showTeamPendingDot =
+              item.href === "/dashboard/team" &&
+              (teamPendingApprovals > 0 || TEAM_PENDING_RED_DOT_PREVIEW);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
+                aria-label={
+                  teamPendingApprovals > 0
+                    ? `${item.label}（承認待ちの公開申請があります）`
+                    : showTeamPendingDot
+                      ? `${item.label}（赤丸の表示確認）`
+                      : undefined
+                }
+                title={
+                  teamPendingApprovals > 0
+                    ? "承認待ちの公開申請があります"
+                    : showTeamPendingDot
+                      ? "確認用（承認待ちはありません）"
+                      : undefined
+                }
                 className={
                   "app-interactive flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors " +
                   (isActive
@@ -64,11 +86,17 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
               >
                 <span
                   className={
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " +
+                    "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " +
                     (isActive ? "bg-slate-100 text-slate-800" : "text-slate-500")
                   }
                 >
                   {item.icon}
+                  {showTeamPendingDot ? (
+                    <span
+                      className="absolute right-0 top-0 z-[1] h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-50"
+                      aria-hidden
+                    />
+                  ) : null}
                 </span>
                 {item.label}
               </Link>

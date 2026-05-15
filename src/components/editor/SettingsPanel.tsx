@@ -112,7 +112,6 @@ export type CardSettingsProps = {
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
-  onBulkReplace?: (find: string, replaceTo: string) => { cardsUpdated: number; occurrences: number };
   onRunPrepublishCheck?: () => void;
   demoMode?: boolean;
   onLockedAction?: (message: string) => void;
@@ -2116,7 +2115,6 @@ export function CardSettings({
   onUpdate,
   onDuplicateCard,
   onRemoveCard,
-  onBulkReplace,
   onRunPrepublishCheck,
   demoMode = false,
   onLockedAction,
@@ -2127,15 +2125,6 @@ export function CardSettings({
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activePalette, setActivePalette] = useState<SettingsPalette>("content");
-  const [bulkFind, setBulkFind] = useState("");
-  const [bulkReplaceTo, setBulkReplaceTo] = useState("");
-  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
-  const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
-  const pageBackgroundColor = useEditor2Store((s) => s.pageBackgroundColor);
-  const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
-  const pageGradientTo = useEditor2Store((s) => s.pageGradientTo);
-  const pageGradientAngle = useEditor2Store((s) => s.pageGradientAngle);
-  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
 
   useEffect(() => {
     if (card?.id) {
@@ -2175,22 +2164,6 @@ export function CardSettings({
     };
   }, []);
 
-  const handleBulkReplace = useCallback(() => {
-    if (!onBulkReplace) return;
-    const needle = bulkFind.trim();
-    if (!needle) {
-      setBulkStatus("検索文字を入力してください。");
-      return;
-    }
-    const result = onBulkReplace(needle, bulkReplaceTo);
-    if (result.occurrences === 0) {
-      setBulkStatus("一致する文字が見つかりませんでした。");
-      return;
-    }
-    setBulkStatus(`置換完了: ${result.cardsUpdated}ブロック / ${result.occurrences}箇所`);
-  }, [onBulkReplace, bulkFind, bulkReplaceTo]);
-
-
   if (!card) {
     return (
       <>
@@ -2204,128 +2177,6 @@ export function CardSettings({
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-6">
-            <SettingsSection title="ページ背景">
-              <div className="w-full">
-                <label className={labelClass}>背景タイプ</label>
-                <select
-                  value={pageBackgroundMode}
-                  onChange={(e) =>
-                    setPageBackground({ mode: e.target.value as "solid" | "gradient" })
-                  }
-                  className={inputClass}
-                >
-                  <option value="solid">単色</option>
-                  <option value="gradient">グラデーション</option>
-                </select>
-              </div>
-              {pageBackgroundMode === "solid" ? (
-                <div className="w-full">
-                  <label className={labelClass}>背景色</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={pageBackgroundColor}
-                      onChange={(e) => setPageBackground({ color: e.target.value })}
-                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                    />
-                    <input
-                      type="text"
-                      value={pageBackgroundColor}
-                      onChange={(e) => setPageBackground({ color: e.target.value || "#ffffff" })}
-                      placeholder="#ffffff"
-                      className={inputClass + " flex-1"}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="w-full">
-                    <label className={labelClass}>開始色</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={pageGradientFrom}
-                        onChange={(e) => setPageBackground({ from: e.target.value })}
-                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                      />
-                      <input
-                        type="text"
-                        value={pageGradientFrom}
-                        onChange={(e) => setPageBackground({ from: e.target.value || "#f8fafc" })}
-                        placeholder="#f8fafc"
-                        className={inputClass + " flex-1"}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-full">
-                    <label className={labelClass}>終了色</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={pageGradientTo}
-                        onChange={(e) => setPageBackground({ to: e.target.value })}
-                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                      />
-                      <input
-                        type="text"
-                        value={pageGradientTo}
-                        onChange={(e) => setPageBackground({ to: e.target.value || "#e2e8f0" })}
-                        placeholder="#e2e8f0"
-                        className={inputClass + " flex-1"}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-full">
-                    <label className={labelClass}>角度 ({pageGradientAngle}deg)</label>
-                    <input
-                      type="range"
-                      min={0}
-                      max={360}
-                      step={1}
-                      value={pageGradientAngle}
-                      onChange={(e) => setPageBackground({ angle: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full"
-                    />
-                  </div>
-                </>
-              )}
-              {demoMode && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onLockedAction?.("デモモードでは詳細設定は利用できません。無料登録で解放されます。")
-                  }
-                  className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100"
-                >
-                  デモでは背景の詳細設定は利用できません
-                </button>
-              )}
-            </SettingsSection>
-            {!demoMode && (
-              <SettingsSection title="一括置換（このページ内）">
-              <Input
-                label="検索文字"
-                value={bulkFind}
-                onChange={(e) => setBulkFind(e.target.value)}
-                placeholder="例: フロント内線 [番号]"
-              />
-              <Input
-                label="置換後"
-                value={bulkReplaceTo}
-                onChange={(e) => setBulkReplaceTo(e.target.value)}
-                placeholder="例: フロント内線 9"
-              />
-              <button
-                type="button"
-                onClick={handleBulkReplace}
-                disabled={!onBulkReplace}
-                className="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                一括置換を実行
-              </button>
-              {bulkStatus ? <p className="text-xs text-slate-500">{bulkStatus}</p> : null}
-              </SettingsSection>
-            )}
             {!demoMode && (
               <SettingsSection title="公開前チェック">
               <p className="text-sm text-slate-500">

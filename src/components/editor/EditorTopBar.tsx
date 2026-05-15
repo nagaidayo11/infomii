@@ -19,7 +19,6 @@ export type EditorTopBarProps = {
   qrPreparing?: boolean;
   /** True while saving / translating before opening preview */
   previewPreparing?: boolean;
-  onEditPageBackground?: () => void;
   onBulkFont?: (anchorEl: HTMLElement) => void;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -113,7 +112,7 @@ function PreviewIcon({ className }: { className?: string }) {
 
 /**
  * Editor top bar — clean, minimal SaaS style.
- * Back | Title | Autosave | … | Preview | Guest publish + CTA | QR
+ * Back | Title | Autosave | 戻る…一括フォント・プレビュー・QR（lg）| 公開（右）
  */
 export function EditorTopBar({
   backHref = "/dashboard",
@@ -157,6 +156,83 @@ export function EditorTopBar({
   /** デモ時は枠だけ出さない。編集者（トグルなし）はバッジ+CTAで表示 */
   const showPublishCluster = !demoMode && (canTogglePublish || showPublishActionButton);
 
+  const publishClusterNode =
+    showPublishCluster ? (
+      <div
+        className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-slate-200 bg-slate-50/90 px-2.5 py-2 shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
+        role="group"
+        aria-label="公開設定"
+      >
+        {canTogglePublish ? (
+          <div
+            className="flex min-w-0 items-center gap-2"
+            title={
+              publishToggleChecked
+                ? "ON: 公開URL・QRから閲覧できます。OFFにするとゲストは閲覧できません（編集の反映とは別です）。"
+                : "OFF: ゲストは閲覧できません。ONにするとURL・QRが有効になります。"
+            }
+          >
+            <button
+              type="button"
+              role="switch"
+              aria-checked={publishToggleChecked}
+              aria-label="ゲスト向けの公開"
+              onClick={onTogglePublished}
+              disabled={publishToggleLoading || publishing}
+              className={
+                "relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 " +
+                (publishToggleChecked ? "bg-emerald-600" : "bg-slate-300")
+              }
+            >
+              {publishToggleLoading ? (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/80 border-t-white" />
+                </span>
+              ) : (
+                <span
+                  className={
+                    "pointer-events-none absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ease-out " +
+                    (publishToggleChecked ? "translate-x-5" : "translate-x-0")
+                  }
+                />
+              )}
+            </button>
+            <div className="min-w-0 leading-tight">
+              <div className="text-xs font-semibold text-slate-800">ゲスト公開</div>
+              <div className="hidden text-[10px] text-slate-500 lg:block">
+                {publishToggleChecked ? "閲覧を許可" : "閲覧は不可"}
+              </div>
+            </div>
+          </div>
+        ) : !demoMode ? (
+          <span
+            className={
+              "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold " +
+              (isPublished ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700")
+            }
+          >
+            {isPublished ? "公開中" : "非公開"}
+          </span>
+        ) : null}
+
+        {canTogglePublish && showPublishActionButton ? (
+          <div className="hidden h-8 w-px shrink-0 self-stretch bg-slate-200/90 sm:block" aria-hidden />
+        ) : null}
+
+        {showPublishActionButton ? (
+          <button
+            type="button"
+            onClick={onPublish}
+            disabled={publishing || qrPreparing}
+            title="編集を公開ページに反映します（翻訳チェックあり）。未反映がなくても実行できます。"
+            className="ui-pop-tap ui-dark-label shrink-0 rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
+          >
+            {publishing ? "処理中…" : publishActionLabel}
+          </button>
+        ) : null}
+      </div>
+    ) : null;
+
   async function commitTitle() {
     const next = titleValue.trim();
     const prev = (pageTitle ?? "").trim();
@@ -164,6 +240,9 @@ export function EditorTopBar({
     if (!onRenamePageTitle || next === prev) return;
     await onRenamePageTitle(next);
   }
+
+  const previewQrBtnClass =
+    "ui-pop-tap inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <header
@@ -250,8 +329,8 @@ export function EditorTopBar({
         <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
       </div>
 
-      {/* Page controls — desktop; mobile uses 「その他」メニュー */}
-      <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
+      {/* Page controls + プレビュー / QR — lg; モバイルは「その他」 */}
+      <div className="hidden shrink-0 flex-wrap items-center gap-1.5 lg:flex">
         <button
           type="button"
           onClick={onUndo}
@@ -279,23 +358,65 @@ export function EditorTopBar({
         >
           全削除
         </button>
-      </div>
-
-      {onBulkFont && (
-        <div className="hidden shrink-0 flex-wrap items-center gap-1.5 lg:flex">
+        {onBulkFont ? (
           <button
             type="button"
             onClick={(e) => onBulkFont(e.currentTarget)}
             data-bulk-font-anchor="true"
-            className="ui-pop-tap rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+            className="ui-pop-tap rounded-md bg-slate-100 px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
             title="ページ内ブロックのフォントを一括変更"
           >
             一括フォント切替
           </button>
-        </div>
-      )}
+        ) : null}
+        <button
+          type="button"
+          onClick={onPreview}
+          disabled={!publicUrl || previewPreparing}
+          title="未反映があれば公開に反映し、ゲスト表示を別タブで開きます"
+          className={previewQrBtnClass}
+        >
+          {previewPreparing ? (
+            <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          ) : (
+            <PreviewIcon className="h-4 w-4 shrink-0 text-slate-500" />
+          )}
+          <span>{previewPreparing ? "準備中…" : "プレビュー"}</span>
+        </button>
+        <div className="h-5 w-px shrink-0 bg-slate-200/90" aria-hidden />
+        <button
+          type="button"
+          onClick={onQr}
+          disabled={publishing || qrPreparing}
+          title="未反映があれば公開に反映し、QRコードと公開URLを表示します"
+          className={previewQrBtnClass}
+          aria-label="QRコードとURLを表示"
+        >
+          {qrPreparing ? (
+            <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+          ) : (
+            <svg
+              className="h-4 w-4 shrink-0 text-slate-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <path d="M14 14h1v4h4v-4" />
+              <path d="M14 17h4" />
+            </svg>
+          )}
+          <span>{qrPreparing ? "開いています…" : "QR / URL"}</span>
+        </button>
+      </div>
 
-      {/* Actions: プレビュー | 公開まわり | QR */}
+      {/* 公開まわり（sm〜lg はプレビュー・QR と同列） */}
       <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5 pr-1 sm:gap-2">
         <div className="flex items-center gap-1.5 lg:hidden">
           <span
@@ -344,14 +465,14 @@ export function EditorTopBar({
           </button>
         </div>
 
-        {/* sm 以上: プレビュー |（公開）| QR — 先頭に孤立した区切り線が出ないよう 1 本の行にまとめる */}
-        <div className="hidden items-center gap-2 sm:flex">
+        {/* sm〜lg-1: プレビュー・QR と公開（デスクトップは上の行に統合済み） */}
+        <div className="hidden flex-wrap items-center justify-end gap-1.5 sm:flex lg:hidden">
           <button
             type="button"
             onClick={onPreview}
             disabled={!publicUrl || previewPreparing}
-            title="保存した内容をゲスト表示で別タブに開きます"
-            className="ui-pop-tap flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:py-1.5"
+            title="未反映があれば公開に反映し、ゲスト表示を別タブで開きます"
+            className={previewQrBtnClass}
           >
             {previewPreparing ? (
               <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
@@ -360,94 +481,13 @@ export function EditorTopBar({
             )}
             <span>{previewPreparing ? "準備中…" : "プレビュー"}</span>
           </button>
-
-          {showPublishCluster ? (
-            <>
-              <div className="h-7 w-px shrink-0 bg-slate-200" aria-hidden />
-              <div
-                className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-slate-200 bg-slate-50/90 px-2.5 py-2 shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
-                role="group"
-                aria-label="公開設定"
-              >
-                {canTogglePublish ? (
-                  <div
-                    className="flex min-w-0 items-center gap-2"
-                    title={
-                      publishToggleChecked
-                        ? "ON: 公開URL・QRから閲覧できます。OFFにするとゲストは閲覧できません。"
-                        : "OFF: ゲストは閲覧できません。ONにすると公開URL・QRが有効になります。"
-                    }
-                  >
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={publishToggleChecked}
-                      aria-label="ゲスト向けの公開"
-                      onClick={onTogglePublished}
-                      disabled={publishToggleLoading || publishing}
-                      className={
-                        "relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 " +
-                        (publishToggleChecked ? "bg-emerald-600" : "bg-slate-300")
-                      }
-                    >
-                      {publishToggleLoading ? (
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/80 border-t-white" />
-                        </span>
-                      ) : (
-                        <span
-                          className={
-                            "pointer-events-none absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ease-out " +
-                            (publishToggleChecked ? "translate-x-5" : "translate-x-0")
-                          }
-                        />
-                      )}
-                    </button>
-                    <div className="min-w-0 leading-tight">
-                      <div className="text-xs font-semibold text-slate-800">ゲスト公開</div>
-                      <div className="hidden text-[10px] text-slate-500 lg:block">
-                        {publishToggleChecked ? "URL・QRで閲覧可" : "OFFのとき閲覧不可"}
-                      </div>
-                    </div>
-                  </div>
-                ) : !demoMode ? (
-                  <span
-                    className={
-                      "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold " +
-                      (isPublished ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700")
-                    }
-                  >
-                    {isPublished ? "公開中" : "非公開"}
-                  </span>
-                ) : null}
-
-                {canTogglePublish && showPublishActionButton ? (
-                  <div className="hidden h-8 w-px shrink-0 self-stretch bg-slate-200/90 sm:block" aria-hidden />
-                ) : null}
-
-                {showPublishActionButton ? (
-                  <button
-                    type="button"
-                    onClick={onPublish}
-                    disabled={publishing || qrPreparing}
-                    title="多言語チェックのうえ、編集内容を公開ページへ反映します"
-                    className="ui-pop-tap ui-dark-label shrink-0 rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
-                  >
-                    {publishing ? "処理中…" : publishActionLabel}
-                  </button>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-
-          <div className="h-7 w-px shrink-0 bg-slate-200" aria-hidden />
-
+          <div className="h-5 w-px shrink-0 bg-slate-200/90" aria-hidden />
           <button
             type="button"
             onClick={onQr}
             disabled={publishing || qrPreparing}
-            title="QRコードと公開URLを表示（先に最新の内容を保存します）"
-            className="ui-pop-tap flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0 lg:py-1.5"
+            title="未反映があれば公開に反映し、QRコードと公開URLを表示します"
+            className={previewQrBtnClass}
             aria-label="QRコードとURLを表示"
           >
             {qrPreparing ? (
@@ -472,7 +512,16 @@ export function EditorTopBar({
             )}
             <span>{qrPreparing ? "開いています…" : "QR / URL"}</span>
           </button>
+          {publishClusterNode ? (
+            <>
+              <div className="h-7 w-px shrink-0 bg-slate-200 max-sm:hidden" aria-hidden />
+              {publishClusterNode}
+            </>
+          ) : null}
         </div>
+
+        {/* lg+: 公開まわりのみ（プレビュー・QRは左の操作行） */}
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">{publishClusterNode}</div>
 
         {/* Mobile: 編集・言語・元に戻す等 */}
         <div className="relative lg:hidden" ref={moreMenuRef}>
@@ -499,7 +548,7 @@ export function EditorTopBar({
                 className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
                 role="menu"
               >
-                <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">確認</div>
+                <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">確認・共有</div>
                 <button
                   type="button"
                   role="menuitem"
@@ -510,17 +559,24 @@ export function EditorTopBar({
                     onPreview();
                   }}
                 >
-                  {previewPreparing ? "プレビュー準備中…" : "プレビュー（ゲスト表示）"}
+                  {previewPreparing ? "プレビュー準備中…" : "プレビュー"}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={publishing || qrPreparing}
+                  className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    onQr();
+                  }}
+                >
+                  {qrPreparing ? "QRを準備中…" : "QRコード・公開URL"}
                 </button>
                 {!demoMode && (
                   <>
                     <div className="border-t border-slate-100" />
                     <div className="px-4 pb-1 pt-2 text-[11px] font-semibold tracking-wide text-slate-500">公開</div>
-                    <div className="px-4 pb-2 text-xs leading-relaxed text-slate-500">
-                      {isPublished
-                        ? "ゲスト公開がONです。編集を反映するには下のボタンを押してください。"
-                        : "ゲスト公開がOFFのとき、URL・QRからは閲覧できません。"}
-                    </div>
                   </>
                 )}
                 {canTogglePublish && (
@@ -555,20 +611,6 @@ export function EditorTopBar({
                     {publishing ? "処理中…" : publishActionLabel}
                   </button>
                 )}
-                <div className="border-t border-slate-100" />
-                <div className="px-4 pb-1 pt-2 text-[11px] font-semibold tracking-wide text-slate-500">共有</div>
-                <button
-                  type="button"
-                  role="menuitem"
-                  disabled={publishing || qrPreparing}
-                  className="flex w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
-                  onClick={() => {
-                    setMoreOpen(false);
-                    onQr();
-                  }}
-                >
-                  {qrPreparing ? "QRを準備中…" : "QRコード・公開URL"}
-                </button>
                 {!demoMode && onRenamePageTitle && (
                   <button
                     type="button"

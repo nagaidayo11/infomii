@@ -147,7 +147,6 @@ export function Editor2({
   const undo = useEditor2Store((s) => s.undo);
   const redo = useEditor2Store((s) => s.redo);
   const clearCards = useEditor2Store((s) => s.clearCards);
-  const replaceTextAll = useEditor2Store((s) => s.replaceTextAll);
   const applyFontFamilyAll = useEditor2Store((s) => s.applyFontFamilyAll);
   const canUndo = useEditor2Store((s) => s.historyPast.length > 0);
   const canRedo = useEditor2Store((s) => s.historyFuture.length > 0);
@@ -1348,13 +1347,6 @@ export function Editor2({
         onUndo={undo}
         onRedo={redo}
         onClearAll={handleClearAll}
-        onEditPageBackground={() => {
-          if (isDemoMode) {
-            setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
-            return;
-          }
-          selectCard(null);
-        }}
         onBulkFont={(anchorEl) => {
           if (isDemoMode) {
             setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
@@ -1458,14 +1450,10 @@ export function Editor2({
             <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
               <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
               {!isDemoMode && !initialEditorLoading && publishStatus !== "published" && (
-                <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。
-                </div>
+                <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-0 py-1.5 text-center text-sm leading-tight text-amber-800">現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。</div>
               )}
               {!isDemoMode && !initialEditorLoading && publishStatus === "published" && hasUnpublishedChanges && (
-                <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                  未反映の変更があります。「公開更新」で公開ページへ反映されます。
-                </div>
+                <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-0 py-1.5 text-center text-sm leading-tight text-emerald-800">未反映の変更があります。プレビュー・QR・公開更新のいずれかで公開ページへ反映できます</div>
               )}
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y">
                 <FreeformCanvas
@@ -1500,7 +1488,6 @@ export function Editor2({
               onUpdate={updateCard}
               onDuplicateCard={duplicateCard}
               onRemoveCard={removeCard}
-              onBulkReplace={isDemoMode ? undefined : replaceTextAll}
               onRunPrepublishCheck={isDemoMode ? undefined : handleRunPrepublishCheck}
               lastAddedCardId={lastAddedCardId}
               demoMode={isDemoMode}

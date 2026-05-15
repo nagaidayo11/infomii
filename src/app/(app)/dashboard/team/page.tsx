@@ -15,6 +15,7 @@ import { resolveUserLabel } from "@/lib/user-label";
 import { HOTEL_TEAM_MAX_MEMBERS } from "@/lib/team-constants";
 import { FadeIn } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { TEAM_PENDING_RED_DOT_PREVIEW } from "@/components/app/usePendingPublishApprovalCount";
 
 type PublishApprovalRow = {
   id: string;
@@ -155,6 +156,10 @@ export default function TeamPage() {
 
   const auditLogGroups = useMemo(() => groupAuditLogsByDay(auditLogs, nowJstDayKey()), [auditLogs]);
   const auditLogSig = useMemo(() => auditLogs.map((l) => l.id).join(","), [auditLogs]);
+  const pendingApprovalCount = useMemo(
+    () => approvals.filter((a) => a.status === "pending").length,
+    [approvals],
+  );
 
   /** 一覧は「使える」コードのみ。無効化・使用済みは出さない */
   const activePendingInvites = useMemo(
@@ -477,6 +482,87 @@ export default function TeamPage() {
 
         {isBusiness ? (
           <>
+            {/* メンバー */}
+            <FadeIn>
+              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+                <h2 className="app-section-title">メンバー</h2>
+                {loading ? (
+                  <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
+                ) : (
+                  <ul className="mt-4 space-y-2">
+                    {members.map((m) => (
+                      <li
+                        key={m.userId}
+                        className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="break-all font-medium text-slate-800">
+                            {resolveUserLabel({
+                              displayName: m.displayName,
+                              email: m.email,
+                              userId: m.userId,
+                            })}
+                          </p>
+                          {m.displayName?.trim() && m.email ? (
+                            <p className="text-xs text-slate-500">{m.email}</p>
+                          ) : null}
+                          <p className="text-xs text-slate-500">{roleLabelJa(m.role)}</p>
+                        </div>
+                        {m.role !== "owner" && canManageMembers && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(m.userId)}
+                            disabled={removingId === m.userId}
+                            className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1.5 sm:text-xs"
+                          >
+                            {removingId === m.userId ? "削除中…" : "削除"}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <details className="group mt-5 rounded-xl border border-slate-100 bg-slate-50/40 open:bg-slate-50/60">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left outline-none transition hover:bg-slate-100/70 sm:px-4 [&::-webkit-details-marker]:hidden">
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-slate-800">ロールの権限（参考）</span>
+                      <p className="text-xs text-slate-500">オーナー／管理者／編集／閲覧でできること</p>
+                    </div>
+                    <span
+                      className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden
+                    >
+                      ▼
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-100/90 px-3 pb-3 pt-3 sm:px-4">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
+                        <p className="text-sm font-semibold text-slate-800">オーナー</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                          メンバー管理 / 承認 / 招待管理 / 履歴確認
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
+                        <p className="text-sm font-semibold text-slate-800">管理者</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
+                          承認 / 招待管理 / メンバー管理（オーナー除く）
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
+                        <p className="text-sm font-semibold text-slate-800">編集担当</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">編集 / 公開申請</p>
+                      </div>
+                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
+                        <p className="text-sm font-semibold text-slate-800">閲覧担当</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">閲覧のみ</p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </section>
+            </FadeIn>
+
             {/* 招待コードで参加 */}
             <FadeIn>
               <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
@@ -504,7 +590,7 @@ export default function TeamPage() {
               </section>
             </FadeIn>
 
-            {/* 招待コード発行 */}
+            {/* 招待コードを発行 */}
             <FadeIn>
               <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
                 <h2 className="app-section-title">招待コードを発行</h2>
@@ -533,288 +619,278 @@ export default function TeamPage() {
               </section>
             </FadeIn>
 
-            <FadeIn>
-              <section className="rounded-2xl border border-emerald-200/90 bg-emerald-50/60 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-6">
-                <h2 className="app-section-title text-emerald-900">ロールごとにできること</h2>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
-                    <p className="text-sm font-semibold text-emerald-900">オーナー</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">メンバー管理 / 承認 / 招待管理 / 履歴確認</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
-                    <p className="text-sm font-semibold text-emerald-900">管理者</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">承認 / 招待管理 / メンバー管理（オーナー除く）</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
-                    <p className="text-sm font-semibold text-emerald-900">編集担当</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">編集 / 公開申請</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5">
-                    <p className="text-sm font-semibold text-emerald-900">閲覧担当</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">閲覧のみ</p>
-                  </div>
-                </div>
-              </section>
-            </FadeIn>
-
-            {/* 発行済み招待 */}
+            {/* 発行済み招待コード */}
             <FadeIn>
               <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-            <h2 className="app-section-title">発行済み招待コード</h2>
-            {loading ? (
-              <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
-            ) : activePendingInvites.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">
-                {invites.length === 0
-                  ? "まだ招待コードは発行されていません"
-                  : "有効な招待コードはありません。新しいコードを発行できます。"}
-              </p>
-            ) : (
-              <ul className="mt-4 space-y-2">
-                {activePendingInvites.map((inv) => (
-                  <li
-                    key={inv.id}
-                    className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
-                  >
-                    <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                      <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
-                        {inv.code}
-                      </code>
-                      <span className="text-xs text-slate-500">
-                        {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · 有効
-                        <span className="ml-2 text-[11px] text-slate-400">
-                          / 招待リンク: {typeof window !== "undefined" ? `${window.location.origin}/invite/${inv.code}` : `/invite/${inv.code}`}
-                        </span>
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRevoke(inv.id)}
-                      disabled={!isBusiness}
-                      className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
-                    >
-                      無効化
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-              </section>
-            </FadeIn>
-
-            {/* メンバー一覧 */}
-            <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-            <h2 className="app-section-title">メンバー</h2>
-            {loading ? (
-              <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
-            ) : (
-              <ul className="mt-4 space-y-2">
-                {members.map((m) => (
-                  <li
-                    key={m.userId}
-                    className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-                  >
-                    <div className="min-w-0">
-                      <p className="break-all font-medium text-slate-800">
-                        {resolveUserLabel({
-                          displayName: m.displayName,
-                          email: m.email,
-                          userId: m.userId,
-                        })}
-                      </p>
-                      {m.displayName?.trim() && m.email ? (
-                        <p className="text-xs text-slate-500">{m.email}</p>
-                      ) : null}
-                      <p className="text-xs text-slate-500">{roleLabelJa(m.role)}</p>
-                    </div>
-                    {m.role !== "owner" && canManageMembers && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMember(m.userId)}
-                        disabled={removingId === m.userId}
-                        className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1.5 sm:text-xs"
+                <h2 className="app-section-title">発行済み招待コード</h2>
+                {loading ? (
+                  <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+                ) : activePendingInvites.length === 0 ? (
+                  <p className="mt-4 text-sm text-slate-500">
+                    {invites.length === 0
+                      ? "まだ招待コードは発行されていません"
+                      : "有効な招待コードはありません。新しいコードを発行できます。"}
+                  </p>
+                ) : (
+                  <ul className="mt-4 space-y-2">
+                    {activePendingInvites.map((inv) => (
+                      <li
+                        key={inv.id}
+                        className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                       >
-                        {removingId === m.userId ? "削除中…" : "削除"}
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                          <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
+                            {inv.code}
+                          </code>
+                          <span className="text-xs text-slate-500">
+                            {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · 有効
+                            <span className="ml-2 text-[11px] text-slate-400">
+                              / 招待リンク:{" "}
+                              {typeof window !== "undefined"
+                                ? `${window.location.origin}/invite/${inv.code}`
+                                : `/invite/${inv.code}`}
+                            </span>
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRevoke(inv.id)}
+                          disabled={!isBusiness}
+                          className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
+                        >
+                          無効化
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </section>
             </FadeIn>
+
             {/* 公開申請 */}
             <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="app-section-title">公開申請</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    編集担当からの公開申請を確認し、承認/却下できます（オーナー/管理者のみ）。
-                  </p>
-                </div>
-                <select
-                  value={approvalFilter}
-                  onChange={(e) => setApprovalFilter(e.target.value as "pending" | "approved" | "rejected" | "all")}
-                  className="min-h-[40px] rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
-                >
-                  <option value="pending">承認待ち</option>
-                  <option value="approved">承認済み</option>
-                  <option value="rejected">却下済み</option>
-                  <option value="all">すべて</option>
-                </select>
-              </div>
-              {loading ? (
-                <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
-              ) : approvals.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">該当する公開申請はありません</p>
-              ) : (
-                <ul className="mt-4 space-y-2">
-                  {approvals.map((row) => (
-                    <li
-                      key={row.id}
-                      className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-slate-900">
-                          {row.pageTitle || "（タイトル未設定）"}
-                        </p>
-                        <span
-                          className={
-                            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
-                            (row.status === "pending"
-                              ? "bg-amber-50 text-amber-800"
-                              : row.status === "approved"
-                                ? "bg-emerald-600 text-white"
-                                : "bg-rose-50 text-rose-700")
-                          }
-                        >
-                          {row.status === "pending" ? "承認待ち" : row.status === "approved" ? "承認済み" : "却下"}
+              <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="relative inline-flex items-center gap-2">
+                          {(pendingApprovalCount > 0 || TEAM_PENDING_RED_DOT_PREVIEW) ? (
+                            <span
+                              className="h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-sm ring-2 ring-white"
+                              title={
+                                pendingApprovalCount > 0
+                                  ? "承認待ちの申請があります"
+                                  : "確認用（承認待ちはありません）"
+                              }
+                              aria-hidden
+                            />
+                          ) : null}
+                          <span className="text-base font-semibold text-slate-900">公開申請</span>
                         </span>
+                        {pendingApprovalCount > 0 ? (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                            承認待ち {pendingApprovalCount}件
+                          </span>
+                        ) : null}
                       </div>
-                      <p className="text-xs text-slate-500">
-                        申請日時: {new Date(row.requestedAt).toLocaleString("ja-JP")}
-                        {row.reviewedAt ? ` / 処理日時: ${new Date(row.reviewedAt).toLocaleString("ja-JP")}` : ""}
+                      <p className="mt-0.5 text-sm text-slate-500">
+                        編集担当からの申請を承認/却下（オーナー/管理者）。タップで開きます。
                       </p>
-                      <p className="text-xs text-slate-500">
-                        申請者:{" "}
-                        {row.requestedByLabel?.trim() ||
-                          resolveUserLabel({
-                            displayName: row.requestedByDisplayName,
-                            email: row.requestedByEmail,
-                            userId: row.requestedByUserId,
-                          })}
-                      </p>
-                      {row.reviewedAt && row.reviewedByLabel ? (
-                        <p className="text-xs text-slate-500">処理者: {row.reviewedByLabel}</p>
-                      ) : null}
-                      {row.reviewComment ? (
-                        <p className="text-xs text-slate-500">コメント: {row.reviewComment}</p>
-                      ) : null}
-                      {canReviewApprovals && row.status === "pending" && (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            disabled={approvalActingId === row.id}
-                            onClick={() => void handleApprovalAction(row.id, "approve")}
-                            className="app-button-native min-h-[40px] rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                    </div>
+                    <span
+                      className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden
+                    >
+                      ▼
+                    </span>
+                  </summary>
+                  <div className="space-y-4 border-t border-slate-100 px-4 py-5 sm:px-6">
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                      <select
+                        value={approvalFilter}
+                        onChange={(e) => setApprovalFilter(e.target.value as "pending" | "approved" | "rejected" | "all")}
+                        className="min-h-[40px] rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                      >
+                        <option value="pending">承認待ち</option>
+                        <option value="approved">承認済み</option>
+                        <option value="rejected">却下済み</option>
+                        <option value="all">すべて</option>
+                      </select>
+                    </div>
+                    {loading ? (
+                      <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
+                    ) : approvals.length === 0 ? (
+                      <p className="text-sm text-slate-500">該当する公開申請はありません</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {approvals.map((row) => (
+                          <li
+                            key={row.id}
+                            className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3"
                           >
-                            承認して公開
-                          </button>
-                          <button
-                            type="button"
-                            disabled={approvalActingId === row.id}
-                            onClick={() => {
-                              setRejectTargetId(row.id);
-                              setRejectComment("");
-                              setRejectModalOpen(true);
-                            }}
-                            className="app-button-native min-h-[40px] rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-700 shadow-sm hover:bg-rose-50 disabled:opacity-50"
-                          >
-                            却下
-                          </button>
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-sm font-medium text-slate-900">
+                                {row.pageTitle || "（タイトル未設定）"}
+                              </p>
+                              <span
+                                className={
+                                  "inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
+                                  (row.status === "pending"
+                                    ? "bg-amber-50 text-amber-800"
+                                    : row.status === "approved"
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-rose-50 text-rose-700")
+                                }
+                              >
+                                {row.status === "pending" ? "承認待ち" : row.status === "approved" ? "承認済み" : "却下"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                              申請日時: {new Date(row.requestedAt).toLocaleString("ja-JP")}
+                              {row.reviewedAt ? ` / 処理日時: ${new Date(row.reviewedAt).toLocaleString("ja-JP")}` : ""}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              申請者:{" "}
+                              {row.requestedByLabel?.trim() ||
+                                resolveUserLabel({
+                                  displayName: row.requestedByDisplayName,
+                                  email: row.requestedByEmail,
+                                  userId: row.requestedByUserId,
+                                })}
+                            </p>
+                            {row.reviewedAt && row.reviewedByLabel ? (
+                              <p className="text-xs text-slate-500">処理者: {row.reviewedByLabel}</p>
+                            ) : null}
+                            {row.reviewComment ? (
+                              <p className="text-xs text-slate-500">コメント: {row.reviewComment}</p>
+                            ) : null}
+                            {canReviewApprovals && row.status === "pending" && (
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  disabled={approvalActingId === row.id}
+                                  onClick={() => void handleApprovalAction(row.id, "approve")}
+                                  className="app-button-native min-h-[40px] rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                  承認して公開
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={approvalActingId === row.id}
+                                  onClick={() => {
+                                    setRejectTargetId(row.id);
+                                    setRejectComment("");
+                                    setRejectModalOpen(true);
+                                  }}
+                                  className="app-button-native min-h-[40px] rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-700 shadow-sm hover:bg-rose-50 disabled:opacity-50"
+                                >
+                                  却下
+                                </button>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </details>
               </section>
             </FadeIn>
 
             {canViewAuditLogs ? (
               <FadeIn>
-                <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
-                  <h2 className="app-section-title">操作履歴</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    日付でまとめて表示します。直近3日分は最初から開いています（新しい日が上）。
-                  </p>
-                  {auditLoading ? (
-                    <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
-                  ) : auditLogs.length === 0 ? (
-                    <p className="mt-4 text-sm text-slate-500">表示できる操作履歴はありません</p>
-                  ) : (
-                    <div className="mt-4 space-y-2" role="list" aria-label="操作履歴（日付別）">
-                      {auditLogGroups.map((group) => {
-                        const open = auditDayOpen.has(group.dayKey);
-                        const count = group.items.length;
-                        const panelId = `audit-day-panel-${group.dayKey}`;
-                        return (
-                          <div
-                            key={group.dayKey}
-                            role="listitem"
-                            className="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/40"
-                          >
-                            <button
-                              type="button"
-                              id={`${panelId}-toggle`}
-                              aria-expanded={open}
-                              aria-controls={panelId}
-                              onClick={() => toggleAuditDay(group.dayKey)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  toggleAuditDay(group.dayKey);
-                                }
-                              }}
-                              className="app-button-native flex w-full min-h-[44px] items-center justify-between gap-2 bg-slate-50/80 px-3 py-2.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
-                            >
-                              <span>{group.label}</span>
-                              <span className="flex shrink-0 items-center gap-2 text-xs font-normal text-slate-500">
-                                <span className="tabular-nums">{count}件</span>
-                                <span className="text-slate-400" aria-hidden>
-                                  {open ? "▲" : "▼"}
-                                </span>
-                              </span>
-                            </button>
-                            {open ? (
-                              <ul id={panelId} className="divide-y divide-slate-100 border-t border-slate-100" role="list">
-                                {group.items.map((log) => (
-                                  <li key={log.id} className="bg-white/90 px-3 py-2.5 sm:px-4" role="listitem">
-                                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                      <time
-                                        dateTime={log.createdAt}
-                                        className="shrink-0 text-xs text-slate-500 tabular-nums"
-                                      >
-                                        {formatAuditTimeJst(log.createdAt)}
-                                      </time>
-                                      <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900">
-                                        {log.message}
-                                      </p>
-                                    </div>
-                                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                                      操作: {log.actorLabel?.trim() || "不明"} ／ 対象: {formatAuditTarget(log)}
-                                    </p>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                          </div>
-                        );
-                      })}
+                <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-semibold text-slate-900">操作履歴</span>
+                          {auditLogs.length > 0 ? (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                              {auditLogs.length}件
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-0.5 text-sm text-slate-500">
+                          開くと日別一覧が表示されます。各日の中身は直近3日が展開された状態で始まります。
+                        </p>
+                      </div>
+                      <span
+                        className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                        aria-hidden
+                      >
+                        ▼
+                      </span>
+                    </summary>
+                    <div className="border-t border-slate-100 px-4 py-5 sm:px-6">
+                      {auditLoading ? (
+                        <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
+                      ) : auditLogs.length === 0 ? (
+                        <p className="text-sm text-slate-500">表示できる操作履歴はありません</p>
+                      ) : (
+                        <div className="space-y-2" role="list" aria-label="操作履歴（日付別）">
+                          {auditLogGroups.map((group) => {
+                            const open = auditDayOpen.has(group.dayKey);
+                            const count = group.items.length;
+                            const panelId = `audit-day-panel-${group.dayKey}`;
+                            return (
+                              <div
+                                key={group.dayKey}
+                                role="listitem"
+                                className="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/40"
+                              >
+                                <button
+                                  type="button"
+                                  id={`${panelId}-toggle`}
+                                  aria-expanded={open}
+                                  aria-controls={panelId}
+                                  onClick={() => toggleAuditDay(group.dayKey)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      toggleAuditDay(group.dayKey);
+                                    }
+                                  }}
+                                  className="app-button-native flex w-full min-h-[44px] items-center justify-between gap-2 bg-slate-50/80 px-3 py-2.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-100/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+                                >
+                                  <span>{group.label}</span>
+                                  <span className="flex shrink-0 items-center gap-2 text-xs font-normal text-slate-500">
+                                    <span className="tabular-nums">{count}件</span>
+                                    <span className="text-slate-400" aria-hidden>
+                                      {open ? "▲" : "▼"}
+                                    </span>
+                                  </span>
+                                </button>
+                                {open ? (
+                                  <ul id={panelId} className="divide-y divide-slate-100 border-t border-slate-100" role="list">
+                                    {group.items.map((log) => (
+                                      <li key={log.id} className="bg-white/90 px-3 py-2.5 sm:px-4" role="listitem">
+                                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                          <time
+                                            dateTime={log.createdAt}
+                                            className="shrink-0 text-xs text-slate-500 tabular-nums"
+                                          >
+                                            {formatAuditTimeJst(log.createdAt)}
+                                          </time>
+                                          <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900">
+                                            {log.message}
+                                          </p>
+                                        </div>
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                                          操作: {log.actorLabel?.trim() || "不明"} ／ 対象: {formatAuditTarget(log)}
+                                        </p>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </details>
                 </section>
               </FadeIn>
             ) : null}
