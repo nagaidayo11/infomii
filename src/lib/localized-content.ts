@@ -76,3 +76,22 @@ export function getLocalizedContent(
   }
   return "";
 }
+
+/** 編集・移行用: 文字列 / 多言語オブジェクトからプレーン文字列を取り出す（オブジェクトの String() は使わない） */
+export function localizedFieldToPlain(value: unknown, locale = "ja"): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return getLocalizedContent(value as LocalizedString, locale);
+  }
+  return "";
+}
+
+const OBJECT_JOIN_GARBAGE = /\[object Object\]/;
+
+/** 移行ミスで body が壊れたときの検出 */
+export function isObjectJoinGarbageText(value: unknown): boolean {
+  const plain = localizedFieldToPlain(value, "ja");
+  return plain.length > 0 && OBJECT_JOIN_GARBAGE.test(plain);
+}

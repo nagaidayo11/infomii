@@ -1257,18 +1257,35 @@ export function Editor2({
     }
     setTogglePublishBusy(true);
     try {
-      if (publishStatus !== "published") {
-        const translationError = await ensureTranslationsBeforePublish();
-        if (translationError) {
-          window.alert(translationError);
-          return;
-        }
+      if (publishStatus === "published") {
+        await handleTogglePublished();
+        return;
       }
-      await handleTogglePublished();
+      await flushAutosaveNow();
+      const saveErr = useEditor2Store.getState().saveError;
+      if (saveErr) {
+        window.alert(
+          `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度ゲスト公開をオンにしてください。`,
+        );
+        return;
+      }
+      const translationError = await ensureTranslationsBeforePublish();
+      if (translationError) {
+        window.alert(translationError);
+        return;
+      }
+      await publishNow({ silent: true });
     } finally {
       setTogglePublishBusy(false);
     }
-  }, [isDemoMode, publishStatus, ensureTranslationsBeforePublish, handleTogglePublished]);
+  }, [
+    isDemoMode,
+    publishStatus,
+    ensureTranslationsBeforePublish,
+    handleTogglePublished,
+    flushAutosaveNow,
+    publishNow,
+  ]);
 
   const publishActionLabel =
     hotelRole === "editor"

@@ -3,7 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getBlockStyle } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
-import { getLocalizedContent } from "@/lib/localized-content";
+import { getLocalizedContent, localizedFieldToPlain } from "@/lib/localized-content";
 import { HeroCard } from "./HeroCard";
 import { HeroSliderCard } from "./HeroSliderCard";
 import { HeadingBodyCard } from "./HeadingBodyCard";
@@ -167,9 +167,9 @@ function SingleCardRenderer({
     }
     case "breakfast": {
       const c = resolvedCard.content as Record<string, unknown> | undefined;
-      const time = (c?.time as string) ?? "";
-      const location = (c?.location as string) ?? "";
-      const menu = (c?.menu as string) ?? "";
+      const time = localizedFieldToPlain(c?.time, locale);
+      const location = localizedFieldToPlain(c?.location, locale);
+      const menu = localizedFieldToPlain(c?.menu, locale);
       const breakfastLabels =
         locale === "ko"
           ? { title: "조식", body: "시간\n장소\n상세" }
@@ -183,7 +183,7 @@ function SingleCardRenderer({
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || "",
+          title: localizedFieldToPlain(c?.title, locale) || breakfastLabels.title,
           body: detailLines.join("\n") || breakfastLabels.body,
           accent: "amber",
         },
@@ -192,9 +192,12 @@ function SingleCardRenderer({
     }
     case "spa": {
       const c = resolvedCard.content as Record<string, unknown> | undefined;
-      const time = ((c?.time as string) ?? (c?.hours as string) ?? "").trim();
-      const location = (c?.location as string) ?? "";
-      const menu = ((c?.menu as string) ?? (c?.description as string) ?? (c?.note as string) ?? "").trim();
+      const time = localizedFieldToPlain(c?.time, locale) || localizedFieldToPlain(c?.hours, locale);
+      const location = localizedFieldToPlain(c?.location, locale);
+      const menu =
+        localizedFieldToPlain(c?.menu, locale) ||
+        localizedFieldToPlain(c?.description, locale) ||
+        localizedFieldToPlain(c?.note, locale);
       const spaLabels =
         locale === "ko"
           ? { title: "스파 · 온천", body: "시간 · 장소 · 안내" }
@@ -207,7 +210,7 @@ function SingleCardRenderer({
         ...resolvedCard,
         type: "highlight",
         content: {
-          title: (c?.title as string) || "",
+          title: localizedFieldToPlain(c?.title, locale) || spaLabels.title,
           body: [time, location, menu].filter(Boolean).join(" · ") || spaLabels.body,
           accent: "blue",
         },
