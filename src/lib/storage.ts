@@ -4153,7 +4153,9 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
   }
   const pageId = newPage.id as string;
 
-  const cards = (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  const rawCards =
+    (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];
+  const cards = rawCards.filter((card) => card.type !== "icon");
   if (cards.length > 0) {
     const normalizeTemplateContent = (
       type: string,

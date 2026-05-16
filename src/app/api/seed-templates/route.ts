@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { templatePreviewPublicPath } from "@/lib/template-preview";
+import { stripDeprecatedIconCards, templateCardsContainIcon } from "@/lib/template-marketplace";
 
 type SeedTemplate = {
   name: string;
@@ -492,6 +493,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "menu", content: { title: "リゾートダイニング", items: [{ name: "サンセットコース", price: "6,500円", description: "地元食材のフルコース" }, { name: "トロピカルモクテル", price: "980円", description: "バーラウンジ限定" }] }, order: 3 },
       { type: "action", content: { label: "アクティビティ予約", href: "#" }, order: 4 },
       { type: "quote", content: { quote: "館内で一日中楽しめる、満足度の高い滞在でした。", author: "ゲストレビュー" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "地域医療センター", note: "フロント内線9" }, order: 6 },
     ],
   },
   {
@@ -746,13 +748,14 @@ const SEED_TEMPLATES: SeedTemplate[] = [
     preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
-      { type: "hero", content: { title: "Rainy Day Plan", subtitle: "雨の日でも館内で充実", image: "/preset-hero-sample.png" }, order: 0 },
-      { type: "highlight", content: { title: "雨の日のおすすめ", body: "外が強い雨の時間帯は館内イベントを先に。スパは11:00前後が比較的空いています。", accent: "amber" }, order: 1 },
-      { type: "pageLinks", content: { title: "館内アクティビティ", columns: 2, iconSize: "md", items: [{ label: "スパ", icon: "bath", linkType: "page", pageSlug: "", link: "" }, { label: "ラウンジ", icon: "coffee", linkType: "page", pageSlug: "", link: "" }, { label: "キッズ", icon: "package", linkType: "page", pageSlug: "", link: "" }] }, order: 2 },
-      { type: "schedule", content: { title: "館内イベント", items: [{ day: "映画上映", time: "16:00", label: "1F シアター" }, { day: "クラフト体験", time: "14:00", label: "2F ラボ" }, { day: "スパ", time: "10:00-12:00", label: "比較的空きやすい" }] }, order: 3 },
-      { type: "menu", content: { title: "ティータイム", items: [{ name: "季節のスイーツ", price: "1,300円", description: "ラウンジ限定" }, { name: "ホットドリンク", price: "650円", description: "" }] }, order: 4 },
-      { type: "spa", content: { title: "屋内温浴", hours: "10:00-23:00", location: "2F", description: "サウナ・内湯", note: "雨の日は混雑しやすいため早めのご利用を。" }, order: 5 },
-      { type: "quote", content: { quote: "雨の日でも一日中楽しめました。", author: "ゲストレビュー" }, order: 6 },
+      { type: "hero", content: { title: "雨の日プラン", subtitle: "館内で一日を満喫", image: "/preset-hero-sample.png" }, order: 0 },
+      { type: "notice", content: { title: "本日の天候", body: "強い雨の時間帯は屋外プログラムをお控えください。館内イベント・温浴・ラウンジをご利用ください。", variant: "info" }, order: 1 },
+      { type: "schedule", content: { title: "雨の日タイムテーブル", items: [{ day: "スパ", time: "10:00-12:00", label: "比較的空きやすい" }, { day: "クラフト体験", time: "14:00", label: "2F ラボ" }, { day: "映画上映", time: "16:00", label: "1F シアター" }] }, order: 2 },
+      { type: "pageLinks", content: { title: "館内でできること", columns: 2, iconSize: "md", items: [{ label: "温浴", icon: "bath", linkType: "page", pageSlug: "", link: "" }, { label: "ラウンジ", icon: "coffee", linkType: "page", pageSlug: "", link: "" }, { label: "キッズ", icon: "package", linkType: "page", pageSlug: "", link: "" }] }, order: 3 },
+      { type: "menu", content: { title: "雨の日ティータイム", items: [{ name: "季節のスイーツ", price: "1,300円", description: "ラウンジ限定" }, { name: "ホットドリンク", price: "650円", description: "16:00まで" }] }, order: 4 },
+      { type: "spa", content: { title: "屋内温浴", hours: "10:00-23:00", location: "2F", description: "サウナ・内湯", note: "雨の日は14:00-17:00が混雑しやすいです。午前のご利用がおすすめ。" }, order: 5 },
+      { type: "highlight", content: { title: "雨が弱まったら", body: "展望デッキと海沿い散歩コースが再開します。最新状況はフロントでご確認ください。", accent: "amber" }, order: 6 },
+      { type: "quote", content: { quote: "雨の日でも館内だけで一日中楽しめました。", author: "ゲストレビュー" }, order: 7 },
     ],
   },
   {
@@ -1004,8 +1007,8 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "welcome", content: { title: "Welcome", message: "チェックインから退室までのご案内です。" }, order: 0 },
       { type: "steps", content: { title: "チェックイン手順", items: [{ title: "入口", description: "暗証番号入力" }, { title: "鍵", description: "キーボックス受け取り" }] }, order: 1 },
       { type: "wifi", content: { ssid: "Home-WiFi", password: "airbnb1234", description: "" }, order: 2 },
-      { type: "checklist", content: { title: "ハウスルール", items: [{ text: "室内禁煙", checked: false }, { text: "ゴミ分別", checked: false }] }, order: 3 },
-      { type: "notice", content: { title: "ハウスルール", body: "22時以降は静かにお過ごしください。室内は禁煙です。", variant: "warning" }, order: 4 },
+      { type: "notice", content: { title: "ハウスルール", body: "22時以降は静かにお過ごしください。室内は禁煙です。ゴミは分別して指定場所へ。", variant: "warning" }, order: 3 },
+      { type: "highlight", content: { title: "よくある質問", body: "鍵の返却はキーボックスへ。トラブル時はホスト連絡先へメッセージでご連絡ください。", accent: "amber" }, order: 4 },
       { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "施錠後にメッセージ送信", linkUrl: "", linkLabel: "報告" }, order: 5 },
       { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "ホスト連絡先あり" }, order: 6 },
     ],
@@ -1128,20 +1131,26 @@ export async function GET(request: Request) {
   try {
     const supabase = getSupabaseAdminServerClient();
     const { searchParams } = new URL(request.url);
-    const syncLatest = searchParams.get("sync") === "1";
+    const syncParam = searchParams.get("sync");
 
     const { data: existing, error: existingError } = await supabase
       .from("templates")
-      .select("id, name")
+      .select("id, name, cards")
       .limit(500);
     if (existingError) {
       return NextResponse.json({ error: existingError.message }, { status: 500 });
     }
 
-    const existingByName = new Map<string, { id: string; name: string }>();
+    const existingByName = new Map<string, { id: string; name: string; cards?: unknown }>();
+    let legacyIconTemplates = 0;
     for (const row of existing ?? []) {
-      existingByName.set(row.name, row as { id: string; name: string });
+      const entry = row as { id: string; name: string; cards?: unknown };
+      existingByName.set(entry.name, entry);
+      if (templateCardsContainIcon(entry.cards)) legacyIconTemplates += 1;
     }
+
+    const syncLatest =
+      syncParam === "1" || (syncParam !== "0" && legacyIconTemplates > 0);
 
     const toInsert: SeedTemplate[] = [];
     let updated = 0;
@@ -1155,19 +1164,21 @@ export async function GET(request: Request) {
       const mediaTemplate = applyTemplateMediaDefaults(template, categoryIndex);
       const diversifiedTemplate = diversifyTemplateBlocks(mediaTemplate, categoryIndex);
       const normalizedTemplate = normalizeTemplateComposition(diversifiedTemplate);
+      const cards = stripDeprecatedIconCards(normalizedTemplate.cards);
+      const payload = { ...normalizedTemplate, cards };
       const found = existingByName.get(template.name);
       if (!found) {
-        toInsert.push(normalizedTemplate);
+        toInsert.push(payload);
         continue;
       }
       if (syncLatest) {
         const { error } = await supabase
           .from("templates")
           .update({
-            description: normalizedTemplate.description,
-            preview_image: normalizedTemplate.preview_image,
-            category: normalizedTemplate.category,
-            cards: normalizedTemplate.cards,
+            description: payload.description,
+            preview_image: payload.preview_image,
+            category: payload.category,
+            cards: payload.cards,
           })
           .eq("id", found.id);
         if (!error) updated += 1;
@@ -1230,6 +1241,7 @@ export async function GET(request: Request) {
       updated,
       removed,
       totalSeedTemplates: SEED_TEMPLATES.length,
+      legacyIconTemplates,
     });
   } catch (e) {
     return NextResponse.json(

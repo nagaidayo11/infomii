@@ -14,6 +14,7 @@ import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
+import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
 /** Template marketplace categories. Filter by template.category when available. */
@@ -88,13 +89,8 @@ export default function TemplatesPage() {
       setLoading(true);
       setError(null);
       try {
-        const first = filterHiddenTemplates(await listTemplates());
-        if (!active) return;
-        if (first.length > 0) {
-          setTemplates(first);
-          return;
-        }
-        await fetch("/api/seed-templates");
+        // Keep Supabase `templates.cards` aligned with SEED_TEMPLATES (removes legacy icon blocks).
+        await fetch(`/api/seed-templates?sync=1&v=${MARKETPLACE_SEED_VERSION}`);
         if (!active) return;
         const seeded = filterHiddenTemplates(await listTemplates());
         if (!active) return;
@@ -173,7 +169,7 @@ export default function TemplatesPage() {
   }
 
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
-    return (template.cards ?? []).map((card, index) => ({
+    return stripDeprecatedIconCards(template.cards ?? []).map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
       content: normalizeTemplatePreviewContent((card.type ?? "text") as CardType, card.content),
