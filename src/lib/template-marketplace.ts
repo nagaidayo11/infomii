@@ -1,5 +1,5 @@
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 4;
+export const MARKETPLACE_SEED_VERSION = 5;
 
 export function stripDeprecatedIconCards<T extends { type: string }>(cards: T[]): T[] {
   return cards.filter((card) => card.type !== "icon");
