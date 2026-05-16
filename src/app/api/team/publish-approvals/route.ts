@@ -84,7 +84,7 @@ async function authenticateWithHotel(request: Request): Promise<AuthContext> {
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "公開申請フローはBusinessプランでご利用いただけます" },
+        { error: "公開申請フローはチームプランでご利用いただけます" },
         { status: 403 },
       ),
     };

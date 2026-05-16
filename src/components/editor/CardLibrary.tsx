@@ -37,8 +37,8 @@ function BusinessBadge() {
   return (
     <span
       className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-violet-300 bg-violet-100 text-violet-700"
-      aria-label="Business"
-      title="Business"
+      aria-label="Team"
+      title="Team"
     >
       <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
@@ -723,7 +723,7 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
 
 const MAIN_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
-  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Business限定）" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（チームプラン限定）" },
   { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を上下で表示" },
   { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
   { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
@@ -741,7 +741,7 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
   { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
   { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
-  { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusiness）" },
+  { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はチームプラン）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
@@ -749,11 +749,11 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
   { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
-  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・チームプラン）" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Business限定）" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（Business限定）" },
-  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Business限定）" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（チームプラン限定）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（チームプラン限定）" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（チームプラン限定）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
   { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
@@ -762,8 +762,8 @@ const GUIDE_ITEMS: LibraryItem[] = [
 const OPERATION_ITEMS: LibraryItem[] = [
   { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Business限定）" },
-  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Business限定）" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（チームプラン限定）" },
+  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（チームプラン限定）" },
   { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図リンクを集約" },
 ];
@@ -906,7 +906,7 @@ function LibraryItemButton({
           : "cursor-not-allowed opacity-55")
       }
       aria-label={`${item.label}を追加`}
-      title={disabled ? "Businessプラン限定ブロックです" : undefined}
+      title={disabled ? "チームプラン限定ブロックです" : undefined}
     >
       <span
         className={
@@ -999,7 +999,7 @@ export function CardLibrary({
                         : "border-violet-300 bg-violet-50/70")
                     }
                     aria-label={`${preset.label}を追加`}
-                    title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
+                    title={canAddPreset(preset.types) ? undefined : "チームプランで利用できます"}
                   >
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
                       {preset.label}

@@ -51,7 +51,7 @@ function filterHiddenTemplates(templates: TemplateRow[]): TemplateRow[] {
 /**
  * Template marketplace — /templates
  * Display template cards (title, description, preview image, Use Template).
- * Categories: Business Hotel, Resort Hotel, Ryokan, Airbnb, Tourist Guide.
+ * Categories: Business hotel, Resort hotel, Ryokan, Airbnb, Tourist guide.
  * Use Template creates a page and populates cards, then opens the editor.
  */
 export default function TemplatesPage() {

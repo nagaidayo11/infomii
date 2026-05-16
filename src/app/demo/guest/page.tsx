@@ -114,7 +114,7 @@ export default function DemoGuestPage({
       localeLocked
       pageBackground={{ mode: "solid", color: "#f8fafc", from: "#f8fafc", to: "#e2e8f0", angle: 180 }}
       unpublishedPreview
-      localeToggleHint="Businessプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
+      localeToggleHint="チームプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
       disableLocaleSwitch
     />
   );

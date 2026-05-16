@@ -1063,7 +1063,7 @@ export async function getHotelCustomDomain(): Promise<string | null> {
   return typeof d === "string" && d.trim() ? d.trim() : null;
 }
 
-/** 施設のカスタムドメイン設定（Businessプランのみ、オーナーのみ） */
+/** 施設のカスタムドメイン設定（チームプランのみ、オーナーのみ） */
 export async function setHotelCustomDomain(domain: string | null): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
@@ -1072,7 +1072,7 @@ export async function setHotelCustomDomain(domain: string | null): Promise<void>
   const role = await getCurrentUserHotelRole();
   if (role !== "owner") throw new Error("オーナーのみカスタムドメインを設定できます");
   const sub = await getCurrentHotelSubscription();
-  if (sub?.plan !== "business") throw new Error("カスタムドメインは Business プランでご利用いただけます");
+  if (sub?.plan !== "business") throw new Error("カスタムドメインはチームプランでご利用いただけます");
   const value = domain && domain.trim() ? domain.trim().toLowerCase() : null;
   if (value && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(value)) {
     throw new Error("有効なドメインを入力してください（例: info.example.com）");
@@ -2327,7 +2327,7 @@ export async function createHotelInvite(role: "admin" | "editor" | "viewer" = "e
   }
   const sub = await getCurrentHotelSubscription();
   if (sub?.plan !== "business") {
-    throw new Error("チーム招待はBusinessプランでご利用いただけます");
+    throw new Error("チーム招待はチームプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2425,7 +2425,7 @@ export async function revokeHotelInvite(inviteId: string): Promise<void> {
   }
   const sub = await getCurrentHotelSubscription();
   if (sub?.plan !== "business") {
-    throw new Error("チーム招待はBusinessプランでご利用いただけます");
+    throw new Error("チーム招待はチームプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2526,7 +2526,7 @@ export async function requestPublishApprovalBySlug(slug: string): Promise<Publis
   const role = await getCurrentUserHotelRole();
   if (role !== "editor") throw new Error("公開申請は編集担当（editor）のみ実行できます");
   const sub = await getCurrentHotelSubscription();
-  if (sub?.plan !== "business") throw new Error("公開申請フローはBusinessプランでご利用いただけます");
+  if (sub?.plan !== "business") throw new Error("公開申請フローはチームプランでご利用いただけます");
 
   const { data: info, error: infoError } = await supabase
     .from("informations")

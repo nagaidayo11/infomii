@@ -545,7 +545,7 @@ export default function DemoGuestLivePage() {
       isEmbed={isEmbed}
       disableInteractions={isEmbed}
       pageBackground={pageBackground}
-      localeToggleHint="Businessプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
+      localeToggleHint="チームプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
       disableLocaleSwitch
     />
   );

@@ -59,7 +59,7 @@ function PricingComparisonTable() {
               Pro
             </th>
             <th scope="col" className="w-[20.5%] bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600 sm:w-[22%]">
-              Business
+              Team
             </th>
           </tr>
         </thead>
@@ -354,7 +354,7 @@ export default function LpSaaSPage() {
         id="pricing"
         kicker="料金"
         title="用途で選べる3プラン"
-        description="Freeは3ページまで無料運用。Proは1拠点を安定運用。Businessは複数拠点・複数担当で、多言語と運用統制まで一括対応。"
+        description="Freeは3ページまで無料運用。Proは1拠点を安定運用。Teamは複数拠点・複数担当で、多言語と運用統制まで一括対応。"
         popTitle
       >
         <ScrollReveal>
@@ -395,7 +395,7 @@ export default function LpSaaSPage() {
                   </CheckoutButton>
                 </article>
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Business</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">¥4,980/月</p>
                   <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
                     <li>・公開ページ数: 無制限</li>
@@ -409,7 +409,7 @@ export default function LpSaaSPage() {
                     adaptiveBusinessCta
                     showUpgradeHint
                   >
-                    Businessを申し込む
+                    Teamプランを申し込む
                   </CheckoutButton>
                 </article>
                 </div>
@@ -419,7 +419,7 @@ export default function LpSaaSPage() {
             </div>
           </div>
 
-          <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Business）">
+          <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Team）">
             <StaggerReveal className="hidden gap-6 lg:grid-cols-3 md:grid" staggerDelay={0.1}>
               <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
@@ -479,7 +479,7 @@ export default function LpSaaSPage() {
               </div>
 
               <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Business</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Team</p>
                 <p className="mt-3 text-4xl font-bold text-slate-900">
                   ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
                 </p>
@@ -502,7 +502,7 @@ export default function LpSaaSPage() {
                     adaptiveBusinessCta
                     showUpgradeHint
                   >
-                    Businessを申し込む
+                    Teamプランを申し込む
                   </CheckoutButton>
                   {hasBusinessAnnual ? (
                     <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full min-h-[44px]">
@@ -533,7 +533,7 @@ export default function LpSaaSPage() {
               },
               {
                 q: "どのプランを選べばいいですか？",
-                a: "最初はFree。ページ数や分析が必要になったらPro、チーム運用や大規模運用ならBusinessが目安です。",
+                a: "最初はFree。ページ数や分析が必要になったらPro、チーム運用や大規模運用ならTeamプランが目安です。",
               },
             ].map((row) => (
               <details

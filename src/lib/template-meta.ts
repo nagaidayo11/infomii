@@ -31,21 +31,23 @@ export const TEMPLATE_AUDIENCE_TAGS = [
  * Manual override table for template badges.
  * Key is template name shown in templates list.
  */
+const CITY_HOTEL_QUICK_START_META: TemplateMeta = {
+  difficulty: "初級",
+  audienceTags: ["出張"],
+  industry: "ホテル",
+  useCase: "チェックイン導線",
+  tone: "実用",
+  mustIncludeElements: ["フロント", "Wi-Fi"],
+  forbiddenElements: ["海辺", "温泉露天"],
+  imagePromptSeed: "city hotel lobby, clean signage, practical information board",
+  recommendedPlan: "pro",
+  consistencyScore: 85,
+  needsReview: false,
+  consistencyReason: "手動設定",
+};
+
 export const TEMPLATE_META_OVERRIDES: Record<string, TemplateMeta> = {
-  "ビジネスホテル・即運用セット": {
-    difficulty: "初級",
-    audienceTags: ["出張"],
-    industry: "ホテル",
-    useCase: "チェックイン導線",
-    tone: "実用",
-    mustIncludeElements: ["フロント", "Wi-Fi"],
-    forbiddenElements: ["海辺", "温泉露天"],
-    imagePromptSeed: "city hotel lobby, clean signage, practical information board",
-    recommendedPlan: "pro",
-    consistencyScore: 85,
-    needsReview: false,
-    consistencyReason: "手動設定",
-  },
+  "ビジネスホテル・即運用セット": CITY_HOTEL_QUICK_START_META,
 };
 
 function deriveTemplateMeta(template: TemplateRow): TemplateMeta {

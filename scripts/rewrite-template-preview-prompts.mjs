@@ -25,7 +25,7 @@ const CATEGORY_STYLE_RULES = {
     fingerprint: "都市機能型・実務的・端正。南国感を排除し、直線的で引き締まった都市ホテルの印象。",
     palette: "slate gray, steel blue, neutral white, subtle amber accents only",
     materials: "glass, aluminum, clean stone, urban pavement",
-    mustInclude: "駅前/オフィス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置、移動導線の気配",
+    mustInclude: "駅前/ビジネス街文脈、明確な車寄せまたは玄関導線、規則的な窓配置、移動導線の気配",
     mustAvoid: "palm trees, beach mood, tropical vegetation, resort-like sunset romance",
     requiredExperience: "歩道から入口までの導線、タクシー降車帯、窓越しロビーの実用感",
   },
@@ -77,7 +77,7 @@ const CATEGORY_PROMPTS = {
     core: "都市部・駅近のビジネスホテル。機能性、清潔感、直線的建築、夜間導線の分かりやすさ。",
     variations: [
       { shot: "frontal symmetry", time: "blue hour", season: "spring fresh green", weather: "light rain reflections", grade: "cool steel-blue", context: "駅前ロータリーからホテル正面へ一直線の動線", detail: "タクシー乗降スペースと庇の下の入口照明" },
-      { shot: "corner perspective", time: "early morning", season: "summer clear sky", weather: "clear", grade: "neutral clean", context: "オフィス街の交差点角地", detail: "歩道から見えるエントランスと街路樹" },
+      { shot: "corner perspective", time: "early morning", season: "summer clear sky", weather: "clear", grade: "neutral clean", context: "ビジネス街の交差点角地", detail: "歩道から見えるエントランスと街路樹" },
       { shot: "street-level approach", time: "rainy dusk", season: "autumn warm foliage", weather: "after rain", grade: "warm amber", context: "駅から徒歩3分の細い導線", detail: "濡れた舗道に反射する外観照明" },
       { shot: "elevated wide", time: "overcast noon", season: "winter crisp air", weather: "misty", grade: "neutral clean", context: "ビジネス街の複数棟の中で目的地が明確", detail: "車寄せとエントランスの視認性を重視" },
       { shot: "gateway close-wide", time: "golden hour", season: "spring fresh green", weather: "clear", grade: "warm amber", context: "出張客が迷わない大通り沿い", detail: "庇下サインの雰囲気は抽象形状のみ" },

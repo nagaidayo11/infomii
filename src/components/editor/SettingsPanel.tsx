@@ -1537,7 +1537,7 @@ function ScheduleItemsEditor({
       ))}
       <div className="rounded-xl border border-slate-200 bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-slate-700">動的強調（Business限定）</p>
+          <p className="text-xs font-semibold text-slate-700">動的強調（チームプラン限定）</p>
           <label className="inline-flex items-center gap-2 text-xs text-slate-600">
             <input
               type="checkbox"
@@ -1551,7 +1551,7 @@ function ScheduleItemsEditor({
         </div>
         {!isBusinessEnabled ? (
           <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-800">
-            この機能はBusinessプランで利用できます。非Businessでは静的表示にフォールバックします。
+            この機能はチームプランで利用できます。チームプラン未加入では静的表示にフォールバックします。
           </p>
         ) : null}
         <div className="mt-3 space-y-2">
@@ -2398,12 +2398,12 @@ export function CardSettings({
                 </div>
               ) : null}
             </div>
-            <p className="text-xs text-slate-500">ビジネスプラン限定ブロック</p>
+            <p className="text-xs text-slate-500">チームプラン限定ブロック</p>
           </div>
         </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-            このブロックの編集はビジネスプランでご利用いただけます。公開ページでの表示は維持されます。
+            このブロックの編集はチームプランでご利用いただけます。公開ページでの表示は維持されます。
           </section>
         </div>
       </>
@@ -4183,7 +4183,7 @@ export function CardSettings({
                 </div>
                 {supportsBusinessTonePreset ? (
                   <div className="w-full">
-                    <label className={labelClass}>要素カラー（Business限定）</label>
+                    <label className={labelClass}>要素カラー（チームプラン限定）</label>
                     <select
                       value={(style.innerTonePreset as string) ?? ""}
                       onChange={(e) => updateStyle("innerTonePreset", e.target.value || undefined)}
