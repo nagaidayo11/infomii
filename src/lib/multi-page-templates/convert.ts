@@ -60,16 +60,6 @@ export function templatePageToInformationBlocks(page: TemplatePage): Information
           ctaUrl: b.href ?? "#",
         });
         break;
-      case "icon":
-        blocks.push({
-          id: blockId(),
-          type: "icon",
-          icon: normalizeTemplateIcon(b.icon),
-          label: b.label ?? "",
-          description: b.description ?? "",
-          iconSize: "lg",
-        });
-        break;
       case "section":
         blocks.push({
           id: blockId(),

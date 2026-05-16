@@ -53,45 +53,6 @@ function galleryItemsForCategory(
   return rotate(base, categoryIndex);
 }
 
-function iconLabelDefaultsByCategory(category: string | null): Array<{ icon: string; label: string; description: string }> {
-  switch (category) {
-    case "business":
-      return [
-        { icon: "svg:clock", label: "チェックイン 15:00 / チェックアウト 11:00", description: "" },
-        { icon: "svg:wifi", label: "Wi-Fiは全客室で利用可能", description: "" },
-      ];
-    case "resort":
-      return [
-        { icon: "svg:bath", label: "温浴施設の営業時間を事前確認", description: "" },
-        { icon: "svg:utensils", label: "夕朝食の時間を先にチェック", description: "" },
-      ];
-    case "ryokan":
-      return [
-        { icon: "svg:info", label: "館内作法・静粛時間のご案内", description: "" },
-        { icon: "svg:bath", label: "大浴場の時間帯をご確認ください", description: "" },
-      ];
-    case "airbnb":
-      return [
-        { icon: "svg:key", label: "チェックイン手順を先に確認", description: "" },
-        { icon: "svg:bell", label: "ハウスルールの確認をお願いします", description: "" },
-      ];
-    case "guide":
-      return [
-        { icon: "svg:map-pin", label: "主要スポットの位置を把握", description: "" },
-        { icon: "svg:train", label: "移動手段と所要時間を確認", description: "" },
-      ];
-    case "inbound":
-      return [
-        { icon: "svg:language", label: "英語でのサポート案内あり", description: "" },
-        { icon: "svg:phone", label: "緊急連絡先を事前に保存", description: "" },
-      ];
-    default:
-      return [
-        { icon: "svg:info", label: "基本情報を先にご確認ください", description: "" },
-      ];
-  }
-}
-
 function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: number): SeedTemplate {
   const previewPath = templatePreviewPublicPath(template.category, template.name);
   const cards = template.cards.map((card) => ({
@@ -131,7 +92,6 @@ function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: numbe
 
   const hasHero = cards.some((c) => c.type === "hero");
   const hasGallery = cards.some((c) => c.type === "gallery");
-  const iconCount = cards.filter((c) => c.type === "icon").length;
   const shouldAddHero = !hasHero && ["resort", "guide", "inbound"].includes(template.category ?? "");
   const shouldAddGallery = !hasGallery && ["resort", "guide", "ryokan"].includes(template.category ?? "");
 
@@ -157,26 +117,6 @@ function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: numbe
       },
       order: 0,
     });
-  }
-
-  // Add icon-label cards when templates are text-heavy.
-  if (iconCount < 2) {
-    const iconDefaults = iconLabelDefaultsByCategory(template.category);
-    const missing = Math.max(0, 2 - iconCount);
-    const insertAt = cards.findIndex((c) => c.type !== "hero");
-    const baseIndex = insertAt >= 0 ? insertAt + 1 : Math.min(2, cards.length);
-    for (let i = 0; i < missing; i += 1) {
-      const row = iconDefaults[i % iconDefaults.length];
-      cards.splice(baseIndex + i, 0, {
-        type: "icon",
-        content: {
-          icon: row.icon,
-          label: row.label,
-          description: row.description,
-        },
-        order: 0,
-      });
-    }
   }
 
   return {
@@ -313,6 +253,9 @@ function buildCardContentByType(type: string): Record<string, unknown> {
   }
 }
 
+/** Hand-authored seeds with 6+ blocks skip pool/required auto-fill to preserve curated stories. */
+const CURATED_MIN_CARD_COUNT = 6;
+
 function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory: number): SeedTemplate {
   const categoryKey = template.category ?? "default";
   const blockedByCategory: Record<string, Set<string>> = {
@@ -333,8 +276,16 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
   const blocked = blockedByCategory[categoryKey] ?? blockedByCategory.default;
 
   const cards = template.cards
-    .filter((card) => !blocked.has(card.type))
+    .filter((card) => card.type !== "icon" && !blocked.has(card.type))
     .map((card) => ({ ...card, content: { ...(card.content ?? {}) } }));
+
+  if (cards.length >= CURATED_MIN_CARD_COUNT) {
+    return {
+      ...template,
+      cards: cards.map((card, index) => ({ ...card, order: index })),
+    };
+  }
+
   const existingTypes = new Set(cards.map((card) => card.type));
 
   const requiredByCategory: Record<string, string[]> = {
@@ -413,7 +364,7 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
 function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
   const importantTypes = new Set(["hero", "summary", "wifi", "breakfast", "checkout", "faq", "cta"]);
   const cards = template.cards
-    .filter((card) => card && typeof card.type === "string")
+    .filter((card) => card && typeof card.type === "string" && card.type !== "icon")
     .slice(0, 10)
     .map((card, index) => ({
       ...card,
@@ -611,7 +562,7 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "pageLinks", content: { title: "出張クイックメニュー", columns: 3, iconSize: "md", items: [{ label: "交通案内", icon: "train", linkType: "page", pageSlug: "", link: "" }, { label: "チェックアウト", icon: "checkout", linkType: "page", pageSlug: "", link: "" }, { label: "領収書", icon: "credit-card", linkType: "page", pageSlug: "", link: "" }] }, order: 3 },
       { type: "breakfast", content: { title: "朝食（時短対応）", time: "6:00-9:30", location: "2F レストラン", menu: "テイクアウトBOX対応（6:00-8:30）" }, order: 4 },
       { type: "taxi", content: { title: "タクシー即時手配", phone: "03-5678-1234", companyName: "駅前タクシー", note: "フロントから最短3分で配車可能" }, order: 5 },
-      { type: "faq", content: { title: "ビジネスFAQ", items: [{ q: "早朝チェックアウトは可能ですか？", a: "24時間対応の自動精算機をご利用いただけます。" }, { q: "会場までの最短ルートは？", a: "フロントで当日朝に地図をお渡しします。" }] }, order: 6 },
+      { type: "faq", content: { title: "宿泊FAQ", items: [{ q: "早朝チェックアウトは可能ですか？", a: "24時間対応の自動精算機をご利用いただけます。" }, { q: "会場までの最短ルートは？", a: "フロントで当日朝に地図をお渡しします。" }] }, order: 6 },
     ],
   },
   {
@@ -709,7 +660,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "notice", content: { title: "チェックイン方法", body: "フロント到着後、夜間ベルをご利用ください。", variant: "info" }, order: 1 },
       { type: "wifi", content: { ssid: "Infomii-Night", password: "nightstay", description: "客室でご利用ください" }, order: 2 },
       { type: "taxi", content: { title: "深夜タクシー", phone: "03-1111-2233", companyName: "ナイトタクシー", note: "駅から約8分" }, order: 3 },
-      { type: "checkout", content: { title: "翌朝のご出発", time: "11:00", note: "早朝出発は前日までに申請してください。", linkUrl: "", linkLabel: "申請" }, order: 4 },
+      { type: "highlight", content: { title: "深夜到着のポイント", body: "エントランスは正面のみ開放。タクシーはホテル名を伝えてお越しください。", accent: "amber" }, order: 4 },
+      { type: "checkout", content: { title: "翌朝のご出発", time: "11:00", note: "早朝出発は前日までに申請してください。", linkUrl: "", linkLabel: "申請" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9（24時間）" }, order: 6 },
     ],
   },
   {
@@ -722,7 +675,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "kpi", content: { title: "参加者向け要点", items: [{ label: "会場", value: "国際フォーラム" }, { label: "移動", value: "電車12分" }, { label: "朝食", value: "6:30開始" }] }, order: 1 },
       { type: "nearby", content: { title: "会場アクセス", items: [{ name: "電車", description: "JR ○○駅→△△駅", link: "" }, { name: "タクシー", description: "所要約15分", link: "" }] }, order: 2 },
       { type: "breakfast", content: { title: "朝食", time: "6:30-9:30", location: "2F", menu: "和洋ビュッフェ" }, order: 3 },
-      { type: "faq", content: { title: "出張FAQ", items: [{ q: "領収書の再発行はできますか？", a: "フロントで対応可能です。" }, { q: "宅配便は使えますか？", a: "1Fカウンターで受付しています。" }] }, order: 4 },
+      { type: "schedule", content: { title: "会議日の時間帯", items: [{ day: "朝食", time: "6:30-9:30", label: "2F レストラン" }, { day: "フロント", time: "24時間", label: "領収書対応可" }] }, order: 4 },
+      { type: "faq", content: { title: "出張FAQ", items: [{ q: "領収書の再発行はできますか？", a: "フロントで対応可能です。" }, { q: "宅配便は使えますか？", a: "1Fカウンターで受付しています。" }] }, order: 5 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "混雑時は10:30までの手続きをおすすめします。", linkUrl: "", linkLabel: "延長申請" }, order: 6 },
     ],
   },
   {
@@ -735,7 +690,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "notice", content: { title: "セキュリティ", body: "エレベーターはルームキー認証です。", variant: "info" }, order: 1 },
       { type: "checklist", content: { title: "客室チェック", items: [{ text: "ドアロック確認", checked: false }, { text: "非常口確認", checked: false }, { text: "連絡先確認", checked: false }] }, order: 2 },
       { type: "laundry", content: { title: "ランドリー", hours: "6:00-24:00", priceNote: "洗濯300円", contact: "内線9" }, order: 3 },
-      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 4 },
+      { type: "wifi", content: { title: "Wi-Fi", ssid: "Infomii-SafeStay", password: "safestay2026", description: "女性専用フロアはエレベーター認証が必要です。" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "荷物預かりは当日中まで対応します。", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 6 },
     ],
   },
   {
@@ -748,7 +705,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "schedule", content: { title: "朝の営業時間", items: [{ day: "朝食", time: "6:00-9:00", label: "1F" }, { day: "ジム", time: "5:00-23:00", label: "3F" }] }, order: 1 },
       { type: "nearby", content: { title: "朝ランコース", items: [{ name: "川沿いルート", description: "往復20分", link: "" }, { name: "公園ルート", description: "往復30分", link: "" }] }, order: 2 },
       { type: "taxi", content: { title: "早朝配車", phone: "03-2222-1212", companyName: "モーニングタクシー", note: "前夜予約可" }, order: 3 },
-      { type: "checkout", content: { title: "早朝チェックアウト", time: "24時間対応", note: "自動精算機をご利用ください。", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "breakfast", content: { title: "早朝朝食", time: "6:00-9:00", location: "1F", menu: "テイクアウト対応あり" }, order: 4 },
+      { type: "checkout", content: { title: "早朝チェックアウト", time: "24時間対応", note: "自動精算機をご利用ください。", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "faq", content: { title: "朝活FAQ", items: [{ q: "ジムのタオルはありますか？", a: "フロントで貸出しています。" }, { q: "荷物預かりは可能ですか？", a: "チェックアウト後も当日中まで対応します。" }] }, order: 6 },
     ],
   },
   {
@@ -761,7 +720,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "steps", content: { title: "おすすめ過ごし方", items: [{ title: "1日目", description: "チェックイン後にスパへ" }, { title: "2日目", description: "アクティビティと散策" }, { title: "3日目", description: "ブランチ後にチェックアウト" }] }, order: 1 },
       { type: "spa", content: { title: "温浴施設", hours: "6:00-11:00 / 15:00-24:00", location: "2F", description: "露天・サウナ", note: "" }, order: 2 },
       { type: "menu", content: { title: "滞在中おすすめ", items: [{ name: "シーフードディナー", price: "7,800円", description: "" }, { name: "サンセットバー", price: "1,200円", description: "" }] }, order: 3 },
-      { type: "button", content: { label: "体験予約", href: "" }, order: 4 },
+      { type: "nearby", content: { title: "2日目のおすすめ", items: [{ name: "ビーチ散策", description: "徒歩10分", link: "" }, { name: "サンセットクルーズ", description: "要予約", link: "" }] }, order: 4 },
+      { type: "button", content: { label: "体験予約", href: "" }, order: 5 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "レイトチェックアウトは空室時のみ対応します。", linkUrl: "", linkLabel: "相談" }, order: 6 },
     ],
   },
   {
@@ -774,7 +735,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "gallery", content: { title: "フォトスポット", columns: 2, items: [{ src: "", alt: "テラス" }, { src: "", alt: "夕景" }] }, order: 1 },
       { type: "menu", content: { title: "記念日ディナー", items: [{ name: "Anniversary Course", price: "12,000円", description: "" }] }, order: 2 },
       { type: "notice", content: { title: "サプライズ相談", body: "ケーキ・花束の手配は前日までにご連絡ください。", variant: "info" }, order: 3 },
-      { type: "button", content: { label: "記念日相談フォーム", href: "" }, order: 4 },
+      { type: "schedule", content: { title: "記念日ディナー枠", items: [{ day: "ディナー", time: "18:00 / 19:30", label: "テラス席（要予約）" }, { day: "朝食", time: "7:00-10:00", label: "ルームサービス可" }] }, order: 4 },
+      { type: "button", content: { label: "記念日相談フォーム", href: "" }, order: 5 },
+      { type: "quote", content: { quote: "スタッフのサプライズ演出が素敵でした。", author: "記念日宿泊ゲスト" }, order: 6 },
     ],
   },
   {
@@ -783,11 +746,13 @@ const SEED_TEMPLATES: SeedTemplate[] = [
     preview_image: "/preset-hero-sample.png",
     category: "resort",
     cards: [
-      { type: "welcome", content: { title: "Rainy Day Plan", message: "館内で快適に過ごせる情報をご案内します。" }, order: 0 },
-      { type: "pageLinks", content: { title: "館内アクティビティ", columns: 2, iconSize: "md", items: [{ label: "スパ", icon: "bath", linkType: "page", pageSlug: "", link: "" }, { label: "ラウンジ", icon: "coffee", linkType: "page", pageSlug: "", link: "" }, { label: "キッズ", icon: "package", linkType: "page", pageSlug: "", link: "" }] }, order: 1 },
-      { type: "schedule", content: { title: "館内イベント", items: [{ day: "映画上映", time: "16:00", label: "1F シアター" }, { day: "クラフト体験", time: "14:00", label: "2F ラボ" }] }, order: 2 },
-      { type: "menu", content: { title: "ティータイム", items: [{ name: "季節のスイーツ", price: "1,300円", description: "" }] }, order: 3 },
-      { type: "quote", content: { quote: "雨の日でも一日中楽しめました。", author: "ゲストレビュー" }, order: 4 },
+      { type: "hero", content: { title: "Rainy Day Plan", subtitle: "雨の日でも館内で充実", image: "/preset-hero-sample.png" }, order: 0 },
+      { type: "highlight", content: { title: "雨の日のおすすめ", body: "外が強い雨の時間帯は館内イベントを先に。スパは11:00前後が比較的空いています。", accent: "amber" }, order: 1 },
+      { type: "pageLinks", content: { title: "館内アクティビティ", columns: 2, iconSize: "md", items: [{ label: "スパ", icon: "bath", linkType: "page", pageSlug: "", link: "" }, { label: "ラウンジ", icon: "coffee", linkType: "page", pageSlug: "", link: "" }, { label: "キッズ", icon: "package", linkType: "page", pageSlug: "", link: "" }] }, order: 2 },
+      { type: "schedule", content: { title: "館内イベント", items: [{ day: "映画上映", time: "16:00", label: "1F シアター" }, { day: "クラフト体験", time: "14:00", label: "2F ラボ" }, { day: "スパ", time: "10:00-12:00", label: "比較的空きやすい" }] }, order: 3 },
+      { type: "menu", content: { title: "ティータイム", items: [{ name: "季節のスイーツ", price: "1,300円", description: "ラウンジ限定" }, { name: "ホットドリンク", price: "650円", description: "" }] }, order: 4 },
+      { type: "spa", content: { title: "屋内温浴", hours: "10:00-23:00", location: "2F", description: "サウナ・内湯", note: "雨の日は混雑しやすいため早めのご利用を。" }, order: 5 },
+      { type: "quote", content: { quote: "雨の日でも一日中楽しめました。", author: "ゲストレビュー" }, order: 6 },
     ],
   },
   {
@@ -800,7 +765,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "人気アクティビティ", items: [{ name: "SUP", description: "送迎あり", link: "" }, { name: "トレッキング", description: "初心者可", link: "" }] }, order: 1 },
       { type: "checklist", content: { title: "持ち物チェック", items: [{ text: "動きやすい服", checked: false }, { text: "飲料水", checked: false }, { text: "日焼け止め", checked: false }] }, order: 2 },
       { type: "taxi", content: { title: "送迎・タクシー", phone: "03-4444-8787", companyName: "リゾート交通", note: "フロント手配可" }, order: 3 },
-      { type: "button", content: { label: "体験を予約する", href: "" }, order: 4 },
+      { type: "schedule", content: { title: "体験時間帯", items: [{ day: "SUP", time: "9:00 / 14:00", label: "要予約" }, { day: "トレッキング", time: "8:00発", label: "初心者コースあり" }] }, order: 4 },
+      { type: "button", content: { label: "体験を予約する", href: "" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "地域医療センター", note: "フロント手配可" }, order: 6 },
     ],
   },
   {
@@ -813,7 +780,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "散策スポット", items: [{ name: "足湯通り", description: "徒歩3分", link: "" }, { name: "土産店", description: "徒歩5分", link: "" }] }, order: 1 },
       { type: "map", content: { title: "散策マップ", address: "○○温泉街 中央通り", mapEmbedUrl: "" }, order: 2 },
       { type: "notice", content: { title: "外出時のお願い", body: "門限は23:30です。", variant: "warning" }, order: 3 },
-      { type: "checkout", content: { title: "翌朝のご出発", time: "10:00", note: "荷物預かり可", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "spa", content: { title: "足湯・大浴場", hours: "15:00-24:00", location: "1F", description: "散策後の入浴に便利", note: "タオルは客室からお持ちください。" }, order: 4 },
+      { type: "restaurant", content: { title: "夕食のご案内", time: "18:00-21:00", location: "お食事処", menu: "地元食材の会席" }, order: 5 },
+      { type: "checkout", content: { title: "翌朝のご出発", time: "10:00", note: "荷物預かり可", linkUrl: "", linkLabel: "詳細" }, order: 6 },
     ],
   },
   {
@@ -826,7 +795,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "schedule", content: { title: "団体スケジュール", items: [{ day: "夕食", time: "18:30", label: "大広間" }, { day: "朝食", time: "7:30", label: "大広間" }] }, order: 1 },
       { type: "notice", content: { title: "館内ルール", body: "深夜の宴会・廊下での会話はお控えください。", variant: "warning" }, order: 2 },
       { type: "steps", content: { title: "出発までの流れ", items: [{ title: "精算", description: "代表者様まとめ払い" }, { title: "集合", description: "玄関前へ" }] }, order: 3 },
-      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 4 },
+      { type: "wifi", content: { title: "Wi-Fi", ssid: "Ryokan-Group", password: "groupstay", description: "団体代表者様へフロントでご案内します。" }, order: 4 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 5 },
+      { type: "map", content: { title: "バス乗り場", address: "○○温泉 中央バス停", mapEmbedUrl: "" }, order: 6 },
     ],
   },
   {
@@ -839,7 +810,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "restaurant", content: { title: "お食事", time: "18:00-21:00", location: "食事処", menu: "お子様膳・やわらか食対応" }, order: 1 },
       { type: "spa", content: { title: "温泉", hours: "15:00-24:00", location: "1F", description: "手すり設置", note: "貸切風呂あり" }, order: 2 },
       { type: "checklist", content: { title: "お出かけ前チェック", items: [{ text: "部屋鍵", checked: false }, { text: "タオル", checked: false }, { text: "薬", checked: false }] }, order: 3 },
-      { type: "nearby", content: { title: "近場観光", items: [{ name: "庭園", description: "徒歩7分", link: "" }] }, order: 4 },
+      { type: "nearby", content: { title: "近場観光", items: [{ name: "庭園", description: "徒歩7分", link: "" }, { name: "足湯", description: "徒歩3分", link: "" }] }, order: 4 },
+      { type: "checkout", content: { title: "ご出発", time: "10:00", note: "送迎バスは前日までにご予約ください。", linkUrl: "", linkLabel: "送迎案内" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 6 },
     ],
   },
   {
@@ -852,7 +825,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "checklist", content: { title: "入室後チェック", items: [{ text: "ベビーベッド確認", checked: false }, { text: "調理器具確認", checked: false }] }, order: 1 },
       { type: "wifi", content: { ssid: "Infomii-Family", password: "familyhome", description: "" }, order: 2 },
       { type: "nearby", content: { title: "家族向け周辺", items: [{ name: "公園", description: "徒歩4分", link: "" }, { name: "スーパー", description: "徒歩5分", link: "" }] }, order: 3 },
-      { type: "checkout", content: { title: "退室手順", time: "10:00", note: "ゴミ分別と施錠確認をお願いします。", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "notice", content: { title: "お子さま連れのお願い", body: "共用部では走り回らないようご協力ください。ベビーベッドは事前連絡で手配します。", variant: "info" }, order: 4 },
+      { type: "checkout", content: { title: "退室手順", time: "10:00", note: "ゴミ分別と施錠確認をお願いします。", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○クリニック", note: "ホスト: 090-xxxx-xxxx" }, order: 6 },
     ],
   },
   {
@@ -865,7 +840,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "wifi", content: { ssid: "Infomii-Solo", password: "solo2026", description: "" }, order: 1 },
       { type: "nearby", content: { title: "近隣情報", items: [{ name: "コンビニ", description: "徒歩2分", link: "" }, { name: "駅", description: "徒歩8分", link: "" }] }, order: 2 },
       { type: "taxi", content: { title: "移動", phone: "03-8989-1010", companyName: "シティタクシー", note: "" }, order: 3 },
-      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "鍵をキーボックスへ戻してください。", linkUrl: "", linkLabel: "報告" }, order: 4 },
+      { type: "notice", content: { title: "一人旅のヒント", body: "近隣の深夜営業店は徒歩2分。Wi-Fiは客室デスク付近が電波良好です。", variant: "info" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "鍵をキーボックスへ戻してください。", linkUrl: "", linkLabel: "報告" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡", fire: "119", police: "110", hospital: "○○病院", note: "ホスト直通あり" }, order: 6 },
     ],
   },
   {
@@ -878,7 +855,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "notice", content: { title: "ペットルール", body: "ベッド利用不可。共用部ではリード着用をお願いします。", variant: "warning" }, order: 1 },
       { type: "checklist", content: { title: "持ち物", items: [{ text: "ペットシーツ", checked: false }, { text: "食器", checked: false }, { text: "リード", checked: false }] }, order: 2 },
       { type: "nearby", content: { title: "周辺施設", items: [{ name: "動物病院", description: "徒歩10分", link: "" }, { name: "ドッグラン", description: "車で8分", link: "" }] }, order: 3 },
-      { type: "emergency", content: { title: "緊急連絡", fire: "119", police: "110", hospital: "○○動物病院 03-1111-7777", note: "ホスト連絡先あり" }, order: 4 },
+      { type: "highlight", content: { title: "ペット同伴のお願い", body: "ベッド・ソファの利用は不可。共用エリアでは必ずリード着用をお願いします。", accent: "amber" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "ペット用シーツの回収場所をご確認ください。", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡", fire: "119", police: "110", hospital: "○○動物病院 03-1111-7777", note: "ホスト連絡先あり" }, order: 6 },
     ],
   },
   {
@@ -892,6 +871,8 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "スポット詳細", items: [{ name: "朝市", description: "地元食材", link: "" }, { name: "展望台", description: "写真映え", link: "" }] }, order: 2 },
       { type: "map", content: { title: "ルートマップ", address: "○○駅 周辺", mapEmbedUrl: "" }, order: 3 },
       { type: "taxi", content: { title: "移動", phone: "03-7676-1212", companyName: "観光タクシー", note: "" }, order: 4 },
+      { type: "faq", content: { title: "コースFAQ", items: [{ q: "所要時間は？", a: "約4時間（休憩含む）です。" }, { q: "雨天時は？", a: "屋内スポットへ切り替え可能です。" }] }, order: 5 },
+      { type: "highlight", content: { title: "半日モデルのコツ", body: "10:00出発がおすすめ。ランチ前に展望台へ行くと待ち時間が少なくなります。", accent: "amber" }, order: 6 },
     ],
   },
   {
@@ -904,7 +885,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "おすすめ店", items: [{ name: "海鮮食堂", description: "11:00-14:00", link: "" }, { name: "和菓子店", description: "10:00-18:00", link: "" }] }, order: 1 },
       { type: "menu", content: { title: "名物メニュー", items: [{ name: "海鮮丼", price: "1,800円", description: "" }, { name: "抹茶大福", price: "280円", description: "" }] }, order: 2 },
       { type: "map", content: { title: "エリア地図", address: "○○商店街", mapEmbedUrl: "" }, order: 3 },
-      { type: "faq", content: { title: "グルメFAQ", items: [{ q: "予約は必要ですか？", a: "人気店は予約推奨です。" }] }, order: 4 },
+      { type: "schedule", content: { title: "おすすめ時間", items: [{ day: "海鮮食堂", time: "11:00-14:00", label: "ランチ" }, { day: "和菓子店", time: "10:00-18:00", label: "お土産" }] }, order: 4 },
+      { type: "faq", content: { title: "グルメFAQ", items: [{ q: "予約は必要ですか？", a: "人気店は予約推奨です。" }, { q: "食べ歩きの持ち帰りは？", a: "店舗により異なります。" }] }, order: 5 },
+      { type: "taxi", content: { title: "移動", phone: "03-8989-2020", companyName: "グルメタクシー", note: "複数店回りプランあり" }, order: 6 },
     ],
   },
   {
@@ -917,7 +900,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "屋内スポット", items: [{ name: "美術館", description: "徒歩9分", link: "" }, { name: "屋内市場", description: "徒歩6分", link: "" }] }, order: 1 },
       { type: "pageLinks", content: { title: "目的別", columns: 2, iconSize: "md", items: [{ label: "文化", icon: "book", linkType: "page", pageSlug: "", link: "" }, { label: "買い物", icon: "shopping-bag", linkType: "page", pageSlug: "", link: "" }] }, order: 2 },
       { type: "taxi", content: { title: "雨天時移動", phone: "03-4343-7878", companyName: "レインタクシー", note: "" }, order: 3 },
-      { type: "notice", content: { title: "注意", body: "雨の日は混雑するため早めの出発がおすすめです。", variant: "info" }, order: 4 },
+      { type: "highlight", content: { title: "雨天時の過ごし方", body: "美術館→屋内市場の順がおすすめ。16:00以降は帰路が混雑しやすいです。", accent: "amber" }, order: 4 },
+      { type: "faq", content: { title: "雨天FAQ", items: [{ q: "傘は必要ですか？", a: "ホテルでレンタル可能です。" }, { q: "屋内だけで半日は足りますか？", a: "はい、モデルコースを調整できます。" }] }, order: 5 },
+      { type: "notice", content: { title: "注意", body: "雨の日は混雑するため早めの出発がおすすめです。", variant: "info" }, order: 6 },
     ],
   },
   {
@@ -930,7 +915,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "Family Spots", items: [{ name: "Zoo", description: "15 min by train", link: "" }, { name: "Science Museum", description: "20 min", link: "" }] }, order: 1 },
       { type: "wifi", content: { title: "Wi-Fi", ssid: "Infomii-FamilyGlobal", password: "globalfamily", description: "" }, order: 2 },
       { type: "checklist", content: { title: "Before Going Out", items: [{ text: "Kids pass", checked: false }, { text: "Emergency contact", checked: false }] }, order: 3 },
-      { type: "emergency", content: { title: "Emergency", fire: "119", police: "110", hospital: "+81-3-2222-3333", note: "Front desk can assist in English." }, order: 4 },
+      { type: "pageLinks", content: { title: "Family Menu", columns: 2, iconSize: "md", items: [{ label: "Kids Area", icon: "package", linkType: "page", pageSlug: "", link: "" }, { label: "Dining", icon: "utensils", linkType: "page", pageSlug: "", link: "" }] }, order: 4 },
+      { type: "checkout", content: { title: "Check-out", time: "11:00", note: "Late check-out on request.", linkUrl: "", linkLabel: "Request" }, order: 5 },
+      { type: "emergency", content: { title: "Emergency", fire: "119", police: "110", hospital: "+81-3-2222-3333", note: "Front desk can assist in English." }, order: 6 },
     ],
   },
   {
@@ -943,7 +930,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "steps", content: { title: "Station to Hotel", items: [{ title: "Step 1", description: "Take Exit A2" }, { title: "Step 2", description: "Walk straight 350m" }] }, order: 1 },
       { type: "nearby", content: { title: "Main Routes", items: [{ name: "Airport Line", description: "45 min", link: "" }, { name: "City Loop Bus", description: "every 10 min", link: "" }] }, order: 2 },
       { type: "map", content: { title: "Transit Map", address: "Nearest station area", mapEmbedUrl: "" }, order: 3 },
-      { type: "faq", content: { title: "Transit FAQ", items: [{ q: "IC cards accepted?", a: "Yes, major IC cards are accepted." }] }, order: 4 },
+      { type: "wifi", content: { title: "Wi-Fi", ssid: "Infomii-Transit", password: "transit2026", description: "Station maps available at front desk." }, order: 4 },
+      { type: "faq", content: { title: "Transit FAQ", items: [{ q: "IC cards accepted?", a: "Yes, major IC cards are accepted." }, { q: "Last train time?", a: "Around 23:40 from nearest station." }] }, order: 5 },
+      { type: "emergency", content: { title: "Emergency", fire: "119", police: "110", hospital: "+81-3-1111-2222", note: "Front desk: +81-3-9999-8888" }, order: 6 },
     ],
   },
   {
@@ -956,7 +945,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "laundry", content: { title: "Laundry", hours: "6:00-24:00", priceNote: "Wash 300 JPY", contact: "Front desk" }, order: 1 },
       { type: "nearby", content: { title: "Daily Life Spots", items: [{ name: "Supermarket", description: "4 min walk", link: "" }, { name: "Drugstore", description: "6 min walk", link: "" }] }, order: 2 },
       { type: "notice", content: { title: "Waste Separation", body: "Please separate burnable and recyclable trash.", variant: "info" }, order: 3 },
-      { type: "emergency", content: { title: "Emergency Contacts", fire: "119", police: "110", hospital: "+81-3-4444-5555", note: "Host contact available." }, order: 4 },
+      { type: "wifi", content: { title: "Wi-Fi", ssid: "Infomii-LongStay", password: "longstay2026", description: "Weekly housekeeping schedule at front desk." }, order: 4 },
+      { type: "schedule", content: { title: "Housekeeping", items: [{ day: "Room cleaning", time: "10:00-14:00", label: "Weekdays" }, { day: "Trash pickup", time: "Mon / Thu", label: "Front desk" }] }, order: 5 },
+      { type: "emergency", content: { title: "Emergency Contacts", fire: "119", police: "110", hospital: "+81-3-4444-5555", note: "Host contact available." }, order: 6 },
     ],
   },
   {
@@ -970,6 +961,8 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "breakfast", content: { title: "朝食", time: "7:00-9:30", location: "1F レストラン", menu: "和洋ビュッフェ" }, order: 2 },
       { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "フロントへお越しください。", linkUrl: "", linkLabel: "詳細" }, order: 3 },
       { type: "map", content: { title: "所在地", address: "東京都○○区○○ 1-2-3", mapEmbedUrl: "" }, order: 4 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 5 },
+      { type: "faq", content: { title: "よくある質問", items: [{ q: "領収書は発行できますか？", a: "フロントで対応します。" }, { q: "荷物預かりは？", a: "当日中まで可能です。" }] }, order: 6 },
     ],
   },
   {
@@ -983,6 +976,8 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "spa", content: { title: "スパ・大浴場", hours: "15:00-24:00", location: "2F", description: "", note: "" }, order: 2 },
       { type: "breakfast", content: { title: "朝食", time: "7:00-10:00", location: "1F", menu: "ビュッフェ" }, order: 3 },
       { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "nearby", content: { title: "周辺", items: [{ name: "ビーチ", description: "徒歩8分", link: "" }, { name: "コンビニ", description: "徒歩3分", link: "" }] }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "地域医療センター", note: "フロント" }, order: 6 },
     ],
   },
   {
@@ -995,7 +990,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "spa", content: { title: "大浴場", hours: "15:00-24:00 / 6:00-9:00", location: "1F", description: "", note: "" }, order: 1 },
       { type: "restaurant", content: { title: "お食事", time: "18:00-21:00", location: "お食事処", menu: "会席料理" }, order: 2 },
       { type: "notice", content: { title: "館内のお願い", body: "23時以降はお静かにお過ごしください。", variant: "warning" }, order: 3 },
-      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "wifi", content: { title: "Wi-Fi", ssid: "Ryokan-Guest", password: "ryokan1234", description: "" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント" }, order: 6 },
     ],
   },
   {
@@ -1008,7 +1005,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "steps", content: { title: "チェックイン手順", items: [{ title: "入口", description: "暗証番号入力" }, { title: "鍵", description: "キーボックス受け取り" }] }, order: 1 },
       { type: "wifi", content: { ssid: "Home-WiFi", password: "airbnb1234", description: "" }, order: 2 },
       { type: "checklist", content: { title: "ハウスルール", items: [{ text: "室内禁煙", checked: false }, { text: "ゴミ分別", checked: false }] }, order: 3 },
-      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "施錠後にメッセージ送信", linkUrl: "", linkLabel: "報告" }, order: 4 },
+      { type: "notice", content: { title: "ハウスルール", body: "22時以降は静かにお過ごしください。室内は禁煙です。", variant: "warning" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "施錠後にメッセージ送信", linkUrl: "", linkLabel: "報告" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "ホスト連絡先あり" }, order: 6 },
     ],
   },
   {
@@ -1021,7 +1020,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "nearby", content: { title: "主要スポット", items: [{ name: "駅周辺", description: "徒歩10分", link: "" }, { name: "観光名所", description: "バス15分", link: "" }] }, order: 1 },
       { type: "map", content: { title: "エリアマップ", address: "○○駅 周辺", mapEmbedUrl: "" }, order: 2 },
       { type: "taxi", content: { title: "タクシー", phone: "03-1111-3333", companyName: "地域タクシー", note: "" }, order: 3 },
-      { type: "faq", content: { title: "観光FAQ", items: [{ q: "おすすめ時間帯は？", a: "午前中がおすすめです。" }] }, order: 4 },
+      { type: "schedule", content: { title: "営業時間の目安", items: [{ day: "観光名所", time: "9:00-17:00", label: "多くの施設" }, { day: "レストラン", time: "11:00-21:00", label: "エリア平均" }] }, order: 4 },
+      { type: "faq", content: { title: "観光FAQ", items: [{ q: "おすすめ時間帯は？", a: "午前中がおすすめです。" }, { q: "雨の日は？", a: "屋内スポットへ切り替え可能です。" }] }, order: 5 },
+      { type: "highlight", content: { title: "初めての方へ", body: "まずは駅周辺マップを確認し、移動手段を決めるとスムーズです。", accent: "amber" }, order: 6 },
     ],
   },
   {
@@ -1034,7 +1035,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "wifi", content: { title: "Wi-Fi", ssid: "Global-WiFi", password: "welcomeglobal", description: "" }, order: 1 },
       { type: "nearby", content: { title: "Access", items: [{ name: "Nearest Station", description: "8 min walk", link: "" }, { name: "Airport Bus", description: "Hotel front", link: "" }] }, order: 2 },
       { type: "notice", content: { title: "House Rules", body: "No smoking in rooms. Quiet hours after 22:00.", variant: "info" }, order: 3 },
-      { type: "emergency", content: { title: "Emergency", fire: "119", police: "110", hospital: "+81-3-1111-2222", note: "Front desk supports English." }, order: 4 },
+      { type: "pageLinks", content: { title: "Quick Links", columns: 2, iconSize: "md", items: [{ label: "Wi-Fi", icon: "wifi", linkType: "page", pageSlug: "", link: "" }, { label: "Transport", icon: "train", linkType: "page", pageSlug: "", link: "" }] }, order: 4 },
+      { type: "checkout", content: { title: "Check-out", time: "11:00", note: "Please return room key to front desk.", linkUrl: "", linkLabel: "Details" }, order: 5 },
+      { type: "emergency", content: { title: "Emergency", fire: "119", police: "110", hospital: "+81-3-1111-2222", note: "Front desk supports English." }, order: 6 },
     ],
   },
   {
@@ -1047,7 +1050,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "breakfast", content: { title: "朝食", time: "7:00-9:30", location: "1F", menu: "キッズメニューあり" }, order: 1 },
       { type: "nearby", content: { title: "周辺施設", items: [{ name: "公園", description: "徒歩5分", link: "" }, { name: "コンビニ", description: "徒歩3分", link: "" }] }, order: 2 },
       { type: "checklist", content: { title: "出発前チェック", items: [{ text: "忘れ物確認", checked: false }, { text: "鍵返却", checked: false }] }, order: 3 },
-      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 4 },
+      { type: "parking", content: { title: "駐車場", capacity: "20台", fee: "1泊800円", note: "ベビーカー積み下ろし可", address: "ホテル北側" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "", linkUrl: "", linkLabel: "詳細" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント" }, order: 6 },
     ],
   },
   {
@@ -1061,6 +1066,8 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "wifi", content: { ssid: "LongStay-WiFi", password: "longstay", description: "" }, order: 2 },
       { type: "nearby", content: { title: "生活導線", items: [{ name: "スーパー", description: "徒歩4分", link: "" }, { name: "ドラッグストア", description: "徒歩6分", link: "" }] }, order: 3 },
       { type: "notice", content: { title: "清掃案内", body: "10:00-14:00に清掃を行います。", variant: "info" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "11:00", note: "延泊は前日20:00までにご連絡ください。", linkUrl: "", linkLabel: "延泊相談" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "フロント内線9" }, order: 6 },
     ],
   },
   {
@@ -1073,7 +1080,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "steps", content: { title: "駅からの行き方", items: [{ title: "改札", description: "東口へ" }, { title: "直進", description: "300m進む" }, { title: "到着", description: "右手にホテル" }] }, order: 1 },
       { type: "map", content: { title: "アクセスマップ", address: "○○駅 東口", mapEmbedUrl: "" }, order: 2 },
       { type: "taxi", content: { title: "タクシー利用", phone: "03-5555-1212", companyName: "駅前タクシー", note: "所要約5分" }, order: 3 },
-      { type: "notice", content: { title: "混雑注意", body: "朝夕は駅周辺が混雑します。", variant: "info" }, order: 4 },
+      { type: "nearby", content: { title: "駅周辺", items: [{ name: "コンビニ", description: "駅構内", link: "" }, { name: "コインロッカー", description: "東口", link: "" }] }, order: 4 },
+      { type: "faq", content: { title: "アクセスFAQ", items: [{ q: "荷物を預けられますか？", a: "チェックイン前もフロントで対応します。" }, { q: "タクシーは呼べますか？", a: "フロントから手配可能です。" }] }, order: 5 },
+      { type: "notice", content: { title: "混雑注意", body: "朝夕は駅周辺が混雑します。", variant: "info" }, order: 6 },
     ],
   },
   {
@@ -1086,7 +1095,9 @@ const SEED_TEMPLATES: SeedTemplate[] = [
       { type: "steps", content: { title: "入室手順", items: [{ title: "1", description: "ドア解錠" }, { title: "2", description: "鍵受け取り" }, { title: "3", description: "室内確認" }] }, order: 1 },
       { type: "wifi", content: { ssid: "Guest-WiFi", password: "gueststay", description: "" }, order: 2 },
       { type: "checklist", content: { title: "ご利用ルール", items: [{ text: "禁煙", checked: false }, { text: "騒音注意", checked: false }] }, order: 3 },
-      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "ホスト連絡先あり" }, order: 4 },
+      { type: "notice", content: { title: "滞在中のお願い", body: "ゴミは分別して指定場所へ。騒音にはご配慮ください。", variant: "info" }, order: 4 },
+      { type: "checkout", content: { title: "チェックアウト", time: "10:00", note: "鍵返却後にメッセージでご連絡ください。", linkUrl: "", linkLabel: "報告" }, order: 5 },
+      { type: "emergency", content: { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○病院", note: "ホスト連絡先あり" }, order: 6 },
     ],
   },
 ];
@@ -1098,6 +1109,14 @@ const REMOVED_TEMPLATE_NAMES = [
   "旅館・ご案内",
   "観光ガイド・スポット案内",
 ];
+
+/** @internal Used by scripts/verify-seed-templates.mts */
+export {
+  SEED_TEMPLATES,
+  applyTemplateMediaDefaults,
+  diversifyTemplateBlocks,
+  normalizeTemplateComposition,
+};
 
 /**
  * GET /api/seed-templates — insert any SEED_TEMPLATES rows missing from DB.

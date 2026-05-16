@@ -133,9 +133,14 @@ function businessHotelPages(): TemplatePage[] {
     page("朝食（時短向け）", [
       { type: "title", content: "朝食（時短向け）" },
       { type: "text", content: "朝の混雑を避けたい方向けの案内です。出発前でも短時間で利用できます。" },
-      { type: "icon", icon: "svg:clock", label: "営業時間: 6:00-9:30" },
-      { type: "icon", icon: "svg:info", label: "比較的空いている時間: 6:00-6:45 / 8:45以降" },
-      { type: "icon", icon: "svg:package", label: "テイクアウト: 一部メニュー対応" },
+      {
+        type: "hours",
+        items: [
+          { label: "営業時間", value: "6:00-9:30" },
+          { label: "空いている時間", value: "6:00-6:45 / 8:45以降" },
+          { label: "テイクアウト", value: "一部メニュー対応" },
+        ],
+      },
     ]),
     page("領収書・インボイス", [
       { type: "title", content: "領収書・インボイス" },
@@ -154,22 +159,37 @@ function businessHotelPages(): TemplatePage[] {
     page("深夜到着・門限", [
       { type: "title", content: "深夜到着・門限" },
       { type: "text", content: "24:00以降は夜間入口をご利用ください。フロント不在時はインターホンで対応します。" },
-      { type: "icon", icon: "svg:info", label: "夜間入口: 建物右側通路" },
-      { type: "icon", icon: "svg:bell", label: "インターホン: 1回押して応答をお待ちください" },
+      {
+        type: "checklist",
+        items: [
+          "夜間入口: 建物右側通路",
+          "インターホン: 1回押して応答をお待ちください",
+        ],
+      },
     ]),
     page("ランドリー・アイロン貸出", [
       { type: "title", content: "ランドリー・アイロン貸出" },
       { type: "text", content: "出張利用で需要の高いクリーニング関連をまとめています。" },
-      { type: "icon", icon: "svg:washing-machine", label: "コインランドリー: 2F / 24時間" },
-      { type: "icon", icon: "svg:hanger", label: "アイロン貸出: フロント（在庫数に限りあり）" },
-      { type: "icon", icon: "svg:phone", label: "問い合わせ: 内線9" },
+      {
+        type: "hours",
+        items: [
+          { label: "コインランドリー", value: "2F / 24時間" },
+          { label: "アイロン貸出", value: "フロント（在庫数に限りあり）" },
+          { label: "問い合わせ", value: "内線9" },
+        ],
+      },
     ]),
     page("駅・空港アクセス", [
       { type: "title", content: "駅・空港アクセス" },
       { type: "text", content: "早朝移動向けの主要導線です。時間に余裕をもってご出発ください。" },
-      { type: "icon", icon: "svg:train", label: "○○駅: 徒歩5分 / 始発 5:12" },
-      { type: "icon", icon: "svg:bus", label: "空港リムジン: ホテル前 6:10発" },
-      { type: "icon", icon: "svg:taxi", label: "タクシー手配: 内線9（目安10分）" },
+      {
+        type: "pricing",
+        items: [
+          { label: "○○駅", value: "徒歩5分 / 始発 5:12" },
+          { label: "空港リムジン", value: "ホテル前 6:10発" },
+          { label: "タクシー手配", value: "内線9（目安10分）" },
+        ],
+      },
     ]),
   ];
 }
@@ -195,9 +215,14 @@ function ryokanPages(): TemplatePage[] {
     page("お食事時間", [
       { type: "title", content: "お食事時間" },
       { type: "text", content: "会席料理は時間制です。開始時刻の10分前までに会場へお越しください。" },
-      { type: "icon", icon: "svg:clock", label: "夕食: 18:00 / 18:30 / 19:00（3部制）" },
-      { type: "icon", icon: "svg:clock", label: "朝食: 7:00-9:00（最終入場8:30）" },
-      { type: "icon", icon: "svg:info", label: "アレルギー対応: 前日20:00までに連絡" },
+      {
+        type: "hours",
+        items: [
+          { label: "夕食", value: "18:00 / 18:30 / 19:00（3部制）" },
+          { label: "朝食", value: "7:00-9:00（最終入場8:30）" },
+          { label: "アレルギー対応", value: "前日20:00までに連絡" },
+        ],
+      },
     ]),
     page("大浴場のご案内", [
       { type: "title", content: "大浴場のご案内" },
@@ -214,37 +239,60 @@ function ryokanPages(): TemplatePage[] {
     page("貸切風呂予約", [
       { type: "title", content: "貸切風呂予約" },
       { type: "text", content: "貸切風呂は50分ごとの事前予約制です。空き枠はフロントで確認できます。" },
-      { type: "icon", icon: "svg:bath", label: "利用枠: 16:00-22:00（50分制）" },
-      { type: "icon", icon: "svg:credit-card", label: "料金: 2,200円 / 1枠" },
-      { type: "icon", icon: "svg:bell", label: "キャンセル: 1時間前まで無料" },
+      {
+        type: "pricing",
+        items: [
+          { label: "利用枠", value: "16:00-22:00（50分制）" },
+          { label: "料金", value: "2,200円 / 1枠" },
+          { label: "キャンセル", value: "1時間前まで無料" },
+        ],
+      },
       { type: "button", label: "予約問い合わせ", href: "tel:+81-00-0000-0000" },
     ]),
     page("館内作法・夜間マナー", [
       { type: "title", content: "館内作法・夜間マナー" },
       { type: "text", content: "皆さまに気持ちよくお過ごしいただくため、以下のご協力をお願いします。" },
-      { type: "icon", icon: "svg:clock", label: "静粛時間: 22:00-7:00" },
-      { type: "icon", icon: "svg:info", label: "廊下・共用部ではお静かに" },
-      { type: "icon", icon: "svg:phone", label: "お困りごとは内線9へ" },
+      {
+        type: "checklist",
+        items: [
+          "静粛時間: 22:00-7:00",
+          "廊下・共用部ではお静かに",
+          "お困りごとは内線9へ",
+        ],
+      },
     ]),
     page("売店・土産", [
       { type: "title", content: "売店・土産" },
       { type: "text", content: "地元名産を中心に取り揃えています。客室付けでの精算も可能です。" },
-      { type: "icon", icon: "svg:clock", label: "営業時間: 7:00-21:00" },
-      { type: "icon", icon: "svg:package", label: "人気: 温泉まんじゅう / 地酒 / だし茶漬け" },
+      {
+        type: "section",
+        title: "売店情報",
+        body: "営業時間: 7:00-21:00\n人気: 温泉まんじゅう / 地酒 / だし茶漬け",
+      },
     ]),
     page("周辺散策", [
       { type: "title", content: "周辺散策" },
       { type: "text", content: "徒歩圏で楽しめる散策コースです。季節ごとの見どころもご確認ください。" },
-      { type: "icon", icon: "svg:map-pin", label: "○○神社: 徒歩8分" },
-      { type: "icon", icon: "svg:map-pin", label: "遊歩道: 徒歩12分（春は桜が見頃）" },
-      { type: "icon", icon: "svg:map-pin", label: "撮影スポット: 川沿い展望台" },
+      {
+        type: "pricing",
+        items: [
+          { label: "○○神社", value: "徒歩8分" },
+          { label: "遊歩道", value: "徒歩12分（春は桜が見頃）" },
+          { label: "撮影スポット", value: "川沿い展望台" },
+        ],
+      },
     ]),
     page("送迎案内", [
       { type: "title", content: "送迎案内" },
       { type: "text", content: "最寄り駅からの送迎を運行しています。事前予約でスムーズにご案内します。" },
-      { type: "icon", icon: "svg:bus", label: "迎え: 14:30 / 15:30 / 16:30" },
-      { type: "icon", icon: "svg:map-pin", label: "集合場所: ○○駅 西口ロータリー" },
-      { type: "icon", icon: "svg:clock", label: "予約締切: 当日12:00" },
+      {
+        type: "hours",
+        items: [
+          { label: "迎え", value: "14:30 / 15:30 / 16:30" },
+          { label: "集合場所", value: "○○駅 西口ロータリー" },
+          { label: "予約締切", value: "当日12:00" },
+        ],
+      },
     ]),
   ];
 }
@@ -268,15 +316,23 @@ function minpakuPages(): TemplatePage[] {
     page("ハウスルール", [
       { type: "title", content: "ハウスルール" },
       { type: "text", content: "近隣トラブル防止のため、以下ルールの順守をお願いします。" },
-      { type: "icon", icon: "svg:clock", label: "22:00-7:00は静かにお過ごしください" },
-      { type: "icon", icon: "svg:bell", label: "室内・ベランダとも禁煙です" },
-      { type: "icon", icon: "svg:bell", label: "パーティー・大人数利用は禁止です" },
+      {
+        type: "checklist",
+        items: [
+          "22:00-7:00は静かにお過ごしください",
+          "室内・ベランダとも禁煙です",
+          "パーティー・大人数利用は禁止です",
+        ],
+      },
     ]),
     page("ゴミ分別・収集日", [
       { type: "title", content: "ゴミ分別・収集日" },
       { type: "text", content: "自治体ルールに沿って分別をお願いします。袋はキッチン下にあります。" },
-      { type: "icon", icon: "svg:package", label: "可燃ごみ: 赤袋 / 缶・びん: 青袋" },
-      { type: "icon", icon: "svg:map-pin", label: "ゴミ置き場: 建物右側の白いボックス" },
+      {
+        type: "section",
+        title: "分別・置き場",
+        body: "可燃ごみ: 赤袋 / 缶・びん: 青袋\nゴミ置き場: 建物右側の白いボックス",
+      },
     ]),
     page("Wi-Fi / 家電の使い方", [
       { type: "title", content: "Wi-Fi / 家電の使い方" },
@@ -298,16 +354,26 @@ function minpakuPages(): TemplatePage[] {
     page("チェックアウト手順", [
       { type: "title", content: "チェックアウト手順" },
       { type: "text", content: "退出時は以下3点だけご確認ください。" },
-      { type: "icon", icon: "svg:info", label: "消灯・エアコンOFF" },
-      { type: "icon", icon: "svg:key", label: "鍵をキーボックスへ返却" },
-      { type: "icon", icon: "svg:info", label: "退室後、玄関写真をメッセージで送信" },
+      {
+        type: "checklist",
+        items: [
+          "消灯・エアコンOFF",
+          "鍵をキーボックスへ返却",
+          "退室後、玄関写真をメッセージで送信",
+        ],
+      },
     ]),
     page("緊急連絡", [
       { type: "title", content: "緊急連絡" },
       { type: "text", content: "緊急時は下記の順でご連絡ください。" },
-      { type: "icon", icon: "svg:phone", label: "宿サポート: +81-00-0000-0000（24時間）" },
-      { type: "icon", icon: "svg:phone", label: "救急: 119 / 警察: 110" },
-      { type: "icon", icon: "svg:map-pin", label: "最寄り救急病院: ○○総合病院" },
+      {
+        type: "hours",
+        items: [
+          { label: "宿サポート", value: "+81-00-0000-0000（24時間）" },
+          { label: "救急・警察", value: "119 / 110" },
+          { label: "最寄り救急病院", value: "○○総合病院" },
+        ],
+      },
       { type: "button", label: "緊急連絡先に発信", href: "tel:+81-00-0000-0000" },
     ]),
   ];

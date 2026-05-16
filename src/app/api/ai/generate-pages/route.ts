@@ -18,7 +18,7 @@ Output: Return ONLY a valid JSON array of 5 pages. No markdown, no code fence. E
     "blocks": [
       { "type": "title", "content": "館内総合案内" },
       { "type": "text", "content": "1–2 sentences for this hotel" },
-      { "type": "icon", "icon": "🏨", "label": "short label" },
+      { "type": "text", "content": "Key facility note (hours, location, or tip)" },
       { "type": "button", "label": "館内マップ", "href": "#" }
     ]
   },
@@ -27,7 +27,7 @@ Output: Return ONLY a valid JSON array of 5 pages. No markdown, no code fence. E
     "blocks": [
       { "type": "title", "content": "WiFi" },
       { "type": "text", "content": "1 sentence about WiFi at this hotel" },
-      { "type": "icon", "icon": "📶", "label": "SSID・パスワード" },
+      { "type": "text", "content": "SSID・パスワード（プレースホルダ可）" },
       { "type": "button", "label": "WiFi情報", "href": "#wifi" }
     ]
   },
@@ -36,7 +36,7 @@ Output: Return ONLY a valid JSON array of 5 pages. No markdown, no code fence. E
     "blocks": [
       { "type": "title", "content": "朝食" },
       { "type": "text", "content": "1 sentence about breakfast" },
-      { "type": "icon", "icon": "🍽️", "label": "時間・場所" },
+      { "type": "text", "content": "時間・会場・形式" },
       { "type": "button", "label": "朝食のご案内", "href": "#breakfast" }
     ]
   },
@@ -45,7 +45,7 @@ Output: Return ONLY a valid JSON array of 5 pages. No markdown, no code fence. E
     "blocks": [
       { "type": "title", "content": "チェックアウト" },
       { "type": "text", "content": "1 sentence about checkout" },
-      { "type": "icon", "icon": "🚪", "label": "時刻・返却" },
+      { "type": "text", "content": "チェックアウト時刻・鍵返却など" },
       { "type": "button", "label": "チェックアウトのご案内", "href": "#checkout" }
     ]
   },
@@ -54,15 +54,14 @@ Output: Return ONLY a valid JSON array of 5 pages. No markdown, no code fence. E
     "blocks": [
       { "type": "title", "content": "周辺観光" },
       { "type": "text", "content": "1–2 sentences about ${location} and nearby spots" },
-      { "type": "icon", "icon": "📍", "label": "アクセス・観光" },
+      { "type": "text", "content": "アクセス・おすすめスポット" },
       { "type": "button", "label": "周辺マップ", "href": "#map" }
     ]
   }
 ]
 
 Rules:
-- Block types are only: title, text, icon, button (no image).
-- Use emoji for icon (e.g. 📶 🍽️ 🚪 📍 🏨).
+- Block types are only: title, text, button (no image, no icon blocks).
 - Keep text concise and suitable for hotel guests. Use ${hotelName} and ${location} where natural.
 - Return only the JSON array, no other text.`;
 }
@@ -85,12 +84,6 @@ function parsePages(body: string): TemplatePage[] {
         blocks.push({ type: "title", content: String((b as { content?: string }).content ?? "") });
       else if (t === "text" && "content" in b)
         blocks.push({ type: "text", content: String((b as { content?: string }).content ?? "") });
-      else if (t === "icon")
-        blocks.push({
-          type: "icon",
-          icon: String((b as { icon?: string }).icon ?? "📍"),
-          label: (b as { label?: string }).label != null ? String((b as { label?: string }).label) : undefined,
-        });
       else if (t === "button")
         blocks.push({
           type: "button",

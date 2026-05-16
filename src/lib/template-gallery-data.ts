@@ -158,9 +158,10 @@ export function buildBlocksForTemplate(templateId: GalleryTemplateId): PageBlock
   blocks.push({ id: nid(), type: "text", content: "WiFi" });
   blocks.push({
     id: nid(),
-    type: "icon",
-    icon: "📶",
-    label: "SSID・パスワードはこちらに記載してください",
+    type: "wifi",
+    ssid: "Guest-WiFi",
+    password: "（編集してください）",
+    label: "SSID・パスワード",
   });
   blocks.push({
     id: nid(),
@@ -180,9 +181,11 @@ export function buildBlocksForTemplate(templateId: GalleryTemplateId): PageBlock
   blocks.push({ id: nid(), type: "text", content: "朝食" });
   blocks.push({
     id: nid(),
-    type: "icon",
-    icon: "🍽️",
-    label: "朝食の時間・場所・形式を記載",
+    type: "breakfast",
+    title: "朝食",
+    time: "7:00-9:30",
+    place: "1F レストラン",
+    note: "形式・会場は編集してください",
   });
   blocks.push({
     id: nid(),
@@ -202,9 +205,10 @@ export function buildBlocksForTemplate(templateId: GalleryTemplateId): PageBlock
   blocks.push({ id: nid(), type: "text", content: "チェックアウト" });
   blocks.push({
     id: nid(),
-    type: "icon",
-    icon: "🚪",
-    label: "出発時刻・鍵・ゴミ出しなど",
+    type: "checkout",
+    title: "チェックアウト",
+    time: "11:00",
+    note: "鍵返却・ゴミ出しなど施設ルールに合わせて編集してください",
   });
   blocks.push({
     id: nid(),
