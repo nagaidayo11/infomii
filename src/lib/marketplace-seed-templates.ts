@@ -1,3 +1,5 @@
+import { ensurePageLinksAfterOpening } from "@/lib/template-marketplace";
+
 const PREVIEW_IMAGE = "/preset-hero-sample.png" as const;
 
 type MarketplaceSeedCategory = "business" | "resort" | "ryokan" | "airbnb" | "guide" | "inbound";
@@ -66,7 +68,7 @@ function block(type: MarketplaceSeedCardType, content: Record<string, unknown>):
 }
 
 function ordered(cards: CardDraft[]): MarketplaceSeedCard[] {
-  return cards.map((card, order) => ({ ...card, order }));
+  return ensurePageLinksAfterOpening(cards).map((card, order) => ({ ...card, order }));
 }
 
 const hero = (title: string, subtitle: string) => ({ title, subtitle, image: PREVIEW_IMAGE });

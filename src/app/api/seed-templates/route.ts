@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { templatePreviewPublicPath } from "@/lib/template-preview";
 import { MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-templates";
-import { stripDeprecatedIconCards, templateCardsContainIcon } from "@/lib/template-marketplace";
+import {
+  ensurePageLinksAfterOpening,
+  stripDeprecatedIconCards,
+  templateCardsContainIcon,
+} from "@/lib/template-marketplace";
 
 type SeedTemplate = {
   name: string;
@@ -378,7 +382,11 @@ function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
     ...card,
     order: index,
   }));
-  const enriched = enrichCriticalCardContent(reordered);
+  const withPageLinksPlacement = ensurePageLinksAfterOpening(reordered).map((card, index) => ({
+    ...card,
+    order: index,
+  }));
+  const enriched = enrichCriticalCardContent(withPageLinksPlacement);
 
   const hasImportant = enriched.some((card) => importantTypes.has(card.type));
   if (hasImportant) return { ...template, cards: enriched };
@@ -393,13 +401,13 @@ function reorderCardsByCategory(
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>,
 ): Array<{ type: string; content: Record<string, unknown>; order: number }> {
   const priorityByCategory: Record<string, string[]> = {
-    business: ["hero", "kpi", "wifi", "schedule", "restaurant", "laundry", "checkout", "faq", "taxi", "nearby", "emergency"],
-    resort: ["hero", "gallery", "spa", "menu", "schedule", "nearby", "map", "pageLinks", "quote", "faq", "checkout", "emergency"],
-    ryokan: ["hero", "welcome", "notice", "spa", "restaurant", "menu", "steps", "schedule", "nearby", "map", "checkout", "faq", "emergency"],
-    airbnb: ["hero", "steps", "checklist", "wifi", "nearby", "map", "checkout", "emergency", "faq", "notice"],
-    guide: ["hero", "nearby", "map", "pageLinks", "taxi", "schedule", "notice", "faq", "quote", "emergency"],
-    inbound: ["hero", "welcome", "notice", "pageLinks", "map", "wifi", "steps", "checkout", "emergency", "faq", "taxi"],
-    default: ["hero", "steps", "wifi", "schedule", "checkout", "nearby", "map", "faq", "emergency"],
+    business: ["hero", "pageLinks", "welcome", "heading_body", "notice", "kpi", "wifi", "schedule", "restaurant", "laundry", "checkout", "faq", "taxi", "nearby", "emergency"],
+    resort: ["hero", "pageLinks", "welcome", "heading_body", "notice", "gallery", "spa", "menu", "schedule", "nearby", "map", "quote", "faq", "checkout", "emergency"],
+    ryokan: ["hero", "pageLinks", "welcome", "heading_body", "notice", "spa", "restaurant", "menu", "steps", "schedule", "nearby", "map", "checkout", "faq", "emergency"],
+    airbnb: ["hero", "pageLinks", "welcome", "heading_body", "notice", "steps", "checklist", "wifi", "nearby", "map", "checkout", "emergency", "faq"],
+    guide: ["hero", "pageLinks", "welcome", "heading_body", "notice", "nearby", "map", "taxi", "schedule", "faq", "quote", "emergency"],
+    inbound: ["hero", "pageLinks", "welcome", "heading_body", "notice", "map", "wifi", "steps", "checkout", "emergency", "faq", "taxi"],
+    default: ["hero", "pageLinks", "welcome", "heading_body", "steps", "wifi", "schedule", "checkout", "nearby", "map", "faq", "emergency"],
   };
   const key = category && priorityByCategory[category] ? category : "default";
   const orderMap = new Map(priorityByCategory[key].map((type, idx) => [type, idx]));
