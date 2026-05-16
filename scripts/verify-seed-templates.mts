@@ -3,7 +3,7 @@ import {
   applyTemplateMediaDefaults,
   diversifyTemplateBlocks,
   normalizeTemplateComposition,
-} from "../src/app/api/seed-templates/route.ts";
+} from "../src/app/api/seed-templates/route";
 
 const categoryIndexMap = new Map<string, number>();
 let iconHits = 0;
