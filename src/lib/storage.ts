@@ -3995,20 +3995,36 @@ function isTemplatesTableMissing(error: unknown): boolean {
   );
 }
 
+/** Marketplace listing — omits heavy `cards` JSON for faster page load. */
 export async function listTemplates(): Promise<TemplateRow[]> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("templates")
     .select(
-      "id,name,description,preview_image,cards,created_at,category,review_status,consistency_score,consistency_reason,regen_requested_at,regen_completed_at,regen_error"
+      "id,name,description,preview_image,created_at,category,review_status,consistency_score,consistency_reason,regen_requested_at,regen_completed_at,regen_error"
     )
     .order("created_at", { ascending: false });
   if (error) {
     if (isTemplatesTableMissing(error)) return [];
     throw toError(error, "テンプレート一覧の取得に失敗しました");
   }
-  return (data ?? []) as TemplateRow[];
+  return (data ?? []).map((row) => ({ ...row, cards: [] })) as TemplateRow[];
+}
+
+export async function getTemplateWithCards(templateId: string): Promise<TemplateRow | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("templates")
+    .select("id,name,description,preview_image,cards,created_at,category")
+    .eq("id", templateId)
+    .maybeSingle();
+  if (error) {
+    if (isTemplatesTableMissing(error)) return null;
+    throw toError(error, "テンプレートの取得に失敗しました");
+  }
+  return (data as TemplateRow | null) ?? null;
 }
 
 export async function recheckTemplateConsistency(

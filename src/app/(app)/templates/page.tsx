@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   listTemplates,
+  getTemplateWithCards,
   createPageFromTemplate,
   type TemplateRow,
 } from "@/lib/storage";
@@ -34,7 +35,27 @@ const HIDDEN_TEMPLATE_NAMES = new Set<string>([
   "Airbnb・ゲスト向け案内",
   "観光ガイド・スポット案内",
 ]);
-const MAX_VISIBLE_PER_CATEGORY = 6;
+
+function templateSeedSyncStorageKey(version: number): string {
+  return `infomii-template-seed-v${version}`;
+}
+
+function shouldSyncMarketplaceTemplates(version: number): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(templateSeedSyncStorageKey(version)) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+function markMarketplaceTemplatesSynced(version: number): void {
+  try {
+    sessionStorage.setItem(templateSeedSyncStorageKey(version), "done");
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
 
 function filterByCategory(
   templates: TemplateRow[],
@@ -63,8 +84,8 @@ export default function TemplatesPage() {
   const [usingId, setUsingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   useRouteProgressLoading(loading || !!usingId);
 
@@ -89,17 +110,24 @@ export default function TemplatesPage() {
       setLoading(true);
       setError(null);
       try {
-        // Keep Supabase `templates.cards` aligned with SEED_TEMPLATES (removes legacy icon blocks).
-        await fetch(`/api/seed-templates?sync=1&v=${MARKETPLACE_SEED_VERSION}`);
-        if (!active) return;
         const seeded = filterHiddenTemplates(await listTemplates());
         if (!active) return;
         setTemplates(seeded);
+        setLoading(false);
+
+        if (!shouldSyncMarketplaceTemplates(MARKETPLACE_SEED_VERSION)) return;
+
+        const res = await fetch(`/api/seed-templates?sync=1&v=${MARKETPLACE_SEED_VERSION}`);
+        if (!active) return;
+        if (res.ok) {
+          markMarketplaceTemplatesSynced(MARKETPLACE_SEED_VERSION);
+          const refreshed = filterHiddenTemplates(await listTemplates());
+          if (active) setTemplates(refreshed);
+        }
       } catch (e) {
         if (!active) return;
         setError(e instanceof Error ? e.message : "読み込みに失敗しました");
-      } finally {
-        if (active) setLoading(false);
+        setLoading(false);
       }
     };
     void loadTemplates();
@@ -121,6 +149,21 @@ export default function TemplatesPage() {
       : filtered.length > 0
         ? [{ category, label: selectedCategoryLabel, items: filtered }]
         : [];
+
+  async function handlePreview(template: TemplateRow) {
+    setPreviewLoading(true);
+    setPreviewTemplate(template);
+    setError(null);
+    try {
+      const full = await getTemplateWithCards(template.id);
+      if (full) setPreviewTemplate(full);
+    } catch (e) {
+      setPreviewTemplate(null);
+      setError(e instanceof Error ? e.message : "プレビューの読み込みに失敗しました");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
 
   async function handleUseTemplate(templateId: string) {
     setUsingId(templateId);
@@ -241,60 +284,37 @@ export default function TemplatesPage() {
           </div>
         ) : (
           <div className="space-y-5">
-            {groupsToRender.map((group) => {
-              const expanded = !!expandedCategories[group.category];
-              const visible = expanded ? group.items : group.items.slice(0, MAX_VISIBLE_PER_CATEGORY);
-              const hiddenCount = Math.max(0, group.items.length - visible.length);
-              return (
-                <section key={group.category} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
-                    {group.items.length > MAX_VISIBLE_PER_CATEGORY ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExpandedCategories((prev) => ({ ...prev, [group.category]: !expanded }))
-                        }
-                        className="app-button-native min-h-[44px] rounded-lg px-2.5 text-xs font-medium text-slate-500 hover:text-slate-700"
+            {groupsToRender.map((group) => (
+              <section key={group.category} className="space-y-2">
+                <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
+                <div
+                  className="-mx-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+                  role="region"
+                  aria-label={`${group.label} テンプレート一覧（横スクロール）`}
+                  tabIndex={0}
+                >
+                  <div className="flex w-max min-w-full items-stretch gap-3 sm:gap-4">
+                    {group.items.map((template) => (
+                      <div
+                        key={template.id}
+                        className="w-[min(88vw,280px)] shrink-0 sm:w-[300px] lg:w-[320px]"
                       >
-                        {expanded ? "折りたたむ" : `もっと見る（+${hiddenCount}）`}
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="relative">
-                    <p className="mb-2 text-xs text-slate-500 sm:hidden">横にスワイプして閲覧できます</p>
-                    <div
-                      className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0"
-                      role="region"
-                      aria-label={`${group.label} テンプレート一覧`}
-                      tabIndex={0}
-                    >
-                      <div className="flex items-stretch snap-x snap-mandatory gap-3 sm:gap-4">
-                    {visible.map((template) => {
-                      return (
-                            <div
-                              key={template.id}
-                              className="flex h-full min-w-[240px] snap-start sm:min-w-[280px] lg:min-w-[320px] lg:max-w-[360px]"
-                            >
-                              <TemplateCard
-                                id={template.id}
-                                name={template.name}
-                                description={template.description}
-                                preview_image={template.preview_image}
-                                category={template.category}
-                                onUse={() => handleUseTemplate(template.id)}
-                                onPreview={() => setPreviewTemplate(template)}
-                                using={usingId === template.id}
-                              />
-                            </div>
-                      );
-                    })}
+                        <TemplateCard
+                          id={template.id}
+                          name={template.name}
+                          description={template.description}
+                          preview_image={template.preview_image}
+                          category={template.category}
+                          onUse={() => handleUseTemplate(template.id)}
+                          onPreview={() => void handlePreview(template)}
+                          using={usingId === template.id}
+                        />
                       </div>
-                    </div>
+                    ))}
                   </div>
-                </section>
-              );
-            })}
+                </div>
+              </section>
+            ))}
           </div>
         )}
       </div>
@@ -335,11 +355,17 @@ export default function TemplatesPage() {
               </div>
               <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-4">
                 <div className={previewFrameClassName}>
-                  <LocaleProvider value="ja">
-                    <div className="space-y-3">
-                      <CardRenderer cards={previewCards} />
+                  {previewLoading ? (
+                    <div className="flex min-h-[240px] items-center justify-center text-sm text-slate-500">
+                      プレビューを読み込み中…
                     </div>
-                  </LocaleProvider>
+                  ) : (
+                    <LocaleProvider value="ja">
+                      <div className="space-y-3">
+                        <CardRenderer cards={previewCards} />
+                      </div>
+                    </LocaleProvider>
+                  )}
                 </div>
               </div>
             </div>
