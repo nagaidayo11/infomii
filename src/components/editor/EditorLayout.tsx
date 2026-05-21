@@ -32,6 +32,13 @@ const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
   full: "全画面",
 };
 
+/** 下部タブバー高さ（キャンバス padding / シート bottom と揃える） */
+const MOBILE_NAV_HEIGHT =
+  "calc(3.75rem + max(0.35rem, env(safe-area-inset-bottom, 0px)))";
+
+const mobileSheetAsideClass =
+  "ui-pop-in fixed inset-x-0 z-[55] flex max-h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 shadow-2xl lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-sm";
+
 export function EditorLayout({ topBar, library, canvas, settings, mobileActions, onMobileSheetChange }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
   const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
@@ -75,7 +82,12 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
     applySheet(sheet === "library" ? "none" : "library");
   };
   const openSettings = () => {
-    applySheet(sheet === "settings" ? "none" : "settings");
+    const next = sheet === "settings" ? "none" : "settings";
+    if (next === "settings") {
+      setMobileSheetSize("comfortable");
+      setDragTopPx(null);
+    }
+    applySheet(next);
   };
   const focusCanvas = () => {
     applySheet("none");
@@ -100,7 +112,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
     const onMove = (event: PointerEvent) => {
       const viewportHeight = getViewportHeight();
       const minTop = getSnapTopPx("full", viewportHeight);
-      const maxTop = Math.max(minTop + 24, viewportHeight - 96);
+      const maxTop = Math.max(minTop + 24, viewportHeight - 120);
       const nextTop = Math.min(maxTop, Math.max(minTop, dragState.startTopPx + (event.clientY - dragState.startY)));
       setDragTopPx(nextTop);
     };
@@ -108,7 +120,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
     const onUp = (event: PointerEvent) => {
       const viewportHeight = getViewportHeight();
       const minTop = getSnapTopPx("full", viewportHeight);
-      const maxTop = Math.max(minTop + 24, viewportHeight - 96);
+      const maxTop = Math.max(minTop + 24, viewportHeight - 120);
       const finalTop = Math.min(maxTop, Math.max(minTop, dragState.startTopPx + (event.clientY - dragState.startY)));
       if (finalTop >= closeTopPx(viewportHeight)) {
         applySheet("none");
@@ -156,6 +168,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
       role="application"
       aria-label="エディタ"
       data-editor-layout
+      style={{ ["--editor-mobile-nav-h" as string]: MOBILE_NAV_HEIGHT }}
     >
       {topBar != null ? (
         <header
@@ -171,7 +184,8 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
       {sheetOpen && (
         <button
           type="button"
-          className="fixed inset-x-0 bottom-0 top-14 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
+          className="fixed inset-x-0 top-14 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
+          style={{ bottom: MOBILE_NAV_HEIGHT }}
           aria-label="パネルを閉じる"
           onClick={() => applySheet("none")}
         />
@@ -184,12 +198,11 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
           className={
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
-            (sheet === "library"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 z-[55] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
-              : "hidden lg:flex")
+            (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
           }
           style={{
             animationDelay: "40ms",
+            bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
             top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
           }}
           aria-label="ブロックライブラリ"
@@ -211,7 +224,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
           data-editor-column="canvas"
           className={
             "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100 " +
-            "pb-[calc(3.9rem+env(safe-area-inset-bottom))] lg:pb-0"
+            "pb-[var(--editor-mobile-nav-h)] lg:pb-0"
           }
           aria-label="キャンバス"
           style={{ animationDelay: "90ms" }}
@@ -224,12 +237,11 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
           className={
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
-            (sheet === "settings"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 z-[55] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
-              : "hidden lg:flex")
+            (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
           }
           style={{
             animationDelay: "140ms",
+            bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
             top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
           }}
           aria-label="ブロック設定"
@@ -249,10 +261,10 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
       </div>
 
       {/* Mobile bottom navigation */}
-      {mobileActions != null ? (
+      {mobileActions != null && !sheetOpen ? (
         <div
           className="fixed inset-x-0 z-[60] px-2 lg:hidden"
-          style={{ bottom: "calc(3.9rem + env(safe-area-inset-bottom))" }}
+          style={{ bottom: MOBILE_NAV_HEIGHT }}
         >
           <div className="ui-pop-modal-enter mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
             {mobileActions}
@@ -260,8 +272,8 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
         </div>
       ) : null}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-[60] flex border-t border-slate-200/90 bg-white/95 px-1 pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden"
-        style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom))" }}
+        className="fixed bottom-0 left-0 right-0 z-[60] flex border-t border-slate-200 bg-white px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.08)] lg:hidden"
+        style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
         aria-label="エディタ操作"
       >
         <button

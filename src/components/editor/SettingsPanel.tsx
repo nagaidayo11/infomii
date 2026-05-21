@@ -2174,7 +2174,7 @@ export function CardSettings({
 
   if (!card) {
     return (
-      <>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
             ブロック設定
@@ -2183,7 +2183,7 @@ export function CardSettings({
             キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。
           </p>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -2330,7 +2330,7 @@ export function CardSettings({
 
   if (businessLocked) {
     return (
-      <>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-2">
@@ -2390,17 +2390,20 @@ export function CardSettings({
             <p className="text-xs text-slate-500">Businessプラン限定ブロック</p>
           </div>
         </div>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+        >
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
             このブロックの編集はBusinessプランでご利用いただけます。公開ページでの表示は維持されます。
           </section>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
@@ -2494,7 +2497,10 @@ export function CardSettings({
           </div>
         </div>
       </div>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+      >
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
             <SettingsSection title="コンテンツ">
@@ -4370,7 +4376,7 @@ export function CardSettings({
           </SettingsSection>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
