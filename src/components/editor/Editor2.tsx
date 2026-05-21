@@ -128,13 +128,12 @@ export function Editor2({
   }, []);
 
   const cards = useEditor2Store((s) => s.cards);
-  const effectiveLibraryAudience: LibraryAudience = isDemoMode ? "hotel" : libraryAudience;
 
   const handleLibraryAudienceChange = useCallback((audience: LibraryAudience) => {
     setLibraryAudience(audience);
-    persistLibraryAudience(audience);
+    if (!isDemoMode) persistLibraryAudience(audience);
     libraryAudienceInferredRef.current = true;
-  }, []);
+  }, [isDemoMode]);
 
   useEffect(() => {
     if (isDemoMode || libraryAudienceInferredRef.current) return;
@@ -161,9 +160,9 @@ export function Editor2({
   const addCardRaw = useEditor2Store((s) => s.addCard);
   const addCard = useCallback(
     (type: CardType, index?: number) => {
-      addCardRaw(type, index, effectiveLibraryAudience);
+      addCardRaw(type, index, libraryAudience);
     },
-    [addCardRaw, effectiveLibraryAudience],
+    [addCardRaw, libraryAudience],
   );
   const updateCard = useEditor2Store((s) => s.updateCard);
   const reorderCards = useEditor2Store((s) => s.reorderCards);
@@ -1315,7 +1314,7 @@ export function Editor2({
                   openBusinessUpsell(type);
                 }
               }}
-              libraryAudience={effectiveLibraryAudience}
+              libraryAudience={libraryAudience}
               onLibraryAudienceChange={handleLibraryAudienceChange}
             />
           }
@@ -1365,7 +1364,7 @@ export function Editor2({
               demoMode={isDemoMode}
               onLockedAction={(message) => setDemoLockMessage(message)}
               isBusinessEnabled={translationEnabled}
-              libraryAudience={effectiveLibraryAudience}
+              libraryAudience={libraryAudience}
             />
           }
         />
@@ -1375,7 +1374,7 @@ export function Editor2({
           onSelect={handleSlashSelect}
           anchorRef={canvasRef}
           canUseBusinessBlocks={translationEnabled}
-          libraryAudience={effectiveLibraryAudience}
+          libraryAudience={libraryAudience}
           onLockedAddCard={(type) => {
             if (isDemoMode) {
               setDemoLockMessage("このブロックはBusinessプラン限定です。");
