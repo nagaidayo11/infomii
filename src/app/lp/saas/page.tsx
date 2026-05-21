@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button, Card, Container, Section } from "@/components/ui";
-import { CheckoutButton } from "@/components/lp/CheckoutButton";
+import { Button, Container, Section } from "@/components/ui";
+import CheckoutButton from "@/components/lp/CheckoutButtonDynamic";
 import { HorizontalScrollHint } from "@/components/lp/HorizontalScrollHint";
+import { LpFeatures } from "@/components/lp/LpFeatures";
+import { LpFinalCta } from "@/components/lp/LpFinalCta";
 import { LpHero } from "@/components/lp/LpHero";
+import { LpInstagramBanner } from "@/components/lp/LpInstagramBanner";
 import { LpSaasHeader } from "@/components/lp/LpSaasHeader";
+import { LpSocialProof } from "@/components/lp/LpSocialProof";
+import { LpTemplates } from "@/components/lp/LpTemplates";
+import { LpUseCases } from "@/components/lp/LpUseCases";
 import { ScrollReveal, StaggerReveal } from "@/components/motion";
+import { LP_FAQ } from "@/lib/lp/data";
+import { LP_PAGE_TYPOGRAPHY_CLASS } from "@/lib/lp/typography";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1";
@@ -13,21 +21,30 @@ const SAMPLE_PAGE_DEMO_HREF = "/lp/saas?focus=templates";
 const DEMO_EDITOR_HREF = "/demo/editor";
 
 export const metadata: Metadata = {
-  title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
+  title: "Infomii | 情報を1ページに。旅行・予定・案内をスマホで整理",
   description:
-    "口頭説明・紙更新の手間を減らすホテル向けSaaS。WiFi・朝食・設備を1つのQRに集約。まずは無料で3ページまで。",
+    "旅行しおり、推し活、イベント、ホテル案内まで。伝えたい情報をスマホで見やすくまとめて共有。無料で3ページまで、登録なしデモあり。",
   alternates: { canonical: "https://www.infomii.com/lp/saas" },
+  keywords: [
+    "情報整理",
+    "旅行しおり",
+    "推し活",
+    "リンク共有",
+    "スマホ案内",
+    "ホテル案内",
+    "QR共有",
+  ],
   openGraph: {
     url: `${appUrl}/lp/saas`,
-    title: "Infomii | QRひとつで館内案内を3分で",
+    title: "Infomii | 情報を1ページに。共有をシンプルに",
     description:
-      "フロントの説明と紙更新を減らし、ゲストには常に最新の案内を。登録なしのデモあり。",
+      "旅行、予定、案内、リンク共有まで。スマホで見やすい情報ページを無料で作成。宿泊施設向けの運用例もあります。",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Infomii" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Infomii | QRひとつで館内案内を3分で",
-    description: "フロント向け・少人数ホテル向け。WiFi・朝食・設備を3ページまで無料で運用。",
+    title: "Infomii | 情報を1ページに",
+    description: "旅行しおり・推し活・イベント共有。ホテル案内にも。無料3ページ・デモ体験あり。",
   },
 };
 
@@ -48,7 +65,7 @@ function PricingComparisonTable() {
           <tr className="border-b border-slate-200 bg-slate-50">
             <th
               scope="col"
-              className="w-[38%] bg-slate-50 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:w-[34%]"
+              className="w-[38%] bg-slate-50 px-4 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 sm:w-[34%]"
             >
               比較項目
             </th>
@@ -59,7 +76,7 @@ function PricingComparisonTable() {
               Pro
             </th>
             <th scope="col" className="w-[20.5%] bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-600 sm:w-[22%]">
-              Team
+              Business
             </th>
           </tr>
         </thead>
@@ -162,98 +179,6 @@ function PricingComparisonTable() {
   );
 }
 
-function HeroImpactComparison({ ctaHref }: { ctaHref: string }) {
-  const rows = [
-    {
-      axis: "作成〜公開",
-      legacy: "半日〜数日",
-      cms: "数時間〜半日",
-      infomii: "最短3分で公開",
-    },
-    {
-      axis: "更新反映",
-      legacy: "紙差し替え / 都度案内",
-      cms: "編集後の確認作業が必要",
-      infomii: "編集後すぐ反映",
-    },
-    {
-      axis: "フロント説明負荷",
-      legacy: "高い",
-      cms: "中程度",
-      infomii: "低い（QRで自己解決）",
-    },
-    {
-      axis: "追加売上導線",
-      legacy: "ほぼなし",
-      cms: "設計次第",
-      infomii: "標準で設置しやすい",
-    },
-  ] as const;
-
-  return (
-    <Section
-      id="impact-compare"
-      kicker="比較"
-      title="従来運用と比べると、ここが違う"
-      description="公開までの速さ、日々の運用負荷、売上導線をひと目で比較"
-      variant="muted"
-      popTitle
-    >
-      <div className="lux-section-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
-        <p className="mb-2 text-xs text-slate-500 sm:hidden">横にスクロールして比較できます</p>
-        <HorizontalScrollHint>
-            <table className="w-full min-w-[760px] border-collapse text-sm">
-            <caption className="sr-only">従来運用・一般的なCMS・Infomiiの比較表</caption>
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th scope="col" className="sticky left-0 z-10 bg-slate-50 px-3 py-4 text-left font-semibold text-slate-600 shadow-[1px_0_0_rgba(148,163,184,0.22)]">
-                  比較軸
-                </th>
-                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
-                  従来運用
-                </th>
-                <th scope="col" className="px-3 py-4 text-left font-semibold text-slate-600">
-                  一般的なCMS（Canva/Notion）
-                </th>
-                <th scope="col" className="bg-emerald-50 px-3 py-4 text-left font-semibold text-emerald-700">
-                  Infomii
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((row) => (
-                <tr key={row.axis} className="align-top">
-                  <th scope="row" className="sticky left-0 z-10 w-[22%] bg-white px-3 py-5 font-semibold text-slate-900 shadow-[1px_0_0_rgba(148,163,184,0.18)]">
-                    {row.axis}
-                  </th>
-                  <td className="w-[26%] px-3 py-5 text-slate-600">{row.legacy}</td>
-                  <td className="w-[26%] px-3 py-5 text-slate-600">{row.cms}</td>
-                  <td className="w-[26%] bg-emerald-50 px-3 py-5 font-semibold text-emerald-700">{row.infomii}</td>
-                </tr>
-              ))}
-            </tbody>
-            </table>
-        </HorizontalScrollHint>
-      </div>
-      <div className="mt-6 flex flex-wrap items-start gap-3">
-        <Button
-          href={ctaHref}
-          size="lg"
-          className="min-h-[48px] !border-emerald-700 !bg-emerald-600 px-6 !text-white hover:!bg-emerald-700 hover:!shadow-[0_10px_24px_rgba(5,150,105,0.35)]"
-        >
-          無料でQR案内を作る
-        </Button>
-        <div className="flex min-h-[48px] flex-col items-start">
-          <Button href={DEMO_EDITOR_HREF} variant="secondary" size="lg" className="min-h-[48px] border-2">
-            30秒デモを見る
-          </Button>
-          <p className="mt-2 text-sm text-slate-500">登録なしで体験できます</p>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
 export default function LpSaaSPage() {
   const loginHref = "/login?ref=lp-saas";
   const ctaHref = "/login?ref=lp-saas&next=%2Fdashboard%3Ftab%3Dcreate";
@@ -261,43 +186,21 @@ export default function LpSaaSPage() {
   const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
   return (
-    <main className="min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] [&_p]:font-medium [&_li]:font-medium [&_button]:font-bold [&_a]:font-semibold">
+    <main
+      className={`min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] ${LP_PAGE_TYPOGRAPHY_CLASS}`}
+    >
       <LpSaasHeader loginHref={loginHref} ctaHref={ctaHref} />
+      <LpInstagramBanner />
 
       <LpHero
         ctaHref={ctaHref}
         samplePageHref={SAMPLE_PAGE_HREF}
         demoEditorHref={DEMO_EDITOR_HREF}
       />
-      <HeroImpactComparison ctaHref={ctaHref} />
 
-      <Section
-        id="value"
-        kicker="何が良いの？"
-        title="フロントでの「同じ説明」を減らします"
-        description="WiFi・朝食・館内設備を1ページにまとめて、1つのQRで案内。紙の差し替えや口頭説明の負担を軽くします。"
-        variant="muted"
-        popTitle
-      >
-        <ScrollReveal>
-          <StaggerReveal className="grid gap-4 sm:grid-cols-3" staggerDelay={0.08}>
-            {[
-              { title: "説明が減る", body: "ゲストが自分で見られるので、フロントの繰り返し対応を削減。" },
-              { title: "更新が速い", body: "管理画面で修正すると、公開ページにすぐ反映。" },
-              { title: "迷いが減る", body: "URLは1つ。案内の置き場所を統一しやすい。" },
-            ].map((item) => (
-              <Card
-                key={item.title}
-                padding="lg"
-                className="lux-section-card rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80"
-              >
-                <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
-              </Card>
-            ))}
-          </StaggerReveal>
-        </ScrollReveal>
-      </Section>
+      <LpUseCases />
+      <LpFeatures />
+      <LpTemplates ctaHref={ctaHref} demoHref={SAMPLE_PAGE_DEMO_HREF} />
 
       <Section
         id="live-demo"
@@ -314,13 +217,13 @@ export default function LpSaaSPage() {
                 size="lg"
                 className="min-h-[44px] !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
               >
-                30秒デモで運用イメージを見る
+                30秒デモを触る
               </Button>
               <Button href={SAMPLE_PAGE_DEMO_HREF} variant="secondary" size="lg" className="min-h-[44px]">
-                サンプルページを見る
+                用途別サンプルを見る
               </Button>
               <Button href={ctaHref} variant="secondary" size="lg" className="min-h-[44px]">
-                3ページ無料で公開を始める
+                無料ではじめる
               </Button>
             </div>
             <p className="mt-4 text-sm text-slate-500">
@@ -330,13 +233,15 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </Section>
 
-      <Section id="how-it-works" kicker="使い方" title="3ステップで公開まで進める" variant="muted" popTitle>
+      <LpSocialProof />
+
+      <Section id="how-it-works" kicker="使い方" title="3ステップで、1ページができる" variant="muted" popTitle>
         <ScrollReveal>
           <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.1}>
             {[
-              { step: "1", title: "テンプレを選ぶ", desc: "ホテル向けテンプレか白紙から開始。" },
-              { step: "2", title: "編集して確認", desc: "文言・順番を整え、スマホ表示を確認。" },
-              { step: "3", title: "公開してQR配布", desc: "公開URLを発行し、客室やフロントに掲示。" },
+              { step: "1", title: "テンプレを選ぶ", desc: "旅行・推し活・案内など、用途に合った土台から。" },
+              { step: "2", title: "編集して確認", desc: "予定・リンク・MAPを足して、スマホ表示を確認。" },
+              { step: "3", title: "共有する", desc: "URL・QR・SNSで届ける。ホテルなら客室掲示も。" },
             ].map((item) => (
               <div key={item.step}>
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition-[transform,border-color,background-color,box-shadow] duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-300 motion-safe:hover:bg-emerald-50/50 motion-safe:hover:shadow-sm">
@@ -354,7 +259,7 @@ export default function LpSaaSPage() {
         id="pricing"
         kicker="料金"
         title="用途で選べる3プラン"
-        description="Freeは3ページまで無料運用。Proは1拠点を安定運用。Teamは複数拠点・複数担当で、多言語と運用統制まで一括対応。"
+        description="Freeは3ページまで無料。個人のしおりから、宿泊施設の案内運用まで。"
         popTitle
       >
         <ScrollReveal>
@@ -368,7 +273,7 @@ export default function LpSaaSPage() {
                 <p className="mb-2 text-xs text-slate-500">横にスクロールして比較できます</p>
                 <div className="flex snap-x snap-mandatory gap-3 pb-1">
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Free</p>
+                  <p className="text-xs font-semibold tracking-wide text-slate-500">Free</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">¥0</p>
                   <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
                     <li>・公開ページ数: 3本</li>
@@ -380,7 +285,7 @@ export default function LpSaaSPage() {
                   </Button>
                 </article>
                 <article className="min-w-[240px] snap-start rounded-xl border border-emerald-300 bg-emerald-50/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Pro（人気）</p>
+                  <p className="text-xs font-semibold tracking-wide text-emerald-700">Pro（人気）</p>
                   <p className="mt-1 text-xl font-bold text-emerald-700">¥1,980/月</p>
                   <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
                     <li>・公開ページ数: 最大10本</li>
@@ -395,7 +300,7 @@ export default function LpSaaSPage() {
                   </CheckoutButton>
                 </article>
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team</p>
+                  <p className="text-xs font-semibold tracking-wide text-slate-500">Business</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">¥4,980/月</p>
                   <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
                     <li>・公開ページ数: 無制限</li>
@@ -409,7 +314,7 @@ export default function LpSaaSPage() {
                     adaptiveBusinessCta
                     showUpgradeHint
                   >
-                    Teamプランを申し込む
+                    Businessプランを申し込む
                   </CheckoutButton>
                 </article>
                 </div>
@@ -419,10 +324,10 @@ export default function LpSaaSPage() {
             </div>
           </div>
 
-          <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Team）">
+          <div id="pricing-plans" className="scroll-mt-24" aria-label="3プラン（Free / Pro / Business）">
             <StaggerReveal className="hidden gap-6 lg:grid-cols-3 md:grid" staggerDelay={0.1}>
               <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Free</p>
+                <p className="text-xs font-semibold tracking-wider text-slate-500">Free</p>
                 <p className="mt-3 text-4xl font-bold text-slate-900">¥0</p>
                 <p className="mt-1 text-sm text-slate-500">まずは3ページまで無料で公開して試す</p>
                 <ul className="mt-6 space-y-2 text-sm text-slate-700">
@@ -440,7 +345,7 @@ export default function LpSaaSPage() {
 
               <div className="lux-section-card scale-[1.02] rounded-2xl border-2 border-emerald-300 bg-gradient-to-b from-emerald-50/90 to-[#ECFDF5] p-8 shadow-lg motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-400 motion-safe:hover:shadow-xl">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Pro</p>
+                  <p className="text-xs font-semibold tracking-wider text-emerald-700">Pro</p>
                   <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-semibold !text-white">人気No.1</span>
                 </div>
                 <p className="mt-3 text-5xl font-extrabold text-emerald-600">
@@ -479,7 +384,7 @@ export default function LpSaaSPage() {
               </div>
 
               <div className="lux-section-card rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-100/80">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Team</p>
+                <p className="text-xs font-semibold tracking-wider text-slate-500">Business</p>
                 <p className="mt-3 text-4xl font-bold text-slate-900">
                   ¥4,980<span className="text-base font-normal text-slate-600">/月</span>
                 </p>
@@ -502,7 +407,7 @@ export default function LpSaaSPage() {
                     adaptiveBusinessCta
                     showUpgradeHint
                   >
-                    Teamプランを申し込む
+                    Businessプランを申し込む
                   </CheckoutButton>
                   {hasBusinessAnnual ? (
                     <CheckoutButton plan="business" interval="yearly" variant="secondary" className="w-full min-h-[44px]">
@@ -522,20 +427,7 @@ export default function LpSaaSPage() {
       <Section id="faq" kicker="FAQ" title="よくある質問" variant="muted" popTitle>
         <ScrollReveal>
           <div className="mx-auto max-w-3xl space-y-3">
-            {[
-              {
-                q: "デモで作った内容は本番へ引き継げますか？",
-                a: "デモは体験用です。実運用は無料登録後のダッシュボードで作成してください。",
-              },
-              {
-                q: "ITに詳しくなくても更新できますか？",
-                a: "はい。ブロック追加と文章差し替え中心の設計です。まずは3ページまで無料で試し、運用に合わせて拡張できます。",
-              },
-              {
-                q: "どのプランを選べばいいですか？",
-                a: "最初はFree。ページ数や分析が必要になったらPro、チーム運用や大規模運用ならTeamプランが目安です。",
-              },
-            ].map((row) => (
+            {LP_FAQ.map((row) => (
               <details
                 key={row.q}
                 className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100 transition-[box-shadow,border-color,transform] duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:border-emerald-200/60 motion-safe:hover:shadow-md open:border-emerald-200/50"
@@ -564,37 +456,7 @@ export default function LpSaaSPage() {
         </ScrollReveal>
       </Section>
 
-      <section className="lp-cta-shell relative overflow-hidden bg-slate-900 py-16 sm:py-20">
-        <ScrollReveal intensity="subtle">
-          <Container size="sm" className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              まずは無料で3ページ作る
-            </h2>
-            <p className="mt-4 text-lg text-slate-300">
-              クレジットカード不要。サンプルを触ってから始めてもOKです。
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button href={ctaHref} variant="inverted" size="lg" className="min-h-[44px] px-8">
-                今すぐ無料で作成
-              </Button>
-              <Button
-                href={DEMO_EDITOR_HREF}
-                variant="secondary"
-                size="lg"
-                className="min-h-[44px] border-slate-600 bg-transparent !text-white hover:bg-white/10 hover:!text-white"
-              >
-                30秒で試す（登録なし）
-              </Button>
-            </div>
-            <p className="mt-4 text-sm text-slate-500">
-              すでにアカウントをお持ちの方は{" "}
-              <Link href={loginHref} className="font-medium text-white underline hover:no-underline">
-                ログイン
-              </Link>
-            </p>
-          </Container>
-        </ScrollReveal>
-      </section>
+      <LpFinalCta ctaHref={ctaHref} demoEditorHref={DEMO_EDITOR_HREF} loginHref={loginHref} />
 
       <footer className="border-t border-slate-200/80 bg-white py-8">
         <Container className="flex flex-wrap items-center justify-between gap-4">

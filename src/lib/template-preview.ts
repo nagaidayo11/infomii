@@ -22,6 +22,14 @@ export function templatePreviewPublicPath(category: string | null, name: string)
   return `/templates/previews/${cat}/${slug}.jpg`;
 }
 
+/** BtoC marketplace: stable path from seed `slug` (not name hash). */
+export function btocTemplatePreviewPath(category: string, slug: string): string {
+  const cat = category.trim();
+  const id = slug.trim();
+  if (!cat || !id) return "/preset-hero-sample.png";
+  return `/templates/previews/${cat}/${id}.jpg`;
+}
+
 /** Category hero used only when category is known but per-template path cannot be built. */
 export const TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS: Record<string, string> = {
   business: "/template-business-hero-01.jpg",
@@ -62,12 +70,26 @@ function resolveComputedOrCategoryFallback(
  * - Ignore http(s) URLs and legacy seed paths (`template-*-hero-01.jpg`, `/preset-hero-sample.png`); use deterministic path.
  * - Empty → deterministic path, then category fallback.
  */
+import { isBtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
+
+/** BtoC seeds use empty preview_image; listing cards show placeholder only. */
+export function templateListingUsesPlaceholder(
+  category: string | null | undefined,
+  previewImage: string | undefined,
+): boolean {
+  if (!isBtocMarketplaceCategory(category)) return false;
+  return !previewImage?.trim();
+}
+
 export function resolveTemplateCardImageSrc(
   previewImage: string | undefined,
   category: string | null | undefined,
   name: string,
   categoryFallback: string,
-): string {
+): string | null {
+  if (templateListingUsesPlaceholder(category, previewImage)) {
+    return null;
+  }
   const raw = previewImage?.trim() ?? "";
 
   if (raw.startsWith("http://") || raw.startsWith("https://")) {

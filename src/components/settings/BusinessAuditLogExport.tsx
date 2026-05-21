@@ -29,7 +29,7 @@ export function BusinessAuditLogExport() {
     try {
       const sub = await getCurrentHotelSubscription();
       if (sub?.plan !== "business") {
-        setError("この機能はチームプランでご利用いただけます");
+        setError("この機能はBusinessプランでご利用いただけます");
         return;
       }
       const logs = await listCurrentHotelAuditLogs(AUDIT_EXPORT_LIMIT);

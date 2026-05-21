@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LpHeroAudienceSwitch } from "@/components/lp/LpHeroAudienceSwitch";
 import { Button, Container } from "@/components/ui";
 
 type LpSaasHeaderProps = {
   loginHref: string;
   ctaHref: string;
+  /** business LP には #use-cases / #templates がないため非表示 */
+  variant?: "saas" | "business";
 };
 
-export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
+export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHeaderProps) {
+  const showBtocSections = variant === "saas";
+  const audience = variant === "business" ? "hotel" : "personal";
+  const homeHref = variant === "business" ? "/lp/business" : "/lp/saas";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const firstMenuLinkRef = useRef<HTMLAnchorElement | null>(null);
   const navLinkClass =
-    "inline-flex min-h-[44px] items-center rounded-lg px-2 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 " +
+    "inline-flex min-h-[44px] items-center rounded-lg px-2 py-2 text-sm font-semibold text-slate-600 transition-colors duration-200 " +
     "motion-safe:hover:-translate-y-px motion-safe:hover:bg-emerald-50/60 motion-safe:hover:text-emerald-800 " +
     "sm:px-3";
 
@@ -38,17 +44,31 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-shadow duration-300 motion-safe:hover:shadow-sm">
-      <Container className="flex h-14 items-center justify-between gap-2">
-        <span className="text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800">
+      <Container className="flex h-14 items-center gap-2 sm:gap-3">
+        <Link
+          href={homeHref}
+          className="shrink-0 text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800"
+        >
           Infomii
-        </span>
+        </Link>
 
-        <nav className="hidden flex-wrap items-center justify-end gap-0.5 sm:gap-1 md:flex">
+        <div className="flex min-w-0 flex-1 items-center justify-center md:flex-none md:justify-start">
+          <LpHeroAudienceSwitch active={audience} compact />
+        </div>
+
+        <nav className="ml-auto hidden shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1 md:flex">
+          {showBtocSections ? (
+            <>
+              <a href="#use-cases" className={navLinkClass}>
+                用途
+              </a>
+              <a href="#templates" className={navLinkClass}>
+                テンプレ
+              </a>
+            </>
+          ) : null}
           <a href="#live-demo" className={navLinkClass}>
             デモ
-          </a>
-          <a href="#how-it-works" className={navLinkClass}>
-            使い方
           </a>
           <a href="#pricing" className={navLinkClass}>
             料金
@@ -64,13 +84,13 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
             size="md"
             className="min-h-[44px] px-3 sm:px-4 !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
           >
-            3ページ無料で公開してみる
+            無料ではじめる
           </Button>
         </nav>
 
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 md:hidden"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 md:hidden"
           aria-label="メニューを開く"
           aria-expanded={mobileMenuOpen}
           aria-controls="lp-mobile-menu"
@@ -103,11 +123,31 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
           }`}
         >
           <div className="flex flex-col gap-2">
-            <a ref={firstMenuLinkRef} href="#live-demo" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
+            <div className="pb-1">
+              <LpHeroAudienceSwitch active={audience} compact className="w-full justify-center" />
+            </div>
+            {showBtocSections ? (
+              <>
+                <a
+                  ref={firstMenuLinkRef}
+                  href="#use-cases"
+                  className={navLinkClass}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  用途
+                </a>
+                <a href="#templates" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                  テンプレ
+                </a>
+              </>
+            ) : null}
+            <a
+              ref={showBtocSections ? undefined : firstMenuLinkRef}
+              href="#live-demo"
+              className={navLinkClass}
+              onClick={() => setMobileMenuOpen(false)}
+            >
               デモ
-            </a>
-            <a href="#how-it-works" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
-              使い方
             </a>
             <a href="#pricing" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
               料金
@@ -123,7 +163,7 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
               size="md"
               className="min-h-[44px] justify-center !border-ds-accent/30 !bg-ds-accent hover:!bg-ds-accent-strong hover:!shadow-[0_2px_8px_rgba(5,150,105,0.22)]"
             >
-              3ページ無料で公開してみる
+              無料ではじめる
             </Button>
           </div>
         </div>

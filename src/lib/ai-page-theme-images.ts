@@ -14,7 +14,16 @@ export const AI_DEFAULT_HERO_SUBTITLE = "館内案内をスマートにまとめ
 export const AI_GENERATED_PAGE_TITLE = "AIで作ったページ";
 
 /** Visual preset bucket for AI-generated pages (maps to `/public/templates/previews/...`). */
-export type AiPageImageTheme = "business" | "resort" | "ryokan" | "airbnb" | "guide" | "inbound";
+export type AiPageImageTheme =
+  | "travel"
+  | "oshi"
+  | "personal"
+  | "business"
+  | "resort"
+  | "ryokan"
+  | "airbnb"
+  | "guide"
+  | "inbound";
 
 export type AiPageImageDefaults = {
   /** Hero / single image card fallback */
@@ -66,7 +75,28 @@ const BUSINESS_GALLERY = [
   PRESET_HERO_SLIDER_FIFTH_SAMPLE_IMAGE,
 ] as const;
 
+const TRAVEL_GALLERY = [
+  "/templates/previews/travel/travel-itinerary.jpg",
+  "/templates/previews/travel/travel-weekend.jpg",
+  "/templates/previews/travel/travel-group.jpg",
+] as const;
+
+const OSHI_GALLERY = [
+  "/templates/previews/oshi/oshi-live-set.jpg",
+  "/templates/previews/oshi/oshi-fan-meet.jpg",
+  "/templates/previews/oshi/oshi-link-hub.jpg",
+] as const;
+
+const PERSONAL_GALLERY = [
+  "/templates/previews/personal/personal-date-plan.jpg",
+  "/templates/previews/personal/personal-link-collection.jpg",
+  "/templates/previews/personal/personal-event-guide.jpg",
+] as const;
+
 const THEME_GALLERY: Record<AiPageImageTheme, readonly string[]> = {
+  travel: TRAVEL_GALLERY,
+  oshi: OSHI_GALLERY,
+  personal: PERSONAL_GALLERY,
   business: BUSINESS_GALLERY,
   resort: RESORT_GALLERY,
   ryokan: RYOKAN_GALLERY,
@@ -75,12 +105,49 @@ const THEME_GALLERY: Record<AiPageImageTheme, readonly string[]> = {
   inbound: INBOUND_GALLERY,
 };
 
+const HERO_COPY: Record<AiPageImageTheme, { title: string; subtitle: string }> = {
+  travel: { title: "旅行のしおり", subtitle: "日程とリンクをまとめました" },
+  oshi: { title: "推し活まとめ", subtitle: "予定とリンクはここ" },
+  personal: { title: "まとめページ", subtitle: "友達に共有する用" },
+  business: { title: AI_DEFAULT_HERO_TITLE, subtitle: AI_DEFAULT_HERO_SUBTITLE },
+  resort: { title: "リゾートのご案内", subtitle: "滞在情報をまとめました" },
+  ryokan: { title: "旅館のご案内", subtitle: "おもてなしと過ごし方" },
+  airbnb: { title: "滞在のご案内", subtitle: "お部屋と周辺の情報" },
+  guide: { title: "周辺ガイド", subtitle: "おすすめスポット" },
+  inbound: { title: "Guest Guide", subtitle: "Stay information in one place" },
+};
+
+export function heroCopyForAiTheme(theme: AiPageImageTheme): { title: string; subtitle: string } {
+  return HERO_COPY[theme];
+}
+
 /**
  * Infer image theme from free text (description, URL context, extracted fields).
  * First matching bucket wins; default is business/hotel-like stock photos.
  */
 export function inferAiPageImageTheme(text: string): AiPageImageTheme {
   const s = text.toLowerCase();
+  if (
+    ["推し", "ライブ", "公演", "ファンミ", "遠征", "グッズ", "penlight", "oshikatsu", "fan meet"].some((k) =>
+      s.includes(k.toLowerCase())
+    )
+  ) {
+    return "oshi";
+  }
+  if (
+    ["旅行", "旅程", "しおり", "日帰り", "遠征", "新幹線", "沖縄", "京都", "箱根", "持ち物", "itinerary", "trip"].some(
+      (k) => s.includes(k.toLowerCase())
+    )
+  ) {
+    return "travel";
+  }
+  if (
+    ["デート", "おでかけ", "友達", "リンク集", "勉強会", "イベント", "カフェ", "link in bio", "ポートフォリオ"].some(
+      (k) => s.includes(k.toLowerCase())
+    )
+  ) {
+    return "personal";
+  }
   if (
     ["旅館", "温泉", "大浴場", "和室", "ryokan", "onsen"].some((k) => s.includes(k.toLowerCase())) ||
     /\bryokan\b/.test(s)

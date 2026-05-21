@@ -3,7 +3,7 @@ import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 
 /**
- * GET /api/v1/pages — 施設のページ一覧（チームプランのみ）
+ * GET /api/v1/pages — 施設のページ一覧（Businessプランのみ）
  * Authorization: Bearer <session_token>
  */
 export async function GET(request: Request) {
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
   if (!isBusinessAccessible) {
     return NextResponse.json(
-      { error: "API はチームプランでご利用いただけます" },
+      { error: "API はBusinessプランでご利用いただけます" },
       { status: 403 }
     );
   }

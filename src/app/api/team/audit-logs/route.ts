@@ -63,7 +63,7 @@ async function authenticateWithHotel(request: Request): Promise<AuthContext> {
   if (!isBusinessAccessible) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "操作履歴はチームプランでご利用いただけます" }, { status: 403 }),
+      response: NextResponse.json({ error: "操作履歴はBusinessプランでご利用いただけます" }, { status: 403 }),
     };
   }
 

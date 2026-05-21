@@ -1,74 +1,30 @@
-import { ensurePageLinksAfterOpening } from "@/lib/template-marketplace";
+import { BTOC_MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-btoc";
+import { LP_STARTER_TEMPLATE_SLUGS } from "@/lib/template-marketplace-meta";
+import {
+  block,
+  ordered,
+  type MarketplaceSeedCategory,
+  type MarketplaceSeedTemplate,
+} from "@/lib/marketplace-seed-types";
+
+export type { MarketplaceSeedTemplate } from "@/lib/marketplace-seed-types";
 
 const PREVIEW_IMAGE = "/preset-hero-sample.png" as const;
 
-type MarketplaceSeedCategory = "business" | "resort" | "ryokan" | "airbnb" | "guide" | "inbound";
+type HotelSeedDraft = Omit<MarketplaceSeedTemplate, "slug">;
 
-type MarketplaceSeedCardType =
-  | "hero"
-  | "heading_body"
-  | "info"
-  | "highlight"
-  | "action"
-  | "welcome"
-  | "wifi"
-  | "breakfast"
-  | "checkout"
-  | "nearby"
-  | "notice"
-  | "map"
-  | "restaurant"
-  | "taxi"
-  | "emergency"
-  | "laundry"
-  | "spa"
-  | "image"
-  | "video"
-  | "button"
-  | "faq"
-  | "schedule"
-  | "menu"
-  | "gallery"
-  | "parking"
-  | "pageLinks"
-  | "quote"
-  | "checklist"
-  | "steps"
-  | "compare"
-  | "kpi"
-  | "tabs_info"
-  | "faq_search"
-  | "accordion_info"
-  | "open_status"
-  | "social_links"
-  | "contact_hub"
-  | "progress_steps"
-  | "menu_categories"
-  | "daily_special"
-  | "drink_menu";
-
-type MarketplaceSeedCard = {
-  type: MarketplaceSeedCardType;
-  content: Record<string, unknown>;
-  order: number;
+const HOTEL_SLUG_OVERRIDES: Record<string, string> = {
+  "ビジネスホテル・即運用セット": LP_STARTER_TEMPLATE_SLUGS.hotel,
 };
 
-export type MarketplaceSeedTemplate = {
-  name: string;
-  description: string;
-  preview_image: typeof PREVIEW_IMAGE;
-  category: MarketplaceSeedCategory;
-  cards: MarketplaceSeedCard[];
-};
-
-type CardDraft = Omit<MarketplaceSeedCard, "order">;
-
-function block(type: MarketplaceSeedCardType, content: Record<string, unknown>): CardDraft {
-  return { type, content };
-}
-
-function ordered(cards: CardDraft[]): MarketplaceSeedCard[] {
-  return ensurePageLinksAfterOpening(cards).map((card, order) => ({ ...card, order }));
+function attachHotelSlugs(drafts: HotelSeedDraft[]): MarketplaceSeedTemplate[] {
+  const counters: Partial<Record<MarketplaceSeedCategory, number>> = {};
+  return drafts.map((draft) => {
+    const override = HOTEL_SLUG_OVERRIDES[draft.name];
+    if (override) return { ...draft, slug: override };
+    const n = (counters[draft.category] = (counters[draft.category] ?? 0) + 1);
+    return { ...draft, slug: `${draft.category}-${String(n).padStart(2, "0")}` };
+  });
 }
 
 const hero = (title: string, subtitle: string) => ({ title, subtitle, image: PREVIEW_IMAGE });
@@ -233,7 +189,7 @@ const socialLinks = (title: string, handle: string) => ({
   ],
 });
 
-export const MARKETPLACE_SEED_TEMPLATES = [
+const HOTEL_SEED_DRAFTS = [
   {
     name: "ビジネスホテル・即運用セット",
     description: "出張客向けに、Wi-Fi・朝食・ランドリー・チェックアウト導線を最適化した構成です。",
@@ -889,4 +845,9 @@ export const MARKETPLACE_SEED_TEMPLATES = [
       block("emergency", emergency("Emergency", "+81-3-1111-2222", "Front desk supports English. Call 119 for fire/ambulance and 110 for police.")),
     ]),
   },
-] satisfies MarketplaceSeedTemplate[];
+] satisfies HotelSeedDraft[];
+
+export const MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
+  ...BTOC_MARKETPLACE_SEED_TEMPLATES,
+  ...attachHotelSlugs(HOTEL_SEED_DRAFTS),
+];

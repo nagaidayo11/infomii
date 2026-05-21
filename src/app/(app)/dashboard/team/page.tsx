@@ -208,7 +208,7 @@ export default function TeamPage() {
         // owner/admin以外は403になるため、画面では黙って空表示にする
         if (res.status !== 403) {
           setError(data.error ?? "公開申請一覧の取得に失敗しました");
-        } else if ((data.error ?? "").includes("チームプラン")) {
+        } else if ((data.error ?? "").includes("Businessプラン")) {
           // API側の判定を優先し、プラン表示と実機能の不整合を解消する
           setIsBusiness(false);
           setBusinessChecked(true);
@@ -310,7 +310,7 @@ export default function TeamPage() {
 
   async function handleCreateInvite() {
     if (!isBusiness) {
-      setError("チーム招待はチームプランでご利用いただけます");
+      setError("チーム招待はBusinessプランでご利用いただけます");
       return;
     }
     setCreating(true);
@@ -327,7 +327,7 @@ export default function TeamPage() {
 
   async function handleRevoke(inviteId: string) {
     if (!isBusiness) {
-      setError("チーム招待はチームプランでご利用いただけます");
+      setError("チーム招待はBusinessプランでご利用いただけます");
       return;
     }
     try {
@@ -426,7 +426,7 @@ export default function TeamPage() {
 
   async function handleRedeem(e: React.FormEvent) {
     if (!isBusiness) {
-      setError("招待コード参加はチームプランでご利用いただけます");
+      setError("招待コード参加はBusinessプランでご利用いただけます");
       return;
     }
     e.preventDefault();
@@ -451,16 +451,16 @@ export default function TeamPage() {
         {businessChecked && !isBusiness ? (
           <FadeIn>
             <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
-              <h2 className="text-base font-semibold">チームプラン限定機能です</h2>
+              <h2 className="text-base font-semibold">Businessプラン限定機能です</h2>
               <p className="mt-2 text-sm leading-relaxed">
-                チーム招待・公開申請の承認フローはチームプランでご利用いただけます。
+                チーム招待・公開申請の承認フローはBusinessプランでご利用いただけます。
                 現在のプランではこの画面の操作はできません。
               </p>
               <a
                 href="/lp/saas#pricing-plans"
                 className="app-button-native mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 hover:!text-white"
               >
-                チームプランを見る
+                Businessプランを見る
               </a>
             </section>
           </FadeIn>

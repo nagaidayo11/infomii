@@ -306,7 +306,7 @@ export function Editor2({
       }
     });
     if (detectBusinessTypeMisuse(cards.map((c) => c.type), translationEnabled)) {
-      warnings.push("チームプラン限定ブロックが含まれています。現在のプランで公開時表示が制限される可能性があります。");
+      warnings.push("Businessプラン限定ブロックが含まれています。現在のプランで公開時表示が制限される可能性があります。");
     }
     return { errors, warnings };
   }, [cards, translationEnabled]);
@@ -634,7 +634,7 @@ export function Editor2({
     (type: CardType) => {
       if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
         if (isDemoMode) {
-          setDemoLockMessage("このブロックはチームプラン限定です。");
+          setDemoLockMessage("このブロックはBusinessプラン限定です。");
         } else {
           openBusinessUpsell(type);
         }
@@ -711,7 +711,7 @@ export function Editor2({
       for (const type of types) {
         if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
           if (isDemoMode) {
-            setDemoLockMessage("このセットにはチームプラン限定ブロックが含まれています。");
+            setDemoLockMessage("このセットにはBusinessプラン限定ブロックが含まれています。");
           } else {
             openBusinessUpsell(type);
           }
@@ -954,8 +954,8 @@ export function Editor2({
     const subscription = await getCurrentHotelSubscription().catch(() => null);
     if (!subscription || subscription.plan !== "business") {
       return flow === "preview"
-        ? "未翻訳項目があります。プレビュー前に翻訳を完了するにはチームプランが必要です。"
-        : "未翻訳項目があります。公開前に翻訳を完了するにはチームプランが必要です。";
+        ? "未翻訳項目があります。プレビュー前に翻訳を完了するにはBusinessプランが必要です。"
+        : "未翻訳項目があります。公開前に翻訳を完了するにはBusinessプランが必要です。";
     }
     const usage = await getCurrentHotelTranslationUsage().catch(() => null);
     if (usage && usage.usedRuns >= usage.includedRuns) {
@@ -1397,7 +1397,7 @@ export function Editor2({
               onAddCard={(type) => {
                 if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
                   if (isDemoMode) {
-                    setDemoLockMessage("このブロックはチームプラン限定です。");
+                    setDemoLockMessage("このブロックはBusinessプラン限定です。");
                   } else {
                     openBusinessUpsell(type);
                   }
@@ -1409,7 +1409,7 @@ export function Editor2({
               canUseBusinessBlocks={translationEnabled}
               onLockedAddCard={(type) => {
                 if (isDemoMode) {
-                  setDemoLockMessage("このブロックはチームプラン限定です。");
+                  setDemoLockMessage("このブロックはBusinessプラン限定です。");
                 } else {
                   openBusinessUpsell(type);
                 }
@@ -1474,7 +1474,7 @@ export function Editor2({
           canUseBusinessBlocks={translationEnabled}
           onLockedAddCard={(type) => {
             if (isDemoMode) {
-              setDemoLockMessage("このブロックはチームプラン限定です。");
+              setDemoLockMessage("このブロックはBusinessプラン限定です。");
             } else {
               openBusinessUpsell(type);
             }
@@ -1485,8 +1485,8 @@ export function Editor2({
             <div className="ui-pop-in w-full max-w-lg rounded-2xl border border-violet-200 bg-white p-5 shadow-2xl">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">この機能はチームプラン限定です</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">チームプランにアップグレードすると、今選んだ機能をすぐ使えます。</p>
+                  <h3 className="text-lg font-semibold text-slate-900">この機能はBusinessプラン限定です</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Businessプランにアップグレードすると、今選んだ機能をすぐ使えます。</p>
                 </div>
                 <span
                   className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-violet-300 bg-violet-100 text-violet-700"
@@ -1507,7 +1507,7 @@ export function Editor2({
                   <p className="mt-1 text-[11px]">10ページ運用</p>
                 </div>
                 <div className="rounded-lg border border-violet-300 bg-violet-50 px-2 py-2 text-violet-800">
-                  <p className="font-semibold">Team</p>
+                  <p className="font-semibold">Business</p>
                   <p className="mt-1 text-[11px]">無制限 + 多言語/運用</p>
                 </div>
               </div>
@@ -1531,7 +1531,7 @@ export function Editor2({
                   }}
                   className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold !text-white no-underline hover:bg-violet-600"
                 >
-                  チームプランを見る
+                  Businessプランを見る
                 </a>
               </div>
             </div>

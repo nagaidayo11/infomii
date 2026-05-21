@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ScrollReveal } from "@/components/motion";
+import { LP_POP_HEADING_CLASS } from "@/lib/lp/typography";
 
 type SectionProps = {
   children: ReactNode;
@@ -24,8 +25,7 @@ const kickerClass =
   "text-xs font-semibold uppercase tracking-wider text-ds-muted";
 const titleClass =
   "mt-3 text-3xl font-bold tracking-tight text-ds-foreground sm:text-4xl";
-const popTitleClass =
-  "[font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] font-black tracking-tight drop-shadow-[0_4px_0_rgba(16,185,129,0.2)]";
+const popTitleClass = LP_POP_HEADING_CLASS;
 const descriptionClass = "mt-4 max-w-2xl text-lg leading-relaxed text-ds-muted-fg";
 
 /**

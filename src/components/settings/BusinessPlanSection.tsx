@@ -10,7 +10,7 @@ import {
 import { Card } from "@/components/ui/Card";
 
 /**
- * Team（チーム）プランの特典を設定画面に表示（未加入にはアップグレード案内）
+ * Businessプランの特典を設定画面に表示（未加入にはアップグレード案内）
  */
 export function BusinessPlanSection() {
   const [subscription, setSubscription] = useState<HotelSubscription | null | undefined>(undefined);
@@ -181,7 +181,7 @@ export function BusinessPlanSection() {
               disabled={busyAction !== null || !canManageBilling}
               className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {busyAction === "business" ? "処理中…" : "チームプランを申し込む"}
+              {busyAction === "business" ? "処理中…" : "Businessプランを申し込む"}
             </button>
           </>
         ) : null}
@@ -193,7 +193,7 @@ export function BusinessPlanSection() {
               disabled={busyAction !== null || !canManageBilling}
               className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {busyAction === "portal" ? "処理中…" : "チームプランへアップグレード"}
+              {busyAction === "portal" ? "処理中…" : "Businessプランへアップグレード"}
             </button>
             <button
               type="button"
@@ -296,7 +296,7 @@ export function BusinessPlanSection() {
               </p>
             ) : null}
             <div className="flex items-center gap-2">
-              <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-emerald-700" : "text-slate-500"}`}>Team</p>
+              <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-emerald-700" : "text-slate-500"}`}>Business</p>
               <span className="ui-pop-badge inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-sky-700">
                 人気
               </span>
@@ -312,7 +312,7 @@ export function BusinessPlanSection() {
         </div>
       </div>
       {plan === "pro" ? (
-        <p className="mt-2 text-xs text-slate-500">現在の契約から決済ページでチームプランへ変更できます。</p>
+        <p className="mt-2 text-xs text-slate-500">現在の契約から決済ページでBusinessプランへ変更できます。</p>
       ) : null}
       {isPaid && isActiveLike ? (
         <p className="mt-2 text-xs text-slate-500">解約はStripeの管理画面でいつでも行えます。</p>

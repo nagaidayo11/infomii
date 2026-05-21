@@ -14,7 +14,7 @@ function BusinessBadge() {
       <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
       </svg>
-      Team
+      Business
     </span>
   );
 }
@@ -190,7 +190,7 @@ export function SlashCommandMenu({
               }`}
               onMouseEnter={() => setHighlightIndex(i)}
               onClick={() => handleSelect(item)}
-              title={!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "チームプラン限定ブロックです" : undefined}
+              title={!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "Businessプラン限定ブロックです" : undefined}
             >
               <span
                 className={

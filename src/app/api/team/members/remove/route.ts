@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   const isBusinessAccessible = sub?.plan === "business" || canUseDevBusinessOverride(user);
   if (!isBusinessAccessible) {
-    return NextResponse.json({ error: "チーム機能はチームプランでご利用いただけます" }, { status: 403 });
+    return NextResponse.json({ error: "チーム機能はBusinessプランでご利用いただけます" }, { status: 403 });
   }
 
   const { data: hotel } = await admin

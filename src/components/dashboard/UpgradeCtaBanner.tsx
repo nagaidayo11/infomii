@@ -70,7 +70,7 @@ export function UpgradeCtaBanner({
               ページ数の上限に近づいています
             </h3>
             <p className="mt-1 text-xs text-amber-800">
-              公開中 {publishedCount}/{maxPublishedPages} 件。チームプランで無制限まで拡張できます。
+              公開中 {publishedCount}/{maxPublishedPages} 件。Businessプランで無制限まで拡張できます。
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
@@ -81,7 +81,7 @@ export function UpgradeCtaBanner({
               料金を見る
             </Link>
             <DashboardCheckoutButton plan="business" variant="secondary" className="w-full justify-center sm:w-auto">
-              Teamプランを申し込む（¥4,980/月）
+              Businessプランを申し込む（¥4,980/月）
             </DashboardCheckoutButton>
           </div>
         </div>

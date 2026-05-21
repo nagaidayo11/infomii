@@ -1063,7 +1063,7 @@ export async function getHotelCustomDomain(): Promise<string | null> {
   return typeof d === "string" && d.trim() ? d.trim() : null;
 }
 
-/** 施設のカスタムドメイン設定（チームプランのみ、オーナーのみ） */
+/** 施設のカスタムドメイン設定（Businessプランのみ、オーナーのみ） */
 export async function setHotelCustomDomain(domain: string | null): Promise<void> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
@@ -1072,7 +1072,7 @@ export async function setHotelCustomDomain(domain: string | null): Promise<void>
   const role = await getCurrentUserHotelRole();
   if (role !== "owner") throw new Error("オーナーのみカスタムドメインを設定できます");
   const sub = await getCurrentHotelSubscription();
-  if (sub?.plan !== "business") throw new Error("カスタムドメインはチームプランでご利用いただけます");
+  if (sub?.plan !== "business") throw new Error("カスタムドメインはBusinessプランでご利用いただけます");
   const value = domain && domain.trim() ? domain.trim().toLowerCase() : null;
   if (value && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(value)) {
     throw new Error("有効なドメインを入力してください（例: info.example.com）");
@@ -2327,7 +2327,7 @@ export async function createHotelInvite(role: "admin" | "editor" | "viewer" = "e
   }
   const sub = await getCurrentHotelSubscription();
   if (sub?.plan !== "business") {
-    throw new Error("チーム招待はチームプランでご利用いただけます");
+    throw new Error("チーム招待はBusinessプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2425,7 +2425,7 @@ export async function revokeHotelInvite(inviteId: string): Promise<void> {
   }
   const sub = await getCurrentHotelSubscription();
   if (sub?.plan !== "business") {
-    throw new Error("チーム招待はチームプランでご利用いただけます");
+    throw new Error("チーム招待はBusinessプランでご利用いただけます");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {
@@ -2526,7 +2526,7 @@ export async function requestPublishApprovalBySlug(slug: string): Promise<Publis
   const role = await getCurrentUserHotelRole();
   if (role !== "editor") throw new Error("公開申請は編集担当（editor）のみ実行できます");
   const sub = await getCurrentHotelSubscription();
-  if (sub?.plan !== "business") throw new Error("公開申請フローはチームプランでご利用いただけます");
+  if (sub?.plan !== "business") throw new Error("公開申請フローはBusinessプランでご利用いただけます");
 
   const { data: info, error: infoError } = await supabase
     .from("informations")
@@ -3959,12 +3959,13 @@ export async function createStripePortalSession(): Promise<string> {
 
 export type TemplateRow = {
   id: string;
+  slug?: string | null;
   name: string;
   description: string;
   preview_image: string;
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>;
   created_at: string;
-  /** Category for marketplace filter: business | resort | ryokan | airbnb | guide */
+  /** Category for marketplace filter: travel | oshi | personal | business | resort | … */
   category?: string | null;
   review_status?: "ok" | "needs_review" | "regenerating" | "failed" | null;
   consistency_score?: number | null;
@@ -4002,7 +4003,7 @@ export async function listTemplates(): Promise<TemplateRow[]> {
   const { data, error } = await supabase
     .from("templates")
     .select(
-      "id,name,description,preview_image,created_at,category,review_status,consistency_score,consistency_reason,regen_requested_at,regen_completed_at,regen_error"
+      "id,slug,name,description,preview_image,created_at,category,review_status,consistency_score,consistency_reason,regen_requested_at,regen_completed_at,regen_error"
     )
     .order("created_at", { ascending: false });
   if (error) {
@@ -4017,7 +4018,7 @@ export async function getTemplateWithCards(templateId: string): Promise<Template
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("templates")
-    .select("id,name,description,preview_image,cards,created_at,category")
+    .select("id,slug,name,description,preview_image,cards,created_at,category")
     .eq("id", templateId)
     .maybeSingle();
   if (error) {

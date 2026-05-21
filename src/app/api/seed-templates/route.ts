@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
-import { templatePreviewPublicPath } from "@/lib/template-preview";
+import { btocTemplatePreviewPath, templatePreviewPublicPath } from "@/lib/template-preview";
 import { MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-templates";
 import {
   ensurePageLinksAfterOpening,
   stripDeprecatedIconCards,
   templateCardsContainIcon,
 } from "@/lib/template-marketplace";
+import { isBtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
 
 type SeedTemplate = {
+  slug: string;
   name: string;
   description: string;
   preview_image: string;
@@ -60,16 +62,21 @@ function galleryItemsForCategory(
 }
 
 function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: number): SeedTemplate {
-  const previewPath = templatePreviewPublicPath(template.category, template.name);
+  const isBtoc = isBtocMarketplaceCategory(template.category);
+  const previewPath = isBtoc
+    ? btocTemplatePreviewPath(template.category ?? "", template.slug)
+    : templatePreviewPublicPath(template.category, template.name);
   const cards = template.cards.map((card) => ({
     ...card,
     content: { ...(card.content ?? {}) },
   }));
 
-  // Per-template hero + listing preview: same local path (see public/templates/previews/...).
   for (const card of cards) {
     if (card.type !== "hero") continue;
-    card.content.image = previewPath;
+    const image = typeof card.content.image === "string" ? card.content.image.trim() : "";
+    if (!isBtoc || !image) {
+      card.content.image = previewPath;
+    }
   }
 
   // Fill gallery image sources with category-aware samples.
@@ -98,8 +105,10 @@ function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: numbe
 
   const hasHero = cards.some((c) => c.type === "hero");
   const hasGallery = cards.some((c) => c.type === "gallery");
-  const shouldAddHero = !hasHero && ["resort", "guide", "inbound"].includes(template.category ?? "");
-  const shouldAddGallery = !hasGallery && ["resort", "guide", "ryokan"].includes(template.category ?? "");
+  const shouldAddHero =
+    !isBtoc && !hasHero && ["resort", "guide", "inbound"].includes(template.category ?? "");
+  const shouldAddGallery =
+    !isBtoc && !hasGallery && ["resort", "guide", "ryokan"].includes(template.category ?? "");
 
   if (shouldAddHero) {
     cards.unshift({
@@ -263,6 +272,13 @@ function buildCardContentByType(type: string): Record<string, unknown> {
 const CURATED_MIN_CARD_COUNT = 6;
 
 function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory: number): SeedTemplate {
+  if (isBtocMarketplaceCategory(template.category)) {
+    const cards = template.cards
+      .filter((card) => card.type !== "icon")
+      .map((card, index) => ({ ...card, order: index, content: { ...(card.content ?? {}) } }));
+    return { ...template, cards };
+  }
+
   const categoryKey = template.category ?? "default";
   const blockedByCategory: Record<string, Set<string>> = {
     // ビジホは「温浴特化」を外して業務導線重視に
@@ -506,16 +522,18 @@ export async function GET(request: Request) {
 
     const { data: existing, error: existingError } = await supabase
       .from("templates")
-      .select("id, name, cards")
+      .select("id, name, slug, cards")
       .limit(500);
     if (existingError) {
       return NextResponse.json({ error: existingError.message }, { status: 500 });
     }
 
-    const existingByName = new Map<string, { id: string; name: string; cards?: unknown }>();
+    const existingBySlug = new Map<string, { id: string; name: string; slug?: string | null; cards?: unknown }>();
+    const existingByName = new Map<string, { id: string; name: string; slug?: string | null; cards?: unknown }>();
     let legacyIconTemplates = 0;
     for (const row of existing ?? []) {
-      const entry = row as { id: string; name: string; cards?: unknown };
+      const entry = row as { id: string; name: string; slug?: string | null; cards?: unknown };
+      if (entry.slug) existingBySlug.set(entry.slug, entry);
       existingByName.set(entry.name, entry);
       if (templateCardsContainIcon(entry.cards)) legacyIconTemplates += 1;
     }
@@ -537,7 +555,8 @@ export async function GET(request: Request) {
       const normalizedTemplate = normalizeTemplateComposition(diversifiedTemplate);
       const cards = stripDeprecatedIconCards(normalizedTemplate.cards);
       const payload = { ...normalizedTemplate, cards };
-      const found = existingByName.get(template.name);
+      const found =
+        existingBySlug.get(template.slug) ?? existingByName.get(template.name);
       if (!found) {
         toInsert.push(payload);
         continue;
@@ -546,6 +565,7 @@ export async function GET(request: Request) {
         const { error } = await supabase
           .from("templates")
           .update({
+            slug: payload.slug,
             description: payload.description,
             preview_image: payload.preview_image,
             category: payload.category,
@@ -575,7 +595,8 @@ export async function GET(request: Request) {
 
     let inserted = 0;
     if (toInsert.length > 0) {
-      const rows = toInsert.map(({ name, description, preview_image, category, cards }) => ({
+      const rows = toInsert.map(({ slug, name, description, preview_image, category, cards }) => ({
+        slug,
         name,
         description,
         preview_image,
@@ -589,10 +610,17 @@ export async function GET(request: Request) {
 
     // Drop any marketplace row whose name is not in the current seed (legacy titles, broken previews).
     if (syncLatest) {
+      const allowedSlugs = new Set(SEED_TEMPLATES.map((t) => t.slug));
       const allowedNames = new Set(SEED_TEMPLATES.map((t) => t.name));
-      const { data: allRows, error: allErr } = await supabase.from("templates").select("id, name").limit(500);
+      const { data: allRows, error: allErr } = await supabase.from("templates").select("id, name, slug").limit(500);
       if (!allErr && allRows) {
-        const orphanIds = allRows.filter((row) => !allowedNames.has(row.name)).map((r) => r.id);
+        const orphanIds = allRows
+          .filter((row) => {
+            const r = row as { slug?: string | null; name: string };
+            if (r.slug) return !allowedSlugs.has(r.slug);
+            return !allowedNames.has(r.name);
+          })
+          .map((r) => r.id);
         if (orphanIds.length > 0) {
           const { data: orphanDeleted, error: orphanDelErr } = await supabase
             .from("templates")

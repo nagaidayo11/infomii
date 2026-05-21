@@ -72,9 +72,9 @@ export function CheckoutButton({
     if (!adaptiveBusinessCta || plan !== "business") {
       return children;
     }
-    if (!shouldOpenPortal) return "チームプランを申し込む";
+    if (!shouldOpenPortal) return "Businessプランを申し込む";
     if (subscription?.plan === "business") return "請求情報を管理";
-    return "チームプランへアップグレード";
+    return "Businessプランへアップグレード";
   }, [adaptiveBusinessCta, plan, shouldOpenPortal, subscription?.plan, children]);
 
   const handleClick = async () => {
@@ -148,7 +148,7 @@ export function CheckoutButton({
         <p className="text-center text-xs text-slate-500">課金操作はオーナーのみ可能です。オーナーに依頼してください。</p>
       ) : null}
       {showUpgradeHint && plan === "business" && subscription?.plan === "pro" && isActive ? (
-        <p className="text-center text-xs text-slate-500">現在の契約から決済ページでチームプランへ変更できます。</p>
+        <p className="text-center text-xs text-slate-500">現在の契約から決済ページでBusinessプランへ変更できます。</p>
       ) : null}
       {message ? <p className="text-center text-xs text-rose-600">{message}</p> : null}
     </div>

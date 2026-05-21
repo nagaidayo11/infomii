@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   listTemplates,
   getTemplateWithCards,
@@ -16,18 +16,21 @@ import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
+import {
+  BTOC_MARKETPLACE_CATEGORIES,
+  HOTEL_MARKETPLACE_CATEGORIES,
+  TEMPLATE_CATEGORY_LABELS,
+  TEMPLATE_MARKETPLACE_SECTIONS,
+} from "@/lib/template-marketplace-meta";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 
-/** Template marketplace categories. Filter by template.category when available. */
 const TEMPLATE_CATEGORIES = [
-  { id: "all", label: "すべて" },
-  { id: "business", label: "ビジネスホテル" },
-  { id: "resort", label: "リゾートホテル" },
-  { id: "ryokan", label: "旅館" },
-  { id: "airbnb", label: "Airbnb" },
-  { id: "guide", label: "観光ガイド" },
-  { id: "inbound", label: "インバウンド" },
+  { id: "all", label: TEMPLATE_CATEGORY_LABELS.all },
+  ...BTOC_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
+  ...HOTEL_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
 ] as const;
+
+const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
 
 const HIDDEN_TEMPLATE_NAMES = new Set<string>([
   "リゾートホテル・館内案内",
@@ -78,8 +81,10 @@ function filterHiddenTemplates(templates: TemplateRow[]): TemplateRow[] {
  */
 export default function TemplatesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [category, setCategory] = useState<string>("all");
+  const [highlightSlug, setHighlightSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [usingId, setUsingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,11 +92,20 @@ export default function TemplatesPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  const starterSlug = searchParams.get("starter");
+
   useRouteProgressLoading(loading || !!usingId);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const paramCategory = searchParams.get("category");
+    if (paramCategory && VALID_CATEGORY_IDS.has(paramCategory)) {
+      setCategory(paramCategory);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!previewTemplate) return;
@@ -137,18 +151,42 @@ export default function TemplatesPage() {
   }, []);
 
   const filtered = filterByCategory(templates, category);
-  const groupedWhenAll = TEMPLATE_CATEGORIES
-    .filter((c) => c.id !== "all")
-    .map((c) => ({ category: c.id, label: c.label, items: filterByCategory(templates, c.id) }))
-    .filter((g) => g.items.length > 0);
+  const groupedWhenAll = useMemo(
+    () =>
+      TEMPLATE_MARKETPLACE_SECTIONS.flatMap((section) =>
+        section.categories.map((catId) => ({
+          sectionId: section.id,
+          sectionLabel: section.label,
+          category: catId,
+          label: TEMPLATE_CATEGORY_LABELS[catId] ?? catId,
+          items: filterByCategory(templates, catId),
+        })),
+      ).filter((g) => g.items.length > 0),
+    [templates],
+  );
   const selectedCategoryLabel =
     TEMPLATE_CATEGORIES.find((c) => c.id === category)?.label ?? "選択中カテゴリ";
   const groupsToRender =
     category === "all"
       ? groupedWhenAll
       : filtered.length > 0
-        ? [{ category, label: selectedCategoryLabel, items: filtered }]
+        ? [{ sectionId: "single", sectionLabel: "", category, label: selectedCategoryLabel, items: filtered }]
         : [];
+
+  useEffect(() => {
+    if (!starterSlug || loading || templates.length === 0) return;
+    const target = document.getElementById(`template-${starterSlug}`);
+    if (!target) return;
+    const scrollId = window.setTimeout(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightSlug(starterSlug);
+    }, 200);
+    const clearId = window.setTimeout(() => setHighlightSlug(null), 3600);
+    return () => {
+      window.clearTimeout(scrollId);
+      window.clearTimeout(clearId);
+    };
+  }, [starterSlug, loading, templates]);
 
   async function handlePreview(template: TemplateRow) {
     setPreviewLoading(true);
@@ -229,7 +267,7 @@ export default function TemplatesPage() {
       <header className="app-page-header">
         <h1 className="app-page-title">テンプレート</h1>
         <p className="app-page-subtitle">
-          館内案内・WiFi・朝食など、そのまま使える型からQR用ページを作成
+          旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。
         </p>
       </header>
 
@@ -283,38 +321,54 @@ export default function TemplatesPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-5">
-            {groupsToRender.map((group) => (
-              <section key={group.category} className="space-y-2">
-                <h2 className="text-sm font-semibold text-slate-700">{group.label}</h2>
-                <div
-                  className="-mx-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-                  role="region"
-                  aria-label={`${group.label} テンプレート一覧（横スクロール）`}
-                  tabIndex={0}
-                >
-                  <div className="flex w-max min-w-full items-stretch gap-3 sm:gap-4">
-                    {group.items.map((template) => (
-                      <div
-                        key={template.id}
-                        className="w-[min(88vw,280px)] shrink-0 sm:w-[300px] lg:w-[320px]"
-                      >
-                        <TemplateCard
-                          id={template.id}
-                          name={template.name}
-                          description={template.description}
-                          preview_image={template.preview_image}
-                          category={template.category}
-                          onUse={() => handleUseTemplate(template.id)}
-                          onPreview={() => void handlePreview(template)}
-                          using={usingId === template.id}
-                        />
-                      </div>
-                    ))}
+          <div className="space-y-6">
+            {groupsToRender.map((group, index) => {
+              const prev = groupsToRender[index - 1];
+              const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
+              return (
+                <section key={`${group.sectionId}-${group.category}`} className="space-y-2">
+                  {showSectionHeading ? (
+                    <h2 className="text-base font-bold tracking-tight text-slate-800">{group.sectionLabel}</h2>
+                  ) : null}
+                  <h3 className="text-sm font-semibold text-slate-700">{group.label}</h3>
+                  <div
+                    className="-mx-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+                    role="region"
+                    aria-label={`${group.label} テンプレート一覧（横スクロール）`}
+                    tabIndex={0}
+                  >
+                    <div className="flex w-max min-w-full items-stretch gap-3 sm:gap-4">
+                      {group.items.map((template) => {
+                        const highlighted = highlightSlug === template.slug;
+                        return (
+                          <div
+                            key={template.id}
+                            id={template.slug ? `template-${template.slug}` : undefined}
+                            className={
+                              "w-[min(88vw,280px)] shrink-0 scroll-mt-24 rounded-xl transition-shadow sm:w-[300px] lg:w-[320px] " +
+                              (highlighted
+                                ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-[#f8fafc]"
+                                : "")
+                            }
+                          >
+                            <TemplateCard
+                              id={template.id}
+                              name={template.name}
+                              description={template.description}
+                              preview_image={template.preview_image}
+                              category={template.category}
+                              onUse={() => handleUseTemplate(template.id)}
+                              onPreview={() => void handlePreview(template)}
+                              using={usingId === template.id}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              </section>
-            ))}
+                </section>
+              );
+            })}
           </div>
         )}
       </div>

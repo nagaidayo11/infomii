@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { CardType, EditorCard } from "@/components/editor/types";
+import { LP_DEMO_HERO_IMAGES } from "@/lib/lp/data";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
@@ -16,8 +17,7 @@ const FALLBACK_CARDS: EditorCard[] = [
     content: {
       title: "Infomii Hotel",
       subtitle: "館内案内をスマートにまとめました",
-      image:
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+      image: LP_DEMO_HERO_IMAGES.hotel,
     },
   },
   {
@@ -53,6 +53,9 @@ const FALLBACK_BG: PageBackgroundStyle = {
 
 const TEMPLATE_VARIANTS = [
   "city-hotel",
+  "travel",
+  "oshi",
+  "event",
   "resort",
   "ryokan",
   "business-hotel",
@@ -315,7 +318,7 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           createCard("hero", 0, {
             title: "Cafe Board",
             subtitle: "日替わりと混雑案内",
-            image: "/templates/previews/guide/41aeb22d.jpg",
+            image: LP_DEMO_HERO_IMAGES.cafe,
           }),
           createCard("notice_ticker", 1, {
             title: "本日のおすすめ",
@@ -424,6 +427,123 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
         ],
       };
+    case "travel":
+      return {
+        title: "京都・大阪 2泊3日",
+        bg: baseBg,
+        cards: [
+          createCard("hero", 0, {
+            title: "旅行しおり",
+            subtitle: "予定・MAP・持ち物をこの1ページに",
+            image: LP_DEMO_HERO_IMAGES.travel,
+          }),
+          createCard("schedule", 1, {
+            title: "日程",
+            items: [
+              { day: "1日目", time: "10:30", label: "京都駅 → 清水寺周辺" },
+              { day: "2日目", time: "9:00", label: "伏見稲荷 → 嵐山" },
+              { day: "3日目", time: "14:00", label: "大阪・心斎橋 → 帰路" },
+            ],
+          }),
+          createCard("checklist", 2, {
+            title: "持ち物",
+            items: [
+              { text: "ICカード・充電器", checked: true },
+              { text: "歩きやすい靴", checked: true },
+              { text: "雨具", checked: false },
+              { text: "新幹線チケット", checked: false },
+            ],
+          }),
+          createCard("pageLinks", 3, {
+            title: "リンク",
+            columns: 3,
+            items: [
+              { label: "宿MAP", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
+              { label: "予約確認", icon: "info", linkType: "page", pageSlug: "", link: "" },
+              { label: "グループLINE", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+            ],
+          }),
+          createCard("notice", 4, {
+            title: "メモ",
+            body: "2日目の夕食は18:30予約。遅れる場合は連絡を。",
+            variant: "info",
+          }),
+        ],
+      };
+    case "oshi":
+      return {
+        title: "推し活まとめ",
+        bg: baseBg,
+        cards: [
+          createCard("hero", 0, {
+            title: "Summer Live Tour",
+            subtitle: "遠征・グッズ・会場情報",
+            image: LP_DEMO_HERO_IMAGES.oshi,
+          }),
+          createCard("schedule", 1, {
+            title: "公演スケジュール",
+            items: [
+              { day: "6/14 東京", time: "開場 16:00", label: "グッズ先行 14:30〜" },
+              { day: "6/21 大阪", time: "開場 17:00", label: "遠征バス 13:00発" },
+              { day: "6/28 名古屋", time: "開場 16:30", label: "FC先行あり" },
+            ],
+          }),
+          createCard("notice_ticker", 2, {
+            title: "当日メモ",
+            items: ["物販は開場2時間前", "公式アプリで整理券", "ペンライト色は青"],
+            speed: "normal",
+            pauseOnHover: true,
+          }),
+          createCard("social_links", 3, {
+            title: "リンク",
+            items: [
+              { label: "公式X", href: "", handle: "@tour_official" },
+              { label: "ファン垢", href: "", handle: "@oshi_memo" },
+            ],
+          }),
+          createCard("button", 4, { label: "セットリスト予想シート", href: "#" }),
+        ],
+      };
+    case "event":
+      return {
+        title: "イベント案内",
+        bg: baseBg,
+        cards: [
+          createCard("hero", 0, {
+            title: "Design Meetup #12",
+            subtitle: "会場・集合・タイムテーブル",
+            image: LP_DEMO_HERO_IMAGES.event,
+          }),
+          createCard("schedule", 1, {
+            title: "タイムテーブル",
+            items: [
+              { day: "受付", time: "18:30", label: "1F ロビー" },
+              { day: "オープニング", time: "19:00", label: "メインホール" },
+              { day: "ネットワーキング", time: "20:30", label: "軽食エリア" },
+            ],
+          }),
+          createCard("notice", 2, {
+            title: "集合について",
+            body: "遅刻の方は受付で名前をお伝えください。",
+            variant: "info",
+          }),
+          createCard("pageLinks", 3, {
+            title: "関連リンク",
+            columns: 3,
+            items: [
+              { label: "会場MAP", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
+              { label: "アンケート", icon: "info", linkType: "page", pageSlug: "", link: "" },
+              { label: "資料", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+            ],
+          }),
+          createCard("contact_hub", 4, {
+            title: "主催への連絡",
+            phone: "",
+            email: "hello@meetup.example",
+            note: "当日の変更はXでもお知らせします。",
+          }),
+        ],
+      };
     case "city-hotel":
     default:
       return {
@@ -433,7 +553,7 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           createCard("hero", 0, {
             title: "Infomii Hotel",
             subtitle: "館内案内をスマートにまとめました",
-            image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+            image: LP_DEMO_HERO_IMAGES.hotel,
           }),
           createCard("notice", 1, {
             title: "お知らせ",
@@ -545,7 +665,7 @@ export default function DemoGuestLivePage() {
       isEmbed={isEmbed}
       disableInteractions={isEmbed}
       pageBackground={pageBackground}
-      localeToggleHint="チームプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
+      localeToggleHint="Businessプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
       disableLocaleSwitch
     />
   );

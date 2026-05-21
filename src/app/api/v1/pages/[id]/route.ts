@@ -27,7 +27,7 @@ async function resolveHotelId(token: string): Promise<{ hotelId: string; plan: s
 }
 
 /**
- * GET /api/v1/pages/[id] — ページ詳細（カード含む）（チームプランのみ）
+ * GET /api/v1/pages/[id] — ページ詳細（カード含む）（Businessプランのみ）
  */
 export async function GET(
   request: Request,
@@ -42,7 +42,7 @@ export async function GET(
   const resolved = await resolveHotelId(token);
   if (!resolved) {
     return NextResponse.json(
-      { error: "認証に失敗しました。チームプランでご利用ください。" },
+      { error: "認証に失敗しました。Businessプランでご利用ください。" },
       { status: 403 }
     );
   }
@@ -82,7 +82,7 @@ export async function GET(
 }
 
 /**
- * PATCH /api/v1/pages/[id] — ページ更新（チームプランのみ）
+ * PATCH /api/v1/pages/[id] — ページ更新（Businessプランのみ）
  * Body: { title?: string, cards?: Array<{ type, content, order }> }
  */
 export async function PATCH(
@@ -98,7 +98,7 @@ export async function PATCH(
   const resolved = await resolveHotelId(token);
   if (!resolved) {
     return NextResponse.json(
-      { error: "認証に失敗しました。チームプランでご利用ください。" },
+      { error: "認証に失敗しました。Businessプランでご利用ください。" },
       { status: 403 }
     );
   }

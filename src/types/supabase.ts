@@ -287,6 +287,7 @@ export type Database = {
       templates: {
         Row: {
           id: string;
+          slug: string | null;
           name: string;
           description: string;
           preview_image: string;
@@ -303,6 +304,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          slug?: string | null;
           name: string;
           description?: string;
           preview_image?: string;
@@ -317,6 +319,7 @@ export type Database = {
           regen_error?: string | null;
         };
         Update: {
+          slug?: string | null;
           name?: string;
           description?: string;
           preview_image?: string;

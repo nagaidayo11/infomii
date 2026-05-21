@@ -45,7 +45,11 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
               alt=""
               fill
               className="object-cover object-center"
-              unoptimized={image.startsWith("http") || image.startsWith("data:")}
+              unoptimized={
+                image.startsWith("http") ||
+                image.startsWith("data:") ||
+                image.startsWith("/lp/")
+              }
               sizes="420px"
             />
           </div>
