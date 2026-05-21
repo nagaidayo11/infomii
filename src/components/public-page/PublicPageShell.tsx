@@ -64,22 +64,14 @@ function PageContent({
             {contactActions}
           </div>
         </footer>
-      ) : (
-        <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
-          <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
-            <p className="text-sm leading-relaxed text-slate-600">
-              ご不明な点はスタッフまでお声がけください。
-            </p>
-          </div>
-        </footer>
-      )}
+      ) : null}
     </>
   );
 }
 
 /**
  * Public page layout for guests (QR / shared link).
- * Structure: header → main cards → secondary info → contact actions.
+ * Structure: header → main cards → optional contact actions footer.
  * Mobile-first, large touch targets.
  * On desktop: スマホ画面風のフレームで表示
  */

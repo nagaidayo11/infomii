@@ -1259,9 +1259,6 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             <h1 className="mb-5 text-xl font-bold text-slate-900">{row.title}</h1>
             {contentArea}
           </div>
-          <footer className="border-t border-slate-200/80 bg-white px-4 py-4">
-            <p className="text-sm text-slate-600">ご不明な点はスタッフまでお声がけください。</p>
-          </footer>
         </main>
       ) : (
         <PublicPageShell

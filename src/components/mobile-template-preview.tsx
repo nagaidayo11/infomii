@@ -373,7 +373,6 @@ export default function MobileTemplatePreview({ blocks, theme, className }: Mobi
           return null;
         })}
       </div>
-      <p className="mt-8 border-t border-slate-200 pt-4 text-xs text-slate-500">ご不明な点はスタッフまでお声がけください。</p>
     </article>
   );
 }
