@@ -459,9 +459,9 @@ export function EditorTopBar({
                 : "border-slate-200 bg-white text-slate-600")
             }
             aria-pressed={scrollPriorityMode}
-            aria-label="スクロール優先を切り替え"
+            aria-label="スクロールとブロック移動を切り替え"
           >
-            {scrollPriorityMode ? "スクロール優先" : "編集優先"}
+            {scrollPriorityMode ? "スクロール" : "ブロック移動"}
           </button>
         </div>
         <div className="flex items-center gap-1 lg:hidden">
