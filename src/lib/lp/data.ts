@@ -64,6 +64,11 @@ export const HERO_TEMPLATE_PREVIEWS: HeroTemplatePreview[] = [
   },
 ];
 
+/** BtoC LP ヒーロー用（宿泊施設プレビューは除外） */
+export const HERO_PERSONAL_TEMPLATE_PREVIEWS: HeroTemplatePreview[] = HERO_TEMPLATE_PREVIEWS.filter(
+  (item) => item.id !== "city-hotel",
+);
+
 /** Hero デモ iframe 用（ローカル画像） */
 export const LP_DEMO_HERO_IMAGES = {
   hotel: lpAsset("/lp/demo/hotel-hero.jpg"),

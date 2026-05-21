@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Container } from "@/components/ui";
 import { FadeIn } from "@/components/motion";
-import { HERO_TEMPLATE_PREVIEWS } from "@/lib/lp/data";
+import { HERO_PERSONAL_TEMPLATE_PREVIEWS } from "@/lib/lp/data";
 import { LP_POP_HEADING_CLASS } from "@/lib/lp/typography";
 
 function GuestPhoneFrame({ src }: { src: string }) {
@@ -44,13 +44,13 @@ export function LpHero({
   demoEditorHref = "/demo/editor",
 }: LpHeroProps) {
   const popHeadingClass = LP_POP_HEADING_CLASS;
-  const [activeId, setActiveId] = useState(HERO_TEMPLATE_PREVIEWS[0]?.id ?? "travel");
-  const [highlightPreviewTabs, setHighlightPreviewTabs] = useState(false);
-  const [showPreviewGuide, setShowPreviewGuide] = useState(false);
+  const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+  const [highlightTemplateButton, setHighlightTemplateButton] = useState(false);
+  const [showTemplateGuide, setShowTemplateGuide] = useState(false);
 
   const activeTemplate = useMemo(
-    () => HERO_TEMPLATE_PREVIEWS.find((t) => t.id === activeId) ?? HERO_TEMPLATE_PREVIEWS[0],
-    [activeId]
+    () => HERO_PERSONAL_TEMPLATE_PREVIEWS[activeTemplateIndex] ?? HERO_PERSONAL_TEMPLATE_PREVIEWS[0],
+    [activeTemplateIndex],
   );
 
   useEffect(() => {
@@ -58,8 +58,9 @@ export function LpHero({
     const focus = params.get("focus");
     const variant = params.get("variant");
 
-    if (variant && HERO_TEMPLATE_PREVIEWS.some((t) => t.id === variant)) {
-      setActiveId(variant);
+    if (variant) {
+      const idx = HERO_PERSONAL_TEMPLATE_PREVIEWS.findIndex((t) => t.id === variant);
+      if (idx >= 0) setActiveTemplateIndex(idx);
     }
 
     if (focus === "use-cases") {
@@ -70,7 +71,8 @@ export function LpHero({
     if (focus !== "templates") return;
 
     if (!variant) {
-      setActiveId("travel");
+      const travelIdx = HERO_PERSONAL_TEMPLATE_PREVIEWS.findIndex((t) => t.id === "travel");
+      if (travelIdx >= 0) setActiveTemplateIndex(travelIdx);
     }
 
     let cancelled = false;
@@ -82,13 +84,13 @@ export function LpHero({
         return;
       }
       target.scrollIntoView({ behavior: "smooth", block: "center" });
-      setHighlightPreviewTabs(true);
-      setShowPreviewGuide(true);
+      setHighlightTemplateButton(true);
+      setShowTemplateGuide(true);
     };
 
     const scrollId = window.setTimeout(focusHeroPreview, 160);
-    const clearHighlightId = window.setTimeout(() => setHighlightPreviewTabs(false), 3600);
-    const clearGuideId = window.setTimeout(() => setShowPreviewGuide(false), 4200);
+    const clearHighlightId = window.setTimeout(() => setHighlightTemplateButton(false), 3600);
+    const clearGuideId = window.setTimeout(() => setShowTemplateGuide(false), 4200);
 
     return () => {
       cancelled = true;
@@ -129,7 +131,7 @@ export function LpHero({
                 >
                   無料ではじめる
                 </Button>
-                <Button href={demoEditorHref} variant="secondary" size="lg" className="min-h-[48px] border-2">
+                <Button href={demoEditorHref} variant="secondary" size="lg" className="min-h-[44px] border-2">
                   30秒デモを見る
                 </Button>
               </div>
@@ -141,52 +143,33 @@ export function LpHero({
             <div id="template-focus-anchor" className="mx-auto w-full max-w-[390px]">
               <GuestPhoneFrame src={activeTemplate?.previewHref || samplePageHref} />
               <div className="mt-3 text-center">
-                {showPreviewGuide ? (
+                {showTemplateGuide ? (
                   <div className="mb-1.5 flex flex-col items-center">
                     <span className="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold text-white shadow-[0_8px_18px_rgba(5,150,105,0.3)] animate-pulse">
-                      下のタブで用途サンプルを切り替え
+                      ここをタップで用途サンプルを切替
                     </span>
                     <span className="mt-0.5 text-emerald-600 animate-bounce" aria-hidden>
                       ↓
                     </span>
                   </div>
                 ) : null}
-                <div
-                  className={`flex flex-wrap justify-center gap-1.5 rounded-2xl px-1 py-1 transition duration-300 ${
-                    highlightPreviewTabs
-                      ? "animate-pulse bg-emerald-50/90 shadow-[0_0_0_6px_rgba(16,185,129,0.22)] ring-2 ring-emerald-400/50"
+                <button
+                  id="template-cycle-trigger"
+                  type="button"
+                  onClick={() =>
+                    setActiveTemplateIndex((prev) => (prev + 1) % HERO_PERSONAL_TEMPLATE_PREVIEWS.length)
+                  }
+                  className={`inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 ${
+                    highlightTemplateButton
+                      ? "animate-pulse border-emerald-500 bg-emerald-50 shadow-[0_0_0_6px_rgba(16,185,129,0.28),0_12px_24px_rgba(5,150,105,0.2)]"
                       : ""
                   }`}
-                  role="tablist"
-                  aria-label="用途プレビュー"
                 >
-                  {HERO_TEMPLATE_PREVIEWS.map((item) => {
-                    const selected = item.id === activeId;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={selected}
-                        onClick={() => {
-                          setActiveId(item.id);
-                          setHighlightPreviewTabs(false);
-                          setShowPreviewGuide(false);
-                        }}
-                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition duration-200 sm:px-3 sm:py-1.5 ${
-                          selected
-                            ? "border-emerald-300/90 bg-white text-emerald-800 shadow-[0_1px_4px_rgba(16,185,129,0.12)]"
-                            : "border-transparent bg-white/50 text-slate-500 hover:border-slate-200/80 hover:bg-white hover:text-slate-700"
-                        }`}
-                      >
-                        {item.tag}
-                      </button>
-                    );
-                  })}
-                </div>
+                  クリックして別パターンを見る
+                </button>
               </div>
               <p className="mt-2 text-center text-[11px] text-slate-500">
-                {activeTemplate.label} | {activeTemplate.description}
+                {activeTemplate.tag} | {activeTemplate.label}
               </p>
             </div>
           </FadeIn>
