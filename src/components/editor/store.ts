@@ -70,7 +70,7 @@ export type Editor2State = {
   highlightFromTemplate: (cardIds: string[]) => void;
   /** Load cards from API (e.g. AI generate). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
-  addCard: (type: CardType, index?: number) => void;
+  addCard: (type: CardType, index?: number, audience?: "hotel" | "personal") => void;
   updateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   reorderCards: (cards: EditorCard[]) => void;
   selectCard: (id: string | null) => void;
@@ -272,7 +272,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     set({ cards, selectedCardId: cards[0]?.id ?? null });
   },
 
-  addCard: (type, index?: number) => {
+  addCard: (type, index?: number, audience: "hotel" | "personal" = "hotel") => {
     const allowed: CardType[] = [
       "hero",
       "hero_slider",
@@ -334,7 +334,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     const { cards, historyPast } = get();
     const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;
     const id = nanoid(10);
-    const card = createEmptyCard(type, id, insertAt);
+    const card = createEmptyCard(type, id, insertAt, audience);
     const next = [...cards];
     next.splice(insertAt, 0, card);
     const withOrder = next.map((c, i) => ({ ...c, order: i }));

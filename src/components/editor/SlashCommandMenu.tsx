@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { CARD_ICONS, LIBRARY_SECTIONS } from "./CardLibrary";
+import { CARD_ICONS } from "./CardLibrary";
+import { flattenLibraryItems, type LibraryAudience } from "@/lib/editor/card-library-config";
 import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
 
 const RECENT_STORAGE_KEY = "infomii-slash-recent";
@@ -38,19 +39,7 @@ function persistRecent(type: CardType) {
   }
 }
 
-/** 全カードをフラット化（type, label, category） */
 type FlatItem = { type: CardType; label: string; category: string };
-function flattenItems(): FlatItem[] {
-  const out: FlatItem[] = [];
-  for (const section of LIBRARY_SECTIONS) {
-    for (const item of section.items) {
-      out.push({ type: item.type, label: item.label, category: section.title });
-    }
-  }
-  return out;
-}
-
-const ALL_ITEMS = flattenItems();
 
 type SlashCommandMenuProps = {
   open: boolean;
@@ -59,6 +48,7 @@ type SlashCommandMenuProps = {
   anchorRef?: React.RefObject<HTMLElement | null>;
   canUseBusinessBlocks?: boolean;
   onLockedAddCard?: (type: CardType) => void;
+  libraryAudience?: LibraryAudience;
 };
 
 export function SlashCommandMenu({
@@ -68,21 +58,21 @@ export function SlashCommandMenu({
   anchorRef,
   canUseBusinessBlocks = false,
   onLockedAddCard,
+  libraryAudience = "hotel",
 }: SlashCommandMenuProps) {
   const [search, setSearch] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const allItems = useMemo(() => flattenLibraryItems(libraryAudience), [libraryAudience]);
+
   const recentTypes = getRecentTypes();
   const recentItems = recentTypes
-    .map((t) => ALL_ITEMS.find((i) => i.type === t))
+    .map((t) => allItems.find((i) => i.type === t))
     .filter((x): x is FlatItem => !!x);
 
-  const allAvailableItems = useMemo(
-    () => ALL_ITEMS,
-    []
-  );
+  const allAvailableItems = allItems;
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();

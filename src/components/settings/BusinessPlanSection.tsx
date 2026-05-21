@@ -280,7 +280,6 @@ export function BusinessPlanSection() {
             <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "pro" ? "text-emerald-900" : "text-slate-900"}`}>¥1,980 / 月</p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-emerald-800" : "text-slate-600"}`}>
               <li>・最大10ページ公開</li>
-              <li>・公開前チェック</li>
               <li>・閲覧分析</li>
               <li>・用途別にページを分けて運用</li>
             </ul>

@@ -21,7 +21,6 @@ import {
   type PageViewAnalytics,
 } from "@/lib/storage";
 import type { DashboardBootstrapData } from "@/lib/storage";
-import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
@@ -261,9 +260,15 @@ export function DashboardView() {
               </div>
             )}
             {canEdit && (
-              <div className="mt-6 space-y-6 border-t border-slate-100 pt-6">
-                <GeneratePageFromDescription />
-              </div>
+              <p className="mt-4 text-sm text-slate-500">
+                <Link
+                  href="/dashboard/pages"
+                  className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+                >
+                  説明を書いてページを作る
+                </Link>
+                <span className="text-slate-400">（ページ画面）</span>
+              </p>
             )}
           </section>
         </ScrollReveal>

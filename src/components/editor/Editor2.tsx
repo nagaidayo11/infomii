@@ -38,9 +38,11 @@ import {
   trackUpgradeClick,
 } from "@/lib/storage";
 import {
-  detectBusinessTypeMisuse,
-  hasInvalidRange,
-} from "@/lib/server-time";
+  inferLibraryAudience,
+  persistLibraryAudience,
+  readStoredLibraryAudience,
+  type LibraryAudience,
+} from "@/lib/editor/card-library-config";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -89,11 +91,6 @@ export function Editor2({
     slug: string;
   } | null>(null);
   const [publishing, setPublishing] = useState(false);
-  const [prepublishState, setPrepublishState] = useState<{
-    errors: string[];
-    warnings: string[];
-    allowContinue: boolean;
-  } | null>(null);
   const [bulkFontOpen, setBulkFontOpen] = useState(false);
   const [bulkFontFamily, setBulkFontFamily] = useState<string>("");
   const [bulkFontAnchor, setBulkFontAnchor] = useState<{ top: number; left: number } | null>(null);
@@ -117,6 +114,11 @@ export function Editor2({
     open: boolean;
     lockedType: CardType | null;
   }>({ open: false, lockedType: null });
+  const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>(() => {
+    if (typeof window === "undefined") return "hotel";
+    return readStoredLibraryAudience() ?? "hotel";
+  });
+  const libraryAudienceInferredRef = useRef(false);
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
@@ -126,6 +128,25 @@ export function Editor2({
   }, []);
 
   const cards = useEditor2Store((s) => s.cards);
+  const effectiveLibraryAudience: LibraryAudience = isDemoMode ? "hotel" : libraryAudience;
+
+  const handleLibraryAudienceChange = useCallback((audience: LibraryAudience) => {
+    setLibraryAudience(audience);
+    persistLibraryAudience(audience);
+    libraryAudienceInferredRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (isDemoMode || libraryAudienceInferredRef.current) return;
+    if (readStoredLibraryAudience()) {
+      libraryAudienceInferredRef.current = true;
+      return;
+    }
+    if (cards.length === 0) return;
+    libraryAudienceInferredRef.current = true;
+    setLibraryAudience(inferLibraryAudience(cards));
+  }, [cards, isDemoMode]);
+
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);
   const pageBackgroundMode = useEditor2Store((s) => s.pageBackgroundMode);
@@ -137,7 +158,13 @@ export function Editor2({
   const lastSavedAt = useEditor2Store((s) => s.lastSavedAt);
   const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
-  const addCard = useEditor2Store((s) => s.addCard);
+  const addCardRaw = useEditor2Store((s) => s.addCard);
+  const addCard = useCallback(
+    (type: CardType, index?: number) => {
+      addCardRaw(type, index, effectiveLibraryAudience);
+    },
+    [addCardRaw, effectiveLibraryAudience],
+  );
   const updateCard = useEditor2Store((s) => s.updateCard);
   const reorderCards = useEditor2Store((s) => s.reorderCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
@@ -234,82 +261,6 @@ export function Editor2({
       window.removeEventListener("keydown", onEsc);
     };
   }, [bulkFontOpen, cancelBulkFontModal]);
-
-  const runPrepublishChecks = useCallback(() => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    if (cards.length === 0) {
-      errors.push("ブロックが1つもありません。最低1ブロック追加してください。");
-    }
-    const hasWifi = cards.some((c) => c.type === "wifi");
-    const hasCheckout = cards.some((c) => c.type === "checkout");
-    const hasFaq = cards.some((c) => c.type === "faq");
-    const hasMap = cards.some((c) => c.type === "map");
-    const hasEmergency = cards.some((c) => c.type === "emergency");
-    if (!hasWifi) {
-      warnings.push(
-        "「Wi-Fi」ブロックがまだありません。接続手順やSSIDを載せると、宿泊客が迷いにくくなります（任意・後から追加可）。",
-      );
-    }
-    if (!hasCheckout) {
-      warnings.push(
-        "「チェックアウト」ブロックがまだありません。退室時刻や手順を載せると安心です（任意・後から追加可）。",
-      );
-    }
-    if (!hasFaq) {
-      warnings.push(
-        "「よくある質問」ブロックがまだありません。問い合わせ前に自己解決しやすくなります（任意・後から追加可）。",
-      );
-    }
-    if (!hasMap) {
-      warnings.push(
-        "「地図」ブロックがまだありません。アクセス案内を載せると初めての宿泊客にも親切です（任意・後から追加可）。",
-      );
-    }
-    if (!hasEmergency) {
-      warnings.push(
-        "「緊急連絡先」ブロックがまだありません。万一の連絡先を載せると安心です（任意・後から追加可）。",
-      );
-    }
-    const placeholderPattern = /\[[^\]]+\]|ここに|入力してください|記載してください/;
-    const emptyOrAnchorHrefPattern = /^#?$|^\s*$/;
-    cards.forEach((card) => {
-      const raw = JSON.stringify(card.content ?? {});
-      if (placeholderPattern.test(raw)) {
-        warnings.push(
-          `「${card.type}」ブロックに、まだ仮の文言（例: [ ] や「ここに〜」）が残っている可能性があります。公開前に実際の内容へ差し替えてください。`,
-        );
-      }
-      if (card.type === "button") {
-        const href = String((card.content as Record<string, unknown>).href ?? "");
-        if (emptyOrAnchorHrefPattern.test(href)) {
-          warnings.push(
-            "リンクボタンの「リンク先URL」が未設定です。タップしても飛べない状態のままです。",
-          );
-        }
-      }
-      if (card.type === "scheduled_banner") {
-        const c = card.content as Record<string, unknown>;
-        const startAt = typeof c.startAt === "string" ? c.startAt : undefined;
-        const endAt = typeof c.endAt === "string" ? c.endAt : undefined;
-        if (hasInvalidRange(startAt, endAt)) {
-          errors.push("期間限定バナーの開始日時が終了日時より後になっています。");
-        }
-      }
-      if (card.type === "campaign_timer") {
-        const c = card.content as Record<string, unknown>;
-        const startAt = typeof c.startAt === "string" ? c.startAt : undefined;
-        const endAt = typeof c.endAt === "string" ? c.endAt : undefined;
-        if (hasInvalidRange(startAt, endAt)) {
-          errors.push("キャンペーンタイマーの開始日時が終了日時より後になっています。");
-        }
-      }
-    });
-    if (detectBusinessTypeMisuse(cards.map((c) => c.type), translationEnabled)) {
-      warnings.push("Businessプラン限定ブロックが含まれています。現在のプランで公開時表示が制限される可能性があります。");
-    }
-    return { errors, warnings };
-  }, [cards, translationEnabled]);
 
   useEffect(() => {
     if (!isDemoMode) return;
@@ -694,17 +645,8 @@ export function Editor2({
       setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
       return;
     }
-    const report = runPrepublishChecks();
-    if (report.errors.length > 0 || report.warnings.length > 0) {
-      setPrepublishState({
-        errors: report.errors,
-        warnings: report.warnings,
-        allowContinue: report.errors.length === 0,
-      });
-      return;
-    }
     await publishNow();
-  }, [isDemoMode, publishNow, runPrepublishChecks]);
+  }, [isDemoMode, publishNow]);
 
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
@@ -741,19 +683,6 @@ export function Editor2({
     },
     [isDemoMode, pageId, pageMeta, setPageMeta]
   );
-
-  const handleRunPrepublishCheck = useCallback(() => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードでは公開前チェックは利用できません。無料登録で解放されます。");
-      return;
-    }
-    const report = runPrepublishChecks();
-    setPrepublishState({
-      errors: report.errors,
-      warnings: report.warnings,
-      allowContinue: false,
-    });
-  }, [isDemoMode, runPrepublishChecks]);
 
   const handleTogglePublished = useCallback(async () => {
     if (isDemoMode) {
@@ -1195,11 +1124,7 @@ export function Editor2({
           ? null
           : await ensureTranslationsBeforePublish();
       if (translationError) {
-        setPrepublishState({
-          errors: [translationError],
-          warnings: [],
-          allowContinue: false,
-        });
+        window.alert(translationError);
         return;
       }
       if (hotelRole === "editor") {
@@ -1225,30 +1150,6 @@ export function Editor2({
       setPublishFlowBusy(false);
     }
   }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId]);
-
-  /** 警告だけのとき「このまま公開」用。再び公開前チェックを走らせず翻訳確認後にそのまま公開する */
-  const handlePublishPastWarnings = useCallback(async () => {
-    if (isDemoMode) {
-      setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
-      return;
-    }
-    setPublishFlowBusy(true);
-    try {
-      const translationError = await ensureTranslationsBeforePublish();
-      if (translationError) {
-        setPrepublishState({
-          errors: [translationError],
-          warnings: [],
-          allowContinue: false,
-        });
-        return;
-      }
-      setPrepublishState(null);
-      await publishNow();
-    } finally {
-      setPublishFlowBusy(false);
-    }
-  }, [isDemoMode, ensureTranslationsBeforePublish, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -1384,7 +1285,7 @@ export function Editor2({
     editorBusySubtitle =
       publishStatus === "published"
         ? "保存と公開内容の反映を実行しています"
-        : "保存と公開前チェックを実行しています";
+        : "保存と公開処理を実行しています";
   }
 
   return (
@@ -1414,6 +1315,8 @@ export function Editor2({
                   openBusinessUpsell(type);
                 }
               }}
+              libraryAudience={effectiveLibraryAudience}
+              onLibraryAudienceChange={handleLibraryAudienceChange}
             />
           }
           canvas={
@@ -1458,11 +1361,11 @@ export function Editor2({
               onUpdate={updateCard}
               onDuplicateCard={duplicateCard}
               onRemoveCard={removeCard}
-              onRunPrepublishCheck={isDemoMode ? undefined : handleRunPrepublishCheck}
               lastAddedCardId={lastAddedCardId}
               demoMode={isDemoMode}
               onLockedAction={(message) => setDemoLockMessage(message)}
               isBusinessEnabled={translationEnabled}
+              libraryAudience={effectiveLibraryAudience}
             />
           }
         />
@@ -1472,6 +1375,7 @@ export function Editor2({
           onSelect={handleSlashSelect}
           anchorRef={canvasRef}
           canUseBusinessBlocks={translationEnabled}
+          libraryAudience={effectiveLibraryAudience}
           onLockedAddCard={(type) => {
             if (isDemoMode) {
               setDemoLockMessage("このブロックはBusinessプラン限定です。");
@@ -1544,72 +1448,6 @@ export function Editor2({
             slug={publishState.slug}
             onClose={() => setPublishState(null)}
           />
-        )}
-        {prepublishState && (
-          <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-            <div className="ui-pop-in w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-              <h3 className="text-lg font-semibold text-slate-900">公開前チェック</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                公開直前に、ページの内容を自動で確認しています。
-                {prepublishState.errors.length === 0 && prepublishState.warnings.length > 0 ? (
-                  <>
-                    下の「おすすめ」は<strong className="font-medium text-slate-800">なくても公開できます</strong>
-                    が、宿泊客向けに足した方がよい項目です。対応してから公開するか、「このまま公開」で先に公開しても構いません。
-                  </>
-                ) : null}
-              </p>
-              {prepublishState.errors.length === 0 && prepublishState.warnings.length === 0 ? (
-                <p className="mt-3 text-sm text-emerald-700">問題は見つかりませんでした。</p>
-              ) : (
-                <div className="mt-3 space-y-3">
-                  {prepublishState.errors.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold text-rose-700">公開できない項目（要対応）</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        次を解消するまで公開処理に進めません。
-                      </p>
-                      <ul className="mt-1 space-y-1 text-sm text-rose-700">
-                        {prepublishState.errors.map((item) => (
-                          <li key={item}>・{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {prepublishState.warnings.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800">おすすめ（任意）</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        ブロック種別名ではなく、「何が足りないか」「なぜ足すとよいか」を表示しています。
-                      </p>
-                      <ul className="mt-1 max-h-44 space-y-1 overflow-auto text-sm text-amber-800">
-                        {prepublishState.warnings.map((item, idx) => (
-                          <li key={`${item}-${idx}`}>・{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="mt-5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPrepublishState(null)}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  閉じる
-                </button>
-                {prepublishState.allowContinue && (
-                  <button
-                    type="button"
-                    onClick={() => void handlePublishPastWarnings()}
-                    className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
-                  >
-                    このまま公開
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
         )}
         {showEditorBusyOverlay && (
           <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-white/30 backdrop-blur-sm">

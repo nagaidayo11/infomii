@@ -297,8 +297,12 @@ export function PagesListView() {
             単発ページとページ連携をセット単位で管理できます。
           </p>
           {subscription ? (
-            <p className="mt-2 inline-flex items-center rounded-full border border-emerald-700 bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_1px_2px_rgba(16,185,129,0.2)]">
-              公開中 {publishedCount}/{subscription.plan === "business" ? "∞" : subscription.maxPublishedPages} 件
+            <p className="mt-3 text-base font-bold leading-snug tracking-tight text-slate-900 tabular-nums [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+              公開中{" "}
+              <span className="text-lg font-extrabold text-slate-950">
+                {publishedCount}/{subscription.plan === "business" ? "∞" : subscription.maxPublishedPages}
+              </span>{" "}
+              件
             </p>
           ) : null}
         </div>

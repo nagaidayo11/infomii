@@ -12,6 +12,8 @@ import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS } from "./types";
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
+import type { LibraryAudience } from "@/lib/editor/card-library-config";
+import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { useEditor2Store } from "./store";
 
 const TRANSLATE_DEBOUNCE_MS = 1200;
@@ -112,12 +114,12 @@ export type CardSettingsProps = {
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
-  onRunPrepublishCheck?: () => void;
   demoMode?: boolean;
   onLockedAction?: (message: string) => void;
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
   lastAddedCardId?: string | null;
   isBusinessEnabled?: boolean;
+  libraryAudience?: LibraryAudience;
 };
 
 function isLocalizedObject(v: unknown): v is Record<string, string> {
@@ -343,9 +345,11 @@ function GalleryItemsEditor({
 function HeroSliderItemsEditor({
   content,
   onUpdate,
+  libraryAudience = "hotel",
 }: {
   content: Record<string, unknown>;
   onUpdate: (key: string, value: unknown) => void;
+  libraryAudience?: LibraryAudience;
 }) {
   const items = (Array.isArray(content.slides) ? content.slides : []) as HeroSliderItem[];
   const visibleItems = items.slice(0, HERO_SLIDER_MAX_ITEMS);
@@ -357,7 +361,11 @@ function HeroSliderItemsEditor({
   };
   const addItem = () => {
     if (items.length >= HERO_SLIDER_MAX_ITEMS) return;
-    setItems([...items, createDefaultHeroSliderSlide(items.length) as HeroSliderItem]);
+    const slide =
+      libraryAudience === "personal"
+        ? createPersonalHeroSliderSlide(items.length)
+        : createDefaultHeroSliderSlide(items.length);
+    setItems([...items, slide as HeroSliderItem]);
   };
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const moveItem = (index: number, dir: -1 | 1) => {
@@ -2115,11 +2123,11 @@ export function CardSettings({
   onUpdate,
   onDuplicateCard,
   onRemoveCard,
-  onRunPrepublishCheck,
   demoMode = false,
   onLockedAction,
   lastAddedCardId = null,
   isBusinessEnabled = false,
+  libraryAudience = "hotel",
 }: CardSettingsProps) {
   const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
@@ -2174,25 +2182,6 @@ export function CardSettings({
           <p className="mt-3 text-sm text-slate-500">
             キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。
           </p>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <div className="space-y-6">
-            {!demoMode && (
-              <SettingsSection title="公開前チェック">
-              <p className="text-sm text-slate-500">
-                公開前に未入力やプレースホルダをチェックします。
-              </p>
-              <button
-                type="button"
-                onClick={onRunPrepublishCheck}
-                disabled={!onRunPrepublishCheck}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                チェックを実行
-              </button>
-              </SettingsSection>
-            )}
-          </div>
         </div>
       </>
     );
@@ -2557,7 +2546,7 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="おすすめ案内"
               />
-              <HeroSliderItemsEditor content={content} onUpdate={update} />
+              <HeroSliderItemsEditor content={content} onUpdate={update} libraryAudience={libraryAudience} />
               <div className="w-full">
                 <label className={labelClass}>高さ</label>
                 <select

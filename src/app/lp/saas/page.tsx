@@ -116,12 +116,6 @@ function PricingComparisonTable() {
             <td className="px-3 py-2.5 text-center">{yes}</td>
           </tr>
           <tr>
-            <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">運用効率: 公開前チェック</th>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-            <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
-            <td className="px-3 py-2.5 text-center">{yes}</td>
-          </tr>
-          <tr>
             <th scope="row" className="w-[38%] bg-white px-4 py-2.5 text-left text-sm font-medium text-slate-700 sm:w-[34%]">運用効率: 閲覧分析</th>
             <td className="px-3 py-2.5 text-center">{no}</td>
             <td className="border-x border-slate-100 bg-slate-50/60 px-3 py-2.5 text-center">{yes}</td>
@@ -289,7 +283,7 @@ export default function LpSaaSPage() {
                   <p className="mt-1 text-xl font-bold text-emerald-700">¥1,980/月</p>
                   <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
                     <li>・公開ページ数: 最大10本</li>
-                    <li>・公開前チェック / 閲覧分析</li>
+                    <li>・閲覧分析</li>
                     <li>・2ページ目以降の運用向け</li>
                   </ul>
                   <CheckoutButton
@@ -355,7 +349,6 @@ export default function LpSaaSPage() {
                 <ul className="mt-6 space-y-2 text-sm text-slate-700">
                   <li>✓ 公開ページ数: 最大10本</li>
                   <li>✓ 用途別にページを分けて更新しやすい</li>
-                  <li>✓ 公開前チェック</li>
                   <li>✓ 閲覧分析</li>
                   <li>✓ 日々の更新が発生する拠点向け</li>
                 </ul>
@@ -391,7 +384,6 @@ export default function LpSaaSPage() {
                 <p className="mt-1 text-sm text-slate-500">複数拠点・複数担当で継続運用する</p>
                 <ul className="mt-6 space-y-2 text-sm text-slate-700">
                   <li>✓ 公開ページ数: <span className="font-semibold text-emerald-700">無制限</span></li>
-                  <li>✓ 公開前チェック</li>
                   <li>✓ 閲覧分析</li>
                   <li>✓ チーム招待（引き継ぎしやすい）</li>
                   <li className="font-semibold text-emerald-700">✓ 多言語自動翻訳（AI翻訳）</li>

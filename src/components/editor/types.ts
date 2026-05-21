@@ -1,3 +1,5 @@
+import { personalDefaultContent } from "@/lib/editor/card-defaults-personal";
+
 /**
  * Infomii Editor 2.0 — Card-based page system.
  * Table: pages (id, title, slug, ...)
@@ -962,11 +964,21 @@ function defaultContent(type: CardType): Record<string, unknown> {
   }
 }
 
-export function createEmptyCard(type: CardType, id: string, order: number): EditorCard {
+export function createEmptyCard(
+  type: CardType,
+  id: string,
+  order: number,
+  audience: "hotel" | "personal" = "hotel",
+): EditorCard {
+  let content = defaultContent(type);
+  if (audience === "personal") {
+    const personal = personalDefaultContent(type);
+    if (personal !== null) content = personal;
+  }
   return {
     id,
     type,
-    content: defaultContent(type),
+    content,
     style: type === "space" ? { padding: 0 } : { innerBorderRadius: 8 },
     order,
   };

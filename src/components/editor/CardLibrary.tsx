@@ -1,36 +1,26 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import {
+  getLibrarySections,
+  getQuickPresets,
+  type LibraryAudience,
+  type LibraryItem,
+  type QuickPreset,
+} from "@/lib/editor/card-library-config";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
+
+export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-library-config";
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
   onAddPreset?: (types: CardType[]) => void;
   canUseBusinessBlocks?: boolean;
   onLockedAddCard?: (type: CardType) => void;
-};
-
-type LibraryItem = {
-  type: CardType;
-  label: string;
-  description: string;
-};
-
-type LibrarySection = {
-  id: string;
-  title: string;
-  items: LibraryItem[];
-};
-
-type QuickPreset = {
-  id: string;
-  label: string;
-  description: string;
-  purpose: string;
-  types: CardType[];
-  businessOnly?: boolean;
+  libraryAudience: LibraryAudience;
+  onLibraryAudienceChange: (audience: LibraryAudience) => void;
 };
 
 function BusinessBadge() {
@@ -328,12 +318,23 @@ function DescriptionWithTooltip({
   item,
   parentOpen,
   anchorRef,
+  libraryAudience,
 }: {
   item: LibraryItem;
   parentOpen: boolean;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
+  libraryAudience: LibraryAudience;
 }) {
-  const spec = PREVIEW_SPEC_BY_TYPE[item.type];
+  const previewCard = useMemo(
+    () => createEmptyCard(item.type, `preview-${item.type}-${libraryAudience}`, 0, libraryAudience),
+    [item.type, libraryAudience],
+  );
+  const spec: PreviewSpec = {
+    mode: "live",
+    title: item.label,
+    previewData: { card: previewCard },
+    showImage: false,
+  };
   const [mobileOpen, setMobileOpen] = useState(false);
   const tooltipId = useId();
   const showTooltip = parentOpen || mobileOpen;
@@ -721,133 +722,20 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
   ),
 };
 
-const MAIN_ITEMS: LibraryItem[] = [
-  { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
-  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Businessプラン限定）" },
-  { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を上下で表示" },
-  { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
-  { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
-];
-
-const GUIDE_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
-  { type: "wifi", label: "WiFi案内", description: "SSID・パスワードを掲載" },
-  { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
-  { type: "breakfast", label: "施設案内（汎用）", description: "時間・場所・詳細をまとめる" },
-  { type: "map", label: "地図", description: "アクセス・所在地を表示" },
-  { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
-  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
-  { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
-  { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
-  { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
-  { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
-  { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusinessプラン）" },
-  { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
-  { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
-  { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
-  { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
-  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
-  { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
-  { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
-  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Businessプラン）" },
-  { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Businessプラン限定）" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（Businessプラン限定）" },
-  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Businessプラン限定）" },
-  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
-  { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
-  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
-];
-
-const OPERATION_ITEMS: LibraryItem[] = [
-  { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
-  { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Businessプラン限定）" },
-  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Businessプラン限定）" },
-  { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
-  { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図リンクを集約" },
-];
-
-const COMPARISON_ITEMS: LibraryItem[] = [
-  { type: "compare", label: "比較・料金表", description: "2列比較または料金表（最大4列）" },
-  { type: "kpi", label: "数字強調", description: "時間・数値情報を強く見せる" },
-  { type: "quote", label: "引用", description: "レビュー・口コミ掲載" },
-  { type: "checklist", label: "チェックリスト", description: "持ち物・手続き確認" },
-  { type: "steps", label: "ステップ", description: "手順を段階的に表示" },
-  { type: "progress_steps", label: "進捗ステップ", description: "現在進捗を視覚化" },
-  { type: "tabs_info", label: "タブ切替案内", description: "複数案内をタブで切替表示" },
-  { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
-];
-
-const MEDIA_ITEMS: LibraryItem[] = [
-  { type: "image", label: "画像", description: "写真を1枚表示" },
-  { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
-  { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
-  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
-  { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
-  { type: "space", label: "スペース", description: "上下の余白を調整" },
-];
-
-export const LIBRARY_SECTIONS: LibrarySection[] = [
-  { id: "main", title: "メイン表示", items: MAIN_ITEMS },
-  { id: "guide", title: "案内・情報", items: GUIDE_ITEMS },
-  { id: "operation", title: "運用・導線", items: OPERATION_ITEMS },
-  { id: "comparison", title: "比較・訴求", items: COMPARISON_ITEMS },
-  { id: "media", title: "メディア・装飾", items: MEDIA_ITEMS },
-];
-
-const QUICK_PRESETS: QuickPreset[] = [
-  {
-    id: "checkin-basic",
-    label: "チェックイン基本セット",
-    purpose: "初回案内を最短で公開",
-    description: "ヒーロー / ウェルカム / WiFi案内 / チェックアウト / リンクボタン",
-    types: ["hero", "welcome", "wifi", "checkout", "button"],
-  },
-  {
-    id: "facility-standard",
-    label: "館内案内スタンダード",
-    purpose: "館内情報を1ページで網羅",
-    description: "ヒーロー / 施設案内 / 営業時間ステータス / アコーディオン案内 / 地図",
-    types: ["hero", "breakfast", "open_status", "accordion_info", "map"],
-  },
-  {
-    id: "sightseeing-nearby",
-    label: "観光・周辺案内セット",
-    purpose: "移動と周辺導線を明確化",
-    description: "ヒーロー / 周辺案内 / ページリンク / タクシー案内 / 地図",
-    types: ["hero", "nearby", "pageLinks", "taxi", "map"],
-  },
-  {
-    id: "multilingual-ops",
-    label: "多言語運用セット",
-    purpose: "多言語前提の運用導線を構築",
-    description: "ヒーロースライド / 重要なお知らせ / WiFi案内 / よくある質問 / リンクボタン",
-    types: ["hero_slider", "notice", "wifi", "faq", "button"],
-    businessOnly: true,
-  },
-  {
-    id: "campaign-conversion",
-    label: "キャンペーン訴求セット",
-    purpose: "期間訴求とCV導線を強化",
-    description: "ヒーロースライド / キャンペーンタイマー / 強調ブロック / 比較 / リンクボタン",
-    types: ["hero_slider", "campaign_timer", "highlight", "compare", "button"],
-    businessOnly: true,
-  },
-];
-
 function LibraryItemButton({
   sectionId,
   item,
   isBusinessType,
   disabled,
   onAdd,
+  libraryAudience,
 }: {
   sectionId: string;
   item: LibraryItem;
   isBusinessType: boolean;
   disabled: boolean;
   onAdd: (type: CardType) => void;
+  libraryAudience: LibraryAudience;
 }) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -935,6 +823,7 @@ function LibraryItemButton({
             item={item}
             parentOpen={hoverOpen || focusOpen}
             anchorRef={buttonRef}
+            libraryAudience={libraryAudience}
           />
         </span>
       </div>
@@ -951,7 +840,11 @@ export function CardLibrary({
   onAddPreset,
   canUseBusinessBlocks = false,
   onLockedAddCard,
+  libraryAudience,
+  onLibraryAudienceChange,
 }: CardLibraryProps) {
+  const librarySections = getLibrarySections(libraryAudience);
+  const quickPresets = getQuickPresets(libraryAudience);
   const canAdd = (type: CardType) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(type);
   const canAddPreset = (types: CardType[]) => types.every((type) => canAdd(type));
   const handleAdd = (type: CardType) => {
@@ -975,9 +868,38 @@ export function CardLibrary({
         <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
           ブロックライブラリ
         </h2>
-        <p className="mt-1 text-xs text-slate-500">
-          クリックでキャンバスに追加
-        </p>
+        <p className="mt-1 text-xs text-slate-500">クリックでキャンバスに追加</p>
+        <div
+          className="mt-2.5 inline-flex w-full rounded-lg border border-slate-200 bg-slate-50/80 p-0.5"
+          role="tablist"
+          aria-label="ブロックライブラリの用途"
+        >
+          {(
+            [
+              { id: "hotel" as const, label: "宿泊施設" },
+              { id: "personal" as const, label: "個人・友達向け" },
+            ] as const
+          ).map((tab) => {
+            const selected = libraryAudience === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => onLibraryAudienceChange(tab.id)}
+                className={
+                  "ui-pop-tap min-h-[36px] flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-semibold transition " +
+                  (selected
+                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
+                    : "text-slate-500 hover:text-slate-700")
+                }
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <div className="space-y-3">
@@ -987,7 +909,7 @@ export function CardLibrary({
                 おすすめセット
               </h3>
               <div className="space-y-1">
-                {QUICK_PRESETS.map((preset) => (
+                {quickPresets.map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
@@ -1014,7 +936,7 @@ export function CardLibrary({
               </div>
             </section>
           )}
-          {LIBRARY_SECTIONS.map((section) => (
+          {librarySections.map((section) => (
             <section
               key={section.id}
               aria-label={section.title}
@@ -1034,6 +956,7 @@ export function CardLibrary({
                       isBusinessType={isBusinessType}
                       disabled={!canAdd(item.type)}
                       onAdd={handleAdd}
+                      libraryAudience={libraryAudience}
                     />
                   );
                 })}
