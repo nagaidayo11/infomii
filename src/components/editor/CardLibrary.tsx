@@ -11,6 +11,7 @@ import {
   type QuickPreset,
 } from "@/lib/editor/card-library-config";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
+import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
 
 export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-library-config";
 
@@ -370,7 +371,7 @@ function DescriptionWithTooltip({
         tabIndex={0}
         data-mobile-tooltip-trigger="true"
         aria-label="説明文を表示"
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 sm:hidden"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 lg:hidden"
         onClick={toggleMobileTooltip}
         onKeyDown={(e) => {
           if (e.key !== "Enter" && e.key !== " ") return;
@@ -386,7 +387,7 @@ function DescriptionWithTooltip({
       <LibraryTooltipPortal open={parentOpen} tooltipId={tooltipId} item={item} spec={spec} anchorRef={anchorRef} />
       {mobileOpen ? (
         createPortal(
-          <div className="fixed inset-0 z-[9998] bg-black/35 p-4 sm:hidden" onClick={() => setMobileOpen(false)} role="dialog" aria-modal="true">
+          <div className="fixed inset-0 z-[9998] bg-black/35 p-4 lg:hidden" onClick={() => setMobileOpen(false)} role="dialog" aria-modal="true">
             <div
               data-mobile-tooltip-panel="true"
               className="mx-auto mt-[14vh] w-full max-w-sm rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl"
@@ -742,6 +743,7 @@ function LibraryItemButton({
   const openTimerRef = useRef<number | null>(null);
   const [hoverOpen, setHoverOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
+  const hoverPreviewEnabled = useEditorHoverPreviewEnabled();
 
   const clearTimers = () => {
     if (openTimerRef.current) {
@@ -757,11 +759,13 @@ function LibraryItemButton({
   useEffect(() => () => clearTimers(), []);
 
   const handlePointerEnter = () => {
+    if (!hoverPreviewEnabled) return;
     clearTimers();
     openTimerRef.current = window.setTimeout(() => setHoverOpen(true), HOVER_OPEN_DELAY_MS);
   };
 
   const handlePointerLeave = () => {
+    if (!hoverPreviewEnabled) return;
     clearTimers();
     closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
   };
@@ -780,17 +784,19 @@ function LibraryItemButton({
       key={`${sectionId}-${item.type}`}
       type="button"
       onClick={handleAddClick}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      onFocus={() => setFocusOpen(true)}
+      onPointerEnter={hoverPreviewEnabled ? handlePointerEnter : undefined}
+      onPointerLeave={hoverPreviewEnabled ? handlePointerLeave : undefined}
+      onFocus={() => {
+        if (hoverPreviewEnabled) setFocusOpen(true);
+      }}
       onBlur={(e) => {
         if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
         setFocusOpen(false);
       }}
       className={
-        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all hover:z-50 focus:z-50 focus-within:z-50 " +
+        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 " +
         (!disabled
-          ? "hover:bg-slate-50 hover:shadow-sm active:bg-slate-100"
+          ? "lg:hover:bg-slate-50 lg:hover:shadow-sm"
           : "cursor-not-allowed opacity-55")
       }
       aria-label={`${item.label}を追加`}
@@ -821,7 +827,7 @@ function LibraryItemButton({
         <span className="absolute inset-y-0 right-0 flex items-center">
           <DescriptionWithTooltip
             item={item}
-            parentOpen={hoverOpen || focusOpen}
+            parentOpen={hoverPreviewEnabled && (hoverOpen || focusOpen)}
             anchorRef={buttonRef}
             libraryAudience={libraryAudience}
           />
@@ -892,7 +898,7 @@ export function CardLibrary({
                   "ui-pop-tap min-h-[36px] flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-semibold transition " +
                   (selected
                     ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
-                    : "text-slate-500 hover:text-slate-700")
+                    : "text-slate-500 lg:hover:text-slate-700")
                 }
               >
                 {tab.label}
@@ -917,7 +923,7 @@ export function CardLibrary({
                     className={
                       "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-all " +
                       (canAddPreset(preset.types)
-                        ? "hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+                        ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
                         : "border-violet-300 bg-violet-50/70")
                     }
                     aria-label={`${preset.label}を追加`}

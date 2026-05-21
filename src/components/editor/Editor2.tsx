@@ -1292,6 +1292,14 @@ export function Editor2({
       <div ref={rootRef} className="h-[100dvh] w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
+          onMobileSheetChange={(nextSheet) => {
+            if (nextSheet !== "settings" || !selectedCardId) return;
+            window.requestAnimationFrame(() => {
+              document
+                .querySelector(`[data-card-id="${selectedCardId}"]`)
+                ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            });
+          }}
           library={
             <CardLibrary
               onAddCard={(type) => {

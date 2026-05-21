@@ -7,6 +7,8 @@ type HorizontalScrollHintProps = {
   className?: string;
   viewportClassName?: string;
   fadeClassName?: string;
+  /** 右端の白グラデーション（LPでは背景色の縦帯に見えるため無効化可） */
+  showEdgeFade?: boolean;
 };
 
 export function HorizontalScrollHint({
@@ -14,6 +16,7 @@ export function HorizontalScrollHint({
   className,
   viewportClassName,
   fadeClassName,
+  showEdgeFade = true,
 }: HorizontalScrollHintProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -47,26 +50,33 @@ export function HorizontalScrollHint({
   }, [updateFadeState]);
 
   return (
-    <div className={className ?? "relative"}>
+    <div className={`${className ?? "relative"} min-w-0 w-full max-w-full overflow-hidden`}>
       <div
         ref={viewportRef}
-        className={viewportClassName ?? "overflow-x-auto overscroll-x-contain scroll-smooth"}
+        className={
+          viewportClassName ??
+          "min-w-0 w-full max-w-full overflow-x-auto overscroll-x-contain scroll-smooth"
+        }
         onScroll={updateFadeState}
       >
         {children}
       </div>
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute bottom-0 left-0 top-0 z-20 w-6 bg-gradient-to-r from-white to-transparent transition-opacity duration-200 sm:hidden ${
-          showLeft ? "opacity-100" : "opacity-0"
-        } ${fadeClassName ?? ""}`}
-      />
-      <div
-        aria-hidden
-        className={`pointer-events-none absolute bottom-0 right-0 top-0 z-20 w-6 bg-gradient-to-l from-white to-transparent transition-opacity duration-200 sm:hidden ${
-          showRight ? "opacity-100" : "opacity-0"
-        } ${fadeClassName ?? ""}`}
-      />
+      {showEdgeFade ? (
+        <>
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-6 max-h-full bg-gradient-to-r from-white to-transparent transition-opacity duration-200 sm:hidden ${
+              showLeft ? "opacity-100" : "opacity-0"
+            } ${fadeClassName ?? ""}`}
+          />
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-6 max-h-full bg-gradient-to-l from-white to-transparent transition-opacity duration-200 sm:hidden ${
+              showRight ? "opacity-100" : "opacity-0"
+            } ${fadeClassName ?? ""}`}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

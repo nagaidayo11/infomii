@@ -13,14 +13,16 @@ export type EditorLayoutProps = {
   canvas: ReactNode;
   settings: ReactNode;
   mobileActions?: ReactNode;
+  /** モバイルシート開閉（キャンバス側のスクロール調整など） */
+  onMobileSheetChange?: (sheet: MobileSheet) => void;
 };
 
 type MobileSheet = "none" | "library" | "settings";
 type MobileSheetSize = "compact" | "comfortable" | "full";
 
 const MOBILE_SHEET_TOP_MAP: Record<MobileSheetSize, string> = {
-  compact: "42dvh",
-  comfortable: "20dvh",
+  compact: "46dvh",
+  comfortable: "32dvh",
   full: "3.5rem",
 };
 
@@ -30,7 +32,7 @@ const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
   full: "全画面",
 };
 
-export function EditorLayout({ topBar, library, canvas, settings, mobileActions }: EditorLayoutProps) {
+export function EditorLayout({ topBar, library, canvas, settings, mobileActions, onMobileSheetChange }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
   const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
   const [dragTopPx, setDragTopPx] = useState<number | null>(null);
@@ -43,42 +45,40 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
   const getViewportHeight = () => (typeof window !== "undefined" ? window.innerHeight : 800);
   const getSnapTopPx = (size: MobileSheetSize, viewportHeight: number) => {
     if (size === "full") return Math.max(56, 56);
-    if (size === "comfortable") return Math.max(56, Math.round(viewportHeight * 0.2));
-    return Math.max(56, Math.round(viewportHeight * 0.42));
+    if (size === "comfortable") return Math.max(56, Math.round(viewportHeight * 0.32));
+    return Math.max(56, Math.round(viewportHeight * 0.46));
   };
   const closeTopPx = (viewportHeight: number) => Math.round(viewportHeight * 0.82);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
     const clear = () => {
-      if (mq.matches) setSheet("none");
+      if (mq.matches) applySheet("none");
     };
     mq.addEventListener("change", clear);
     return () => mq.removeEventListener("change", clear);
   }, []);
 
-  const openLibrary = () =>
-    setSheet((s) => {
-      const next = s === "library" ? "none" : "library";
-      if (next === "none") {
-        setDragTopPx(null);
-        setDragState(null);
-      }
-      return next;
-    });
-  const openSettings = () =>
-    setSheet((s) => {
-      const next = s === "settings" ? "none" : "settings";
-      if (next === "none") {
-        setDragTopPx(null);
-        setDragState(null);
-      }
-      return next;
-    });
+  const applySheet = (next: MobileSheet) => {
+    if (next === "library" || next === "settings") {
+      setMobileSheetSize("comfortable");
+      setDragTopPx(null);
+    } else {
+      setDragTopPx(null);
+      setDragState(null);
+    }
+    setSheet(next);
+    onMobileSheetChange?.(next);
+  };
+
+  const openLibrary = () => {
+    applySheet(sheet === "library" ? "none" : "library");
+  };
+  const openSettings = () => {
+    applySheet(sheet === "settings" ? "none" : "settings");
+  };
   const focusCanvas = () => {
-    setSheet("none");
-    setDragTopPx(null);
-    setDragState(null);
+    applySheet("none");
   };
 
   const sheetOpen = sheet !== "none";
@@ -111,10 +111,8 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
       const maxTop = Math.max(minTop + 24, viewportHeight - 96);
       const finalTop = Math.min(maxTop, Math.max(minTop, dragState.startTopPx + (event.clientY - dragState.startY)));
       if (finalTop >= closeTopPx(viewportHeight)) {
-        setSheet("none");
+        applySheet("none");
         setMobileSheetSize("comfortable");
-        setDragTopPx(null);
-        setDragState(null);
         return;
       }
 
@@ -173,16 +171,9 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
       {sheetOpen && (
         <button
           type="button"
-          className="fixed left-0 right-0 top-14 z-40 bg-slate-900/45 lg:hidden"
-          style={{
-            bottom: "calc(3.65rem + env(safe-area-inset-bottom, 0px))",
-          }}
+          className="fixed inset-x-0 bottom-0 top-14 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
           aria-label="パネルを閉じる"
-          onClick={() => {
-            setSheet("none");
-            setDragTopPx(null);
-            setDragState(null);
-          }}
+          onClick={() => applySheet("none")}
         />
       )}
 
@@ -194,7 +185,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
             (sheet === "library"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "ui-pop-in fixed inset-x-0 bottom-0 z-[55] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
           style={{
@@ -234,7 +225,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
             "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
             "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
             (sheet === "settings"
-              ? "ui-pop-in fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
+              ? "ui-pop-in fixed inset-x-0 bottom-0 z-[55] rounded-t-2xl border border-slate-200 shadow-2xl lg:rounded-none lg:shadow-sm"
               : "hidden lg:flex")
           }
           style={{
@@ -260,7 +251,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
       {/* Mobile bottom navigation */}
       {mobileActions != null ? (
         <div
-          className="fixed inset-x-0 z-30 px-2 lg:hidden"
+          className="fixed inset-x-0 z-[60] px-2 lg:hidden"
           style={{ bottom: "calc(3.9rem + env(safe-area-inset-bottom))" }}
         >
           <div className="ui-pop-modal-enter mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
@@ -269,7 +260,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions 
         </div>
       ) : null}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-slate-200/90 bg-white/95 px-1 pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden"
+        className="fixed bottom-0 left-0 right-0 z-[60] flex border-t border-slate-200/90 bg-white/95 px-1 pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm lg:hidden"
         style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom))" }}
         aria-label="エディタ操作"
       >

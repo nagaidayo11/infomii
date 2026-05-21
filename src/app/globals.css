@@ -245,6 +245,30 @@ a {
   z-index: -1;
 }
 
+/* LP: 右端の縦帯（body背景の露出・lux-shell固定グロー・横はみ出し）を防ぐ */
+html:has(.lp-page),
+body:has(.lp-page) {
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100%;
+}
+
+body:has(.lp-page) {
+  background-color: #f2fbf7;
+}
+
+body.lux-shell:has(.lp-page)::before {
+  display: none !important;
+  content: none !important;
+}
+
+.lp-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
 /* Surface: card + rounded-xl + soft shadow（ミニマルSaaS） */
 .ds-card {
   background: var(--color-ds-card);
@@ -1027,28 +1051,6 @@ a {
   pointer-events: none;
 }
 
-.lp-cta-shell {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.lp-cta-shell > * {
-  position: relative;
-  z-index: 1;
-}
-
-.lp-cta-shell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 18%, rgba(255, 255, 255, 0.34) 46%, transparent 72%);
-  transform: translateX(-120%);
-  animation: lp-shimmer 6.8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .lp-metric {
   animation: lp-card-breathe 5.2s ease-in-out infinite;
 }
@@ -1300,7 +1302,6 @@ a {
   .ux-skeleton,
   .lux-main::before,
   .lp-hero-shell::after,
-  .lp-cta-shell::after,
   .card-insert,
   .editor-card-drop-placeholder {
     animation: none !important;

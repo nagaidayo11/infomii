@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export type EditorTopBarProps = {
@@ -149,6 +149,26 @@ export function EditorTopBar({
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
   const [moreOpen, setMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (moreMenuRef.current?.contains(target)) return;
+      if (moreMenuPanelRef.current?.contains(target)) return;
+      setMoreOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreOpen(false);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [moreOpen]);
   const isPublished = status === "published";
   const canTogglePublish = !demoMode && typeof onTogglePublished === "function";
   const showPublishActionButton =
@@ -544,10 +564,18 @@ export function EditorTopBar({
           </button>
           {moreOpen && typeof document !== "undefined" &&
             createPortal(
-              <div
-                className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
-                role="menu"
-              >
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-[139] bg-slate-900/20 lg:hidden"
+                  aria-label="メニューを閉じる"
+                  onClick={() => setMoreOpen(false)}
+                />
+                <div
+                  ref={moreMenuPanelRef}
+                  className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                  role="menu"
+                >
                 <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">確認・共有</div>
                 <button
                   type="button"
@@ -682,7 +710,8 @@ export function EditorTopBar({
                     </button>
                   </>
                 )}
-              </div>,
+                </div>
+              </>,
               document.body
             )}
         </div>

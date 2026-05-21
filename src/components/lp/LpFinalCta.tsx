@@ -13,7 +13,7 @@ type LpFinalCtaProps = {
 
 export function LpFinalCta({ ctaHref, demoEditorHref, loginHref }: LpFinalCtaProps) {
   return (
-    <section className="lp-cta-shell relative overflow-hidden bg-slate-900 py-16 sm:py-20">
+    <section className="relative w-full bg-slate-900 py-16 sm:py-20">
       <ScrollReveal intensity="subtle">
         <Container size="sm" className="text-center">
           <h2 className={`text-3xl text-white sm:text-4xl ${LP_POP_HEADING_CLASS}`}>

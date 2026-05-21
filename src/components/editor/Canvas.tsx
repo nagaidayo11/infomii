@@ -205,14 +205,16 @@ function SortableCardWrapper({
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
               ? "border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
-              : "border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-slate-300 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:scale-[1.005]")
+              : "border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:hover:border-slate-300 lg:hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] lg:hover:-translate-y-1 lg:hover:scale-[1.005]")
           }
         >
           <button
             type="button"
             className={
               "absolute left-0 top-0 z-20 flex h-full w-9 cursor-grab items-center justify-center border-r border-slate-200/80 bg-slate-50/95 text-slate-400 shadow-[1px_0_0_rgba(0,0,0,0.04)] transition-all duration-200 ease-out active:cursor-grabbing " +
-              (isSelected ? "border-blue-200/80 opacity-100" : "opacity-0 group-hover:opacity-100")
+              (isSelected
+                ? "border-blue-200/80 opacity-100"
+                : "opacity-70 lg:opacity-0 lg:group-hover:opacity-100")
             }
             {...attributes}
             {...listeners}

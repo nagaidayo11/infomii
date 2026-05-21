@@ -58,7 +58,11 @@ function PricingComparisonTable() {
       <p className="px-4 pt-3 text-xs text-slate-500 sm:hidden" aria-live="polite">
         横にスクロールして比較できます
       </p>
-      <HorizontalScrollHint className="relative px-2 pb-2 sm:px-0 sm:pb-0" viewportClassName="max-h-[70dvh] overflow-auto overscroll-x-contain scroll-smooth sm:max-h-none">
+      <HorizontalScrollHint
+        className="relative min-w-0 px-2 pb-2 sm:px-0 sm:pb-0"
+        viewportClassName="max-h-[70dvh] min-w-0 overflow-x-auto overflow-y-auto overscroll-x-contain scroll-smooth sm:max-h-none"
+        showEdgeFade={false}
+      >
           <table className="w-full min-w-[860px] table-fixed border-collapse text-sm">
         <caption className="sr-only">Infomii プラン別の機能比較</caption>
         <thead>
@@ -181,7 +185,7 @@ export default function LpSaaSPage() {
 
   return (
     <main
-      className={`min-h-screen bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] ${LP_PAGE_TYPOGRAPHY_CLASS}`}
+      className={`lp-page min-h-screen w-full max-w-full min-w-0 overflow-x-clip bg-[#F2FBF7] text-slate-900 antialiased font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] ${LP_PAGE_TYPOGRAPHY_CLASS}`}
     >
       <LpSaasHeader loginHref={loginHref} ctaHref={ctaHref} />
       <LpInstagramBanner />
@@ -263,9 +267,9 @@ export default function LpSaaSPage() {
           >
             <h3 className="text-base font-semibold text-slate-900">機能比較（主要項目）</h3>
             <p className="mt-1 text-sm text-slate-600">比較軸: 作成規模 / 運用効率 / チーム統制（詳細は横スクロールで確認）</p>
-            <HorizontalScrollHint className="mt-4 md:hidden">
+            <HorizontalScrollHint className="mt-4 min-w-0 w-full max-w-full md:hidden" showEdgeFade={false}>
                 <p className="mb-2 text-xs text-slate-500">横にスクロールして比較できます</p>
-                <div className="flex snap-x snap-mandatory gap-3 pb-1">
+                <div className="flex w-max max-w-none snap-x snap-mandatory gap-3 pb-1">
                 <article className="min-w-[240px] snap-start rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   <p className="text-xs font-semibold tracking-wide text-slate-500">Free</p>
                   <p className="mt-1 text-xl font-bold text-slate-900">¥0</p>
@@ -313,7 +317,7 @@ export default function LpSaaSPage() {
                 </article>
                 </div>
             </HorizontalScrollHint>
-            <div className="mt-4">
+            <div className="mt-4 hidden md:block">
               <PricingComparisonTable />
             </div>
           </div>
