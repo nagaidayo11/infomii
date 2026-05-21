@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 /**
  * Dedicated editor layout. Does not use DashboardLayout.
  * Desktop (`lg+`): TopBar + Card Library | Canvas | Card Settings.
- * Mobile: Canvas full width + bottom tabs to open library/settings as bottom sheets.
+ * Mobile: Canvas full width + in-flow bottom tabs + overlay sheets above the tab bar.
  */
 export type EditorLayoutProps = {
   topBar?: ReactNode;
@@ -32,12 +32,12 @@ const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
   full: "全画面",
 };
 
-/** 下部タブバー高さ（キャンバス padding / シート bottom と揃える） */
+/** モバイル下部タブの高さ（シートの bottom オフセット用。実寸に合わせて px 指定） */
 const MOBILE_NAV_HEIGHT =
-  "calc(3.75rem + max(0.35rem, env(safe-area-inset-bottom, 0px)))";
+  "calc(58px + env(safe-area-inset-bottom, 0px))";
 
 const mobileSheetAsideClass =
-  "ui-pop-in fixed inset-x-0 z-[55] flex max-h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 shadow-2xl lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-sm";
+  "ui-pop-in fixed inset-x-0 z-[90] flex max-h-[min(88dvh,calc(100dvh-10rem))] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-sm";
 
 export function EditorLayout({ topBar, library, canvas, settings, mobileActions, onMobileSheetChange }: EditorLayoutProps) {
   const [sheet, setSheet] = useState<MobileSheet>("none");
@@ -164,7 +164,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
 
   return (
     <div
-      className="app-ambient-bg flex h-[100dvh] w-full flex-col overflow-hidden bg-slate-100/95"
+      className="app-ambient-bg flex h-[100dvh] max-lg:h-[100svh] w-full flex-col overflow-hidden bg-slate-100/95"
       role="application"
       aria-label="エディタ"
       data-editor-layout
@@ -172,7 +172,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
     >
       {topBar != null ? (
         <header
-          className="app-page-enter shrink-0 border-b border-slate-200/80 bg-white"
+          className="app-page-enter relative z-[110] shrink-0 border-b border-slate-200/80 bg-white"
           role="banner"
           data-editor-topbar
         >
@@ -180,151 +180,145 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
         </header>
       ) : null}
 
-      {/* Mobile: backdrop */}
-      {sheetOpen && (
-        <button
-          type="button"
-          className="fixed inset-x-0 top-14 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
-          style={{ bottom: MOBILE_NAV_HEIGHT }}
-          aria-label="パネルを閉じる"
-          onClick={() => applySheet("none")}
-        />
-      )}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {sheetOpen ? (
+          <button
+            type="button"
+            className="absolute inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
+            aria-label="パネルを閉じる"
+            onClick={() => applySheet("none")}
+          />
+        ) : null}
 
-      <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row" role="main">
-        {/* Library — desktop fixed width; mobile bottom sheet */}
-        <aside
-          data-editor-column="library"
-          className={
-            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
-            "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
-            (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
-          }
-          style={{
-            animationDelay: "40ms",
-            bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
-            top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
-          }}
-          aria-label="ブロックライブラリ"
-        >
-          {sheet === "library" ? (
-            <div
-              className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden touch-none"
-              onPointerDown={startHandleDrag}
-              role="presentation"
-              aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
-            >
-              <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
-            </div>
-          ) : null}
-          {library}
-        </aside>
+        <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row" role="main">
+          <aside
+            data-editor-column="library"
+            className={
+              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+              "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
+              (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
+            }
+            style={{
+              animationDelay: "40ms",
+              bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
+              top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
+            }}
+            aria-label="ブロックライブラリ"
+          >
+            {sheet === "library" ? (
+              <div
+                className="shrink-0 border-b border-slate-100 bg-white px-3 py-1.5 lg:hidden touch-none"
+                onPointerDown={startHandleDrag}
+                role="presentation"
+                aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
+              >
+                <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
+              </div>
+            ) : null}
+            {library}
+          </aside>
 
-        <section
-          data-editor-column="canvas"
-          className={
-            "app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100 " +
-            "pb-[var(--editor-mobile-nav-h)] lg:pb-0"
-          }
-          aria-label="キャンバス"
-          style={{ animationDelay: "90ms" }}
-        >
-          {canvas}
-        </section>
+          <section
+            data-editor-column="canvas"
+            className="app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100"
+            aria-label="キャンバス"
+            style={{ animationDelay: "90ms" }}
+          >
+            {canvas}
+          </section>
 
-        <aside
-          data-editor-column="settings"
-          className={
-            "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
-            "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
-            (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
-          }
-          style={{
-            animationDelay: "140ms",
-            bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
-            top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
-          }}
-          aria-label="ブロック設定"
-        >
-          {sheet === "settings" ? (
-            <div
-              className="shrink-0 border-b border-slate-100 bg-white/96 px-3 py-1.5 lg:hidden touch-none"
-              onPointerDown={startHandleDrag}
-              role="presentation"
-              aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
-            >
-              <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
-            </div>
-          ) : null}
-          {settings}
-        </aside>
+          <aside
+            data-editor-column="settings"
+            className={
+              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+              "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
+              (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
+            }
+            style={{
+              animationDelay: "140ms",
+              bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
+              top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
+            }}
+            aria-label="ブロック設定"
+          >
+            {sheet === "settings" ? (
+              <div
+                className="shrink-0 border-b border-slate-100 bg-white px-3 py-1.5 lg:hidden touch-none"
+                onPointerDown={startHandleDrag}
+                role="presentation"
+                aria-label={`パネルハンドル（現在: ${MOBILE_SHEET_LABEL[mobileSheetSize]}）`}
+              >
+                <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-300" aria-hidden />
+              </div>
+            ) : null}
+            {settings}
+          </aside>
+        </div>
       </div>
 
-      {/* Mobile bottom navigation */}
-      {mobileActions != null && !sheetOpen ? (
-        <div
-          className="fixed inset-x-0 z-[60] px-2 lg:hidden"
-          style={{ bottom: MOBILE_NAV_HEIGHT }}
-        >
-          <div className="ui-pop-modal-enter mx-auto max-w-2xl rounded-2xl border border-slate-200/90 bg-white/95 p-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-sm">
-            {mobileActions}
+      <div className="relative z-[100] shrink-0 lg:hidden">
+        {mobileActions != null && !sheetOpen ? (
+          <div className="border-t border-slate-200/80 bg-white px-2 py-2">
+            <div className="mx-auto max-w-2xl rounded-xl border border-slate-200/90 bg-white p-2 shadow-sm">
+              {mobileActions}
+            </div>
           </div>
-        </div>
-      ) : null}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-[60] flex border-t border-slate-200 bg-white px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.08)] lg:hidden"
-        style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
-        aria-label="エディタ操作"
-      >
-        <button
-          type="button"
-          onClick={openLibrary}
-          aria-label="追加タブを開く"
-          className={
-            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
-            (sheet === "library"
-              ? "text-slate-900"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
-          }
+        ) : null}
+        <nav
+          className="flex border-t border-slate-200 bg-white px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.1)]"
+          style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
+          aria-label="エディタ操作"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          ブロック追加
-        </button>
-        <button
-          type="button"
-          onClick={focusCanvas}
-          aria-label="編集タブを開く"
-          className={
-            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
-            (sheet === "none"
-              ? "text-slate-900"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
-          }
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          キャンバス
-        </button>
-        <button
-          type="button"
-          onClick={openSettings}
-          aria-label="ブロック設定タブを開く"
-          className={
-            "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
-            (sheet === "settings"
-              ? "text-slate-900"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")
-          }
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
-          </svg>
-          ブロック設定
-        </button>
-      </nav>
+          <button
+            type="button"
+            onClick={openLibrary}
+            aria-label="追加タブを開く"
+            className={
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              (sheet === "library"
+                ? "text-slate-900"
+                : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
+            }
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            ブロック追加
+          </button>
+          <button
+            type="button"
+            onClick={focusCanvas}
+            aria-label="編集タブを開く"
+            className={
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              (sheet === "none"
+                ? "text-slate-900"
+                : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
+            }
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            キャンバス
+          </button>
+          <button
+            type="button"
+            onClick={openSettings}
+            aria-label="ブロック設定タブを開く"
+            className={
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              (sheet === "settings"
+                ? "text-slate-900"
+                : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
+            }
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
+            </svg>
+            ブロック設定
+          </button>
+        </nav>
+      </div>
     </div>
   );
 }

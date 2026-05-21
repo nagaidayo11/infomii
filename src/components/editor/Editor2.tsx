@@ -1335,7 +1335,7 @@ export function Editor2({
               {!isDemoMode && !initialEditorLoading && publishStatus === "published" && hasUnpublishedChanges && (
                 <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-0 py-1.5 text-center text-sm leading-tight text-emerald-800">未反映の変更があります。プレビュー・QR・公開更新のいずれかで公開ページへ反映できます</div>
               )}
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-4 max-lg:pb-6">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-6">
                 <FreeformCanvas
                   cards={cards}
                   selectedCardId={selectedCardId}
