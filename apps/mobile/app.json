@@ -1,19 +1,20 @@
 {
   "expo": {
-    "name": "Hotel Idle",
-    "slug": "hotel-idle",
+    "name": "Infomii",
+    "slug": "infomii",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "infomii",
+    "userInterfaceStyle": "light",
     "platforms": ["ios", "android"],
     "assetBundlePatterns": ["**/*"],
-    "plugins": [
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
-        }
-      ]
-    ]
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.infomii.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

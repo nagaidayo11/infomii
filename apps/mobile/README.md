@@ -1,53 +1,30 @@
-# Hotel Idle Mobile (Expo)
+# Infomii Mobile (iOS-first)
 
-## Setup
+Calm travel utility app — React Native, Expo Router, TypeScript.
+
+## Run
 
 ```bash
-cd /Users/nagai/Desktop/hotel/apps/mobile
+cd apps/mobile
 npm install
-npm run start
+npm run ios
 ```
 
-## Ad Reward Runtime
+Copy `.env.example` to `.env` and set:
 
-- Expo Go: falls back to mock ad flow automatically.
-- Dev Build: uses `react-native-google-mobile-ads` rewarded ads.
+- `EXPO_PUBLIC_SUPABASE_*` — same project as web (auth + drafts + published feed)
+- `EXPO_PUBLIC_APP_URL` — share links / QR target (`/p/[slug]`)
 
-## Enable Real Rewarded Ads (Dev Build)
+Auth matches web: email/password, Google OAuth, plus mobile magic link & Apple (requires Supabase providers).
 
-1. Install dependencies:
+## Structure
 
-```bash
-cd /Users/nagai/Desktop/hotel/apps/mobile
-npm install
-```
+- `app/` — Expo Router screens (tabs + itinerary detail)
+- `src/design/` — colors, spacing, typography
+- `src/data/` — sample one-day itinerary cards (no login required)
+- `src/components/` — cards, explore deck, timeline
+- `src/stores/` — saved library (AsyncStorage), optional Supabase auth
 
-2. Optional env vars for rewarded ad unit IDs (`.env`):
+## Design
 
-```bash
-EXPO_PUBLIC_ADMOB_REWARDED_IOS=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
-EXPO_PUBLIC_ADMOB_REWARDED_ANDROID=ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx
-```
-
-3. Build with native modules:
-
-```bash
-npx expo prebuild
-npx expo run:ios
-# or
-npx expo run:android
-```
-
-## What is migrated
-
-- Core economy loop (passive income + check-in tap)
-- Hotel grid growth
-- Upgrades
-- Achievements
-- Save/load with AsyncStorage
-- Ad reward mock flow (2x boost / instant reward + cooldown)
-
-## Next replacement point
-
-- Real SDK adapter is already wired in `src/ads/rewarded-ad.ts`.
-- Replace test app IDs in `app.json` before production release.
+Soft mist blue, frosted tab bar, large cards, horizontal discovery sections, swipe explore deck. No ads, no forced login on launch.
