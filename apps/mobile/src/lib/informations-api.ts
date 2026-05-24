@@ -144,6 +144,75 @@ export async function updateDraftItinerary(
   if (error) throw error;
 }
 
+export async function publishItinerary(id: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("Supabase が未設定です");
+
+  const hotelId = await ensureUserHotelScopeForOnboarding();
+  if (!hotelId) throw new Error("ログインが必要です");
+
+  const { error } = await supabase
+    .from("informations")
+    .update({
+      status: "published",
+      publish_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("hotel_id", hotelId);
+
+  if (error) throw error;
+}
+
+export async function upsertDraftFromLocal(
+  title: string,
+  draftBlocks: DraftBlock[],
+  existingId?: string,
+): Promise<string> {
+  if (existingId) {
+    await updateDraftItinerary(existingId, title, draftBlocks);
+    return existingId;
+  }
+  return createDraftItinerary(title, draftBlocks);
+}
+
+export async function searchPublishedItineraries(query: string, limit = 24): Promise<ItineraryCard[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const q = query.trim();
+  if (!q) return fetchPublishedItineraries(limit);
+
+  const escaped = q.replace(/[%_]/g, "\\$&");
+  const pattern = `%${escaped}%`;
+  const { data, error } = await supabase
+    .from("informations")
+    .select("id,hotel_id,title,body,images,content_blocks,status,slug,updated_at")
+    .eq("status", "published")
+    .or(`title.ilike."${pattern}",body.ilike."${pattern}",slug.ilike."${pattern}"`)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data.map((row) => mapInformationToCard(mapRow(row as Record<string, unknown>)));
+}
+
+export async function recordItineraryView(
+  informationId: string,
+  slug: string,
+  hotelId: string | null,
+): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase || !hotelId) return;
+
+  await supabase.from("information_views").insert({
+    information_id: informationId,
+    hotel_id: hotelId,
+    slug,
+    source: "mobile",
+  });
+}
+
 export function isRemoteItineraryId(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }

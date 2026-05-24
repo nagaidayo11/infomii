@@ -29,9 +29,9 @@ const CARD_HEIGHT = CARD_WIDTH * 1.25;
 
 type Props = {
   items: ItineraryCard[];
-  savedIds: string[];
+  isSaved: (item: ItineraryCard) => boolean;
   onOpen: (id: string) => void;
-  onToggleSave: (id: string) => void;
+  onToggleSave: (item: ItineraryCard) => void;
   onShare?: (item: ItineraryCard) => void;
 };
 
@@ -76,7 +76,7 @@ function DeckCard({
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.subtitle}>{item.subtitle}</Text>
           <Text style={styles.meta}>
-            {item.location} · {item.duration} · {item.stops} spots
+            {item.location} · {item.duration} · {item.stops} スポット
           </Text>
           <View style={styles.actions}>
             <Pressable
@@ -87,7 +87,7 @@ function DeckCard({
               }}
             >
               <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={20} color={colors.ink} />
-              <Text style={styles.actionLabel}>{saved ? "Saved" : "Save"}</Text>
+              <Text style={styles.actionLabel}>{saved ? "保存済み" : "保存"}</Text>
             </Pressable>
             <Pressable
               style={styles.actionBtn}
@@ -97,7 +97,7 @@ function DeckCard({
               }}
             >
               <Ionicons name="qr-code-outline" size={20} color={colors.ink} />
-              <Text style={styles.actionLabel}>Share</Text>
+              <Text style={styles.actionLabel}>共有</Text>
             </Pressable>
           </View>
         </View>
@@ -106,7 +106,7 @@ function DeckCard({
   );
 }
 
-export function ExploreDeck({ items, savedIds, onOpen, onToggleSave, onShare }: Props) {
+export function ExploreDeck({ items, isSaved, onOpen, onToggleSave, onShare }: Props) {
   const [index, setIndex] = useState(0);
   const lastIndex = useRef(0);
 
@@ -134,9 +134,9 @@ export function ExploreDeck({ items, savedIds, onOpen, onToggleSave, onShare }: 
         renderItem={({ item }) => (
           <DeckCard
             item={item}
-            saved={savedIds.includes(item.id)}
+            saved={isSaved(item)}
             onOpen={() => onOpen(item.id)}
-            onToggleSave={() => onToggleSave(item.id)}
+            onToggleSave={() => onToggleSave(item)}
             onShare={onShare ? () => onShare(item) : undefined}
           />
         )}
@@ -146,7 +146,7 @@ export function ExploreDeck({ items, savedIds, onOpen, onToggleSave, onShare }: 
           <View key={item.id} style={[styles.dot, i === index && styles.dotActive]} />
         ))}
       </View>
-      <Text style={styles.hint}>Swipe to discover · {index + 1} / {items.length}</Text>
+      <Text style={styles.hint}>スワイプして発見 · {index + 1} / {items.length}</Text>
     </View>
   );
 }

@@ -34,7 +34,7 @@ function ProfileRow({ icon, label, value, onPress }: RowProps) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, enabled, signOut } = useAuth();
-  const { savedIds } = useSaved();
+  const { savedKeys } = useSaved();
   const [draftCount, setDraftCount] = useState(0);
 
   useEffect(() => {
@@ -44,13 +44,13 @@ export default function ProfileScreen() {
 
   return (
     <Screen bottomInset={TAB_BAR_SPACE}>
-      <Text style={styles.hero}>Profile</Text>
-      <Text style={styles.sub}>Minimal. Calm. Yours.</Text>
+      <Text style={styles.hero}>マイページ</Text>
+      <Text style={styles.sub}>シンプルに。静かに。あなたのもの。</Text>
 
       <View style={styles.avatar}>
         <Ionicons name="person-outline" size={32} color={colors.accentDeep} />
       </View>
-      <Text style={styles.name}>{user?.email?.split("@")[0] ?? "Guest"}</Text>
+      <Text style={styles.name}>{user?.email?.split("@")[0] ?? "ゲスト"}</Text>
       <Text style={styles.email}>
         {user?.email ?? (enabled ? "ログインで Web と同期" : "ローカルモード（サンプル閲覧）")}
       </Text>
@@ -62,18 +62,18 @@ export default function ProfileScreen() {
       ) : null}
 
       <View style={styles.card}>
-        <ProfileRow icon="bookmark-outline" label="Saved itineraries" value={`${savedIds.length}`} onPress={() => router.push("/saved")} />
+        <ProfileRow icon="bookmark-outline" label="保存したしおり" value={`${savedKeys.length}件`} onPress={() => router.push("/saved")} />
         <ProfileRow
           icon="document-text-outline"
-          label="My drafts (Supabase)"
-          value={user ? `${draftCount}` : "—"}
+          label="下書き（Supabase）"
+          value={user ? `${draftCount}件` : "—"}
         />
-        <ProfileRow icon="sparkles-outline" label="Premium" value="Explore themes" />
-        <ProfileRow icon="share-outline" label="Shared journeys" value="Coming soon" />
+        <ProfileRow icon="sparkles-outline" label="プレミアム" value="テーマを見る" />
+        <ProfileRow icon="share-outline" label="共有した旅" value="準備中" />
       </View>
 
       <View style={styles.premiumBanner}>
-        <Text style={styles.premiumTitle}>More beautiful. More calm.</Text>
+        <Text style={styles.premiumTitle}>もっと美しく。もっと静かに。</Text>
         <Text style={styles.premiumBody}>
           広告なし。プレミアムテンプレート・オフライン・高級 QR スタイルなど、ライフスタイル向けの拡張のみ。
         </Text>

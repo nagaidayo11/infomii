@@ -1,12 +1,14 @@
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ShareSheet } from "@/components/ShareSheet";
 import { TimelineView } from "@/components/TimelineView";
 import { getCategoryLabel } from "@/data/sample-itineraries";
 import { useItineraryDetail } from "@/hooks/use-itinerary-feed";
+import { recordItineraryView, isRemoteItineraryId } from "@/lib/informations-api";
 import { useShareSheet } from "@/hooks/use-share-sheet";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
@@ -18,9 +20,16 @@ export default function ItineraryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { isSaved, toggleSave } = useSaved();
+  const { isSaved, toggleSave, refreshSaves } = useSaved();
   const { item, loading } = useItineraryDetail(typeof id === "string" ? id : undefined);
   const { shareItem, shareVisible, openShare, closeShare } = useShareSheet();
+
+  useEffect(() => {
+    if (!item || item.source !== "remote" || !isRemoteItineraryId(item.id)) return;
+    if (item.hotelId) {
+      void recordItineraryView(item.id, item.slug, item.hotelId);
+    }
+  }, [item]);
 
   if (loading) {
     return (
@@ -33,15 +42,15 @@ export default function ItineraryDetailScreen() {
   if (!item) {
     return (
       <View style={[styles.root, styles.center]}>
-        <Text style={typography.title}>Itinerary not found</Text>
+        <Text style={typography.title}>しおりが見つかりません</Text>
         <Pressable onPress={() => router.back()}>
-          <Text style={styles.backLink}>Go back</Text>
+          <Text style={styles.backLink}>戻る</Text>
         </Pressable>
       </View>
     );
   }
 
-  const saved = isSaved(item.id);
+  const saved = isSaved(item);
 
   return (
     <View style={styles.root}>
@@ -63,7 +72,7 @@ export default function ItineraryDetailScreen() {
           style={styles.heroActionBtn}
           onPress={() => {
             void selection();
-            toggleSave(item.id);
+            void toggleSave(item).then(() => refreshSaves());
           }}
         >
           <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={20} color="#fff" />
@@ -87,12 +96,12 @@ export default function ItineraryDetailScreen() {
         <View style={styles.sheetInner}>
           <Text style={styles.category}>{getCategoryLabel(item.category)}</Text>
           {item.status ? (
-            <Text style={styles.status}>{item.status === "published" ? "Published" : "Draft"}</Text>
+            <Text style={styles.status}>{item.status === "published" ? "公開中" : "下書き"}</Text>
           ) : null}
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.subtitle}>{item.subtitle}</Text>
           <Text style={styles.meta}>
-            {item.location} · {item.duration} · {item.stops} stops
+            {item.location} · {item.duration} · {item.stops} スポット
           </Text>
           <TimelineView blocks={item.blocks} />
         </View>

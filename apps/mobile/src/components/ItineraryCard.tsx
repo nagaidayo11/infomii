@@ -89,7 +89,7 @@ export function ItineraryCard({
       </View>
       {item.premium ? (
         <View style={styles.premiumBadge}>
-          <Text style={styles.premiumText}>Premium</Text>
+          <Text style={styles.premiumText}>プレミアム</Text>
         </View>
       ) : null}
     </Pressable>

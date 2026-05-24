@@ -1,4 +1,14 @@
-export type ItineraryCategory = "travel" | "hotel" | "local" | "wellness";
+export type ItineraryCategory =
+  | "travel"
+  | "daytrip"
+  | "hotel"
+  | "local"
+  | "wellness"
+  | "oshi"
+  | "live"
+  | "event"
+  | "gourmet"
+  | "group";
 
 export type ItineraryBlockType =
   | "hero"
@@ -8,7 +18,8 @@ export type ItineraryBlockType =
   | "map"
   | "nearby"
   | "notice"
-  | "welcome";
+  | "welcome"
+  | "image";
 
 export type ScheduleItem = {
   day: string;
@@ -22,6 +33,7 @@ export type ItineraryBlock = {
   title?: string;
   subtitle?: string;
   body?: string;
+  imageUrl?: string;
   scheduleItems?: ScheduleItem[];
   checklistItems?: string[];
   steps?: { title: string; description: string }[];
@@ -45,10 +57,14 @@ export type ItineraryCard = {
   /** Sample cards use `sample`; Supabase rows use `remote`. */
   source?: "sample" | "remote";
   status?: "draft" | "published";
+  /** Supabase `informations.hotel_id`（PV 記録など） */
+  hotelId?: string | null;
 };
 
 export type DraftBlock = {
   id: string;
   type: ItineraryBlockType;
   title: string;
+  /** タイムライン1行目・メモ・地図テキストなど */
+  body?: string;
 };

@@ -2,16 +2,33 @@ import type { ItineraryBlock, ItineraryCard, ItineraryCategory } from "@/types/i
 import type { InformationBlock, InformationRow } from "@/types/information";
 import { normalizeContentBlocks } from "@/lib/normalize-blocks";
 
-const DEFAULT_COVER =
-  "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80";
+import { IMG } from "@/data/sample-images";
+
+const DEFAULT_COVER = IMG.kyotoCover;
 
 function inferCategory(title: string, blocks: InformationBlock[]): ItineraryCategory {
   const hay = `${title} ${blocks.map((b) => b.text ?? b.sectionTitle ?? "").join(" ")}`.toLowerCase();
+  if (hay.includes("推し") || hay.includes("聖地") || hay.includes("グッズ")) return "oshi";
+  if (hay.includes("ライブ") || hay.includes("コンサート") || hay.includes("arena") || hay.includes("アリーナ")) {
+    return "live";
+  }
+  if (hay.includes("祭") || hay.includes("フェス") || hay.includes("花火") || hay.includes("イベント")) {
+    return "event";
+  }
+  if (hay.includes("グルメ") || hay.includes("食べ") || hay.includes("レストラン") || hay.includes("料理")) {
+    return "gourmet";
+  }
+  if (hay.includes("仲間") || hay.includes("グループ") || hay.includes("分担") || hay.includes("合流")) {
+    return "group";
+  }
   if (hay.includes("hotel") || hay.includes("宿") || hay.includes("check-in") || hay.includes("チェックイン")) {
     return "hotel";
   }
   if (hay.includes("sauna") || hay.includes("サウナ") || hay.includes("温泉")) {
     return "wellness";
+  }
+  if (hay.includes("日帰り") || hay.includes("週末") || hay.includes("day trip")) {
+    return "daytrip";
   }
   if (hay.includes("cafe") || hay.includes("カフェ") || hay.includes("おでかけ")) {
     return "local";
@@ -38,7 +55,7 @@ function mapBlocksToTimeline(blocks: InformationBlock[]): ItineraryBlock[] {
       out.push({
         id: block.id,
         type: "schedule",
-        title: block.label ?? "Timeline",
+        title: block.label ?? "タイムライン",
         scheduleItems: block.hoursItems.map((item) => {
           const parts = item.label.split(/\s+/);
           return {
@@ -54,7 +71,7 @@ function mapBlocksToTimeline(blocks: InformationBlock[]): ItineraryBlock[] {
       out.push({
         id: block.id,
         type: "checklist",
-        title: block.label ?? "Checklist",
+        title: block.label ?? "持ち物リスト",
         checklistItems: block.checklistItems.map((i) => i.text),
       });
       continue;
@@ -63,7 +80,7 @@ function mapBlocksToTimeline(blocks: InformationBlock[]): ItineraryBlock[] {
       out.push({
         id: block.id,
         type: "steps",
-        title: block.sectionTitle ?? "Section",
+        title: block.sectionTitle ?? "セクション",
         steps: [
           {
             title: block.sectionTitle ?? "",
@@ -77,14 +94,14 @@ function mapBlocksToTimeline(blocks: InformationBlock[]): ItineraryBlock[] {
       out.push({
         id: block.id,
         type: "notice",
-        title: "Note",
+        title: "メモ",
         body: block.text,
       });
     }
   }
 
   if (!out.length) {
-    out.push({ id: "hero-fallback", type: "hero", title: "Itinerary", subtitle: "" });
+    out.push({ id: "hero-fallback", type: "hero", title: "旅のしおり", subtitle: "" });
   }
   return out;
 }
@@ -104,11 +121,12 @@ export function mapInformationToCard(row: InformationRow): ItineraryCard {
     subtitle: row.body.slice(0, 80) || blocks.find((b) => b.type === "paragraph")?.text?.slice(0, 80) || "",
     coverImage,
     category: inferCategory(row.title, blocks),
-    location: "Japan",
-    duration: row.status === "published" ? "Published" : "Draft",
+    location: "日本",
+    duration: row.status === "published" ? "公開中" : "下書き",
     stops: scheduleCount + stepsCount || blocks.length,
     blocks: timeline,
     source: "remote",
     status: row.status,
+    hotelId: row.hotel_id,
   };
 }

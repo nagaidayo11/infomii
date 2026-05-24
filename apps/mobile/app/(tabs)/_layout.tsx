@@ -34,35 +34,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "ホーム",
           tabBarIcon: ({ focused }) => tabIcon(focused ? "home" : "home-outline", focused),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Explore",
+          title: "探す",
           tabBarIcon: ({ focused }) => tabIcon(focused ? "compass" : "compass-outline", focused),
         }}
       />
       <Tabs.Screen
         name="create"
         options={{
-          title: "Create",
+          title: "作る",
           tabBarIcon: ({ focused }) => tabIcon(focused ? "add-circle" : "add-circle-outline", focused),
         }}
       />
       <Tabs.Screen
         name="saved"
         options={{
-          title: "Saved",
+          title: "保存",
           tabBarIcon: ({ focused }) => tabIcon(focused ? "bookmark" : "bookmark-outline", focused),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "マイページ",
           tabBarIcon: ({ focused }) => tabIcon(focused ? "person" : "person-outline", focused),
         }}
       />

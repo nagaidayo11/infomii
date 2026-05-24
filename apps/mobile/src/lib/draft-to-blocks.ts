@@ -14,9 +14,17 @@ export function draftBlocksToContentBlocks(
   ];
 
   for (const draft of drafts) {
+    const note = draft.body?.trim();
     switch (draft.type) {
       case "hero":
-        blocks.push({ id: draft.id, type: "heading", text: draft.title });
+        blocks.push({
+          id: draft.id,
+          type: "heading",
+          text: note || draft.title,
+        });
+        if (note && note !== draft.title) {
+          blocks.push({ id: uid("sub"), type: "paragraph", text: draft.title });
+        }
         break;
       case "schedule":
         blocks.push({
@@ -24,8 +32,11 @@ export function draftBlocksToContentBlocks(
           type: "hours",
           label: draft.title,
           hoursItems: [
-            { id: uid("h"), label: "1日目 10:00", value: "Add your first stop" },
-            { id: uid("h"), label: "1日目 14:00", value: "Second stop" },
+            {
+              id: uid("h"),
+              label: "1日目",
+              value: note || "10:00 最初の予定を入力",
+            },
           ],
         });
         break;
@@ -34,10 +45,7 @@ export function draftBlocksToContentBlocks(
           id: draft.id,
           type: "checklist",
           label: draft.title,
-          checklistItems: [
-            { id: uid("c"), text: "Passport / ID" },
-            { id: uid("c"), text: "Charger" },
-          ],
+          checklistItems: [{ id: uid("c"), text: note || "持ち物を入力" }],
         });
         break;
       case "steps":
@@ -45,15 +53,16 @@ export function draftBlocksToContentBlocks(
           id: draft.id,
           type: "section",
           sectionTitle: draft.title,
-          sectionBody: "Step-by-step notes for your day.",
+          sectionBody: note || "ステップの内容を入力",
         });
         break;
       case "map":
       case "notice":
+      case "welcome":
         blocks.push({
           id: draft.id,
           type: "paragraph",
-          text: `${draft.title}: meeting point and address.`,
+          text: note ? `${draft.title}: ${note}` : `${draft.title}の内容を入力`,
         });
         break;
       case "nearby":
@@ -61,14 +70,7 @@ export function draftBlocksToContentBlocks(
           id: draft.id,
           type: "section",
           sectionTitle: draft.title,
-          sectionBody: "Nearby spots to visit.",
-        });
-        break;
-      case "welcome":
-        blocks.push({
-          id: draft.id,
-          type: "paragraph",
-          text: draft.title,
+          sectionBody: note || "スポット名とメモを入力",
         });
         break;
       default:

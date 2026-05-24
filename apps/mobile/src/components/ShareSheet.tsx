@@ -59,8 +59,8 @@ export function ShareSheet({ visible, item, onClose }: Props) {
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         <View style={styles.handle} />
-        <Text style={styles.title}>Share journey</Text>
-        <Text style={styles.subtitle}>Beautiful link & QR — not a raw admin URL.</Text>
+        <Text style={styles.title}>旅を共有</Text>
+        <Text style={styles.subtitle}>きれいなリンクと QR。管理画面の生 URL ではありません。</Text>
 
         <ViewShot ref={shotRef} options={{ format: "png", quality: 0.95 }}>
           <View style={styles.cardPreview}>
@@ -85,11 +85,11 @@ export function ShareSheet({ visible, item, onClose }: Props) {
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={shareImage}>
             <Ionicons name="image-outline" size={20} color={colors.ink} />
-            <Text style={styles.btnText}>Share image</Text>
+            <Text style={styles.btnText}>画像で共有</Text>
           </Pressable>
           <Pressable style={styles.btnPrimary} onPress={shareLink}>
             <Ionicons name="link-outline" size={20} color="#fff" />
-            <Text style={styles.btnPrimaryText}>Share link</Text>
+            <Text style={styles.btnPrimaryText}>リンクで共有</Text>
           </Pressable>
         </View>
       </View>

@@ -29,6 +29,7 @@ export function Screen({
       style={[
         padded && styles.padded,
         { paddingTop: insets.top + spacing.md, paddingBottom: bottomInset + spacing.xl },
+        !scroll && styles.fill,
         contentStyle,
       ]}
     >
@@ -61,5 +62,6 @@ export function Screen({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.warmWhite },
   padded: { paddingHorizontal: spacing.screen },
+  fill: { flex: 1, width: "100%" },
   scrollGrow: { flexGrow: 1 },
 });

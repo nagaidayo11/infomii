@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
@@ -78,6 +79,14 @@ export function TimelineView({ blocks }: Props) {
             </>
           ) : null}
 
+          {block.type === "image" && block.imageUrl ? (
+            <>
+              {block.title ? <Text style={styles.blockTitle}>{block.title}</Text> : null}
+              <Image source={{ uri: block.imageUrl }} style={styles.blockImage} contentFit="cover" />
+              {block.body ? <Text style={styles.bodyText}>{block.body}</Text> : null}
+            </>
+          ) : null}
+
           {block.type === "hero" ? (
             <View style={styles.heroBlock}>
               <Text style={styles.heroTitle}>{block.title}</Text>
@@ -155,4 +164,10 @@ const styles = StyleSheet.create({
   heroBlock: { gap: spacing.xs },
   heroTitle: { fontSize: 20, fontWeight: "700", color: colors.ink },
   heroSub: typography.body,
+  blockImage: {
+    width: "100%",
+    height: 180,
+    borderRadius: radius.md,
+    backgroundColor: colors.frost,
+  },
 });
