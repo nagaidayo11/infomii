@@ -28,24 +28,35 @@ export function getNativeOAuthReturnUri(): string {
 }
 
 /**
- * Supabase Redirect URLs に登録: https://YOUR_DOMAIN/auth/mobile-callback*
- * （末尾 * ワイルドカード推奨 — ?native= クエリ付きのため）
+ * Supabase Redirect URLs に登録する URI（ログイン画面に表示）。
+ * - Expo Go: 表示された exp://… をそのまま追加
+ * - 開発ビルド/本番: https://…/auth/mobile-callback*（ワイルドカード）
  */
 export function getAuthRedirectUri(): string {
+  if (isExpoGo()) {
+    return getNativeOAuthReturnUri();
+  }
   const native = encodeURIComponent(getNativeOAuthReturnUri());
   return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}?native=${native}`;
 }
 
-/** WebBrowser が URL を受け取るときのプレフィックス */
-export function getOAuthBrowserReturnPrefix(): string {
+/** WebBrowser.openAuthSessionAsync の第2引数（この URL に着いたらアプリへ返す） */
+export function getOAuthBrowserReturnUrl(): string {
+  if (isExpoGo()) {
+    return getNativeOAuthReturnUri();
+  }
   return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`;
 }
 
 export function getAuthRedirectUriAlternates(): string[] {
+  const native = getNativeOAuthReturnUri();
+  if (isExpoGo()) {
+    return [native, `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}*`];
+  }
   return [
     `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}*`,
     `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`,
-    getNativeOAuthReturnUri(),
+    native,
   ];
 }
 

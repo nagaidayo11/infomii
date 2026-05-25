@@ -133,8 +133,13 @@ export default function AuthScreen() {
     setMessage("");
     await persistInviteBeforeAuth();
     const { error } = await signInWithGoogleOAuth();
-    if (error) setMessage(formatGoogleAuthError(error));
-    else await finishAuth();
+    if (error) {
+      setMessage(
+        error.includes("\n") || error.length > 48
+          ? error
+          : formatGoogleAuthError(error),
+      );
+    } else await finishAuth();
     setSubmitting(false);
   }
 
@@ -188,11 +193,13 @@ export default function AuthScreen() {
 
           {hasSupabaseEnv ? (
             <Text style={styles.redirectHint} selectable>
-              Supabase → Redirect URLs に追加:{"\n"}
-              {getAuthRedirectUriAlternates().join("\n")}
               {isExpoGo()
-                ? "\n\n※ Expo Go は上の exp:// をそのまま登録（再起動で変わる場合あり）"
-                : ""}
+                ? "Expo Go: Supabase → Redirect URLs に次を1件追加:\n"
+                : "Supabase → Redirect URLs に追加:\n"}
+              {getAuthRedirectUri()}
+              {!isExpoGo()
+                ? "\n（ワイルドカード: " + getAuthRedirectUriAlternates()[0] + "）"
+                : "\n\n※ IP/ポートが変わったら expo start 後に表示を更新して再登録"}
             </Text>
           ) : null}
 

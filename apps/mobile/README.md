@@ -24,7 +24,7 @@ Auth matches web: **full gate** (launch requires login), email/password, Google 
 - **Expo Go**: `exp://…/--/auth/callback`（端末・起動ごとに異なる場合あり）
 - **開発ビルド/本番**: `https://…/auth/mobile-callback`
 
-1. Supabase → **Redirect URLs** に `https://infomii.com/auth/mobile-callback*`（**末尾の \* ワイルドカード必須**）を追加
+1. Supabase → **Redirect URLs** — **Expo Go** はログイン画面の `exp://…` をそのまま1件追加。本番ビルドは `https://infomii.com/auth/mobile-callback*`
 2. Web をデプロイ（`auth/mobile-callback` — `infomii://` へは飛ばさない）
 3. `npx expo start -c` で再起動
 
