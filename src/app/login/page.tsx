@@ -20,7 +20,6 @@ import {
   INVITE_REDEEM_LOCK_KEY,
 } from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
-import { buildAppOAuthReturnUrl } from "@/lib/mobile-oauth-return";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -106,34 +105,6 @@ function LoginForm() {
       searchParams.get("error_description") ?? searchParams.get("error");
     if (!oauthError) return;
     setMessage(formatGoogleAuthError(oauthError));
-  }, [searchParams]);
-
-  /** モバイルアプリ Google OAuth: Web ダッシュボードへ行かず infomii:// へ即復帰 */
-  useEffect(() => {
-    if (searchParams.get("mobile") !== "1") return;
-    if (typeof window === "undefined") return;
-
-    const error =
-      searchParams.get("error_description") ?? searchParams.get("error");
-    const code = searchParams.get("code");
-    const hash = window.location.hash;
-
-    const target = new URL("infomii://auth/callback");
-    if (error) {
-      target.searchParams.set("error", error);
-      window.location.replace(target.toString());
-      return;
-    }
-    if (code) {
-      const qs = new URLSearchParams(window.location.search);
-      qs.delete("mobile");
-      qs.forEach((value, key) => target.searchParams.set(key, value));
-      window.location.replace(target.toString());
-      return;
-    }
-    if (hash.length > 1) {
-      window.location.replace(`infomii://auth/callback${hash}`);
-    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -305,31 +276,13 @@ function LoginForm() {
   }
 
   if (searchParams.get("mobile") === "1") {
-    const appLink =
-      typeof window !== "undefined"
-        ? buildAppOAuthReturnUrl(
-            new URLSearchParams(window.location.search),
-            window.location.hash,
-          )
-        : "infomii://auth/callback";
-    const hasOAuthPayload =
-      searchParams.has("code") ||
-      (typeof window !== "undefined" && window.location.hash.includes("access_token"));
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center">
-        <p className="text-sm text-slate-600">アプリに戻しています…</p>
-        {hasOAuthPayload ? (
-          <a
-            href={appLink}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
-          >
-            アプリを開く
-          </a>
-        ) : (
-          <p className="max-w-sm text-xs leading-relaxed text-slate-500">
-            この画面が続く場合は、左上の × で閉じてアプリから Google ログインをもう一度お試しください。
-          </p>
-        )}
+        <p className="text-sm text-slate-600">認証が完了しました</p>
+        <p className="max-w-sm text-xs leading-relaxed text-slate-500">
+          左上の × で閉じるとアプリに戻ります。古い導線のため、最新アプリでは
+          /auth/mobile-callback を使います。
+        </p>
       </div>
     );
   }

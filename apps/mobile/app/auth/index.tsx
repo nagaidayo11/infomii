@@ -28,7 +28,12 @@ import {
   writePendingInviteCode,
 } from "@/lib/invite-pending";
 import { completeAfterLogin } from "@/lib/post-auth";
-import { getAuthRedirectUri, signInWithGoogleOAuth } from "@/lib/oauth";
+import {
+  getAuthRedirectUri,
+  getAuthRedirectUriAlternates,
+  isExpoGo,
+  signInWithGoogleOAuth,
+} from "@/lib/oauth";
 import { getSupabaseClient, hasSupabaseEnv } from "@/lib/supabase";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
@@ -184,7 +189,10 @@ export default function AuthScreen() {
           {hasSupabaseEnv ? (
             <Text style={styles.redirectHint} selectable>
               Supabase → Redirect URLs に追加:{"\n"}
-              {getAuthRedirectUri()}
+              {getAuthRedirectUriAlternates().join("\n")}
+              {isExpoGo()
+                ? "\n\n※ Expo Go は上の exp:// をそのまま登録（再起動で変わる場合あり）"
+                : ""}
             </Text>
           ) : null}
 

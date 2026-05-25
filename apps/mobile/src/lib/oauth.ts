@@ -1,5 +1,10 @@
 import * as WebBrowser from "expo-web-browser";
-import { applyOAuthRedirectUrl, getAuthRedirectUri } from "@/lib/oauth-session";
+import {
+  applyOAuthRedirectUrl,
+  getAuthRedirectUri,
+  getOAuthBrowserReturnPrefix,
+  isNativeOAuthRedirectUri,
+} from "@/lib/oauth-session";
 import { getSupabaseClient } from "@/lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -8,7 +13,15 @@ export {
   getAuthRedirectUri,
   getAuthRedirectUriAlternates,
   getNativeOAuthReturnUri,
+  isExpoGo,
 } from "@/lib/oauth-session";
+
+function isMisdirectedWebUrl(url: string): boolean {
+  if (!url.includes("infomii.com")) return false;
+  if (url.includes("/auth/mobile-callback")) return false;
+  if (url.includes("code=")) return false;
+  return url.includes("/dashboard") || url.endsWith("infomii.com") || url.endsWith("infomii.com/");
+}
 
 export async function signInWithGoogleOAuth(): Promise<{ error: string | null }> {
   const supabase = getSupabaseClient();
@@ -17,6 +30,7 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
   }
 
   const redirectTo = getAuthRedirectUri();
+  const browserReturnPrefix = getOAuthBrowserReturnPrefix();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -29,24 +43,35 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
   try {
     const authUrl = new URL(data.url);
     const redirectParam = decodeURIComponent(authUrl.searchParams.get("redirect_to") ?? "");
-    if (!redirectParam.includes("/auth/mobile-callback")) {
+    const redirectOk =
+      redirectParam.includes("/auth/mobile-callback") ||
+      isNativeOAuthRedirectUri(redirectParam);
+    if (!redirectOk) {
       return {
         error:
-          "OAuth の戻り先が正しく設定されていません。Supabase の Redirect URLs に " +
-          redirectTo +
-          " を追加してください。",
+          "OAuth の戻り先が正しくありません。Supabase Redirect URLs に次を追加してください:\n" +
+          `${browserReturnPrefix}*`,
       };
     }
   } catch {
     /* ignore parse errors */
   }
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+  await WebBrowser.warmUpAsync();
+  const result = await WebBrowser.openAuthSessionAsync(data.url, browserReturnPrefix, {
     showInRecents: true,
     preferEphemeralSession: true,
   });
+  await WebBrowser.coolDownAsync();
 
   if (result.type === "success" && result.url) {
+    if (isMisdirectedWebUrl(result.url)) {
+      return {
+        error:
+          "認証後に Web ダッシュボードへ飛ばされました。Supabase → Redirect URLs に次を追加してから再試行してください:\n" +
+          `${browserReturnPrefix}*`,
+      };
+    }
     return applyOAuthRedirectUrl(result.url);
   }
 
@@ -56,7 +81,7 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
 
   return {
     error:
-      "認証後にアプリへ戻れませんでした。Supabase の Redirect URLs に次を追加してください: " +
-      redirectTo,
+      "認証後にアプリへ戻れませんでした。Supabase → Redirect URLs に次を追加してください:\n" +
+      `${browserReturnPrefix}*`,
   };
 }

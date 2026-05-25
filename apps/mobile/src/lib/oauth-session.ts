@@ -1,26 +1,23 @@
 import { makeRedirectUri } from "expo-auth-session";
+import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import { APP_PUBLIC_URL } from "@/lib/config";
 import { getSupabaseClient } from "@/lib/supabase";
 
 const OAUTH_CALLBACK_PATH = "auth/callback";
 const WEB_MOBILE_CALLBACK_PATH = "/auth/mobile-callback";
-/**
- * Supabase Redirect URLs に登録する OAuth 戻り先（この URL をそのまま追加）。
- * /login?mobile=1 は Web がセッションを消費しアプリに code が渡らないため使わない。
- */
-export function getAuthRedirectUri(): string {
-  return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`;
+
+export function isExpoGo(): boolean {
+  return Constants.appOwnership === "expo";
 }
 
-export function getAuthRedirectUriAlternates(): string[] {
-  return [`${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`];
-}
-
-/** 外部ブラウザ用フォールバック（infomii:// / exp://） */
+/** アプリが受け取る deep link（exp:// または infomii://） */
 export function getNativeOAuthReturnUri(): string {
-  const isExpoGo = Constants.appOwnership === "expo";
-  if (isExpoGo) {
+  const fromLinking = Linking.createURL(OAUTH_CALLBACK_PATH);
+  if (fromLinking.startsWith("exp://") || fromLinking.startsWith("infomii://")) {
+    return fromLinking;
+  }
+  if (isExpoGo()) {
     return makeRedirectUri({ path: OAUTH_CALLBACK_PATH });
   }
   return makeRedirectUri({
@@ -28,6 +25,32 @@ export function getNativeOAuthReturnUri(): string {
     path: OAUTH_CALLBACK_PATH,
     preferLocalhost: false,
   });
+}
+
+/**
+ * Supabase Redirect URLs に登録: https://YOUR_DOMAIN/auth/mobile-callback*
+ * （末尾 * ワイルドカード推奨 — ?native= クエリ付きのため）
+ */
+export function getAuthRedirectUri(): string {
+  const native = encodeURIComponent(getNativeOAuthReturnUri());
+  return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}?native=${native}`;
+}
+
+/** WebBrowser が URL を受け取るときのプレフィックス */
+export function getOAuthBrowserReturnPrefix(): string {
+  return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`;
+}
+
+export function getAuthRedirectUriAlternates(): string[] {
+  return [
+    `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}*`,
+    `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`,
+    getNativeOAuthReturnUri(),
+  ];
+}
+
+export function isNativeOAuthRedirectUri(uri: string): boolean {
+  return uri.startsWith("exp://") || uri.startsWith("infomii://");
 }
 
 function readRedirectParams(url: string): Record<string, string> {
@@ -46,7 +69,6 @@ function readRedirectParams(url: string): Record<string, string> {
   return out;
 }
 
-/** Supabase OAuth リダイレクト URL からセッションを復元（PKCE code / hash トークン両対応） */
 export async function applyOAuthRedirectUrl(url: string): Promise<{ error: string | null }> {
   const supabase = getSupabaseClient();
   if (!supabase) {
