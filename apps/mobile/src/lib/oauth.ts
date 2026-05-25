@@ -1,5 +1,4 @@
 import * as WebBrowser from "expo-web-browser";
-import { APP_PUBLIC_URL } from "@/lib/config";
 import { applyOAuthRedirectUrl, getAuthRedirectUri } from "@/lib/oauth-session";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -29,11 +28,8 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
 
   try {
     const authUrl = new URL(data.url);
-    const redirectParam = authUrl.searchParams.get("redirect_to") ?? "";
-    if (
-      !redirectParam.includes("mobile=1") &&
-      !redirectParam.includes("mobile-callback")
-    ) {
+    const redirectParam = decodeURIComponent(authUrl.searchParams.get("redirect_to") ?? "");
+    if (!redirectParam.includes("/auth/mobile-callback")) {
       return {
         error:
           "OAuth の戻り先が正しく設定されていません。Supabase の Redirect URLs に " +
@@ -45,10 +41,7 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
     /* ignore parse errors */
   }
 
-  /** Site URL 直下へ飛んでもブラウザを閉じられるようオリジン一致で受ける */
-  const browserReturnUrl = APP_PUBLIC_URL;
-
-  const result = await WebBrowser.openAuthSessionAsync(data.url, browserReturnUrl, {
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
     showInRecents: true,
     preferEphemeralSession: true,
   });

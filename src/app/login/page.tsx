@@ -20,6 +20,7 @@ import {
   INVITE_REDEEM_LOCK_KEY,
 } from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
+import { buildAppOAuthReturnUrl } from "@/lib/mobile-oauth-return";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -304,9 +305,31 @@ function LoginForm() {
   }
 
   if (searchParams.get("mobile") === "1") {
+    const appLink =
+      typeof window !== "undefined"
+        ? buildAppOAuthReturnUrl(
+            new URLSearchParams(window.location.search),
+            window.location.hash,
+          )
+        : "infomii://auth/callback";
+    const hasOAuthPayload =
+      searchParams.has("code") ||
+      (typeof window !== "undefined" && window.location.hash.includes("access_token"));
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">アプリに戻しています…</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center">
+        <p className="text-sm text-slate-600">アプリに戻しています…</p>
+        {hasOAuthPayload ? (
+          <a
+            href={appLink}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            アプリを開く
+          </a>
+        ) : (
+          <p className="max-w-sm text-xs leading-relaxed text-slate-500">
+            この画面が続く場合は、左上の × で閉じてアプリから Google ログインをもう一度お試しください。
+          </p>
+        )}
       </div>
     );
   }

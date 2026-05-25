@@ -5,23 +5,16 @@ import { getSupabaseClient } from "@/lib/supabase";
 
 const OAUTH_CALLBACK_PATH = "auth/callback";
 const WEB_MOBILE_CALLBACK_PATH = "/auth/mobile-callback";
-/** 既に Supabase に登録済みの /login を利用（?mobile=1 で Web ダッシュボード自動遷移を抑止） */
-const WEB_LOGIN_MOBILE_PATH = "/login?mobile=1";
-
 /**
- * Supabase Redirect URLs に登録する OAuth 戻り先。
- * 優先: /login?mobile=1（多くの環境で既登録の /login と互換）
- * 代替: /auth/mobile-callback
+ * Supabase Redirect URLs に登録する OAuth 戻り先（この URL をそのまま追加）。
+ * /login?mobile=1 は Web がセッションを消費しアプリに code が渡らないため使わない。
  */
 export function getAuthRedirectUri(): string {
-  return `${APP_PUBLIC_URL}${WEB_LOGIN_MOBILE_PATH}`;
+  return `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`;
 }
 
 export function getAuthRedirectUriAlternates(): string[] {
-  return [
-    `${APP_PUBLIC_URL}${WEB_LOGIN_MOBILE_PATH}`,
-    `${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`,
-  ];
+  return [`${APP_PUBLIC_URL}${WEB_MOBILE_CALLBACK_PATH}`];
 }
 
 /** 外部ブラウザ用フォールバック（infomii:// / exp://） */

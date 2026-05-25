@@ -19,16 +19,14 @@ Auth matches web: **full gate** (launch requires login), email/password, Google 
 
 ### Google OAuth（アプリに戻る設定）
 
-モバイルは **`{EXPO_PUBLIC_APP_URL}/auth/mobile-callback`** に戻します（ログイン画面にも表示）。
+モバイル Google ログインは **`{EXPO_PUBLIC_APP_URL}/auth/mobile-callback`** に戻します（ログイン画面に表示）。
 
-1. Supabase → **Authentication → URL Configuration → Redirect URLs** に追加:
-   - `https://infomii.com/auth/mobile-callback`（本番 Web と同じドメイン）
-   - ローカル Web を使う場合: `http://localhost:3000/auth/mobile-callback`
-2. 上記と同じ URL で Web をデプロイ（`src/app/auth/mobile-callback`）していること
-3. `EXPO_PUBLIC_APP_URL` がその Web のオリジンと一致していること
-4. 変更後に `npx expo start` を再起動
+1. Supabase → **Redirect URLs** に **この URL を完全一致で** 追加（`/login` や `/login?mobile=1` では不可）
+2. Web をデプロイ（`src/app/auth/mobile-callback/route.ts`）
+3. `EXPO_PUBLIC_APP_URL` が本番 Web のオリジンと一致していること
+4. `npx expo start -c` でアプリ再起動
 
-`infomii://` だけを Redirect URLs に入れても Supabase が Web に逃がすことがあります。**必ず `/auth/mobile-callback` の https URL を登録**してください。
+「アプリに戻しています…」で止まる場合は Redirect URL 未登録か古いアプリビルドが多いです。
 
 ## Structure
 

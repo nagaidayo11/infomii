@@ -183,10 +183,8 @@ export default function AuthScreen() {
 
           {hasSupabaseEnv ? (
             <Text style={styles.redirectHint} selectable>
-              Supabase → Redirect URLs（いずれか必須）:{"\n"}
+              Supabase → Redirect URLs に追加:{"\n"}
               {getAuthRedirectUri()}
-              {"\n"}
-              または https://infomii.com/auth/mobile-callback
             </Text>
           ) : null}
 
