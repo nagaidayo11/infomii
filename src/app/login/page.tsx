@@ -303,6 +303,14 @@ function LoginForm() {
     }
   }
 
+  if (searchParams.get("mobile") === "1") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">アプリに戻しています…</p>
+      </div>
+    );
+  }
+
   if (loading || user) {
     const showInvite =
       typeof window !== "undefined" &&

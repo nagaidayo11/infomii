@@ -1,4 +1,5 @@
 import * as WebBrowser from "expo-web-browser";
+import { APP_PUBLIC_URL } from "@/lib/config";
 import { applyOAuthRedirectUrl, getAuthRedirectUri } from "@/lib/oauth-session";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -44,7 +45,10 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
     /* ignore parse errors */
   }
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+  /** Site URL 直下へ飛んでもブラウザを閉じられるようオリジン一致で受ける */
+  const browserReturnUrl = APP_PUBLIC_URL;
+
+  const result = await WebBrowser.openAuthSessionAsync(data.url, browserReturnUrl, {
     showInRecents: true,
     preferEphemeralSession: true,
   });

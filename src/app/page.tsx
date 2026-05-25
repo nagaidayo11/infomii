@@ -13,6 +13,7 @@ export default function RootPage() {
     const sp = new URLSearchParams(window.location.search);
     const code = sp.get("code");
     const hash = window.location.hash;
+
     if (code || hash.includes("access_token")) {
       const target = new URL("infomii://auth/callback");
       if (code) {
@@ -26,10 +27,10 @@ export default function RootPage() {
 
     if (loading) return;
     if (!enabled || !user) {
-      router.replace("/lp/saas");
+      window.location.replace("/lp/saas");
       return;
     }
-    router.replace("/dashboard");
+    window.location.replace("/dashboard");
   }, [enabled, loading, router, user]);
 
   return (
