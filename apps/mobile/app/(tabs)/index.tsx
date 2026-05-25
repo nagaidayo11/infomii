@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { HorizontalSection } from "@/components/HorizontalSection";
 import { ItineraryCard } from "@/components/ItineraryCard";
 import { Screen } from "@/components/Screen";
@@ -9,6 +9,10 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { useItineraryFeed } from "@/hooks/use-itinerary-feed";
 import { useShareSheet } from "@/hooks/use-share-sheet";
 import { fetchMyDraftItineraries } from "@/lib/informations-api";
+import {
+  readAndClearHomeInviteError,
+  readAndClearHomeInviteSuccess,
+} from "@/lib/invite-pending";
 import { loadLocalDraft, type LocalDraft } from "@/lib/local-draft";
 import { spacing } from "@/design/spacing";
 import { typography } from "@/design/typography";
@@ -24,35 +28,51 @@ export default function HomeScreen() {
   const { featured, templates, loading, error, hasRemote } = useItineraryFeed();
   const { shareItem, shareVisible, openShare, closeShare } = useShareSheet();
   const [continueDraft, setContinueDraft] = useState<LocalDraft | null>(null);
-  const [remoteDraftTitle, setRemoteDraftTitle] = useState<string | null>(null);
+  const [remoteDraft, setRemoteDraft] = useState<{ title: string; pageId: string; informationId: string } | null>(null);
 
   const loadContinue = useCallback(async () => {
     const local = await loadLocalDraft();
     if (local) {
       setContinueDraft(local);
-      setRemoteDraftTitle(null);
+      setRemoteDraft(null);
       return;
     }
     if (user) {
       const drafts = await fetchMyDraftItineraries();
-      const draft = drafts.find((d) => d.status === "draft");
-      if (draft) {
-        setRemoteDraftTitle(draft.title);
+      const draft = drafts.find((d) => d.status === "draft" && d.pageId);
+      if (draft?.pageId) {
+        setRemoteDraft({
+          title: draft.title,
+          pageId: draft.pageId,
+          informationId: draft.id,
+        });
         setContinueDraft(null);
         return;
       }
     }
     setContinueDraft(null);
-    setRemoteDraftTitle(null);
+    setRemoteDraft(null);
   }, [user]);
 
   useEffect(() => {
     void loadContinue();
   }, [loadContinue]);
 
+  useEffect(() => {
+    void (async () => {
+      if (await readAndClearHomeInviteSuccess()) {
+        Alert.alert("チーム参加", "招待コードで施設に参加しました。");
+      }
+      const err = await readAndClearHomeInviteError();
+      if (err) {
+        Alert.alert("招待コード", err);
+      }
+    })();
+  }, []);
+
   const open = (id: string) => router.push(`/itinerary/${id}`);
 
-  const continueTitle = continueDraft?.title ?? remoteDraftTitle;
+  const continueTitle = continueDraft?.title ?? remoteDraft?.title;
 
   return (
     <Screen bottomInset={TAB_BAR_SPACE}>
@@ -66,7 +86,29 @@ export default function HomeScreen() {
       {continueTitle ? (
         <Pressable
           style={styles.continueCard}
-          onPress={() => router.push("/(tabs)/create")}
+          onPress={() => {
+            if (continueDraft?.pageId) {
+              router.push({
+                pathname: "/(tabs)/create",
+                params: {
+                  pageId: continueDraft.pageId,
+                  informationId: continueDraft.informationId,
+                },
+              });
+              return;
+            }
+            if (remoteDraft) {
+              router.push({
+                pathname: "/(tabs)/create",
+                params: {
+                  pageId: remoteDraft.pageId,
+                  informationId: remoteDraft.informationId,
+                },
+              });
+              return;
+            }
+            router.push("/(tabs)/create");
+          }}
         >
           <Text style={styles.continueLabel}>続きから編集</Text>
           <Text style={styles.continueTitle} numberOfLines={1}>

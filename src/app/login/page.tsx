@@ -107,7 +107,36 @@ function LoginForm() {
     setMessage(formatGoogleAuthError(oauthError));
   }, [searchParams]);
 
+  /** モバイルアプリ Google OAuth: Web ダッシュボードへ行かず infomii:// へ即復帰 */
   useEffect(() => {
+    if (searchParams.get("mobile") !== "1") return;
+    if (typeof window === "undefined") return;
+
+    const error =
+      searchParams.get("error_description") ?? searchParams.get("error");
+    const code = searchParams.get("code");
+    const hash = window.location.hash;
+
+    const target = new URL("infomii://auth/callback");
+    if (error) {
+      target.searchParams.set("error", error);
+      window.location.replace(target.toString());
+      return;
+    }
+    if (code) {
+      const qs = new URLSearchParams(window.location.search);
+      qs.delete("mobile");
+      qs.forEach((value, key) => target.searchParams.set(key, value));
+      window.location.replace(target.toString());
+      return;
+    }
+    if (hash.length > 1) {
+      window.location.replace(`infomii://auth/callback${hash}`);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("mobile") === "1") return;
     if (loading || !user) return;
     if (typeof window === "undefined") return;
     const pending = readPendingInviteCode();

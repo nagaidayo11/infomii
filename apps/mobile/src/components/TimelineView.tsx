@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
 import { typography } from "@/design/typography";
@@ -72,6 +72,67 @@ export function TimelineView({ blocks }: Props) {
             </>
           ) : null}
 
+          {block.type === "quote" ? (
+            <View style={styles.quoteBlock}>
+              <Text style={styles.quoteMark}>“</Text>
+              <Text style={styles.quoteText}>{block.body || "引用文"}</Text>
+              {block.quoteAuthor ? <Text style={styles.quoteAuthor}>— {block.quoteAuthor}</Text> : null}
+            </View>
+          ) : null}
+
+          {block.type === "gallery" && block.galleryItems?.length ? (
+            <>
+              <Text style={styles.blockTitle}>{block.title}</Text>
+              <View style={styles.galleryGrid}>
+                {block.galleryItems.map((item, i) => (
+                  <Image
+                    key={`${item.url}-${i}`}
+                    source={{ uri: item.url }}
+                    style={styles.galleryThumb}
+                    contentFit="cover"
+                  />
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          {block.type === "pricing" && block.pricingItems?.length ? (
+            <>
+              <Text style={styles.blockTitle}>{block.title}</Text>
+              {block.pricingItems.map((row, i) => (
+                <View key={`${row.label}-${i}`} style={styles.pricingRow}>
+                  <Text style={styles.pricingLabel}>{row.label}</Text>
+                  <Text style={styles.pricingValue}>{row.value}</Text>
+                </View>
+              ))}
+            </>
+          ) : null}
+
+          {block.type === "cta" && (block.ctaLabel || block.ctaUrl) ? (
+            <Pressable
+              style={styles.ctaBtn}
+              onPress={() => {
+                const url = block.ctaUrl?.trim();
+                if (url) void Linking.openURL(url);
+              }}
+            >
+              <Text style={styles.ctaBtnText}>{block.ctaLabel || "リンクを開く"}</Text>
+            </Pressable>
+          ) : null}
+
+          {block.type === "badge" && block.badgeText ? (
+            <View
+              style={[
+                styles.badgePill,
+                { backgroundColor: block.badgeColor ?? "#dcfce7" },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: block.badgeTextColor ?? "#065f46" }]}>
+                {block.badgeText}
+              </Text>
+            </View>
+          ) : null}
+
           {(block.type === "map" || block.type === "notice" || block.type === "welcome") && block.body ? (
             <>
               <Text style={styles.blockTitle}>{block.title}</Text>
@@ -89,8 +150,12 @@ export function TimelineView({ blocks }: Props) {
 
           {block.type === "hero" ? (
             <View style={styles.heroBlock}>
-              <Text style={styles.heroTitle}>{block.title}</Text>
-              {block.subtitle ? <Text style={styles.heroSub}>{block.subtitle}</Text> : null}
+              {block.imageUrl ? (
+                <Image source={{ uri: block.imageUrl }} style={styles.heroImage} contentFit="cover" />
+              ) : null}
+              {block.subtitle || block.body ? (
+                <Text style={styles.heroSub}>{block.subtitle ?? block.body}</Text>
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -161,13 +226,53 @@ const styles = StyleSheet.create({
   placeName: { fontSize: 15, fontWeight: "600", color: colors.ink },
   placeDesc: typography.body,
   bodyText: typography.body,
-  heroBlock: { gap: spacing.xs },
-  heroTitle: { fontSize: 20, fontWeight: "700", color: colors.ink },
-  heroSub: typography.body,
+  heroBlock: { gap: spacing.sm },
+  heroImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: radius.md,
+    backgroundColor: colors.frost,
+  },
+  heroSub: { fontSize: 18, fontWeight: "600", color: colors.ink },
   blockImage: {
     width: "100%",
     height: 180,
     borderRadius: radius.md,
     backgroundColor: colors.frost,
   },
+  quoteBlock: { gap: spacing.xs, paddingLeft: spacing.sm, borderLeftWidth: 3, borderLeftColor: colors.accent },
+  quoteMark: { fontSize: 28, color: colors.accent, lineHeight: 28 },
+  quoteText: { fontSize: 16, fontStyle: "italic", color: colors.ink, lineHeight: 24 },
+  quoteAuthor: { ...typography.caption, marginTop: spacing.xs },
+  galleryGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  galleryThumb: {
+    width: "31%",
+    aspectRatio: 1,
+    borderRadius: radius.sm,
+    backgroundColor: colors.frost,
+  },
+  pricingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.frost,
+  },
+  pricingLabel: typography.body,
+  pricingValue: { fontSize: 15, fontWeight: "600", color: colors.ink },
+  ctaBtn: {
+    backgroundColor: colors.accentDeep,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+  },
+  ctaBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+  badgePill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+  },
+  badgeText: { fontSize: 13, fontWeight: "700" },
 });

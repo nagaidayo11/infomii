@@ -19,12 +19,27 @@ export type ItineraryBlockType =
   | "nearby"
   | "notice"
   | "welcome"
-  | "image";
+  | "image"
+  | "quote"
+  | "gallery"
+  | "pricing"
+  | "cta"
+  | "badge";
 
 export type ScheduleItem = {
   day: string;
   time: string;
   label: string;
+};
+
+export type DraftGalleryItem = {
+  url: string;
+  caption?: string;
+};
+
+export type DraftPricingItem = {
+  label: string;
+  value: string;
 };
 
 export type ItineraryBlock = {
@@ -38,6 +53,14 @@ export type ItineraryBlock = {
   checklistItems?: string[];
   steps?: { title: string; description: string }[];
   nearby?: { name: string; description: string }[];
+  quoteAuthor?: string;
+  galleryItems?: DraftGalleryItem[];
+  pricingItems?: DraftPricingItem[];
+  ctaLabel?: string;
+  ctaUrl?: string;
+  badgeText?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
 };
 
 export type ItineraryCard = {
@@ -54,17 +77,47 @@ export type ItineraryCard = {
   popular?: boolean;
   premium?: boolean;
   blocks: ItineraryBlock[];
-  /** Sample cards use `sample`; Supabase rows use `remote`. */
   source?: "sample" | "remote";
   status?: "draft" | "published";
-  /** Supabase `informations.hotel_id`（PV 記録など） */
   hotelId?: string | null;
+  /** Web Editor 2.0 `pages.id`（cards 正本） */
+  pageId?: string;
+};
+
+export type DraftNearbyItem = {
+  name: string;
+  description: string;
+};
+
+export type DraftStepItem = {
+  title: string;
+  description: string;
 };
 
 export type DraftBlock = {
   id: string;
   type: ItineraryBlockType;
   title: string;
-  /** タイムライン1行目・メモ・地図テキストなど */
   body?: string;
+  imageUrl?: string;
+  scheduleItems?: ScheduleItem[];
+  checklistItems?: string[];
+  nearby?: DraftNearbyItem[];
+  steps?: DraftStepItem[];
+  quoteAuthor?: string;
+  galleryItems?: DraftGalleryItem[];
+  pricingItems?: DraftPricingItem[];
+  ctaLabel?: string;
+  ctaUrl?: string;
+  badgeText?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
 };
+
+export const BADGE_COLOR_PRESETS: { bg: string; text: string; label: string }[] = [
+  { bg: "#dcfce7", text: "#065f46", label: "グリーン" },
+  { bg: "#dbeafe", text: "#1e40af", label: "ブルー" },
+  { bg: "#fef3c7", text: "#92400e", label: "イエロー" },
+  { bg: "#fce7f3", text: "#9d174d", label: "ピンク" },
+  { bg: "#f3f4f6", text: "#374151", label: "グレー" },
+];

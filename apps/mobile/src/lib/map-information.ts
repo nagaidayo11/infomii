@@ -1,6 +1,8 @@
 import type { ItineraryBlock, ItineraryCard, ItineraryCategory } from "@/types/itinerary";
 import type { InformationBlock, InformationRow } from "@/types/information";
-import { normalizeContentBlocks } from "@/lib/normalize-blocks";
+import { contentBlocksToDraftBlocks } from "@/lib/draft-to-blocks";
+import { draftBlocksToTimelineBlocks } from "@/lib/draft-preview";
+import { blocksToImages, normalizeContentBlocks } from "@/lib/normalize-blocks";
 
 import { IMG } from "@/data/sample-images";
 
@@ -24,9 +26,7 @@ function inferCategory(title: string, blocks: InformationBlock[]): ItineraryCate
   if (hay.includes("hotel") || hay.includes("宿") || hay.includes("check-in") || hay.includes("チェックイン")) {
     return "hotel";
   }
-  if (hay.includes("sauna") || hay.includes("サウナ") || hay.includes("温泉")) {
-    return "wellness";
-  }
+  if (hay.includes("サウナ") || hay.includes("温泉")) return "wellness";
   if (hay.includes("日帰り") || hay.includes("週末") || hay.includes("day trip")) {
     return "daytrip";
   }
@@ -36,83 +36,17 @@ function inferCategory(title: string, blocks: InformationBlock[]): ItineraryCate
   return "travel";
 }
 
-function mapBlocksToTimeline(blocks: InformationBlock[]): ItineraryBlock[] {
-  const out: ItineraryBlock[] = [];
-  let heroDone = false;
-
-  for (const block of blocks) {
-    if (!heroDone && (block.type === "title" || block.type === "heading")) {
-      out.push({
-        id: block.id,
-        type: "hero",
-        title: block.text ?? block.sectionTitle ?? "",
-        subtitle: blocks.find((b) => b.type === "paragraph")?.text,
-      });
-      heroDone = true;
-      continue;
-    }
-    if (block.type === "hours" && block.hoursItems?.length) {
-      out.push({
-        id: block.id,
-        type: "schedule",
-        title: block.label ?? "タイムライン",
-        scheduleItems: block.hoursItems.map((item) => {
-          const parts = item.label.split(/\s+/);
-          return {
-            day: parts[0] ?? "",
-            time: item.value,
-            label: item.label,
-          };
-        }),
-      });
-      continue;
-    }
-    if (block.type === "checklist" && block.checklistItems?.length) {
-      out.push({
-        id: block.id,
-        type: "checklist",
-        title: block.label ?? "持ち物リスト",
-        checklistItems: block.checklistItems.map((i) => i.text),
-      });
-      continue;
-    }
-    if (block.type === "section") {
-      out.push({
-        id: block.id,
-        type: "steps",
-        title: block.sectionTitle ?? "セクション",
-        steps: [
-          {
-            title: block.sectionTitle ?? "",
-            description: block.sectionBody ?? "",
-          },
-        ],
-      });
-      continue;
-    }
-    if (block.type === "paragraph" && block.text) {
-      out.push({
-        id: block.id,
-        type: "notice",
-        title: "メモ",
-        body: block.text,
-      });
-    }
-  }
-
-  if (!out.length) {
-    out.push({ id: "hero-fallback", type: "hero", title: "旅のしおり", subtitle: "" });
-  }
-  return out;
-}
-
 export function mapInformationToCard(row: InformationRow): ItineraryCard {
   const blocks = normalizeContentBlocks(row.content_blocks, row.body);
-  const imageBlock = blocks.find((b) => b.type === "image" && b.url);
-  const coverImage = imageBlock?.url ?? row.images[0] ?? DEFAULT_COVER;
-  const timeline = mapBlocksToTimeline(blocks);
+  const imageUrls = blocksToImages(blocks);
+  const coverImage = imageUrls[0] ?? row.images[0] ?? DEFAULT_COVER;
+  const drafts = contentBlocksToDraftBlocks(blocks, row.title);
+  const timeline: ItineraryBlock[] =
+    blocks.length > 0 ? draftBlocksToTimelineBlocks(drafts) : [{ id: "hero-fallback", type: "hero", title: row.title, subtitle: row.body }];
   const scheduleCount = timeline.find((b) => b.type === "schedule")?.scheduleItems?.length ?? 0;
-  const stepsCount = timeline.filter((b) => b.type === "steps").length;
+  const nearbyCount = timeline.find((b) => b.type === "nearby")?.nearby?.length ?? 0;
+  const stepsCount =
+    timeline.reduce((n, b) => n + (b.type === "steps" ? (b.steps?.length ?? 0) : 0), 0) || 0;
 
   return {
     id: row.id,
@@ -123,7 +57,7 @@ export function mapInformationToCard(row: InformationRow): ItineraryCard {
     category: inferCategory(row.title, blocks),
     location: "日本",
     duration: row.status === "published" ? "公開中" : "下書き",
-    stops: scheduleCount + stepsCount || blocks.length,
+    stops: scheduleCount + nearbyCount + stepsCount || blocks.length,
     blocks: timeline,
     source: "remote",
     status: row.status,

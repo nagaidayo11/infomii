@@ -22,8 +22,15 @@ export type InformationBlockType =
   | "gallery"
   | "columnGroup";
 
-export type KeyValueItem = { id: string; label: string; value: string };
+export type KeyValueItem = {
+  id: string;
+  label: string;
+  value: string;
+  /** schedule の day など */
+  description?: string;
+};
 export type ChecklistItem = { id: string; text: string };
+export type GalleryItem = { id: string; url: string; caption?: string };
 
 export type InformationBlock = {
   id: string;
@@ -36,6 +43,15 @@ export type InformationBlock = {
   sectionBody?: string;
   hoursItems?: KeyValueItem[];
   checklistItems?: ChecklistItem[];
+  pricingItems?: KeyValueItem[];
+  galleryItems?: GalleryItem[];
+  quoteAuthor?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  badgeText?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
+  textColor?: string;
 };
 
 export type InformationRow = {

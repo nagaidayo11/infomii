@@ -1,13 +1,14 @@
 import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
-import * as QueryParams from "expo-auth-session/build/QueryParams";
+import { applyOAuthRedirectUrl, getAuthRedirectUri } from "@/lib/oauth-session";
 import { getSupabaseClient } from "@/lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export function getAuthRedirectUri(): string {
-  return makeRedirectUri({ scheme: "infomii", path: "auth/callback" });
-}
+export {
+  getAuthRedirectUri,
+  getAuthRedirectUriAlternates,
+  getNativeOAuthReturnUri,
+} from "@/lib/oauth-session";
 
 export async function signInWithGoogleOAuth(): Promise<{ error: string | null }> {
   const supabase = getSupabaseClient();
@@ -16,6 +17,7 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
   }
 
   const redirectTo = getAuthRedirectUri();
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },
@@ -24,23 +26,40 @@ export async function signInWithGoogleOAuth(): Promise<{ error: string | null }>
   if (error) return { error: error.message };
   if (!data?.url) return { error: "OAuth URL を取得できませんでした" };
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-  if (result.type !== "success" || !result.url) {
-    return { error: result.type === "cancel" ? "キャンセルされました" : "認証に失敗しました" };
+  try {
+    const authUrl = new URL(data.url);
+    const redirectParam = authUrl.searchParams.get("redirect_to") ?? "";
+    if (
+      !redirectParam.includes("mobile=1") &&
+      !redirectParam.includes("mobile-callback")
+    ) {
+      return {
+        error:
+          "OAuth の戻り先が正しく設定されていません。Supabase の Redirect URLs に " +
+          redirectTo +
+          " を追加してください。",
+      };
+    }
+  } catch {
+    /* ignore parse errors */
   }
 
-  const { params, errorCode } = QueryParams.getQueryParams(result.url);
-  if (errorCode) return { error: errorCode };
-
-  const access_token = params.access_token;
-  const refresh_token = params.refresh_token;
-  if (!access_token || !refresh_token) {
-    return { error: "セッションを取得できませんでした" };
-  }
-
-  const { error: sessionError } = await supabase.auth.setSession({
-    access_token,
-    refresh_token,
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+    showInRecents: true,
+    preferEphemeralSession: true,
   });
-  return { error: sessionError?.message ?? null };
+
+  if (result.type === "success" && result.url) {
+    return applyOAuthRedirectUrl(result.url);
+  }
+
+  if (result.type === "cancel") {
+    return { error: "キャンセルされました" };
+  }
+
+  return {
+    error:
+      "認証後にアプリへ戻れませんでした。Supabase の Redirect URLs に次を追加してください: " +
+      redirectTo,
+  };
 }

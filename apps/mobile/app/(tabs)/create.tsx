@@ -1,26 +1,28 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { CardEditModal } from "@/components/CardEditModal";
+import { CardPreview } from "@/components/CardPreview";
 import { Screen } from "@/components/Screen";
-import { getTemplateById, templateToDraftBlocks } from "@/data/templates";
+import { clearCreateSession, getCreateSession, setCreateSession } from "@/lib/create-session";
+import { fetchPageById, fetchPageCards, savePageCards } from "@/lib/pages-api";
 import {
+  createNewPageDraft,
+  fetchItineraryById,
   publishItinerary,
-  upsertDraftFromLocal,
+  savePageDraft,
 } from "@/lib/informations-api";
-import {
-  clearLocalDraft,
-  loadLocalDraft,
-  saveLocalDraft,
-} from "@/lib/local-draft";
+import { clearLocalDraft, loadLocalDraft, saveLocalDraft } from "@/lib/local-draft";
 import { consumePendingPublishAfterAuth, setPendingPublishAfterAuth } from "@/lib/pending-auth";
 import { hasSupabaseEnv } from "@/lib/supabase";
 import { colors } from "@/design/colors";
@@ -28,115 +30,291 @@ import { radius, spacing } from "@/design/spacing";
 import { typography } from "@/design/typography";
 import { selection, success, tapLight } from "@/lib/haptics";
 import { useAuth } from "@/stores/auth-provider";
-import type { DraftBlock, ItineraryBlockType } from "@/types/itinerary";
+import {
+  CARD_LIBRARY_ITEMS,
+  createPlaceholderCard,
+  isBusinessOnlyCard,
+  newCardId,
+  type CardType,
+  type EditorCard,
+} from "@/types/editor-card";
 
 const TAB_BAR_SPACE = 100;
 
-const BLOCK_OPTIONS: { type: ItineraryBlockType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { type: "hero", label: "カバー", icon: "image-outline" },
-  { type: "schedule", label: "タイムライン", icon: "time-outline" },
-  { type: "checklist", label: "持ち物", icon: "checkbox-outline" },
-  { type: "steps", label: "ステップ", icon: "footsteps-outline" },
-  { type: "map", label: "地図", icon: "map-outline" },
-  { type: "nearby", label: "スポット", icon: "location-outline" },
-  { type: "notice", label: "メモ", icon: "document-text-outline" },
-];
-
-function newBlock(type: ItineraryBlockType): DraftBlock {
-  return {
-    id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    type,
-    title: BLOCK_OPTIONS.find((b) => b.type === type)?.label ?? "ブロック",
-  };
-}
+type PageState = {
+  title: string;
+  pageId: string;
+  slug: string;
+  informationId?: string;
+  cards: EditorCard[];
+};
 
 export default function CreateScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
-  const [title, setTitle] = useState("わたしの一日プラン");
-  const [blocks, setBlocks] = useState<DraftBlock[]>([
-    { id: "draft-hero", type: "hero", title: "カバー", body: "" },
-    { id: "draft-schedule", type: "schedule", title: "タイムライン", body: "10:00 最初の予定" },
-  ]);
-  const [remoteId, setRemoteId] = useState<string | undefined>();
+  const { pageId: pageIdParam, informationId: infoIdParam } = useLocalSearchParams<{
+    pageId?: string;
+    informationId?: string;
+  }>();
+
+  const [state, setState] = useState<PageState | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [editingCard, setEditingCard] = useState<EditorCard | null>(null);
 
-  const persistLocal = useCallback(async () => {
-    await saveLocalDraft({ title, blocks, remoteId, updatedAt: new Date().toISOString() });
-  }, [title, blocks, remoteId]);
+  const hydratedRef = useRef(false);
+  const skipFocusReloadRef = useRef(false);
+
+  const syncSession = useCallback((next: PageState) => {
+    setCreateSession({
+      title: next.title,
+      pageId: next.pageId,
+      slug: next.slug,
+      informationId: next.informationId,
+      cards: next.cards,
+    });
+  }, []);
+
+  const applyState = useCallback(
+    (next: PageState) => {
+      const sorted = [...next.cards].sort((a, b) => a.order - b.order);
+      const normalized = { ...next, cards: sorted };
+      setState(normalized);
+      syncSession(normalized);
+    },
+    [syncSession],
+  );
+
+  const persistLocal = useCallback(async (next: PageState) => {
+    await saveLocalDraft({
+      title: next.title,
+      pageId: next.pageId,
+      slug: next.slug,
+      informationId: next.informationId,
+      cards: next.cards,
+      updatedAt: new Date().toISOString(),
+    });
+    syncSession(next);
+  }, [syncSession]);
+
+  const initNewPage = useCallback(async () => {
+    if (!user || !hasSupabaseEnv) {
+      applyState({
+        title: "わたしの一日プラン",
+        pageId: `local-${Date.now()}`,
+        slug: "local-draft",
+        cards: [createPlaceholderCard("hero", newCardId(), 0)],
+      });
+      setLoading(false);
+      return;
+    }
+    const created = await createNewPageDraft("わたしの一日プラン");
+    const cards = await fetchPageCards(created.pageId);
+    applyState({
+      title: "わたしの一日プラン",
+      pageId: created.pageId,
+      slug: created.slug,
+      informationId: created.informationId,
+      cards: cards.length ? cards : [createPlaceholderCard("hero", newCardId(), 0)],
+    });
+    setLoading(false);
+  }, [user, applyState]);
 
   useFocusEffect(
     useCallback(() => {
+      if (skipFocusReloadRef.current) {
+        skipFocusReloadRef.current = false;
+        return;
+      }
+
+      if (hydratedRef.current) {
+        const mem = getCreateSession();
+        if (mem) {
+          applyState({
+            title: mem.title,
+            pageId: mem.pageId,
+            slug: mem.slug,
+            informationId: mem.informationId,
+            cards: mem.cards,
+          });
+        }
+        return;
+      }
+
       let active = true;
+
       (async () => {
-        if (typeof templateId === "string" && templateId) {
-          const tpl = getTemplateById(templateId);
+        setLoading(true);
+
+        const pid = typeof pageIdParam === "string" ? pageIdParam : null;
+        const iid = typeof infoIdParam === "string" ? infoIdParam : null;
+
+        if (pid && hasSupabaseEnv) {
+          const [page, cards] = await Promise.all([fetchPageById(pid), fetchPageCards(pid)]);
           if (!active) return;
-          if (tpl) {
-            setTitle(tpl.title);
-            setBlocks(templateToDraftBlocks(tpl));
-          }
+          const local = await loadLocalDraft();
+          applyState({
+            title: local?.title ?? page?.title ?? "しおり",
+            pageId: pid,
+            slug: local?.slug ?? page?.slug ?? "",
+            informationId: local?.informationId ?? iid ?? undefined,
+            cards,
+          });
+          hydratedRef.current = true;
+          setLoading(false);
           return;
         }
+
+        if (iid && hasSupabaseEnv) {
+          const remote = await fetchItineraryById(iid);
+          if (!active) return;
+          if (remote?.pageId) {
+            const cards = await fetchPageCards(remote.pageId);
+            applyState({
+              title: remote.title,
+              pageId: remote.pageId,
+              slug: remote.slug,
+              informationId: remote.id,
+              cards,
+            });
+            hydratedRef.current = true;
+            setLoading(false);
+            return;
+          }
+        }
+
         const local = await loadLocalDraft();
         if (!active) return;
-        if (local) {
-          setTitle(local.title);
-          setBlocks(local.blocks);
-          setRemoteId(local.remoteId);
+        if (local?.pageId && !local.pageId.startsWith("local-")) {
+          const cards = hasSupabaseEnv ? await fetchPageCards(local.pageId) : local.cards;
+          applyState({
+            title: local.title,
+            pageId: local.pageId,
+            slug: local.slug,
+            informationId: local.informationId,
+            cards: cards.length ? cards : local.cards,
+          });
+          hydratedRef.current = true;
+          setLoading(false);
+          return;
         }
+
+        if (local) {
+          applyState({
+            title: local.title,
+            pageId: local.pageId,
+            slug: local.slug,
+            informationId: local.informationId,
+            cards: local.cards,
+          });
+          hydratedRef.current = true;
+          setLoading(false);
+          return;
+        }
+
+        const mem = getCreateSession();
+        if (mem) {
+          applyState({
+            title: mem.title,
+            pageId: mem.pageId,
+            slug: mem.slug,
+            informationId: mem.informationId,
+            cards: mem.cards,
+          });
+          hydratedRef.current = true;
+          setLoading(false);
+          return;
+        }
+
+        await initNewPage();
+        hydratedRef.current = true;
       })();
+
       return () => {
         active = false;
       };
-    }, [templateId]),
+    }, [pageIdParam, infoIdParam, applyState, initNewPage]),
   );
 
   useEffect(() => {
+    if (!state) return;
     const t = setTimeout(() => {
-      void persistLocal();
-    }, 400);
+      void persistLocal(state);
+    }, 500);
     return () => clearTimeout(t);
-  }, [persistLocal]);
+  }, [state, persistLocal]);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const shouldPublish = await consumePendingPublishAfterAuth();
-      if (shouldPublish) {
+      if (await consumePendingPublishAfterAuth()) {
         await runPublish();
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const updateBlock = (id: string, patch: Partial<DraftBlock>) => {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  const updateCards = (cards: EditorCard[]) => {
+    if (!state) return;
+    const withOrder = cards.map((c, i) => ({ ...c, order: i }));
+    applyState({ ...state, cards: withOrder });
   };
 
-  const addBlock = (type: ItineraryBlockType) => {
+  const addCard = (type: CardType) => {
+    if (!state) return;
+    if (isBusinessOnlyCard(type)) {
+      Alert.alert("Business 専用", "このカードは Web エディタで追加・編集してください。App では閲覧のみです。");
+      return;
+    }
     void selection();
-    setBlocks((prev) => [...prev, newBlock(type)]);
+    const card = createPlaceholderCard(type, newCardId(), state.cards.length);
+    updateCards([...state.cards, card]);
   };
 
-  const removeBlock = (id: string) => {
+  const removeCard = (id: string) => {
+    if (!state) return;
     void tapLight();
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
+    updateCards(state.cards.filter((c) => c.id !== id));
   };
 
-  const moveBlock = (id: string, direction: -1 | 1) => {
+  const moveCard = (id: string, direction: -1 | 1) => {
+    if (!state) return;
+    const idx = state.cards.findIndex((c) => c.id === id);
+    const next = idx + direction;
+    if (idx < 0 || next < 0 || next >= state.cards.length) return;
     void selection();
-    setBlocks((prev) => {
-      const idx = prev.findIndex((b) => b.id === id);
-      const next = idx + direction;
-      if (idx < 0 || next < 0 || next >= prev.length) return prev;
-      const copy = [...prev];
-      [copy[idx], copy[next]] = [copy[next], copy[idx]];
-      return copy;
-    });
+    const copy = [...state.cards];
+    [copy[idx], copy[next]] = [copy[next], copy[idx]];
+    updateCards(copy);
   };
+
+  async function persistRemote(): Promise<{ informationId: string } | null> {
+    if (!state) return null;
+    if (!hasSupabaseEnv || !user) return null;
+    if (state.pageId.startsWith("local-")) {
+      const created = await createNewPageDraft(state.title);
+      const merged = { ...state, ...created };
+      const result = await savePageDraft({
+        title: merged.title,
+        pageId: merged.pageId,
+        slug: merged.slug,
+        informationId: merged.informationId,
+        cards: merged.cards,
+      });
+      applyState({ ...merged, informationId: result.informationId });
+      return { informationId: result.informationId };
+    }
+    const result = await savePageDraft({
+      title: state.title,
+      pageId: state.pageId,
+      slug: state.slug,
+      informationId: state.informationId,
+      cards: state.cards,
+    });
+    applyState({ ...state, informationId: result.informationId });
+    return { informationId: result.informationId };
+  }
 
   async function runPublish() {
     if (!hasSupabaseEnv) {
@@ -144,20 +322,20 @@ export default function CreateScreen() {
       return;
     }
     if (!user) {
-      await persistLocal();
+      if (state) await persistLocal(state);
       await setPendingPublishAfterAuth(true);
       router.push("/auth");
       return;
     }
-
     setPublishing(true);
     try {
-      const id = await upsertDraftFromLocal(title, blocks, remoteId);
-      setRemoteId(id);
-      await publishItinerary(id);
+      const saved = await persistRemote();
+      if (!saved) throw new Error("保存に失敗しました");
+      await publishItinerary(saved.informationId);
       await clearLocalDraft();
+      clearCreateSession();
       void success();
-      router.push(`/itinerary/${id}`);
+      router.push(`/itinerary/${saved.informationId}`);
     } catch (e) {
       Alert.alert("公開できませんでした", e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -166,23 +344,19 @@ export default function CreateScreen() {
   }
 
   async function saveDraft() {
-    if (!hasSupabaseEnv) {
-      Alert.alert("Supabase 未設定", ".env に EXPO_PUBLIC_SUPABASE_* を設定してください。");
-      return;
-    }
-    if (!user) {
-      await persistLocal();
+    if (!user || !hasSupabaseEnv) {
+      if (state) await persistLocal(state);
       router.push("/auth");
       return;
     }
-
     setSaving(true);
     try {
-      const id = await upsertDraftFromLocal(title, blocks, remoteId);
-      setRemoteId(id);
+      const saved = await persistRemote();
+      if (!saved) throw new Error("保存に失敗しました");
       await clearLocalDraft();
+      clearCreateSession();
       void success();
-      router.push(`/itinerary/${id}`);
+      router.push(`/itinerary/${saved.informationId}`);
     } catch (e) {
       Alert.alert("保存できませんでした", e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -190,93 +364,122 @@ export default function CreateScreen() {
     }
   }
 
-  function openPreview() {
+  function openWebEditor() {
+    if (!state?.pageId || state.pageId.startsWith("local-")) {
+      Alert.alert("ログインが必要です", "Web エディタを使うには下書き保存後に再度お試しください。");
+      return;
+    }
+    skipFocusReloadRef.current = true;
+    router.push({ pathname: "/editor/[pageId]", params: { pageId: state.pageId } });
+  }
+
+  function openPublicPreview() {
+    if (!state?.slug || state.slug === "local-draft") {
+      Alert.alert("プレビュー", "先に下書きを保存してください。");
+      return;
+    }
+    skipFocusReloadRef.current = true;
     router.push({
-      pathname: "/preview",
-      params: {
-        title,
-        blocks: JSON.stringify(blocks),
-      },
+      pathname: "/preview-public",
+      params: { slug: state.slug, draft: "1" },
     });
   }
+
+  async function saveCardsToServer() {
+    if (!state || !user || state.pageId.startsWith("local-")) return;
+    const { updatedIds } = await savePageCards(state.pageId, state.cards);
+    if (Object.keys(updatedIds).length) {
+      const next = state.cards.map((c) => (updatedIds[c.id] ? { ...c, id: updatedIds[c.id] } : c));
+      applyState({ ...state, cards: next });
+    }
+  }
+
+  if (loading || !state) {
+    return (
+      <Screen bottomInset={TAB_BAR_SPACE}>
+        <ActivityIndicator color={colors.accentDeep} style={{ marginTop: 40 }} />
+      </Screen>
+    );
+  }
+
+  const uploadPrefix = user?.id ?? state.pageId ?? "temp";
 
   return (
     <Screen bottomInset={TAB_BAR_SPACE}>
       <Text style={styles.hero}>作る</Text>
       <Text style={styles.sub}>
-        {user ? "下書き保存・公開ができます。" : "ゲストでも編集できます。公開するときだけログイン。"}
+        Web と同じカードを編集します。カードをタップしてフォーム編集、公開プレビューは Web と同じ URL です。
       </Text>
 
       <Text style={styles.sectionLabel}>タイトル</Text>
       <TextInput
         style={styles.titleInput}
-        value={title}
-        onChangeText={setTitle}
+        value={state.title}
+        onChangeText={(title) => applyState({ ...state, title })}
         placeholder="京都、静かな一日"
         placeholderTextColor={colors.inkFaint}
       />
 
-      <Pressable style={styles.previewBtn} onPress={openPreview}>
-        <Ionicons name="eye-outline" size={18} color={colors.accentDeep} />
-        <Text style={styles.previewBtnText}>編集中のしおりをプレビュー</Text>
-      </Pressable>
+      <View style={styles.actionRow}>
+        <Pressable style={styles.secondaryBtn} onPress={() => void openPublicPreview()}>
+          <Ionicons name="eye-outline" size={18} color={colors.accentDeep} />
+          <Text style={styles.secondaryBtnText}>公開プレビュー</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryBtn} onPress={openWebEditor}>
+          <Ionicons name="desktop-outline" size={18} color={colors.accentDeep} />
+          <Text style={styles.secondaryBtnText}>Web エディタ</Text>
+        </Pressable>
+      </View>
 
-      <Text style={styles.sectionLabel}>ブロック</Text>
-      <View style={styles.blockList}>
-        {blocks.map((block, index) => (
-          <View key={block.id} style={styles.blockCard}>
-            <View style={styles.blockRow}>
-              <Ionicons
-                name={BLOCK_OPTIONS.find((b) => b.type === block.type)?.icon ?? "cube-outline"}
-                size={20}
-                color={colors.accentDeep}
-              />
-              <TextInput
-                style={styles.blockTitleInput}
-                value={block.title}
-                onChangeText={(text) => updateBlock(block.id, { title: text })}
-                placeholder="ブロック名"
-                placeholderTextColor={colors.inkFaint}
-              />
-              <View style={styles.blockActions}>
-                <Pressable onPress={() => moveBlock(block.id, -1)} disabled={index === 0}>
+      <Text style={styles.sectionLabel}>カード（{state.cards.length}）</Text>
+      <ScrollView style={styles.cardList} nestedScrollEnabled>
+        {state.cards.map((card, index) => {
+          const businessViewOnly = isBusinessOnlyCard(card.type);
+          return (
+            <View key={card.id} style={styles.cardRow}>
+              <View style={styles.cardActions}>
+                <Pressable onPress={() => moveCard(card.id, -1)} disabled={index === 0}>
                   <Ionicons name="chevron-up" size={18} color={index === 0 ? colors.inkFaint : colors.ink} />
                 </Pressable>
-                <Pressable onPress={() => moveBlock(block.id, 1)} disabled={index === blocks.length - 1}>
+                <Pressable
+                  onPress={() => moveCard(card.id, 1)}
+                  disabled={index === state.cards.length - 1}
+                >
                   <Ionicons
                     name="chevron-down"
                     size={18}
-                    color={index === blocks.length - 1 ? colors.inkFaint : colors.ink}
+                    color={index === state.cards.length - 1 ? colors.inkFaint : colors.ink}
                   />
                 </Pressable>
-                <Pressable onPress={() => removeBlock(block.id)}>
-                  <Ionicons name="close" size={18} color={colors.inkFaint} />
+                <Pressable onPress={() => removeCard(card.id)}>
+                  <Ionicons name="trash-outline" size={18} color={colors.inkFaint} />
                 </Pressable>
               </View>
+              <Pressable
+                style={styles.cardTap}
+                onPress={() => {
+                  void selection();
+                  setEditingCard({ ...card, content: { ...card.content } });
+                }}
+              >
+                <CardPreview card={card} businessLocked={businessViewOnly} />
+              </Pressable>
             </View>
-            <TextInput
-              style={styles.blockBodyInput}
-              value={block.body ?? ""}
-              onChangeText={(text) => updateBlock(block.id, { body: text })}
-              placeholder={
-                block.type === "schedule"
-                  ? "例: 10:00 京都駅集合"
-                  : block.type === "checklist"
-                    ? "例: 充電器"
-                    : "内容を入力"
-              }
-              placeholderTextColor={colors.inkFaint}
-              multiline
-            />
-          </View>
-        ))}
-      </View>
+          );
+        })}
+      </ScrollView>
 
-      <Text style={styles.sectionLabel}>ブロックを追加</Text>
+      {user && !state.pageId.startsWith("local-") ? (
+        <Pressable style={styles.syncBtn} onPress={() => void saveCardsToServer()}>
+          <Text style={styles.syncBtnText}>カード構成をサーバーに反映</Text>
+        </Pressable>
+      ) : null}
+
+      <Text style={styles.sectionLabel}>カードを追加</Text>
       <View style={styles.chips}>
-        {BLOCK_OPTIONS.map((opt) => (
-          <Pressable key={opt.type} style={styles.chip} onPress={() => addBlock(opt.type)}>
-            <Ionicons name={opt.icon} size={16} color={colors.accentDeep} />
+        {CARD_LIBRARY_ITEMS.filter((opt) => !isBusinessOnlyCard(opt.type)).map((opt) => (
+          <Pressable key={opt.type} style={styles.chip} onPress={() => addCard(opt.type)}>
+            <Ionicons name="add" size={14} color={colors.accentDeep} />
             <Text style={styles.chipText}>{opt.label}</Text>
           </Pressable>
         ))}
@@ -307,13 +510,26 @@ export default function CreateScreen() {
           </Text>
         )}
       </Pressable>
+
+      <CardEditModal
+        visible={editingCard !== null}
+        card={editingCard}
+        uploadPrefix={uploadPrefix}
+        readOnly={editingCard ? isBusinessOnlyCard(editingCard.type) : false}
+        onClose={() => setEditingCard(null)}
+        onSave={(updated) => {
+          updateCards(state.cards.map((c) => (c.id === updated.id ? updated : c)));
+          setEditingCard(null);
+        }}
+        onOpenWebEditor={openWebEditor}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   hero: typography.hero,
-  sub: { ...typography.body, marginBottom: spacing.xl },
+  sub: { ...typography.body, marginBottom: spacing.lg },
   sectionLabel: { ...typography.label, marginBottom: spacing.md, textTransform: "none", fontSize: 13 },
   titleInput: {
     borderWidth: 1,
@@ -326,45 +542,37 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     backgroundColor: colors.cardSolid,
   },
-  previewBtn: {
+  actionRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg },
+  secondaryBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    marginBottom: spacing.xxl,
-  },
-  previewBtnText: { fontSize: 15, fontWeight: "600", color: colors.accentDeep },
-  blockList: { gap: spacing.md, marginBottom: spacing.xxl },
-  blockCard: {
-    backgroundColor: colors.cardSolid,
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
-    padding: spacing.md,
-    gap: spacing.sm,
+    borderColor: colors.accentDeep,
+    backgroundColor: colors.cardSolid,
   },
-  blockRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  blockTitleInput: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.ink },
-  blockBodyInput: {
-    fontSize: 14,
-    color: colors.ink,
-    lineHeight: 20,
-    minHeight: 44,
-    padding: spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: radius.sm,
-  },
-  blockActions: { flexDirection: "row", gap: spacing.sm },
+  secondaryBtnText: { fontSize: 13, fontWeight: "600", color: colors.accentDeep },
+  cardList: { maxHeight: 360, marginBottom: spacing.md },
+  cardRow: { marginBottom: spacing.md, gap: spacing.xs },
+  cardActions: { flexDirection: "row", gap: spacing.md, alignSelf: "flex-end" },
+  cardTap: { flex: 1 },
+  syncBtn: { alignSelf: "center", marginBottom: spacing.lg },
+  syncBtnText: { fontSize: 13, color: colors.accentDeep, fontWeight: "600" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.xxl },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: 4,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     backgroundColor: colors.aqua,
   },
-  chipText: { fontSize: 13, fontWeight: "600", color: colors.ink },
+  chipText: { fontSize: 12, fontWeight: "600", color: colors.ink },
   primaryBtn: {
     backgroundColor: colors.accentDeep,
     borderRadius: radius.pill,

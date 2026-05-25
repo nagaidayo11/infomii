@@ -103,6 +103,23 @@ export default function ItineraryDetailScreen() {
           <Text style={styles.meta}>
             {item.location} · {item.duration} · {item.stops} スポット
           </Text>
+
+          {item.source === "remote" && item.pageId ? (
+            <Pressable
+              style={styles.editBtn}
+              onPress={() => {
+                void selection();
+                router.push({
+                  pathname: "/(tabs)/create",
+                  params: { pageId: item.pageId, informationId: item.id },
+                });
+              }}
+            >
+              <Ionicons name="create-outline" size={18} color="#fff" />
+              <Text style={styles.editBtnText}>このしおりを編集</Text>
+            </Pressable>
+          ) : null}
+
           <TimelineView blocks={item.blocks} />
         </View>
       </ScrollView>
@@ -165,6 +182,17 @@ const styles = StyleSheet.create({
   status: { ...typography.caption, color: colors.accentDeep },
   title: { fontSize: 28, fontWeight: "700", color: colors.ink, letterSpacing: -0.4 },
   subtitle: typography.body,
-  meta: { ...typography.caption, marginBottom: spacing.xl },
+  meta: { ...typography.caption, marginBottom: spacing.md },
+  editBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.accentDeep,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  editBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
   backLink: { color: colors.accentDeep, marginTop: spacing.lg },
 });

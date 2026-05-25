@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,15 +22,13 @@ import {
   formatGoogleAuthError,
   formatOtpError,
 } from "@/lib/auth-errors";
-import { saveItinerary, targetFromKey } from "@/lib/information-saves-api";
-import { ensureUserHotelScopeForOnboarding } from "@/lib/hotel-scope";
 import {
-  consumePendingPublishAfterAuth,
-  consumePendingSave,
-  peekPendingPublishAfterAuth,
-  peekPendingSave,
-} from "@/lib/pending-auth";
-import { signInWithGoogleOAuth } from "@/lib/oauth";
+  readPendingInviteCode,
+  setOnboardingScopeBootstrap,
+  writePendingInviteCode,
+} from "@/lib/invite-pending";
+import { completeAfterLogin } from "@/lib/post-auth";
+import { getAuthRedirectUri, signInWithGoogleOAuth } from "@/lib/oauth";
 import { getSupabaseClient, hasSupabaseEnv } from "@/lib/supabase";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
@@ -41,6 +39,7 @@ type EmailMode = "login" | "signup" | "otp";
 
 export default function AuthScreen() {
   const router = useRouter();
+  const { invite: inviteParam } = useLocalSearchParams<{ invite?: string }>();
   const insets = useSafeAreaInsets();
   const isIos = Platform.OS === "ios";
 
@@ -48,51 +47,45 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [emailMode, setEmailMode] = useState<EmailMode>("login");
   const [emailExpanded, setEmailExpanded] = useState(false);
+  const [inviteInput, setInviteInput] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [saveIntent, setSaveIntent] = useState(false);
-  const [publishIntent, setPublishIntent] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   useEffect(() => {
     void (async () => {
-      const pendingSave = await peekPendingSave();
-      const pendingPublish = await peekPendingPublishAfterAuth();
-      setSaveIntent(Boolean(pendingSave));
-      setPublishIntent(pendingPublish && !pendingSave);
+      const stored = await readPendingInviteCode();
+      if (stored) {
+        setInviteInput(stored);
+        setInviteOpen(true);
+      }
     })();
   }, []);
+
+  useEffect(() => {
+    const q = inviteParam?.trim();
+    if (!q) return;
+    const up = q.toUpperCase();
+    void writePendingInviteCode(up);
+    setInviteInput(up);
+    setInviteOpen(true);
+  }, [inviteParam]);
 
   useEffect(() => {
     if (!isIos) return;
     void AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
   }, [isIos]);
 
+  async function persistInviteBeforeAuth() {
+    if (inviteInput.trim()) {
+      await writePendingInviteCode(inviteInput);
+    }
+  }
+
   async function finishAuth() {
-    await ensureUserHotelScopeForOnboarding();
-
-    const pendingSave = await consumePendingSave();
-    if (pendingSave) {
-      const target = targetFromKey(pendingSave.saveKey);
-      if (target) {
-        try {
-          await saveItinerary(target);
-        } catch {
-          /* ignore */
-        }
-      }
-      router.replace(pendingSave.returnPath as never);
-      return;
-    }
-
-    const pendingPublish = await consumePendingPublishAfterAuth();
-    if (pendingPublish) {
-      router.replace("/(tabs)/create");
-      return;
-    }
-
-    router.back();
+    await completeAfterLogin(router);
   }
 
   async function handleEmailAuth() {
@@ -113,13 +106,16 @@ export default function AuthScreen() {
       if (error) setMessage(formatOtpError(error.message));
       else setSuccessMsg("マジックリンクを送信しました。メールをご確認ください。");
     } else if (emailMode === "signup") {
+      await persistInviteBeforeAuth();
       const { error } = await client.auth.signUp({ email, password });
       if (error) setMessage(formatEmailAuthError(error.message));
       else {
+        await setOnboardingScopeBootstrap();
         setSuccessMsg("登録しました。確認メールのあとログインしてください。");
         setEmailMode("login");
       }
     } else {
+      await persistInviteBeforeAuth();
       const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) setMessage(formatEmailAuthError(error.message));
       else await finishAuth();
@@ -130,6 +126,7 @@ export default function AuthScreen() {
   async function handleGoogle() {
     setSubmitting(true);
     setMessage("");
+    await persistInviteBeforeAuth();
     const { error } = await signInWithGoogleOAuth();
     if (error) setMessage(formatGoogleAuthError(error));
     else await finishAuth();
@@ -139,6 +136,7 @@ export default function AuthScreen() {
   async function handleApple() {
     setSubmitting(true);
     setMessage("");
+    await persistInviteBeforeAuth();
     const { error } = await signInWithApple();
     if (error && !error.includes("キャンセル")) {
       setMessage(formatAppleAuthError(error));
@@ -147,17 +145,6 @@ export default function AuthScreen() {
     }
     setSubmitting(false);
   }
-
-  const intentTitle = saveIntent
-    ? "保存するにはログイン"
-    : publishIntent
-      ? "公開するにはログイン"
-      : null;
-  const intentBody = saveIntent
-    ? "ログイン後、このしおりをライブラリに追加します。"
-    : publishIntent
-      ? "ログイン後、編集中のしおりを同期して公開できます。"
-      : null;
 
   return (
     <View style={styles.root}>
@@ -180,26 +167,8 @@ export default function AuthScreen() {
             { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xxl },
           ]}
         >
-          <Pressable style={styles.close} onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="close" size={24} color={colors.inkMuted} />
-          </Pressable>
-
-          {intentTitle ? (
-            <View style={styles.intentBanner}>
-              <Ionicons
-                name={saveIntent ? "bookmark" : "cloud-upload-outline"}
-                size={20}
-                color={colors.accentDeep}
-              />
-              <View style={styles.intentTextWrap}>
-                <Text style={styles.intentTitle}>{intentTitle}</Text>
-                <Text style={styles.intentBody}>{intentBody}</Text>
-              </View>
-            </View>
-          ) : null}
-
           <Text style={styles.hero}>Infomii</Text>
-          <Text style={styles.sub}>かんたんログインで、しおりを保存・公開。</Text>
+          <Text style={styles.sub}>ログインして、しおりの作成・保存・公開を始めましょう。</Text>
 
           {!hasSupabaseEnv ? (
             <View style={styles.warn}>
@@ -211,6 +180,15 @@ export default function AuthScreen() {
 
           {message ? <Text style={styles.error}>{message}</Text> : null}
           {successMsg ? <Text style={styles.success}>{successMsg}</Text> : null}
+
+          {hasSupabaseEnv ? (
+            <Text style={styles.redirectHint} selectable>
+              Supabase → Redirect URLs（いずれか必須）:{"\n"}
+              {getAuthRedirectUri()}
+              {"\n"}
+              または https://infomii.com/auth/mobile-callback
+            </Text>
+          ) : null}
 
           {/* メイン: Apple（iOS） */}
           {isIos && appleAvailable ? (
@@ -243,6 +221,42 @@ export default function AuthScreen() {
               <Text style={styles.googleMainText}>Google で続ける</Text>
             </Pressable>
           ) : null}
+
+          <View style={styles.inviteBlock}>
+            <Pressable
+              style={styles.inviteToggle}
+              onPress={() => {
+                void tapLight();
+                setInviteOpen((v) => !v);
+              }}
+            >
+              <Ionicons name="people-outline" size={18} color={colors.accentDeep} />
+              <Text style={styles.inviteToggleText}>
+                {inviteOpen ? "招待コードを閉じる" : "チーム招待コードがある"}
+              </Text>
+              <Ionicons
+                name={inviteOpen ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={colors.inkFaint}
+              />
+            </Pressable>
+            {inviteOpen ? (
+              <TextInput
+                style={[styles.input, styles.inviteInput]}
+                value={inviteInput}
+                onChangeText={setInviteInput}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder="招待コード（例: ABCD1234）"
+                placeholderTextColor={colors.inkFaint}
+              />
+            ) : null}
+            {inviteOpen ? (
+              <Text style={styles.inviteHint}>
+                ログイン後に自動でチームに参加します。Web 版と同じコードが使えます。
+              </Text>
+            ) : null}
+          </View>
 
           <View style={styles.secondaryBlock}>
             <Text style={styles.secondaryLabel}>その他の方法</Text>
@@ -357,11 +371,9 @@ export default function AuthScreen() {
             </View>
           ) : null}
 
-          <Pressable style={styles.skipBtn} onPress={() => router.back()}>
-            <Text style={styles.skipText}>あとで</Text>
-          </Pressable>
-
-          <Text style={styles.footerNote}>Web 版と同じアカウント（Google・メール）でも同期できます。</Text>
+          <Text style={styles.footerNote}>
+            Web 版と同じアカウント（Apple・Google・メール）でデータを同期できます。
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -376,21 +388,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screen,
     width: "100%",
   },
-  close: { alignSelf: "flex-end", padding: spacing.sm, marginBottom: spacing.sm },
-  intentBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.md,
-    backgroundColor: "rgba(90, 155, 176, 0.15)",
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+  inviteBlock: {
+    alignItems: "center",
+    gap: spacing.sm,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(90, 155, 176, 0.3)",
+    width: "100%",
   },
-  intentTextWrap: { flex: 1, gap: spacing.xs },
-  intentTitle: { fontSize: 16, fontWeight: "700", color: colors.ink },
-  intentBody: { fontSize: 14, lineHeight: 20, color: colors.inkMuted },
+  inviteToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    alignSelf: "center",
+  },
+  inviteToggleText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.ink,
+    textAlign: "center",
+  },
+  inviteInput: {
+    alignSelf: "stretch",
+  },
+  inviteHint: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.inkFaint,
+    textAlign: "center",
+    paddingHorizontal: spacing.md,
+    alignSelf: "stretch",
+  },
   hero: { ...typography.hero, marginBottom: spacing.xs },
   sub: { ...typography.body, marginBottom: spacing.xl },
   warn: {
@@ -402,6 +435,13 @@ const styles = StyleSheet.create({
   warnText: { fontSize: 13, color: colors.ink },
   error: { color: colors.danger, marginBottom: spacing.sm, fontSize: 14 },
   success: { color: colors.accentDeep, marginBottom: spacing.sm, fontSize: 14 },
+  redirectHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.inkFaint,
+    marginBottom: spacing.md,
+    textAlign: "center",
+  },
   applePrimary: {
     width: "100%",
     height: 52,
@@ -514,8 +554,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     fontWeight: "500",
   },
-  skipBtn: { alignItems: "center", paddingVertical: spacing.md },
-  skipText: { fontSize: 15, fontWeight: "600", color: colors.inkMuted },
   footerNote: {
     ...typography.caption,
     textAlign: "center",

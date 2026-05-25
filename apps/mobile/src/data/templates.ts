@@ -31,33 +31,44 @@ export function templateToDraftBlocks(template: ItineraryCard): DraftBlock[] {
         id: `draft-${block.id}`,
         type: "hero",
         title: block.title ?? "カバー",
-        body: block.body ?? "",
+        body: block.body ?? block.subtitle ?? "",
       });
       continue;
     }
     if (!DRAFT_TYPES.includes(block.type)) continue;
 
-    let body = block.body ?? block.subtitle ?? "";
-    if (block.type === "schedule" && block.scheduleItems?.[0]) {
-      const first = block.scheduleItems[0];
-      body = `${first.time} ${first.label}`;
-    }
-    if (block.type === "checklist" && block.checklistItems?.[0]) {
-      body = block.checklistItems[0];
-    }
-
-    out.push({
+    const draft: DraftBlock = {
       id: `draft-${block.id}`,
       type: block.type,
       title: block.title ?? block.type,
-      body,
-    });
+      body: block.body ?? block.subtitle ?? "",
+    };
+
+    if (block.type === "schedule" && block.scheduleItems?.length) {
+      draft.scheduleItems = block.scheduleItems.map((item) => ({ ...item }));
+    }
+    if (block.type === "checklist" && block.checklistItems?.length) {
+      draft.checklistItems = [...block.checklistItems];
+    }
+    if (block.type === "nearby" && block.nearby?.length) {
+      draft.nearby = block.nearby.map((p) => ({ ...p }));
+    }
+    if (block.type === "steps" && block.steps?.length) {
+      draft.steps = block.steps.map((s) => ({ ...s }));
+    }
+
+    out.push(draft);
   }
 
   if (!out.length) {
     return [
       { id: "draft-hero", type: "hero", title: "カバー", body: template.title },
-      { id: "draft-schedule", type: "schedule", title: "タイムライン", body: "" },
+      {
+        id: "draft-schedule",
+        type: "schedule",
+        title: "タイムライン",
+        scheduleItems: [{ day: "", time: "", label: "" }],
+      },
     ];
   }
 

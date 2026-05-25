@@ -1,7 +1,6 @@
-import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { RootAuthGuard } from "@/components/RootAuthGuard";
 import { AuthProvider } from "@/stores/auth-provider";
 import { SavedProvider } from "@/stores/saved-store";
 
@@ -11,25 +10,7 @@ export default function RootLayout() {
       <AuthProvider>
         <SavedProvider>
           <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="auth"
-              options={{
-                animation: "slide_from_bottom",
-                presentation: Platform.OS === "ios" ? "fullScreenModal" : "modal",
-                gestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="itinerary/[id]"
-              options={{ animation: "slide_from_right", presentation: "card" }}
-            />
-            <Stack.Screen
-              name="preview"
-              options={{ animation: "slide_from_right", presentation: "card" }}
-            />
-          </Stack>
+          <RootAuthGuard />
         </SavedProvider>
       </AuthProvider>
     </GestureHandlerRootView>

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -7,6 +8,7 @@ import { fetchMyDraftItineraries } from "@/lib/informations-api";
 import { colors } from "@/design/colors";
 import { radius, spacing } from "@/design/spacing";
 import { typography } from "@/design/typography";
+import { APP_PUBLIC_URL } from "@/lib/config";
 import { hasSupabaseEnv } from "@/lib/supabase";
 import { useAuth } from "@/stores/auth-provider";
 import { useSaved } from "@/stores/saved-store";
@@ -33,7 +35,7 @@ function ProfileRow({ icon, label, value, onPress }: RowProps) {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, enabled, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { savedKeys } = useSaved();
   const [draftCount, setDraftCount] = useState(0);
 
@@ -50,16 +52,8 @@ export default function ProfileScreen() {
       <View style={styles.avatar}>
         <Ionicons name="person-outline" size={32} color={colors.accentDeep} />
       </View>
-      <Text style={styles.name}>{user?.email?.split("@")[0] ?? "ゲスト"}</Text>
-      <Text style={styles.email}>
-        {user?.email ?? (enabled ? "ログインで Web と同期" : "ローカルモード（サンプル閲覧）")}
-      </Text>
-
-      {!user ? (
-        <Pressable style={styles.loginBtn} onPress={() => router.push("/auth")}>
-          <Text style={styles.loginBtnText}>ログイン / 新規登録</Text>
-        </Pressable>
-      ) : null}
+      <Text style={styles.name}>{user?.email?.split("@")[0] ?? "ユーザー"}</Text>
+      <Text style={styles.email}>{user?.email ?? ""}</Text>
 
       <View style={styles.card}>
         <ProfileRow icon="bookmark-outline" label="保存したしおり" value={`${savedKeys.length}件`} onPress={() => router.push("/saved")} />
@@ -70,6 +64,12 @@ export default function ProfileScreen() {
         />
         <ProfileRow icon="sparkles-outline" label="プレミアム" value="テーマを見る" />
         <ProfileRow icon="share-outline" label="共有した旅" value="準備中" />
+        <ProfileRow
+          icon="people-outline"
+          label="チーム・招待コード"
+          value="Web で管理"
+          onPress={() => void WebBrowser.openBrowserAsync(`${APP_PUBLIC_URL}/dashboard/team`)}
+        />
       </View>
 
       <View style={styles.premiumBanner}>
@@ -79,15 +79,9 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
-      {user ? (
-        <Pressable style={styles.signOut} onPress={() => signOut()}>
-          <Text style={styles.signOutText}>ログアウト</Text>
-        </Pressable>
-      ) : (
-        <Text style={styles.guestNote}>
-          ログインなしでもサンプルしおりは閲覧できます。保存・作成の同期にはログインが必要です。
-        </Text>
-      )}
+      <Pressable style={styles.signOut} onPress={() => void signOut()}>
+        <Text style={styles.signOutText}>ログアウト</Text>
+      </Pressable>
     </Screen>
   );
 }
@@ -106,14 +100,6 @@ const styles = StyleSheet.create({
   },
   name: { fontSize: 22, fontWeight: "700", color: colors.ink },
   email: { ...typography.caption, marginBottom: spacing.lg },
-  loginBtn: {
-    backgroundColor: colors.accentDeep,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    marginBottom: spacing.xl,
-  },
-  loginBtnText: { color: "#fff", fontWeight: "600" },
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
@@ -144,5 +130,4 @@ const styles = StyleSheet.create({
   premiumBody: typography.body,
   signOut: { marginTop: spacing.xl, alignItems: "center", padding: spacing.lg },
   signOutText: { color: colors.danger, fontWeight: "600" },
-  guestNote: { ...typography.caption, marginTop: spacing.xl, textAlign: "center", lineHeight: 18 },
 });
