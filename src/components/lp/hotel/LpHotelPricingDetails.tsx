@@ -112,7 +112,7 @@ export function LpHotelPricingDetails({
           <Button href={freeSignupHref} className="min-h-[44px] !bg-emerald-600 !text-white hover:!bg-emerald-700">
             無料ではじめる
           </Button>
-          <CheckoutButton plan="pro" className="min-h-[44px]">
+          <CheckoutButton plan="pro" variant="secondary" className="min-h-[44px]">
             Proを試す{hasProAnnual ? "（月払い）" : ""}
           </CheckoutButton>
           {hasBusinessAnnual ? (

@@ -78,7 +78,8 @@ export function LpPricingCard({ plan, freeSignupHref, hasProAnnual, hasBusinessA
           <>
             <CheckoutButton
               plan="pro"
-              className="min-h-[52px] w-full !text-base !border-emerald-700 !bg-emerald-600 hover:!bg-emerald-700"
+              variant="secondary"
+              className="min-h-[52px] w-full !text-base"
             >
               {plan.ctaLabel}
               {hasProAnnual ? "（月払い）" : ""}
