@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import {
   createStripeCheckoutSession,
   createStripePortalSession,
@@ -76,7 +77,7 @@ export function BusinessPlanSection() {
       window.location.href = url;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes("ログイン") || msg.includes("認証") || msg.includes("セッション")) {
+      if (isLoginRequiredMessage(msg)) {
         window.location.href = "/login?ref=lp-saas&next=%2Fsettings";
         return;
       }
@@ -97,7 +98,7 @@ export function BusinessPlanSection() {
       window.location.href = url;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes("ログイン") || msg.includes("認証") || msg.includes("セッション")) {
+      if (isLoginRequiredMessage(msg)) {
         window.location.href = "/login?ref=lp-saas&next=%2Fsettings";
         return;
       }

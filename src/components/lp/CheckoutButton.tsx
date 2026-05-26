@@ -8,6 +8,8 @@ import {
   getCurrentUserHotelRole,
   trackUpgradeClick,
 } from "@/lib/storage";
+import { buildBillingLoginHref, isLoginRequiredMessage } from "@/lib/billing-auth";
+import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui";
 
 type Plan = "pro" | "business";
@@ -21,8 +23,6 @@ type CheckoutButtonProps = {
   showUpgradeHint?: boolean;
   children: React.ReactNode;
 };
-
-const loginHref = "/login?ref=lp-saas&next=%2Flp%2Fsaas%23pricing";
 
 /**
  * LP料金セクション用の申し込みボタン。
@@ -84,6 +84,20 @@ export function CheckoutButton({
       return;
     }
     setMessage(null);
+
+    const supabase = getBrowserSupabaseClient();
+    if (supabase) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError && isLoginRequiredMessage(String(sessionError.message ?? ""))) {
+        window.location.href = buildBillingLoginHref();
+        return;
+      }
+      if (!session?.access_token) {
+        window.location.href = buildBillingLoginHref();
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
@@ -99,12 +113,8 @@ export function CheckoutButton({
       window.location.href = url;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (
-        msg.includes("ログイン") ||
-        msg.includes("認証") ||
-        msg.includes("セッション")
-      ) {
-        window.location.href = loginHref;
+      if (isLoginRequiredMessage(msg)) {
+        window.location.href = buildBillingLoginHref();
         return;
       }
       if (msg.includes("すでに有料プランです")) {
@@ -114,8 +124,8 @@ export function CheckoutButton({
           return;
         } catch (portalError) {
           const portalMsg = portalError instanceof Error ? portalError.message : String(portalError);
-          if (portalMsg.includes("ログイン") || portalMsg.includes("認証") || portalMsg.includes("セッション")) {
-            window.location.href = loginHref;
+          if (isLoginRequiredMessage(portalMsg)) {
+            window.location.href = buildBillingLoginHref();
             return;
           }
           setLoading(false);

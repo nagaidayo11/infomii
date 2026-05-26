@@ -6,6 +6,7 @@ import type {
 } from "@/types/information";
 import { createSlug } from "@/lib/slug";
 import { starterTemplates, type StarterTemplate } from "@/lib/templates";
+import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { getMultiPageTemplate } from "@/lib/multi-page-templates/data";
 import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/convert";
@@ -3892,10 +3893,13 @@ export async function createStripeCheckoutSession(
   } = await supabase.auth.getSession();
 
   if (sessionError) {
+    if (isLoginRequiredMessage(String(sessionError.message ?? ""))) {
+      throw new Error("ログインが必要です。サインインしてから再度お試しください。");
+    }
     throw toError(sessionError, "認証セッション取得に失敗しました");
   }
   if (!session?.access_token) {
-    throw new Error("ログインセッションが見つかりません");
+    throw new Error("ログインが必要です。サインインしてから再度お試しください。");
   }
 
   const response = await fetch("/api/stripe/checkout", {
@@ -3915,7 +3919,11 @@ export async function createStripeCheckoutSession(
   const payload = (await response.json()) as { url?: string; portal_url?: string; message?: string };
   const checkoutUrl = payload.portal_url ?? payload.url;
   if (!response.ok || !checkoutUrl) {
-    throw new Error(payload.message || "Checkout作成に失敗しました");
+    const apiMessage = payload.message || "Checkout作成に失敗しました";
+    if (response.status === 401 || isLoginRequiredMessage(apiMessage)) {
+      throw new Error("ログインが必要です。サインインしてから再度お試しください。");
+    }
+    throw new Error(apiMessage);
   }
 
   return checkoutUrl;
@@ -3933,10 +3941,13 @@ export async function createStripePortalSession(): Promise<string> {
   } = await supabase.auth.getSession();
 
   if (sessionError) {
+    if (isLoginRequiredMessage(String(sessionError.message ?? ""))) {
+      throw new Error("ログインが必要です。サインインしてから再度お試しください。");
+    }
     throw toError(sessionError, "認証セッション取得に失敗しました");
   }
   if (!session?.access_token) {
-    throw new Error("ログインセッションが見つかりません");
+    throw new Error("ログインが必要です。サインインしてから再度お試しください。");
   }
 
   const response = await fetch("/api/stripe/portal", {
@@ -3949,7 +3960,11 @@ export async function createStripePortalSession(): Promise<string> {
 
   const payload = (await response.json()) as { url?: string; message?: string };
   if (!response.ok || !payload.url) {
-    throw new Error(payload.message || "Customer Portal開始に失敗しました");
+    const apiMessage = payload.message || "Customer Portal開始に失敗しました";
+    if (response.status === 401 || isLoginRequiredMessage(apiMessage)) {
+      throw new Error("ログインが必要です。サインインしてから再度お試しください。");
+    }
+    throw new Error(apiMessage);
   }
 
   return payload.url;
