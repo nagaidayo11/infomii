@@ -12,7 +12,7 @@ import {
 
 export function LpUseCases() {
   return (
-    <section id="use-cases" className="border-b border-emerald-100/60 bg-[#FAFFFC] py-16 sm:py-20">
+    <section id="use-cases" className="border-b border-slate-100 bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <ScrollReveal intensity="subtle">
           <p className={LP_SECTION_KICKER_CLASS}>用途</p>

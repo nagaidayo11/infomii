@@ -53,7 +53,7 @@ export default function OpenGraphImage() {
           <div style={{ fontSize: 28, opacity: 0.95 }}>
             1画面編集で即時更新 / QR運用対応
           </div>
-          <div style={{ fontSize: 22, opacity: 0.9 }}>Free ¥0 / Pro ¥1,980</div>
+          <div style={{ fontSize: 22, opacity: 0.9 }}>Free ¥0 / Pro ¥1,280〜</div>
         </div>
       </div>
     ),

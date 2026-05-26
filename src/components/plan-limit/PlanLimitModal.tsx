@@ -47,7 +47,7 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
               href={pricingHref}
               className="app-button-native inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800"
             >
-              Proプラン（¥1,980/月）
+              Proプラン（¥1,280/月）
             </Link>
           )}
           <Link
@@ -58,7 +58,7 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
                 : "app-button-native inline-flex rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"
             }
           >
-            Businessプラン（¥4,980/月）
+            Businessプラン（¥3,480/月）
           </Link>
           <button
             type="button"

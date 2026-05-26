@@ -8,6 +8,7 @@ import {
   type HotelSubscription,
 } from "@/lib/storage";
 import { Card } from "@/components/ui/Card";
+import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 /**
  * Businessプランの特典を設定画面に表示（未加入にはアップグレード案内）
@@ -277,7 +278,12 @@ export function BusinessPlanSection() {
               </p>
             ) : null}
             <p className={`text-sm font-semibold sm:text-base ${plan === "pro" ? "text-emerald-700" : "text-slate-500"}`}>Pro</p>
-            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "pro" ? "text-emerald-900" : "text-slate-900"}`}>¥1,980 / 月</p>
+            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "pro" ? "text-emerald-900" : "text-slate-900"}`}>
+              {PLAN_PRICE_DISPLAY.pro.monthlyPerMonth}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              年払い {PLAN_PRICE_DISPLAY.pro.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
+            </p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-emerald-800" : "text-slate-600"}`}>
               <li>・最大10ページ公開</li>
               <li>・閲覧分析</li>
@@ -300,7 +306,12 @@ export function BusinessPlanSection() {
                 人気
               </span>
             </div>
-            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "business" ? "text-emerald-900" : "text-slate-900"}`}>¥4,980 / 月</p>
+            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "business" ? "text-emerald-900" : "text-slate-900"}`}>
+              {PLAN_PRICE_DISPLAY.business.monthlyPerMonth}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              年払い {PLAN_PRICE_DISPLAY.business.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
+            </p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-emerald-800" : "text-slate-600"}`}>
               <li>・公開ページ無制限</li>
               <li>・公開時の多言語自動翻訳</li>

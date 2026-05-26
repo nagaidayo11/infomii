@@ -59,6 +59,9 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
         <nav className="ml-auto hidden shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1 md:flex">
           {showBtocSections ? (
             <>
+              <a href="#benefits" className={navLinkClass}>
+                特長
+              </a>
               <a href="#use-cases" className={navLinkClass}>
                 用途
               </a>
@@ -66,7 +69,11 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
                 テンプレ
               </a>
             </>
-          ) : null}
+          ) : (
+            <a href="#operations" className={navLinkClass}>
+              現場のメリット
+            </a>
+          )}
           <a href="#live-demo" className={navLinkClass}>
             デモ
           </a>
@@ -130,19 +137,30 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
               <>
                 <a
                   ref={firstMenuLinkRef}
-                  href="#use-cases"
+                  href="#benefits"
                   className={navLinkClass}
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  特長
+                </a>
+                <a href="#use-cases" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
                   用途
                 </a>
                 <a href="#templates" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
                   テンプレ
                 </a>
               </>
-            ) : null}
+            ) : (
+              <a
+                ref={firstMenuLinkRef}
+                href="#operations"
+                className={navLinkClass}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                現場のメリット
+              </a>
+            )}
             <a
-              ref={showBtocSections ? undefined : firstMenuLinkRef}
               href="#live-demo"
               className={navLinkClass}
               onClick={() => setMobileMenuOpen(false)}

@@ -4,21 +4,21 @@ import LpHotelSaaSPage from "@/components/lp/LpHotelSaaSPage";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
 export const metadata: Metadata = {
-  title: "Infomii | QRひとつで館内案内を3分で。フロント向け",
+  title: "Infomii | ホテル・旅館向け館内案内 — 無料ではじめる",
   description:
-    "口頭説明・紙更新の手間を減らすホテル向けSaaS。WiFi・朝食・設備を1つのQRに集約。まずは無料で3ページまで。",
+    "フロントの説明と紙更新を減らす、ホテル向けQR案内。Wi-Fi・朝食・FAQを1ページに。クレジットカード不要で3ページまで無料公開。",
   alternates: { canonical: `${appUrl}/lp/business` },
   openGraph: {
     url: `${appUrl}/lp/business`,
-    title: "Infomii | QRひとつで館内案内を3分で",
+    title: "Infomii | ホテル現場で軽く使える館内案内",
     description:
-      "フロントの説明と紙更新を減らし、ゲストには常に最新の案内を。登録なしのデモあり。",
+      "ホテル・旅館・民泊向け。紙差し替え不要、QRで案内統一。まず無料登録から。",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Infomii" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Infomii | QRひとつで館内案内を3分で",
-    description: "フロント向け・少人数ホテル向け。WiFi・朝食・設備を3ページまで無料で運用。",
+    title: "Infomii | ホテル向け館内案内",
+    description: "フロント負荷を減らすQR案内。無料3ページ・クレカ不要・数分で公開。",
   },
 };
 

@@ -53,7 +53,7 @@ export function UpgradeCtaBanner({
               variant="secondary"
               className="w-full justify-center !rounded-xl !border-emerald-600 !bg-emerald-600 !px-3 !py-2.5 !text-sm !font-medium !text-white shadow-sm hover:!border-emerald-700 hover:!bg-emerald-700 sm:w-auto sm:!py-2"
             >
-              Proを申し込む（¥1,980/月）
+              Proを申し込む（¥1,280/月）
             </DashboardCheckoutButton>
           </div>
         </div>
@@ -81,7 +81,7 @@ export function UpgradeCtaBanner({
               料金を見る
             </Link>
             <DashboardCheckoutButton plan="business" variant="secondary" className="w-full justify-center sm:w-auto">
-              Businessプランを申し込む（¥4,980/月）
+              Businessプランを申し込む（¥3,480/月）
             </DashboardCheckoutButton>
           </div>
         </div>
