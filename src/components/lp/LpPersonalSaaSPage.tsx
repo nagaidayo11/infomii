@@ -93,6 +93,10 @@ export default function LpPersonalSaaSPage() {
         placements={PERSONAL_LP_SHARING}
         visualTitle="1リンクで、予定と案内を届ける"
         visualBody="旅行・推し活・イベント — 必要な情報だけをスマホで読みやすく"
+        visualMode="flow"
+        hidePlacements
+        visualImageSrc="/templates/previews/travel/travel-itinerary.jpg"
+        visualImageAlt="予定表スタイルの旅程ページプレビュー"
       />
 
       <LpTemplates ctaHref={ctaHref} demoHref={SAMPLE_PAGE_DEMO_HREF} />
