@@ -15,6 +15,8 @@ export type EditorLayoutProps = {
   mobileActions?: ReactNode;
   /** モバイルシート開閉（キャンバス側のスクロール調整など） */
   onMobileSheetChange?: (sheet: MobileSheet) => void;
+  /** Native app shell: Canva-style bottom tool labels */
+  footerVariant?: "default" | "app";
 };
 
 type MobileSheet = "none" | "library" | "settings";
@@ -39,7 +41,19 @@ const MOBILE_NAV_HEIGHT =
 const mobileSheetAsideClass =
   "ui-pop-in fixed inset-x-0 z-[90] flex max-h-[min(88dvh,calc(100dvh-10rem))] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-sm";
 
-export function EditorLayout({ topBar, library, canvas, settings, mobileActions, onMobileSheetChange }: EditorLayoutProps) {
+export function EditorLayout({
+  topBar,
+  library,
+  canvas,
+  settings,
+  mobileActions,
+  onMobileSheetChange,
+  footerVariant = "default",
+}: EditorLayoutProps) {
+  const isAppFooter = footerVariant === "app";
+  const libraryTabLabel = isAppFooter ? "ブロック" : "ブロック追加";
+  const canvasTabLabel = isAppFooter ? "編集" : "キャンバス";
+  const settingsTabLabel = isAppFooter ? "設定" : "ブロック設定";
   const [sheet, setSheet] = useState<MobileSheet>("none");
   const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
   const [dragTopPx, setDragTopPx] = useState<number | null>(null);
@@ -265,32 +279,41 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
           </div>
         ) : null}
         <nav
-          className="flex border-t border-slate-200 bg-white px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.1)]"
+          className={
+            "flex border-t px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.1)] " +
+            (isAppFooter ? "border-slate-200/80 bg-slate-50" : "border-slate-200 bg-white")
+          }
           style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
           aria-label="エディタ操作"
         >
           <button
             type="button"
             onClick={openLibrary}
-            aria-label="追加タブを開く"
+            aria-label="ブロック一覧を開く"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
               (sheet === "library"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
             }
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            ブロック追加
+            {isAppFooter ? (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4z" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            )}
+            {libraryTabLabel}
           </button>
           <button
             type="button"
             onClick={focusCanvas}
-            aria-label="編集タブを開く"
+            aria-label="キャンバスを表示"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
               (sheet === "none"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
@@ -299,14 +322,14 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            キャンバス
+            {canvasTabLabel}
           </button>
           <button
             type="button"
             onClick={openSettings}
-            aria-label="ブロック設定タブを開く"
+            aria-label="ブロック設定を開く"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-xs font-semibold transition-colors " +
+              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
               (sheet === "settings"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
@@ -315,7 +338,7 @@ export function EditorLayout({ topBar, library, canvas, settings, mobileActions,
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
             </svg>
-            ブロック設定
+            {settingsTabLabel}
           </button>
         </nav>
       </div>

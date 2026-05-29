@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { LocaleProvider } from "@/components/locale-context";
+import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
@@ -82,6 +84,8 @@ export function Editor2({
   startUnselected = false,
 }: Editor2Props) {
   const isDemoMode = mode === "demo";
+  const { isAppShell } = useClientShell();
+  const useAppEditorChrome = isAppShell && !isDemoMode;
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
@@ -1197,55 +1201,90 @@ export function Editor2({
       : hasPendingApproval
         ? "承認して公開"
         : "公開";
+  const onBulkFontFromAnchor = useCallback(
+    (anchorEl: HTMLElement) => {
+      if (isDemoMode) {
+        setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
+        return;
+      }
+      const rect = anchorEl.getBoundingClientRect();
+      const panelWidth = 420;
+      const maxLeft = Math.max(10, window.innerWidth - panelWidth - 10);
+      const left = Math.max(10, Math.min(rect.left, maxLeft));
+      const top = Math.min(rect.bottom + 8, window.innerHeight - 80);
+      bulkFontSnapshotRef.current = cloneCardsSnapshot(cards);
+      const first = cards[0]?.style as Record<string, unknown> | undefined;
+      const current = typeof first?.fontFamily === "string" ? first.fontFamily : "";
+      setBulkFontFamily(current);
+      setBulkFontAnchor({ top, left });
+      setBulkFontOpen(true);
+    },
+    [cards, cloneCardsSnapshot, isDemoMode],
+  );
+
   const topBar =
     pageId || isDemoMode ? (
-      <EditorTopBar
-        backHref={isDemoMode ? "/lp/saas" : "/dashboard"}
-        demoMode={isDemoMode}
-        pageTitle={isDemoMode ? "デモ編集画面" : pageMeta.title}
-        saving={isSaving}
-        lastSavedAt={lastSavedAt}
-        saveError={saveError}
-        onRetry={retry}
-        status={publishStatus}
-        publicUrl={isDemoMode ? demoPreviewUrl : pageMeta.publicUrl}
-        publishing={publishing}
-        qrPreparing={qrModalPreparing}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        canClearAll={cards.length > 0}
-        onUndo={undo}
-        onRedo={redo}
-        onClearAll={handleClearAll}
-        onBulkFont={(anchorEl) => {
-          if (isDemoMode) {
-            setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
-            return;
-          }
-          const rect = anchorEl.getBoundingClientRect();
-          const panelWidth = 420;
-          const maxLeft = Math.max(10, window.innerWidth - panelWidth - 10);
-          const left = Math.max(10, Math.min(rect.left, maxLeft));
-          const top = Math.min(rect.bottom + 8, window.innerHeight - 80);
-          bulkFontSnapshotRef.current = cloneCardsSnapshot(cards);
-          const first = cards[0]?.style as Record<string, unknown> | undefined;
-          const current = typeof first?.fontFamily === "string" ? first.fontFamily : "";
-          setBulkFontFamily(current);
-          setBulkFontAnchor({ top, left });
-          setBulkFontOpen(true);
-        }}
-        onPreview={handlePreviewClick}
-        previewPreparing={previewBusy || localeTranslating}
-        onPublish={handlePublishClickStrict}
-        publishActionLabel={publishActionLabel}
-        onQr={handleQrClick}
-        onTogglePublished={isDemoMode || hotelRole === "editor" ? undefined : handleTogglePublishedStrict}
-        publishToggleLoading={publishToggleLoading}
-        publishToggleChecked={publishStatus === "published"}
-        onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
-        scrollPriorityMode={scrollPriorityMode}
-        onToggleScrollPriority={() => setScrollPriorityMode((prev) => !prev)}
-      />
+      useAppEditorChrome ? (
+        <EditorAppTopBar
+          backHref="/dashboard"
+          pageTitle={pageMeta.title}
+          saving={isSaving}
+          lastSavedAt={lastSavedAt}
+          saveError={saveError}
+          onRetry={retry}
+          publicUrl={pageMeta.publicUrl}
+          publishing={publishing}
+          qrPreparing={qrModalPreparing}
+          previewPreparing={previewBusy || localeTranslating}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          canClearAll={cards.length > 0}
+          onUndo={undo}
+          onRedo={redo}
+          onClearAll={handleClearAll}
+          onBulkFont={onBulkFontFromAnchor}
+          onPreview={handlePreviewClick}
+          onPublish={handlePublishClickStrict}
+          publishActionLabel={publishActionLabel}
+          onQr={handleQrClick}
+          onTogglePublished={hotelRole === "editor" ? undefined : handleTogglePublishedStrict}
+          publishToggleLoading={publishToggleLoading}
+          publishToggleChecked={publishStatus === "published"}
+          onRenamePageTitle={handleRenamePageTitle}
+        />
+      ) : (
+        <EditorTopBar
+          backHref={isDemoMode ? "/lp/saas" : "/dashboard"}
+          demoMode={isDemoMode}
+          pageTitle={isDemoMode ? "デモ編集画面" : pageMeta.title}
+          saving={isSaving}
+          lastSavedAt={lastSavedAt}
+          saveError={saveError}
+          onRetry={retry}
+          status={publishStatus}
+          publicUrl={isDemoMode ? demoPreviewUrl : pageMeta.publicUrl}
+          publishing={publishing}
+          qrPreparing={qrModalPreparing}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          canClearAll={cards.length > 0}
+          onUndo={undo}
+          onRedo={redo}
+          onClearAll={handleClearAll}
+          onBulkFont={onBulkFontFromAnchor}
+          onPreview={handlePreviewClick}
+          previewPreparing={previewBusy || localeTranslating}
+          onPublish={handlePublishClickStrict}
+          publishActionLabel={publishActionLabel}
+          onQr={handleQrClick}
+          onTogglePublished={isDemoMode || hotelRole === "editor" ? undefined : handleTogglePublishedStrict}
+          publishToggleLoading={publishToggleLoading}
+          publishToggleChecked={publishStatus === "published"}
+          onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
+          scrollPriorityMode={scrollPriorityMode}
+          onToggleScrollPriority={() => setScrollPriorityMode((prev) => !prev)}
+        />
+      )
     ) : null;
   const showEditorBusyOverlay =
     previewBusy || publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
@@ -1292,6 +1331,7 @@ export function Editor2({
       <div ref={rootRef} className="h-[100dvh] w-full overflow-hidden">
         <EditorLayout
           topBar={topBar}
+          footerVariant={useAppEditorChrome ? "app" : "default"}
           onMobileSheetChange={(nextSheet) => {
             if (nextSheet !== "settings" || !selectedCardId) return;
             window.requestAnimationFrame(() => {

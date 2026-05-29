@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { ClientShellProvider } from "@/components/app-shell";
 import { AuthProvider } from "@/components/auth-provider";
 import { ButtonLiftProvider } from "@/components/providers/ButtonLiftProvider";
 import "./globals.css";
@@ -85,7 +87,11 @@ export default function RootLayout({
       <body className="font-sans lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-ds-foreground antialiased [-webkit-tap-highlight-color:transparent]">
         <GoogleAnalytics />
         <AuthProvider>
-          <ButtonLiftProvider>{children}</ButtonLiftProvider>
+          <Suspense fallback={null}>
+            <ClientShellProvider>
+              <ButtonLiftProvider>{children}</ButtonLiftProvider>
+            </ClientShellProvider>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

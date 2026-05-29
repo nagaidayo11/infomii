@@ -284,3 +284,22 @@ where i.hotel_id = 'HOTEL_ID'
 - `docs/TEMPLATE_QUALITY_SCORECARD.md`
 - `docs/TEMPLATE_BLOCK_ORDER_GUIDE.md`
 
+---
+
+## 7. モバイルアプリ（Expo WebView）
+
+ネイティブ UI は最小限で、**Web アプリ（Phase 1 の `client=app` シェル）** を WebView で表示します。
+
+```bash
+cd apps/mobile
+cp .env.example .env
+npm install
+npm start
+```
+
+- 本番 Web: `EXPO_PUBLIC_WEB_ORIGIN=https://www.infomii.com`（デフォルト）
+- ローカル検証: ルートで `npm run dev` のあと `.env` に `EXPO_PUBLIC_WEB_ORIGIN=http://127.0.0.1:3000`
+- 詳細: [`apps/mobile/README.md`](../apps/mobile/README.md)
+
+認証は WebView 内 Cookie。Supabase の Redirect URL に本番ドメイン（例: `https://www.infomii.com/**`）を登録してください。
+

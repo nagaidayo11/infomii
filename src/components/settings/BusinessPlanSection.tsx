@@ -11,10 +11,18 @@ import {
 import { Card } from "@/components/ui/Card";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
+type BusinessPlanSectionProps = {
+  successPath?: string;
+  cancelPath?: string;
+};
+
 /**
  * Businessプランの特典を設定画面に表示（未加入にはアップグレード案内）
  */
-export function BusinessPlanSection() {
+export function BusinessPlanSection({
+  successPath = "/dashboard?billing=success",
+  cancelPath = "/settings",
+}: BusinessPlanSectionProps = {}) {
   const [subscription, setSubscription] = useState<HotelSubscription | null | undefined>(undefined);
   const [busyAction, setBusyAction] = useState<"pro" | "business" | "portal" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -71,20 +79,20 @@ export function BusinessPlanSection() {
     try {
       const url = await createStripeCheckoutSession({
         plan: targetPlan,
-        successPath: "/dashboard?billing=success",
-        cancelPath: "/settings",
+        successPath,
+        cancelPath,
       });
       window.location.href = url;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       if (isLoginRequiredMessage(msg)) {
-        window.location.href = "/login?ref=lp-saas&next=%2Fsettings";
+        window.location.href = `/login?next=${encodeURIComponent(cancelPath)}`;
         return;
       }
       setMessage(msg || "決済ページの起動に失敗しました。");
       setBusyAction(null);
     }
-  }, [canManageBilling]);
+  }, [canManageBilling, cancelPath, successPath]);
 
   const openPortal = useCallback(async () => {
     if (!canManageBilling) {

@@ -1,0 +1,88 @@
+# Infomii Mobile (Expo)
+
+Web-first の Infomii を **WebView シェル**で包む iOS / Android アプリです。  
+UI・認証・課金はすべて Web（Next.js）側。ネイティブは起動と WebView のみ。
+
+## 前提
+
+- Node.js 20+
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)（`npx expo` で可）
+- iOS: Xcode + Simulator（Mac）
+- Android: Android Studio + エミュレータ
+
+## セットアップ
+
+```bash
+cd apps/mobile
+cp .env.example .env
+npm install
+```
+
+### 本番 Web を開く（デフォルト）
+
+`.env` の `EXPO_PUBLIC_WEB_ORIGIN` を省略するか `https://www.infomii.com` にします。
+
+### ローカル Next.js を開く
+
+1. リポジトリルートで `npm run dev`（`http://127.0.0.1:3000`）
+2. `apps/mobile/.env` に次を設定:
+
+```bash
+EXPO_PUBLIC_WEB_ORIGIN=http://127.0.0.1:3000
+```
+
+3. iOS シミュレータから実機 IP が必要な場合は、マシンの LAN IP に差し替え（例: `http://192.168.1.10:3000`）。
+
+## 起動
+
+```bash
+npm start
+# または
+npm run ios
+npm run android
+```
+
+初回 URL: `{ORIGIN}/dashboard?client=app`  
+Web 側でアプリ用 5 タブ・エディタ UI が有効になります（Phase 1）。
+
+## Web との連携
+
+| 仕組み | 用途 |
+|--------|------|
+| `?client=app` | 初回ロード |
+| Cookie `infomii_client=app` | 以降のナビゲーション |
+| User-Agent `InfomiiApp/1.0` | `applicationNameForUserAgent` |
+| `window.__INFOMII_CLIENT__ = 'app'` | JS 注入（ページ読み込み前） |
+
+認証は **WebView 内 Cookie**（Supabase）。旧 `infomii://auth` / `mobile-callback` は使いません。
+
+## リリースの考え方
+
+| 変更 | 再ビルド |
+|------|----------|
+| Web UI・API・料金ページ | 不要（Vercel デプロイのみ） |
+| WebView 設定・アイコン・ネイティブ権限 | 必要（EAS Build → TestFlight / Play 内部テスト） |
+
+### TestFlight / Play 内部テスト（概要）
+
+1. [EAS](https://expo.dev/eas) でプロジェクト作成し、`app.json` の `extra.eas.projectId` を設定
+2. `eas build --platform ios` / `android`
+3. `eas submit` またはストアコンソールから TestFlight / 内部テストトラックへ
+4. テスター招待 → インストール → Web は本番 URL のまま検証
+
+## ストア ID
+
+- iOS: `com.infomii.app`
+- Android: `com.infomii.app`
+
+## 今後（v2 以降）
+
+- Sign in with Apple（Google ログインと併用する場合）
+- ユニバーサルリンク（`https://www.infomii.com/...` → アプリで開く）
+- プッシュ通知
+
+## トラブルシュート
+
+- **真っ白 / 接続エラー**: `EXPO_PUBLIC_WEB_ORIGIN` と Next.js の起動を確認。ローカルは HTTP 許可（`app.json` の ATS / cleartext）済み。
+- **ログイン後にループ**: Supabase の Redirect URL に `https://www.infomii.com/**` が含まれているか確認。
+- **Stripe**: Checkout は WebView 内で `checkout.stripe.com` へ遷移（許可リスト済み）。
