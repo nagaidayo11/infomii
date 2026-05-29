@@ -187,11 +187,7 @@ create policy "authenticated cards via pages" on public.cards for all to authent
    - Google Cloud で作成した Client ID / Client Secret を入力
 3. **Redirect URLs**
    - **Authentication → URL Configuration** で、アプリで使うURLを追加
-   - Web 例: `http://localhost:3000/login`, `https://your-domain.com/login`, `http://localhost:3000/settings`, `https://your-domain.com/settings`
-   - **モバイル（Expo）必須**（`EXPO_PUBLIC_APP_URL` + `/auth/mobile-callback`）:
-     - `https://your-domain.com/auth/mobile-callback`
-     - ローカル検証時: `http://localhost:3000/auth/mobile-callback`
-   - モバイルの Google ログインは Web の固定コールバック経由でアプリ内ブラウザに URL を返す。`infomii://` のみの登録では Web ダッシュボードに留まることがある。
+  - Web 例: `http://localhost:3000/login`, `https://your-domain.com/login`, `http://localhost:3000/settings`, `https://your-domain.com/settings`
    - `signInWithOAuth` の `redirectTo` と **完全一致** していることを確認。
 
 注意:

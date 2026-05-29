@@ -10,21 +10,6 @@ export default function RootPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const sp = new URLSearchParams(window.location.search);
-    const code = sp.get("code");
-    const hash = window.location.hash;
-
-    if (code || hash.includes("access_token")) {
-      const target = new URL("infomii://auth/callback");
-      if (code) {
-        sp.forEach((value, key) => target.searchParams.set(key, value));
-        window.location.replace(target.toString());
-      } else {
-        window.location.replace(`infomii://auth/callback${hash}`);
-      }
-      return;
-    }
-
     if (loading) return;
     if (!enabled || !user) {
       window.location.replace("/lp/saas");

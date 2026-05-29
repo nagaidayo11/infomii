@@ -275,18 +275,6 @@ function LoginForm() {
     }
   }
 
-  if (searchParams.get("mobile") === "1") {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center">
-        <p className="text-sm text-slate-600">認証が完了しました</p>
-        <p className="max-w-sm text-xs leading-relaxed text-slate-500">
-          左上の × で閉じるとアプリに戻ります。古い導線のため、最新アプリでは
-          /auth/mobile-callback を使います。
-        </p>
-      </div>
-    );
-  }
-
   if (loading || user) {
     const showInvite =
       typeof window !== "undefined" &&
