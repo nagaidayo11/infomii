@@ -35,11 +35,18 @@ EXPO_PUBLIC_WEB_ORIGIN=http://127.0.0.1:3000
 
 ## 起動
 
+**必ず `apps/mobile` で実行**（リポジトリルートで `expo start` すると SDK 未検出エラーになります）。
+
 ```bash
+cd apps/mobile
 npm start
-# または
-npm run ios
-npm run android
+# またはリポジトリルートから
+# npm run mobile
+```
+
+```bash
+npm run ios      # iOS シミュレータ
+npm run android  # Android エミュレータ
 ```
 
 初回 URL: `{ORIGIN}/dashboard?client=app`  

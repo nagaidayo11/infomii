@@ -4,8 +4,8 @@ import { createContext, useEffect, useMemo, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   detectClientShell,
+  isNativeInfomiiAppClient,
   persistClientShellCookie,
-  readClientShellCookie,
   type ClientShell,
 } from "@/lib/client-shell";
 
@@ -27,12 +27,12 @@ export function ClientShellProvider({ children }: { children: ReactNode }) {
     return detectClientShell({
       search,
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-      cookie: readClientShellCookie(),
     });
   }, [searchParams]);
 
   useEffect(() => {
-    persistClientShellCookie(client);
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : undefined;
+    persistClientShellCookie(client, { nativeApp: isNativeInfomiiAppClient(ua) });
   }, [client]);
 
   const value = useMemo(
