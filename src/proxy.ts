@@ -7,7 +7,7 @@ function isAppClient(request: NextRequest): boolean {
   return isInfomiiAppUserAgent(ua);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (!isAppClient(request)) {
     return NextResponse.next();
   }
