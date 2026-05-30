@@ -65,13 +65,6 @@ export const HOTEL_LP_WORKFLOW_STEPS = [
   },
 ] as const;
 
-export const HOTEL_LP_QR_PLACEMENTS = [
-  { place: "客室", detail: "デスク・ベッドサイドにQRカード" },
-  { place: "フロント", detail: "受付横のスタンドで案内統一" },
-  { place: "エレベーター前", detail: "館内ルール・朝食会場への導線" },
-  { place: "朝食会場", detail: "時間変更をその場で案内" },
-] as const;
-
 export const HOTEL_LP_PROPERTY_TYPES = [
   "シティホテル",
   "温泉旅館",

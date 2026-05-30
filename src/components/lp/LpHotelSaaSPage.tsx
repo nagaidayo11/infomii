@@ -7,7 +7,6 @@ import { LpContentGridSection } from "@/components/lp/shared/LpContentGridSectio
 import { LpDemoSection } from "@/components/lp/shared/LpDemoSection";
 import { LpFaqSection } from "@/components/lp/shared/LpFaqSection";
 import { LpFinalCtaSection } from "@/components/lp/shared/LpFinalCtaSection";
-import { LpPlacementSection } from "@/components/lp/shared/LpPlacementSection";
 import { LpPricing } from "@/components/lp/shared/LpPricing";
 import { LpScenesSection } from "@/components/lp/shared/LpScenesSection";
 import { LpTrustStrip } from "@/components/lp/shared/LpTrustStrip";
@@ -18,7 +17,6 @@ import {
   HOTEL_LP_OPERATIONS_BENEFITS,
   HOTEL_LP_PAIN_POINTS,
   HOTEL_LP_PROPERTY_TYPES,
-  HOTEL_LP_QR_PLACEMENTS,
   HOTEL_LP_TRUST_POINTS,
   HOTEL_LP_WORKFLOW_STEPS,
   HOTEL_PLANS,
@@ -77,7 +75,7 @@ export default function LpHotelSaaSPage() {
       <LpWorkflowSection
         kicker="操作の流れ"
         title="3ステップで、今日から案内を統一"
-        description="難しい設定は不要。テンプレ選びからQR設置まで、現場目線で進められます。"
+        description="難しい設定は不要。テンプレ選びから公開まで、現場目線で進められます。"
         steps={HOTEL_LP_WORKFLOW_STEPS}
         variant="muted"
       />
@@ -87,16 +85,6 @@ export default function LpHotelSaaSPage() {
         demoEditorHref={DEMO_EDITOR_HREF}
         samplePageHref={SAMPLE_PAGE_DEMO_HREF}
         title="登録前に、操作感だけ確かめる"
-      />
-
-      <LpPlacementSection
-        id="qr-placement"
-        kicker="QR設置"
-        title="置き場所は、いつもの導線でOK"
-        description="客室・フロント・館内の見える場所にQRを置くだけ。案内の入口を1つにそろえます。"
-        placements={HOTEL_LP_QR_PLACEMENTS}
-        visualTitle="QR → スマホで館内案内"
-        visualBody="Wi-Fi・朝食・FAQ・チェックアウトを、ひとつのURLに集約"
       />
 
       <LpScenesSection
