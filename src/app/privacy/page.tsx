@@ -41,7 +41,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-semibold text-slate-900">6. お問い合わせ</h2>
               <p>
-                連絡先: {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp"}
+                連絡先: {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@infomii.com"}
               </p>
             </section>
           </div>
