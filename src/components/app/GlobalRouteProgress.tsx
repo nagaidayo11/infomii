@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 const SHOW_DELAY_MS = 50;
 const HIDE_FADE_MS = 120;
@@ -26,6 +27,7 @@ function normalizeHistoryUrl(url: string | URL | null | undefined): string | nul
 }
 
 export function GlobalRouteProgress({ manualPending = false }: { manualPending?: boolean }) {
+  const { isAppShell } = useClientShell();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const routeKey = `${pathname ?? ""}?${searchParams?.toString() ?? ""}`;
@@ -228,7 +230,12 @@ export function GlobalRouteProgress({ manualPending = false }: { manualPending?:
         aria-hidden
       >
         <div
-          className="h-full origin-left bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.35)] transition-[transform] duration-120 ease-out"
+          className={
+            "h-full origin-left transition-[transform] duration-120 ease-out " +
+            (isAppShell
+              ? "app-route-progress-bar"
+              : "bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.35)]")
+          }
           style={{
             transform: `scaleX(${Math.max(0, Math.min(1, progress / 100))})`,
             transitionDuration: reducedMotion ? "0ms" : undefined,

@@ -19,6 +19,8 @@ import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppPagesListView } from "@/components/app-shell/views/AppPagesListView";
 
 function modeLabel(mode: PageConnectionSet["mode"]): string {
   return mode === "linked" ? "ページ連携" : "単発";
@@ -39,6 +41,11 @@ function PagePublishBadge({ page }: { page: PageRow }) {
 }
 
 export function PagesListView() {
+  const { isAppShell } = useClientShell();
+  return isAppShell ? <AppPagesListView /> : <PagesListViewWeb />;
+}
+
+function PagesListViewWeb() {
   const router = useRouter();
   const [sets, setSets] = useState<PageConnectionSet[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "nodes">("nodes");

@@ -298,7 +298,7 @@ npx expo start -c   # QR を Expo Go でスキャン
 ```
 
 - 本番 Web: `EXPO_PUBLIC_WEB_ORIGIN=https://www.infomii.com`（デフォルト）
-- ローカル検証: ルートで `npm run dev` のあと `.env` に Mac の LAN IP（例: `http://192.168.x.x:3000`）。実機から `127.0.0.1` は使えません。
+- ローカル検証: ルートで **`npm run dev:lan`**（`npm run dev` は 127.0.0.1 のみで実機から届かない）。Expo 開発時は `.env` 不要でも LAN IP に自動切替可。
 - ブラウザだけ: `http://127.0.0.1:3000/dashboard?client=app`
 - 詳細: [`apps/mobile/README.md`](../apps/mobile/README.md)
 

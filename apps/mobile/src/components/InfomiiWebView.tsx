@@ -1,32 +1,99 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
+  DevSettings,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import type { WebViewNavigation } from "react-native-webview";
 import WebView from "react-native-webview";
-import { getAppEntryUrl, WEBVIEW_USER_AGENT_SUFFIX } from "../lib/config";
-import { INJECTED_CLIENT_BOOTSTRAP } from "../lib/injected-script";
+import {
+  getAppEntryUrl,
+  resolveWebOrigin,
+  WEBVIEW_USER_AGENT_SUFFIX,
+} from "../lib/config";
+import { buildInjectedBootstrap } from "../lib/injected-script";
 import { isAllowedNavigationUrl } from "../lib/navigation";
 
+const LOAD_TIMEOUT_MS = 20_000;
+
 export function InfomiiWebView() {
+  const insets = useSafeAreaInsets();
+  const originResolution = resolveWebOrigin();
+  const [entryUrl] = useState(() =>
+    originResolution.ok
+      ? getAppEntryUrl()
+      : `${originResolution.origin}/dashboard?client=app`,
+  );
+
+  const injectedBeforeLoad = useMemo(
+    () => buildInjectedBootstrap(insets),
+    [insets.top, insets.bottom, insets.left, insets.right],
+  );
+
   const webViewRef = useRef<WebView>(null);
-  const [entryUrl] = useState(() => getAppEntryUrl());
+  const hasLoadedOnceRef = useRef(false);
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [canGoBack, setCanGoBack] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(originResolution.ok);
+  const [loadError, setLoadError] = useState<string | null>(
+    originResolution.ok ? null : originResolution.message,
+  );
+  const [originHint, setOriginHint] = useState<string | null>(
+    originResolution.ok ? (originResolution.hint ?? null) : null,
+  );
+
+  const applySafeAreaToWeb = useCallback(() => {
+    webViewRef.current?.injectJavaScript(injectedBeforeLoad);
+  }, [injectedBeforeLoad]);
+
+  useEffect(() => {
+    applySafeAreaToWeb();
+  }, [applySafeAreaToWeb]);
+
+  const clearLoadTimeout = useCallback(() => {
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  }, []);
+
+  const finishLoading = useCallback(() => {
+    clearLoadTimeout();
+    hasLoadedOnceRef.current = true;
+    setLoading(false);
+    applySafeAreaToWeb();
+  }, [applySafeAreaToWeb, clearLoadTimeout]);
+
+  const armLoadTimeout = useCallback(() => {
+    clearLoadTimeout();
+    loadTimeoutRef.current = setTimeout(() => {
+      setLoading(false);
+      setLoadError(
+        "読み込みがタイムアウトしました。Next.js が起動しているか、.env の IP が正しいか確認してください。",
+      );
+    }, LOAD_TIMEOUT_MS);
+  }, [clearLoadTimeout]);
+
+  useEffect(() => {
+    if (!originResolution.ok) return;
+    armLoadTimeout();
+    return clearLoadTimeout;
+  }, [armLoadTimeout, clearLoadTimeout, originResolution.ok]);
 
   const onNavigationStateChange = useCallback((event: WebViewNavigation) => {
     setCanGoBack(event.canGoBack);
-    setLoadError(null);
-  }, []);
+    if (loadError && event.url && !event.url.startsWith("about:")) {
+      setLoadError(null);
+    }
+  }, [loadError]);
 
   const handleAndroidBack = useCallback(() => {
     if (canGoBack && webViewRef.current) {
@@ -42,64 +109,133 @@ export function InfomiiWebView() {
     return () => sub.remove();
   }, [handleAndroidBack]);
 
+  const webViewProps = {
+    ref: webViewRef,
+    source: { uri: entryUrl },
+    style: styles.webview,
+    applicationNameForUserAgent: WEBVIEW_USER_AGENT_SUFFIX,
+    injectedJavaScriptBeforeContentLoaded: injectedBeforeLoad,
+    sharedCookiesEnabled: true,
+    thirdPartyCookiesEnabled: true,
+    allowsBackForwardNavigationGestures: true,
+    allowsInlineMediaPlayback: true,
+    mediaPlaybackRequiresUserAction: true,
+    pullToRefreshEnabled: true,
+    setSupportMultipleWindows: false,
+    onNavigationStateChange,
+    onLoadStart: () => {
+      if (!hasLoadedOnceRef.current) {
+        setLoading(true);
+        setLoadError(null);
+        armLoadTimeout();
+      }
+    },
+    onLoadEnd: finishLoading,
+    onError: (event: { nativeEvent: { description?: string } }) => {
+      finishLoading();
+      setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
+    },
+    onHttpError: (event: { nativeEvent: { statusCode: number } }) => {
+      if (event.nativeEvent.statusCode >= 400) {
+        finishLoading();
+        setLoadError(`HTTP ${event.nativeEvent.statusCode}`);
+      }
+    },
+    onShouldStartLoadWithRequest: (request: { url: string }) =>
+      isAllowedNavigationUrl(request.url),
+    ...(Platform.OS === "ios"
+      ? {
+          contentInsetAdjustmentBehavior: "never" as const,
+          automaticallyAdjustsScrollIndicatorInsets: false,
+        }
+      : {}),
+  };
+
+  if (!originResolution.ok) {
+    return (
+      <SafeAreaView style={styles.root} edges={["bottom"]}>
+        <StatusBar style="auto" translucent backgroundColor="transparent" />
+        <ConfigErrorPanel
+          title="設定を直してください"
+          message={originResolution.message}
+          entryUrl={entryUrl}
+          onRetry={() => DevSettings.reload()}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
-      <StatusBar style="dark" />
-      <WebView
-        ref={webViewRef}
-        source={{ uri: entryUrl }}
-        style={styles.webview}
-        applicationNameForUserAgent={WEBVIEW_USER_AGENT_SUFFIX}
-        injectedJavaScriptBeforeContentLoaded={INJECTED_CLIENT_BOOTSTRAP}
-        sharedCookiesEnabled
-        thirdPartyCookiesEnabled
-        allowsBackForwardNavigationGestures
-        allowsInlineMediaPlayback
-        mediaPlaybackRequiresUserAction
-        pullToRefreshEnabled
-        setSupportMultipleWindows={false}
-        onNavigationStateChange={onNavigationStateChange}
-        onLoadStart={() => {
-          setLoading(true);
-          setLoadError(null);
-        }}
-        onLoadEnd={() => setLoading(false)}
-        onError={(event) => {
-          setLoading(false);
-          setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
-        }}
-        onHttpError={(event) => {
-          if (event.nativeEvent.statusCode >= 400) {
-            setLoadError(`HTTP ${event.nativeEvent.statusCode}`);
-          }
-        }}
-        onShouldStartLoadWithRequest={(request) => isAllowedNavigationUrl(request.url)}
-      />
+    <SafeAreaView style={styles.root} edges={["bottom"]}>
+      <StatusBar style="auto" translucent backgroundColor="transparent" />
+      {originHint ? (
+        <View style={[styles.hintBanner, { marginTop: insets.top }]}>
+          <Text style={styles.hintText}>{originHint}</Text>
+        </View>
+      ) : null}
+      <View
+        style={[
+          styles.webviewFrame,
+          {
+            paddingTop: originHint ? 0 : insets.top,
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
+          },
+        ]}
+      >
+        <WebView {...webViewProps} />
+      </View>
 
       {loading && !loadError ? (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#0d9488" />
+          <Text style={styles.loadingUrl} numberOfLines={2}>
+            {entryUrl}
+          </Text>
         </View>
       ) : null}
 
       {loadError ? (
-        <View style={styles.errorOverlay}>
-          <Text style={styles.errorTitle}>接続できません</Text>
-          <Text style={styles.errorBody}>{loadError}</Text>
-          <Text style={styles.errorHint}>{entryUrl}</Text>
-          <Pressable
-            style={styles.retryButton}
-            onPress={() => {
-              setLoadError(null);
-              setLoading(true);
-              webViewRef.current?.reload();
-            }}
-          >
-            <Text style={styles.retryLabel}>再試行</Text>
-          </Pressable>
-        </View>
+        <ConfigErrorPanel
+          title="接続できません"
+          message={loadError}
+          entryUrl={entryUrl}
+          onRetry={() => {
+            setLoadError(null);
+            hasLoadedOnceRef.current = false;
+            setLoading(true);
+            armLoadTimeout();
+            webViewRef.current?.reload();
+          }}
+        />
       ) : null}
     </SafeAreaView>
+  );
+}
+
+function ConfigErrorPanel({
+  title,
+  message,
+  entryUrl,
+  onRetry,
+}: {
+  title: string;
+  message: string;
+  entryUrl: string;
+  onRetry: () => void;
+}) {
+  return (
+    <View style={styles.errorOverlay}>
+      <Text style={styles.errorTitle}>{title}</Text>
+      <Text style={styles.errorBody}>{message}</Text>
+      <Text style={styles.errorHint}>{entryUrl}</Text>
+      <Pressable style={styles.retryButton} onPress={onRetry}>
+        <Text style={styles.retryLabel}>再試行</Text>
+      </Pressable>
+      <Text style={styles.errorFootnote}>
+        実機開発: ルートで npm run dev:lan（127.0.0.1 の dev では iPhone から届きません）→ npx expo start -c
+      </Text>
+    </View>
   );
 }
 
@@ -108,15 +244,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f1f5f9",
   },
+  webviewFrame: {
+    flex: 1,
+    backgroundColor: "#f1f5f9",
+  },
   webview: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  hintBanner: {
+    backgroundColor: "#ecfdf5",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#99f6e4",
+  },
+  hintText: {
+    fontSize: 12,
+    color: "#0f766e",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(241, 245, 249, 0.85)",
+    paddingHorizontal: 24,
+  },
+  loadingUrl: {
+    marginTop: 16,
+    fontSize: 11,
+    color: "#64748b",
+    textAlign: "center",
   },
   errorOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -142,6 +300,13 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     textAlign: "center",
     marginBottom: 20,
+  },
+  errorFootnote: {
+    marginTop: 16,
+    fontSize: 11,
+    color: "#94a3b8",
+    textAlign: "center",
+    lineHeight: 16,
   },
   retryButton: {
     backgroundColor: "#0d9488",

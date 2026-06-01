@@ -27,10 +27,17 @@ import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FadeIn, ScrollReveal } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppDashboardView } from "@/components/app-shell/views/AppDashboardView";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 
 export function DashboardView() {
+  const { isAppShell } = useClientShell();
+  return isAppShell ? <AppDashboardView /> : <DashboardViewWeb />;
+}
+
+function DashboardViewWeb() {
   const router = useRouter();
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);

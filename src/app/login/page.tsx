@@ -20,6 +20,8 @@ import {
   INVITE_REDEEM_LOCK_KEY,
 } from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { withAppClientQuery } from "@/lib/app-href";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -65,10 +67,12 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
-  const next =
+  const { isAppShell } = useClientShell();
+  const rawNext =
     searchParams.get("next") && searchParams.get("next")?.startsWith("/")
       ? searchParams.get("next")!
       : "/dashboard";
+  const next = isAppShell ? withAppClientQuery(rawNext.split("#")[0].split("?")[0]) : rawNext;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -282,8 +286,14 @@ function LoginForm() {
       (Boolean(readPendingInviteCode()) ||
         sessionStorage.getItem(INVITE_REDEEM_LOCK_KEY) === "1");
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">
+      <div
+        className={
+          isAppShell
+            ? "flex min-h-[100dvh] items-center justify-center bg-[var(--app-bg)]"
+            : "flex min-h-screen items-center justify-center bg-slate-50"
+        }
+      >
+        <p className="text-base text-[var(--app-text-muted)]">
           {showInvite ? "招待コードを適用しています…" : "読み込み中..."}
         </p>
       </div>
@@ -292,24 +302,25 @@ function LoginForm() {
 
   return (
     <div
-      className="flex min-h-[100dvh] flex-col items-center justify-start bg-slate-50 px-4 py-6 sm:justify-center sm:py-10"
+      className={
+        isAppShell
+          ? "app-shell-page-enter flex min-h-[100dvh] flex-col justify-center bg-[var(--app-bg)] px-4 py-6"
+          : "flex min-h-[100dvh] flex-col items-center justify-start bg-slate-50 px-4 py-6 sm:justify-center sm:py-10"
+      }
       style={{
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
         paddingTop: "max(0.75rem, env(safe-area-inset-top))",
       }}
     >
-      <FadeIn className="w-full max-w-sm">
-        {/* Logo / タイトル */}
-        <div className="mb-4 text-center sm:mb-5">
-          <Link href="/" className="inline-block">
-            <span className="text-lg font-semibold text-slate-900 sm:text-xl">
-              Infomii
-            </span>
-          </Link>
-          <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-            案内を1つ作って、QRで届ける
-          </p>
-        </div>
+      <FadeIn className={isAppShell ? "mx-auto w-full max-w-md" : "w-full max-w-sm"}>
+        {!isAppShell ? (
+          <div className="mb-4 text-center sm:mb-5">
+            <Link href="/" className="inline-block">
+              <span className="text-lg font-semibold text-slate-900 sm:text-xl">Infomii</span>
+            </Link>
+            <p className="mt-1 text-xs text-slate-500 sm:text-sm">案内を1つ作って、QRで届ける</p>
+          </div>
+        ) : null}
 
         {/* Supabase 未設定時 */}
         {!hasSupabaseEnv && (
@@ -342,9 +353,42 @@ function LoginForm() {
           </p>
         ) : null}
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div
+          className={
+            isAppShell
+              ? "app-shell-card overflow-hidden"
+              : "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+          }
+        >
+          {isAppShell ? (
+            <div className="space-y-3 border-b border-[var(--app-border)] p-4">
+              <button
+                type="button"
+                onClick={() => void handleGoogleLogin()}
+                aria-label="Googleで続ける"
+                disabled={submitting || !hasSupabaseEnv}
+                className="app-touch-btn flex w-full items-center justify-center gap-2 border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)] disabled:opacity-50"
+              >
+                <svg aria-hidden className="h-5 w-5" viewBox="0 0 18 18">
+                  <path fill="#4285F4" d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2582h2.9086c1.7018-1.5668 2.6837-3.8741 2.6837-6.6155z" />
+                  <path fill="#34A853" d="M9 18c2.43 0 4.4673-.8068 5.9564-2.1791l-2.9086-2.2582c-.8068.5409-1.8409.8591-3.0478.8591-2.3441 0-4.3282-1.5832-5.0364-3.7105H.9573v2.3318C2.4382 15.9845 5.4818 18 9 18z" />
+                  <path fill="#FBBC05" d="M3.9636 10.7113c-.18-.5409-.2836-1.1186-.2836-1.7113s.1036-1.1705.2836-1.7113V4.9568H.9573C.3477 6.1718 0 7.5445 0 9s.3477 2.8282.9573 4.0432l3.0063-2.3319z" />
+                  <path fill="#EA4335" d="M9 3.5782c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5813C13.4632.8918 11.4268 0 9 0 5.4818 0 2.4382 2.0155.9573 4.9568l3.0063 2.3319C4.6718 5.1614 6.6559 3.5782 9 3.5782z" />
+                </svg>
+                Googleで続ける
+              </button>
+              <p className="text-center text-sm text-[var(--app-text-muted)]">またはメールで</p>
+            </div>
+          ) : null}
+
           <form onSubmit={handleSubmit} className="p-4 sm:p-5">
-            <h1 className="text-base font-semibold text-slate-900 sm:text-lg">
+            <h1
+              className={
+                isAppShell
+                  ? "text-lg font-bold text-[var(--app-text)]"
+                  : "text-base font-semibold text-slate-900 sm:text-lg"
+              }
+            >
               {isSignUp ? "メールアドレスで新規登録" : "メールでログイン"}
             </h1>
 
@@ -404,7 +448,11 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={submitting || !hasSupabaseEnv}
-                className="app-button-native w-full min-h-[44px] rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:py-2.5"
+                className={
+                  isAppShell
+                    ? "app-touch-btn w-full bg-[var(--app-accent)] font-semibold text-white disabled:opacity-50"
+                    : "app-button-native w-full min-h-[44px] rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:py-2.5"
+                }
               >
                 {submitting
                   ? "処理中..."
@@ -412,6 +460,8 @@ function LoginForm() {
                     ? "メールで登録する"
                     : "メールでログイン"}
               </button>
+              {!isAppShell ? (
+                <>
               <div className="relative py-0.5">
                 <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200" />
                 <span className="relative mx-auto block w-fit bg-white px-2 text-[11px] text-slate-400">
@@ -450,6 +500,8 @@ function LoginForm() {
                 </svg>
                 Googleでログイン
               </button>
+                </>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {

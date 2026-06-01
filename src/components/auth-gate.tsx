@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { withAppClientQuery } from "@/lib/app-href";
 import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { isAppShell } = useClientShell();
   const { user, loading, enabled } = useAuth();
   const [scopeChecked, setScopeChecked] = useState(false);
 
@@ -16,8 +19,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!enabled || loading || user) {
       return;
     }
-    router.replace(`/login?next=${encodeURIComponent(pathname)}`);
-  }, [enabled, loading, user, router, pathname]);
+    const nextPath = pathname ?? "/dashboard";
+    const loginNext = isAppShell ? withAppClientQuery(nextPath) : nextPath;
+    router.replace(`/login?next=${encodeURIComponent(loginNext)}`);
+  }, [enabled, isAppShell, loading, user, router, pathname]);
 
   useEffect(() => {
     if (!enabled || loading || !user) return;

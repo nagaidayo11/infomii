@@ -23,6 +23,7 @@ import {
   TEMPLATE_MARKETPLACE_SECTIONS,
 } from "@/lib/template-marketplace-meta";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 const TEMPLATE_CATEGORIES = [
   { id: "all", label: TEMPLATE_CATEGORY_LABELS.all },
@@ -80,6 +81,7 @@ function filterHiddenTemplates(templates: TemplateRow[]): TemplateRow[] {
  * Use Template creates a page and populates cards, then opens the editor.
  */
 export default function TemplatesPage() {
+  const { isAppShell } = useClientShell();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
@@ -263,11 +265,33 @@ export default function TemplatesPage() {
     "mx-auto w-full max-w-[375px] rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.12)]";
 
   return (
-    <div className="app-main-container space-y-4">
-      <header className="app-page-header">
-        <h1 className="app-page-title">テンプレート</h1>
-        <p className="app-page-subtitle">
-          旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。
+    <div
+      className={
+        isAppShell
+          ? "app-shell-page-enter mx-auto w-full max-w-lg space-y-4 pb-4"
+          : "app-main-container space-y-4"
+      }
+    >
+      <header className={isAppShell ? "mb-1" : "app-page-header"}>
+        <h1
+          className={
+            isAppShell
+              ? "text-[1.75rem] font-bold text-[var(--app-text)]"
+              : "app-page-title"
+          }
+        >
+          テンプレート
+        </h1>
+        <p
+          className={
+            isAppShell
+              ? "mt-2 text-base text-[var(--app-text-muted)]"
+              : "app-page-subtitle"
+          }
+        >
+          {isAppShell
+            ? "友だちにシェアしたくなる型を選んで、すぐ編集をはじめましょう。"
+            : "旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。"}
         </p>
       </header>
 

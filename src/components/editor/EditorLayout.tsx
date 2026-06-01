@@ -22,10 +22,16 @@ export type EditorLayoutProps = {
 type MobileSheet = "none" | "library" | "settings";
 type MobileSheetSize = "compact" | "comfortable" | "full";
 
-const MOBILE_SHEET_TOP_MAP: Record<MobileSheetSize, string> = {
+const MOBILE_SHEET_TOP_MAP_WEB: Record<MobileSheetSize, string> = {
   compact: "46dvh",
   comfortable: "32dvh",
   full: "3.5rem",
+};
+
+const MOBILE_SHEET_TOP_MAP_APP: Record<MobileSheetSize, string> = {
+  compact: "46dvh",
+  comfortable: "32dvh",
+  full: "calc(3.25rem + env(safe-area-inset-top, 0px))",
 };
 
 const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
@@ -51,6 +57,7 @@ export function EditorLayout({
   footerVariant = "default",
 }: EditorLayoutProps) {
   const isAppFooter = footerVariant === "app";
+  const mobileSheetTopMap = isAppFooter ? MOBILE_SHEET_TOP_MAP_APP : MOBILE_SHEET_TOP_MAP_WEB;
   const libraryTabLabel = isAppFooter ? "ブロック" : "ブロック追加";
   const canvasTabLabel = isAppFooter ? "編集" : "キャンバス";
   const settingsTabLabel = isAppFooter ? "設定" : "ブロック設定";
@@ -64,8 +71,10 @@ export function EditorLayout({
   } | null>(null);
 
   const getViewportHeight = () => (typeof window !== "undefined" ? window.innerHeight : 800);
+  const editorTopChromePx = isAppFooter ? 88 : 56;
+
   const getSnapTopPx = (size: MobileSheetSize, viewportHeight: number) => {
-    if (size === "full") return Math.max(56, 56);
+    if (size === "full") return editorTopChromePx;
     if (size === "comfortable") return Math.max(56, Math.round(viewportHeight * 0.32));
     return Math.max(56, Math.round(viewportHeight * 0.46));
   };
@@ -185,13 +194,19 @@ export function EditorLayout({
       style={{ ["--editor-mobile-nav-h" as string]: MOBILE_NAV_HEIGHT }}
     >
       {topBar != null ? (
-        <header
-          className="app-page-enter relative z-[110] shrink-0 border-b border-slate-200/80 bg-white"
-          role="banner"
-          data-editor-topbar
-        >
-          {topBar}
-        </header>
+        isAppFooter ? (
+          <div className="relative z-[110] shrink-0" data-editor-topbar>
+            {topBar}
+          </div>
+        ) : (
+          <header
+            className="app-page-enter relative z-[110] shrink-0 border-b border-slate-200/80 bg-white"
+            role="banner"
+            data-editor-topbar
+          >
+            {topBar}
+          </header>
+        )
       ) : null}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
@@ -215,7 +230,7 @@ export function EditorLayout({
             style={{
               animationDelay: "40ms",
               bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
-              top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
+              top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`) : undefined,
             }}
             aria-label="ブロックライブラリ"
           >
@@ -251,7 +266,7 @@ export function EditorLayout({
             style={{
               animationDelay: "140ms",
               bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
-              top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${MOBILE_SHEET_TOP_MAP[mobileSheetSize]})`) : undefined,
+              top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`) : undefined,
             }}
             aria-label="ブロック設定"
           >
@@ -291,7 +306,9 @@ export function EditorLayout({
             onClick={openLibrary}
             aria-label="ブロック一覧を開く"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
+              "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
+              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              " " +
               (sheet === "library"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
@@ -313,7 +330,9 @@ export function EditorLayout({
             onClick={focusCanvas}
             aria-label="キャンバスを表示"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
+              "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
+              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              " " +
               (sheet === "none"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
@@ -329,7 +348,9 @@ export function EditorLayout({
             onClick={openSettings}
             aria-label="ブロック設定を開く"
             className={
-              "ui-pop-tap flex min-h-[50px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition-colors " +
+              "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
+              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              " " +
               (sheet === "settings"
                 ? "text-slate-900"
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")

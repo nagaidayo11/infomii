@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { AppShellLink } from "./AppShellLink";
 
-type TabId = "home" | "pages" | "create" | "plan" | "settings";
+type TabId = "home" | "templates" | "works" | "plan" | "settings";
 
 type TabConfig = {
   id: TabId;
@@ -14,6 +14,7 @@ type TabConfig = {
   icon: ReactNode;
 };
 
+/** 「ページ」= テンプレート、「作成」= 作品一覧（ユーザー要望で入れ替え） */
 const TABS: TabConfig[] = [
   {
     id: "home",
@@ -27,24 +28,24 @@ const TABS: TabConfig[] = [
     ),
   },
   {
-    id: "pages",
+    id: "templates",
     label: "ページ",
+    href: "/templates",
+    match: (p) => p.startsWith("/templates"),
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4z" />
+      </svg>
+    ),
+  },
+  {
+    id: "works",
+    label: "作成",
     href: "/dashboard/pages",
     match: (p) => p.startsWith("/dashboard/pages"),
     icon: (
       <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-      </svg>
-    ),
-  },
-  {
-    id: "create",
-    label: "作成",
-    href: "/templates",
-    match: (p) => p.startsWith("/templates"),
-    icon: (
-      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
       </svg>
     ),
   },
@@ -82,26 +83,29 @@ export function AppTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/90 bg-white/95 backdrop-blur-md"
-      style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--app-border)] bg-[var(--app-surface)]/95 backdrop-blur-md"
+      style={{
+        paddingBottom: "max(0.35rem, var(--infomii-safe-bottom-fallback, env(safe-area-inset-bottom, 0px)))",
+      }}
       aria-label="アプリメニュー"
     >
       <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           return (
-            <Link
+            <AppShellLink
               key={tab.id}
               href={tab.href}
+              prefetch
               className={
-                "ui-pop-tap flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold transition-colors " +
-                (active ? "text-emerald-700" : "text-slate-500 active:bg-slate-100")
+                "ui-pop-tap flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[11px] font-semibold transition-colors " +
+                (active ? "text-[var(--app-accent)]" : "text-[var(--app-text-muted)] active:bg-[var(--app-surface-muted)]")
               }
               aria-current={active ? "page" : undefined}
             >
-              <span className={active ? "text-emerald-600" : "text-slate-400"}>{tab.icon}</span>
+              <span className={active ? "text-[var(--app-accent)]" : "opacity-70"}>{tab.icon}</span>
               <span>{tab.label}</span>
-            </Link>
+            </AppShellLink>
           );
         })}
       </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { EditorTopBarProps } from "@/components/editor/EditorTopBar";
+import { AppShellLink } from "./AppShellLink";
 
 type EditorAppTopBarProps = Pick<
   EditorTopBarProps,
@@ -117,11 +117,16 @@ export function EditorAppTopBar({
 
   return (
     <header
-      className="flex min-h-[52px] shrink-0 items-center gap-2 border-b border-teal-700/20 bg-gradient-to-r from-teal-600 to-teal-500 px-2 py-1.5 text-white shadow-sm"
+      className="editor-app-topbar flex min-h-[52px] shrink-0 items-center gap-2 border-b border-teal-700/20 bg-gradient-to-r from-teal-600 to-teal-500 px-2 pb-1.5 text-white shadow-sm"
+      style={{
+        paddingTop: "0.375rem",
+        paddingLeft: "max(0.5rem, var(--infomii-safe-left-fallback, env(safe-area-inset-left, 0px)))",
+        paddingRight: "max(0.5rem, var(--infomii-safe-right-fallback, env(safe-area-inset-right, 0px)))",
+      }}
       role="banner"
       aria-label="エディタ（アプリ）"
     >
-      <Link
+      <AppShellLink
         href={backHref}
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 transition active:bg-white/25"
         aria-label="ホームに戻る"
@@ -129,7 +134,7 @@ export function EditorAppTopBar({
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
         </svg>
-      </Link>
+      </AppShellLink>
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold leading-tight">{pageTitle || "編集中"}</p>
@@ -205,7 +210,10 @@ export function EditorAppTopBar({
                 />
                 <div
                   ref={moreMenuPanelRef}
-                  className="fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 text-slate-900 shadow-xl"
+                  className="fixed right-2 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 text-slate-900 shadow-xl"
+                  style={{
+                    top: "calc(3.25rem + var(--infomii-safe-top-fallback, env(safe-area-inset-top, 0px)))",
+                  }}
                   role="menu"
                 >
                   {saveError ? (

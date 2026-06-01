@@ -1370,7 +1370,17 @@ export function Editor2({
             <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
               <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
               {!isDemoMode && !initialEditorLoading && publishStatus !== "published" && (
-                <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-0 py-1.5 text-center text-sm leading-tight text-amber-800">現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。</div>
+                <div
+                  className={
+                    useAppEditorChrome
+                      ? "mx-3 mt-2 rounded-xl border border-amber-200/90 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-900"
+                      : "mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-0 py-1.5 text-center text-sm leading-tight text-amber-800"
+                  }
+                >
+                  {useAppEditorChrome
+                    ? "非公開です。公開スイッチをONにすると共有できます。"
+                    : "現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。"}
+                </div>
               )}
               {!isDemoMode && !initialEditorLoading && publishStatus === "published" && hasUnpublishedChanges && (
                 <div className="mx-4 mt-3 rounded-lg border border-emerald-300 bg-emerald-50 px-0 py-1.5 text-center text-sm leading-tight text-emerald-800">未反映の変更があります。プレビュー・QR・公開更新のいずれかで公開ページへ反映できます</div>

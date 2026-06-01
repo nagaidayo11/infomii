@@ -30,6 +30,11 @@ export function detectClientShell(options: {
   search?: string;
   userAgent?: string;
 }): ClientShell {
+  if (typeof document !== "undefined") {
+    if (document.documentElement.getAttribute("data-infomii-native") === "1") {
+      return "app";
+    }
+  }
   if (typeof window !== "undefined" && window.__INFOMII_CLIENT__ === "app") {
     return "app";
   }

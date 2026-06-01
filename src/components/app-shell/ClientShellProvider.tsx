@@ -8,6 +8,7 @@ import {
   persistClientShellCookie,
   type ClientShell,
 } from "@/lib/client-shell";
+import { AppShellEffects } from "./AppShellEffects";
 
 type ClientShellContextValue = {
   client: ClientShell;
@@ -43,5 +44,10 @@ export function ClientShellProvider({ children }: { children: ReactNode }) {
     [client],
   );
 
-  return <ClientShellContext.Provider value={value}>{children}</ClientShellContext.Provider>;
+  return (
+    <ClientShellContext.Provider value={value}>
+      <AppShellEffects />
+      {children}
+    </ClientShellContext.Provider>
+  );
 }
