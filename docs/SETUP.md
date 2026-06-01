@@ -286,19 +286,20 @@ where i.hotel_id = 'HOTEL_ID'
 
 ---
 
-## 7. モバイルアプリ（Expo WebView）
+## 7. モバイルアプリ（Expo SDK 54 + WebView）
 
-ネイティブ UI は最小限で、**Web アプリ（Phase 1 の `client=app` シェル）** を WebView で表示します。
+ネイティブ UI は最小限で、**Web アプリ（Phase 1 の `client=app` シェル）** を WebView で表示します。**Expo Go**（App Store 版）と互換です。
 
 ```bash
 cd apps/mobile
 cp .env.example .env
 npm install
-npm start
+npx expo start -c   # QR を Expo Go でスキャン
 ```
 
 - 本番 Web: `EXPO_PUBLIC_WEB_ORIGIN=https://www.infomii.com`（デフォルト）
-- ローカル検証: ルートで `npm run dev` のあと `.env` に `EXPO_PUBLIC_WEB_ORIGIN=http://127.0.0.1:3000`
+- ローカル検証: ルートで `npm run dev` のあと `.env` に Mac の LAN IP（例: `http://192.168.x.x:3000`）。実機から `127.0.0.1` は使えません。
+- ブラウザだけ: `http://127.0.0.1:3000/dashboard?client=app`
 - 詳細: [`apps/mobile/README.md`](../apps/mobile/README.md)
 
 認証は WebView 内 Cookie。Supabase の Redirect URL に本番ドメイン（例: `https://www.infomii.com/**`）を登録してください。
