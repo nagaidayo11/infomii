@@ -8,6 +8,7 @@ import { ImageUpload } from "@/components/editor/ImageUpload";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
+import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -45,11 +46,7 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
               alt=""
               fill
               className="object-cover object-center"
-              unoptimized={
-                image.startsWith("http") ||
-                image.startsWith("data:") ||
-                image.startsWith("/lp/")
-              }
+              unoptimized={shouldUseUnoptimizedImage(image)}
               sizes="420px"
             />
           </div>

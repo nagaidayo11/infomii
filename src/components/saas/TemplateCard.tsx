@@ -6,6 +6,7 @@ import {
   resolveTemplateCardImageSrc,
   TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
 } from "@/lib/template-preview";
+import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 const DEFAULT_FALLBACK = "/preset-hero-sample.png";
 
@@ -33,7 +34,10 @@ export function TemplateCard({
     (category ? TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[category] : "") || DEFAULT_FALLBACK;
   const imageSrc = resolveTemplateCardImageSrc(preview_image, category ?? null, name, categoryFallback);
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  const imageReady = imageSrc != null && loadedSrc === imageSrc;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const displaySrc =
+    imageSrc && failedSrc === imageSrc ? categoryFallback : imageSrc;
+  const imageReady = displaySrc != null && loadedSrc === displaySrc;
   const placeholderGradient =
     category === "travel"
       ? "from-emerald-100 via-teal-50 to-white"
@@ -52,7 +56,7 @@ export function TemplateCard({
       <div
         className={`relative flex aspect-[5/3] items-center justify-center overflow-hidden bg-gradient-to-br ${placeholderGradient}`}
       >
-        {imageSrc ? (
+        {displaySrc ? (
           <>
             <div
               aria-hidden
@@ -62,14 +66,17 @@ export function TemplateCard({
               }
             />
             <Image
-              src={imageSrc}
+              src={displaySrc}
               alt=""
               fill
               className={"object-cover transition-opacity duration-200 " + (imageReady ? "opacity-100" : "opacity-0")}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              unoptimized={false}
-              onLoad={() => setLoadedSrc(imageSrc)}
-              onError={() => setLoadedSrc(imageSrc)}
+              unoptimized={shouldUseUnoptimizedImage(displaySrc)}
+              onLoad={() => setLoadedSrc(displaySrc)}
+              onError={() => {
+                if (displaySrc === imageSrc) setFailedSrc(imageSrc);
+                else setFailedSrc(displaySrc);
+              }}
             />
           </>
         ) : (

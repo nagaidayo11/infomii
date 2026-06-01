@@ -9,6 +9,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type GalleryItem = { src?: string; alt?: string };
 
@@ -66,7 +67,7 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
                   alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
                   fill
                   className="object-cover object-center"
-                  unoptimized={item.src.startsWith("http")}
+                  unoptimized={shouldUseUnoptimizedImage(item.src)}
                 />
               </div>
             ) : (

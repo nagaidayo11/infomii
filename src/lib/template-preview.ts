@@ -32,6 +32,11 @@ export function btocTemplatePreviewPath(category: string, slug: string): string 
 
 /** Category hero used only when category is known but per-template path cannot be built. */
 export const TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS: Record<string, string> = {
+  travel: "/templates/previews/travel/travel-itinerary.jpg",
+  oshi: "/templates/previews/oshi/oshi-live-set.jpg",
+  personal: "/templates/previews/personal/personal-date-plan.jpg",
+  food: "/preset-menu-hero-dining.jpg",
+  lightbiz: "/preset-menu-hero-salon.jpg",
   business: "/template-business-hero-01.jpg",
   resort: "/template-resort-hero-01.jpg",
   ryokan: "/template-ryokan-hero-01.jpg",
@@ -72,7 +77,7 @@ function resolveComputedOrCategoryFallback(
  */
 import { isBtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
 
-/** BtoC seeds use empty preview_image; listing cards show placeholder only. */
+/** BtoC: preview_image 未設定時のみプレースホルダー（パスがあれば表示を試みる） */
 export function templateListingUsesPlaceholder(
   category: string | null | undefined,
   previewImage: string | undefined,

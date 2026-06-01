@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "kind": "btoc",
+  "generated": "2026-06-01T13:07:09.761Z",
+  "note": "BtoC marketplace template previews. English prompts ~80–120 words. Run: npm run templates:previews:btoc:openai",
+  "entries": [
+    {
+      "name": "旅行しおり・基本セット",
+      "slug": "travel-itinerary",
+      "category": "travel",
+      "categoryIndex": 0,
+      "previewPath": "/templates/previews/travel/travel-itinerary.jpg",
+      "hint": "京都・友達旅行・新幹線",
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic wide landscape 5:3, friends' trip to Kyoto Japan. Two travelers with backpacks walking along a quiet traditional street toward a wooden machiya district, soft morning sunlight, subtle Shinkansen station atmosphere in the far background without readable signs. Luggage and travel mood, cherry trees and stone pavement, warm optimistic tone. Shallow depth of field, cinematic but natural colors. No logos, no readable text, no watermarks, no hotel facade as main subject. High resolution commercial quality."
+    },
+    {
+      "name": "週末旅行・おでかけセット",
+      "slug": "travel-weekend",
+      "category": "travel",
+      "categoryIndex": 1,
+      "previewPath": "/templates/previews/travel/travel-weekend.jpg",
+      "hint": "箱根・日帰り・ロマンスカー",
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic 5:3 landscape, day trip to Hakone Japan. Friends near a vintage romancecar-style train platform silhouette, misty mountains and hot spring town valley, light rain clearing to soft sunlight. Cozy travel energy, small bags, walking path through greenery, lake glimpse. No readable signage, no logos, no hotel-only exterior. Fresh weekend escape mood, balanced composition with foreground journey cues and midground transport, lifestyle travel not food close-up."
+    },
+    {
+      "name": "グループ旅行・役割分担セット",
+      "slug": "travel-group",
+      "category": "travel",
+      "categoryIndex": 2,
+      "previewPath": "/templates/previews/travel/travel-group.jpg",
+      "hint": "沖縄・グループ・海",
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic Okinawa group vacation scene, 5:3 horizontal. Turquoise ocean, rental car parked near coastal road, five friends as distant silhouettes on beach path with snorkel bags. Bright summer light, tropical plants framing edges, island town hint without luxury hotel dominance. Joyful shared adventure, layered depth sky-sea-land. No readable text, no brand logos, no single person portrait focus. Commercial travel brochure quality, vibrant but realistic."
+    },
+    {
+      "name": "キャンプ・アウトドアしおり",
+      "slug": "travel-camp-outdoor",
+      "category": "travel",
+      "categoryIndex": 3,
+      "previewPath": "/templates/previews/travel/travel-camp-outdoor.jpg",
+      "hint": "富士山麓・テント・夕方",
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic campsite at Fuji foothills, dusk 5:3 wide shot. Orange tent and tarp among trees, camping chairs, cooler, subtle campfire glow without faces visible. Mountain silhouette, crisp air, stars beginning in sky. Outdoor friends trip atmosphere, practical gear scattered naturally. No readable labels on equipment, no hotel building, no logos. Warm adventure lifestyle, gentle smoke, respectful nature composition."
+    },
+    {
+      "name": "推し活・ライブまとめセット",
+      "slug": "oshi-live-set",
+      "category": "oshi",
+      "categoryIndex": 4,
+      "previewPath": "/templates/previews/oshi/oshi-live-set.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic concert night exterior ambiance, 5:3. Arena entrance glow, crowd silhouettes holding penlights creating soft bokeh sea of lights, urban plaza before show. Energetic fandom mood without identifiable artist faces or readable posters. Neon accents purple and cyan, light rain reflections optional. No logos, no legible banners, no watermarks. Cinematic fan experience, anticipation and friendship gathering, modern Japanese city venue hints abstract only."
+    },
+    {
+      "name": "推し活・ファンイベントセット",
+      "slug": "oshi-fan-meet",
+      "category": "oshi",
+      "categoryIndex": 5,
+      "previewPath": "/templates/previews/oshi/oshi-fan-meet.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Indoor fan meeting event atmosphere, photorealistic 5:3. Queued rows of attendees as back-view silhouettes, soft stage lighting ahead, convention hall ceiling lights. Merch bags at feet, polite orderly mood, warm neutral interior. No celebrity faces, no readable signage, no brand marks. Slight pastel fan culture aesthetic, clean commercial photography, focus on community experience and organized lines rather than single product hero shot."
+    },
+    {
+      "name": "推し活・リンクハブセット",
+      "slug": "oshi-link-hub",
+      "category": "oshi",
+      "categoryIndex": 6,
+      "previewPath": "/templates/previews/oshi/oshi-link-hub.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Stylized-photoreal hybrid 5:3 key visual for fan link hub. Gradient background magenta to violet, abstract glowing shapes suggesting social apps and tickets without readable UI text. Headphones, lightstick bokeh, subtle sparkle. Modern pop fandom digital mood, clean center space for template overlay feel but no actual typography in image. No logos, no watermarks. Sleek contemporary illustration-photography blend, upbeat and shareable."
+    },
+    {
+      "name": "オフ会・ファン交流会",
+      "slug": "oshi-offline-meetup",
+      "category": "oshi",
+      "categoryIndex": 7,
+      "previewPath": "/templates/previews/oshi/oshi-offline-meetup.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Cozy rented café fan meetup, photorealistic 5:3. Small group chatting at wooden tables, warm pendant lights, cups and notebooks, backs and partial profiles only unidentifiable. Friendly offline community vibe, afternoon window light. No readable menu boards, no character merch with text, no logos. Intimate grassroots gathering, balanced composition table-foreground and soft background blur of more attendees."
+    },
+    {
+      "name": "おでかけ・デートプランセット",
+      "slug": "personal-date-plan",
+      "category": "personal",
+      "categoryIndex": 8,
+      "previewPath": "/templates/previews/personal/personal-date-plan.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic Shibuya date afternoon, 5:3 landscape. Couple silhouettes walking toward tree-lined street, café terrace with two cups, soft golden backlight. Urban romance without faces shown, stylish casual fashion blur. Hachiko area mood abstract, no readable storefront signs. Warm friendly tone, shallow depth, lifestyle photography for sharing plans. No hotel imagery, no logos, no watermarks."
+    },
+    {
+      "name": "リンク集・プロフィールセット",
+      "slug": "personal-link-collection",
+      "category": "personal",
+      "categoryIndex": 9,
+      "previewPath": "/templates/previews/personal/personal-link-collection.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Minimal creator profile desk scene, photorealistic 5:3. Laptop closed, sketchbook, potted plant, pastel wall, soft daylight from side window. Freelancer link-in-bio mood, calm organized aesthetic, negative space. No screen UI visible, no readable notes, no logos. Approachable professional creative workspace, Scandinavian-Japanese interior hints, clean commercial stock quality for personal branding template."
+    },
+    {
+      "name": "イベント・勉強会案内セット",
+      "slug": "personal-event-guide",
+      "category": "personal",
+      "categoryIndex": 10,
+      "previewPath": "/templates/previews/personal/personal-event-guide.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Bright coworking study meetup, photorealistic 5:3. Rows of laptops, attendees from behind, whiteboard with abstract colored shapes only no text. Friendly community learning event, indoor plants, large windows. Casual tech workshop atmosphere, inclusive and welcoming. No readable slides, no logos, no hotel lobby. Modern startup space photography, balanced wide angle showing room depth and collaboration energy."
+    },
+    {
+      "name": "結婚式・二次会向け案内",
+      "slug": "personal-wedding-party",
+      "category": "personal",
+      "categoryIndex": 11,
+      "previewPath": "/templates/previews/personal/personal-wedding-party.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Elegant wedding party reception ambiance, photorealistic 5:3. Floral table settings, champagne glasses clinking blur, warm candlelight bokeh, guests as soft silhouettes. Celebration and hospitality mood without bride groom faces. Indoor banquet hall softness, ivory and gold palette. No readable place cards, no monograms with letters, no logos. Romantic social gathering suitable for guest information page hero."
+    },
+    {
+      "name": "新居・ハウスwarming",
+      "slug": "personal-housewarming",
+      "category": "personal",
+      "categoryIndex": 12,
+      "previewPath": "/templates/previews/personal/personal-housewarming.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Home party in new apartment living room, photorealistic 5:3. Friends on sofa with drinks and snacks, houseplants, moving boxes subtly stacked, warm evening window light. Casual housewarming joy, lived-in cozy interior, residential not hotel. No readable labels on boxes, no logos. Friendly informal gathering, wide composition showing welcoming home atmosphere and shared relaxed moment."
+    },
+    {
+      "name": "キッチンカー・今日の出店",
+      "slug": "food-kitchen-car-today",
+      "category": "food",
+      "categoryIndex": 13,
+      "previewPath": "/templates/previews/food/food-kitchen-car-today.jpg",
+      "hint": "たこ焼き・公園イベント",
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Photorealistic food truck festival scene 5:3, colorful kitchen car serving takoyaki. Steam rising from griddle, vendor hands with spatula only, park trees and weekend crowd silhouettes. Appetizing street food energy without menu text on truck. Bright midday, cheerful community event, shallow depth on cooking action. No logos, no readable signage, no watermark. Vibrant but realistic Japanese outdoor market mood."
+    },
+    {
+      "name": "フードトラック・週間スケジュール",
+      "slug": "food-truck-weekly",
+      "category": "food",
+      "categoryIndex": 14,
+      "previewPath": "/templates/previews/food/food-truck-weekly.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Gourmet burger food truck at business district lunch, photorealistic 5:3. Truck side window open, hands passing paper bag, office workers as distant silhouettes in line. Urban noon light, glass buildings soft background. Street lunch culture, appetizing without giant food macro dominating. No brand names, no readable truck graphics, no logos. Dynamic street-level composition showing mobility and weekly pop-up vibe."
+    },
+    {
+      "name": "マルシェ・フェス出店案内",
+      "slug": "food-festival-stall",
+      "category": "food",
+      "categoryIndex": 15,
+      "previewPath": "/templates/previews/food/food-festival-stall.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Summer marquee crêpe stall at outdoor market, photorealistic 5:3. Striped tent, queue of families silhouettes, crepe being folded on iron plate hands only. Festive fair atmosphere, green trees, sun flare. No readable stall banners, no logos. Joyful local market energy, balanced foreground food preparation and background crowd depth, commercial event photography style."
+    },
+    {
+      "name": "取り置き・事前予約（小規模飲食）",
+      "slug": "food-preorder-pickup",
+      "category": "food",
+      "categoryIndex": 16,
+      "previewPath": "/templates/previews/food/food-preorder-pickup.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Small deli pickup counter, photorealistic 5:3. Neat bento boxes stacked on wooden counter, shopkeeper hands wrapping package, clean tiled kitchen glimpse. Order-ahead small business mood, warm interior light. No price tags with numbers readable, no logos on packaging. Trustworthy local food service, appetizing but orderly, focus on pickup moment not dining room hero."
+    },
+    {
+      "name": "カフェ・ポップアップ1日店",
+      "slug": "food-cafe-popup",
+      "category": "food",
+      "categoryIndex": 17,
+      "previewPath": "/templates/previews/food/food-cafe-popup.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "One-day pop-up café in gallery space, photorealistic 5:3. Latte art cup on counter, pastries on tray, white walls and natural light skylight. Limited-time specialty coffee mood, minimalist Scandinavian interior. Few customers blurred background. No readable chalkboards, no brand logos. Calm artisan café aesthetic, inviting and Instagram-friendly without being screenshot of app UI."
+    },
+    {
+      "name": "美容室・サロン案内",
+      "slug": "lightbiz-salon",
+      "category": "lightbiz",
+      "categoryIndex": 18,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-salon.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Modern hair salon interior, photorealistic 5:3. Styling chairs, large mirrors with reflection bokeh, plants, warm indirect lighting. Client cape silhouette from behind in chair, professional yet welcoming. Clean boutique salon not corporate hotel lobby. No readable product labels, no logos. Soft beige and wood palette, commercial interior photography for appointment-based small business template."
+    },
+    {
+      "name": "ヨガ・フィットネススタジオ",
+      "slug": "lightbiz-fitness-studio",
+      "category": "lightbiz",
+      "categoryIndex": 19,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-fitness-studio.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Yoga studio morning class, photorealistic 5:3. Mats on wood floor, large windows with soft sunrise, instructor silhouette in warrior pose distant. Serene wellness mood, minimal decor plants. No readable wall text, no logos. Healthy studio business atmosphere, airy spacious composition, natural light emphasizing calm professional fitness brand suitable for class schedule page."
+    },
+    {
+      "name": "教室・講座・スクール案内",
+      "slug": "lightbiz-classroom",
+      "category": "lightbiz",
+      "categoryIndex": 20,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-classroom.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Small seminar classroom, photorealistic 5:3. Projector casting abstract blue shape on screen no text, students with laptops from behind, tidy training room. Professional education mood approachable not corporate tower. Whiteboard edge without writing. No logos, no hotel conference hall luxury. Balanced wide shot showing instructor desk and participant engagement for course landing template."
+    },
+    {
+      "name": "ポップアップショップ・期間限定店",
+      "slug": "lightbiz-popup-shop",
+      "category": "lightbiz",
+      "categoryIndex": 21,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-popup-shop.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Temporary fashion pop-up retail interior, photorealistic 5:3. Clothing racks with neutral garments, minimal display tables, urban street glimpse through glass door. Trendy limited-time shop mood, clean industrial-chic design. No readable price tags or brand names, no logos. Inviting retail experience photography, soft spotlight on merchandise texture without portrait models facing camera."
+    },
+    {
+      "name": "小規模オフィス・来訪案内",
+      "slug": "lightbiz-office-visit",
+      "category": "lightbiz",
+      "categoryIndex": 22,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-office-visit.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Startup office reception visit, photorealistic 5:3. Glass entry, small sofa, plants, bright corridor depth, handshake blur partial hands only. Friendly B2B welcome without intimidating corporate atrium. No readable door plaques, no logos on wall. Modern compact workplace, natural light, professional trust for meeting guest instructions page, not hotel check-in desk."
+    },
+    {
+      "name": "フリーランス・サービス案内",
+      "slug": "lightbiz-freelance-portfolio",
+      "category": "lightbiz",
+      "categoryIndex": 23,
+      "previewPath": "/templates/previews/lightbiz/lightbiz-freelance-portfolio.jpg",
+      "hint": null,
+      "styleNotes": "BtoC template card hero. Photorealistic 5:3 ~1920×1152. No readable text, logos, watermarks, UI, QR. No hotel-exterior-only shots.",
+      "generator": "npm run templates:previews:btoc:openai",
+      "prompt": "Freelance designer workspace, photorealistic 5:3. Dual monitor backs showing abstract color blocks no UI text, sketch tablet, coffee, tidy desk plant. Creative professional services mood, calm confidence. Home-office quality light from window. No logos, no readable sticky notes. Commercial portfolio hero for independent contractor, warm neutral tones and organized creative tools arrangement."
+    }
+  ]
+}

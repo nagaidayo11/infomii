@@ -9,6 +9,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type ImageCardProps = {
   card: EditorCard;
@@ -48,7 +49,13 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
       {src ? (
         <div data-inner-surface className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
           <div className="absolute inset-0">
-            <Image src={src} alt={alt} fill className="object-cover object-center" unoptimized={src.startsWith("http")} />
+            <Image
+              src={src}
+              alt={alt}
+              fill
+              className="object-cover object-center"
+              unoptimized={shouldUseUnoptimizedImage(src)}
+            />
           </div>
         </div>
       ) : (

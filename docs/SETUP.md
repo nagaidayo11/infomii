@@ -226,12 +226,17 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 `/templates` のテンプレートカードは **外部URLを使わず**、`public/` 配下のローカル画像のみを参照します。
 
 - **画像ファイル**: `public/templates/previews/<category>/<slug>.jpg`
-- **対応表**: `public/templates/previews/manifest.json`
-  - 各テンプレの `previewPath`（保存先）と、画像生成用の `prompt` が入っています
+- **対応表（ホテル/B2B）**: `public/templates/previews/manifest.json`
+- **対応表（BtoC）**: `public/templates/previews/manifest-btoc.json`（正本: `scripts/btoc-preview-prompt-data.mjs`）
+  - 各テンプレの `previewPath`（保存先）と、画像生成用の英語 `prompt` が入っています
 
 ### 画像は「一回だけ」生成して差し替える
 
-OpenAI Images API を使う場合は、`.env.local` に `OPENAI_API_KEY` を設定した上で `node scripts/generate-template-previews-openai.mjs` を実行すると、`manifest.json` の `entries[].prompt` と `entries[].previewPath` に従って `public/templates/previews/**/*.jpg` が一括上書きされます（生成はワンショット運用で、アプリ実行時には行いません）。
+**BtoC（旅行・推し活・飲食など）:** `.env.local` に `OPENAI_API_KEY` を設定し、`npm run templates:previews:btoc:manifest` のあと `npm run templates:previews:btoc:openai` を実行すると、`manifest-btoc.json` の `entries[].prompt` と `previewPath` に従って `public/templates/previews/{travel,oshi,personal,food,lightbiz}/*.jpg` が上書きされます。
+
+**ホテル向け:** `npm run templates:previews:openai`（`manifest.json` 参照）。
+
+いずれも生成はワンショット運用で、アプリ実行時には行いません。
 
 1. `public/templates/previews/manifest.json` の `entries[].prompt` を外部画像生成ツールに投入し、**ホテル外観が主役**の画像を生成する（料理・皿・ドリンク等は禁止）。
 2. 生成した JPG を `entries[].previewPath` の場所へ **上書き保存**する。
