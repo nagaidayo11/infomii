@@ -41,7 +41,11 @@ export function TemplateCard({
         ? "from-violet-100 via-fuchsia-50 to-white"
         : category === "personal"
           ? "from-sky-100 via-slate-50 to-white"
-          : "from-slate-200 via-slate-100 to-white";
+          : category === "food"
+            ? "from-orange-100 via-amber-50 to-white"
+            : category === "lightbiz"
+              ? "from-indigo-100 via-slate-50 to-white"
+              : "from-slate-200 via-slate-100 to-white";
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">

@@ -1,9 +1,19 @@
+"use client";
+
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { AppBillingView } from "@/components/app-shell/views/AppBillingView";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 /**
  * プラン・請求（アプリタブ「プラン」向け）。Stripe Checkout / Customer Portal。
  */
 export default function SettingsBillingPage() {
+  const { isAppShell } = useClientShell();
+
+  if (isAppShell) {
+    return <AppBillingView />;
+  }
+
   return (
     <div className="app-main-container space-y-6 pb-4">
       <header className="app-page-header">

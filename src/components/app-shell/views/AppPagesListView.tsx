@@ -81,9 +81,9 @@ export function AppPagesListView() {
   return (
     <div className="app-shell-page-enter mx-auto w-full max-w-lg pb-24">
       <header className="mb-5">
-        <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作成</h1>
+        <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作品</h1>
         <p className="mt-2 text-base text-[var(--app-text-muted)]">
-          あなたのページ一覧。タップして編集・公開できます。
+          作ったページの一覧。タップして編集・公開できます。
         </p>
       </header>
 
@@ -97,7 +97,7 @@ export function AppPagesListView() {
         <AppEmptyState
           emoji="🖼️"
           title="作品がまだありません"
-          description="テンプレから始めるか、新規ページを作成しましょう。"
+          description="ホームのAIやテンプレートタブから作ると、ここに並びます。"
           action={
             <div className="flex flex-col gap-3">
               <AppShellLink

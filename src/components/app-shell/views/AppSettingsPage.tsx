@@ -13,7 +13,7 @@ export function AppSettingsPage() {
   const content = (
     <>
       <ProfileDisplayNameSection />
-      <BusinessPlanSection />
+      {!isAppShell ? <BusinessPlanSection /> : null}
       <AccountAuthLinkSection />
       <BusinessAuditLogExport />
     </>

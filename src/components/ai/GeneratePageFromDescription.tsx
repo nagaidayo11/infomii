@@ -106,12 +106,22 @@ function PromptChipRow({
   );
 }
 
-export function GeneratePageFromDescription({ className = "" }: { className?: string }) {
+const APP_HOME_PROMPT_TEMPLATES = PROMPT_TEMPLATES_PERSONAL.slice(0, 4);
+
+export function GeneratePageFromDescription({
+  className = "",
+  variant = "default",
+}: {
+  className?: string;
+  variant?: "default" | "app";
+}) {
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const isApp = variant === "app";
+  const textareaId = isApp ? "ai-desc-app" : "ai-desc";
 
   useEffect(() => {
     setMounted(true);
@@ -174,58 +184,128 @@ export function GeneratePageFromDescription({ className = "" }: { className?: st
     }
   }
 
+  const chipClassName = isApp
+    ? "rounded-full border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-xs font-medium text-[var(--app-text)] transition active:opacity-80 disabled:opacity-60"
+    : undefined;
+
   return (
     <section className={className}>
       <div className="mb-3">
-        <h2 className="text-base font-semibold text-slate-900">説明を書くだけでページができる</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          旅行のしおりや推し活メモなど個人向けのほか、ホテル・旅館の館内案内も同じ要領で作れます。
-        </p>
+        <h2
+          className={
+            isApp
+              ? "text-lg font-bold text-[var(--app-text)]"
+              : "text-base font-semibold text-slate-900"
+          }
+        >
+          {isApp ? "AIでつくる" : "説明を書くだけでページができる"}
+        </h2>
+        {!isApp && (
+          <p className="mt-1 text-sm text-slate-500">
+            旅行のしおりや推し活メモなど個人向けのほか、ホテル・旅館の館内案内も同じ要領で作れます。
+          </p>
+        )}
+        {isApp && (
+          <p className="mt-1 text-sm text-[var(--app-text-muted)]">
+            作りたい内容を書くか、例文をタップしてください
+          </p>
+        )}
       </div>
-      <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <form
+        onSubmit={handleSubmit}
+        className={
+          isApp
+            ? "app-shell-card space-y-3 p-4"
+            : "rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        }
+      >
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+          <div
+            className={
+              isApp
+                ? "rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800"
+                : "mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800"
+            }
+          >
             {error}
           </div>
         )}
         <div className="space-y-3">
-          <div className="space-y-3">
-            <div>
-              <p className="mb-2 text-xs font-medium text-slate-600">個人・友達に送る（例文）</p>
-              <PromptChipRow templates={PROMPT_TEMPLATES_PERSONAL} loading={loading} onSelect={setDescription} />
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-medium text-slate-600">宿泊施設向け（例文）</p>
+          <div className={isApp ? "space-y-2" : "space-y-3"}>
+            {!isApp && (
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-600">個人・友達に送る（例文）</p>
+                <PromptChipRow templates={PROMPT_TEMPLATES_PERSONAL} loading={loading} onSelect={setDescription} />
+              </div>
+            )}
+            {isApp ? (
               <PromptChipRow
-                templates={PROMPT_TEMPLATES_HOSPITALITY}
+                templates={APP_HOME_PROMPT_TEMPLATES}
                 loading={loading}
                 onSelect={setDescription}
-                chipClassName="rounded-full border border-slate-300/80 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-200/80 disabled:opacity-60"
+                chipClassName={chipClassName}
               />
-            </div>
+            ) : (
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-600">宿泊施設向け（例文）</p>
+                <PromptChipRow
+                  templates={PROMPT_TEMPLATES_HOSPITALITY}
+                  loading={loading}
+                  onSelect={setDescription}
+                  chipClassName="rounded-full border border-slate-300/80 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-200/80 disabled:opacity-60"
+                />
+              </div>
+            )}
           </div>
           <div>
-            <label htmlFor="ai-desc" className="mb-1 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor={textareaId}
+              className={
+                isApp
+                  ? "mb-1 block text-sm font-semibold text-[var(--app-text)]"
+                  : "mb-1 block text-sm font-medium text-slate-700"
+              }
+            >
               どんなページにする？
             </label>
             <textarea
-              id="ai-desc"
+              id={textareaId}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="例: 友達と沖縄3泊… / ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい、など自由に書いてください"
-              rows={3}
-              className="w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
+              placeholder={
+                isApp
+                  ? "例: 友達と京都2泊3日の旅行しおり。集合場所と持ち物も入れて"
+                  : "例: 友達と沖縄3泊… / ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい、など自由に書いてください"
+              }
+              rows={isApp ? 4 : 3}
+              className={
+                isApp
+                  ? "w-full resize-none rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-3 text-base text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:border-[var(--app-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--app-accent)]/20"
+                  : "w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
+              }
               disabled={loading}
             />
-            <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-              <p>コツ: 個人向けは時間・場所・持ち物。宿泊向けは Wi-Fi・食事・チェックアウト・連絡先があると良いです。</p>
-              <p>{description.trim().length} 文字</p>
-            </div>
+            <p
+              className={
+                isApp
+                  ? "mt-1 text-right text-xs text-[var(--app-text-muted)]"
+                  : "mt-1 flex items-center justify-between text-xs text-slate-500"
+              }
+            >
+              {!isApp && (
+                <span>コツ: 個人向けは時間・場所・持ち物。宿泊向けは Wi-Fi・食事・チェックアウト・連絡先があると良いです。</span>
+              )}
+              <span>{description.trim().length} 文字</span>
+            </p>
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="app-button-native rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            className={
+              isApp
+                ? "app-touch-btn flex w-full items-center justify-center bg-[var(--app-accent)] font-semibold text-white disabled:opacity-50"
+                : "app-button-native rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+            }
           >
             {loading ? "つくってる…" : "つくって編集"}
           </button>

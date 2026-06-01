@@ -1,33 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
+import { useAuth } from "@/components/auth-provider";
 import {
-  createBlankPage,
   getCurrentHotelViewMetrics,
   getCurrentUserHotelRole,
   getDashboardBootstrapData,
   listPagesForHotel,
-  PAGE_LIMIT_REACHED,
   type DashboardBootstrapData,
   type PageRow,
 } from "@/lib/storage";
-import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
+import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-label";
 import { PageCard } from "@/components/saas/PageCard";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppOnboardingTour } from "../AppOnboardingTour";
 import { AppShellLink } from "../AppShellLink";
 
 export function AppDashboardView() {
-  const router = useRouter();
+  const { user } = useAuth();
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
   const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [totalViews7d, setTotalViews7d] = useState(0);
-  const createBusyRef = useRef(false);
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
 
@@ -55,26 +53,36 @@ export function AppDashboardView() {
     void load();
   }, [load]);
 
-  async function handleCreatePage() {
-    if (createBusyRef.current || !canEdit) return;
-    const entered = window.prompt("新しいページ名");
-    if (entered == null) return;
-    const title = entered.trim();
-    if (!title) return;
-    createBusyRef.current = true;
-    setCreating(true);
-    try {
-      const pageId = await createBlankPage(title);
-      if (pageId) router.push(`/editor/${pageId}`);
-    } catch (e) {
-      const err = e as Error & { code?: string };
-      if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
-      else alert(err.message || "作成に失敗しました");
-    } finally {
-      createBusyRef.current = false;
-      setCreating(false);
+  useEffect(() => {
+    if (!user?.id) {
+      setProfileDisplayName(null);
+      return;
     }
-  }
+    const supabase = getBrowserSupabaseClient();
+    if (!supabase) return;
+    let active = true;
+    void supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setProfileDisplayName(data?.display_name ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  const userNameBase = profileDisplayName ?? user?.email?.split("@")[0] ?? null;
+  const greetingName = formatDisplayNameWithSan(userNameBase);
+  const workspaceName = bootstrap?.hotelName?.trim();
+  const showWorkspaceName =
+    Boolean(workspaceName) &&
+    workspaceName !== "Infomii" &&
+    workspaceName !== "マイワークスペース" &&
+    !displayNamesEquivalent(workspaceName, userNameBase) &&
+    !displayNamesEquivalent(workspaceName, greetingName);
 
   const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
   const recent = pages.slice(0, 4);
@@ -85,15 +93,17 @@ export function AppDashboardView() {
       <AppOnboardingTour />
 
       <header>
-        <p className="text-sm font-medium text-[var(--app-text-muted)]">
-          {bootstrap?.hotelName ?? "マイワークスペース"}
-        </p>
-        <h1 className="mt-1 text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]">
-          こんにちは 👋
+        {showWorkspaceName && (
+          <p className="text-sm font-medium text-[var(--app-text-muted)]">{workspaceName}</p>
+        )}
+        <h1
+          className={
+            (showWorkspaceName ? "mt-1 " : "") +
+            "text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]"
+          }
+        >
+          {greetingName}
         </h1>
-        <p className="mt-2 text-base text-[var(--app-text-muted)]">
-          つくって、友だちにシェア。今日からはじめましょう。
-        </p>
       </header>
 
       {loading ? (
@@ -104,31 +114,7 @@ export function AppDashboardView() {
         </div>
       ) : (
         <>
-          <section className="app-shell-hero p-5">
-            <p className="text-sm font-semibold text-[var(--app-accent)]">クイックスタート</p>
-            <div className="mt-4 flex flex-col gap-3">
-              {canEdit ? (
-                <>
-                  <AppShellLink
-                    href="/templates"
-                    className="app-touch-btn flex items-center justify-center bg-[var(--app-accent)] font-semibold text-white"
-                  >
-                    テンプレートから作成
-                  </AppShellLink>
-                  <button
-                    type="button"
-                    onClick={() => void handleCreatePage()}
-                    disabled={creating}
-                    className="app-touch-btn border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)] disabled:opacity-50"
-                  >
-                    {creating ? "作成中…" : "白紙でページを作る"}
-                  </button>
-                </>
-              ) : (
-                <p className="text-sm text-[var(--app-text-muted)]">閲覧のみの権限です</p>
-              )}
-            </div>
-          </section>
+          {canEdit && <GeneratePageFromDescription variant="app" />}
 
           <section className="app-shell-card p-4">
             <p className="text-sm font-semibold text-[var(--app-text-muted)]">今週のざっくり</p>
@@ -160,11 +146,11 @@ export function AppDashboardView() {
                 <AppEmptyState
                   emoji="📄"
                   title="まだ作品がありません"
-                  description="テンプレートを選ぶか、白紙から1ページ作るとここに表示されます。"
+                  description="AIでつくるか、テンプレートタブから始めるとここに表示されます。"
                   action={
                     <AppShellLink
                       href="/templates"
-                      className="app-touch-btn flex items-center justify-center bg-[var(--app-accent)] font-semibold text-white"
+                      className="app-touch-btn app-touch-btn-primary flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
                     >
                       テンプレートを見る
                     </AppShellLink>
@@ -192,12 +178,6 @@ export function AppDashboardView() {
           </section>
         </>
       )}
-
-      <PlanLimitModal
-        open={planLimitModalOpen}
-        onClose={() => setPlanLimitModalOpen(false)}
-        currentPlan={bootstrap?.subscription?.plan}
-      />
     </div>
   );
 }

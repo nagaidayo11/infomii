@@ -4,6 +4,8 @@ export type MarketplaceSeedCategory =
   | "travel"
   | "oshi"
   | "personal"
+  | "food"
+  | "lightbiz"
   | "business"
   | "resort"
   | "ryokan"

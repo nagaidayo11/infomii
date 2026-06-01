@@ -1,5 +1,5 @@
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 11;
+export const MARKETPLACE_SEED_VERSION = 12;
 
 type TemplateCardLike = { type: string; order?: number };
 

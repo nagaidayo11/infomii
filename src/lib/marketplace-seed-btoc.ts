@@ -6,6 +6,7 @@ import {
 } from "@/lib/marketplace-seed-types";
 import { btocTemplatePreviewPath } from "@/lib/template-preview";
 import type { BtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
+import { BTOC_EXPANDED_MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-btoc-expanded";
 
 function pv(category: BtocMarketplaceCategory, slug: string): string {
   return btocTemplatePreviewPath(category, slug);
@@ -681,4 +682,5 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
     ]),
   },
+  ...BTOC_EXPANDED_MARKETPLACE_SEED_TEMPLATES,
 ];

@@ -1,5 +1,11 @@
 /** BtoC marketplace categories (no listing preview image). */
-export const BTOC_MARKETPLACE_CATEGORIES = ["travel", "oshi", "personal"] as const;
+export const BTOC_MARKETPLACE_CATEGORIES = [
+  "travel",
+  "oshi",
+  "personal",
+  "food",
+  "lightbiz",
+] as const;
 
 export type BtocMarketplaceCategory = (typeof BTOC_MARKETPLACE_CATEGORIES)[number];
 
@@ -47,7 +53,12 @@ export const TEMPLATE_MARKETPLACE_SECTIONS = [
   {
     id: "personal-daily",
     label: "個人・日常",
-    categories: [...BTOC_MARKETPLACE_CATEGORIES],
+    categories: ["travel", "oshi", "personal"] as const,
+  },
+  {
+    id: "food-shop",
+    label: "飲食・お店づくり",
+    categories: ["food", "lightbiz"] as const,
   },
   {
     id: "hospitality",
@@ -61,6 +72,8 @@ export const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   travel: "旅行しおり",
   oshi: "推し活",
   personal: "おでかけ・リンク",
+  food: "キッチンカー・飲食",
+  lightbiz: "小規模店舗・教室",
   business: "ビジネスホテル",
   resort: "リゾートホテル",
   ryokan: "旅館",

@@ -14,7 +14,7 @@ type TabConfig = {
   icon: ReactNode;
 };
 
-/** 「ページ」= テンプレート、「作成」= 作品一覧（ユーザー要望で入れ替え） */
+/** ホーム / テンプレート / 作品 / プラン / 設定 */
 const TABS: TabConfig[] = [
   {
     id: "home",
@@ -29,7 +29,7 @@ const TABS: TabConfig[] = [
   },
   {
     id: "templates",
-    label: "ページ",
+    label: "テンプレート",
     href: "/templates",
     match: (p) => p.startsWith("/templates"),
     icon: (
@@ -40,7 +40,7 @@ const TABS: TabConfig[] = [
   },
   {
     id: "works",
-    label: "作成",
+    label: "作品",
     href: "/dashboard/pages",
     match: (p) => p.startsWith("/dashboard/pages"),
     icon: (
