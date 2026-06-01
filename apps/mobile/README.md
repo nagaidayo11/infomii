@@ -27,9 +27,25 @@ echo 'EXPO_PUBLIC_WEB_ORIGIN=http://YOUR_MAC_IP:3000' > .env   # 実機は 127.0
 npx expo start -c
 ```
 
-4. 表示された **QR コード**を Expo Go でスキャン
+4. 表示された **QR コード**を Expo Go でスキャン（**ホームの「最近」から開かない**）
+
+> **重要:** 「New update available, downloading…」で止まる場合  
+> 1. iPhone で **Expo Go を削除→再インストール**（または設定でデータ消去）  
+> 2. **Mac の「ターミナル.app」**で `npm run restart:tunnel`（Cursor 内ターミナルだと失敗することがあります）  
+> 3. ターミナルに **`iOS Bundled`** が出てから QR をスキャン
 
 Mac の IP 確認: `ipconfig getifaddr en0`
+
+### トラブルシュート
+
+| 症状 | 対処 |
+|------|------|
+| `Port 8081 is running` / Expo が起動しない | `cd apps/mobile && npm run restart` |
+| `Could not connect to development server` | ① iPhone **設定 → Expo Go → ローカルネットワーク ON** ② ターミナルに **「iOS Bundled」** が出てから QR ③ ダメなら `npm run restart:tunnel` |
+| `Missing script: dev:lan` | **`dev:lan` はリポジトリルート**で実行 |
+| iPhone が「downloading…」で止まる | Expo Go を終了 → `npm run restart` → QR を読み直し |
+
+SDK 54 は lazy bundling 既定のため、起動スクリプトで `EXPO_NO_METRO_LAZY=1` を付けています。
 
 ## ブラウザでも確認可（UI だけ速い）
 
