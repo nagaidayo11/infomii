@@ -4,18 +4,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createBlankPage,
+  deletePage,
+  getCurrentUserHotelRole,
   getDashboardBootstrapData,
   listPagesForHotel,
   PAGE_LIMIT_REACHED,
-  deletePage,
-  updatePageTitle,
   setInformationStatusBySlug,
   type PageRow,
 } from "@/lib/storage";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
-import { PageCard } from "@/components/saas/PageCard";
+import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
+import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
+import { useAppToast } from "../AppToastProvider";
+import { APP_FAB_BOTTOM_OFFSET, APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 
 export function AppPagesListView() {
   const router = useRouter();
@@ -26,17 +29,24 @@ export function AppPagesListView() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const createBusyRef = useRef(false);
+  const deleteBusyRef = useRef(false);
+  const { showToast } = useAppToast();
+
+  const canEdit = role === "owner" || role === "admin" || role === "editor";
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [bootstrap, list] = await Promise.all([
+      const [bootstrap, list, r] = await Promise.all([
         getDashboardBootstrapData(),
         listPagesForHotel(),
+        getCurrentUserHotelRole().catch(() => null),
       ]);
+      setRole(r);
       setPages(list);
       setInfoBySlug(
         new Map(
@@ -78,19 +88,96 @@ export function AppPagesListView() {
     }
   }
 
+  async function handleTogglePublish(id: string, nextStatus: "draft" | "published") {
+    const target = pages.find((p) => p.id === id);
+    if (!target) return;
+
+    const prev = infoBySlug.get(target.slug);
+    setInfoBySlug((map) => {
+      const next = new Map(map);
+      next.set(target.slug, {
+        ...prev,
+        status: nextStatus,
+        updatedAt: new Date().toISOString(),
+      });
+      return next;
+    });
+    setTogglingId(id);
+
+    try {
+      await setInformationStatusBySlug(target.slug, nextStatus);
+      showToast(
+        nextStatus === "published" ? "ゲストに公開しました" : "非公開にしました",
+        "success",
+      );
+    } catch (e) {
+      setInfoBySlug((map) => {
+        const next = new Map(map);
+        if (prev) next.set(target.slug, prev);
+        else next.delete(target.slug);
+        return next;
+      });
+      showToast((e as Error).message || "公開状態の変更に失敗しました", "error");
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
+  async function handleDelete(page: PageRow) {
+    if (!canEdit || deleteBusyRef.current) return;
+    if (
+      !window.confirm(
+        `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n削除すると元に戻せません。`,
+      )
+    ) {
+      return;
+    }
+    deleteBusyRef.current = true;
+    setDeletingId(page.id);
+    try {
+      await deletePage(page.id);
+      setPages((prev) => prev.filter((p) => p.id !== page.id));
+      setInfoBySlug((map) => {
+        const next = new Map(map);
+        next.delete(page.slug);
+        return next;
+      });
+      showToast("削除しました", "success");
+    } catch (e) {
+      showToast((e as Error).message || "削除に失敗しました", "error");
+    } finally {
+      setDeletingId(null);
+      deleteBusyRef.current = false;
+    }
+  }
+
   return (
-    <div className="app-shell-page-enter mx-auto w-full max-w-lg pb-24">
-      <header className="mb-5">
-        <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作品</h1>
-        <p className="mt-2 text-base text-[var(--app-text-muted)]">
-          作ったページの一覧。タップして編集・公開できます。
-        </p>
+    <div className="mx-auto w-full max-w-lg" style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}>
+      <header className="app-screen-header">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作品</h1>
+            <p className="app-screen-header-desc text-base text-[var(--app-text-muted)]">
+              カードをタップで編集。公開スイッチでゲストへの表示を切り替えられます。
+            </p>
+          </div>
+          {!loading && pages.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="app-pressable ui-pop-tap shrink-0 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
+              aria-label="一覧を更新"
+            >
+              更新
+            </button>
+          ) : null}
+        </div>
       </header>
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="app-shell-skeleton h-24" />
+            <div key={i} className="app-shell-skeleton h-[7.25rem] rounded-2xl" />
           ))}
         </div>
       ) : pages.length === 0 ? (
@@ -102,14 +189,14 @@ export function AppPagesListView() {
             <div className="flex flex-col gap-3">
               <AppShellLink
                 href="/templates"
-                className="app-touch-btn flex items-center justify-center bg-[var(--app-accent)] font-semibold text-white"
+                className="app-touch-btn app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold text-white"
               >
                 テンプレートへ
               </AppShellLink>
               <button
                 type="button"
                 onClick={() => void handleCreate()}
-                className="app-touch-btn border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)]"
+                className="app-touch-btn app-pressable border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)]"
               >
                 新規作成
               </button>
@@ -117,62 +204,36 @@ export function AppPagesListView() {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <AppWorksList>
           {pages.map((page) => {
             const info = infoBySlug.get(page.slug);
             return (
-            <PageCard
-              key={page.id}
-              id={page.id}
-              title={page.title}
-              slug={page.slug}
-              status={info?.status === "published" ? "published" : "draft"}
-              updatedAt={info?.updatedAt ?? new Date().toISOString()}
-              publishToggling={togglingId === page.id}
-              onDelete={
-                deletingId
-                  ? undefined
-                  : async (id) => {
-                      setDeletingId(id);
-                      try {
-                        await deletePage(id);
-                        setPages((prev) => prev.filter((p) => p.id !== id));
-                      } finally {
-                        setDeletingId(null);
-                      }
-                    }
-              }
-              onRename={async (id, nextTitle) => {
-                await updatePageTitle(id, nextTitle);
-                setPages((prev) =>
-                  prev.map((p) => (p.id === id ? { ...p, title: nextTitle } : p)),
-                );
-              }}
-              onTogglePublish={async (id, nextStatus) => {
-                const target = pages.find((p) => p.id === id);
-                if (!target) return;
-                setTogglingId(id);
-                try {
-                  await setInformationStatusBySlug(target.slug, nextStatus);
-                  await load();
-                } finally {
-                  setTogglingId(null);
-                }
-              }}
-            />
+              <AppWorksListItemMotion key={page.id}>
+                <AppWorksListItem
+                  id={page.id}
+                  title={page.title}
+                  slug={page.slug}
+                  status={info?.status === "published" ? "published" : "draft"}
+                  updatedAt={info?.updatedAt ?? new Date().toISOString()}
+                  publishToggling={togglingId === page.id}
+                  deleting={deletingId === page.id}
+                  onTogglePublish={canEdit ? handleTogglePublish : undefined}
+                  onDelete={canEdit ? () => void handleDelete(page) : undefined}
+                />
+              </AppWorksListItemMotion>
             );
           })}
-        </div>
+        </AppWorksList>
       )}
 
       <button
         type="button"
         onClick={() => void handleCreate()}
         disabled={creating}
-        className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg active:scale-95 disabled:opacity-60"
+        className="app-fab ui-pop-tap fixed z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg disabled:opacity-60"
         style={{
           right: "1rem",
-          bottom: "calc(58px + env(safe-area-inset-bottom, 0px) + 0.75rem)",
+          bottom: APP_FAB_BOTTOM_OFFSET,
         }}
         aria-label="新規ページを作成"
       >

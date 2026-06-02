@@ -4,6 +4,11 @@ import {
   type MarketplaceSeedCardType,
   type MarketplaceSeedTemplate,
 } from "@/lib/marketplace-seed-types";
+import {
+  hubLinks,
+  sectionDivider,
+  sectionHeading,
+} from "@/lib/marketplace-seed-btoc-layout";
 import { btocTemplatePreviewPath } from "@/lib/template-preview";
 import type { BtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
 import { BTOC_EXPANDED_MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-btoc-expanded";
@@ -30,13 +35,11 @@ const checklist = (title: string, items: string[]) => ({
   title,
   items: items.map((text) => ({ text, checked: false })),
 });
-const pageLinks = (title: string, items: { label: string; icon: string }[]) => ({
-  title,
-  columns: 3,
-  iconSize: "md",
-  styleVariant: "tile",
-  items: items.map((item) => ({ ...item, linkType: "page", pageSlug: "", link: "" })),
-});
+const pageLinks = (
+  title: string,
+  items: { label: string; icon: string }[],
+  columns: 2 | 3 | 4 = 4,
+) => hubLinks(title, items, columns);
 const map = (title: string, address: string) => ({ title, address, mapEmbedUrl: "" });
 const steps = (title: string, items: { title: string; description: string }[]) => ({ title, items });
 const faq = (title: string, items: { q: string; a: string }[]) => ({ title, items });
@@ -79,6 +82,13 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
         "hero",
         hero("京都、2泊3日", "新幹線・宿・ざっくり予定はここ", pv("travel", "travel-itinerary")),
       ),
+      hubLinks("しおりメニュー", [
+        { label: "日程", icon: "clock" },
+        { label: "持ち物", icon: "checklist" },
+        { label: "集合・宿", icon: "map-pin" },
+        { label: "リンク", icon: "link" },
+      ]),
+      sectionHeading("日程", "1日目〜3日目のざっくり予定"),
       b(
         "schedule",
         schedule("いつ何する？", [
@@ -90,6 +100,8 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { day: "3日目", time: "15:30", label: "京都駅から帰る" },
         ]),
       ),
+      sectionDivider(),
+      sectionHeading("持ち物・スポット", ""),
       b(
         "checklist",
         checklist("持っていくやつ", [
@@ -112,6 +124,14 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { name: "京都駅", description: "荷物預けはコインロッカー（八条口側）" },
         ]),
       ),
+      sectionDivider("dotted"),
+      sectionHeading("連絡・リンク", "予約画面と天気はここから"),
+      pageLinks("リンクまとめ", [
+        { label: "新幹線", icon: "train" },
+        { label: "宿の予約", icon: "bed" },
+        { label: "天気", icon: "map" },
+        { label: "乗り換え", icon: "bus" },
+      ], 4),
       b(
         "notice",
         notice(
@@ -119,19 +139,11 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           "30分以上遅れるならLINE「京都いこ！」に次の集合場所を書いて。雨強い日は外回りやめて駅ビルとか屋内に逃げよう。",
         ),
       ),
-      b(
-        "pageLinks",
-        pageLinks("リンクまとめ", [
-          { label: "新幹線の予約", icon: "link" },
-          { label: "宿の予約画面", icon: "calendar" },
-          { label: "天気", icon: "map" },
-          { label: "乗り換え", icon: "map" },
-          { label: "割り勘メモ（あとで）", icon: "link" },
-        ]),
-      ),
+      sectionDivider(),
+      sectionHeading("聞かれそうなこと", ""),
       b(
         "faq",
-        faq("聞かれそうなこと", [
+        faq("FAQ", [
           {
             q: "お金どうする？",
             a: "新幹線と宿は3人割。食事はだいたい各自で、レシート写真だけLINEに上げといて。帰る前にざっくり精算。",
@@ -203,15 +215,12 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
         ),
       ),
       b("map", map("最初に会う場所", "新宿駅 南口改札前")),
-      b(
-        "pageLinks",
-        pageLinks("予約とか", [
+      pageLinks("予約とか", [
           { label: "ロマンスカー", icon: "link" },
           { label: "ランチの店", icon: "calendar" },
           { label: "箱根フリーパス", icon: "map" },
           { label: "箱根の天気", icon: "map" },
         ]),
-      ),
       b(
         "faq",
         faq("よく聞かれるやつ", [
@@ -295,16 +304,13 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           "基本LINE「沖縄5人」。30分以上遅れるなら次どこで会うか書いて。わからないことはけんたに。",
         ),
       ),
-      b(
-        "pageLinks",
-        pageLinks("リンク", [
+      pageLinks("リンク", [
           { label: "航空券", icon: "link" },
           { label: "レンタカー", icon: "calendar" },
           { label: "宿（住所・鍵）", icon: "map" },
           { label: "シュノーケル", icon: "gift" },
           { label: "共通費メモ", icon: "link" },
         ]),
-      ),
       b(
         "faq",
         faq("あるある", [
@@ -363,15 +369,12 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           "撮影・再入場は公演ごとに違う。最新は公式X見て。グッズは開場1時間前くらいに並び始める人多い。",
         ),
       ),
-      b(
-        "pageLinks",
-        pageLinks("リンク", [
+      pageLinks("リンク", [
           { label: "チケット", icon: "link" },
           { label: "会場MAP", icon: "map" },
           { label: "グッズ通販", icon: "gift" },
           { label: "公式X", icon: "link" },
         ]),
-      ),
       b(
         "faq",
         faq("当日あるある", [
@@ -456,14 +459,11 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           },
         ]),
       ),
-      b(
-        "pageLinks",
-        pageLinks("公式", [
+      pageLinks("公式", [
           { label: "イベント詳細", icon: "link" },
           { label: "番号アプリ", icon: "calendar" },
           { label: "会場MAP", icon: "map" },
         ]),
-      ),
     ]),
   },
   {
@@ -494,9 +494,7 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           },
         ]),
       ),
-      b(
-        "pageLinks",
-        pageLinks("メイン", [
+      pageLinks("メイン", [
           { label: "公式サイト", icon: "link" },
           { label: "チケット", icon: "calendar" },
           { label: "YouTube", icon: "play" },
@@ -506,7 +504,6 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { label: "Instagram", icon: "link" },
           { label: "配信アーカイブ", icon: "play" },
         ]),
-      ),
       b(
         "notice",
         notice(
@@ -553,15 +550,12 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           "散歩やめてヒカリエとか屋内にする。遅れそうならチャットで一声くれればOK。",
         ),
       ),
-      b(
-        "pageLinks",
-        pageLinks("予約と地図", [
+      pageLinks("予約と地図", [
           { label: "ランチの予約", icon: "calendar" },
           { label: "カフェの場所", icon: "map" },
           { label: "夕食の予約", icon: "calendar" },
           { label: "天気", icon: "map" },
         ]),
-      ),
       b(
         "faq",
         faq("聞かれそう", [
@@ -586,9 +580,7 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           "○○です。イラストとWebいじってます。仕事の相談は下のフォームかメールが見やすい。",
         ),
       ),
-      b(
-        "pageLinks",
-        pageLinks("リンク", [
+      pageLinks("リンク", [
           { label: "作品見る", icon: "link" },
           { label: "Instagram", icon: "link" },
           { label: "ブログ", icon: "link" },
@@ -597,7 +589,6 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { label: "いちばん新しい作", icon: "gift" },
           { label: "小さめショップ", icon: "link" },
         ]),
-      ),
       b(
         "highlight",
         highlight(
@@ -664,14 +655,11 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { q: "行けなくなった", a: "前日までに申込フォームからキャンセル。録画なし。" },
         ]),
       ),
-      b(
-        "pageLinks",
-        pageLinks("リンク", [
+      pageLinks("リンク", [
           { label: "申し込み", icon: "calendar" },
           { label: "資料（当日）", icon: "link" },
           { label: "前回のメモ", icon: "play" },
         ]),
-      ),
       b(
         "contact_hub",
         contactHub(

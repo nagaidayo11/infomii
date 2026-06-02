@@ -15,6 +15,8 @@ export type MarketplaceSeedCategory =
 
 export type MarketplaceSeedCardType =
   | "hero"
+  | "divider"
+  | "iconRow"
   | "heading_body"
   | "info"
   | "highlight"

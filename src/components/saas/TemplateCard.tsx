@@ -19,6 +19,7 @@ export type TemplateCardProps = {
   onUse: () => void;
   onPreview?: () => void;
   using?: boolean;
+  variant?: "default" | "app";
 };
 
 export function TemplateCard({
@@ -29,7 +30,9 @@ export function TemplateCard({
   onUse,
   onPreview,
   using,
+  variant = "default",
 }: TemplateCardProps) {
+  const isApp = variant === "app";
   const categoryFallback =
     (category ? TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[category] : "") || DEFAULT_FALLBACK;
   const imageSrc = resolveTemplateCardImageSrc(preview_image, category ?? null, name, categoryFallback);
@@ -52,7 +55,13 @@ export function TemplateCard({
               : "from-slate-200 via-slate-100 to-white";
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+    <article
+      className={
+        isApp
+          ? "app-template-card ui-pop-card flex h-full flex-col overflow-hidden rounded-xl border transition"
+          : "flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+      }
+    >
       <div
         className={`relative flex aspect-[5/3] items-center justify-center overflow-hidden bg-gradient-to-br ${placeholderGradient}`}
       >
@@ -83,28 +92,56 @@ export function TemplateCard({
           <span className="px-4 text-center text-sm font-semibold text-slate-500">{name}</span>
         )}
       </div>
-      <div className="flex flex-1 flex-col bg-white p-3">
-        <h3 className="min-h-[2.8rem] line-clamp-2 text-[0.95rem] font-semibold leading-6 text-slate-900">{name}</h3>
-        <p className="mt-1.5 min-h-[2.7rem] line-clamp-2 text-sm leading-[1.35rem] text-slate-600">{description || "説明なし"}</p>
-        <div className="mt-auto pt-3">
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-end sm:gap-1.5">
+      <div
+        className={
+          isApp
+            ? "flex flex-1 flex-col bg-[var(--app-surface)] p-3"
+            : "flex flex-1 flex-col bg-white p-3"
+        }
+      >
+        <h3
+          className={
+            isApp
+              ? "min-h-[2.8rem] line-clamp-2 text-[0.95rem] font-semibold leading-6 text-[var(--app-text)]"
+              : "min-h-[2.8rem] line-clamp-2 text-[0.95rem] font-semibold leading-6 text-slate-900"
+          }
+        >
+          {name}
+        </h3>
+        <p
+          className={
+            isApp
+              ? "mt-1.5 min-h-[2.7rem] line-clamp-2 text-sm leading-[1.35rem] text-[var(--app-text-muted)]"
+              : "mt-1.5 min-h-[2.7rem] line-clamp-2 text-sm leading-[1.35rem] text-slate-600"
+          }
+        >
+          {description || "説明なし"}
+        </p>
+        <div className="mt-auto flex flex-col gap-2 pt-3">
           <button
             type="button"
             disabled={!!using}
             onClick={onUse}
-            className="app-button-native w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
+            className={
+              isApp
+                ? "app-touch-btn app-touch-btn-primary app-pressable w-full bg-[var(--app-accent)] font-semibold !text-white disabled:opacity-50"
+                : "app-button-native w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
+            }
           >
-            {using ? "作成中…" : "テンプレートを使う"}
+            {using ? "作成中…" : "このテンプレートを使う"}
           </button>
           <button
             type="button"
             onClick={onPreview}
             disabled={!onPreview}
-            className="app-button-native w-full min-h-[42px] rounded-lg border border-slate-200 bg-white px-2.5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-1.5 sm:text-xs"
+            className={
+              isApp
+                ? "app-pressable w-full rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] py-2.5 text-sm font-medium text-[var(--app-text)] disabled:opacity-40"
+                : "app-button-native w-full min-h-[42px] rounded-lg border border-slate-200 bg-white px-2.5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-1.5 sm:text-xs"
+            }
           >
             プレビュー
           </button>
-          </div>
         </div>
       </div>
     </article>

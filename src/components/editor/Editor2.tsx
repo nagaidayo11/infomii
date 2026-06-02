@@ -503,20 +503,33 @@ export function Editor2({
       if (!root || !target || !root.contains(target)) return;
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
       if (isInput) {
-        const isEmpty =
-          (target as HTMLInputElement | HTMLTextAreaElement).value?.trim() === "" ||
-          target.textContent?.trim() === "";
-        if (isEmpty) {
-          if (e.key === "Backspace" || e.key === "Delete") {
+        const field = target as HTMLInputElement | HTMLTextAreaElement;
+        const hasTextSelection =
+          typeof field.selectionStart === "number" &&
+          typeof field.selectionEnd === "number" &&
+          field.selectionStart !== field.selectionEnd;
+
+        if (e.key === "Backspace" || e.key === "Delete") {
+          // Partial/full selection in a field: always edit text only, never delete the block.
+          if (hasTextSelection) return;
+
+          const isEmpty = field.value?.trim() === "" || target.textContent?.trim() === "";
+          if (isEmpty) {
             const cardEl = target.closest("[data-card-id]");
             const cardId = cardEl?.getAttribute("data-card-id");
-            if (cardId && selectedCardId === cardId) {
+            const card = cardId ? cards.find((c) => c.id === cardId) : undefined;
+            // Notion-style: empty dedicated text block + Backspace removes the block only.
+            if (cardId && selectedCardId === cardId && card?.type === "text") {
               e.preventDefault();
               removeCard(cardId);
-              (target as HTMLElement).blur();
+              target.blur();
             }
-            return;
           }
+          return;
+        }
+
+        const isEmpty = field.value?.trim() === "" || target.textContent?.trim() === "";
+        if (isEmpty) {
           if (e.key === "Enter" && !e.shiftKey) {
             const cardEl = target.closest("[data-card-id]");
             const cardId = cardEl?.getAttribute("data-card-id");
@@ -525,13 +538,12 @@ export function Editor2({
               const idx = cards.findIndex((c) => c.id === cardId);
               if (idx >= 0) {
                 addCard("text", idx + 1);
-                (target as HTMLElement).blur();
+                target.blur();
               }
             }
             return;
           }
         }
-        if (e.key === "Backspace" || e.key === "Delete") return;
       }
       const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
       const mod = isMac ? e.metaKey : e.ctrlKey;
@@ -569,6 +581,15 @@ export function Editor2({
         return;
       }
       if ((e.key === "Backspace" || e.key === "Delete") && selectedCardId) {
+        const active = document.activeElement as HTMLElement | null;
+        const inlineEditing =
+          active &&
+          root.contains(active) &&
+          (active.tagName === "INPUT" ||
+            active.tagName === "TEXTAREA" ||
+            active.isContentEditable);
+        if (inlineEditing) return;
+
         const el = target as HTMLElement;
         if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA" && !el.isContentEditable) {
           e.preventDefault();

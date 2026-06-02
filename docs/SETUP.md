@@ -221,7 +221,17 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 
 ---
 
-## 5. テンプレート一覧サムネ（プレビュー画像）の運用
+## 5. App シェル UI / モーション改善
+
+ネイティブアプリ（Expo WebView）の押下感・トグル・画面遷移を磨くときは、実装指示プロンプト集を参照してください。
+
+- **ドキュメント:** `docs/APP_SHELL_UI_MOTION_PROMPTS.md`
+- **内容:** マスターシステムプロンプト、Phase A–F、画面別クイックプロンプト
+- **QA:** `docs/APP_SHELL_QA_CHECKLIST.md`（Expo Go 手動確認）
+
+---
+
+## 6. テンプレート一覧サムネ（プレビュー画像）の運用
 
 `/templates` のテンプレートカードは **外部URLを使わず**、`public/` 配下のローカル画像のみを参照します。
 
@@ -274,7 +284,7 @@ where i.hotel_id = 'HOTEL_ID'
 
 ---
 
-## 6. テンプレート品質監査（S基準）
+## 7. テンプレート品質監査（S基準）
 
 テンプレート内容（カード構成・必須情報）を機械監査するスクリプトを追加しています。
 
@@ -291,7 +301,7 @@ where i.hotel_id = 'HOTEL_ID'
 
 ---
 
-## 7. モバイルアプリ（Expo SDK 54 + WebView）
+## 8. モバイルアプリ（Expo SDK 54 + WebView）
 
 ネイティブ UI は最小限で、**Web アプリ（Phase 1 の `client=app` シェル）** を WebView で表示します。**Expo Go**（App Store 版）と互換です。
 

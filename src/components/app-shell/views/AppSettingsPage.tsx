@@ -5,6 +5,7 @@ import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSec
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
+import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
 
 export function AppSettingsPage() {
@@ -20,7 +21,12 @@ export function AppSettingsPage() {
   );
 
   if (isAppShell) {
-    return <AppSettingsShell>{content}</AppSettingsShell>;
+    return (
+      <AppSettingsShell>
+        {content}
+        <AppSettingsSignOutSection />
+      </AppSettingsShell>
+    );
   }
 
   return (

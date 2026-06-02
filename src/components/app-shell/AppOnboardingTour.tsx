@@ -79,7 +79,7 @@ export function AppOnboardingTour() {
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute right-3 top-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--app-text-muted)] active:bg-[var(--app-surface-muted)]"
+          className="app-pressable ui-pop-tap absolute right-3 top-3 min-h-0 rounded-xl px-3 py-2 text-sm font-medium text-[var(--app-text-muted)]"
         >
           スキップ
         </button>
@@ -119,7 +119,7 @@ export function AppOnboardingTour() {
                 trackOnboardingWizardEvent("wizard_step_completed", { step: step + 1 });
               }
             }}
-            className="app-touch-btn w-full bg-[var(--app-accent)] font-semibold text-white shadow-sm active:opacity-90"
+            className="app-touch-btn app-pressable ui-pop-tap w-full bg-[var(--app-accent)] font-semibold text-white shadow-sm"
           >
             {isLast ? "はじめる" : "次へ"}
           </button>

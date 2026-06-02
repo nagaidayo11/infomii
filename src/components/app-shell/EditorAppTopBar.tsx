@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
 import type { EditorTopBarProps } from "@/components/editor/EditorTopBar";
 import { AppShellLink } from "./AppShellLink";
+import { AppBottomSheet } from "./primitives/AppBottomSheet";
+import { AppSwitch } from "./primitives/AppSwitch";
 
 type EditorAppTopBarProps = Pick<
   EditorTopBarProps,
@@ -48,6 +50,28 @@ function PreviewIcon({ className }: { className?: string }) {
   );
 }
 
+function saveHintKey(
+  saveError: string | null | undefined,
+  saving: boolean | undefined,
+  lastSavedAt: number | null | undefined,
+): string {
+  if (saveError) return "error";
+  if (saving) return "saving";
+  if (lastSavedAt != null) return "saved";
+  return "idle";
+}
+
+function saveHintText(
+  saveError: string | null | undefined,
+  saving: boolean | undefined,
+  lastSavedAt: number | null | undefined,
+): string {
+  if (saveError) return "保存エラー";
+  if (saving) return "保存中…";
+  if (lastSavedAt != null) return "保存済み";
+  return "未保存";
+}
+
 /**
  * Canva-style editor header for native app shell: home | publish toggle | preview (+ overflow menu).
  */
@@ -80,40 +104,14 @@ export function EditorAppTopBar({
   onBulkFont,
 }: EditorAppTopBarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
-  const moreMenuPanelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!moreOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (moreMenuRef.current?.contains(target)) return;
-      if (moreMenuPanelRef.current?.contains(target)) return;
-      setMoreOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMoreOpen(false);
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [moreOpen]);
+  const reduceMotion = useReducedMotion();
 
   const canTogglePublish = !demoMode && typeof onTogglePublished === "function";
   const showPublishActionButton =
     !demoMode && (!canTogglePublish || publishActionLabel !== "公開");
 
-  let saveHint = "未保存";
-  if (saveError) {
-    saveHint = "保存エラー";
-  } else if (saving) {
-    saveHint = "保存中…";
-  } else if (lastSavedAt != null) {
-    saveHint = "保存済み";
-  }
+  const hintKey = saveHintKey(saveError, saving, lastSavedAt);
+  const saveHint = saveHintText(saveError, saving, lastSavedAt);
 
   return (
     <header
@@ -128,7 +126,7 @@ export function EditorAppTopBar({
     >
       <AppShellLink
         href={backHref}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 transition active:bg-white/25"
+        className="editor-topbar-btn editor-topbar-btn--round h-11 w-11 shrink-0"
         aria-label="ホームに戻る"
       >
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -138,43 +136,42 @@ export function EditorAppTopBar({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold leading-tight">{pageTitle || "編集中"}</p>
-        <p className="truncate text-[10px] text-teal-50/90">{saveHint}</p>
+        <div className="editor-save-hint">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={hintKey}
+              className="editor-save-hint-line"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.15 }}
+            >
+              {saveHint}
+            </motion.span>
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
         {canTogglePublish ? (
-          <button
-            type="button"
-            role="switch"
-            aria-checked={publishToggleChecked}
-            aria-label="ゲスト向けの公開"
-            onClick={onTogglePublished}
-            disabled={publishToggleLoading || publishing}
-            className={
-              "relative h-8 w-[52px] shrink-0 rounded-full transition-colors disabled:opacity-50 " +
-              (publishToggleChecked ? "bg-emerald-400" : "bg-white/30")
-            }
-          >
-            {publishToggleLoading ? (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/80 border-t-white" />
-              </span>
-            ) : (
-              <span
-                className={
-                  "pointer-events-none absolute top-0.5 left-0.5 h-7 w-7 rounded-full bg-white shadow transition-transform " +
-                  (publishToggleChecked ? "translate-x-[22px]" : "translate-x-0")
-                }
-              />
-            )}
-          </button>
+          <AppSwitch
+            variant="on-dark"
+            compact
+            label="公開"
+            checked={publishToggleChecked}
+            loading={publishToggleLoading}
+            disabled={publishing}
+            ariaLabel="ゲスト向けの公開"
+            onCheckedChange={() => onTogglePublished?.()}
+            className="min-h-0 shrink-0"
+          />
         ) : null}
 
         <button
           type="button"
           onClick={onPreview}
           disabled={!publicUrl || previewPreparing}
-          className="flex h-10 min-w-[44px] items-center justify-center gap-1 rounded-xl bg-white/15 px-2.5 text-xs font-semibold disabled:opacity-40"
+          className="editor-topbar-btn h-10 min-w-[44px] gap-1 px-2.5 text-xs font-semibold"
           aria-label="プレビュー"
         >
           {previewPreparing ? (
@@ -185,144 +182,139 @@ export function EditorAppTopBar({
           <span className="hidden min-[380px]:inline">プレビュー</span>
         </button>
 
-        <div className="relative" ref={moreMenuRef}>
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          className="editor-topbar-btn h-10 w-10"
+          aria-expanded={moreOpen}
+          aria-haspopup="dialog"
+          aria-label="その他の操作"
+        >
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <circle cx="12" cy="6" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="18" r="1.5" />
+          </svg>
+        </button>
+      </div>
+
+      <AppBottomSheet open={moreOpen} onClose={() => setMoreOpen(false)} title="その他の操作">
+        {saveError ? (
+          <div className="border-b border-[var(--app-border)] px-3 py-2 text-sm text-rose-600">
+            {saveError}
+            {onRetry ? (
+              <button
+                type="button"
+                className="app-sheet-action app-sheet-action--primary mt-1 !min-h-[40px] !px-0"
+                onClick={() => {
+                  onRetry();
+                  setMoreOpen(false);
+                }}
+              >
+                再試行
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          role="menuitem"
+          disabled={publishing || qrPreparing}
+          className="app-sheet-action"
+          onClick={() => {
+            setMoreOpen(false);
+            onQr();
+          }}
+        >
+          {qrPreparing ? "QRを準備中…" : "QRコード・公開URL"}
+        </button>
+
+        {showPublishActionButton ? (
           <button
             type="button"
-            onClick={() => setMoreOpen((o) => !o)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"
-            aria-expanded={moreOpen}
-            aria-label="その他の操作"
+            role="menuitem"
+            disabled={publishing || qrPreparing}
+            className="app-sheet-action app-sheet-action--primary"
+            onClick={() => {
+              setMoreOpen(false);
+              onPublish();
+            }}
           >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <circle cx="12" cy="6" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="12" cy="18" r="1.5" />
-            </svg>
+            {publishing ? "処理中…" : publishActionLabel}
           </button>
-          {moreOpen && typeof document !== "undefined" &&
-            createPortal(
-              <>
-                <button
-                  type="button"
-                  className="fixed inset-0 z-[139] bg-slate-900/30"
-                  aria-label="メニューを閉じる"
-                  onClick={() => setMoreOpen(false)}
-                />
-                <div
-                  ref={moreMenuPanelRef}
-                  className="fixed right-2 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 text-slate-900 shadow-xl"
-                  style={{
-                    top: "calc(3.25rem + var(--infomii-safe-top-fallback, env(safe-area-inset-top, 0px)))",
-                  }}
-                  role="menu"
-                >
-                  {saveError ? (
-                    <div className="border-b border-slate-100 px-4 py-2 text-xs text-rose-600">
-                      {saveError}
-                      {onRetry ? (
-                        <button type="button" className="ml-2 underline" onClick={onRetry}>
-                          再試行
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={publishing || qrPreparing}
-                    className="flex w-full px-4 py-3 text-left text-sm font-medium hover:bg-slate-50 disabled:opacity-40"
-                    onClick={() => {
-                      setMoreOpen(false);
-                      onQr();
-                    }}
-                  >
-                    {qrPreparing ? "QRを準備中…" : "QRコード・公開URL"}
-                  </button>
-                  {showPublishActionButton ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={publishing || qrPreparing}
-                      className="flex w-full px-4 py-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-40"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        onPublish();
-                      }}
-                    >
-                      {publishing ? "処理中…" : publishActionLabel}
-                    </button>
-                  ) : null}
-                  {onRenamePageTitle ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="flex w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        const next = window.prompt("ページ名", pageTitle ?? "");
-                        if (next != null && next.trim()) void onRenamePageTitle(next.trim());
-                      }}
-                    >
-                      ページ名を変更
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={!canUndo || !onUndo}
-                    className="flex w-full px-4 py-3 text-left text-sm hover:bg-slate-50 disabled:opacity-40"
-                    onClick={() => {
-                      onUndo?.();
-                      setMoreOpen(false);
-                    }}
-                  >
-                    元に戻す
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={!canRedo || !onRedo}
-                    className="flex w-full px-4 py-3 text-left text-sm hover:bg-slate-50 disabled:opacity-40"
-                    onClick={() => {
-                      onRedo?.();
-                      setMoreOpen(false);
-                    }}
-                  >
-                    やり直す
-                  </button>
-                  {onClearAll ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={!canClearAll}
-                      className="flex w-full px-4 py-3 text-left text-sm text-rose-700 hover:bg-rose-50 disabled:opacity-40"
-                      onClick={() => {
-                        onClearAll();
-                        setMoreOpen(false);
-                      }}
-                    >
-                      ブロックをすべて削除
-                    </button>
-                  ) : null}
-                  {onBulkFont ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="flex w-full px-4 py-3 text-left text-sm hover:bg-slate-50"
-                      onClick={(e) => {
-                        onBulkFont(e.currentTarget);
-                        setMoreOpen(false);
-                      }}
-                    >
-                      一括フォント切替
-                    </button>
-                  ) : null}
-                </div>
-              </>,
-              document.body,
-            )}
-        </div>
-      </div>
+        ) : null}
+
+        {onRenamePageTitle ? (
+          <button
+            type="button"
+            role="menuitem"
+            className="app-sheet-action"
+            onClick={() => {
+              setMoreOpen(false);
+              const next = window.prompt("ページ名", pageTitle ?? "");
+              if (next != null && next.trim()) void onRenamePageTitle(next.trim());
+            }}
+          >
+            ページ名を変更
+          </button>
+        ) : null}
+
+        <button
+          type="button"
+          role="menuitem"
+          disabled={!canUndo || !onUndo}
+          className="app-sheet-action"
+          onClick={() => {
+            onUndo?.();
+            setMoreOpen(false);
+          }}
+        >
+          元に戻す
+        </button>
+
+        <button
+          type="button"
+          role="menuitem"
+          disabled={!canRedo || !onRedo}
+          className="app-sheet-action"
+          onClick={() => {
+            onRedo?.();
+            setMoreOpen(false);
+          }}
+        >
+          やり直す
+        </button>
+
+        {onClearAll ? (
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canClearAll}
+            className="app-sheet-action app-sheet-action--danger"
+            onClick={() => {
+              onClearAll();
+              setMoreOpen(false);
+            }}
+          >
+            ブロックをすべて削除
+          </button>
+        ) : null}
+
+        {onBulkFont ? (
+          <button
+            type="button"
+            role="menuitem"
+            className="app-sheet-action"
+            onClick={(e) => {
+              onBulkFont(e.currentTarget);
+              setMoreOpen(false);
+            }}
+          >
+            一括フォント切替
+          </button>
+        ) : null}
+      </AppBottomSheet>
     </header>
   );
 }

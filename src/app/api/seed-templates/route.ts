@@ -385,16 +385,18 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
 
 function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
   const importantTypes = new Set(["hero", "summary", "wifi", "breakfast", "checkout", "faq", "cta"]);
+  const isBtoc = isBtocMarketplaceCategory(template.category);
+  const maxCards = isBtoc ? 12 : 10;
   const cards = template.cards
     .filter((card) => card && typeof card.type === "string" && card.type !== "icon")
-    .slice(0, 10)
+    .slice(0, maxCards)
     .map((card, index) => ({
       ...card,
       order: index,
       content: { ...(card.content ?? {}) },
     }));
 
-  const reordered = reorderCardsByCategory(template.category, cards).map((card, index) => ({
+  const reordered = (isBtoc ? cards : reorderCardsByCategory(template.category, cards)).map((card, index) => ({
     ...card,
     order: index,
   }));

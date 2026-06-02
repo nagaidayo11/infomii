@@ -100,6 +100,9 @@ export function InlineEditable({
           onChange={(e) => setLocal(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
+            if (e.key === "Backspace" || e.key === "Delete") {
+              e.stopPropagation();
+            }
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               commit();
@@ -119,6 +122,9 @@ export function InlineEditable({
         onChange={(e) => setLocal(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
+          if (e.key === "Backspace" || e.key === "Delete") {
+            e.stopPropagation();
+          }
           if (e.key === "Enter") {
             e.preventDefault();
             commit();

@@ -215,7 +215,7 @@ export function GeneratePageFromDescription({
         onSubmit={handleSubmit}
         className={
           isApp
-            ? "app-shell-card space-y-3 p-4"
+            ? "space-y-3"
             : "rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
         }
       >

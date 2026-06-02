@@ -110,14 +110,11 @@ export function PageCard({
               </button>
             )}
           </div>
-          <dl className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
-            <div className="flex items-center gap-1.5">
+          <dl className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-normal text-slate-500">
+            <div className="flex items-center gap-2">
               <span
                 className={
-                  "inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
-                  (status === "published"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-100 text-slate-600")
+                  status === "published" ? "text-emerald-600" : "text-slate-500"
                 }
               >
                 {status === "published" ? "公開中" : "下書き"}
@@ -128,11 +125,10 @@ export function PageCard({
                   disabled={publishToggling}
                   onClick={() => void onTogglePublish(id, status === "published" ? "draft" : "published")}
                   className={
-                    "app-button-native inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium shadow-sm transition " +
+                    "app-button-native inline-flex items-center p-0 text-sm font-normal transition disabled:opacity-50 " +
                     (status === "published"
-                      ? "border-emerald-700 bg-emerald-600 text-white"
-                      : "border-slate-200 bg-white text-slate-600") +
-                    " disabled:opacity-50"
+                      ? "text-emerald-600 hover:text-emerald-700"
+                      : "text-slate-500 hover:text-slate-600")
                   }
                 >
                   {publishToggling ? "切替中…" : status === "published" ? "公開ON" : "公開OFF"}

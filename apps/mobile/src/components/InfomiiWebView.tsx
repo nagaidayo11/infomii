@@ -153,7 +153,7 @@ export function InfomiiWebView() {
 
   if (!originResolution.ok) {
     return (
-      <SafeAreaView style={styles.root} edges={["bottom"]}>
+      <SafeAreaView style={styles.root} edges={[]}>
         <StatusBar style="auto" translucent backgroundColor="transparent" />
         <ConfigErrorPanel
           title="設定を直してください"
@@ -166,7 +166,7 @@ export function InfomiiWebView() {
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={["bottom"]}>
+    <SafeAreaView style={styles.root} edges={[]}>
       <StatusBar style="auto" translucent backgroundColor="transparent" />
       {originHint ? (
         <View style={[styles.hintBanner, { marginTop: insets.top }]}>

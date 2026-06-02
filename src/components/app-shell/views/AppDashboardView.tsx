@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { useAuth } from "@/components/auth-provider";
 import {
+  deletePage,
   getCurrentHotelViewMetrics,
   getCurrentUserHotelRole,
   getDashboardBootstrapData,
@@ -13,19 +14,27 @@ import {
 } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-label";
-import { PageCard } from "@/components/saas/PageCard";
+import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
+import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppOnboardingTour } from "../AppOnboardingTour";
 import { AppShellLink } from "../AppShellLink";
+import { AppListRow } from "../primitives/AppListRow";
+import { AppSection } from "../primitives/AppSection";
+import { useAppToast } from "../AppToastProvider";
 
 export function AppDashboardView() {
   const { user } = useAuth();
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
   const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [totalViews7d, setTotalViews7d] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const deleteBusyRef = useRef(false);
+  const { showToast } = useAppToast();
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
 
@@ -56,86 +65,135 @@ export function AppDashboardView() {
   useEffect(() => {
     if (!user?.id) {
       setProfileDisplayName(null);
+      setProfileLoaded(true);
       return;
     }
     const supabase = getBrowserSupabaseClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setProfileLoaded(true);
+      return;
+    }
     let active = true;
+    setProfileLoaded(false);
     void supabase
       .from("profiles")
       .select("display_name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (active) setProfileDisplayName(data?.display_name ?? null);
+        if (!active) return;
+        setProfileDisplayName(data?.display_name ?? null);
+      })
+      .finally(() => {
+        if (active) setProfileLoaded(true);
       });
     return () => {
       active = false;
     };
   }, [user?.id]);
 
-  const userNameBase = profileDisplayName ?? user?.email?.split("@")[0] ?? null;
-  const greetingName = formatDisplayNameWithSan(userNameBase);
+  const displayName = profileDisplayName?.trim() ?? "";
+  const greetingName = displayName ? formatDisplayNameWithSan(displayName) : null;
   const workspaceName = bootstrap?.hotelName?.trim();
   const showWorkspaceName =
+    profileLoaded &&
+    Boolean(displayName) &&
     Boolean(workspaceName) &&
     workspaceName !== "Infomii" &&
     workspaceName !== "マイワークスペース" &&
-    !displayNamesEquivalent(workspaceName, userNameBase) &&
+    !displayNamesEquivalent(workspaceName, displayName) &&
     !displayNamesEquivalent(workspaceName, greetingName);
 
   const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
   const recent = pages.slice(0, 4);
   const publishedCount = (bootstrap?.informations ?? []).filter((i) => i.status === "published").length;
 
+  async function handleDelete(page: PageRow) {
+    if (!canEdit || deleteBusyRef.current) return;
+    if (
+      !window.confirm(
+        `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n削除すると元に戻せません。`,
+      )
+    ) {
+      return;
+    }
+    deleteBusyRef.current = true;
+    setDeletingId(page.id);
+    try {
+      await deletePage(page.id);
+      setPages((prev) => prev.filter((p) => p.id !== page.id));
+      await load();
+      showToast("削除しました", "success");
+    } catch (e) {
+      showToast((e as Error).message || "削除に失敗しました", "error");
+    } finally {
+      setDeletingId(null);
+      deleteBusyRef.current = false;
+    }
+  }
+
   return (
-    <div className="app-shell-page-enter mx-auto w-full max-w-lg space-y-5 pb-4">
+    <div className="mx-auto w-full max-w-lg space-y-5 pb-4">
       <AppOnboardingTour />
 
-      <header>
-        {showWorkspaceName && (
-          <p className="text-sm font-medium text-[var(--app-text-muted)]">{workspaceName}</p>
-        )}
-        <h1
-          className={
-            (showWorkspaceName ? "mt-1 " : "") +
-            "text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]"
-          }
-        >
-          {greetingName}
-        </h1>
-      </header>
+      {profileLoaded && greetingName ? (
+        <header>
+          {showWorkspaceName ? (
+            <p className="text-sm font-medium text-[var(--app-text-muted)]">{workspaceName}</p>
+          ) : null}
+          <h1
+            className={
+              (showWorkspaceName ? "mt-1 " : "") +
+              "text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]"
+            }
+          >
+            {greetingName}
+          </h1>
+        </header>
+      ) : null}
 
       {loading ? (
         <div className="space-y-3">
-          <div className="app-shell-skeleton h-32" />
-          <div className="app-shell-skeleton h-24" />
-          <div className="app-shell-skeleton h-20" />
+          <div className="app-shell-skeleton h-40 rounded-2xl" />
+          <div className="app-shell-skeleton h-24 rounded-2xl" />
+          <div className="app-shell-skeleton h-20 rounded-2xl" />
         </div>
       ) : (
         <>
-          {canEdit && <GeneratePageFromDescription variant="app" />}
-
-          <section className="app-shell-card p-4">
-            <p className="text-sm font-semibold text-[var(--app-text-muted)]">今週のざっくり</p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-[var(--app-surface-muted)] p-3">
-                <p className="text-2xl font-bold text-[var(--app-text)]">{totalViews7d}</p>
-                <p className="text-sm text-[var(--app-text-muted)]">閲覧（7日）</p>
+          {canEdit ? (
+            <AppSection>
+              <div className="app-shell-hero p-4">
+                <GeneratePageFromDescription variant="app" className="mb-0" />
               </div>
-              <div className="rounded-xl bg-[var(--app-surface-muted)] p-3">
-                <p className="text-2xl font-bold text-[var(--app-text)]">{publishedCount}</p>
-                <p className="text-sm text-[var(--app-text-muted)]">公開中</p>
-              </div>
-            </div>
-          </section>
+            </AppSection>
+          ) : null}
 
-          <section>
+          <AppSection>
+            <section className="app-shell-card overflow-hidden">
+              <div className="grid grid-cols-2 divide-x divide-[var(--app-border)]">
+                <div className="p-4 text-center">
+                  <p className="app-stat-value">{totalViews7d}</p>
+                  <p className="app-meta mt-1">閲覧（7日）</p>
+                </div>
+                <div className="p-4 text-center">
+                  <p className="app-stat-value">{publishedCount}</p>
+                  <p className="app-meta mt-1">公開中</p>
+                </div>
+              </div>
+              <AppListRow
+                href="/dashboard/analytics"
+                title="詳しい分析を見る"
+                subtitle="ページ別の閲覧数とQRの状況"
+              />
+            </section>
+          </AppSection>
+
+          <AppSection>
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-lg font-bold text-[var(--app-text)]">最近の作品</h2>
               <AppShellLink
                 href="/dashboard/pages"
-                className="text-sm font-semibold text-[var(--app-accent)]"
+                className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
               >
                 すべて
               </AppShellLink>
@@ -150,7 +208,7 @@ export function AppDashboardView() {
                   action={
                     <AppShellLink
                       href="/templates"
-                      className="app-touch-btn app-touch-btn-primary flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
+                      className="app-touch-btn app-touch-btn-primary app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
                     >
                       テンプレートを見る
                     </AppShellLink>
@@ -158,24 +216,26 @@ export function AppDashboardView() {
                 />
               </div>
             ) : (
-              <div className="mt-3 space-y-3">
+              <AppWorksList className="mt-3">
                 {recent.map((item) => {
                   const info = infoBySlug.get(item.slug);
                   return (
-                    <PageCard
-                      key={item.id}
-                      id={item.id}
-                      title={item.title}
-                      slug={item.slug}
-                      status={info?.status === "published" ? "published" : "draft"}
-                      updatedAt={info?.updatedAt ?? new Date().toISOString()}
-                      canEdit={canEdit}
-                    />
+                    <AppWorksListItemMotion key={item.id}>
+                      <AppWorksListItem
+                        id={item.id}
+                        title={item.title}
+                        status={info?.status === "published" ? "published" : "draft"}
+                        updatedAt={info?.updatedAt ?? new Date().toISOString()}
+                        showPublishSwitch={false}
+                        deleting={deletingId === item.id}
+                        onDelete={canEdit ? () => void handleDelete(item) : undefined}
+                      />
+                    </AppWorksListItemMotion>
                   );
                 })}
-              </div>
+              </AppWorksList>
             )}
-          </section>
+          </AppSection>
         </>
       )}
     </div>

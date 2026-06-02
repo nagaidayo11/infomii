@@ -1,9 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { RouteProgressProvider } from "@/components/app/RouteProgressContext";
 import { AppTabBar, APP_TAB_BAR_OFFSET } from "./AppTabBar";
+import { AppTabTransition } from "./AppTabTransition";
+import { AppToastProvider } from "./AppToastProvider";
 
 type AppTabLayoutProps = {
   children: ReactNode;
@@ -13,21 +14,19 @@ type AppTabLayoutProps = {
  * Native app shell: full-height content + fixed bottom tab bar (5 tabs).
  */
 export function AppTabLayout({ children }: AppTabLayoutProps) {
-  const pathname = usePathname() ?? "";
-
   return (
     <RouteProgressProvider>
+      <AppToastProvider>
       <div className="app-ambient-bg flex h-[100dvh] w-full flex-col overflow-hidden">
         <main
           className="app-shell-main min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4"
           style={{ paddingBottom: APP_TAB_BAR_OFFSET }}
         >
-          <div key={pathname} className="app-shell-page-enter">
-            {children}
-          </div>
+          <AppTabTransition>{children}</AppTabTransition>
         </main>
         <AppTabBar />
       </div>
+      </AppToastProvider>
     </RouteProgressProvider>
   );
 }
