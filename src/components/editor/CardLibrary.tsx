@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/lib/editor/card-library-config";
 import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
 import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-library-config";
 
@@ -45,10 +46,24 @@ type TooltipPosition = {
 };
 
 const TOOLTIP_VIEWPORT_MARGIN = 10;
-/** Layout width passed to blocks before the mild uniform scale below (readable “phone-ish” preview). */
-const LIVE_PREVIEW_NATURAL_WIDTH =300;
-/** Slightly shrink live block chrome (typography/media) inside the tooltip without changing relative layout between block types. */
+/** Layout width for desktop hover tooltip (readable “phone-ish” preview). */
+const LIVE_PREVIEW_NATURAL_WIDTH = 300;
+/** Slightly shrink live block chrome on desktop hover preview only. */
 const LIVE_PREVIEW_DETAIL_SCALE = 0.935;
+
+/** 外枠はそのまま、内側のブロック表示を枠いっぱいに広げる（モバイル / アプリ） */
+function useLibraryPreviewExpandInner(): boolean {
+  const { isAppShell } = useClientShell();
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return isAppShell || mobile;
+}
 /**
  * Fallback width for horizontal placement before the tooltip first measures — approx. preview column + paddings/chrome.
  */
@@ -84,7 +99,19 @@ const PREVIEW_SPEC_BY_TYPE: Record<CardType, PreviewSpec> = (Object.keys(CARD_TY
   {} as Record<CardType, PreviewSpec>
 );
 
-function LiveCardPreview({ card }: { card: EditorCard }) {
+function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expandInner?: boolean }) {
+  if (expandInner) {
+    return (
+      <div data-library-live-preview className="library-preview-root w-full">
+        <div className="library-preview-frame box-border w-full rounded-xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
+          <div className="library-preview-inner w-full min-w-0 overflow-hidden">
+            <CardRenderer card={card} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const scaledRef = useRef<HTMLDivElement | null>(null);
   /**
    * Avoid a tall placeholder height (previously 480px): it inflated the tooltip on first layout,
@@ -117,12 +144,13 @@ function LiveCardPreview({ card }: { card: EditorCard }) {
 
   const clipWidth = clipBox?.w ?? LIVE_PREVIEW_NATURAL_WIDTH * LIVE_PREVIEW_DETAIL_SCALE;
   const clipStyle =
-    clipBox != null
-      ? { width: clipBox.w, height: clipBox.h }
-      : { width: clipWidth };
+    clipBox != null ? { width: clipBox.w, height: clipBox.h } : { width: clipWidth };
 
   return (
-    <div className="box-border flex w-fit max-w-full justify-center bg-transparent p-0">
+    <div
+      data-library-live-preview
+      className="box-border flex w-fit max-w-full justify-center bg-transparent p-0"
+    >
       <div className="max-w-full overflow-hidden" style={clipStyle}>
         <div
           ref={scaledRef}
@@ -141,7 +169,7 @@ function LiveCardPreview({ card }: { card: EditorCard }) {
   );
 }
 
-function renderPreviewVisual(item: LibraryItem, spec: PreviewSpec) {
+function renderPreviewVisual(item: LibraryItem, spec: PreviewSpec, expandInner: boolean) {
   const previewCard = spec.previewData?.card;
   if (!previewCard) {
     return (
@@ -151,8 +179,8 @@ function renderPreviewVisual(item: LibraryItem, spec: PreviewSpec) {
     );
   }
   return (
-    <div className="w-fit max-w-full">
-      <LiveCardPreview card={previewCard} />
+    <div className={expandInner ? "w-full" : "w-fit max-w-full"}>
+      <LiveCardPreview card={previewCard} expandInner={expandInner} />
     </div>
   );
 }
@@ -163,12 +191,14 @@ function LibraryTooltipPortal({
   item,
   spec,
   anchorRef,
+  expandInner,
 }: {
   open: boolean;
   tooltipId: string;
   item: LibraryItem;
   spec: PreviewSpec;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
+  expandInner: boolean;
 }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const exitTimerRef = useRef<number | null>(null);
@@ -304,7 +334,9 @@ function LibraryTooltipPortal({
       }}
     >
       <div className="pointer-events-auto max-h-[calc(100vh-40px)] min-h-0 overflow-y-auto overflow-x-hidden">
-        <div className="flex justify-center overflow-hidden">{renderPreviewVisual(item, spec)}</div>
+        <div className={expandInner ? "w-full overflow-hidden" : "flex justify-center overflow-hidden"}>
+          {renderPreviewVisual(item, spec, expandInner)}
+        </div>
         <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
         <p className={"mt-1 text-[11px] leading-[1.45] " + (isBusinessType ? "text-violet-600" : "text-slate-500")}>
           {item.description}
@@ -320,11 +352,17 @@ function DescriptionWithTooltip({
   parentOpen,
   anchorRef,
   libraryAudience,
+  mobilePreviewOpen,
+  onMobilePreviewOpenChange,
+  onCloseMobilePreview,
 }: {
   item: LibraryItem;
   parentOpen: boolean;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
   libraryAudience: LibraryAudience;
+  mobilePreviewOpen: boolean;
+  onMobilePreviewOpenChange: (open: boolean) => void;
+  onCloseMobilePreview: () => void;
 }) {
   const previewCard = useMemo(
     () => createEmptyCard(item.type, `preview-${item.type}-${libraryAudience}`, 0, libraryAudience),
@@ -336,32 +374,23 @@ function DescriptionWithTooltip({
     previewData: { card: previewCard },
     showImage: false,
   };
-  const [mobileOpen, setMobileOpen] = useState(false);
   const tooltipId = useId();
-  const showTooltip = parentOpen || mobileOpen;
+  const showTooltip = parentOpen || mobilePreviewOpen;
+  const previewExpandInner = useLibraryPreviewExpandInner();
 
   useEffect(() => {
-    if (!mobileOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("[data-mobile-tooltip-trigger='true']") || target?.closest("[data-mobile-tooltip-panel='true']")) return;
-      setMobileOpen(false);
-    };
+    if (!mobilePreviewOpen) return;
     const onEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key === "Escape") onCloseMobilePreview();
     };
-    window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onEsc);
-    return () => {
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("keydown", onEsc);
-    };
-  }, [mobileOpen]);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [mobilePreviewOpen, onCloseMobilePreview]);
 
   const toggleMobileTooltip = (e: React.MouseEvent<HTMLSpanElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setMobileOpen((prev) => !prev);
+    onMobilePreviewOpenChange(!mobilePreviewOpen);
   };
 
   return (
@@ -377,32 +406,59 @@ function DescriptionWithTooltip({
           if (e.key !== "Enter" && e.key !== " ") return;
           e.preventDefault();
           e.stopPropagation();
-          setMobileOpen((prev) => !prev);
+          onMobilePreviewOpenChange(!mobilePreviewOpen);
         }}
         aria-expanded={showTooltip}
         aria-controls={tooltipId}
       >
         i
       </span>
-      <LibraryTooltipPortal open={parentOpen} tooltipId={tooltipId} item={item} spec={spec} anchorRef={anchorRef} />
-      {mobileOpen ? (
+      <LibraryTooltipPortal
+        open={parentOpen}
+        tooltipId={tooltipId}
+        item={item}
+        spec={spec}
+        anchorRef={anchorRef}
+        expandInner={previewExpandInner}
+      />
+      {mobilePreviewOpen ? (
         createPortal(
-          <div className="fixed inset-0 z-[9998] bg-black/35 p-4 lg:hidden" onClick={() => setMobileOpen(false)} role="dialog" aria-modal="true">
+          <div
+            data-mobile-block-preview-overlay="true"
+            className="fixed inset-0 z-[10000] bg-black/35 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${item.label}のプレビュー`}
+            onPointerDownCapture={(e) => {
+              if (e.target !== e.currentTarget) return;
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClickCapture={(e) => {
+              if (e.target !== e.currentTarget) return;
+              e.preventDefault();
+              e.stopPropagation();
+              onCloseMobilePreview();
+            }}
+          >
             <div
               data-mobile-tooltip-panel="true"
-              className="mx-auto mt-[14vh] w-full max-w-sm rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl"
+              className="pointer-events-auto mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="overflow-hidden">{renderPreviewVisual(item, spec)}</div>
-              <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
-              <p
-                className={
-                  "mt-1 text-[11px] leading-[1.45] " +
-                  (BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "text-violet-600" : "text-slate-500")
-                }
-              >
-                {item.description}
-              </p>
+              <div className="w-full overflow-hidden">{renderPreviewVisual(item, spec, previewExpandInner)}</div>
+              <div>
+                <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
+                <p
+                  className={
+                    "mt-1 text-[11px] leading-[1.45] " +
+                    (BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "text-violet-600" : "text-slate-500")
+                  }
+                >
+                  {item.description}
+                </p>
+              </div>
             </div>
           </div>,
           document.body
@@ -741,9 +797,19 @@ function LibraryItemButton({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
+  const blockAddClickRef = useRef(false);
   const [hoverOpen, setHoverOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const hoverPreviewEnabled = useEditorHoverPreviewEnabled();
+
+  const closeMobilePreview = useCallback(() => {
+    blockAddClickRef.current = true;
+    setMobilePreviewOpen(false);
+    window.setTimeout(() => {
+      blockAddClickRef.current = false;
+    }, 450);
+  }, []);
 
   const clearTimers = () => {
     if (openTimerRef.current) {
@@ -770,12 +836,23 @@ function LibraryItemButton({
     closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
   };
 
-  const handleAddClick = () => {
-    // Close preview immediately on add, and cancel delayed open from a prior hover-enter.
+  const handleAddClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (blockAddClickRef.current || mobilePreviewOpen) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (mobilePreviewOpen) closeMobilePreview();
+      return;
+    }
     clearTimers();
     setHoverOpen(false);
     setFocusOpen(false);
     onAdd(item.type);
+  };
+
+  const handleRowPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!mobilePreviewOpen) return;
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
@@ -784,6 +861,7 @@ function LibraryItemButton({
       key={`${sectionId}-${item.type}`}
       type="button"
       onClick={handleAddClick}
+      onPointerDown={handleRowPointerDown}
       onPointerEnter={hoverPreviewEnabled ? handlePointerEnter : undefined}
       onPointerLeave={hoverPreviewEnabled ? handlePointerLeave : undefined}
       onFocus={() => {
@@ -830,6 +908,9 @@ function LibraryItemButton({
             parentOpen={hoverPreviewEnabled && (hoverOpen || focusOpen)}
             anchorRef={buttonRef}
             libraryAudience={libraryAudience}
+            mobilePreviewOpen={mobilePreviewOpen}
+            onMobilePreviewOpenChange={setMobilePreviewOpen}
+            onCloseMobilePreview={closeMobilePreview}
           />
         </span>
       </div>

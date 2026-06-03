@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
@@ -9,7 +9,6 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
-import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -36,20 +35,11 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   return (
     <div
       data-inner-surface
-      className={`app-interactive relative overflow-hidden ${editorInnerRadiusClassName} bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5`}
+      className={`app-interactive relative w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5`}
     >
-      <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden">
+      <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden bg-slate-800">
         {image ? (
-          <div className="absolute inset-0">
-            <Image
-              src={image}
-              alt=""
-              fill
-              className="object-cover object-center"
-              unoptimized={shouldUseUnoptimizedImage(image)}
-              sizes="420px"
-            />
-          </div>
+          <EditorCoverImage src={image} alt={title || "ヒーロー"} priority sizes="420px" />
         ) : (
           <ImageUpload onUploaded={(url) => update("image", url)} className="relative z-0 h-full min-h-[140px] w-full" />
         )}

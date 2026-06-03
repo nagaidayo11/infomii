@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { HERO_SLIDER_MAX_ITEMS } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
@@ -61,10 +61,6 @@ function decodeImageUrl(src: string): Promise<void> {
     img.onerror = done;
     img.src = src;
   });
-}
-
-function unoptimizedRemote(src: string): boolean {
-  return src.startsWith("http");
 }
 
 export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
@@ -160,49 +156,6 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
 
-  if (bind.editable) {
-    const slides = Array.isArray(content.slides) ? (content.slides as SlideItem[]) : [];
-    return (
-      <section className="space-y-3">
-        <CardTitleInline
-          title={title}
-          onSave={(v) => editor.setPlainField("title", v)}
-          placeholder="見出し（任意）"
-          bind={bind}
-        />
-        <div className="space-y-2">
-          {slides.length === 0 ? (
-            <p className="text-sm text-slate-500">スライド画像が未設定です。設定パネルから画像を追加してください。</p>
-          ) : (
-            slides.map((slide, idx) => (
-              <div
-                key={idx}
-                data-inner-surface
-                className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 px-3 py-2 text-sm`}
-              >
-                <p className="text-xs text-slate-500">スライド {idx + 1}</p>
-                <PlainInline
-                  value={typeof slide.caption === "string" ? slide.caption : ""}
-                  onSave={(v) => editor.setArrayItemField("slides", idx, "caption", v, false)}
-                  bind={bind}
-                  className="mt-1 block w-full text-slate-700"
-                  placeholder="キャプション"
-                />
-                <PlainInline
-                  value={typeof slide.alt === "string" ? slide.alt : ""}
-                  onSave={(v) => editor.setArrayItemField("slides", idx, "alt", v, false)}
-                  bind={bind}
-                  className="mt-1 block w-full text-xs text-slate-500"
-                  placeholder="代替テキスト"
-                />
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-    );
-  }
-
   if (!hasSlides || normalizedSlides.length === 0) {
     return (
       <section data-inner-surface className={`${editorInnerRadiusClassName} border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500`}>
@@ -220,8 +173,12 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const hasCaption = showCaptions && current.caption.trim().length > 0;
   const shouldAnimate = transitionEnabled && !reducedMotion;
   const isTransitioning = shouldAnimate && previous != null;
-  const dotBottomClass = hasCaption ? "bottom-1.5 sm:bottom-2" : "bottom-2";
+  const dotBottomClass = hasCaption || bind.editable ? "bottom-1.5 sm:bottom-2" : "bottom-2";
   const titleFontWeight = getTitleFontSizeStyle().fontWeight;
+  const rawSlideIndex = rawSlides.findIndex(
+    (s) => typeof s?.src === "string" && s.src.trim() === current.src,
+  );
+  const captionSlideIndex = rawSlideIndex >= 0 ? rawSlideIndex : currentIndex;
 
   const moveTo = async (nextIndex: number, dir: 1 | -1) => {
     if (nextIndex === currentIndex) return;
@@ -273,8 +230,19 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const layerGpu = "pointer-events-none absolute inset-0 [backface-visibility:hidden] [transform:translateZ(0)]";
 
   return (
-    <section className="app-interactive space-y-3 transition-transform duration-200 ease-out hover:-translate-y-0.5">
-      {title ? <h3 className={`px-1 text-base ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>{title}</h3> : null}
+    <section className="app-interactive w-full space-y-3 transition-transform duration-200 ease-out hover:-translate-y-0.5">
+      {bind.editable ? (
+        <CardTitleInline
+          title={title}
+          onSave={(v) => editor.setPlainField("title", v)}
+          placeholder="見出し（任意）"
+          bind={bind}
+        />
+      ) : title ? (
+        <h3 className={`px-1 text-base ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          {title}
+        </h3>
+      ) : null}
       <div
         data-inner-surface
         className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent ${heightClass}`}
@@ -293,32 +261,27 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
           <>
             <div className={`${layerGpu} z-[1] will-change-transform`}>
               <div className="relative h-full w-full">
-                <Image
+                <EditorCoverImage
                   key={`hero-in-${currentIndex}`}
                   src={current.src}
                   alt={current.alt}
-                  fill
                   sizes="(max-width: 640px) 100vw, 640px"
-                  unoptimized={unoptimizedRemote(current.src)}
                   className="object-cover object-center"
                   style={incomingAnimationStyle}
                   priority={currentIndex === 0}
-                  loading="eager"
                 />
               </div>
             </div>
             <div className={`${layerGpu} z-[2] will-change-[opacity,transform]`}>
               <div className="relative h-full w-full">
-                <Image
+                <EditorCoverImage
                   key={`hero-out-${prevIndex}-${animationSeed}`}
                   src={previous.src}
                   alt={previous.alt}
-                  fill
                   sizes="(max-width: 640px) 100vw, 640px"
-                  unoptimized={unoptimizedRemote(previous.src)}
                   className="object-cover object-center"
                   style={outgoingAnimationStyle}
-                  loading="eager"
+                  priority
                 />
               </div>
             </div>
@@ -326,17 +289,14 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
         ) : (
           <div className={`${layerGpu} z-[1]`}>
             <div className="relative h-full w-full">
-              <Image
+              <EditorCoverImage
                 key={`hero-in-${currentIndex}`}
                 src={current.src}
                 alt={current.alt}
-                fill
                 sizes="(max-width: 640px) 100vw, 640px"
-                unoptimized={unoptimizedRemote(current.src)}
                 className="object-cover object-center"
                 style={{ transform: "translateZ(0)", WebkitBackfaceVisibility: "hidden" }}
                 priority={currentIndex === 0}
-                loading="eager"
               />
             </div>
           </div>
@@ -353,12 +313,25 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
             }}
           />
         ) : null}
-        {hasCaption ? (
+        {showCaptions && (hasCaption || bind.editable) ? (
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex min-h-14 items-end bg-gradient-to-t from-black/65 to-transparent px-3 pb-4 pt-2 text-sm text-white sm:pb-5"
+            className={
+              "absolute inset-x-0 bottom-0 z-20 flex min-h-14 items-end bg-gradient-to-t from-black/65 to-transparent px-3 pb-4 pt-2 text-sm text-white sm:pb-5 " +
+              (bind.editable ? "pointer-events-auto" : "pointer-events-none")
+            }
             style={{ ...getBodyFontSizeStyle(), fontWeight: titleFontWeight }}
           >
-            {current.caption}
+            {bind.editable ? (
+              <PlainInline
+                value={current.caption}
+                onSave={(v) => editor.setArrayItemField("slides", captionSlideIndex, "caption", v, false)}
+                bind={bind}
+                className="block w-full text-sm text-white"
+                placeholder="キャプション"
+              />
+            ) : (
+              current.caption
+            )}
           </div>
         ) : null}
         {canMove ? (
@@ -367,7 +340,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
               type="button"
               aria-label="前のスライド"
               onClick={() => void moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1)}
-              className={`absolute left-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-white hover:bg-black/60`}
+              className={`hero-slider-nav-btn absolute left-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-xs text-white hover:bg-black/60`}
             >
               ‹
             </button>
@@ -375,7 +348,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
               type="button"
               aria-label="次のスライド"
               onClick={() => void moveTo((currentIndex + 1) % normalizedSlides.length, 1)}
-              className={`absolute right-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-white hover:bg-black/60`}
+              className={`hero-slider-nav-btn absolute right-2 top-1/2 z-20 -translate-y-1/2 ${editorInnerRadiusClassName} bg-black/45 px-2 py-1 text-xs text-white hover:bg-black/60`}
             >
               ›
             </button>
@@ -386,7 +359,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
                   type="button"
                   aria-label={`スライド ${i + 1}`}
                   aria-current={i === currentIndex ? "true" : "false"}
-                  className={`h-2.5 w-2.5 ${editorInnerRadiusClassName} ${i === currentIndex ? "bg-white" : "bg-white/55"}`}
+                  className={`hero-slider-dot h-2.5 w-2.5 min-h-0 min-w-0 p-0 ${editorInnerRadiusClassName} ${i === currentIndex ? "bg-white" : "bg-white/55"}`}
                   onClick={() => void moveTo(i, i > currentIndex ? 1 : -1)}
                 />
               ))}

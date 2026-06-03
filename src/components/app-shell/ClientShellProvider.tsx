@@ -9,6 +9,7 @@ import {
   type ClientShell,
 } from "@/lib/client-shell";
 import { AppShellEffects } from "./AppShellEffects";
+import { AppToastProvider } from "./AppToastProvider";
 
 type ClientShellContextValue = {
   client: ClientShell;
@@ -44,10 +45,16 @@ export function ClientShellProvider({ children }: { children: ReactNode }) {
     [client],
   );
 
-  return (
-    <ClientShellContext.Provider value={value}>
+  const inner = (
+    <>
       <AppShellEffects />
       {children}
+    </>
+  );
+
+  return (
+    <ClientShellContext.Provider value={value}>
+      {client === "app" ? <AppToastProvider>{inner}</AppToastProvider> : inner}
     </ClientShellContext.Provider>
   );
 }

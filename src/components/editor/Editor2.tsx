@@ -5,6 +5,7 @@ import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { useAppToast } from "@/components/app-shell/AppToastProvider";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
@@ -85,6 +86,7 @@ export function Editor2({
 }: Editor2Props) {
   const isDemoMode = mode === "demo";
   const { isAppShell } = useClientShell();
+  const { showToast } = useAppToast();
   const useAppEditorChrome = isAppShell && !isDemoMode;
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -162,11 +164,21 @@ export function Editor2({
   const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
   const addCardRaw = useEditor2Store((s) => s.addCard);
+  const notifyBlockPlaced = useCallback(
+    (type: CardType) => {
+      if (!useAppEditorChrome) return;
+      const label = CARD_TYPE_LABELS[type] ?? type;
+      showToast(`「${label}」ブロックを配置しました`, "success");
+    },
+    [useAppEditorChrome, showToast],
+  );
+
   const addCard = useCallback(
     (type: CardType, index?: number) => {
       addCardRaw(type, index, libraryAudience);
+      notifyBlockPlaced(type);
     },
-    [addCardRaw, libraryAudience],
+    [addCardRaw, libraryAudience, notifyBlockPlaced],
   );
   const updateCard = useEditor2Store((s) => s.updateCard);
   const reorderCards = useEditor2Store((s) => s.reorderCards);
@@ -674,6 +686,7 @@ export function Editor2({
 
   const handleAddPreset = useCallback(
     (types: CardType[]) => {
+      let placed = 0;
       for (const type of types) {
         if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
           if (isDemoMode) {
@@ -683,10 +696,14 @@ export function Editor2({
           }
           continue;
         }
-        addCard(type);
+        addCardRaw(type, undefined, libraryAudience);
+        placed += 1;
+      }
+      if (useAppEditorChrome && placed > 0) {
+        showToast(`${placed}件のブロックを配置しました`, "success");
       }
     },
-    [addCard, translationEnabled, isDemoMode, openBusinessUpsell]
+    [addCardRaw, libraryAudience, translationEnabled, isDemoMode, openBusinessUpsell, useAppEditorChrome, showToast]
   );
 
   const handleClearAll = useCallback(() => {

@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { getLocalizedContent } from "@/lib/localized-content";
@@ -10,7 +10,6 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type ImageCardProps = {
   card: EditorCard;
@@ -48,15 +47,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
     <Card padding="none" className="">
       {src ? (
         <div data-inner-surface className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
-          <div className="absolute inset-0">
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              className="object-cover object-center"
-              unoptimized={shouldUseUnoptimizedImage(src)}
-            />
-          </div>
+          <EditorCoverImage src={src} alt={alt} sizes="420px" />
         </div>
       ) : (
         <div className={`aspect-video w-full ${editorInnerRadiusClassName}`}>

@@ -181,6 +181,37 @@
   font-size: max(16px, 1rem);
 }
 
+/* Block library preview: keep outer frame, stretch inner block symmetrically */
+[data-library-live-preview] .library-preview-inner,
+[data-library-live-preview] .library-preview-inner > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+[data-library-live-preview] .library-preview-inner [data-inner-surface],
+[data-library-live-preview] .library-preview-inner img,
+[data-library-live-preview] .library-preview-inner video {
+  max-width: 100%;
+}
+
+[data-library-live-preview] .hero-slider-dot,
+[data-client-shell="app"] [data-editor-layout] .hero-slider-dot {
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+
+[data-library-live-preview] .hero-slider-nav-btn,
+[data-client-shell="app"] [data-editor-layout] .hero-slider-nav-btn {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  line-height: 1;
+}
+
 [data-client-shell="app"] .editor-app-topbar {
   box-sizing: border-box;
 }
