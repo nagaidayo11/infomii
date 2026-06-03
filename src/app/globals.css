@@ -851,6 +851,31 @@ body.lux-shell:has(.lp-page)::before {
   margin-inline: auto;
 }
 
+/* Web settings (/settings): billing buttons must not overlap plan table below */
+.app-settings-billing-actions {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.5rem;
+}
+
+.app-settings-billing-actions .app-button-native {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.app-settings-plan-panel {
+  position: relative;
+  z-index: 0;
+  clear: both;
+  margin-top: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.app-settings-link-actions .app-button-native {
+  flex-shrink: 0;
+}
+
 .app-page-header {
   border-bottom: 1px solid rgba(16, 185, 129, 0.22);
   padding-bottom: 0.75rem;

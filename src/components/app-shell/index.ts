@@ -4,7 +4,6 @@ export { AppTabTransition } from "./AppTabTransition";
 export { AppToastProvider, useAppToast } from "./AppToastProvider";
 export { APP_TAB_CONFIGS, resolveAppTabId } from "./app-tab-config";
 export { AppShellLink } from "./AppShellLink";
-export { AppOnboardingTour } from "./AppOnboardingTour";
 export { ClientShellProvider, ClientShellContext } from "./ClientShellProvider";
 export { EditorAppTopBar } from "./EditorAppTopBar";
 export { useClientShell } from "./useClientShell";

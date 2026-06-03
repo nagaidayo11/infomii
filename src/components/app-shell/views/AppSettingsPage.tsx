@@ -3,6 +3,7 @@
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { LaunchOnboardingDevSection } from "@/components/settings/LaunchOnboardingDevSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
@@ -17,6 +18,7 @@ export function AppSettingsPage() {
       {!isAppShell ? <BusinessPlanSection /> : null}
       <AccountAuthLinkSection />
       <BusinessAuditLogExport />
+      <LaunchOnboardingDevSection />
     </>
   );
 
@@ -26,6 +28,7 @@ export function AppSettingsPage() {
         <ProfileDisplayNameSection />
         <AccountAuthLinkSection />
         <BusinessAuditLogExport />
+        <LaunchOnboardingDevSection />
         <AppSettingsSignOutSection />
       </AppSettingsShell>
     );

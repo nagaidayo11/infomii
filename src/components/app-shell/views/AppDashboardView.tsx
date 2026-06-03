@@ -17,7 +17,6 @@ import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-lab
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
 import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
-import { AppOnboardingTour } from "../AppOnboardingTour";
 import { AppShellLink } from "../AppShellLink";
 import { AppListRow } from "../primitives/AppListRow";
 import { AppSection } from "../primitives/AppSection";
@@ -135,8 +134,6 @@ export function AppDashboardView() {
 
   return (
     <div className="mx-auto w-full max-w-lg space-y-5 pb-4">
-      <AppOnboardingTour />
-
       {profileLoaded && greetingName ? (
         <header>
           {showWorkspaceName ? (

@@ -944,4 +944,222 @@
   [data-client-shell="app"] .app-plan-tier--current::after {
     animation: none;
   }
+
+  .launch-onboarding-card {
+    animation: none !important;
+  }
+
+  .launch-onboarding-card-slot .launch-onboarding-card--turn {
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* First-launch onboarding (pre-login, web + app WebView) */
+.launch-onboarding-root {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: max(0.625rem, env(safe-area-inset-top)) 1.25rem max(1.125rem, env(safe-area-inset-bottom));
+  background: linear-gradient(165deg, #f8fafc 0%, #eef2ff 42%, #f1f5f9 100%);
+  overflow: hidden;
+}
+
+.launch-onboarding-root--app {
+  padding-bottom: max(1.375rem, env(safe-area-inset-bottom));
+}
+
+.launch-onboarding-root--app .launch-onboarding-card {
+  touch-action: pan-y;
+}
+
+.launch-onboarding-root--app .launch-onboarding-dot:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.launch-onboarding-main {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 24rem;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.875rem;
+}
+
+.launch-onboarding-card-slot {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  perspective: 1400px;
+}
+
+.launch-onboarding-card-slot .launch-onboarding-card--turn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity, filter;
+}
+
+.launch-onboarding-brand {
+  flex-shrink: 0;
+  margin: 0;
+  padding-top: 0.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #64748b;
+}
+
+.launch-onboarding-card {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 1rem 1rem 1.15rem;
+  box-shadow:
+    0 22px 50px -24px rgba(15, 23, 42, 0.35),
+    0 8px 18px -12px rgba(15, 23, 42, 0.18);
+  touch-action: pan-y;
+}
+
+.launch-onboarding-preview {
+  flex: 1 1 auto;
+  min-height: 11rem;
+  width: 100%;
+  margin: 0;
+  display: flex;
+}
+
+/* Web は横余白が広い — やや低めの最小高さでテキスト領域を確保 */
+.launch-onboarding-preview--web {
+  min-height: 10rem;
+}
+
+.launch-onboarding-preview--web .launch-onboarding-preview-screen {
+  min-height: 10rem;
+}
+
+.launch-onboarding-preview--app .launch-onboarding-preview-image {
+  object-position: center top;
+}
+
+.launch-onboarding-preview-screen {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 11rem;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  box-shadow: 0 10px 28px -18px rgba(15, 23, 42, 0.35);
+}
+
+.launch-onboarding-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.launch-onboarding-kicker,
+.launch-onboarding-title,
+.launch-onboarding-body {
+  flex-shrink: 0;
+}
+
+.launch-onboarding-kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.launch-onboarding-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.launch-onboarding-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.launch-onboarding-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 0.125rem;
+}
+
+.launch-onboarding-footer-spacer {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+}
+
+[data-client-shell="app"] .launch-onboarding-footer .app-touch-btn-primary {
+  width: 100%;
+  background: var(--app-accent);
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.launch-onboarding-dots {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.launch-onboarding-main > button,
+.launch-onboarding-footer > button {
+  flex-shrink: 0;
+}
+
+.launch-onboarding-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: #cbd5e1;
+  transition:
+    width 220ms var(--ui-ease-out, ease),
+    background-color 220ms ease;
+  cursor: pointer;
+}
+
+.launch-onboarding-dot--active {
+  width: 1.35rem;
+  background: #0f172a;
+}
+
+.launch-onboarding-cta-final {
+  width: 100%;
 }

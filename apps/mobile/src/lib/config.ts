@@ -97,7 +97,7 @@ export function getWebOrigin(): string {
 
 export function getAppEntryUrl(): string {
   const origin = getWebOrigin();
-  return `${origin}/dashboard?client=app`;
+  return `${origin}/onboarding?client=app`;
 }
 
 /** Appended to the WebView user agent for Phase 1 client detection on the web app. */

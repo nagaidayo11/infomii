@@ -23,7 +23,6 @@ import {
 import type { DashboardBootstrapData } from "@/lib/storage";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
-import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FadeIn, ScrollReveal } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
@@ -199,7 +198,6 @@ function DashboardViewWeb() {
           {inviteNotice.text}
         </div>
       ) : null}
-      <OnboardingTour />
       <FadeIn>
         <header className="app-page-header">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-400">

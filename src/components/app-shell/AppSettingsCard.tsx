@@ -25,7 +25,10 @@ export function AppSettingsCard({ children, className = "", padding = "lg" }: Ap
   }
 
   return (
-    <Card padding={padding} className={`border-slate-200 ${className}`.trim()}>
+    <Card
+      padding={padding}
+      className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`.trim()}
+    >
       {children}
     </Card>
   );

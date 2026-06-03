@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
+import { isLaunchOnboardingCompleted } from "@/lib/launch-onboarding";
 import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
@@ -17,6 +18,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!enabled || loading || user) {
+      return;
+    }
+    if (!isLaunchOnboardingCompleted()) {
+      router.replace(isAppShell ? withAppClientQuery("/onboarding") : "/onboarding");
       return;
     }
     const nextPath = pathname ?? "/dashboard";

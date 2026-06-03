@@ -256,25 +256,61 @@ export function AccountAuthLinkSection() {
           Google連携を行うと、次回から Google でも同じアカウントにログインできます。
         </p>
 
-        <div className={isAppShell ? "app-settings-rows mt-4" : "mt-4 space-y-3"}>
-          <div className="app-settings-row flex items-center justify-between px-3 py-2.5">
+        <div
+          className={
+            isAppShell
+              ? "app-settings-rows mt-4"
+              : "app-settings-link-rows mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60 divide-y divide-slate-200"
+          }
+        >
+          <div className="app-settings-row flex items-center justify-between px-3 py-2.5 sm:px-4">
             <p className="text-sm font-medium text-slate-700">メールログイン</p>
-            <span className="app-settings-status-pill app-settings-status-pill--on">連携済み</span>
+            <span
+              className={
+                isAppShell
+                  ? "app-settings-status-pill app-settings-status-pill--on"
+                  : "inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700"
+              }
+            >
+              連携済み
+            </span>
           </div>
 
-          <div className="app-settings-row flex items-center justify-between px-3 py-2.5">
+          <div className="app-settings-row flex items-center justify-between px-3 py-2.5 sm:px-4">
             <p className="text-sm font-medium text-slate-700">Googleログイン</p>
             {checking ? (
               <span className="text-xs text-slate-500">確認中...</span>
             ) : googleLinked ? (
-              <span className="app-settings-status-pill app-settings-status-pill--on">連携済み</span>
+              <span
+                className={
+                  isAppShell
+                    ? "app-settings-status-pill app-settings-status-pill--on"
+                    : "inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700"
+                }
+              >
+                連携済み
+              </span>
             ) : (
-              <span className="app-settings-status-pill app-settings-status-pill--off">未連携</span>
+              <span
+                className={
+                  isAppShell
+                    ? "app-settings-status-pill app-settings-status-pill--off"
+                    : "inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600"
+                }
+              >
+                未連携
+              </span>
             )}
           </div>
         </div>
 
-        <div className={isAppShell ? "app-settings-actions mt-4 flex flex-col gap-2.5" : "mt-4"}>
+        <div
+          className={
+            isAppShell
+              ? "app-settings-actions mt-4 flex flex-col gap-2.5"
+              : "app-settings-link-actions mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+          }
+        >
           {!googleLinked ? (
             <button
               type="button"
