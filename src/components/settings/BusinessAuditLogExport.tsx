@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { triggerAuditLogCsvDownload } from "@/lib/audit-log-csv-export";
 import { getCurrentHotelSubscription, listCurrentHotelAuditLogs } from "@/lib/storage";
-import { Card } from "@/components/ui/Card";
+import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 
 const AUDIT_EXPORT_LIMIT = 500;
 
@@ -43,18 +43,18 @@ export function BusinessAuditLogExport() {
 
   if (!planLoaded) {
     return (
-      <Card padding="lg">
-        <div className="h-20 animate-pulse rounded-lg bg-slate-100" aria-hidden />
-      </Card>
+      <AppSettingsCard>
+        <div className="app-shell-skeleton h-24 rounded-2xl" aria-hidden />
+      </AppSettingsCard>
     );
   }
 
   if (!isBusiness) return null;
 
   return (
-    <Card padding="lg" className="border-slate-200">
+    <AppSettingsCard>
       <h2 className="text-base font-semibold text-slate-900">監査ログ（CSV）</h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+      <p className="app-settings-card-desc mt-2 text-sm leading-relaxed text-slate-600">
         施設内の主な操作履歴（公開・招待・課金関連など）を、最大 {AUDIT_EXPORT_LIMIT} 件まで CSV
         で保存できます。経理・内部共有用にご利用ください。
       </p>
@@ -67,6 +67,6 @@ export function BusinessAuditLogExport() {
         {busy ? "作成中…" : "CSVをダウンロード"}
       </button>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-    </Card>
+    </AppSettingsCard>
   );
 }

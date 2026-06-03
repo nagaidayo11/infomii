@@ -21,15 +21,17 @@
   "scripts": {
     "start": "EXPO_NO_METRO_LAZY=1 expo start --host lan",
     "start:clear": "EXPO_NO_METRO_LAZY=1 expo start -c --host lan",
+    "start:localhost": "EXPO_NO_METRO_LAZY=1 expo start -c --host localhost",
     "start:tunnel": "EXPO_NO_METRO_LAZY=1 expo start -c --tunnel",
     "start:8082": "EXPO_NO_METRO_LAZY=1 expo start -c --host lan --port 8082",
     "kill-metro": "lsof -ti :8081 | xargs kill -9 2>/dev/null || true",
     "clean": "rm -rf .expo node_modules/.cache",
     "restart": "npm run kill-metro && npm run clean && EXPO_NO_METRO_LAZY=1 expo start -c --host lan",
+    "restart:sim": "npm run kill-metro && npm run clean && EXPO_NO_METRO_LAZY=1 expo start -c --host localhost",
     "restart:tunnel": "npm run kill-metro && npm run clean && EXPO_NO_METRO_LAZY=1 expo start -c --tunnel",
     "open:lan": "open exp://$(ipconfig getifaddr en0 2>/dev/null || echo 127.0.0.1):8081",
     "android": "EXPO_NO_METRO_LAZY=1 expo start --android --host lan",
-    "ios": "EXPO_NO_METRO_LAZY=1 expo start --ios --host lan",
+    "ios": "EXPO_NO_METRO_LAZY=1 expo start --ios --host localhost",
     "web": "expo start --web"
   },
   "private": true

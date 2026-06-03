@@ -1,10 +1,11 @@
 "use client";
 
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { AppSection } from "../primitives/AppSection";
 
 export function AppBillingView() {
   return (
-    <div className="mx-auto w-full max-w-lg space-y-5 pb-8">
+    <div className="app-billing-page app-shell-page-enter mx-auto w-full max-w-lg space-y-5 pb-8">
       <header className="app-screen-header">
         <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">プラン</h1>
         <p className="app-screen-header-desc text-base text-[var(--app-text-muted)]">
@@ -12,12 +13,13 @@ export function AppBillingView() {
         </p>
       </header>
 
-      <div className="space-y-4 [&_section]:app-shell-card [&_section]:overflow-hidden [&_h2]:text-base [&_h2]:font-bold">
+      <AppSection className="app-billing-content">
         <BusinessPlanSection
+          layout="app"
           successPath="/settings/billing?billing=success"
           cancelPath="/settings/billing"
         />
-      </div>
+      </AppSection>
     </div>
   );
 }

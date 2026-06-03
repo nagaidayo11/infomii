@@ -11,7 +11,7 @@ import { AppSettingsShell } from "./AppSettingsShell";
 export function AppSettingsPage() {
   const { isAppShell } = useClientShell();
 
-  const content = (
+  const settingsSections = (
     <>
       <ProfileDisplayNameSection />
       {!isAppShell ? <BusinessPlanSection /> : null}
@@ -23,7 +23,9 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
-        {content}
+        <ProfileDisplayNameSection />
+        <AccountAuthLinkSection />
+        <BusinessAuditLogExport />
         <AppSettingsSignOutSection />
       </AppSettingsShell>
     );
@@ -35,7 +37,7 @@ export function AppSettingsPage() {
         <h1 className="app-page-title">設定</h1>
         <p className="app-page-subtitle">プランの案内と、Business向けの設定項目です。</p>
       </header>
-      {content}
+      {settingsSections}
     </div>
   );
 }

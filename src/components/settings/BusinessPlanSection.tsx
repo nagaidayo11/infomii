@@ -8,12 +8,14 @@ import {
   getCurrentUserHotelRole,
   type HotelSubscription,
 } from "@/lib/storage";
-import { Card } from "@/components/ui/Card";
+import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 type BusinessPlanSectionProps = {
   successPath?: string;
   cancelPath?: string;
+  /** Native app shell: stacked tiers, full-width CTAs, shimmer accents */
+  layout?: "default" | "app";
 };
 
 /**
@@ -22,7 +24,9 @@ type BusinessPlanSectionProps = {
 export function BusinessPlanSection({
   successPath = "/dashboard?billing=success",
   cancelPath = "/settings",
+  layout = "default",
 }: BusinessPlanSectionProps = {}) {
+  const isAppLayout = layout === "app";
   const [subscription, setSubscription] = useState<HotelSubscription | null | undefined>(undefined);
   const [busyAction, setBusyAction] = useState<"pro" | "business" | "portal" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -153,9 +157,12 @@ export function BusinessPlanSection({
 
   if (subscription === undefined || !roleLoaded) {
     return (
-      <Card padding="lg">
-        <div className="h-20 animate-pulse rounded-lg bg-slate-100" aria-hidden />
-      </Card>
+      <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>
+        <div
+          className={isAppLayout ? "app-shell-skeleton h-48 rounded-2xl" : "h-20 animate-pulse rounded-lg bg-slate-100"}
+          aria-hidden
+        />
+      </AppSettingsCard>
     );
   }
 
@@ -164,24 +171,38 @@ export function BusinessPlanSection({
     return null;
   }
 
+  const tierClass = (active: boolean) =>
+    `app-plan-tier rounded-2xl border px-4 py-4 ${active ? "app-plan-tier--current" : "border-slate-200 bg-white"}`;
+
   return (
-    <Card padding="lg" className="border-slate-200">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>
+      <div className={isAppLayout ? "" : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"}>
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-slate-900">プランと請求</h2>
-          <p className="mt-1 text-sm leading-relaxed text-slate-600">
-            多言語翻訳の自動補助、分析の CSV ダウンロード、公開ページ数の拡張など、運用が大きくなった施設向けのプランです。
-          </p>
+          {isAppLayout ? null : (
+            <p className="app-settings-card-desc mt-1 text-sm leading-relaxed text-slate-600">
+              多言語翻訳の自動補助、分析の CSV ダウンロード、公開ページ数の拡張など、運用が大きくなった施設向けのプランです。
+            </p>
+          )}
         </div>
       </div>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <div
+        className={
+          isAppLayout
+            ? "app-plan-actions mt-4 flex flex-col gap-2.5"
+            : "mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+        }
+      >
         {plan === "free" ? (
           <>
             <button
               type="button"
               onClick={() => void openCheckout("pro")}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-primary" : "")
+              }
             >
               {busyAction === "pro" ? "処理中…" : "Proを申し込む"}
             </button>
@@ -189,7 +210,10 @@ export function BusinessPlanSection({
               type="button"
               onClick={() => void openCheckout("business")}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " w-full" : "")
+              }
             >
               {busyAction === "business" ? "処理中…" : "Businessプランを申し込む"}
             </button>
@@ -201,7 +225,10 @@ export function BusinessPlanSection({
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-primary" : "")
+              }
             >
               {busyAction === "portal" ? "処理中…" : "Businessプランへアップグレード"}
             </button>
@@ -209,7 +236,10 @@ export function BusinessPlanSection({
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " w-full" : "")
+              }
             >
               サブスクリプションを管理 / 解約する
             </button>
@@ -221,7 +251,10 @@ export function BusinessPlanSection({
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-primary" : "")
+              }
             >
               {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
             </button>
@@ -229,17 +262,40 @@ export function BusinessPlanSection({
               type="button"
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
-              className="app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              className={
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " w-full" : "")
+              }
             >
               サブスクリプションを管理 / 解約する
             </button>
           </>
         ) : null}
       </div>
-      <div className="mt-4 rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 to-slate-50/60 p-5 sm:p-7">
-        <div className="flex flex-col gap-2 border-b border-emerald-100/80 pb-4 sm:flex-row sm:items-end sm:justify-between">
-          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800/90 sm:text-base">料金表</p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 sm:text-[15px]">
+      <div
+        className={
+          isAppLayout
+            ? "app-plan-table mt-5"
+            : "mt-4 rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 to-slate-50/60 p-5 sm:p-7"
+        }
+      >
+        <div
+          className={
+            isAppLayout
+              ? "app-plan-table-head flex flex-col gap-2 pb-3"
+              : "flex flex-col gap-2 border-b border-emerald-100/80 pb-4 sm:flex-row sm:items-end sm:justify-between"
+          }
+        >
+          <p
+            className={
+              isAppLayout
+                ? "text-sm font-bold text-[var(--app-text)]"
+                : "text-sm font-semibold uppercase tracking-wide text-emerald-800/90 sm:text-base"
+            }
+          >
+            料金プラン
+          </p>
+          <div className="app-plan-meta flex flex-col gap-1 text-sm text-[var(--app-text-muted)]">
             {showNextRenewal ? (
               <span>
                 次回更新日: <span className="font-medium text-slate-800">{currentPeriodEndLabel}</span>
@@ -257,14 +313,30 @@ export function BusinessPlanSection({
             ) : null}
           </div>
         </div>
-        <div className="mx-auto mt-5 grid w-full max-w-none gap-4 sm:grid-cols-3 lg:gap-6">
+        <div
+          className={
+            isAppLayout
+              ? "app-plan-tiers mt-3 flex flex-col gap-3"
+              : "mx-auto mt-5 grid w-full max-w-none gap-4 sm:grid-cols-3 lg:gap-6"
+          }
+        >
           <div
-            className={`rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-              plan === "free" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
-            }`}
+            className={
+              isAppLayout
+                ? tierClass(plan === "free")
+                : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
+                    plan === "free" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                  }`
+            }
           >
             {plan === "free" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+              <p
+                className={
+                  isAppLayout
+                    ? "app-plan-badge mb-2"
+                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                }
+              >
                 現在のプラン
               </p>
             ) : null}
@@ -277,12 +349,22 @@ export function BusinessPlanSection({
             </ul>
           </div>
           <div
-            className={`rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-              plan === "pro" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
-            }`}
+            className={
+              isAppLayout
+                ? tierClass(plan === "pro")
+                : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
+                    plan === "pro" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                  }`
+            }
           >
             {plan === "pro" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+              <p
+                className={
+                  isAppLayout
+                    ? "app-plan-badge mb-2"
+                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                }
+              >
                 現在のプラン
               </p>
             ) : null}
@@ -300,12 +382,22 @@ export function BusinessPlanSection({
             </ul>
           </div>
           <div
-            className={`rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-              plan === "business" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
-            }`}
+            className={
+              isAppLayout
+                ? tierClass(plan === "business")
+                : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
+                    plan === "business" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                  }`
+            }
           >
             {plan === "business" ? (
-              <p className="mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+              <p
+                className={
+                  isAppLayout
+                    ? "app-plan-badge mb-2"
+                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                }
+              >
                 現在のプラン
               </p>
             ) : null}
@@ -337,6 +429,6 @@ export function BusinessPlanSection({
         <p className="mt-2 text-xs text-slate-500">解約はStripeの管理画面でいつでも行えます。</p>
       ) : null}
       {message ? <p className="mt-2 text-xs text-rose-600">{message}</p> : null}
-    </Card>
+    </AppSettingsCard>
   );
 }

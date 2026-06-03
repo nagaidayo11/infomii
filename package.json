@@ -20,7 +20,8 @@
     "mobile:start": "npm run start --prefix apps/mobile",
     "mobile:restart": "npm run restart --prefix apps/mobile",
     "mobile:tunnel": "npm run restart:tunnel --prefix apps/mobile",
-    "mobile:ios": "npm run ios --prefix apps/mobile"
+    "mobile:ios": "npm run ios --prefix apps/mobile",
+    "mobile:sim": "npm run restart:sim --prefix apps/mobile"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

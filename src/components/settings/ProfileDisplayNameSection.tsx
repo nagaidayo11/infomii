@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Card } from "@/components/ui/Card";
+import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
@@ -70,19 +70,13 @@ export function ProfileDisplayNameSection() {
   }
 
   return (
-    <Card padding="lg" className="border-slate-200">
+    <AppSettingsCard>
       <h2 className="text-base font-semibold text-slate-900">表示名</h2>
-      <p className="mt-1 text-sm text-slate-600">
-        チーム画面や申請者表示に使います。空欄の場合はメールアドレスを表示します。
-      </p>
       {loading ? (
-        <p className="mt-3 text-sm text-slate-500">読み込み中…</p>
+        <div className="app-settings-loading mt-3 app-shell-skeleton h-12 rounded-xl" aria-label="読み込み中" />
       ) : (
         <form onSubmit={(ev) => void handleSubmit(ev)} className="mt-4 space-y-3">
           <div>
-            <label htmlFor="display-name" className="block text-sm font-medium text-slate-700">
-              表示名
-            </label>
             <input
               id="display-name"
               name="display-name"
@@ -91,7 +85,8 @@ export function ProfileDisplayNameSection() {
               onChange={(ev) => setValue(ev.target.value)}
               maxLength={80}
               autoComplete="nickname"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              aria-label="表示名"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="例: 施設 花子"
             />
           </div>
@@ -109,6 +104,6 @@ export function ProfileDisplayNameSection() {
           {message}
         </p>
       ) : null}
-    </Card>
+    </AppSettingsCard>
   );
 }

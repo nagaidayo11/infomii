@@ -233,7 +233,7 @@ function ConfigErrorPanel({
         <Text style={styles.retryLabel}>再試行</Text>
       </Pressable>
       <Text style={styles.errorFootnote}>
-        実機開発: ルートで npm run dev:lan（127.0.0.1 の dev では iPhone から届きません）→ npx expo start -c
+        実機開発: ルートで npm run dev:lan → apps/mobile で npm run restart（シミュレータは npm run ios）
       </Text>
     </View>
   );
