@@ -46,9 +46,6 @@ export function InfomiiWebView() {
   const [loadError, setLoadError] = useState<string | null>(
     originResolution.ok ? null : originResolution.message,
   );
-  const [originHint, setOriginHint] = useState<string | null>(
-    originResolution.ok ? (originResolution.hint ?? null) : null,
-  );
 
   const applySafeAreaToWeb = useCallback(() => {
     webViewRef.current?.injectJavaScript(injectedBeforeLoad);
@@ -168,16 +165,11 @@ export function InfomiiWebView() {
   return (
     <SafeAreaView style={styles.root} edges={[]}>
       <StatusBar style="auto" translucent backgroundColor="transparent" />
-      {originHint ? (
-        <View style={[styles.hintBanner, { marginTop: insets.top }]}>
-          <Text style={styles.hintText}>{originHint}</Text>
-        </View>
-      ) : null}
       <View
         style={[
           styles.webviewFrame,
           {
-            paddingTop: originHint ? 0 : insets.top,
+            paddingTop: insets.top,
             paddingLeft: insets.left,
             paddingRight: insets.right,
           },
@@ -251,17 +243,6 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
     backgroundColor: "transparent",
-  },
-  hintBanner: {
-    backgroundColor: "#ecfdf5",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#99f6e4",
-  },
-  hintText: {
-    fontSize: 12,
-    color: "#0f766e",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

@@ -13,7 +13,7 @@ const INVALID_ORIGIN_HINT_RE = /<|YOUR_MAC|MacのIP|example\.com/i;
 const LOCALHOST_ORIGIN_RE = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/i;
 
 export type WebOriginResolution =
-  | { ok: true; origin: string; hint?: string }
+  | { ok: true; origin: string }
   | { ok: false; origin: string; message: string };
 
 function getMetroLanHost(): string | null {
@@ -45,11 +45,7 @@ function replaceLocalhostWithLanHost(origin: string): WebOriginResolution | null
 
   const port = new URL(origin).port || "3000";
   const resolved = `http://${lanHost}:${port}`;
-  return {
-    ok: true,
-    origin: resolved,
-    hint: `実機のため ${origin} を ${resolved} に自動変換しました。`,
-  };
+  return { ok: true, origin: resolved };
 }
 
 export function resolveWebOrigin(): WebOriginResolution {
@@ -88,11 +84,7 @@ export function resolveWebOrigin(): WebOriginResolution {
     const lanHost = getMetroLanHost();
     if (lanHost) {
       const resolved = `http://${lanHost}:3000`;
-      return {
-        ok: true,
-        origin: resolved,
-        hint: `開発ビルドのため ${origin} の代わりに ${resolved} を開いています（ルートで npm run dev:lan が必要）`,
-      };
+      return { ok: true, origin: resolved };
     }
   }
 

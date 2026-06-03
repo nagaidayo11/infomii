@@ -197,7 +197,7 @@ function LibraryTooltipPortal({
   tooltipId: string;
   item: LibraryItem;
   spec: PreviewSpec;
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  anchorRef: React.RefObject<HTMLElement | null>;
   expandInner: boolean;
 }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -358,7 +358,7 @@ function DescriptionWithTooltip({
 }: {
   item: LibraryItem;
   parentOpen: boolean;
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  anchorRef: React.RefObject<HTMLElement | null>;
   libraryAudience: LibraryAudience;
   mobilePreviewOpen: boolean;
   onMobilePreviewOpenChange: (open: boolean) => void;
@@ -395,24 +395,18 @@ function DescriptionWithTooltip({
 
   return (
     <span className="relative block h-4 w-4 shrink-0">
-      <span
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         data-mobile-tooltip-trigger="true"
         aria-label="説明文を表示"
         className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 lg:hidden"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={toggleMobileTooltip}
-        onKeyDown={(e) => {
-          if (e.key !== "Enter" && e.key !== " ") return;
-          e.preventDefault();
-          e.stopPropagation();
-          onMobilePreviewOpenChange(!mobilePreviewOpen);
-        }}
         aria-expanded={showTooltip}
         aria-controls={tooltipId}
       >
         i
-      </span>
+      </button>
       <LibraryTooltipPortal
         open={parentOpen}
         tooltipId={tooltipId}
@@ -794,7 +788,7 @@ function LibraryItemButton({
   onAdd: (type: CardType) => void;
   libraryAudience: LibraryAudience;
 }) {
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const rowRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
   const blockAddClickRef = useRef(false);
@@ -836,10 +830,8 @@ function LibraryItemButton({
     closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
   };
 
-  const handleAddClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleAddClick = () => {
     if (blockAddClickRef.current || mobilePreviewOpen) {
-      e.preventDefault();
-      e.stopPropagation();
       if (mobilePreviewOpen) closeMobilePreview();
       return;
     }
@@ -849,18 +841,30 @@ function LibraryItemButton({
     onAdd(item.type);
   };
 
-  const handleRowPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+  const handleRowPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!mobilePreviewOpen) return;
     e.preventDefault();
     e.stopPropagation();
   };
 
+  const handleRowKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if ((e.target as HTMLElement).closest("[data-mobile-tooltip-trigger]")) return;
+    e.preventDefault();
+    handleAddClick();
+  };
+
   return (
-    <button
-      ref={buttonRef}
+    <div
+      ref={rowRef}
       key={`${sectionId}-${item.type}`}
-      type="button"
-      onClick={handleAddClick}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      onClick={() => {
+        if (disabled) return;
+        handleAddClick();
+      }}
+      onKeyDown={handleRowKeyDown}
       onPointerDown={handleRowPointerDown}
       onPointerEnter={hoverPreviewEnabled ? handlePointerEnter : undefined}
       onPointerLeave={hoverPreviewEnabled ? handlePointerLeave : undefined}
@@ -872,12 +876,13 @@ function LibraryItemButton({
         setFocusOpen(false);
       }}
       className={
-        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 " +
+        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 " +
         (!disabled
           ? "lg:hover:bg-slate-50 lg:hover:shadow-sm"
           : "cursor-not-allowed opacity-55")
       }
       aria-label={`${item.label}を追加`}
+      aria-disabled={disabled || undefined}
       title={disabled ? "Businessプラン限定ブロックです" : undefined}
     >
       <span
@@ -906,7 +911,7 @@ function LibraryItemButton({
           <DescriptionWithTooltip
             item={item}
             parentOpen={hoverPreviewEnabled && (hoverOpen || focusOpen)}
-            anchorRef={buttonRef}
+            anchorRef={rowRef}
             libraryAudience={libraryAudience}
             mobilePreviewOpen={mobilePreviewOpen}
             onMobilePreviewOpenChange={setMobilePreviewOpen}
@@ -914,7 +919,7 @@ function LibraryItemButton({
           />
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 

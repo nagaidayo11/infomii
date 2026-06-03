@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { formatRelativeTimeJa } from "@/lib/format-relative-time";
-import { withAppClientQuery } from "@/lib/app-href";
+import { AppShellLink } from "./AppShellLink";
 import { AppSwitch } from "./primitives/AppSwitch";
 
 export type AppWorksListItemProps = {
@@ -60,49 +59,40 @@ export function AppWorksListItem({
   onTogglePublish,
   onDelete,
 }: AppWorksListItemProps) {
-  const router = useRouter();
   const published = status === "published";
-  const editHref = withAppClientQuery(`/editor/${id}`);
-
-  function openEditor() {
-    router.push(editHref);
-  }
+  const editHref = `/editor/${id}`;
 
   return (
     <article className="app-shell-card ui-pop-card overflow-hidden">
-      <button
-        type="button"
-        onClick={openEditor}
-        className="app-pressable flex w-full items-center gap-2 border-0 bg-transparent px-4 py-3.5 text-left"
-      >
-        <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-[var(--app-text)]">
-          {title || "無題"}
-        </h3>
-        <span className="flex shrink-0 items-center gap-0.5">
-          {onDelete ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(id);
-              }}
-              disabled={deleting}
-              className="app-works-delete-btn ui-pop-tap"
-              aria-label={deleting ? "削除中" : "削除"}
-            >
-              {deleting ? (
-                <span
-                  className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-text-muted)] border-t-transparent"
-                  aria-hidden
-                />
-              ) : (
-                <TrashIcon />
-              )}
-            </button>
-          ) : null}
+      <div className="flex items-center gap-1 px-4 py-3.5">
+        <AppShellLink
+          href={editHref}
+          className="app-pressable flex min-w-0 flex-1 items-center gap-2 border-0 bg-transparent text-left no-underline"
+        >
+          <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-[var(--app-text)]">
+            {title || "無題"}
+          </h3>
           <ChevronRight />
-        </span>
-      </button>
+        </AppShellLink>
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={() => onDelete(id)}
+            disabled={deleting}
+            className="app-works-delete-btn ui-pop-tap shrink-0"
+            aria-label={deleting ? "削除中" : "削除"}
+          >
+            {deleting ? (
+              <span
+                className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--app-text-muted)] border-t-transparent"
+                aria-hidden
+              />
+            ) : (
+              <TrashIcon />
+            )}
+          </button>
+        ) : null}
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-[var(--app-border)] px-4 py-2.5">
         <span className="inline-flex items-center gap-1.5 text-sm text-[var(--app-text)]">

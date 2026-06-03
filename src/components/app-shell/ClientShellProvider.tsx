@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useEffect, useMemo, type ReactNode } from "react";
+import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   detectClientShell,
@@ -21,16 +21,26 @@ export const ClientShellContext = createContext<ClientShellContextValue>({
   isAppShell: false,
 });
 
+function detectClientShellFromSearch(search: string): ClientShell {
+  return detectClientShell({ search });
+}
+
 export function ClientShellProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
+  const search = searchParams?.toString() ? `?${searchParams.toString()}` : "";
 
-  const client = useMemo(() => {
-    const search = searchParams?.toString() ? `?${searchParams.toString()}` : "";
-    return detectClientShell({
-      search,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-    });
-  }, [searchParams]);
+  /** SSR と初回 hydration で同じ値にする（UA / document はマウント後に反映） */
+  const queryClient = useMemo(() => detectClientShellFromSearch(search), [search]);
+  const [client, setClient] = useState<ClientShell>(queryClient);
+
+  useEffect(() => {
+    setClient(
+      detectClientShell({
+        search,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      }),
+    );
+  }, [search]);
 
   useEffect(() => {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : undefined;
