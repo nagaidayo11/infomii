@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  AI_DEFAULT_HERO_SUBTITLE,
-  AI_DEFAULT_HERO_TITLE,
-  AI_GENERATED_PAGE_TITLE,
-  getAiPageDefaultImages,
-  inferAiPageImageTheme,
-} from "@/lib/ai-page-theme-images";
+import { finalizeAiPageCards } from "@/lib/ai-page-content-enrichment";
+import { AI_GENERATED_PAGE_TITLE, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
@@ -235,21 +230,20 @@ export async function POST(request: Request) {
     }
 
     const extracted = await extractHotelData(apiKey, url, pageText);
-    const themeHint = [extracted.hotelName, extracted.address, extracted.nearbyInfo, url].filter(Boolean).join(" ");
-    const imageDefaults = getAiPageDefaultImages(inferAiPageImageTheme(themeHint));
+    const description = [
+      extracted.hotelName,
+      extracted.address,
+      extracted.breakfastInfo,
+      extracted.nearbyInfo,
+      url,
+    ]
+      .filter(Boolean)
+      .join(" ");
     const baseCards = buildCardsFromExtracted(extracted);
-    const cards = [
-      {
-        type: "hero",
-        content: {
-          title: AI_DEFAULT_HERO_TITLE,
-          subtitle: AI_DEFAULT_HERO_SUBTITLE,
-          image: imageDefaults.primary,
-        },
-        order: 0,
-      },
-      ...baseCards.map((c, i) => ({ ...c, order: i + 1 })),
-    ];
+    const cards = finalizeAiPageCards(
+      baseCards.map((c, i) => ({ ...c, order: i })),
+      description || extracted.hotelName || "ホテル案内",
+    );
 
     if (cards.length === 0) {
       return NextResponse.json(

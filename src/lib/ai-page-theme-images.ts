@@ -68,6 +68,7 @@ const INBOUND_GALLERY = [
 ] as const;
 
 const BUSINESS_GALLERY = [
+  "/lp/demo/hotel-hero.jpg",
   PRESET_HERO_SAMPLE_IMAGE,
   PRESET_HERO_SLIDER_SECOND_SAMPLE_IMAGE,
   PRESET_HERO_SLIDER_THIRD_SAMPLE_IMAGE,
@@ -76,21 +77,31 @@ const BUSINESS_GALLERY = [
 ] as const;
 
 const TRAVEL_GALLERY = [
+  "/lp/demo/travel-hero.jpg",
+  "/lp/use-cases/travel.jpg",
   "/templates/previews/travel/travel-itinerary.jpg",
   "/templates/previews/travel/travel-weekend.jpg",
   "/templates/previews/travel/travel-group.jpg",
+  "/templates/previews/travel/travel-camp-outdoor.jpg",
 ] as const;
 
 const OSHI_GALLERY = [
+  "/lp/demo/oshi-hero.jpg",
+  "/lp/use-cases/oshi.jpg",
   "/templates/previews/oshi/oshi-live-set.jpg",
   "/templates/previews/oshi/oshi-fan-meet.jpg",
   "/templates/previews/oshi/oshi-link-hub.jpg",
+  "/templates/previews/oshi/oshi-offline-meetup.jpg",
 ] as const;
 
 const PERSONAL_GALLERY = [
+  "/lp/demo/cafe-hero.jpg",
+  "/lp/use-cases/date.jpg",
+  "/lp/use-cases/event.jpg",
   "/templates/previews/personal/personal-date-plan.jpg",
   "/templates/previews/personal/personal-link-collection.jpg",
   "/templates/previews/personal/personal-event-guide.jpg",
+  "/templates/previews/personal/personal-housewarming.jpg",
 ] as const;
 
 const THEME_GALLERY: Record<AiPageImageTheme, readonly string[]> = {
@@ -202,4 +213,48 @@ export function gallerySlotSrc(index: number, defaults: AiPageImageDefaults): st
   const g = defaults.gallery;
   if (g.length === 0) return defaults.primary;
   return g[index % g.length] ?? defaults.primary;
+}
+
+/** Slide captions bundled with themed local images (no external URLs). */
+export type ThemedSlidePreset = { src: string; alt: string; caption: string };
+
+const SLIDE_CAPTIONS: Record<AiPageImageTheme, readonly string[]> = {
+  travel: ["メインの集合写真", "移動・観光スポット", "お土産・休憩", "夜の予定", "翌日の出発"],
+  oshi: ["会場・入り口", "グッズ・列の目安", "開演前の集合", "終演後の待ち合わせ", "遠征のしおり"],
+  personal: ["待ち合わせ場所", "ランチ・カフェ", "おでかけのメイン", "リンクまとめ", "当日のリマインド"],
+  business: ["フロント・ロビー", "客室", "朝食会場", "周辺案内", "館内の過ごし方"],
+  resort: ["プール・ビーチ", "客室からの眺め", "レストラン", "アクティビティ", "夕暮れ"],
+  ryokan: ["玄関・外観", "和室", "大浴場", "食事会場", "庭園・散策"],
+  airbnb: ["外観・チェックイン", "リビング", "キッチン", "周辺マップ", "チェックアウト"],
+  guide: ["スポット①", "スポット②", "散策ルート", "おすすめカフェ", "帰り道"],
+  inbound: ["Lobby", "Room", "Breakfast", "Local area", "Check-out"],
+};
+
+export function themedSlidePresets(theme: AiPageImageTheme, defaults?: AiPageImageDefaults): ThemedSlidePreset[] {
+  const img = defaults ?? getAiPageDefaultImages(theme);
+  const captions = SLIDE_CAPTIONS[theme];
+  const count = Math.max(img.gallery.length, captions.length, 5);
+  return Array.from({ length: count }, (_, i) => {
+    const src = gallerySlotSrc(i, img);
+    return {
+      src,
+      alt: captions[i] ?? `slide-${i + 1}`,
+      caption: captions[i] ?? "",
+    };
+  }).slice(0, 5);
+}
+
+export function isHotelLikeDescription(text: string): boolean {
+  const s = text.toLowerCase();
+  return ["ホテル", "旅館", "宿泊", "フロント", "チェックイン", "チェックアウト", "館内案内", "hotel", "ryokan"].some(
+    (k) => s.includes(k.toLowerCase()),
+  );
+}
+
+export function isPersonalDailyDescription(text: string): boolean {
+  if (isHotelLikeDescription(text)) return false;
+  const s = text.toLowerCase();
+  return ["旅行", "推し", "ライブ", "デート", "おでかけ", "友達", "イベント", "勉強会", "リンク"].some((k) =>
+    s.includes(k.toLowerCase()),
+  );
 }

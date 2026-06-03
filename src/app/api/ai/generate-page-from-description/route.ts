@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { createSlug } from "@/lib/slug";
+import { finalizeAiPageCards, type AiGeneratedCard } from "@/lib/ai-page-content-enrichment";
 import {
   AI_GENERATED_PAGE_TITLE,
   gallerySlotSrc,
   getAiPageDefaultImages,
-  heroCopyForAiTheme,
   inferAiPageImageTheme,
+  isHotelLikeDescription,
+  isPersonalDailyDescription,
   normalizeGeneratedImageSrc,
   type AiPageImageDefaults,
-  type AiPageImageTheme,
 } from "@/lib/ai-page-theme-images";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
@@ -17,7 +18,11 @@ const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
 const FALLBACK_AI_MODEL = process.env.OPENAI_FALLBACK_MODEL ?? "gpt-4o-mini";
 
 const ALLOWED_TYPES = [
+  "hero",
+  "hero_slider",
   "welcome",
+  "heading_body",
+  "highlight",
   "notice",
   "schedule",
   "steps",
@@ -39,7 +44,11 @@ const ALLOWED_TYPES = [
 ] as const;
 
 const CARD_SCHEMAS: Record<string, string> = {
+  hero: '{"title":"string","subtitle":"string"}',
+  hero_slider: '{"title":"string","slides":[{"caption":"string","alt":"string"}]}',
   welcome: '{"title":"string","message":"string"}',
+  heading_body: '{"title":"string","body":"string"}',
+  highlight: '{"title":"string","body":"string","accent":"amber|rose"}',
   notice: '{"title":"string","body":"string","variant":"info|warning"}',
   schedule: '{"title":"string","items":[{"day":"string","time":"string","label":"string"}]}',
   steps: '{"title":"string","items":[{"title":"string","description":"string"}]}',
@@ -64,17 +73,41 @@ function normalizeText(value: unknown, maxLen = 300): string {
   return String(value ?? "").trim().slice(0, maxLen);
 }
 
-function buildDefaultHeroContent(img: AiPageImageDefaults, theme: AiPageImageTheme): Record<string, unknown> {
-  const copy = heroCopyForAiTheme(theme);
-  return {
-    title: copy.title,
-    subtitle: copy.subtitle,
-    image: img.primary,
-  };
-}
-
 function sanitizeCardContent(type: string, content: Record<string, unknown>, img: AiPageImageDefaults): Record<string, unknown> {
   switch (type) {
+    case "hero":
+      return {
+        title: normalizeText(content.title, 80),
+        subtitle: normalizeText(content.subtitle, 120),
+        image: normalizeGeneratedImageSrc(content.image, img.primary),
+      };
+    case "hero_slider": {
+      const slides = Array.isArray(content.slides) ? content.slides : [];
+      return {
+        title: normalizeText(content.title, 80),
+        slides: slides.slice(0, 5).map((item, index) => {
+          const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+          return {
+            caption: normalizeText(row.caption, 80),
+            alt: normalizeText(row.alt, 80),
+            src: normalizeGeneratedImageSrc(row.src, gallerySlotSrc(index, img)),
+          };
+        }),
+      };
+    }
+    case "heading_body":
+      return {
+        title: normalizeText(content.title, 80),
+        body: normalizeText(content.body, 600),
+        dividerEnabled: false,
+        dividerStyle: "solid",
+      };
+    case "highlight":
+      return {
+        title: normalizeText(content.title, 80),
+        body: normalizeText(content.body, 400),
+        accent: content.accent === "rose" ? "rose" : "amber",
+      };
     case "welcome":
       return {
         title: normalizeText(content.title, 80) || "ようこそ",
@@ -253,21 +286,6 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>, img
   }
 }
 
-function isHotelLikeDescription(text: string): boolean {
-  const s = text.toLowerCase();
-  return ["ホテル", "旅館", "宿泊", "フロント", "チェックイン", "チェックアウト", "館内案内", "hotel", "ryokan"].some(
-    (k) => s.includes(k.toLowerCase())
-  );
-}
-
-function isPersonalDailyDescription(text: string): boolean {
-  if (isHotelLikeDescription(text)) return false;
-  const s = text.toLowerCase();
-  return ["旅行", "推し", "ライブ", "デート", "おでかけ", "友達", "イベント", "勉強会", "リンク"].some((k) =>
-    s.includes(k.toLowerCase())
-  );
-}
-
 function ensureCoreHotelCards(
   cards: Array<{ type: string; content: Record<string, unknown>; order: number }>,
   description: string
@@ -380,12 +398,16 @@ async function generateCardsFromDescription(
       ? "個人向け（旅行・推し活・おでかけ・イベント）: schedule, steps, checklist, faq, map, pageLinks, notice を優先。wifi/checkout/emergency は説明に無い限り使わない。"
       : "説明に合うカードを選ぶ。宿泊・店舗・イベントのいずれにも対応可。";
 
-  const prompt = `あなたはスマホ1ページの案内カードを組み立てるAIです。ユーザーの説明に基づいてカードを生成してください。
+  const imageGuide =
+    "画像URL（src）は一切出力しない。hero は title/subtitle のみ。hero_slider は caption と alt のみ。image/gallery は alt のみ（src はサーバーがローカル素材を割り当てる）。";
+
+  const prompt = `あなたはスマホ1ページの案内カードを組み立てるAIです。ユーザーの説明に書かれた固有名詞・日時・場所・人数を必ず本文に反映してください。汎用の挨拶文だけのカードは避けてください。
 
 ユーザーの説明: "${description.slice(0, 800)}"
 
 文体: ${toneGuide}
 方針: ${scenarioGuide}
+画像: ${imageGuide}
 
 以下のカードタイプのみ使用: ${ALLOWED_TYPES.join(", ")}.
 各カードは type, content（下記スキーマ）, order（0始まり）を含める。
@@ -394,10 +416,10 @@ async function generateCardsFromDescription(
 ${schemas}
 
 出力例:
-- 旅行しおり → welcome, schedule, checklist, map, notice, pageLinks, faq
-- ライブ当日 → welcome, schedule, notice, checklist, faq, map
-- デートプラン → welcome, schedule, map, notice, pageLinks
-- ホテル案内（説明に宿泊がある場合のみ）→ welcome, wifi, breakfast, checkout, nearby, map
+- 旅行しおり → hero, hero_slider, welcome, schedule, checklist, map, notice, pageLinks, faq
+- ライブ当日 → hero, hero_slider, welcome, schedule, notice, checklist, faq, map
+- デートプラン → hero, heading_body, schedule, map, notice, pageLinks
+- ホテル案内（説明に宿泊がある場合のみ）→ hero, welcome, wifi, breakfast, checkout, nearby, map
 
 JSON配列のみ。マークダウンや説明は含めない。`;
 
@@ -427,16 +449,10 @@ JSON配列のみ。マークダウンや説明は含めない。`;
     throw new Error("No valid cards in AI response");
   }
 
-  const theme = inferAiPageImageTheme(description);
   const ordered = cards.sort((a, b) => a.order - b.order).map((c, i) => ({ ...c, order: i }));
-  const withHero = ordered.some((c) => c.type === "hero")
-    ? ordered
-    : [
-        { type: "hero", content: buildDefaultHeroContent(imageDefaults, theme), order: 0 },
-        ...ordered.map((c, i) => ({ ...c, order: i + 1 })),
-      ];
-  const completed = ensureCoreHotelCards(withHero, description);
-  return { cards: completed, modelUsed: aiResult.modelUsed, fallbackUsed: aiResult.fallbackUsed };
+  const completed = ensureCoreHotelCards(ordered as AiGeneratedCard[], description);
+  const finalized = finalizeAiPageCards(completed, description);
+  return { cards: finalized, modelUsed: aiResult.modelUsed, fallbackUsed: aiResult.fallbackUsed };
 }
 
 export async function POST(request: Request) {

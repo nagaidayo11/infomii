@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { finalizeAiPageCards } from "@/lib/ai-page-content-enrichment";
 import {
   gallerySlotSrc,
   getAiPageDefaultImages,
@@ -31,11 +32,12 @@ async function generateCardsFromDescription(
 ): Promise<Array<{ type: string; content: Record<string, unknown>; order: number }>> {
   const schemas = ALLOWED_TYPES.map((t) => `${t}: ${CARD_SCHEMAS[t]}`).join("\n");
 
-  const prompt = `あなたは宿泊施設・店舗向けのモバイル案内ページを生成するAIです。ユーザーの説明に基づいて、適切なカードを生成してください。
+  const prompt = `あなたは宿泊施設・店舗向けのモバイル案内ページを生成するAIです。ユーザーの説明の固有名詞・営業時間・住所を必ずカード本文に反映してください。
 
 ユーザーの説明: "${description.slice(0, 800)}"
 
 以下のカードタイプのみ使用: ${ALLOWED_TYPES.join(", ")}. 各カードは type, content（下記スキーマ）, order（0始まり）を含める。
+画像URL（src）は出力しない。image/gallery は alt のみ。
 
 スキーマ:
 ${schemas}
@@ -114,7 +116,8 @@ JSON配列のみ出力。マークダウン・説明禁止。`;
     throw new Error("No valid cards in AI response");
   }
 
-  return cards.sort((a, b) => a.order - b.order).map((c, i) => ({ ...c, order: i }));
+  const sorted = cards.sort((a, b) => a.order - b.order).map((c, i) => ({ ...c, order: i }));
+  return finalizeAiPageCards(sorted, description);
 }
 
 export async function POST(request: Request) {
