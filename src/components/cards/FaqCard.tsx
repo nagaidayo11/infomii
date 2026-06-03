@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type FaqItem = { q?: string; a?: string };
 
@@ -22,8 +23,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -50,8 +51,6 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
     updateCard(card.id, { content: { ...c, items: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md" className="">
       {title ? (
@@ -59,7 +58,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className={CARD_BLOCK_TITLE_CLASS}
           />
@@ -75,7 +74,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                 <InlineEditable
                   value={item.q ?? ""}
                   onSave={(v) => updateItem(i, "q", v)}
-                  editable={isSelected}
+                  editable={editable}
                   onActivate={onActivate}
                   className="font-bold text-slate-700"
                   placeholder={labels.q}
@@ -85,7 +84,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                 <InlineEditable
                   value={item.a ?? ""}
                   onSave={(v) => updateItem(i, "a", v)}
-                  editable={isSelected}
+                  editable={editable}
                   onActivate={onActivate}
                   multiline
                   className="block w-full min-h-[1lh] text-slate-600"

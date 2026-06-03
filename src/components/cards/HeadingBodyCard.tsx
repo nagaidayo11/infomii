@@ -7,6 +7,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type HeadingBodyCardProps = {
   card: EditorCard;
@@ -14,8 +15,8 @@ type HeadingBodyCardProps = {
 };
 
 export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = (card.content ?? {}) as Record<string, unknown>;
 
   const title = typeof c.title === "string" ? c.title : "";
@@ -26,8 +27,6 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
   const update = (key: "title" | "body", value: string) => {
     updateCard(card.id, { content: { ...c, [key]: value } });
   };
-
-  const onActivate = () => selectCard(card.id);
   const dividerClass = dividerStyle === "dashed" ? "border-dashed" : "border-solid";
   const dividerStyleObj: CSSProperties = {
     borderTopWidth: 1,
@@ -41,7 +40,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
           <InlineEditable
             value={title}
             onSave={(v) => update("title", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             placeholder="見出しテキスト"
             className={CARD_BLOCK_TITLE_CLASS}
@@ -52,7 +51,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
           <InlineEditable
             value={body}
             onSave={(v) => update("body", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             multiline
             placeholder="本文テキスト"

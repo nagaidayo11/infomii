@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type TextCardProps = {
   card: EditorCard;
@@ -20,8 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const raw = card.content?.content;
   const content = getLocalizedContent(raw as LocalizedString | undefined, locale);
   const labels =
@@ -39,8 +40,6 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
     updateCard(card.id, { content: { ...card.content, content: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="none" className="">
       <div
@@ -51,7 +50,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
         <InlineEditable
           value={content}
           onSave={updateContent}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           multiline
           className="font-normal text-slate-800"

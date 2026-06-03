@@ -9,6 +9,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type GalleryItem = { src?: string; alt?: string };
@@ -24,8 +25,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const content = card.content as Record<string, unknown>;
   const title = getLocalizedContent(content?.title as LocalizedString | undefined, locale);
   const items = (Array.isArray(content?.items) ? content.items : [{ src: "", alt: "" }]) as GalleryItem[];
@@ -45,13 +46,12 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...content, [key]: next } });
   };
-  const onActivate = () => selectCard(card.id);
 
   return (
     <Card padding="md" className="">
       {title ? (
         <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
         </p>
       ) : null}
       <div

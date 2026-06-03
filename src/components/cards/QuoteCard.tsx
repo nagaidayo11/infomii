@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon } from "./LineIcon";
 
 type QuoteCardProps = {
@@ -15,8 +16,8 @@ type QuoteCardProps = {
 };
 
 export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const quote = (c?.quote as string) ?? "";
   const author = (c?.author as string) ?? "";
@@ -33,8 +34,6 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
     updateCard(card.id, { content: { ...c, ...patch } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md">
       <div className="flex items-center gap-2 text-slate-500">
@@ -49,7 +48,7 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
         <InlineEditable
           value={quote}
           onSave={(v) => update({ quote: v })}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           multiline
           className="block min-h-[2em] leading-relaxed"
@@ -60,7 +59,7 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
         <InlineEditable
           value={author}
           onSave={(v) => update({ author: v })}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           className="inline-block"
           placeholder={labels.authorPlaceholder}

@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, PlainInline } from "./card-inline-fields";
 
 type TabsInfoCardProps = {
   card: EditorCard;
@@ -15,7 +17,9 @@ type TabsInfoCardProps = {
 type TabItem = { label?: string; body?: string };
 
 export function TabsInfoCard({ card }: TabsInfoCardProps) {
-  const content = (card.content ?? {}) as Record<string, unknown>;
+  const editor = useCardContentEditor(card);
+  const content = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof content.title === "string" ? content.title : "案内";
   const defaultIndexRaw = Number(content.defaultIndex);
   const tabs = useMemo(
@@ -26,7 +30,7 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
           body: typeof t?.body === "string" ? t.body : "",
         }))
         .slice(0, 8),
-    [content.tabs]
+    [content.tabs],
   );
   const defaultIndex =
     Number.isFinite(defaultIndexRaw) && defaultIndexRaw >= 0
@@ -35,11 +39,46 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
   const active = tabs[activeIndex] ?? tabs[0] ?? { label: "タブ", body: "" };
 
+  if (bind.editable) {
+    return (
+      <Card padding="md">
+        <CardTitleInline title={title} onSave={(v) => editor.setPlainField("title", v)} placeholder="案内" bind={bind} />
+        <div className="mt-3 space-y-3">
+          {tabs.map((tab, idx) => (
+            <div
+              key={idx}
+              data-inner-surface
+              className={`border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}
+            >
+              <p className="text-xs font-semibold text-slate-500">
+                <PlainInline
+                  value={tab.label}
+                  onSave={(v) => editor.setArrayItemField("tabs", idx, "label", v, false)}
+                  bind={bind}
+                  className="text-xs font-semibold text-slate-700"
+                  placeholder="タブ名"
+                />
+              </p>
+              <p className="mt-2 whitespace-pre-line text-slate-700" style={getBodyFontSizeStyle()}>
+                <PlainInline
+                  value={tab.body}
+                  onSave={(v) => editor.setArrayItemField("tabs", idx, "body", v, false)}
+                  bind={bind}
+                  multiline
+                  className="block w-full min-h-[1lh] whitespace-pre-line text-slate-700"
+                  placeholder="説明文"
+                />
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      <CardTitleInline title={title} onSave={(v) => editor.setPlainField("title", v)} placeholder="案内" bind={bind} />
       {tabs.length > 0 ? (
         <>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -62,7 +101,10 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
               );
             })}
           </div>
-          <div data-inner-surface className={`mt-3 border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}>
+          <div
+            data-inner-surface
+            className={`mt-3 border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}
+          >
             <p className="whitespace-pre-line text-slate-700" style={getBodyFontSizeStyle()}>
               {active.body || "説明文を設定してください。"}
             </p>

@@ -2,9 +2,11 @@
 
 import { useMemo } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, PlainInline } from "./card-inline-fields";
 
 type NoticeTickerCardProps = {
   card: EditorCard;
@@ -21,31 +23,54 @@ const DURATION_BY_SPEED: Record<Speed, number> = {
 };
 
 export function NoticeTickerCard({ card }: NoticeTickerCardProps) {
-  const content = (card.content ?? {}) as Record<string, unknown>;
+  const editor = useCardContentEditor(card);
+  const content = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof content.title === "string" ? content.title : "お知らせ";
   const speed = content.speed === "slow" || content.speed === "fast" ? content.speed : "normal";
   const pauseOnHover = content.pauseOnHover !== false;
   const items = useMemo(
     () =>
       (Array.isArray(content.items) ? content.items : [])
-        .filter((it): it is string => typeof it === "string" && it.trim().length > 0)
+        .map((it) => (typeof it === "string" ? it : ""))
         .slice(0, 12),
-    [content.items]
+    [content.items],
   );
-  const line = items.join("   •   ");
-  const shouldAnimate = line.length > 0;
+  const line = items.filter((it) => it.trim().length > 0).join("   •   ");
+  const shouldAnimate = line.length > 0 && !bind.editable;
 
   return (
     <Card padding="md">
-      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-        {title}
-      </p>
+      <CardTitleInline
+        title={title}
+        onSave={(v) => editor.setPlainField("title", v)}
+        placeholder="お知らせ"
+        bind={bind}
+      />
       <div
         data-inner-surface
         className={`mt-3 overflow-hidden border border-slate-200 bg-slate-50 px-3 py-2 ${editorInnerRadiusClassName}`}
         style={getBodyFontSizeStyle()}
       >
-        {shouldAnimate ? (
+        {bind.editable ? (
+          <div className="space-y-2">
+            {items.length === 0 ? (
+              <p className="text-slate-500">表示するお知らせを追加してください（設定パネル）。</p>
+            ) : (
+              items.map((text, idx) => (
+                <p key={idx} className="text-slate-700">
+                  <PlainInline
+                    value={text}
+                    onSave={(v) => editor.setStringArrayItem("items", idx, v)}
+                    bind={bind}
+                    className="block w-full text-slate-700"
+                    placeholder={`お知らせ ${idx + 1}`}
+                  />
+                </p>
+              ))
+            )}
+          </div>
+        ) : shouldAnimate ? (
           <div>
             <div
               className={`whitespace-nowrap text-slate-700 ${pauseOnHover ? "hover:[animation-play-state:paused]" : ""}`}
@@ -53,7 +78,9 @@ export function NoticeTickerCard({ card }: NoticeTickerCardProps) {
                 animation: `noticeTickerMarquee ${DURATION_BY_SPEED[speed]}s linear infinite`,
               }}
             >
-              {line}{"   •   "}{line}
+              {line}
+              {"   •   "}
+              {line}
             </div>
           </div>
         ) : (

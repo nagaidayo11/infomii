@@ -8,6 +8,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
@@ -41,8 +42,8 @@ function pageLinkShadowClass(strength: string): string {
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
 export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageLinksCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const c = card.content as Record<string, unknown> | undefined;
@@ -78,7 +79,6 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
   };
-  const onActivate = () => selectCard(card.id);
 
   const getHref = (item: PageLinksItem): string => {
     const linkType = item.linkType ?? "page";
@@ -123,7 +123,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
           <InlineEditable
             value={title}
             onSave={(v) => update({ title: v })}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className="text-slate-800"
             placeholder={labels.titlePlaceholder}
@@ -215,7 +215,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
                 onClick={onActivate}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && onActivate()}
+                onKeyDown={(e) => e.key === "Enter" && onActivate?.()}
               >
                 {content}
               </div>

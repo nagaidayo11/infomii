@@ -1,12 +1,13 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
-import { MenuCardHeroImage, MenuCategoryBannerImage, MenuItemThumb } from "@/components/cards/menu-card-visual";
+import { MenuCardHeroImage, MenuCategoryBannerImage } from "@/components/cards/menu-card-visual";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, MenuItemInlineRow, PlainInline } from "./card-inline-fields";
 
 type CatItem = {
   name?: string;
@@ -19,7 +20,9 @@ type CatItem = {
 type Category = { title?: string; imageSrc?: string; imageAlt?: LocalizedString; items?: CatItem[] };
 
 export function MenuCategoriesCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
-  const c = card.content as Record<string, unknown> | undefined;
+  const editor = useCardContentEditor(card);
+  const c = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const categories = (Array.isArray(c?.categories) ? c?.categories : []) as Category[];
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
@@ -28,11 +31,7 @@ export function MenuCategoriesCard({ card, locale = "ja" }: { card: EditorCard; 
 
   const body = (
     <>
-      {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          {title}
-        </p>
-      ) : null}
+      <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="メニュー" bind={bind} />
       <div className="mt-4 space-y-6">
         {categories.map((cat, ci) => {
           const catTitle = getLocalizedContent(cat.title as LocalizedString | undefined, locale);
@@ -40,45 +39,35 @@ export function MenuCategoriesCard({ card, locale = "ja" }: { card: EditorCard; 
           const items = Array.isArray(cat.items) ? cat.items : [];
           return (
             <div key={ci} className={ci > 0 ? "border-t border-slate-200/80 pt-6" : ""}>
-              {catTitle ? (
-                <p className="text-sm font-semibold tracking-wide text-slate-900" style={getBodyFontSizeStyle()}>
-                  {catTitle}
-                </p>
-              ) : null}
+              <p className="text-sm font-semibold tracking-wide text-slate-900" style={getBodyFontSizeStyle()}>
+                <PlainInline
+                  value={catTitle}
+                  onSave={(v) => editor.setCategoryField(ci, "title", v)}
+                  bind={bind}
+                  className="text-sm font-semibold tracking-wide text-slate-900"
+                  placeholder="カテゴリ名"
+                />
+              </p>
               <MenuCategoryBannerImage src={catImg} alt={cat.imageAlt} locale={locale} />
               <div className="mt-2 space-y-2">
-                {items.map((item, ii) => {
-                  const name = getLocalizedContent(item.name as LocalizedString | undefined, locale) || "";
-                  const price = getLocalizedContent(item.price as LocalizedString | undefined, locale);
-                  const description = getLocalizedContent(item.description as LocalizedString | undefined, locale);
-                  const tag = getLocalizedContent(item.tag as LocalizedString | undefined, locale);
-                  const imageSrc = typeof item.imageSrc === "string" ? item.imageSrc : "";
-                  return (
-                    <div
-                      key={ii}
-                      data-inner-surface
-                      className={`flex gap-3 ${editorInnerRadiusClassName} border border-slate-200/90 bg-white p-2.5 shadow-sm`}
-                    >
-                      <MenuItemThumb src={imageSrc} alt={item.imageAlt} locale={locale} />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold leading-snug text-slate-800" style={getBodyFontSizeStyle()}>
-                          {name}
-                          {price ? <span className="text-slate-900"> — {price}</span> : null}
-                          {tag ? (
-                            <span className="ml-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
-                              {tag}
-                            </span>
-                          ) : null}
-                        </p>
-                        {description ? (
-                          <p className="mt-1 leading-relaxed text-slate-500" style={getBodyFontSizeStyle()}>
-                            {description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
+                {items.map((item, ii) => (
+                  <MenuItemInlineRow
+                    key={ii}
+                    locale={locale}
+                    bind={bind}
+                    name={getLocalizedContent(item.name as LocalizedString | undefined, locale)}
+                    price={getLocalizedContent(item.price as LocalizedString | undefined, locale)}
+                    description={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+                    tag={getLocalizedContent(item.tag as LocalizedString | undefined, locale)}
+                    imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
+                    imageAlt={item.imageAlt}
+                    rowClassName="flex gap-3 rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-sm"
+                    onSaveName={(v) => editor.setCategoryItemField(ci, ii, "name", v)}
+                    onSavePrice={(v) => editor.setCategoryItemField(ci, ii, "price", v)}
+                    onSaveDescription={(v) => editor.setCategoryItemField(ci, ii, "description", v)}
+                    onSaveTag={(v) => editor.setCategoryItemField(ci, ii, "tag", v)}
+                  />
+                ))}
               </div>
             </div>
           );

@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type ButtonCardProps = {
   card: EditorCard;
@@ -20,8 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const href = (c?.href as string) ?? "#";
   const labels =
@@ -38,8 +39,6 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   const isEditor = isSelected !== undefined;
   return (
     <Card padding="md" className="">
@@ -50,7 +49,7 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
         onClick={isEditor ? (e) => e.preventDefault() : undefined}
         aria-disabled={isEditor ? true : undefined}
       >
-        <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={!!isSelected} onActivate={onActivate} className="text-white" placeholder={labels.buttonPlaceholder} />
+        <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={editable} onActivate={onActivate} className="text-white" placeholder={labels.buttonPlaceholder} />
       </a>
     </Card>
   );

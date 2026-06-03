@@ -2,10 +2,13 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type ScheduleCardProps = {
   card: EditorCard;
@@ -22,6 +25,10 @@ type ScheduleRule = {
   startDate?: string;
   endDate?: string;
 };
+
+function isLocalizedObj(v: unknown): v is Record<string, string> {
+  return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
+}
 
 function parseHourMinute(text: string | undefined): number | null {
   if (!text) return null;
@@ -41,7 +48,6 @@ function isRuleActive(rule: ScheduleRule, now: Date): boolean {
   const startMinutes = parseHourMinute(typeof rule.start === "string" ? rule.start : undefined);
   const endMinutes = parseHourMinute(typeof rule.end === "string" ? rule.end : undefined);
   if (startMinutes != null && endMinutes != null) {
-    // Overnight range support (e.g. 22:00-02:00)
     const inTimeRange =
       startMinutes <= endMinutes
         ? nowMinutes >= startMinutes && nowMinutes <= endMinutes
@@ -101,12 +107,17 @@ export function ScheduleCard({
   locale = "ja",
   businessFeaturesEnabled = false,
 }: ScheduleCardProps) {
+  const updateCard = useEditor2Store((s) => s.updateCard);
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
-    locale === "ko" ? { title: "운영 시간", day: "구분" } :
-    locale === "zh" ? { title: "营业时间", day: "分类" } :
-    locale === "en" ? { title: "Opening Hours", day: "Category" } :
-    { title: "営業時間", day: "区分" };
+    locale === "ko"
+      ? { title: "운영 시간", day: "구분", time: "시간", label: "메모", titlePh: "제목" }
+      : locale === "zh"
+        ? { title: "营业时间", day: "分类", time: "时间", label: "备注", titlePh: "标题" }
+        : locale === "en"
+          ? { title: "Opening Hours", day: "Category", time: "Time", label: "Note", titlePh: "Title" }
+          : { title: "営業時間", day: "区分", time: "時間", label: "補足", titlePh: "見出し" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const dynamicEnabled = c?.dynamicEnabled === true && businessFeaturesEnabled;
@@ -124,10 +135,34 @@ export function ScheduleCard({
   })();
   const hasActiveRows = activeIndices.size > 0;
 
+  const updateKey = (key: string, nextValue: string) => {
+    const cur = c?.[key];
+    const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
+    updateCard(card.id, { content: { ...c, [key]: next } });
+  };
+
+  const updateItem = (index: number, field: "day" | "time" | "label", value: string) => {
+    const next = [...items];
+    const row = { ...(next[index] ?? {}) } as Record<string, unknown>;
+    const cur = row[field];
+    row[field] = isLocalizedObj(cur) ? { ...cur, ja: value } : value;
+    next[index] = row;
+    updateCard(card.id, { content: { ...c, items: next } });
+  };
+
   return (
     <Card padding="md" className="">
       <div className="flex items-center justify-between gap-2">
-        {title ? <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p> : null}
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={labels.titlePh}
+          />
+        </p>
         {dynamicEnabled ? (
           <span
             className={
@@ -142,8 +177,10 @@ export function ScheduleCard({
       </div>
       <div className="mt-2 space-y-1.5">
         {items.slice(0, 5).map((item, index) => {
-          const day = getLocalizedContent(item.day as LocalizedString | undefined, locale) || labels.day;
-          const time = getLocalizedContent(item.time as LocalizedString | undefined, locale) || "-";
+          const day =
+            getLocalizedContent(item.day as LocalizedString | undefined, locale) || labels.day;
+          const time =
+            getLocalizedContent(item.time as LocalizedString | undefined, locale) || "-";
           const label = getLocalizedContent(item.label as LocalizedString | undefined, locale);
           const active = activeIndices.has(index);
           return (
@@ -157,8 +194,36 @@ export function ScheduleCard({
                   : "bg-slate-50")
               }
             >
-              <p className="font-normal text-slate-700" style={getBodyFontSizeStyle()}>{day}: {time}</p>
-              {label ? <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>{label}</p> : null}
+              <p className="font-normal text-slate-700" style={getBodyFontSizeStyle()}>
+                <InlineEditable
+                  value={day}
+                  onSave={(v) => updateItem(index, "day", v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="inline font-normal text-slate-700"
+                  placeholder={labels.day}
+                />
+                {": "}
+                <InlineEditable
+                  value={time === "-" ? "" : time}
+                  onSave={(v) => updateItem(index, "time", v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="inline font-normal text-slate-700"
+                  placeholder={labels.time}
+                />
+              </p>
+              <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
+                <InlineEditable
+                  value={label}
+                  onSave={(v) => updateItem(index, "label", v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  multiline
+                  className="block w-full min-h-[1lh] text-slate-500"
+                  placeholder={labels.label}
+                />
+              </p>
             </div>
           );
         })}

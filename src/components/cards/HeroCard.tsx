@@ -7,14 +7,15 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
 export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const image = (c?.image as string) ?? "";
@@ -31,7 +32,6 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const update = (key: string, value: string) => {
     updateCard(card.id, { content: { ...c, [key]: value } });
   };
-  const onActivate = () => selectCard(card.id);
 
   return (
     <div
@@ -58,12 +58,12 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
       <div className="absolute bottom-0 left-0 right-0 z-20 p-4 text-white">
         {title ? (
           <h2 className="leading-tight" style={getTitleFontSizeStyle()}>
-            <InlineEditable value={title} onSave={(v) => update("title", v)} editable={isSelected} onActivate={onActivate} className="text-white" placeholder={labels.titlePlaceholder} />
+            <InlineEditable value={title} onSave={(v) => update("title", v)} editable={editable} onActivate={onActivate} className="text-white" placeholder={labels.titlePlaceholder} />
           </h2>
         ) : null}
         {subtitle && (
           <p className="mt-1 opacity-95" style={getBodyFontSizeStyle()}>
-            <InlineEditable value={subtitle} onSave={(v) => update("subtitle", v)} editable={isSelected} onActivate={onActivate} className="text-white/95" placeholder={labels.subtitlePlaceholder} />
+            <InlineEditable value={subtitle} onSave={(v) => update("subtitle", v)} editable={editable} onActivate={onActivate} className="text-white/95" placeholder={labels.subtitlePlaceholder} />
           </p>
         )}
       </div>

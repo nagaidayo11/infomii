@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type WelcomeCardProps = {
   card: EditorCard;
@@ -20,8 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
   const labels =
@@ -40,8 +41,6 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card
       padding="lg"
@@ -52,7 +51,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className={CARD_BLOCK_TITLE_CLASS}
           />
@@ -62,7 +61,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
         <InlineEditable
           value={message}
           onSave={(v) => updateKey("message", v)}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           multiline
           className="block w-full min-h-[1lh] leading-relaxed text-slate-600"

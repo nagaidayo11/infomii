@@ -60,21 +60,23 @@ export function InlineEditable({
     else setLocal(value);
   };
 
+  const canInlineEdit = editable || Boolean(onActivate);
+
   const startEditing = (e: React.MouseEvent) => {
-    if (!editable) return;
+    if (!canInlineEdit) return;
     e.stopPropagation();
     onActivate?.();
     setEditing(true);
   };
 
   const handleFocus = () => {
-    if (!editable) return;
+    if (!canInlineEdit) return;
     onActivate?.();
     setEditing(true);
   };
 
   /** Guest / preview: plain text only — no focus ring, no keyboard focus, no click-to-edit affordance. */
-  if (!editable) {
+  if (!canInlineEdit) {
     const text = value || placeholder || "\u00a0";
     return (
       <span
@@ -88,8 +90,9 @@ export function InlineEditable({
   }
 
   if (editing) {
+    /** 16px+ avoids iOS Safari auto-zoom on focus */
     const baseClass =
-      "w-full resize-none border-0 bg-transparent p-0 outline-none rounded px-0.5 py-px transition-[box-shadow] duration-150 ease-out focus:ring-0 focus:shadow-[0_0_0_2px_rgba(37,99,235,0.2)] " +
+      "editor-inline-field w-full resize-none border-0 bg-transparent p-0 outline-none rounded px-0.5 py-px text-base leading-normal transition-[box-shadow] duration-150 ease-out focus:ring-0 focus:shadow-[0_0_0_2px_rgba(37,99,235,0.2)] " +
       className;
     if (multiline) {
       const lineCount = Math.min(12, Math.max(1, local.split("\n").length));

@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type KpiItem = { label?: string; value?: string };
@@ -17,8 +18,8 @@ type KpiCardProps = {
 };
 
 export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const items = (Array.isArray(c?.items) ? c.items : []) as KpiItem[];
   const labels =
@@ -35,8 +36,6 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
     updateCard(card.id, { content: { ...c, ...patch } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md">
       {title ? (
@@ -44,7 +43,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           <InlineEditable
             value={title}
             onSave={(v) => update({ title: v })}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.titlePlaceholder}
@@ -57,8 +56,34 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
         ) : (
           items.map((item, i) => (
             <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
-              <p className="text-xs text-slate-500">{item.label ?? ""}</p>
-              <p className="mt-1 text-lg font-normal text-slate-800">{item.value ?? ""}</p>
+              <p className="text-xs text-slate-500">
+                <InlineEditable
+                  value={item.label ?? ""}
+                  onSave={(v) => {
+                    const next = [...items];
+                    next[i] = { ...(next[i] ?? {}), label: v };
+                    update({ items: next });
+                  }}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="text-xs text-slate-500"
+                  placeholder="ラベル"
+                />
+              </p>
+              <p className="mt-1 text-lg font-normal text-slate-800">
+                <InlineEditable
+                  value={item.value ?? ""}
+                  onSave={(v) => {
+                    const next = [...items];
+                    next[i] = { ...(next[i] ?? {}), value: v };
+                    update({ items: next });
+                  }}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="text-lg font-normal text-slate-800"
+                  placeholder="数値"
+                />
+              </p>
             </div>
           ))
         )}

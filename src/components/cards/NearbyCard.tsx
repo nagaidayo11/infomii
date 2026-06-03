@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type NearbyItem = { name?: string; description?: string; link?: string };
 
@@ -22,8 +23,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -42,8 +43,6 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card
       padding="md"
@@ -51,7 +50,7 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
     >
       {title ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
         </p>
       ) : null}
       {items.length > 0 ? (

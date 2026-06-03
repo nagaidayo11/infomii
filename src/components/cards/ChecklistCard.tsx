@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type ChecklistItem = { text?: string; checked?: boolean };
@@ -17,8 +18,8 @@ type ChecklistCardProps = {
 };
 
 export function ChecklistCard({ card, isSelected = false, locale = "ja" }: ChecklistCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const items = (Array.isArray(c?.items) ? c.items : []) as ChecklistItem[];
   const labels =
@@ -35,22 +36,24 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
     updateCard(card.id, { content: { ...c, ...patch } });
   };
 
-  const onActivate = () => selectCard(card.id);
+  const updateItemText = (index: number, text: string) => {
+    const next = [...items];
+    next[index] = { ...(next[index] ?? {}), text };
+    update({ items: next });
+  };
 
   return (
     <Card padding="md">
-      {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          <InlineEditable
-            value={title}
-            onSave={(v) => update({ title: v })}
-            editable={isSelected}
-            onActivate={onActivate}
-            className={CARD_BLOCK_TITLE_CLASS}
-            placeholder={labels.titlePlaceholder}
-          />
-        </p>
-      ) : null}
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <InlineEditable
+          value={title}
+          onSave={(v) => update({ title: v })}
+          editable={editable}
+          onActivate={onActivate}
+          className={CARD_BLOCK_TITLE_CLASS}
+          placeholder={labels.titlePlaceholder}
+        />
+      </p>
       <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
           <li className="text-slate-500">{labels.empty}</li>
@@ -68,7 +71,16 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
                   <path d="m5 12 4 4 10-10" />
                 </svg>
               </span>
-              <span className="text-slate-700">{item.text ?? ""}</span>
+              <span className="min-w-0 flex-1 text-slate-700">
+                <InlineEditable
+                  value={item.text ?? ""}
+                  onSave={(v) => updateItemText(i, v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="block w-full text-slate-700"
+                  placeholder="項目"
+                />
+              </span>
             </li>
           ))
         )}

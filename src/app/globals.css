@@ -731,6 +731,17 @@ body.lux-shell:has(.lp-page)::before {
 
 /* Canvas area now follows unified POP font as well. */
 
+/* iOS Safari: focused inputs under 16px trigger page zoom */
+[data-editor-layout] .editor-inline-field,
+[data-editor-layout] .editor-card input[type="text"],
+[data-editor-layout] .editor-card input[type="search"],
+[data-editor-layout] .editor-card input[type="email"],
+[data-editor-layout] .editor-card input[type="tel"],
+[data-editor-layout] .editor-card input[type="url"],
+[data-editor-layout] .editor-card textarea {
+  font-size: max(16px, 1rem);
+}
+
 /* Override internal chip/cardlet backgrounds from block style (card defines data-inner-surface). */
 .editor-inner-surface-overridden [data-inner-surface] {
   background-color: var(--editor-inner-surface-bg, transparent) !important;

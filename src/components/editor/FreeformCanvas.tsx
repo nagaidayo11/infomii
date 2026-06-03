@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { getBlockStyle, isMediaCardType, type CardType, type EditorCard } from "./types";
 
@@ -537,6 +538,7 @@ export function FreeformCanvas({
   );
 
   return (
+    <CardEditProvider inlineEditable>
     <div
       ref={canvasRef}
       className="flex flex-1 flex-col overflow-hidden outline-none"
@@ -687,5 +689,6 @@ export function FreeformCanvas({
         </MobileCanvasFrame>
       </div>
     </div>
+    </CardEditProvider>
   );
 }

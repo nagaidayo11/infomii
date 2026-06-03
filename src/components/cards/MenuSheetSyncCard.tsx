@@ -2,18 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, PlainInline } from "./card-inline-fields";
 
 type CsvResponse = { ok?: boolean; rows?: string[][]; error?: string };
 
 const cache = new Map<string, { at: number; rows: string[][] }>();
 
 export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
-  const c = card.content as Record<string, unknown> | undefined;
+  const editor = useCardContentEditor(card);
+  const c = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const csvUrl = typeof c?.csvUrl === "string" ? c.csvUrl.trim() : "";
   const delimiter = typeof c?.delimiter === "string" && c.delimiter.length > 0 ? c.delimiter : ",";
@@ -89,9 +93,15 @@ export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; i
 
   const cell = (row: string[], idx: number) => (idx >= 0 && idx < row.length ? String(row[idx] ?? "").trim() : "");
 
+  const override = (index: number, field: string, fallback: string) => {
+    const overrides = Array.isArray(c?.rowOverrides) ? (c.rowOverrides as Array<Record<string, string>>) : [];
+    const v = overrides[index]?.[field];
+    return typeof v === "string" && v.length > 0 ? v : fallback;
+  };
+
   return (
     <Card padding="md">
-      {title ? <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>{title}</p> : null}
+      <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="メニュー" bind={bind} />
       {loading ? (
         <p className="mt-3 text-sm text-slate-500" style={getBodyFontSizeStyle()}>
           読み込み中…
@@ -99,7 +109,14 @@ export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; i
       ) : null}
       {!loading && failed ? (
         <p className="mt-3 text-sm text-amber-800" style={getBodyFontSizeStyle()}>
-          {fallbackText}
+          <PlainInline
+            value={fallbackText}
+            onSave={(v) => editor.setField("fallbackText", v)}
+            bind={bind}
+            multiline
+            className="block w-full min-h-[1lh] text-sm text-amber-800"
+            placeholder="読み込み失敗時の文言"
+          />
         </p>
       ) : null}
       {!loading && !failed && csvUrl && displayRows.length === 0 ? (
@@ -109,25 +126,51 @@ export function MenuSheetSyncCard({ card, locale = "ja" }: { card: EditorCard; i
       ) : null}
       <div className="mt-2 space-y-1.5">
         {displayRows.map((row, index) => {
-          const name = cell(row, nameCol);
-          const price = cell(row, priceCol);
-          const description = descCol >= 0 ? cell(row, descCol) : "";
-          const tag = tagCol >= 0 ? cell(row, tagCol) : "";
-          if (!name && !price && !description) return null;
+          const name = override(index, "name", cell(row, nameCol));
+          const price = override(index, "price", cell(row, priceCol));
+          const description = override(index, "description", descCol >= 0 ? cell(row, descCol) : "");
+          const tag = override(index, "tag", tagCol >= 0 ? cell(row, tagCol) : "");
+          if (!name && !price && !description && !bind.editable) return null;
           return (
             <div key={index} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 px-2.5 py-2`}>
               <p className="font-semibold text-slate-800" style={getBodyFontSizeStyle()}>
-                {name || "—"}
-                {price ? ` — ${price}` : ""}
-                {tag ? (
-                  <span className="ml-2 inline-block rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                    {tag}
+                <PlainInline
+                  value={name || "—"}
+                  onSave={(v) => editor.setRowOverrideField(index, "name", v)}
+                  bind={bind}
+                  className="inline font-semibold text-slate-800"
+                  placeholder="メニュー名"
+                />
+                {" — "}
+                <PlainInline
+                  value={price}
+                  onSave={(v) => editor.setRowOverrideField(index, "price", v)}
+                  bind={bind}
+                  className="inline font-semibold text-slate-800"
+                  placeholder="価格"
+                />
+                {tag || bind.editable ? (
+                  <span className="ml-2 inline-block">
+                    <PlainInline
+                      value={tag}
+                      onSave={(v) => editor.setRowOverrideField(index, "tag", v)}
+                      bind={bind}
+                      className="inline rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-medium text-slate-600"
+                      placeholder="タグ"
+                    />
                   </span>
                 ) : null}
               </p>
-              {description ? (
+              {description || bind.editable ? (
                 <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
-                  {description}
+                  <PlainInline
+                    value={description}
+                    onSave={(v) => editor.setRowOverrideField(index, "description", v)}
+                    bind={bind}
+                    multiline
+                    className="block w-full min-h-[1lh] text-slate-500"
+                    placeholder="説明"
+                  />
                 </p>
               ) : null}
             </div>

@@ -2,13 +2,15 @@
 
 import { useMemo } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
-import { MenuCardHeroImage, MenuItemThumb } from "@/components/cards/menu-card-visual";
+import { MenuCardHeroImage } from "@/components/cards/menu-card-visual";
 import { getNowMinutesInTimezone, isMinutesInSlot, parseHHmmToMinutes } from "@/lib/menu-time-utils";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, MenuItemInlineRow, PlainInline } from "./card-inline-fields";
 
 type Slot = {
   label?: string;
@@ -20,7 +22,9 @@ type Slot = {
 const EMPTY_SLOTS: Slot[] = [];
 
 export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
-  const c = card.content as Record<string, unknown> | undefined;
+  const editor = useCardContentEditor(card);
+  const c = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const bandLabel =
     getLocalizedContent(c?.currentBandLabel as LocalizedString | undefined, locale) || "ただいまのメニュー";
@@ -48,12 +52,83 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
     return null;
   }, [slots, tz]);
 
-  const items = active?.items && Array.isArray(active.items) ? active.items : [];
+  const renderSlotItems = (slot: Slot, slotIndex: number) => {
+    const items = slot?.items && Array.isArray(slot.items) ? slot.items : [];
+    return (
+      <div className="mt-2 space-y-2.5">
+        {items.map((item, itemIndex) => (
+          <MenuItemInlineRow
+            key={itemIndex}
+            locale={locale}
+            bind={bind}
+            name={getLocalizedContent(item.name as LocalizedString | undefined, locale)}
+            price={getLocalizedContent(item.price as LocalizedString | undefined, locale)}
+            description={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+            tag={getLocalizedContent(item.tag as LocalizedString | undefined, locale)}
+            imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
+            imageAlt={item.imageAlt as LocalizedString | undefined}
+            rowClassName={`flex gap-3 ${editorInnerRadiusClassName} border border-emerald-100 bg-emerald-50/40 p-2.5 shadow-sm`}
+            onSaveName={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "name", v)}
+            onSavePrice={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "price", v)}
+            onSaveDescription={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "description", v)}
+            onSaveTag={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "tag", v)}
+          />
+        ))}
+      </div>
+    );
+  };
 
-  const inner = (
+  const inner = bind.editable ? (
+    <>
+      <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="メニュー" bind={bind} />
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-emerald-700" style={getBodyFontSizeStyle()}>
+        <PlainInline
+          value={bandLabel}
+          onSave={(v) => editor.setField("currentBandLabel", v)}
+          bind={bind}
+          className="text-xs font-medium text-emerald-700"
+          placeholder="帯ラベル"
+        />
+      </p>
+      <div className="mt-3 space-y-4">
+        {slots.map((slot, slotIndex) => (
+          <div
+            key={slotIndex}
+            data-inner-surface
+            className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50/80 p-3`}
+          >
+            <p className="text-xs font-semibold text-slate-600">
+              <PlainInline
+                value={getLocalizedContent(slot.label as LocalizedString | undefined, locale)}
+                onSave={(v) => editor.setTimeBandSlotField(slotIndex, "label", v)}
+                bind={bind}
+                className="text-xs font-semibold text-slate-700"
+                placeholder="時間帯名"
+              />
+              <span className="ml-2 font-normal text-slate-400">
+                {String(slot.start ?? "")} – {String(slot.end ?? "")}
+              </span>
+            </p>
+            {renderSlotItems(slot, slotIndex)}
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-sm text-slate-600" style={getBodyFontSizeStyle()}>
+        <span className="text-xs text-slate-500">時間外メッセージ: </span>
+        <PlainInline
+          value={outsideMessage}
+          onSave={(v) => editor.setField("outsideMessage", v)}
+          bind={bind}
+          multiline
+          className="block w-full min-h-[1lh] text-sm text-slate-600"
+          placeholder="時間外メッセージ"
+        />
+      </p>
+    </>
+  ) : (
     <>
       {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <p className="font-semibold text-slate-900" style={getTitleFontSizeStyle()}>
           {title}
         </p>
       ) : null}
@@ -66,40 +141,12 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
             {bandLabel}
             {active.label ? ` · ${active.label}` : ""}
           </p>
-          <div className="mt-3 space-y-2.5">
-            {items.map((item, index) => {
-              const name = getLocalizedContent(item.name as LocalizedString | undefined, locale) || "";
-              const price = getLocalizedContent(item.price as LocalizedString | undefined, locale);
-              const description = getLocalizedContent(item.description as LocalizedString | undefined, locale);
-              const tag = getLocalizedContent(item.tag as LocalizedString | undefined, locale);
-              const imageSrc = typeof item.imageSrc === "string" ? item.imageSrc : "";
-              return (
-                <div
-                  key={index}
-                  data-inner-surface
-                  className={`flex gap-3 ${editorInnerRadiusClassName} border border-emerald-100 bg-emerald-50/40 p-2.5 shadow-sm`}
-                >
-                  <MenuItemThumb src={imageSrc} alt={item.imageAlt as LocalizedString | undefined} locale={locale} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold leading-snug text-slate-900" style={getBodyFontSizeStyle()}>
-                      {name}
-                      {price ? ` — ${price}` : ""}
-                      {tag ? (
-                        <span className="ml-2 inline-block rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-medium text-white">
-                          {tag}
-                        </span>
-                      ) : null}
-                    </p>
-                    {description ? (
-                      <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-                        {description}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {renderSlotItems(
+            active,
+            slots.findIndex(
+              (s) => s.start === active.start && s.end === active.end && s.label === active.label,
+            ),
+          )}
         </>
       ) : (
         <p className="mt-3 text-sm text-slate-600" style={getBodyFontSizeStyle()}>

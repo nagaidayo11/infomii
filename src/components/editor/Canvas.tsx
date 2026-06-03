@@ -19,6 +19,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { getBlockStyle, isMediaCardType, type EditorCard } from "./types";
 
 /** Guest viewport widths (matches public page). */
@@ -337,6 +338,7 @@ export function Canvas({
   };
 
   return (
+    <CardEditProvider inlineEditable>
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
@@ -474,5 +476,6 @@ export function Canvas({
         );
       })()}
     </DndContext>
+    </CardEditProvider>
   );
 }

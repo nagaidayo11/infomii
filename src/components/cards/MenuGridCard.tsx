@@ -5,6 +5,8 @@ import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } f
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, PlainInline } from "./card-inline-fields";
 
 type MenuGridCardProps = {
   card: EditorCard;
@@ -40,7 +42,9 @@ function getCellPaddingClass(value: unknown): string {
 }
 
 export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
-  const c = card.content as Record<string, unknown> | undefined;
+  const editor = useCardContentEditor(card);
+  const c = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const columns = clampColumns(c?.columns);
   const rows = normalizeRows(c?.rows, columns);
@@ -52,11 +56,7 @@ export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
   if (!rows.length) {
     return (
       <Card padding="md">
-        {title ? (
-          <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            {title}
-          </p>
-        ) : null}
+        <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="メニュー表" bind={bind} />
         <p className="mt-3 text-sm text-slate-500" style={getBodyFontSizeStyle()}>
           メニュー表の行データがありません。
         </p>
@@ -69,11 +69,7 @@ export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
 
   return (
     <Card padding="md">
-      {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          {title}
-        </p>
-      ) : null}
+      <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="メニュー表" bind={bind} />
       <div className="mt-3 overflow-x-auto">
         <table className={`min-w-full border-separate border-spacing-0 rounded-lg bg-white ${showBorder ? "overflow-hidden" : ""}`}>
           {headerRow ? (
@@ -85,7 +81,13 @@ export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
                     className={`${cellPaddingClass} ${borderClass} bg-slate-100 text-left text-xs font-semibold text-slate-700`}
                     style={getBodyFontSizeStyle()}
                   >
-                    {cell || "—"}
+                    <PlainInline
+                      value={cell}
+                      onSave={(v) => editor.setGridHeaderCell(idx, v)}
+                      bind={bind}
+                      className="text-xs font-semibold text-slate-700"
+                      placeholder="—"
+                    />
                   </th>
                 ))}
               </tr>
@@ -100,7 +102,13 @@ export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
                     className={`${cellPaddingClass} ${borderClass} align-top text-slate-700 ${!hasHeader && rowIdx === 0 ? "font-medium" : ""}`}
                     style={getBodyFontSizeStyle()}
                   >
-                    {cell || " "}
+                    <PlainInline
+                      value={cell}
+                      onSave={(v) => editor.setGridCell(rowIdx, colIdx, v)}
+                      bind={bind}
+                      className="text-slate-700"
+                      placeholder=" "
+                    />
                   </td>
                 ))}
               </tr>

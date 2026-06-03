@@ -6,6 +6,8 @@ import type { EditorCard } from "@/components/editor/types";
 import { HERO_SLIDER_MAX_ITEMS } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, PlainInline } from "./card-inline-fields";
 
 type SlideItem = {
   src?: string;
@@ -66,7 +68,9 @@ function unoptimizedRemote(src: string): boolean {
 }
 
 export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
-  const content = (card.content ?? {}) as Record<string, unknown>;
+  const editor = useCardContentEditor(card);
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
+  const content = editor.content;
   const title = typeof content.title === "string" ? content.title : "";
   const rawSlides = useMemo(
     () => ((Array.isArray(content.slides) ? content.slides : []) as SlideItem[]),
@@ -155,6 +159,49 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       : heightPreset === "l"
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
+
+  if (bind.editable) {
+    const slides = Array.isArray(content.slides) ? (content.slides as SlideItem[]) : [];
+    return (
+      <section className="space-y-3">
+        <CardTitleInline
+          title={title}
+          onSave={(v) => editor.setPlainField("title", v)}
+          placeholder="見出し（任意）"
+          bind={bind}
+        />
+        <div className="space-y-2">
+          {slides.length === 0 ? (
+            <p className="text-sm text-slate-500">スライド画像が未設定です。設定パネルから画像を追加してください。</p>
+          ) : (
+            slides.map((slide, idx) => (
+              <div
+                key={idx}
+                data-inner-surface
+                className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 px-3 py-2 text-sm`}
+              >
+                <p className="text-xs text-slate-500">スライド {idx + 1}</p>
+                <PlainInline
+                  value={typeof slide.caption === "string" ? slide.caption : ""}
+                  onSave={(v) => editor.setArrayItemField("slides", idx, "caption", v, false)}
+                  bind={bind}
+                  className="mt-1 block w-full text-slate-700"
+                  placeholder="キャプション"
+                />
+                <PlainInline
+                  value={typeof slide.alt === "string" ? slide.alt : ""}
+                  onSave={(v) => editor.setArrayItemField("slides", idx, "alt", v, false)}
+                  bind={bind}
+                  className="mt-1 block w-full text-xs text-slate-500"
+                  placeholder="代替テキスト"
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+    );
+  }
 
   if (!hasSlides || normalizedSlides.length === 0) {
     return (

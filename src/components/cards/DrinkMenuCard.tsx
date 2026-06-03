@@ -1,15 +1,17 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
-import { MenuCardHeroImage, MenuItemThumb } from "@/components/cards/menu-card-visual";
+import { MenuCardHeroImage } from "@/components/cards/menu-card-visual";
+import { useCardContentEditor } from "./card-content-edit";
+import { CardTitleInline, MenuItemInlineRow } from "./card-inline-fields";
 
 export function DrinkMenuCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
-  const c = card.content as Record<string, unknown> | undefined;
+  const editor = useCardContentEditor(card);
+  const c = editor.content;
+  const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
@@ -18,42 +20,24 @@ export function DrinkMenuCard({ card, locale = "ja" }: { card: EditorCard; isSel
 
   const body = (
     <>
-      {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          {title}
-        </p>
-      ) : null}
+      <CardTitleInline title={title} onSave={(v) => editor.setField("title", v)} placeholder="ドリンク" bind={bind} />
       <div className="mt-3 space-y-2.5">
-        {items.map((item, index) => {
-          const name = getLocalizedContent(item.name as LocalizedString | undefined, locale) || "";
-          const sizes = getLocalizedContent(item.sizes as LocalizedString | undefined, locale);
-          const note = getLocalizedContent(item.note as LocalizedString | undefined, locale);
-          const imageSrc = typeof item.imageSrc === "string" ? item.imageSrc : "";
-          return (
-            <div
-              key={index}
-              data-inner-surface
-              className={`flex gap-3 ${editorInnerRadiusClassName} border border-slate-200/90 bg-white p-2.5 shadow-sm`}
-            >
-              <MenuItemThumb src={imageSrc} alt={item.imageAlt as LocalizedString | undefined} locale={locale} />
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold leading-snug text-slate-900" style={getBodyFontSizeStyle()}>
-                  {name}
-                </p>
-                {sizes ? (
-                  <p className="mt-0.5 text-slate-700" style={getBodyFontSizeStyle()}>
-                    {sizes}
-                  </p>
-                ) : null}
-                {note ? (
-                  <p className="mt-1 text-xs text-slate-500" style={getBodyFontSizeStyle()}>
-                    {note}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+        {items.map((item, index) => (
+          <MenuItemInlineRow
+            key={index}
+            locale={locale}
+            bind={bind}
+            name={getLocalizedContent(item.name as LocalizedString | undefined, locale)}
+            sizes={getLocalizedContent(item.sizes as LocalizedString | undefined, locale)}
+            note={getLocalizedContent(item.note as LocalizedString | undefined, locale)}
+            imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
+            imageAlt={item.imageAlt as LocalizedString | undefined}
+            rowClassName="flex gap-3 rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-sm"
+            onSaveName={(v) => editor.setArrayItemField("items", index, "name", v)}
+            onSaveSizes={(v) => editor.setArrayItemField("items", index, "sizes", v)}
+            onSaveNote={(v) => editor.setArrayItemField("items", index, "note", v)}
+          />
+        ))}
       </div>
     </>
   );

@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { VideoUpload } from "@/components/editor/VideoUpload";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { parseVideoEmbed } from "@/lib/video-embed";
@@ -21,8 +22,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const videoUrl = typeof c?.videoUrl === "string" ? c.videoUrl.trim() : "";
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -67,8 +68,6 @@ export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCard
 
   const setVideoUrl = (url: string) => updateCard(card.id, { content: { ...c, videoUrl: url } });
 
-  const onActivate = () => selectCard(card.id);
-
   const iframePointerClass = isSelected ? "pointer-events-none" : "pointer-events-auto";
 
   return (
@@ -78,7 +77,7 @@ export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCard
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.titlePh}
@@ -122,7 +121,7 @@ export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCard
           <InlineEditable
             value={caption}
             onSave={(v) => updateKey("caption", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className="text-xs text-slate-500"
             placeholder={labels.capPh}

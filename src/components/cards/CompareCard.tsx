@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardContentEditor } from "./card-content-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type CompareCardProps = {
@@ -28,8 +29,9 @@ function normalizePricingRows(raw: unknown, colCount: number): { label: unknown;
 }
 
 export function CompareCard({ card, isSelected = false, locale = "ja" }: CompareCardProps) {
+  const editor = useCardContentEditor(card);
+  const { editable, onActivate } = editor;
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -63,22 +65,22 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
     updateCard(card.id, { content: { ...c, ...patch } });
   };
 
-  const onActivate = () => selectCard(card.id);
+  const saveLocalized = (key: string, value: string) => {
+    editor.setField(key, value);
+  };
 
   return (
     <Card padding="md">
-      {title ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-          <InlineEditable
-            value={title}
-            onSave={(v) => update({ title: v })}
-            editable={isSelected}
-            onActivate={onActivate}
-            className={CARD_BLOCK_TITLE_CLASS}
-            placeholder={labels.placeholder}
-          />
-        </p>
-      ) : null}
+      <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <InlineEditable
+          value={title}
+          onSave={(v) => saveLocalized("title", v)}
+          editable={editable}
+          onActivate={onActivate}
+          className={CARD_BLOCK_TITLE_CLASS}
+          placeholder={labels.placeholder}
+        />
+      </p>
 
       {usePricingTable ? (
         <div className="mt-3 overflow-x-auto" style={getBodyFontSizeStyle()}>
@@ -104,7 +106,14 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                     }
                     style={getTitleFontSizeStyle()}
                   >
-                    {h}
+                    <InlineEditable
+                      value={h}
+                      onSave={(v) => editor.setPricingHeader(ci, v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      className="font-semibold text-slate-800"
+                      placeholder="プラン"
+                    />
                   </th>
                 ))}
               </tr>
@@ -120,7 +129,14 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                 pricingRows.map((row, ri) => (
                   <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50/80"}>
                     <th scope="row" className="border-t border-slate-200 px-3 py-2.5 font-medium text-slate-700">
-                      {getLocalizedContent(row.label as LocalizedString, locale)}
+                      <InlineEditable
+                        value={getLocalizedContent(row.label as LocalizedString, locale)}
+                        onSave={(v) => editor.setPricingRowLabel(ri, v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        className="font-medium text-slate-700"
+                        placeholder={labels.corner}
+                      />
                     </th>
                     {row.values.map((cell, ci) => (
                       <td
@@ -130,7 +146,15 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                           (highlightColumnIndex === ci ? "bg-emerald-50/90 font-medium text-slate-800 ring-1 ring-emerald-200/60" : "")
                         }
                       >
-                        {cell}
+                        <InlineEditable
+                          value={cell}
+                          onSave={(v) => editor.setPricingCell(ri, ci, v)}
+                          editable={editable}
+                          onActivate={onActivate}
+                          className="block w-full whitespace-pre-wrap text-slate-600"
+                          placeholder="—"
+                          multiline
+                        />
                       </td>
                     ))}
                   </tr>
@@ -143,15 +167,49 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
         <div className="mt-3 grid grid-cols-2 gap-2" style={getBodyFontSizeStyle()}>
           <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
             <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-              {leftTitle}
+              <InlineEditable
+                value={leftTitle}
+                onSave={(v) => saveLocalized("leftTitle", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className={CARD_BLOCK_TITLE_CLASS}
+                placeholder={labels.left}
+              />
             </p>
-            <p className="mt-1 whitespace-pre-wrap font-normal text-slate-600">{leftBody}</p>
+            <p className="mt-1 whitespace-pre-wrap font-normal text-slate-600">
+              <InlineEditable
+                value={leftBody}
+                onSave={(v) => saveLocalized("leftBody", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className="block w-full min-h-[1lh] whitespace-pre-wrap text-slate-600"
+                placeholder="左カラムの本文"
+                multiline
+              />
+            </p>
           </div>
           <div data-inner-surface className={`${editorInnerRadiusClassName} border border-slate-200 bg-slate-50 p-3`}>
             <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-              {rightTitle}
+              <InlineEditable
+                value={rightTitle}
+                onSave={(v) => saveLocalized("rightTitle", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className={CARD_BLOCK_TITLE_CLASS}
+                placeholder={labels.right}
+              />
             </p>
-            <p className="mt-1 whitespace-pre-wrap font-normal text-slate-600">{rightBody}</p>
+            <p className="mt-1 whitespace-pre-wrap font-normal text-slate-600">
+              <InlineEditable
+                value={rightBody}
+                onSave={(v) => saveLocalized("rightBody", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className="block w-full min-h-[1lh] whitespace-pre-wrap text-slate-600"
+                placeholder="右カラムの本文"
+                multiline
+              />
+            </p>
           </div>
         </div>
       )}

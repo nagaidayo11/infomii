@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon } from "./LineIcon";
 
 type MapCardProps = {
@@ -71,8 +72,8 @@ function normalizeMapEmbedUrl(raw: string): string | null {
 }
 
 export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
   const mapEmbedUrl = normalizeMapEmbedUrl((c?.mapEmbedUrl as string) ?? "");
@@ -93,13 +94,11 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md" className="">
       {title ? (
         <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
         </p>
       ) : null}
       {mapEmbedUrl ? (
@@ -120,7 +119,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
         </div>
       )}
       <p className="mt-2 text-slate-700" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={isSelected} onActivate={onActivate} className="text-slate-700" placeholder={labels.addressPlaceholder} />
+        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={editable} onActivate={onActivate} className="text-slate-700" placeholder={labels.addressPlaceholder} />
       </p>
     </Card>
   );

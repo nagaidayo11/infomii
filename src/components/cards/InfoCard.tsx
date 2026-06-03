@@ -8,6 +8,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
 
 type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -15,8 +16,8 @@ type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string }
 type InfoRow = { label?: string; value?: string };
 
 export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const localeLabels =
     locale === "ko"
@@ -33,7 +34,6 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
   };
-  const onActivate = () => selectCard(card.id);
 
   return (
     <Card padding="md">
@@ -46,7 +46,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         </span>
         {title ? (
           <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
+            <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
           </h3>
         ) : null}
       </div>
@@ -69,7 +69,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
                     next[i] = { ...next[i], value: v };
                     update({ rows: next });
                   }}
-                  editable={isSelected}
+                  editable={editable}
                   onActivate={onActivate}
                   className="text-right font-normal text-slate-800"
                   placeholder={localeLabels.value}

@@ -9,6 +9,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type ImageCardProps = {
@@ -22,8 +23,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const src = (c?.src as string | undefined) ?? "";
   const alt = getLocalizedContent(c?.alt as LocalizedString | undefined, locale);
@@ -42,7 +43,6 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
   const updateSrc = (v: string) => updateCard(card.id, { content: { ...c, src: v } });
-  const onActivate = () => selectCard(card.id);
 
   return (
     <Card padding="none" className="">
@@ -65,7 +65,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
       )}
       {(src || isSelected) && (isSelected || alt.trim().length > 0) && (
         <p className="mt-2 px-1 text-xs text-slate-500">
-          <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-500" placeholder={labels.altPlaceholder} />
+          <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={editable} onActivate={onActivate} className="text-xs text-slate-500" placeholder={labels.altPlaceholder} />
         </p>
       )}
     </Card>

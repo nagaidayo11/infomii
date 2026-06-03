@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type WifiCardProps = {
   card: EditorCard;
@@ -20,8 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const ssid = getLocalizedContent(c?.ssid as LocalizedString | undefined, locale);
@@ -42,8 +43,6 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="none" className="">
       <div data-inner-surface className={`flex flex-col gap-1.5 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2.5`}>
@@ -53,7 +52,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`}
             placeholder={labels.title}
@@ -65,7 +64,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
         <InlineEditable
           value={ssid}
           onSave={(v) => updateKey("ssid", v)}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           className="text-xs text-slate-600"
           placeholder={labels.ssid}
@@ -76,7 +75,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
         <InlineEditable
           value={password}
           onSave={(v) => updateKey("password", v)}
-          editable={isSelected}
+          editable={editable}
           onActivate={onActivate}
           className="text-xs font-mono text-slate-600"
           placeholder={labels.password}
@@ -87,7 +86,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
           <InlineEditable
             value={description}
             onSave={(v) => updateKey("description", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             multiline
             className="block w-full min-h-[1lh] text-xs text-slate-500"

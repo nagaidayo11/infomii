@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type NoticeCardProps = {
   card: EditorCard;
@@ -20,8 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
   const variant = (c?.variant as string) ?? "info";
@@ -42,8 +43,6 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="none">
       <div
@@ -55,7 +54,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
             <InlineEditable
               value={title}
               onSave={(v) => updateKey("title", v)}
-              editable={isSelected}
+              editable={editable}
               onActivate={onActivate}
               className={`leading-tight ${CARD_BLOCK_TITLE_CLASS}`}
             />
@@ -65,7 +64,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
           <InlineEditable
             value={body}
             onSave={(v) => updateKey("body", v)}
-            editable={isSelected}
+            editable={editable}
             onActivate={onActivate}
             multiline
             className="text-slate-600 leading-normal"

@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
 
 type IconCardProps = {
@@ -21,8 +22,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const icon = ((c?.icon as string) ?? "📍").trim() || "📍";
   const label = getLocalizedContent(c?.label as LocalizedString | undefined, locale);
@@ -41,8 +42,6 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
-
-  const onActivate = () => selectCard(card.id);
   const tokenLike = /^[a-z0-9:-]+$/i.test(icon);
   const showLineIcon = tokenLike || icon.startsWith("svg:");
   const normalizedIconName = normalizeIconToken(icon, "info");
@@ -62,10 +61,10 @@ export function IconCard({ card, isSelected, locale = "ja" }: IconCardProps) {
         </div>
         <div className="min-w-0">
           <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.labelPlaceholder} className={CARD_BLOCK_TITLE_CLASS} />
+            <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={editable} onActivate={onActivate} placeholder={labels.labelPlaceholder} className={CARD_BLOCK_TITLE_CLASS} />
           </p>
           <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
-            <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={isSelected} onActivate={onActivate} placeholder={labels.descriptionPlaceholder} className="text-slate-600" />
+            <InlineEditable value={description} onSave={(v) => updateKey("description", v)} editable={editable} onActivate={onActivate} placeholder={labels.descriptionPlaceholder} className="text-slate-600" />
           </p>
         </div>
       </div>

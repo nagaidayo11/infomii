@@ -7,6 +7,7 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type BreakfastCardProps = {
   card: EditorCard;
@@ -19,8 +20,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 }
 
 export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
@@ -41,25 +42,23 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md" className="">
       {title ? (
         <p className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
         </p>
       ) : null}
       <p className="mt-1 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.time}:{" "}
-        <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder="7:00–9:30" />
+        <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={editable} onActivate={onActivate} className="text-xs text-slate-600" placeholder="7:00–9:30" />
       </p>
       <p className="mt-0.5 text-xs text-slate-600" style={getBodyFontSizeStyle()}>
         {labels.location}:{" "}
-        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={isSelected} onActivate={onActivate} className="text-xs text-slate-600" placeholder={labels.locationPlaceholder} />
+        <InlineEditable value={location} onSave={(v) => updateKey("location", v)} editable={editable} onActivate={onActivate} className="text-xs text-slate-600" placeholder={labels.locationPlaceholder} />
       </p>
       <p className="mt-2 text-xs text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
+        <InlineEditable value={menu} onSave={(v) => updateKey("menu", v)} editable={editable} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-xs text-slate-500" placeholder={labels.menuPlaceholder} />
       </p>
     </Card>
   );

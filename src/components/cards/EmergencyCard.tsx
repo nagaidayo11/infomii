@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useCardInlineEdit } from "./card-inline-edit";
 
 type EmergencyCardProps = {
   card: EditorCard;
@@ -45,8 +46,8 @@ function SosMark() {
 }
 
 export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCardProps) {
+  const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const selectCard = useEditor2Store((s) => s.selectCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -68,32 +69,30 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const onActivate = () => selectCard(card.id);
-
   return (
     <Card padding="md" className="">
       {title ? (
         <p className={`flex flex-wrap items-center gap-1.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <SosMark />
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
+          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
         </p>
       ) : null}
       <ul data-inner-surface className={`mt-2 space-y-1 text-slate-600 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`} style={getBodyFontSizeStyle()}>
         <li>
           {labels.fire}:{" "}
-          <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={isSelected} onActivate={onActivate} className="font-bold text-red-600" placeholder="119" />
+          <InlineEditable value={fire} onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })} editable={editable} onActivate={onActivate} className="font-bold text-red-600" placeholder="119" />
         </li>
         <li>
           {labels.police}:{" "}
-          <InlineEditable value={police} onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })} editable={isSelected} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder="110" />
+          <InlineEditable value={police} onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder="110" />
         </li>
         <li>
           {labels.hospital}:{" "}
-          <InlineEditable value={hospital} onSave={(v) => updateKey("hospital", v)} editable={isSelected} onActivate={onActivate} className="text-slate-600" placeholder={labels.hospitalPlaceholder} />
+          <InlineEditable value={hospital} onSave={(v) => updateKey("hospital", v)} editable={editable} onActivate={onActivate} className="text-slate-600" placeholder={labels.hospitalPlaceholder} />
         </li>
       </ul>
       <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={isSelected} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.note} />
+        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={editable} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.note} />
       </p>
     </Card>
   );
