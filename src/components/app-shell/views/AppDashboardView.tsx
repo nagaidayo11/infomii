@@ -75,18 +75,19 @@ export function AppDashboardView() {
     }
     let active = true;
     setProfileLoaded(false);
-    void supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
         if (!active) return;
         setProfileDisplayName(data?.display_name ?? null);
-      })
-      .finally(() => {
+      } finally {
         if (active) setProfileLoaded(true);
-      });
+      }
+    })();
     return () => {
       active = false;
     };
