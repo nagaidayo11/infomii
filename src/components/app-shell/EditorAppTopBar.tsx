@@ -136,7 +136,7 @@ export function EditorAppTopBar({
 
   return (
     <header
-      className="editor-app-topbar flex min-h-[52px] shrink-0 items-center gap-2 border-b border-teal-700/20 bg-gradient-to-r from-teal-600 to-teal-500 px-2 pb-1.5 text-white shadow-sm"
+      className="editor-app-topbar grid min-h-[52px] shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 border-b border-teal-700/20 bg-gradient-to-r from-teal-600 to-teal-500 px-1.5 pb-1.5 text-white shadow-sm"
       style={{
         paddingTop: "0.375rem",
         paddingLeft: "max(0.5rem, var(--infomii-safe-left-fallback, env(safe-area-inset-left, 0px)))",
@@ -155,7 +155,7 @@ export function EditorAppTopBar({
         </svg>
       </AppShellLink>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 overflow-hidden px-0.5">
         <p className="truncate text-sm font-semibold leading-tight">{pageTitle || "編集中"}</p>
         <div className="editor-save-hint">
           <AnimatePresence mode="wait" initial={false}>
@@ -173,7 +173,7 @@ export function EditorAppTopBar({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center justify-end gap-1">
         {canTogglePublish ? (
           <AppSwitch
             variant="on-dark"
@@ -184,7 +184,7 @@ export function EditorAppTopBar({
             disabled={publishing}
             ariaLabel="ゲスト向けの公開"
             onCheckedChange={() => onTogglePublished?.()}
-            className="min-h-0 shrink-0"
+            className="min-h-0 max-w-[5.5rem] shrink-0"
           />
         ) : null}
 
@@ -192,7 +192,7 @@ export function EditorAppTopBar({
           type="button"
           onClick={onQr}
           disabled={publishing || qrPreparing}
-          className="editor-topbar-btn h-10 min-w-[44px] gap-1 px-2 text-xs font-semibold"
+          className="editor-topbar-btn h-10 w-10 shrink-0"
           aria-label="QRとリンク"
         >
           {qrPreparing ? (
@@ -200,14 +200,13 @@ export function EditorAppTopBar({
           ) : (
             <QrLinkIcon className="h-5 w-5" />
           )}
-          <span className="hidden min-[400px]:inline">QR / リンク</span>
         </button>
 
         <button
           type="button"
           onClick={onPreview}
           disabled={!publicUrl || previewPreparing}
-          className="editor-topbar-btn h-10 min-w-[44px] gap-1 px-2.5 text-xs font-semibold"
+          className="editor-topbar-btn h-10 w-10 shrink-0"
           aria-label="プレビュー"
         >
           {previewPreparing ? (
@@ -215,13 +214,12 @@ export function EditorAppTopBar({
           ) : (
             <PreviewIcon className="h-5 w-5" />
           )}
-          <span className="hidden min-[380px]:inline">プレビュー</span>
         </button>
 
         <button
           type="button"
           onClick={() => setMoreOpen(true)}
-          className="editor-topbar-btn h-10 w-10"
+          className="editor-topbar-btn h-10 w-10 shrink-0"
           aria-expanded={moreOpen}
           aria-haspopup="dialog"
           aria-label="その他の操作"

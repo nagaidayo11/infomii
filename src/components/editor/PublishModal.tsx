@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { navigateGuestPageUrl } from "@/lib/app-href";
 import { qrCodeImageUrl } from "@/lib/storage";
 
 type PublishModalProps = {
@@ -23,6 +25,7 @@ export function PublishModal({
   variant = "publish-success",
 }: PublishModalProps) {
   const isShare = variant === "share";
+  const { isAppShell } = useClientShell();
   const [mounted, setMounted] = useState(false);
   const [copyUrlStatus, setCopyUrlStatus] = useState<"idle" | "ok" | "fail">("idle");
   const [copyImageStatus, setCopyImageStatus] = useState<"idle" | "ok" | "fail">("idle");
@@ -217,14 +220,19 @@ export function PublishModal({
             </button>
           </div>
 
-          <a
-            href={publicUrl}
-            target="_blank"
-            rel="noreferrer"
-          className="block min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/50 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100"
+          <button
+            type="button"
+            onClick={() => {
+              if (isAppShell) {
+                navigateGuestPageUrl(publicUrl);
+                return;
+              }
+              window.open(publicUrl, "_blank", "noopener,noreferrer");
+            }}
+            className="block w-full min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/50 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100"
           >
             ページを開く
-          </a>
+          </button>
         </div>
 
         <div className="flex justify-end border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4">

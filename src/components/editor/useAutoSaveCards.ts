@@ -172,7 +172,8 @@ export function useAutoSaveCards(pageId: string | null) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
         const id = pageIdRef.current;
-        if (id) void flushSave(id);
+        const pendingCards = useEditor2Store.getState().cards;
+        if (id && pendingCards.length > 0) void flushSave(id);
       }
     };
   }, [pageId]);

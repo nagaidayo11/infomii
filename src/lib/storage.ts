@@ -4632,13 +4632,17 @@ export type EditorCardForSave = {
 export async function savePageCards(
   pageId: string,
   cards: EditorCardForSave[],
-  options?: { pageStyle?: PageStyleForSave | null }
+  options?: { pageStyle?: PageStyleForSave | null; allowEmpty?: boolean }
 ): Promise<{ updatedIds: Record<string, string> }> {
   const supabase = getBrowserSupabaseClient();
   const updatedIds: Record<string, string> = {};
   if (!supabase) return { updatedIds };
 
   const existing = await getPageCards(pageId);
+  /** Avoid wiping DB when autosave/navigation races deliver an empty in-memory store. */
+  if (cards.length === 0 && existing.length > 0 && !options?.allowEmpty) {
+    return { updatedIds };
+  }
   const existingIds = new Set(existing.map((r) => r.id));
   const storeIds = new Set(cards.map((c) => c.id));
 
@@ -4663,10 +4667,11 @@ export async function savePageCards(
         : contentWithPageStyle;
 
     if (isSupabaseId(card.id)) {
-      await supabase
+      const { error } = await supabase
         .from("cards")
         .update({ content: contentToSave, order: card.order })
         .eq("id", card.id);
+      if (error) throw toError(error, "カードの更新に失敗しました");
     } else {
       const { data: inserted, error } = await supabase
         .from("cards")
@@ -4678,7 +4683,8 @@ export async function savePageCards(
         })
         .select("id")
         .single();
-      if (!error && inserted?.id) updatedIds[card.id] = inserted.id as string;
+      if (error) throw toError(error, "カードの追加に失敗しました");
+      if (inserted?.id) updatedIds[card.id] = inserted.id as string;
     }
   }
 

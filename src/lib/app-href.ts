@@ -1,3 +1,12 @@
+/** Open a public guest page inside the native WebView (same tab). */
+export function navigateGuestPageUrl(publicUrl: string, opts?: { preview?: boolean }): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(publicUrl, window.location.origin);
+  if (opts?.preview) url.searchParams.set("preview", "1");
+  url.searchParams.set("client", "app");
+  window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+}
+
 /** Preserve ?client=app for browser preview parity with native WebView. */
 export function withAppClientQuery(href: string): string {
   if (!href.startsWith("/")) return href;

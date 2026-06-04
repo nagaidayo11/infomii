@@ -46,6 +46,7 @@ import {
   readStoredLibraryAudience,
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
+import { navigateGuestPageUrl } from "@/lib/app-href";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -706,12 +707,32 @@ export function Editor2({
     [addCardRaw, libraryAudience, translationEnabled, isDemoMode, openBusinessUpsell, useAppEditorChrome, showToast]
   );
 
-  const handleClearAll = useCallback(() => {
+  const handleClearAll = useCallback(async () => {
     if (cards.length === 0) return;
     const ok = window.confirm("このページのブロックをすべて削除します。よろしいですか？");
     if (!ok) return;
     clearCards();
-  }, [cards.length, clearCards]);
+    if (!pageId) return;
+    const state = useEditor2Store.getState();
+    try {
+      await savePageCards(pageId, [], {
+        allowEmpty: true,
+        pageStyle: {
+          background: {
+            mode: state.pageBackgroundMode,
+            color: state.pageBackgroundColor,
+            from: state.pageGradientFrom,
+            to: state.pageGradientTo,
+            angle: state.pageGradientAngle,
+          },
+        },
+      });
+      setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "保存に失敗しました";
+      setAutosaveStatus({ isSaving: false, saveError: msg });
+    }
+  }, [cards.length, clearCards, pageId, setAutosaveStatus]);
 
   const handleRenamePageTitle = useCallback(
     async (nextTitle: string) => {
@@ -1059,28 +1080,33 @@ export function Editor2({
 
     if (!guardPublishedBeforeGuestView()) return;
 
-    // ユーザー操作の直後にタブを開き、続く await のあとでもブロックされにくくする
-    const previewWindow = window.open("about:blank", "_blank");
-    if (!previewWindow) {
-      window.alert(
-        "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
-      );
-      return;
-    }
-    previewWindow.opener = null;
-    try {
-      previewWindow.document.open();
-      previewWindow.document.write(
-        "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>プレビュー準備中</title></head>" +
-          "<body style=\"margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#475569;\">" +
-          "<div style=\"display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;\">" +
-          "<div><p style=\"margin:0;font-size:1rem;font-weight:600;color:#334155;\">プレビューを準備しています…</p>" +
-          "<p style=\"margin:0.75rem 0 0;font-size:0.875rem;\">このタブはまもなくゲスト表示に切り替わります。</p></div></div></body></html>"
-      );
-      previewWindow.document.close();
-    } catch {
-      /* 表示できなくても続行し、後で location で遷移する */
-    }
+    const openPreviewInBrowserTab = (): Window | null => {
+      const previewWindow = window.open("about:blank", "_blank");
+      if (!previewWindow) {
+        window.alert(
+          "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
+        );
+        return null;
+      }
+      previewWindow.opener = null;
+      try {
+        previewWindow.document.open();
+        previewWindow.document.write(
+          "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>プレビュー準備中</title></head>" +
+            "<body style=\"margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#475569;\">" +
+            "<div style=\"display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;\">" +
+            "<div><p style=\"margin:0;font-size:1rem;font-weight:600;color:#334155;\">プレビューを準備しています…</p>" +
+            "<p style=\"margin:0.75rem 0 0;font-size:0.875rem;\">このタブはまもなくゲスト表示に切り替わります。</p></div></div></body></html>"
+        );
+        previewWindow.document.close();
+      } catch {
+        /* 表示できなくても続行し、後で location で遷移する */
+      }
+      return previewWindow;
+    };
+
+    const previewWindow = useAppEditorChrome ? null : openPreviewInBrowserTab();
+    if (!useAppEditorChrome && !previewWindow) return;
 
     setPreviewBusy(true);
     try {
@@ -1102,10 +1128,12 @@ export function Editor2({
       }
       const translationError = await ensureTranslationsBeforePublish({ translationSource: "preview" });
       if (translationError) {
-        try {
-          previewWindow.close();
-        } catch {
-          /* ignore */
+        if (previewWindow) {
+          try {
+            previewWindow.close();
+          } catch {
+            /* ignore */
+          }
         }
         window.alert(translationError);
         return;
@@ -1127,10 +1155,14 @@ export function Editor2({
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
       const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
-      try {
-        previewWindow.location.href = previewUrl;
-      } catch {
-        window.open(previewUrl, "_blank", "noopener,noreferrer");
+      if (useAppEditorChrome) {
+        navigateGuestPageUrl(previewUrl, { preview: true });
+      } else if (previewWindow) {
+        try {
+          previewWindow.location.href = previewUrl;
+        } catch {
+          window.open(previewUrl, "_blank", "noopener,noreferrer");
+        }
       }
     } finally {
       setPreviewBusy(false);
@@ -1142,6 +1174,7 @@ export function Editor2({
     ensureTranslationsBeforePublish,
     flushAutosaveNow,
     guardPublishedBeforeGuestView,
+    useAppEditorChrome,
   ]);
 
   const handlePublishClickStrict = useCallback(async () => {
@@ -1179,6 +1212,7 @@ export function Editor2({
         return;
       }
       if ((hotelRole === "owner" || hotelRole === "admin") && hasPendingApproval && pageMeta.slug) {
+        await publishNow({ silent: true });
         await approvePublishApprovalBySlug(pageMeta.slug);
         setHasPendingApproval(false);
         setPublishStatus("published");
@@ -1190,7 +1224,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId]);
+  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
