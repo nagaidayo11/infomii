@@ -3,13 +3,8 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
-import {
-  getLaunchOnboardingImageSrc,
-  LAUNCH_ONBOARDING_STEPS,
-  markLaunchOnboardingCompleted,
-} from "@/lib/launch-onboarding";
+import { LAUNCH_ONBOARDING_STEPS, markLaunchOnboardingCompleted } from "@/lib/launch-onboarding";
 import { LaunchOnboardingPhone } from "./LaunchOnboardingPhone";
 
 const pageTurnEase = [0.33, 1, 0.32, 1] as const;
@@ -27,7 +22,7 @@ const slideVariants = {
     opacity: 0.35,
     scale: 0.9,
     filter: "brightness(0.9)",
-    boxShadow: "0 4px 20px -8px rgba(15, 23, 42, 0.15)",
+    boxShadow: "none",
   }),
   center: {
     x: 0,
@@ -36,7 +31,7 @@ const slideVariants = {
     opacity: 1,
     scale: 1,
     filter: "brightness(1)",
-    boxShadow: "0 22px 50px -20px rgba(15, 23, 42, 0.32)",
+    boxShadow: "none",
   },
   exit: (direction: number) => ({
     x: direction > 0 ? "-76%" : "76%",
@@ -45,7 +40,7 @@ const slideVariants = {
     opacity: 0,
     scale: 0.86,
     filter: "brightness(0.78)",
-    boxShadow: "0 2px 12px -6px rgba(15, 23, 42, 0.12)",
+    boxShadow: "none",
   }),
 };
 
@@ -55,7 +50,6 @@ type LaunchOnboardingFlowProps = {
 
 export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowProps) {
   const router = useRouter();
-  const { isAppShell } = useClientShell();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -63,8 +57,6 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
   const total = LAUNCH_ONBOARDING_STEPS.length;
   const current = LAUNCH_ONBOARDING_STEPS[step]!;
   const isLast = step === total - 1;
-  const previewClient = isAppShell ? "app" : "web";
-  const previewSrc = getLaunchOnboardingImageSrc(current, previewClient);
 
   const goTo = useCallback((next: number) => {
     if (next < 0 || next >= total || next === step) return;
@@ -74,8 +66,8 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
 
   const finish = useCallback(() => {
     markLaunchOnboardingCompleted();
-    router.replace(isAppShell ? withAppClientQuery("/login") : "/login");
-  }, [isAppShell, router]);
+    router.replace(withAppClientQuery("/login"));
+  }, [router]);
 
   const handleNext = () => {
     if (isLast) {
@@ -86,7 +78,7 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
   };
 
   const handleTouchEnd = (clientX: number) => {
-    if (!isAppShell || touchStartX == null) return;
+    if (touchStartX == null) return;
     const delta = clientX - touchStartX;
     setTouchStartX(null);
     if (Math.abs(delta) < 56) return;
@@ -94,16 +86,13 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
     if (delta > 0 && step > 0) goTo(step - 1);
   };
 
-  /** Web: 次へ / はじめる。App: 5枚目のみ はじめる（それ以外はスワイプ） */
-  const showNavButton = !isAppShell || step >= total - 1;
+  /** 5枚目のみ「はじめる」（それ以外はスワイプ） */
+  const showNavButton = step >= total - 1;
 
   return (
     <div
-      className={
-        (isAppShell ? "launch-onboarding-root launch-onboarding-root--app " : "launch-onboarding-root ") +
-        className
-      }
-      data-client-shell={isAppShell ? "app" : undefined}
+      className={"launch-onboarding-root launch-onboarding-root--app " + className}
+      data-client-shell="app"
     >
       <div className="launch-onboarding-main">
         <p className="launch-onboarding-brand">Infomii</p>
@@ -119,27 +108,21 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
               exit="exit"
               transition={pageTurnTransition}
               className="launch-onboarding-card launch-onboarding-card--turn"
-              onTouchStart={
-                isAppShell
-                  ? (e) => setTouchStartX(e.touches[0]?.clientX ?? null)
-                  : undefined
-              }
-              onTouchEnd={
-                isAppShell
-                  ? (e) => handleTouchEnd(e.changedTouches[0]?.clientX ?? 0)
-                  : undefined
-              }
+              onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
+              onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0]?.clientX ?? 0)}
             >
               <LaunchOnboardingPhone
-                src={previewSrc}
+                src={current.image}
                 alt={current.imageAlt}
                 priority={step === 0}
-                variant={previewClient}
+                objectPosition={current.imageObjectPosition}
               />
 
-              <p className="launch-onboarding-kicker">{current.kicker}</p>
-              <h1 className="launch-onboarding-title">{current.title}</h1>
-              <p className="launch-onboarding-body">{current.body}</p>
+              <div className="launch-onboarding-copy">
+                <p className="launch-onboarding-kicker">{current.kicker}</p>
+                <h1 className="launch-onboarding-title">{current.title}</h1>
+                <p className="launch-onboarding-body">{current.body}</p>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -156,8 +139,7 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
                 className={
                   "launch-onboarding-dot " + (i === step ? "launch-onboarding-dot--active" : "")
                 }
-                onClick={isAppShell ? undefined : () => goTo(i)}
-                disabled={isAppShell}
+                disabled
               />
             ))}
           </div>
@@ -166,13 +148,9 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
             <button
               type="button"
               onClick={handleNext}
-              className={
-                (isAppShell
-                  ? "app-touch-btn app-touch-btn-primary app-pressable launch-onboarding-cta-final w-full bg-[var(--app-accent)] font-semibold !text-white "
-                  : "onboarding-cta-primary ui-focus-ring ui-pop-tap launch-onboarding-cta-final min-h-[48px] w-full px-4 py-3 text-base font-semibold ")
-              }
+              className="app-touch-btn app-touch-btn-primary app-pressable launch-onboarding-cta-final w-full bg-[var(--app-accent)] font-semibold !text-white "
             >
-              {isLast ? "はじめる" : "次へ"}
+              はじめる
             </button>
           ) : (
             <div className="launch-onboarding-footer-spacer" aria-hidden />

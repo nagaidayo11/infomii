@@ -13,13 +13,13 @@ export function LaunchOnboardingDevSection() {
   const router = useRouter();
   const { isAppShell } = useClientShell();
 
-  if (!isLaunchOnboardingDevToolsEnabled()) {
+  if (!isLaunchOnboardingDevToolsEnabled() || !isAppShell) {
     return null;
   }
 
   function openOnboarding() {
     resetLaunchOnboarding();
-    router.push(isAppShell ? withAppClientQuery("/onboarding") : "/onboarding");
+    router.push(withAppClientQuery("/onboarding"));
   }
 
   return (

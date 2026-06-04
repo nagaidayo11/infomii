@@ -5,15 +5,22 @@ import { useRouter } from "next/navigation";
 import { LaunchOnboardingFlow } from "@/components/launch-onboarding/LaunchOnboardingFlow";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
-import { isLaunchOnboardingCompleted } from "@/lib/launch-onboarding";
+import {
+  isLaunchOnboardingCompleted,
+  isLaunchOnboardingRequired,
+} from "@/lib/launch-onboarding";
 
 export default function LaunchOnboardingPage() {
   const router = useRouter();
   const { isAppShell } = useClientShell();
 
   useEffect(() => {
+    if (!isLaunchOnboardingRequired(isAppShell)) {
+      router.replace("/login");
+      return;
+    }
     if (isLaunchOnboardingCompleted()) {
-      router.replace(isAppShell ? withAppClientQuery("/login") : "/login");
+      router.replace(withAppClientQuery("/login"));
     }
   }, [isAppShell, router]);
 
@@ -26,7 +33,7 @@ export default function LaunchOnboardingPage() {
     };
   }, []);
 
-  if (isLaunchOnboardingCompleted()) {
+  if (!isLaunchOnboardingRequired(isAppShell) || isLaunchOnboardingCompleted()) {
     return (
       <main className="flex min-h-[100dvh] items-center justify-center bg-slate-50 text-sm text-slate-500">
         読み込み中…

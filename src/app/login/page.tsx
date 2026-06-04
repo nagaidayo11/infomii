@@ -22,7 +22,7 @@ import {
 import { FadeIn } from "@/components/motion";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
-import { isLaunchOnboardingCompleted } from "@/lib/launch-onboarding";
+import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -85,8 +85,8 @@ function LoginForm() {
 
   useEffect(() => {
     if (loading || user) return;
-    if (!isLaunchOnboardingCompleted()) {
-      router.replace(isAppShell ? withAppClientQuery("/onboarding") : "/onboarding");
+    if (shouldShowLaunchOnboarding(isAppShell)) {
+      router.replace(withAppClientQuery("/onboarding"));
     }
   }, [loading, user, isAppShell, router]);
 
