@@ -63,8 +63,8 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
 
 ## プッシュ通知
 
-- ネイティブ: `apps/mobile/src/lib/push-notifications.ts`（Expo Push Token 取得）
+- ネイティブ: `apps/mobile/src/lib/push-notifications.ts`（Expo Push Token 取得用。v1 では**起動時に許可ダイアログを出さない**）
 - API: `POST /api/push/register`（Bearer セッション必須）
 - DB: `supabase/migrations/20260604100000_push_device_tokens.sql` を適用
 
-トークン登録は WebView からセッションを渡すブリッジ実装後に接続予定です。
+トークン登録は WebView からセッションを渡すブリッジ実装後、設定画面のユーザー操作から許可を取る予定です。

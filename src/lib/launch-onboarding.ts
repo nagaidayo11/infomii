@@ -101,22 +101,3 @@ export function markLaunchOnboardingCompleted(): void {
   }
 }
 
-export function resetLaunchOnboarding(): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(LAUNCH_ONBOARDING_STORAGE_KEY);
-    for (const key of LEGACY_ONBOARDING_KEYS) {
-      localStorage.removeItem(key);
-    }
-  } catch {
-    /* private mode */
-  }
-}
-
-/** Settings dev entry — development build or explicit env flag */
-export function isLaunchOnboardingDevToolsEnabled(): boolean {
-  return (
-    process.env.NODE_ENV === "development" ||
-    process.env.NEXT_PUBLIC_ENABLE_ONBOARDING_DEV_RESET === "true"
-  );
-}

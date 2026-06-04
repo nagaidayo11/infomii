@@ -13,6 +13,7 @@ Notifications.setNotificationHandler({
 
 /**
  * Registers for push (permission + Expo push token).
+ * Call only from an in-app, user-initiated flow (e.g. Settings toggle) — not on cold start.
  * Upload to POST /api/push/register requires a Bearer session from the WebView (not wired yet).
  */
 export async function registerForPushNotificationsAsync(): Promise<string | null> {

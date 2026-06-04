@@ -139,7 +139,7 @@ Web 側でアプリ用 5 タブ・エディタ UI が有効になります（Pha
 
 - Sign in with Apple（Web ログイン画面。Supabase Apple プロバイダ要設定）
 - ユニバーサルリンク（`associatedDomains` + AASA）
-- プッシュ通知の権限リクエスト（トークン送信 API は今後）
+- プッシュ通知（`expo-notifications` 準備済み。起動時の許可ダイアログは出さない — 設定 UI 連携後にリクエスト予定）
 
 ## トラブルシュート
 
