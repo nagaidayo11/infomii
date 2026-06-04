@@ -1,11 +1,10 @@
 /**
- * Local dev: disable OTA updates (stops "New update available, downloading…" in Expo Go).
- * Slug infomii-dev avoids fetching published @naiai/infomii from Expo servers.
+ * Slug must match the EAS project (expo.dev → infomii). Updates are disabled below for Expo Go.
  */
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = {
   name: "Infomii",
-  slug: "infomii-dev",
+  slug: "infomii",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -49,13 +48,8 @@ module.exports = {
         },
       },
     ],
-    [
-      "expo-notifications",
-      {
-        icon: "./assets/icon.png",
-        color: "#0d9488",
-      },
-    ],
+    // Push: enable after App ID has Push Notifications + matching provisioning profile.
+    // See docs/APP_STORE_REVIEW.md — expo-notifications plugin removed for first App Store build.
   ],
   web: {
     favicon: "./assets/favicon.png",
