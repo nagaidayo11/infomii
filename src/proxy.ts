@@ -17,6 +17,11 @@ function isLpPublicAssetPath(pathname: string): boolean {
   return /\.(avif|gif|ico|jpe?g|png|svg|webp|woff2?)$/i.test(pathname);
 }
 
+/** iOS/WebView billing CTAs open SaaS pricing LP (App Store 3.1.1). */
+function isLpAllowedForAppClient(pathname: string): boolean {
+  return pathname === "/lp/saas" || pathname === "/lp/saas/";
+}
+
 export function proxy(request: NextRequest) {
   if (!isAppClient(request)) {
     return NextResponse.next();
@@ -25,6 +30,9 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname === "/lp" || pathname.startsWith("/lp/")) {
     if (isLpPublicAssetPath(pathname)) {
+      return NextResponse.next();
+    }
+    if (isLpAllowedForAppClient(pathname)) {
       return NextResponse.next();
     }
     const url = request.nextUrl.clone();

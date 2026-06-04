@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui";
+import { LpHashScroll } from "@/components/lp/LpHashScroll";
 import { LpHero } from "@/components/lp/LpHero";
 import { LpSaasHeader } from "@/components/lp/LpSaasHeader";
 import { LpTemplates } from "@/components/lp/LpTemplates";
@@ -136,6 +137,7 @@ export default function LpPersonalSaaSPage() {
         variant="muted"
       />
 
+      <LpHashScroll id="pricing" />
       <LpPricing
         plans={PERSONAL_PLANS}
         freeSignupHref={ctaHref}

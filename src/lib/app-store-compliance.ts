@@ -21,9 +21,18 @@ export function shouldBlockInAppSubscriptionCheckout(userAgent?: string): boolea
   return isNativeIosAppClient(userAgent);
 }
 
+/** In-app path (same origin). proxy.ts allows /lp/saas for native WebView. */
+export const WEB_PRICING_LP_PATH = "/lp/saas#pricing";
+
 /** Public pricing LP — used for iOS app new subscriptions (Guideline 3.1.1). */
 export function getWebPricingLpUrl(): string {
-  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}/lp/saas#pricing`;
+  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}${WEB_PRICING_LP_PATH}`;
+}
+
+/** Navigate away from app tab shell to the marketing pricing section. */
+export function navigateToWebPricingLp(): void {
+  if (typeof window === "undefined") return;
+  window.location.assign(WEB_PRICING_LP_PATH);
 }
 
 /** @deprecated Prefer getWebPricingLpUrl for app-shell billing CTAs. */

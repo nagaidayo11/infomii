@@ -1,7 +1,7 @@
 "use client";
 
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
-import { getWebPricingLpUrl } from "@/lib/app-store-compliance";
+import { getWebPricingLpUrl, navigateToWebPricingLp } from "@/lib/app-store-compliance";
 
 /**
  * Infomii bills via Stripe on the web — no StoreKit products. Explains restore expectations for reviewers.
@@ -21,7 +21,7 @@ export function AppSettingsRestorePurchasesSection() {
           className="font-medium text-[var(--app-accent)] underline"
           onClick={(e) => {
             e.preventDefault();
-            window.location.assign(pricingUrl);
+            navigateToWebPricingLp();
           }}
         >
           Web の請求ページ

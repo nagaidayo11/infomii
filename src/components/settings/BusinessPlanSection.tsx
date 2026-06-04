@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import {
   shouldBlockInAppSubscriptionCheckout,
   getWebPricingLpUrl,
+  navigateToWebPricingLp,
 } from "@/lib/app-store-compliance";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import {
@@ -90,7 +91,7 @@ export function BusinessPlanSection({
   }, []);
 
   const openWebPricingLp = useCallback(() => {
-    window.location.assign(getWebPricingLpUrl());
+    navigateToWebPricingLp();
   }, []);
 
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
