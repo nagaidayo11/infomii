@@ -21,8 +21,14 @@ export function shouldBlockInAppSubscriptionCheckout(userAgent?: string): boolea
   return isNativeIosAppClient(userAgent);
 }
 
+/** Public pricing LP — used for iOS app new subscriptions (Guideline 3.1.1). */
+export function getWebPricingLpUrl(): string {
+  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}/lp/saas#pricing`;
+}
+
+/** @deprecated Prefer getWebPricingLpUrl for app-shell billing CTAs. */
 export function getWebBillingUrl(): string {
-  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}/settings/billing`;
+  return getWebPricingLpUrl();
 }
 
 export function getLegalPageUrl(path: "/terms" | "/privacy" | "/commerce", appShell: boolean): string {

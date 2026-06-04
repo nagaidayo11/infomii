@@ -1,6 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
-import { shouldBlockInAppSubscriptionCheckout, getWebBillingUrl } from "@/lib/app-store-compliance";
+import {
+  shouldBlockInAppSubscriptionCheckout,
+  getWebPricingLpUrl,
+} from "@/lib/app-store-compliance";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import {
   createStripeCheckoutSession,
@@ -86,6 +89,10 @@ export function BusinessPlanSection({
     return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
   }, []);
 
+  const openWebPricingLp = useCallback(() => {
+    window.location.assign(getWebPricingLpUrl());
+  }, []);
+
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
     if (!canManageBilling) {
       setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
@@ -93,7 +100,7 @@ export function BusinessPlanSection({
     }
     if (blockIosCheckout) {
       setMessage(
-        `新規のプランお申し込みは Web ブラウザから行ってください（${getWebBillingUrl()}）。`,
+        `新規のプランお申し込みは Web ブラウザから行ってください（${getWebPricingLpUrl()}）。`,
       );
       return;
     }
@@ -236,7 +243,14 @@ export function BusinessPlanSection({
       {blockIosCheckout && isAppLayout ? (
         <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
           iOS アプリからの新規お申し込みは App Store のガイドラインに合わせ、Web（
-          <a href={getWebBillingUrl()} className="font-medium text-[var(--app-accent)] underline">
+          <a
+            href={getWebPricingLpUrl()}
+            className="font-medium text-[var(--app-accent)] underline"
+            onClick={(e) => {
+              e.preventDefault();
+              openWebPricingLp();
+            }}
+          >
             infomii.com の請求ページ
           </a>
           ）で行ってください。既存契約の確認・解約は下の「請求情報を管理」から可能です。
@@ -276,17 +290,16 @@ export function BusinessPlanSection({
           </>
         ) : null}
         {plan === "free" && blockIosCheckout ? (
-          <a
-            href={getWebBillingUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={openWebPricingLp}
             className={
               "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[var(--app-accent)] px-4 py-2.5 text-sm font-semibold !text-white shadow-sm " +
               (isAppLayout ? " app-touch-btn-primary w-full max-w-full" : "")
             }
           >
             Web でプランを申し込む
-          </a>
+          </button>
         ) : null}
         {plan === "pro" ? (
           <>

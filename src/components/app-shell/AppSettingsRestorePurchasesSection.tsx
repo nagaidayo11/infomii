@@ -1,13 +1,13 @@
 "use client";
 
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
-import { getWebBillingUrl } from "@/lib/app-store-compliance";
+import { getWebPricingLpUrl } from "@/lib/app-store-compliance";
 
 /**
  * Infomii bills via Stripe on the web — no StoreKit products. Explains restore expectations for reviewers.
  */
 export function AppSettingsRestorePurchasesSection() {
-  const billingUrl = getWebBillingUrl();
+  const pricingUrl = getWebPricingLpUrl();
 
   return (
     <AppSettingsCard>
@@ -16,7 +16,14 @@ export function AppSettingsRestorePurchasesSection() {
         本アプリでは App Store 経由の課金は行っていません。Pro / Business プランは Web（Stripe）でお申し込みいただきます。
         契約の確認・解約はプラン画面の「請求情報を管理」、または
         {" "}
-        <a href={billingUrl} className="font-medium text-[var(--app-accent)] underline">
+        <a
+          href={pricingUrl}
+          className="font-medium text-[var(--app-accent)] underline"
+          onClick={(e) => {
+            e.preventDefault();
+            window.location.assign(pricingUrl);
+          }}
+        >
           Web の請求ページ
         </a>
         から行えます。
