@@ -190,7 +190,7 @@ export function BusinessPlanSection({
         className={
           isAppLayout
             ? "app-plan-actions mt-4 flex flex-col gap-2.5"
-            : "app-settings-billing-actions mt-4 flex w-full flex-col gap-3"
+            : "app-settings-billing-actions mt-4 flex flex-col items-start gap-3"
         }
       >
         {plan === "free" ? (
@@ -200,8 +200,8 @@ export function BusinessPlanSection({
               onClick={() => void openCheckout("pro")}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-primary" : "")
+                "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-touch-btn-primary app-plan-cta-primary w-full max-w-full" : "")
               }
             >
               {busyAction === "pro" ? "処理中…" : "Proを申し込む"}
@@ -211,8 +211,8 @@ export function BusinessPlanSection({
               onClick={() => void openCheckout("business")}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-secondary" : "")
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
               {busyAction === "business" ? "処理中…" : "Businessプランを申し込む"}
@@ -226,8 +226,8 @@ export function BusinessPlanSection({
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-primary" : "")
+                "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-touch-btn-primary app-plan-cta-primary w-full max-w-full" : "")
               }
             >
               {busyAction === "portal" ? "処理中…" : "Businessプランへアップグレード"}
@@ -237,8 +237,8 @@ export function BusinessPlanSection({
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-secondary" : "")
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
               サブスクリプションを管理 / 解約する
@@ -252,8 +252,8 @@ export function BusinessPlanSection({
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-touch-btn-primary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-primary" : "")
+                "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-touch-btn-primary app-plan-cta-primary w-full max-w-full" : "")
               }
             >
               {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
@@ -263,8 +263,8 @@ export function BusinessPlanSection({
               onClick={() => void openPortal()}
               disabled={busyAction !== null || !canManageBilling}
               className={
-                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] w-full max-w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
-                (isAppLayout ? " app-plan-cta-secondary" : "")
+                "app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70" +
+                (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
               サブスクリプションを管理 / 解約する
