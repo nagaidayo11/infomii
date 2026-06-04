@@ -338,6 +338,73 @@
   padding: 0 0.5rem 0.5rem;
 }
 
+[data-client-shell="app"] .app-bottom-sheet-panel--bulk-font {
+  display: flex;
+  flex-direction: column;
+  max-height: min(58vh, 560px);
+  min-height: min(50vh, 480px);
+}
+
+[data-client-shell="app"] .app-bottom-sheet-panel--bulk-font .app-bottom-sheet-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0.75rem 0.5rem;
+}
+
+[data-client-shell="app"] .editor-bulk-font-hint {
+  flex-shrink: 0;
+  margin: 0 0 0.5rem;
+  line-height: 1.45;
+}
+
+[data-client-shell="app"] .editor-bulk-font-options {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0.25rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  border: 1px solid var(--app-border);
+  border-radius: 0.75rem;
+  background: var(--app-surface-elevated, var(--app-surface));
+}
+
+[data-client-shell="app"] .editor-bulk-font-option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-client-shell="app"] .editor-bulk-font-option--active {
+  background: var(--app-accent, #0f766e);
+  color: #fff;
+  font-weight: 600;
+}
+
+[data-client-shell="app"] .editor-bulk-font-actions {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
 [data-client-shell="app"] .app-sheet-action {
   display: flex;
   width: 100%;

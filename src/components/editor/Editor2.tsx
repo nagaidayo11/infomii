@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
+import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAppToast } from "@/components/app-shell/AppToastProvider";
 import { EditorLayout } from "./EditorLayout";
@@ -260,7 +261,7 @@ export function Editor2({
   }, [applyFontFamilyAll, bulkFontFamily, cloneCardsSnapshot, setCards]);
 
   useEffect(() => {
-    if (!bulkFontOpen) return;
+    if (!bulkFontOpen || useAppEditorChrome) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest("[data-bulk-font-anchor='true']")) return;
@@ -276,7 +277,7 @@ export function Editor2({
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onEsc);
     };
-  }, [bulkFontOpen, cancelBulkFontModal]);
+  }, [bulkFontOpen, cancelBulkFontModal, useAppEditorChrome]);
 
   useEffect(() => {
     if (!isDemoMode) return;
@@ -1279,19 +1280,24 @@ export function Editor2({
         setDemoLockMessage("デモモードでは詳細設定は利用できません。無料登録で解放されます。");
         return;
       }
+      bulkFontSnapshotRef.current = cloneCardsSnapshot(cards);
+      const first = cards[0]?.style as Record<string, unknown> | undefined;
+      const current = typeof first?.fontFamily === "string" ? first.fontFamily : "";
+      setBulkFontFamily(current);
+      if (useAppEditorChrome) {
+        setBulkFontAnchor(null);
+        setBulkFontOpen(true);
+        return;
+      }
       const rect = anchorEl.getBoundingClientRect();
       const panelWidth = 420;
       const maxLeft = Math.max(10, window.innerWidth - panelWidth - 10);
       const left = Math.max(10, Math.min(rect.left, maxLeft));
       const top = Math.min(rect.bottom + 8, window.innerHeight - 80);
-      bulkFontSnapshotRef.current = cloneCardsSnapshot(cards);
-      const first = cards[0]?.style as Record<string, unknown> | undefined;
-      const current = typeof first?.fontFamily === "string" ? first.fontFamily : "";
-      setBulkFontFamily(current);
       setBulkFontAnchor({ top, left });
       setBulkFontOpen(true);
     },
-    [cards, cloneCardsSnapshot, isDemoMode],
+    [cards, cloneCardsSnapshot, isDemoMode, useAppEditorChrome],
   );
 
   const topBar =
@@ -1610,7 +1616,52 @@ export function Editor2({
             </div>
           </div>
         )}
-        {bulkFontOpen && bulkFontAnchor && (
+        {useAppEditorChrome ? (
+          <AppBottomSheet
+            open={bulkFontOpen}
+            onClose={cancelBulkFontModal}
+            title="フォント一括変更"
+            panelClassName="app-bottom-sheet-panel--bulk-font"
+          >
+            <p className="editor-bulk-font-hint px-3 text-sm text-[var(--app-text-muted)]">
+              候補を選ぶと即時プレビューされます。確定は「一括適用」です。
+            </p>
+            <div className="editor-bulk-font-options" role="listbox" aria-label="フォント候補">
+              {EDITOR_FONT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label + opt.value}
+                  type="button"
+                  role="option"
+                  aria-selected={bulkFontFamily === opt.value}
+                  onClick={() => {
+                    setBulkFontFamily(opt.value);
+                    previewBulkFontFamily(opt.value);
+                  }}
+                  className={
+                    "editor-bulk-font-option " +
+                    (bulkFontFamily === opt.value ? "editor-bulk-font-option--active" : "")
+                  }
+                  style={opt.value ? { fontFamily: opt.value } : undefined}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="editor-bulk-font-actions">
+              <button type="button" className="app-sheet-action" onClick={cancelBulkFontModal}>
+                閉じる
+              </button>
+              <button
+                type="button"
+                className="app-sheet-action app-sheet-action--primary"
+                onClick={applyBulkFontModal}
+              >
+                一括適用
+              </button>
+            </div>
+          </AppBottomSheet>
+        ) : null}
+        {!useAppEditorChrome && bulkFontOpen && bulkFontAnchor ? (
           <div
             ref={bulkFontPanelRef}
             className="ui-pop-in fixed z-[90] w-[min(420px,calc(100vw-20px))] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
@@ -1618,7 +1669,7 @@ export function Editor2({
           >
             <h3 className="text-lg font-semibold text-slate-900">フォント一括変更</h3>
             <p className="mt-1 text-sm text-slate-500">候補を選ぶと即時プレビューされます。確定は「一括適用」です。</p>
-            <div className="mt-4 max-h-56 space-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2">
+            <div className="mt-4 max-h-[min(40vh,280px)] space-y-1 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-2 [-webkit-overflow-scrolling:touch]">
               {EDITOR_FONT_OPTIONS.map((opt) => (
                 <button
                   key={opt.label + opt.value}
@@ -1639,24 +1690,24 @@ export function Editor2({
                 </button>
               ))}
             </div>
-              <div className="mt-5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={cancelBulkFontModal}
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  閉じる
-                </button>
-                <button
-                  type="button"
-                  onClick={applyBulkFontModal}
-                  className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
-                >
-                  一括適用
-                </button>
-              </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={cancelBulkFontModal}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                閉じる
+              </button>
+              <button
+                type="button"
+                onClick={applyBulkFontModal}
+                className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800"
+              >
+                一括適用
+              </button>
+            </div>
           </div>
-        )}
+        ) : null}
       </div>
     </LocaleProvider>
   );

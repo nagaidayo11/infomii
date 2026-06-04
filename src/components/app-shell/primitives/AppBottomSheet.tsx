@@ -11,6 +11,8 @@ type AppBottomSheetProps = {
   children: ReactNode;
   /** Accessible name when title is omitted */
   ariaLabel?: string;
+  /** Extra class on the sliding panel (e.g. taller sheets). */
+  panelClassName?: string;
 };
 
 export function AppBottomSheet({
@@ -19,6 +21,7 @@ export function AppBottomSheet({
   title,
   children,
   ariaLabel = "操作メニュー",
+  panelClassName = "",
 }: AppBottomSheetProps) {
   const reduceMotion = useReducedMotion();
   const duration = reduceMotion ? 0.12 : 0.28;
@@ -54,7 +57,7 @@ export function AppBottomSheet({
             onClick={onClose}
           />
           <motion.div
-            className="app-bottom-sheet-panel"
+            className={["app-bottom-sheet-panel", panelClassName].filter(Boolean).join(" ")}
             role="dialog"
             aria-modal="true"
             aria-label={title ?? ariaLabel}
