@@ -35,22 +35,29 @@ export function AppTabTransition({ children }: AppTabTransitionProps) {
     tabIdRef.current = tabId;
   }
 
-  const slide = reduceMotion ? 0 : 12;
-  const duration = reduceMotion ? 0.12 : 0.2;
+  const slide = reduceMotion ? 0 : 14;
+  const floatY = reduceMotion ? 0 : 10;
+  const duration = reduceMotion ? 0.12 : 0.26;
   const direction = directionRef.current;
 
   const variants = {
     enter: (d: number) => ({
       opacity: 0,
       x: d * slide,
+      y: floatY,
+      filter: "blur(2px)",
     }),
     center: {
       opacity: 1,
       x: 0,
+      y: 0,
+      filter: "blur(0px)",
     },
     exit: (d: number) => ({
       opacity: 0,
       x: d * -slide,
+      y: -floatY * 0.5,
+      filter: "blur(2px)",
     }),
   };
 

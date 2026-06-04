@@ -16,6 +16,9 @@ const EXTERNAL_ALLOW_SUFFIXES = [
   "gstatic.com",
   "supabase.co",
   "github.com",
+  "apple.com",
+  "appleid.apple.com",
+  "icloud.com",
 ];
 
 function isAllowedExternalHost(hostname: string): boolean {

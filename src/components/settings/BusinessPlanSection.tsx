@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
+import { shouldBlockInAppSubscriptionCheckout, getWebBillingUrl } from "@/lib/app-store-compliance";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import {
   createStripeCheckoutSession,
@@ -10,6 +11,9 @@ import {
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
+
+const EXTERNAL_PAYMENT_CONFIRM =
+  "決済ページ（別ページ）に遷移しますがよろしいですか？";
 
 type BusinessPlanSectionProps = {
   successPath?: string;
@@ -32,6 +36,11 @@ export function BusinessPlanSection({
   const [message, setMessage] = useState<string | null>(null);
   const [canManageBilling, setCanManageBilling] = useState(false);
   const [roleLoaded, setRoleLoaded] = useState(false);
+  const [blockIosCheckout, setBlockIosCheckout] = useState(false);
+
+  useEffect(() => {
+    setBlockIosCheckout(shouldBlockInAppSubscriptionCheckout());
+  }, []);
 
   const plan = subscription?.plan ?? "free";
   const status = subscription?.status ?? null;
@@ -73,11 +82,22 @@ export function BusinessPlanSection({
     void load();
   }, [load]);
 
+  const confirmExternalPayment = useCallback((): boolean => {
+    return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
+  }, []);
+
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
     if (!canManageBilling) {
       setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
       return;
     }
+    if (blockIosCheckout) {
+      setMessage(
+        `新規のプランお申し込みは Web ブラウザから行ってください（${getWebBillingUrl()}）。`,
+      );
+      return;
+    }
+    if (!confirmExternalPayment()) return;
     setMessage(null);
     setBusyAction(targetPlan);
     try {
@@ -96,13 +116,14 @@ export function BusinessPlanSection({
       setMessage(msg || "決済ページの起動に失敗しました。");
       setBusyAction(null);
     }
-  }, [canManageBilling, cancelPath, successPath]);
+  }, [blockIosCheckout, canManageBilling, cancelPath, confirmExternalPayment, successPath]);
 
   const openPortal = useCallback(async () => {
     if (!canManageBilling) {
       setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
       return;
     }
+    if (!confirmExternalPayment()) return;
     setMessage(null);
     setBusyAction("portal");
     try {
@@ -121,7 +142,7 @@ export function BusinessPlanSection({
       }
       setBusyAction(null);
     }
-  }, [canManageBilling]);
+  }, [canManageBilling, confirmExternalPayment]);
 
   const scheduledCancel = Boolean(cancelAtPeriodEnd && status !== "canceled");
   const statusLabel =
@@ -171,8 +192,34 @@ export function BusinessPlanSection({
     return null;
   }
 
-  const tierClass = (active: boolean) =>
-    `app-plan-tier rounded-2xl border px-4 py-4 ${active ? "app-plan-tier--current" : "border-slate-200 bg-white"}`;
+  const tierClass = (active: boolean, selectable = false) =>
+    `app-plan-tier rounded-2xl border px-4 py-4 ${active ? "app-plan-tier--current" : "border-slate-200 bg-white"}${
+      selectable ? " ui-pop-tap cursor-pointer transition active:scale-[0.98]" : ""
+    }`;
+
+  const tierSelectProps = (onSelect?: () => void) => {
+    if (!onSelect) return {};
+    return {
+      role: "button" as const,
+      tabIndex: 0,
+      onClick: onSelect,
+      onKeyDown: (e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      },
+    };
+  };
+
+  const selectProTier =
+    plan === "free" && !blockIosCheckout ? () => void openCheckout("pro") : undefined;
+  const selectBusinessTier =
+    plan === "free" && !blockIosCheckout
+      ? () => void openCheckout("business")
+      : plan === "pro"
+        ? () => void openPortal()
+        : undefined;
 
   return (
     <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>
@@ -186,6 +233,15 @@ export function BusinessPlanSection({
           )}
         </div>
       </div>
+      {blockIosCheckout && isAppLayout ? (
+        <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
+          iOS アプリからの新規お申し込みは App Store のガイドラインに合わせ、Web（
+          <a href={getWebBillingUrl()} className="font-medium text-[var(--app-accent)] underline">
+            infomii.com の請求ページ
+          </a>
+          ）で行ってください。既存契約の確認・解約は下の「請求情報を管理」から可能です。
+        </p>
+      ) : null}
       <div
         className={
           isAppLayout
@@ -193,7 +249,7 @@ export function BusinessPlanSection({
             : "app-settings-billing-actions mt-4 flex flex-col items-start gap-3"
         }
       >
-        {plan === "free" ? (
+        {plan === "free" && !blockIosCheckout ? (
           <>
             <button
               type="button"
@@ -218,6 +274,19 @@ export function BusinessPlanSection({
               {busyAction === "business" ? "処理中…" : "Businessプランを申し込む"}
             </button>
           </>
+        ) : null}
+        {plan === "free" && blockIosCheckout ? (
+          <a
+            href={getWebBillingUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={
+              "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[var(--app-accent)] px-4 py-2.5 text-sm font-semibold !text-white shadow-sm " +
+              (isAppLayout ? " app-touch-btn-primary w-full max-w-full" : "")
+            }
+          >
+            Web でプランを申し込む
+          </a>
         ) : null}
         {plan === "pro" ? (
           <>
@@ -349,12 +418,13 @@ export function BusinessPlanSection({
             </ul>
           </div>
           <div
+            {...tierSelectProps(selectProTier)}
             className={
               isAppLayout
-                ? tierClass(plan === "pro")
+                ? tierClass(plan === "pro", Boolean(selectProTier))
                 : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
                     plan === "pro" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
-                  }`
+                  }${selectProTier ? " ui-pop-tap cursor-pointer" : ""}`
             }
           >
             {plan === "pro" ? (
@@ -382,12 +452,13 @@ export function BusinessPlanSection({
             </ul>
           </div>
           <div
+            {...tierSelectProps(selectBusinessTier)}
             className={
               isAppLayout
-                ? tierClass(plan === "business")
+                ? tierClass(plan === "business", Boolean(selectBusinessTier))
                 : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
                     plan === "business" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
-                  }`
+                  }${selectBusinessTier ? " ui-pop-tap cursor-pointer" : ""}`
             }
           >
             {plan === "business" ? (

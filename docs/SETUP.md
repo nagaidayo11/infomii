@@ -195,6 +195,22 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 - 同一メールは 1 ユーザー方針のため、アカウント統合ポリシー（Manual linking など）を Supabase 側で確認してください。
 - 設定画面の Google 連携は再認証（現在のパスワード入力）後にのみ開始されます。ログイン済みユーザーのみ利用できます。
 
+## 3.1.1 Sign in with Apple（iOS アプリ審査・推奨）
+
+App Store 提出時は **Google ログインと併用する場合、Sign in with Apple が必須** です。Web / アプリのログイン画面に「Appleでサインイン」を実装済みです。
+
+1. **Apple Developer**
+   - App ID（`com.infomii.app`）で Sign in with Apple を有効化
+   - Services ID を作成（例: `com.infomii.app.auth`）
+   - Key（Sign in with Apple）を作成し `.p8` をダウンロード
+2. **Supabase ダッシュボード** → **Authentication** → **Providers** → **Apple**
+   - Services ID、Team ID、Key ID、Secret（`.p8` から生成）を設定
+3. **Redirect URLs**（Authentication → URL Configuration）に本番・開発の `/login` を含める
+
+詳細チェックリスト: [docs/APP_STORE_REVIEW.md](./APP_STORE_REVIEW.md)
+
+本番の Universal Links 用に **環境変数 `APPLE_TEAM_ID`**（Apple Developer の 10 文字 Team ID）を Vercel に設定してください。審査用アカウントは `npm run app-store:seed-review`（要 `APP_STORE_REVIEW_PASSWORD`）で作成できます。
+
 ## 3.2 Anonymous サインイン（招待コードのみでログインを使う場合）
 
 `/login` の「招待コードでログイン」は、Supabase の匿名認証でセッションを発行し、その後 `redeem_hotel_invite` を呼び出して施設に紐づけます。次を有効にしてください。

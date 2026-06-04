@@ -135,7 +135,7 @@ export function AppDashboardView() {
   return (
     <div className="mx-auto w-full max-w-lg space-y-5 pb-4">
       {profileLoaded && greetingName ? (
-        <header>
+        <header className="app-reveal">
           {showWorkspaceName ? (
             <p className="text-sm font-medium text-[var(--app-text-muted)]">{workspaceName}</p>
           ) : null}
@@ -159,14 +159,14 @@ export function AppDashboardView() {
       ) : (
         <>
           {canEdit ? (
-            <AppSection>
+            <AppSection revealDelay={0}>
               <div className="app-shell-hero p-4">
                 <GeneratePageFromDescription variant="app" className="mb-0" />
               </div>
             </AppSection>
           ) : null}
 
-          <AppSection>
+          <AppSection revealDelay={70}>
             <section className="app-shell-card overflow-hidden">
               <div className="grid grid-cols-2 divide-x divide-[var(--app-border)]">
                 <div className="p-4 text-center">
@@ -186,7 +186,7 @@ export function AppDashboardView() {
             </section>
           </AppSection>
 
-          <AppSection>
+          <AppSection revealDelay={140}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-lg font-bold text-[var(--app-text)]">最近の作品</h2>
               <AppShellLink
@@ -215,13 +215,14 @@ export function AppDashboardView() {
               </div>
             ) : (
               <AppWorksList className="mt-3">
-                {recent.map((item) => {
+                {recent.map((item, index) => {
                   const info = infoBySlug.get(item.slug);
                   return (
-                    <AppWorksListItemMotion key={item.id}>
+                    <AppWorksListItemMotion key={item.id} index={index}>
                       <AppWorksListItem
                         id={item.id}
                         title={item.title}
+                        slug={item.slug}
                         status={info?.status === "published" ? "published" : "draft"}
                         updatedAt={info?.updatedAt ?? new Date().toISOString()}
                         showPublishSwitch={false}

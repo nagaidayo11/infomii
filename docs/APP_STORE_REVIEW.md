@@ -1,0 +1,70 @@
+# App Store 審査チェックリスト（Infomii iOS）
+
+## 審査用デモアカウント（App Review Information に記載）
+
+| 項目 | 値 |
+|------|-----|
+| メール | `review@infomii.com` |
+| パスワード | `.env.local` の `APP_STORE_REVIEW_PASSWORD`（本番のみ。App Store Connect に記載） |
+| 公開デモ URL | `https://www.infomii.com/p/app-store-review` |
+| 備考 | Google / Apple ログインは使わずメールログインで確認可能にする |
+
+### 推奨セットアップ（本番 DB）
+
+```bash
+# .env.local に SUPABASE_SERVICE_ROLE_KEY と APP_STORE_REVIEW_PASSWORD を設定
+npm run app-store:seed-review
+```
+
+1. ワークスペース 1 件（オーナー: 審査用アカウント）
+2. 公開ページ `app-store-review`（シードで `published`）
+3. 無料プランのまま（有料は Web 課金の説明どおり）
+
+提出前のローカル確認: `npm run app-store:verify`（本番 AASA を叩く。オフラインのみなら `--skip-remote`）
+
+### Review Notes（英語例）
+
+```
+Infomii is a WebView shell for our responsive web app at https://www.infomii.com.
+
+Sign in: email/password (demo account above), Sign in with Apple, or Google.
+
+Subscriptions: New Pro/Business purchases are completed on our website (Stripe), not via In-App Purchase. The iOS app shows plan info and links to the web billing page. Existing subscribers can manage billing via Stripe Customer Portal from the Plan tab.
+
+Account deletion: Settings → Delete account.
+
+Legal: Settings → Terms / Privacy / Commerce disclosure.
+```
+
+## App Store Connect — プライバシー
+
+申告の目安:
+
+- 連絡先情報（メール）
+- ユーザー ID
+- 利用状況データ（GA4 本番時）
+- コンテンツ（ユーザー作成ページ）
+- 第三者: Supabase, Stripe, Google, Apple, AI プロバイダ
+
+## ユニバーサルリンク
+
+1. 本番・プレビュー環境に **`APPLE_TEAM_ID`**（10文字）を設定（Vercel / `.env.local`）
+2. `src/app/.well-known/apple-app-site-association/route.ts` が Team ID から AASA を返す
+3. `apps/mobile/app.config.js` の `associatedDomains` を EAS ビルドに反映
+4. Apple Developer → Identifiers → App ID → Associated Domains 有効化
+5. `https://www.infomii.com/.well-known/apple-app-site-association` が JSON（`Content-Type: application/json`）で返ることを確認
+
+## Sign in with Apple（Supabase）
+
+1. Apple Developer: Services ID, Key, Team ID
+2. Supabase Dashboard → Authentication → Apple を有効化
+3. Redirect URL: `https://<project>.supabase.co/auth/v1/callback`
+4. 本番 Web の Site URL / Redirect URLs に `https://www.infomii.com/**` を含める
+
+## プッシュ通知
+
+- ネイティブ: `apps/mobile/src/lib/push-notifications.ts`（Expo Push Token 取得）
+- API: `POST /api/push/register`（Bearer セッション必須）
+- DB: `supabase/migrations/20260604100000_push_device_tokens.sql` を適用
+
+トークン登録は WebView からセッションを渡すブリッジ実装後に接続予定です。

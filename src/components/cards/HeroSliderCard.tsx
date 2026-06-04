@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { HERO_SLIDER_MAX_ITEMS } from "@/components/editor/types";
@@ -84,12 +84,17 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   const hasSlides = rawSlides.some((s) => typeof s?.src === "string" && s.src.trim().length > 0);
   const reducedMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [frontSlot, setFrontSlot] = useState<0 | 1>(0);
+  const [slotIndices, setSlotIndices] = useState<[number, number]>([0, 0]);
+  const [animating, setAnimating] = useState(false);
+  const [outgoingSlot, setOutgoingSlot] = useState<0 | 1 | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [animationSeed, setAnimationSeed] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [suppressTapUntil, setSuppressTapUntil] = useState(0);
   const indexRef = useRef(0);
+  const slotLoadWaiterRef = useRef<{ slot: 0 | 1; resolve: () => void } | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
+  const moveToRef = useRef<(nextIndex: number, dir: 1 | -1) => void>(() => {});
 
   const normalizedSlides = useMemo(
     () =>
@@ -113,41 +118,33 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   }, [index]);
 
   useEffect(() => {
-    if (normalizedSlides.length <= 1) return;
-    const n = normalizedSlides.length;
-    const next = (index + 1) % n;
-    const prev = (index - 1 + n) % n;
-    void decodeImageUrl(normalizedSlides[next]!.src);
-    void decodeImageUrl(normalizedSlides[prev]!.src);
-  }, [normalizedSlides, index]);
+    void normalizedSlides.forEach((slide) => decodeImageUrl(slide.src));
+  }, [normalizedSlides]);
+
+  useEffect(() => {
+    setSlotIndices([0, 0]);
+    setFrontSlot(0);
+    setIndex(0);
+    setAnimating(false);
+    setOutgoingSlot(null);
+  }, [normalizedSlides]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current != null) window.clearTimeout(transitionTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!autoplay || reducedMotion || normalizedSlides.length <= 1) return;
     const timer = window.setInterval(() => {
-      void (async () => {
-        const prev = indexRef.current;
-        const n = normalizedSlides.length;
-        const next = (prev + 1) % n;
-        const nextSlide = normalizedSlides[next];
-        if (nextSlide?.src) await decodeImageUrl(nextSlide.src);
-        setDirection(1);
-        if (transitionEnabled && !reducedMotion) {
-          setPrevIndex(prev);
-          setAnimationSeed((s) => s + 1);
-        } else {
-          setPrevIndex(null);
-        }
-        setIndex(next);
-      })();
+      const prev = indexRef.current;
+      const n = normalizedSlides.length;
+      const next = (prev + 1) % n;
+      void moveToRef.current(next, 1);
     }, intervalSec * 1000);
     return () => window.clearInterval(timer);
-  }, [autoplay, reducedMotion, normalizedSlides, intervalSec, transitionEnabled]);
-
-  useEffect(() => {
-    if (prevIndex == null) return;
-    const timer = window.setTimeout(() => setPrevIndex(null), transitionDurationMs);
-    return () => window.clearTimeout(timer);
-  }, [prevIndex, transitionDurationMs]);
+  }, [autoplay, reducedMotion, normalizedSlides, intervalSec]);
 
   const heightClass =
     heightPreset === "s"
@@ -156,43 +153,102 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
 
-  if (!hasSlides || normalizedSlides.length === 0) {
-    return (
-      <section data-inner-surface className={`${editorInnerRadiusClassName} border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500`}>
-        {title ? <p className={`mb-1 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>{title}</p> : null}
-        スライド画像が未設定です。設定パネルから画像を追加してください。
-      </section>
-    );
-  }
-
   const currentIndex = normalizedSlides.length === 0 ? 0 : index % normalizedSlides.length;
-  const current = normalizedSlides[currentIndex]!;
+  const current = normalizedSlides[currentIndex];
   const currentLink = resolveSlideLink(current);
-  const previous = prevIndex != null && normalizedSlides[prevIndex] ? normalizedSlides[prevIndex] : null;
   const canMove = normalizedSlides.length > 1;
   const hasCaption = showCaptions && current.caption.trim().length > 0;
   const shouldAnimate = transitionEnabled && !reducedMotion;
-  const isTransitioning = shouldAnimate && previous != null;
   const dotBottomClass = hasCaption || bind.editable ? "bottom-1.5 sm:bottom-2" : "bottom-2";
   const titleFontWeight = getTitleFontSizeStyle().fontWeight;
   const rawSlideIndex = rawSlides.findIndex(
     (s) => typeof s?.src === "string" && s.src.trim() === current.src,
   );
   const captionSlideIndex = rawSlideIndex >= 0 ? rawSlideIndex : currentIndex;
+  const useDoubleBuffer = canMove;
 
-  const moveTo = async (nextIndex: number, dir: 1 | -1) => {
-    if (nextIndex === currentIndex) return;
-    const target = normalizedSlides[nextIndex];
-    if (target?.src) await decodeImageUrl(target.src);
-    setDirection(dir);
-    if (shouldAnimate) {
-      setPrevIndex(currentIndex);
-      setAnimationSeed((prev) => prev + 1);
-    } else {
-      setPrevIndex(null);
-    }
-    setIndex(nextIndex);
+  const waitForSlotReady = useCallback((slot: 0 | 1) => {
+    return new Promise<void>((resolve) => {
+      const timeout = window.setTimeout(resolve, 1500);
+      slotLoadWaiterRef.current = {
+        slot,
+        resolve: () => {
+          window.clearTimeout(timeout);
+          slotLoadWaiterRef.current = null;
+          resolve();
+        },
+      };
+    });
+  }, []);
+
+  const moveTo = useCallback(
+    async (nextIndex: number, dir: 1 | -1) => {
+      if (animating || nextIndex === currentIndex) return;
+      const target = normalizedSlides[nextIndex];
+      if (!target) return;
+      if (target.src) await decodeImageUrl(target.src);
+
+      if (!useDoubleBuffer) {
+        setIndex(nextIndex);
+        setSlotIndices([nextIndex, nextIndex]);
+        return;
+      }
+
+      const backSlot = (frontSlot === 0 ? 1 : 0) as 0 | 1;
+      setSlotIndices((prev) => {
+        const next: [number, number] = [...prev];
+        next[backSlot] = nextIndex;
+        return next;
+      });
+      await waitForSlotReady(backSlot);
+      if (target.src) {
+        const probe = new Image();
+        probe.src = target.src;
+        if (probe.complete) {
+          const waiter = slotLoadWaiterRef.current;
+          if (waiter?.slot === backSlot) waiter.resolve();
+        }
+      }
+
+      if (!shouldAnimate) {
+        setFrontSlot(backSlot);
+        setIndex(nextIndex);
+        return;
+      }
+
+      setDirection(dir);
+      setOutgoingSlot(frontSlot);
+      setAnimating(true);
+
+      if (transitionTimerRef.current != null) window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = window.setTimeout(() => {
+        transitionTimerRef.current = null;
+        setFrontSlot(backSlot);
+        setIndex(nextIndex);
+        setAnimating(false);
+        setOutgoingSlot(null);
+      }, transitionDurationMs);
+    },
+    [
+      animating,
+      currentIndex,
+      frontSlot,
+      normalizedSlides,
+      shouldAnimate,
+      transitionDurationMs,
+      useDoubleBuffer,
+      waitForSlotReady,
+    ],
+  );
+
+  moveToRef.current = (nextIndex, dir) => {
+    void moveTo(nextIndex, dir);
   };
+
+  const handleSlotImageLoad = useCallback((slot: 0 | 1) => {
+    const waiter = slotLoadWaiterRef.current;
+    if (waiter?.slot === slot) waiter.resolve();
+  }, []);
 
   /** Incoming slide sits underneath at full opacity; only the outgoing layer animates (reduces iOS/Safari flicker). */
   const slideInAnimationName =
@@ -209,28 +265,77 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
         ? zoomOutAnimationName
         : fadeOutAnimationName;
 
-  const incomingAnimationStyle =
-    isTransitioning && previous && transitionType !== "fade"
-      ? ({
-          animation: `${transitionType === "zoom" ? zoomInAnimationName : slideInAnimationName} ${transitionDurationMs}ms ease-out both`,
-          transform: "translateZ(0)",
-          WebkitBackfaceVisibility: "hidden" as const,
-        } as const)
-      : undefined;
+  const layerGpu = "pointer-events-none absolute inset-0 [backface-visibility:hidden] [transform:translateZ(0)]";
 
-  const outgoingAnimationStyle =
-    isTransitioning && previous
+  const renderSlideLayer = (slot: 0 | 1) => {
+    const slideIndex = slotIndices[slot] % normalizedSlides.length;
+    const slide = normalizedSlides[slideIndex]!;
+    const inactiveSlot = (frontSlot === 0 ? 1 : 0) as 0 | 1;
+    const isOutgoing = animating && outgoingSlot === slot;
+    const isIncoming = animating && slot === inactiveSlot;
+    const isHidden = !animating && frontSlot !== slot;
+
+    const incomingAnimationStyle =
+      isIncoming && transitionType !== "fade"
+        ? ({
+            animation: `${transitionType === "zoom" ? zoomInAnimationName : slideInAnimationName} ${transitionDurationMs}ms ease-out both`,
+            transform: "translateZ(0)",
+            WebkitBackfaceVisibility: "hidden" as const,
+          } as const)
+        : undefined;
+
+    const layerStyle = isOutgoing
       ? {
           animation: `${outgoingAnimation} ${transitionDurationMs}ms ease-out both`,
           transform: "translateZ(0)",
           WebkitBackfaceVisibility: "hidden" as const,
         }
-      : undefined;
+      : isHidden
+        ? { opacity: 0 }
+        : incomingAnimationStyle ?? {
+            transform: "translateZ(0)",
+            WebkitBackfaceVisibility: "hidden" as const,
+          };
 
-  const layerGpu = "pointer-events-none absolute inset-0 [backface-visibility:hidden] [transform:translateZ(0)]";
+    const zClass = isOutgoing
+      ? "z-[2] will-change-[opacity,transform]"
+      : isHidden
+        ? "z-0"
+        : "z-[1] will-change-transform";
+
+    return (
+      <div
+        key={`hero-slot-${slot}`}
+        className={`${layerGpu} ${zClass}`}
+        aria-hidden={isHidden && !animating}
+      >
+        <div className="relative h-full w-full">
+          <EditorCoverImage
+            src={slide.src}
+            alt={slide.alt}
+            sizes="(max-width: 640px) 100vw, 640px"
+            className="object-cover object-center"
+            style={layerStyle}
+            priority={slideIndex === 0}
+            decoding="sync"
+            onLoad={() => handleSlotImageLoad(slot)}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  if (!hasSlides || !current || normalizedSlides.length === 0) {
+    return (
+      <section data-inner-surface className={`${editorInnerRadiusClassName} border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500`}>
+        {title ? <p className={`mb-1 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>{title}</p> : null}
+        スライド画像が未設定です。設定パネルから画像を追加してください。
+      </section>
+    );
+  }
 
   return (
-    <section className="app-interactive w-full space-y-3 transition-transform duration-200 ease-out hover:-translate-y-0.5">
+    <section className="w-full space-y-3">
       {bind.editable ? (
         <CardTitleInline
           title={title}
@@ -245,7 +350,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       ) : null}
       <div
         data-inner-surface
-        className={`relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent ${heightClass}`}
+        className={`hero-slider-frame relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-900 ${heightClass}`}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (!canMove || touchStartX == null) return;
@@ -257,46 +362,22 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
           else void moveTo((currentIndex - 1 + normalizedSlides.length) % normalizedSlides.length, -1);
         }}
       >
-        {isTransitioning && previous ? (
+        {useDoubleBuffer ? (
           <>
-            <div className={`${layerGpu} z-[1] will-change-transform`}>
-              <div className="relative h-full w-full">
-                <EditorCoverImage
-                  key={`hero-in-${currentIndex}`}
-                  src={current.src}
-                  alt={current.alt}
-                  sizes="(max-width: 640px) 100vw, 640px"
-                  className="object-cover object-center"
-                  style={incomingAnimationStyle}
-                  priority={currentIndex === 0}
-                />
-              </div>
-            </div>
-            <div className={`${layerGpu} z-[2] will-change-[opacity,transform]`}>
-              <div className="relative h-full w-full">
-                <EditorCoverImage
-                  key={`hero-out-${prevIndex}-${animationSeed}`}
-                  src={previous.src}
-                  alt={previous.alt}
-                  sizes="(max-width: 640px) 100vw, 640px"
-                  className="object-cover object-center"
-                  style={outgoingAnimationStyle}
-                  priority
-                />
-              </div>
-            </div>
+            {renderSlideLayer(0)}
+            {renderSlideLayer(1)}
           </>
         ) : (
           <div className={`${layerGpu} z-[1]`}>
             <div className="relative h-full w-full">
               <EditorCoverImage
-                key={`hero-in-${currentIndex}`}
                 src={current.src}
                 alt={current.alt}
                 sizes="(max-width: 640px) 100vw, 640px"
                 className="object-cover object-center"
                 style={{ transform: "translateZ(0)", WebkitBackfaceVisibility: "hidden" }}
-                priority={currentIndex === 0}
+                priority
+                decoding="sync"
               />
             </div>
           </div>

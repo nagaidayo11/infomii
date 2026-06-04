@@ -6,6 +6,10 @@ import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 import { LaunchOnboardingDevSection } from "@/components/settings/LaunchOnboardingDevSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
+import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSection";
+import { AppSettingsLegalSection } from "../AppSettingsLegalSection";
+import { AppSettingsPushSection } from "../AppSettingsPushSection";
+import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
 
@@ -29,6 +33,10 @@ export function AppSettingsPage() {
         <AccountAuthLinkSection />
         <BusinessAuditLogExport />
         <LaunchOnboardingDevSection />
+        <AppSettingsLegalSection />
+        <AppSettingsRestorePurchasesSection />
+        <AppSettingsPushSection />
+        <AppSettingsAccountDeleteSection />
         <AppSettingsSignOutSection />
       </AppSettingsShell>
     );
@@ -41,6 +49,8 @@ export function AppSettingsPage() {
         <p className="app-page-subtitle">プランの案内と、Business向けの設定項目です。</p>
       </header>
       {settingsSections}
+      <AppSettingsLegalSection />
+      <AppSettingsAccountDeleteSection />
     </div>
   );
 }

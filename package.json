@@ -21,7 +21,9 @@
     "mobile:restart": "npm run restart --prefix apps/mobile",
     "mobile:tunnel": "npm run restart:tunnel --prefix apps/mobile",
     "mobile:ios": "npm run ios --prefix apps/mobile",
-    "mobile:sim": "npm run restart:sim --prefix apps/mobile"
+    "mobile:sim": "npm run restart:sim --prefix apps/mobile",
+    "app-store:seed-review": "node scripts/seed-app-store-review-account.mjs",
+    "app-store:verify": "node scripts/verify-app-store-readiness.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -23,6 +23,7 @@ module.exports = {
   ios: {
     bundleIdentifier: "com.infomii.app",
     supportsTablet: true,
+    associatedDomains: ["applinks:www.infomii.com", "applinks:infomii.com"],
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsLocalNetworking: true,
@@ -46,6 +47,13 @@ module.exports = {
         android: {
           usesCleartextTraffic: true,
         },
+      },
+    ],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/icon.png",
+        color: "#0d9488",
       },
     ],
   ],

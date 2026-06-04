@@ -11,6 +11,9 @@ type EditorCoverImageProps = {
   sizes?: string;
   priority?: boolean;
   style?: CSSProperties;
+  onLoad?: () => void;
+  /** Hero slider etc.: avoid undecoded frames on mobile WebView */
+  decoding?: "async" | "sync" | "auto";
 };
 
 /**
@@ -24,6 +27,8 @@ export function EditorCoverImage({
   sizes = "(max-width: 480px) 100vw, 420px",
   priority = false,
   style,
+  onLoad,
+  decoding = "async",
 }: EditorCoverImageProps) {
   const trimmed = src.trim();
   if (!trimmed) return null;
@@ -37,8 +42,9 @@ export function EditorCoverImage({
         className={`absolute inset-0 h-full w-full ${className}`}
         style={style}
         loading={priority ? "eager" : "lazy"}
-        decoding="async"
+        decoding={decoding}
         draggable={false}
+        onLoad={onLoad}
       />
     );
   }
@@ -52,6 +58,7 @@ export function EditorCoverImage({
       sizes={sizes}
       priority={priority}
       style={style}
+      onLoad={onLoad}
     />
   );
 }

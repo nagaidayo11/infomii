@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
+import { AppAuthBootScreen } from "@/components/app-shell/AppAuthBootScreen";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
@@ -63,6 +64,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (loading || !user || (user && !scopeChecked)) {
+    if (isAppShell) {
+      const isEditor = (pathname ?? "").startsWith("/editor");
+      return <AppAuthBootScreen variant={isEditor ? "editor" : "tabs"} />;
+    }
     return (
       <main className="mx-auto min-h-screen w-full max-w-xl px-4 py-10 sm:px-6">
         <p className="text-sm text-slate-600">認証状態を確認しています...</p>

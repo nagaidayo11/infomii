@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { qrCodeImageUrl } from "@/lib/storage";
 
 type PublishModalProps = {
@@ -8,13 +9,40 @@ type PublishModalProps = {
   pageTitle: string;
   slug: string;
   onClose: () => void;
+  /** 公開直後の成功表示か、一覧からの共有表示か */
+  variant?: "publish-success" | "share";
 };
 
 const QR_SIZE = 256;
 
-export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishModalProps) {
+export function PublishModal({
+  publicUrl,
+  pageTitle,
+  slug,
+  onClose,
+  variant = "publish-success",
+}: PublishModalProps) {
+  const isShare = variant === "share";
+  const [mounted, setMounted] = useState(false);
   const [copyUrlStatus, setCopyUrlStatus] = useState<"idle" | "ok" | "fail">("idle");
   const [copyImageStatus, setCopyImageStatus] = useState<"idle" | "ok" | "fail">("idle");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose]);
 
   const qrImageUrl = qrCodeImageUrl(publicUrl, QR_SIZE);
 
@@ -61,27 +89,49 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
     }
   };
 
-  return (
+  const overlay = (
     <div
-      className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm sm:p-4"
+      className="publish-modal-overlay ui-overlay-fade fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal
       aria-labelledby="publish-modal-title"
       onClick={onClose}
     >
       <div
-        className="ui-pop-in w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl max-h-[85dvh]"
+        className="publish-modal-panel ui-pop-in w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl max-h-[85dvh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Success header — the reward moment */}
-        <div className="border-b border-slate-100 bg-gradient-to-b from-emerald-50/80 to-white px-4 py-4 text-center sm:px-6 sm:py-5">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-            <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+        <div
+          className={
+            "border-b border-slate-100 px-4 py-4 text-center sm:px-6 sm:py-5 " +
+            (isShare
+              ? "bg-gradient-to-b from-slate-50 to-white"
+              : "bg-gradient-to-b from-emerald-50/80 to-white")
+          }
+        >
+          <div
+            className={
+              "mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full " +
+              (isShare ? "bg-slate-100" : "bg-emerald-100")
+            }
+          >
+            {isShare ? (
+              <svg className="h-6 w-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
           <h2 id="publish-modal-title" className="text-xl font-semibold text-slate-900">
-            公開しました
+            {isShare ? "QR・リンク" : "公開しました"}
           </h2>
           <p className="mt-1 text-sm text-slate-500">{pageTitle}</p>
         </div>
@@ -189,4 +239,7 @@ export function PublishModal({ publicUrl, pageTitle, slug, onClose }: PublishMod
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(overlay, document.body);
 }

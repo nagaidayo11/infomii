@@ -370,6 +370,29 @@ export type Database = {
         };
         Relationships: [];
       };
+      push_device_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          expo_push_token: string;
+          platform: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          expo_push_token: string;
+          platform?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          expo_push_token?: string;
+          platform?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           user_id: string;

@@ -18,7 +18,8 @@ import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
 import { useAppToast } from "../AppToastProvider";
-import { APP_FAB_BOTTOM_OFFSET, APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
+import { AppFabPortal } from "../AppFabPortal";
+import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 
 export function AppPagesListView() {
   const router = useRouter();
@@ -153,7 +154,7 @@ export function AppPagesListView() {
 
   return (
     <div className="mx-auto w-full max-w-lg" style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}>
-      <header className="app-screen-header">
+      <header className="app-screen-header app-reveal">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作品</h1>
@@ -205,10 +206,10 @@ export function AppPagesListView() {
         />
       ) : (
         <AppWorksList>
-          {pages.map((page) => {
+          {pages.map((page, index) => {
             const info = infoBySlug.get(page.slug);
             return (
-              <AppWorksListItemMotion key={page.id}>
+              <AppWorksListItemMotion key={page.id} index={index}>
                 <AppWorksListItem
                   id={page.id}
                   title={page.title}
@@ -226,19 +227,7 @@ export function AppPagesListView() {
         </AppWorksList>
       )}
 
-      <button
-        type="button"
-        onClick={() => void handleCreate()}
-        disabled={creating}
-        className="app-fab ui-pop-tap fixed z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg disabled:opacity-60"
-        style={{
-          right: "1rem",
-          bottom: APP_FAB_BOTTOM_OFFSET,
-        }}
-        aria-label="新規ページを作成"
-      >
-        +
-      </button>
+      <AppFabPortal onClick={() => void handleCreate()} disabled={creating} />
 
       <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
     </div>

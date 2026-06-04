@@ -129,11 +129,17 @@ Web 側でアプリ用 5 タブ・エディタ UI が有効になります（Pha
 - iOS: `com.infomii.app`
 - Android: `com.infomii.app`
 
-## 今後（v2 以降）
+## App Store 提出前
 
-- Sign in with Apple（Google ログインと併用する場合）
-- ユニバーサルリンク（`https://www.infomii.com/...` → アプリで開く）
-- プッシュ通知
+- [docs/APP_STORE_REVIEW.md](../docs/APP_STORE_REVIEW.md) — 審査用アカウント、Review Notes、Universal Links、Apple OAuth
+- 本番に `APPLE_TEAM_ID` を設定（`/.well-known/apple-app-site-association` は Next の動的ルート）
+- `npm install`（`expo-notifications` を含む）後に EAS Build
+
+## 実装済み（ストア向け）
+
+- Sign in with Apple（Web ログイン画面。Supabase Apple プロバイダ要設定）
+- ユニバーサルリンク（`associatedDomains` + AASA）
+- プッシュ通知の権限リクエスト（トークン送信 API は今後）
 
 ## トラブルシュート
 

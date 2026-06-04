@@ -23,6 +23,12 @@ import { FadeIn } from "@/components/motion";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
+import {
+  formatAppleAuthError,
+  formatGoogleAuthError,
+  formatOAuthCallbackError,
+} from "@/lib/auth-oauth-errors";
+import { getLegalPageUrl } from "@/lib/app-store-compliance";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -49,20 +55,6 @@ function formatEmailAuthError(message: string): string {
   return "ログインに失敗しました。時間をおいて再度お試しください。";
 }
 
-function formatGoogleAuthError(message: string): string {
-  if (isEmailCollisionMessage(message)) {
-    return "同じメールアドレスのアカウントが既にあります。先にメールでログインしてからGoogle連携を行ってください。";
-  }
-  const normalized = message.toLowerCase();
-  if (normalized.includes("provider is not enabled")) {
-    return "Googleログインの設定が未完了です。管理者にお問い合わせください。";
-  }
-  if (normalized.includes("access_denied")) {
-    return "Googleログインがキャンセルされました。もう一度お試しください。";
-  }
-  return "Googleログインに失敗しました。時間をおいて再度お試しください。";
-}
-
 function LoginForm() {
   const ONBOARDING_SCOPE_BOOTSTRAP_KEY = "infomii_onboarding_scope_bootstrap";
   const router = useRouter();
@@ -82,6 +74,7 @@ function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [inviteInput, setInviteInput] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (loading || user) return;
@@ -113,10 +106,12 @@ function LoginForm() {
   }, [searchParams, router, next]);
 
   useEffect(() => {
-    const oauthError =
-      searchParams.get("error_description") ?? searchParams.get("error");
+    const oauthError = formatOAuthCallbackError(
+      searchParams.get("error"),
+      searchParams.get("error_description"),
+    );
     if (!oauthError) return;
-    setMessage(formatGoogleAuthError(oauthError));
+    setMessage(oauthError);
   }, [searchParams]);
 
   useEffect(() => {
@@ -220,6 +215,12 @@ function LoginForm() {
     setSubmitting(true);
     setMessage("");
 
+    if (isSignUp && !agreedToTerms) {
+      setMessage("利用規約とプライバシーポリシーへの同意が必要です。");
+      setSubmitting(false);
+      return;
+    }
+
     if (isSignUp) {
       const { error } = await client.auth.signUp({ email, password });
       if (error) {
@@ -254,7 +255,7 @@ function LoginForm() {
     setSubmitting(false);
   }
 
-  async function handleGoogleLogin() {
+  async function handleOAuthLogin(provider: "google" | "apple") {
     const client = getBrowserSupabaseClient();
     if (!client) {
       setMessage(
@@ -276,14 +277,14 @@ function LoginForm() {
         ? "/login"
         : `/login?next=${encodeURIComponent(next)}`;
     const { error } = await client.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: { redirectTo: `${origin}${redirectPath}` },
     });
 
     if (error) {
-      setMessage(formatGoogleAuthError(error.message ?? ""));
+      const msg = error.message ?? "";
+      setMessage(provider === "apple" ? formatAppleAuthError(msg) : formatGoogleAuthError(msg));
       setSubmitting(false);
-      return;
     }
   }
 
@@ -372,7 +373,19 @@ function LoginForm() {
             <div className="space-y-3 border-b border-[var(--app-border)] p-4">
               <button
                 type="button"
-                onClick={() => void handleGoogleLogin()}
+                onClick={() => void handleOAuthLogin("apple")}
+                aria-label="Appleでサインイン"
+                disabled={submitting || !hasSupabaseEnv}
+                className="app-touch-btn flex w-full items-center justify-center gap-2 bg-black font-semibold text-white disabled:opacity-50"
+              >
+                <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05 1.88-3.51 1.9-1.46.02-1.93-.86-3.6-.86-1.67 0-2.19.84-3.57.88-1.38.05-2.43-1.4-3.41-2.35C2.67 17.2 1.69 12.98 3.37 9.9c.84-1.52 2.39-2.48 4.06-2.51 1.59-.03 3.09 1.04 3.6 1.04.51 0 2.34-1.28 3.95-1.09.67.03 2.56.27 3.77 2.05-.09.06-2.25 1.31-2.22 3.9.03 3.08 2.7 4.1 2.74 4.12-.02.06-.43 1.47-1.26 2.87zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                </svg>
+                Appleでサインイン
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleOAuthLogin("google")}
                 aria-label="Googleで続ける"
                 disabled={submitting || !hasSupabaseEnv}
                 className="app-touch-btn flex w-full items-center justify-center gap-2 border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)] disabled:opacity-50"
@@ -399,6 +412,27 @@ function LoginForm() {
             >
               {isSignUp ? "メールアドレスで新規登録" : "メールでログイン"}
             </h1>
+
+            {isSignUp ? (
+              <label className="mt-3 flex items-start gap-2 text-sm text-[var(--app-text-muted)]">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300"
+                />
+                <span>
+                  <Link href={getLegalPageUrl("/terms", isAppShell)} className="text-[var(--app-accent)] underline">
+                    利用規約
+                  </Link>
+                  と
+                  <Link href={getLegalPageUrl("/privacy", isAppShell)} className="text-[var(--app-accent)] underline">
+                    プライバシーポリシー
+                  </Link>
+                  に同意します
+                </span>
+              </label>
+            ) : null}
 
             <div className="mt-3 space-y-3">
               <div>
@@ -478,7 +512,19 @@ function LoginForm() {
               </div>
               <button
                 type="button"
-                onClick={() => void handleGoogleLogin()}
+                onClick={() => void handleOAuthLogin("apple")}
+                aria-label="Appleでサインイン"
+                disabled={submitting || !hasSupabaseEnv}
+                className="app-button-native flex w-full min-h-[44px] items-center justify-center gap-2 rounded-lg bg-black px-3 py-2 text-[13px] font-medium text-white shadow-sm transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:py-2.5"
+              >
+                <svg aria-hidden className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05 1.88-3.51 1.9-1.46.02-1.93-.86-3.6-.86-1.67 0-2.19.84-3.57.88-1.38.05-2.43-1.4-3.41-2.35C2.67 17.2 1.69 12.98 3.37 9.9c.84-1.52 2.39-2.48 4.06-2.51 1.59-.03 3.09 1.04 3.6 1.04.51 0 2.34-1.28 3.95-1.09.67.03 2.56.27 3.77 2.05-.09.06-2.25 1.31-2.22 3.9.03 3.08 2.7 4.1 2.74 4.12-.02.06-.43 1.47-1.26 2.87zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                </svg>
+                Appleでサインイン
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleOAuthLogin("google")}
                 aria-label="Googleでログイン"
                 disabled={submitting || !hasSupabaseEnv}
                 className="app-button-native flex w-full min-h-[44px] items-center justify-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-medium text-[#3c4043] shadow-sm transition hover:bg-[#f8f9fa] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8]/30 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:py-2.5"
@@ -515,6 +561,7 @@ function LoginForm() {
                 onClick={() => {
                   setIsSignUp((v) => !v);
                   setMessage("");
+                  setAgreedToTerms(false);
                 }}
                 disabled={submitting}
                 className="app-button-native w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 sm:rounded-xl sm:text-sm"
@@ -522,7 +569,7 @@ function LoginForm() {
                 {isSignUp ? "ログイン画面へ" : "新規登録（メールアドレス）"}
               </button>
               <p className="pt-0.5 text-center text-[11px] leading-snug text-slate-500 sm:text-xs">
-                新規登録はメールアドレス。Googleはログイン専用。
+                新規登録はメールアドレス。Apple / Google はログイン専用。
               </p>
             </div>
           </form>
