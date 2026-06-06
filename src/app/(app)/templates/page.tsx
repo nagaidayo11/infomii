@@ -385,7 +385,7 @@ export default function TemplatesPage() {
                     {group.label}
                   </h3>
                   <div
-                    className="-mx-4 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+                    className="-mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
                     role="region"
                     aria-label={`${group.label} テンプレート一覧（横スクロール）`}
                     tabIndex={0}
@@ -400,7 +400,7 @@ export default function TemplatesPage() {
                             className={
                               "w-[min(88vw,280px)] shrink-0 scroll-mt-24 rounded-xl transition-shadow sm:w-[300px] lg:w-[320px] " +
                               (highlighted
-                                ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-[#f8fafc]"
+                                ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
                                 : "")
                             }
                           >

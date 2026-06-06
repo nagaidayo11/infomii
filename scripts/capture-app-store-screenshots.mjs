@@ -82,26 +82,50 @@ async function loginForCapture(page, env) {
   console.log("Logged in as", email);
 }
 
-async function hideDevOverlays(page) {
-  await page.addStyleTag({
-    content: `
-      [data-nextjs-dev-tools-button],
-      [data-nextjs-toast],
-      #devtools-indicator,
-      nextjs-portal,
-      [data-nextjs-dev-tools-overlay],
-      [data-next-badge-root] {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-      }
-    `,
-  });
-  await page.evaluate(() => {
+const DEV_OVERLAY_HIDE_CSS = `
+  [data-nextjs-dev-tools-button],
+  [data-nextjs-toast],
+  #devtools-indicator,
+  nextjs-portal,
+  [data-nextjs-dev-tools-overlay],
+  [data-next-badge-root],
+  [data-nextjs-dev-tools-menu],
+  #nextjs__container_build_indicator,
+  [class*="nextjs-toast"],
+  [class*="dev-tools"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
+`;
+
+function devOverlayInitScript() {
+  const purge = () => {
+    for (const selector of ["nextjs-portal", "[data-next-badge-root]", "[data-nextjs-dev-tools-button]"]) {
+      document.querySelectorAll(selector).forEach((el) => el.remove());
+    }
     for (const el of document.querySelectorAll("button, a, div, span")) {
-      const text = el.textContent?.trim() ?? "";
-      if (/^\\d+\\s*Issue$/i.test(text) || text === "N 1 Issue X") {
-        el.closest("button, div")?.remove();
+      const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+      if (!text) continue;
+      if (/^N?\s*\d+\s*Issue/i.test(text) || /^\\d+\s*Issue$/i.test(text)) {
+        el.closest("button, nextjs-portal, div")?.remove();
+      }
+    }
+  };
+  purge();
+  new MutationObserver(purge).observe(document.documentElement, { childList: true, subtree: true });
+}
+
+async function hideDevOverlays(page) {
+  await page.addStyleTag({ content: DEV_OVERLAY_HIDE_CSS });
+  await page.evaluate(devOverlayInitScript).catch(() => {});
+  await page.evaluate(() => {
+    document.querySelectorAll("nextjs-portal, [data-next-badge-root]").forEach((el) => el.remove());
+    for (const el of document.querySelectorAll("button, a,div, span")) {
+      const text = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+      if (/^N?\s*\d+\s*Issue/i.test(text) || /^\\d+\s*Issue$/i.test(text)) {
+        el.closest("button, nextjs-portal, div")?.remove();
       }
     }
   });
@@ -120,9 +144,111 @@ async function getFakeQrDataUrl() {
 
 async function capture(page, outPath) {
   await hideDevOverlays(page);
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(250);
+  await hideDevOverlays(page);
+  await page.waitForTimeout(250);
   await page.screenshot({ path: outPath, type: "png" });
   console.log("saved", path.relative(ROOT, outPath));
+}
+
+async function centerTemplateCard(page, slug) {
+  await page.waitForTimeout(800);
+  await page.evaluate((templateSlug) => {
+    const card = document.getElementById(`template-${templateSlug}`);
+    if (!card) return;
+
+    const scroller = card.closest('[role="region"]');
+    if (scroller instanceof HTMLElement) {
+      scroller.scrollLeft = 0;
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      scroller.scrollLeft = Math.max(0, cardCenter - scroller.clientWidth / 2);
+
+      const cardRect = card.getBoundingClientRect();
+      const viewportCenterX = window.innerWidth / 2;
+      const cardCenterX = cardRect.left + cardRect.width / 2;
+      scroller.scrollLeft += cardCenterX - viewportCenterX;
+    }
+
+    const main = document.querySelector(".app-shell-main");
+    const scrollRoot = main instanceof HTMLElement ? main : document.scrollingElement;
+    if (!(scrollRoot instanceof HTMLElement)) return;
+
+    scrollRoot.scrollTop = 0;
+    let cardRect = card.getBoundingClientRect();
+    const bottomNav = document.querySelector("nav");
+    const bottomNavHeight = bottomNav?.getBoundingClientRect().height ?? 72;
+    const contentCenterY = (window.innerHeight - bottomNavHeight) / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+    scrollRoot.scrollTop += cardCenterY - contentCenterY;
+  }, slug);
+  await page.waitForTimeout(400);
+}
+
+async function resetEditorFrameForCapture(page) {
+  await page.evaluate(() => {
+    const vh = window.innerHeight;
+    document.documentElement.style.setProperty("--infomii-safe-top", "0px");
+    document.documentElement.style.setProperty("--infomii-safe-bottom", "0px");
+    document.documentElement.style.setProperty("--infomii-safe-top-fallback", "0px");
+    document.documentElement.style.setProperty("--infomii-safe-bottom-fallback", "0px");
+
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+
+    for (const el of document.querySelectorAll("*")) {
+      if (!(el instanceof HTMLElement)) continue;
+      const { overflowY } = getComputedStyle(el);
+      if (overflowY === "auto" || overflowY === "scroll") el.scrollTop = 0;
+    }
+
+    const layout = document.querySelector("[data-editor-layout]");
+    if (layout instanceof HTMLElement) {
+      layout.style.height = `${vh}px`;
+      layout.style.maxHeight = `${vh}px`;
+      layout.style.minHeight = `${vh}px`;
+    }
+  });
+}
+
+async function stylizeAiHomeForAppStore(page) {
+  await page.evaluate(() => {
+    const header = document.querySelector("header.app-reveal, header");
+    const h1 = header?.querySelector("h1");
+    if (h1) h1.textContent = "ゲストさん";
+
+    header?.querySelectorAll("p").forEach((el) => {
+      const text = el.textContent?.trim() ?? "";
+      if (text.includes("App Store") || text.includes("審査")) el.remove();
+    });
+
+    document.querySelectorAll(".app-reveal").forEach((el) => {
+      if (el.querySelector('a[href*="/editor/"]') && el.textContent?.includes("App Store 審査")) {
+        el.remove();
+      }
+    });
+  });
+  const textarea = page.locator("textarea").first();
+  if (await textarea.count()) {
+    await textarea.fill(
+      "友達5人で沖縄3泊の旅行しおり。飛行機・レンタカー・宿・役割分担とリンクを1ページに。",
+    );
+  }
+}
+
+async function waitForRouteProgressHidden(page) {
+  await page
+    .waitForFunction(
+      () => {
+        const host = document.querySelector(".app-route-progress-bar")?.parentElement;
+        if (!host) return true;
+        const opacity = getComputedStyle(host).opacity;
+        return opacity === "0" || Number.parseFloat(opacity) < 0.05;
+      },
+      { timeout: 60_000 },
+    )
+    .catch(() => {});
+  await page.waitForTimeout(400);
 }
 
 async function waitForTemplatesLoaded(page) {
@@ -135,12 +261,24 @@ async function waitForTemplatesLoaded(page) {
   await page.waitForTimeout(600);
 }
 
+async function markTemplateSeedSynced(page) {
+  await page.evaluate((version) => {
+    try {
+      sessionStorage.setItem(`infomii-template-seed-v${version}`, "done");
+    } catch {
+      /* ignore */
+    }
+  }, MARKETPLACE_SEED_VERSION);
+}
+
 async function ensureTravelTemplateVisible(page) {
+  await markTemplateSeedSynced(page);
   await page.goto(`${BASE}/templates?client=app&category=travel&starter=${TEMPLATE_SLUG}`, {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
     timeout: 120_000,
   });
   await waitForTemplatesLoaded(page);
+  await waitForRouteProgressHidden(page);
 
   let card = page.locator(`#template-${TEMPLATE_SLUG}`);
   if (!(await card.count())) {
@@ -200,6 +338,8 @@ async function renamePageForCapture(env, pageId) {
 
 async function captureTemplates(page, outPath) {
   await ensureTravelTemplateVisible(page);
+  await centerTemplateCard(page, TEMPLATE_SLUG);
+  await waitForRouteProgressHidden(page);
   await page.evaluate(() => {
     for (const el of document.querySelectorAll("a, button")) {
       if (el.textContent?.includes("ダッシュボード")) el.remove();
@@ -216,18 +356,7 @@ async function captureAiHome(page, outPath) {
     .first()
     .waitFor({ state: "detached", timeout: 60_000 })
     .catch(() => {});
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll("h1")) {
-      const text = el.textContent?.trim() ?? "";
-      if (text.endsWith("さん")) el.textContent = "さくらさん";
-    }
-    const textarea = document.querySelector("textarea");
-    if (textarea instanceof HTMLTextAreaElement) {
-      textarea.value =
-        "友達5人で沖縄3泊の旅行しおり。飛行機・レンタカー・宿・役割分担とリンクを1ページに。";
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-  });
+  await stylizeAiHomeForAppStore(page);
   await page.waitForTimeout(800);
   await capture(page, outPath);
 }
@@ -251,8 +380,13 @@ async function captureEditor(page, pageId, outPath) {
     await page.waitForTimeout(400);
   }
   await page.waitForTimeout(400);
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await capture(page, outPath);
+  await resetEditorFrameForCapture(page);
+  await hideDevOverlays(page);
+  await page.waitForTimeout(300);
+  const layout = page.locator("[data-editor-layout]");
+  await layout.waitFor({ timeout: 30_000 });
+  await layout.screenshot({ path: outPath, type: "png" });
+  console.log("saved", path.relative(ROOT, outPath));
 }
 
 async function stylizePublishModalForAppStore(page) {
@@ -304,6 +438,11 @@ async function main() {
     throw new Error("Missing Supabase env in .env.local");
   }
 
+  const only = process.env.APP_STORE_CAPTURE_ONLY?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const shouldCapture = (name) => !only?.length || only.includes(name);
+
   await mkdir(OUT_DIR, { recursive: true });
 
   const { email } = resolveCaptureCredentials(env);
@@ -316,20 +455,34 @@ async function main() {
     isMobile: true,
     hasTouch: true,
   });
+  await context.addInitScript(devOverlayInitScript);
   const page = await context.newPage();
 
   await loginForCapture(page, env);
   await page.waitForTimeout(800);
 
-  const editorPageId = await findGroupEditorPageId(page);
-  console.log("Group travel editor page:", editorPageId);
-  await renamePageForCapture(env, editorPageId);
+  let editorPageId = null;
+  if (shouldCapture("03")) {
+    editorPageId = await findGroupEditorPageId(page);
+    console.log("Group travel editor page:", editorPageId);
+    await renamePageForCapture(env, editorPageId);
+  }
 
-  await captureTemplates(page, path.join(OUT_DIR, "01-templates.png"));
-  await captureAiHome(page, path.join(OUT_DIR, "02-ai-home.png"));
-  await captureEditor(page, editorPageId, path.join(OUT_DIR, "03-editor.png"));
-  await capturePublishModal(page, path.join(OUT_DIR, "04-publish.png"));
-  await captureGuestDemo(page, path.join(OUT_DIR, "05-guest.png"));
+  if (shouldCapture("01")) {
+    await captureTemplates(page, path.join(OUT_DIR, "01-templates.png"));
+  }
+  if (shouldCapture("02")) {
+    await captureAiHome(page, path.join(OUT_DIR, "02-ai-home.png"));
+  }
+  if (shouldCapture("03")) {
+    await captureEditor(page, editorPageId, path.join(OUT_DIR, "03-editor.png"));
+  }
+  if (shouldCapture("04")) {
+    await capturePublishModal(page, path.join(OUT_DIR, "04-publish.png"));
+  }
+  if (shouldCapture("05")) {
+    await captureGuestDemo(page, path.join(OUT_DIR, "05-guest.png"));
+  }
 
   await browser.close();
   console.log("Done. Output:", path.relative(ROOT, OUT_DIR));
