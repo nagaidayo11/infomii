@@ -22,7 +22,11 @@ module.exports = {
   ios: {
     bundleIdentifier: "com.infomii.app",
     supportsTablet: true,
+    usesAppleSignIn: true,
     associatedDomains: ["applinks:www.infomii.com", "applinks:infomii.com"],
+    entitlements: {
+      "com.apple.developer.applesignin": ["Default"],
+    },
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsLocalNetworking: true,

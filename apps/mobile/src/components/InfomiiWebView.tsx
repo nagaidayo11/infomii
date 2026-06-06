@@ -74,7 +74,9 @@ export function InfomiiWebView() {
     loadTimeoutRef.current = setTimeout(() => {
       setLoading(false);
       setLoadError(
-        "読み込みがタイムアウトしました。Next.js が起動しているか、.env の IP が正しいか確認してください。",
+        __DEV__
+          ? "読み込みがタイムアウトしました。Next.js が起動しているか、.env の IP が正しいか確認してください。"
+          : "読み込みがタイムアウトしました。通信環境を確認して、もう一度お試しください。",
       );
     }, LOAD_TIMEOUT_MS);
   }, [clearLoadTimeout]);
@@ -181,9 +183,12 @@ export function InfomiiWebView() {
       {loading && !loadError ? (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#0d9488" />
-          <Text style={styles.loadingUrl} numberOfLines={2}>
-            {entryUrl}
-          </Text>
+          <Text style={styles.loadingLabel}>読み込み中…</Text>
+          {__DEV__ ? (
+            <Text style={styles.loadingUrl} numberOfLines={2}>
+              {entryUrl}
+            </Text>
+          ) : null}
         </View>
       ) : null}
 
@@ -220,13 +225,15 @@ function ConfigErrorPanel({
     <View style={styles.errorOverlay}>
       <Text style={styles.errorTitle}>{title}</Text>
       <Text style={styles.errorBody}>{message}</Text>
-      <Text style={styles.errorHint}>{entryUrl}</Text>
+      {__DEV__ ? <Text style={styles.errorHint}>{entryUrl}</Text> : null}
       <Pressable style={styles.retryButton} onPress={onRetry}>
         <Text style={styles.retryLabel}>再試行</Text>
       </Pressable>
-      <Text style={styles.errorFootnote}>
-        実機開発: ルートで npm run dev:lan → apps/mobile で npm run restart（シミュレータは npm run ios）
-      </Text>
+      {__DEV__ ? (
+        <Text style={styles.errorFootnote}>
+          実機開発: ルートで npm run dev:lan → apps/mobile で npm run restart（シミュレータは npm run ios）
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -251,8 +258,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(241, 245, 249, 0.85)",
     paddingHorizontal: 24,
   },
-  loadingUrl: {
+  loadingLabel: {
     marginTop: 16,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#334155",
+    textAlign: "center",
+  },
+  loadingUrl: {
+    marginTop: 10,
     fontSize: 11,
     color: "#64748b",
     textAlign: "center",
