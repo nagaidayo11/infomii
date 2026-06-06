@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { navigateGuestPageUrl } from "@/lib/app-href";
-import { qrCodeImageUrl } from "@/lib/storage";
+import {
+  buildLineShareUrl,
+  buildMailShareUrl,
+  buildPublishShareMessage,
+  buildXShareUrl,
+} from "@/lib/publish-share";
+import { qrCodeImageUrl, trackShareClick } from "@/lib/storage";
 
 type PublishModalProps = {
   publicUrl: string;
@@ -17,10 +23,49 @@ type PublishModalProps = {
 
 const QR_SIZE = 256;
 
+function CopyIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+      />
+    </svg>
+  );
+}
+
+function ShareIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+      />
+    </svg>
+  );
+}
+
+function OpenPageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+      />
+    </svg>
+  );
+}
+
 export function PublishModal({
   publicUrl,
   pageTitle,
-  slug,
+  slug: _slug,
   onClose,
   variant = "publish-success",
 }: PublishModalProps) {
@@ -28,7 +73,7 @@ export function PublishModal({
   const { isAppShell } = useClientShell();
   const [mounted, setMounted] = useState(false);
   const [copyUrlStatus, setCopyUrlStatus] = useState<"idle" | "ok" | "fail">("idle");
-  const [copyImageStatus, setCopyImageStatus] = useState<"idle" | "ok" | "fail">("idle");
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -48,6 +93,7 @@ export function PublishModal({
   }, [onClose]);
 
   const qrImageUrl = qrCodeImageUrl(publicUrl, QR_SIZE);
+  const shareMessage = buildPublishShareMessage(pageTitle, publicUrl);
 
   const handleCopyUrl = async () => {
     try {
@@ -60,37 +106,86 @@ export function PublishModal({
     }
   };
 
-  const handleCopyQrImage = async () => {
-    setCopyImageStatus("idle");
-    try {
-      const res = await fetch(qrImageUrl);
-      const blob = await res.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob }),
-      ]);
-      setCopyImageStatus("ok");
-      setTimeout(() => setCopyImageStatus("idle"), 2000);
-    } catch {
-      setCopyImageStatus("fail");
-      setTimeout(() => setCopyImageStatus("idle"), 2000);
-    }
+  const openShareWindow = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleDownloadQr = async () => {
-    try {
-      const res = await fetch(qrImageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `qr-${slug || "page"}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      // Fallback: open in new tab
-      window.open(qrImageUrl, "_blank");
+  const handleOpenPage = () => {
+    if (isAppShell) {
+      navigateGuestPageUrl(publicUrl);
+      return;
     }
+    window.open(publicUrl, "_blank", "noopener,noreferrer");
   };
+
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: pageTitle,
+          text: `${pageTitle}のしおり`,
+          url: publicUrl,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+    setShareMenuOpen((open) => !open);
+  };
+
+  const shareFallbackActions = [
+    {
+      id: "line",
+      label: "LINE",
+      onClick: () => {
+        void trackShareClick("line");
+        openShareWindow(buildLineShareUrl(shareMessage));
+        setShareMenuOpen(false);
+      },
+    },
+    {
+      id: "x",
+      label: "X",
+      onClick: () => {
+        openShareWindow(buildXShareUrl(pageTitle, publicUrl));
+        setShareMenuOpen(false);
+      },
+    },
+    {
+      id: "mail",
+      label: "メール",
+      onClick: () => {
+        void trackShareClick("mail");
+        window.location.href = buildMailShareUrl(pageTitle, shareMessage);
+        setShareMenuOpen(false);
+      },
+    },
+  ];
+
+  const actionButtons = [
+    {
+      id: "share",
+      label: "共有",
+      className: "publish-share-btn publish-share-btn--share",
+      icon: <ShareIcon className="h-5 w-5" />,
+      onClick: () => void handleShare(),
+    },
+    {
+      id: "copy",
+      label: copyUrlStatus === "ok" ? "コピー済" : copyUrlStatus === "fail" ? "失敗" : "リンク",
+      className: "publish-share-btn publish-share-btn--copy",
+      icon: <CopyIcon className="h-5 w-5" />,
+      onClick: () => void handleCopyUrl(),
+    },
+    {
+      id: "open",
+      label: "開く",
+      className: "publish-share-btn publish-share-btn--open",
+      icon: <OpenPageIcon className="h-5 w-5" />,
+      onClick: handleOpenPage,
+    },
+  ];
 
   const overlay = (
     <div
@@ -140,7 +235,6 @@ export function PublishModal({
         </div>
 
         <div className="space-y-5 p-4 sm:p-6">
-          {/* QR as hero */}
           <div className="flex flex-col items-center">
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">QRコード</p>
             <div className="flex shrink-0 overflow-hidden rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-inner">
@@ -155,84 +249,57 @@ export function PublishModal({
             </div>
           </div>
 
-          {/* Primary actions: Copy link + Download QR */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={handleCopyUrl}
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold !text-white hover:bg-slate-800"
-            >
-              {copyUrlStatus === "ok" ? (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  コピーしました
-                </>
-              ) : copyUrlStatus === "fail" ? (
-                "失敗"
-              ) : (
-                <>
-                  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  リンクをコピー
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={handleDownloadQr}
-              className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              QRをダウンロード
-            </button>
+          <div>
+            <div className="publish-share-grid publish-share-grid--compact">
+              {actionButtons.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={action.onClick}
+                  className={action.className}
+                  aria-label={
+                    action.id === "share"
+                      ? "共有"
+                      : action.id === "copy"
+                        ? "リンクをコピー"
+                        : "ページを開く"
+                  }
+                >
+                  <span className="publish-share-btn-icon">{action.icon}</span>
+                  <span className="publish-share-btn-label">{action.label}</span>
+                </button>
+              ))}
+            </div>
+            {shareMenuOpen ? (
+              <div className="publish-share-fallback mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                <div className="flex gap-2">
+                  {shareFallbackActions.map((action) => (
+                    <button
+                      key={action.id}
+                      type="button"
+                      onClick={action.onClick}
+                      className="publish-share-fallback-btn flex-1"
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          {/* Public URL with one-click copy */}
           <div>
             <p className="mb-1.5 text-xs font-medium text-slate-500">公開URL</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                readOnly
-                value={publicUrl}
-                className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm text-slate-700"
-                aria-label="Public page URL"
-              />
-              <button
-                type="button"
-                onClick={handleCopyUrl}
-                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50 min-h-[44px]"
-                title="Copy link"
-                aria-label="Copy link"
-              >
-                {copyUrlStatus === "ok" ? (
-                  <svg className="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                ) : (
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                )}
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyQrImage}
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 min-h-[44px]"
-            >
-              {copyImageStatus === "ok" ? "QR画像をコピーしました" : copyImageStatus === "fail" ? "コピーに失敗しました" : "QR画像をコピー"}
-            </button>
+            <input
+              type="text"
+              readOnly
+              value={publicUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              onClick={(e) => e.currentTarget.select()}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-700"
+              aria-label="Public page URL"
+            />
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (isAppShell) {
-                navigateGuestPageUrl(publicUrl);
-                return;
-              }
-              window.open(publicUrl, "_blank", "noopener,noreferrer");
-            }}
-            className="block w-full min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/50 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100"
-          >
-            ページを開く
-          </button>
         </div>
 
         <div className="flex justify-end border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4">

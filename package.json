@@ -24,7 +24,8 @@
     "mobile:sim": "npm run restart:sim --prefix apps/mobile",
     "mobile:build:ios": "npm exec --prefix apps/mobile -- eas-cli@latest build --platform ios --profile production",
     "app-store:seed-review": "node scripts/seed-app-store-review-account.mjs",
-    "app-store:verify": "node scripts/verify-app-store-readiness.mjs"
+    "app-store:verify": "node scripts/verify-app-store-readiness.mjs",
+    "app-store:capture-screenshots": "node scripts/capture-app-store-screenshots.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -310,7 +310,7 @@ export const BTOC_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
           { label: "宿（住所・鍵）", icon: "map" },
           { label: "シュノーケル", icon: "gift" },
           { label: "共通費メモ", icon: "link" },
-        ]),
+        ], 2),
       b(
         "faq",
         faq("あるある", [
