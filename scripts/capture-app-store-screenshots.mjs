@@ -424,29 +424,56 @@ async function capturePublishModal(page, outPath) {
   await capture(page, outPath);
 }
 
+async function resetGuestFrameForCapture(page) {
+  await page.evaluate(() => {
+    const vh = window.innerHeight;
+    document.documentElement.style.setProperty("--infomii-safe-top", "0px");
+    document.documentElement.style.setProperty("--infomii-safe-bottom", "0px");
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+
+    for (const el of document.querySelectorAll("*")) {
+      if (!(el instanceof HTMLElement)) continue;
+      const { overflowY } = getComputedStyle(el);
+      if (overflowY === "auto" || overflowY === "scroll") el.scrollTop = 0;
+    }
+
+    const shell = document.querySelector("[data-guest-page-shell]");
+    if (shell instanceof HTMLElement) {
+      shell.style.height = `${vh}px`;
+      shell.style.maxHeight = `${vh}px`;
+    }
+  });
+}
+
 async function captureGuestDemo(page, outPath) {
-  await page.goto(`${BASE}${GUEST_DEMO_PATH}`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto(`${BASE}${GUEST_DEMO_PATH}`, { waitUntil: "networkidle", timeout: 120_000 });
   await page.locator("text=沖縄、3泊5人").first().waitFor({ timeout: 60_000 });
-  await page.waitForTimeout(1000);
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await capture(page, outPath);
+  await page.waitForTimeout(800);
+  await resetGuestFrameForCapture(page);
+  await hideDevOverlays(page);
+  await page.waitForTimeout(300);
+  const shell = page.locator("[data-guest-page-shell]");
+  await shell.waitFor({ timeout: 30_000 });
+  await shell.screenshot({ path: outPath, type: "png" });
+  console.log("saved", path.relative(ROOT, outPath));
 }
 
 async function main() {
   const env = await loadEnv();
-  if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Missing Supabase env in .env.local");
-  }
-
   const only = process.env.APP_STORE_CAPTURE_ONLY?.split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const shouldCapture = (name) => !only?.length || only.includes(name);
+  const needsAuth = shouldCapture("01") || shouldCapture("02") || shouldCapture("03");
+  const needsSupabase = shouldCapture("03");
 
   await mkdir(OUT_DIR, { recursive: true });
 
-  const { email } = resolveCaptureCredentials(env);
-  console.log("Capturing as", email);
+  if (needsSupabase && (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY)) {
+    throw new Error("Missing Supabase env in .env.local");
+  }
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -458,8 +485,14 @@ async function main() {
   await context.addInitScript(devOverlayInitScript);
   const page = await context.newPage();
 
-  await loginForCapture(page, env);
-  await page.waitForTimeout(800);
+  if (needsAuth) {
+    const { email } = resolveCaptureCredentials(env);
+    console.log("Capturing as", email);
+    await loginForCapture(page, env);
+    await page.waitForTimeout(800);
+  } else {
+    console.log("Capturing public demo pages (no login)");
+  }
 
   let editorPageId = null;
   if (shouldCapture("03")) {

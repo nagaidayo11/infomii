@@ -21,7 +21,6 @@ type PublicPageShellProps = {
   pageBackground?: PageBackgroundStyle | null;
 };
 
-const PHONE_WIDTH = 375;
 
 function PageContent({
   title,
@@ -130,21 +129,28 @@ export function PublicPageShell({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f1f5f9] md:min-h-screen md:items-center md:justify-center md:bg-slate-300 md:py-8">
-      <div
-        className="flex w-full flex-1 flex-col md:flex-none"
-        style={{ maxWidth: "100%" }}
-      >
+    <div
+      className="flex min-h-screen flex-col bg-[#f1f5f9] md:min-h-screen md:items-center md:justify-center md:bg-slate-300 md:py-8"
+      data-guest-page-root
+    >
+      <div className="flex w-full flex-1 flex-col md:flex-none">
         <div
-          className="flex flex-1 flex-col bg-[#f1f5f9] md:mx-auto md:flex-none md:rounded-[2rem] md:border md:border-slate-200/90 md:bg-slate-100/80 md:p-3 md:shadow-[0_8px_32px_rgba(0,0,0,0.15),0_2px_8px_rgba(0,0,0,0.08)]"
-          style={{ width: "100%", maxWidth: PHONE_WIDTH + 24 }}
+          className={
+            "flex w-full flex-1 flex-col bg-[#f1f5f9] md:mx-auto md:max-w-[399px] md:flex-none " +
+            "md:rounded-[2rem] md:border md:border-slate-200/90 md:bg-slate-100/80 md:p-3 " +
+            "md:shadow-[0_8px_32px_rgba(0,0,0,0.15),0_2px_8px_rgba(0,0,0,0.08)]"
+          }
         >
           <div className="mx-auto mb-1 hidden h-2 w-16 shrink-0 rounded-full bg-slate-300/70 md:block" aria-hidden />
           <div
-            className="flex min-h-[480px] w-full flex-1 flex-col overflow-hidden rounded-b-[1.25rem] border-0 border-t-0 bg-white md:h-[84vh] md:max-h-[84vh] md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
+            className={
+              "flex min-h-[100dvh] w-full flex-1 flex-col overflow-hidden bg-white " +
+              "md:min-h-[480px] md:h-[84vh] md:max-h-[84vh] md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
+            }
           >
             <div
               className="template-preview-scroll flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
+              data-guest-page-shell
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y", background: pageBackgroundStyle }}
             >
               <PageContent
