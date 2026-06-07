@@ -110,6 +110,22 @@ Web 側でアプリ用 5 タブ・エディタ UI が有効になります（Pha
 
 認証は **WebView 内 Cookie**（Supabase）。旧 `infomii://auth` / `mobile-callback` は使いません。
 
+## アプリアイコン
+
+アイコンは **`apps/mobile/assets/`** に置き、**`app.config.js`** から参照します。
+
+| ファイル | 用途 |
+|----------|------|
+| `icon.png` (1024×1024) | iOS / 共通アプリアイコン（`icon`） |
+| `android-icon-foreground.png` | Android アダプティブアイコン前景 |
+| `android-icon-background.png` | Android アダプティブアイコン背景 |
+| `splash-icon.png` | 起動スプラッシュ |
+| `favicon.png` | Expo Web プレビュー |
+
+アイコンを差し替えたら **Expo Go では反映されません**（開発中は Expo Go 自身のアイコン）。実機のホーム画面アイコンを確認するには **EAS Build** が必要です。
+
+Web PWA のアイコンは別管理です: リポジトリルートの `public/icon-512.png` と `src/app/manifest.ts`。
+
 ## リリースの考え方
 
 | 変更 | 再ビルド |
@@ -117,12 +133,36 @@ Web 側でアプリ用 5 タブ・エディタ UI が有効になります（Pha
 | Web UI・API・料金ページ | 不要（Vercel デプロイのみ） |
 | WebView 設定・アイコン・ネイティブ権限 | 必要（EAS Build → TestFlight / Play 内部テスト） |
 
-### TestFlight / Play 内部テスト（概要）
+### TestFlight / Play 内部テスト（手順）
 
-1. [EAS](https://expo.dev/eas) でプロジェクト作成し、`app.json` の `extra.eas.projectId` を設定
-2. `eas build --platform ios` / `android`
-3. `eas submit` またはストアコンソールから TestFlight / 内部テストトラックへ
-4. テスター招待 → インストール → Web は本番 URL のまま検証
+1. [Expo](https://expo.dev) にログインし、プロジェクト `infomii`（`extra.eas.projectId`）へアクセス
+2. リポジトリルートまたは `apps/mobile` でビルド（**必ず `apps/mobile` 配下の `eas.json` を使う**）:
+
+```bash
+cd apps/mobile
+npx eas login          # 初回のみ
+npx eas build --platform ios --profile production
+# Android も必要なら
+npx eas build --platform android --profile production
+```
+
+ルートから実行する場合:
+
+```bash
+npm run mobile:build:ios
+```
+
+3. ビルド完了後、TestFlight / Play へ提出:
+
+```bash
+cd apps/mobile
+npx eas submit --platform ios --profile production
+npx eas submit --platform android --profile production
+```
+
+4. App Store Connect / Google Play Console でテスターを招待 → インストール → Web は本番 URL のまま動作確認
+
+> **アイコン変更後**は上記 EAS Build をやり直してください。Web だけデプロイしてもネイティブアイコンは変わりません。
 
 ## ストア ID
 

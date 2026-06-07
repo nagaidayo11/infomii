@@ -1,5 +1,11 @@
 /**
  * Slug must match the EAS project (expo.dev → infomii). Updates are disabled below for Expo Go.
+ *
+ * App icon assets live in ./assets/
+ * - icon.png (1024×1024) — iOS App Store + default app icon
+ * - android-icon-foreground.png — Android adaptive icon foreground
+ * - splash-icon.png — launch splash (resizeMode: contain)
+ * - favicon.png — Expo web preview
  */
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = {
@@ -13,7 +19,7 @@ module.exports = {
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#0d9488",
   },
   updates: {
     enabled: false,
@@ -37,7 +43,7 @@ module.exports = {
   android: {
     package: "com.infomii.app",
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#0d9488",
       foregroundImage: "./assets/android-icon-foreground.png",
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
