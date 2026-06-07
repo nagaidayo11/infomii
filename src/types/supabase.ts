@@ -444,6 +444,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      bootstrap_user_workspace: {
+        Args: { default_name?: string | null };
+        Returns: string;
+      };
       ensure_hotel_subscription: {
         Args: { target_hotel_id: string };
         Returns: string;
