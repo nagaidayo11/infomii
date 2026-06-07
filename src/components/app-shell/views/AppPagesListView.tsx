@@ -183,14 +183,13 @@ export function AppPagesListView() {
         </div>
       ) : pages.length === 0 ? (
         <AppEmptyState
-          emoji="🖼️"
           title="作品がまだありません"
           description="ホームのAIやテンプレートタブから作ると、ここに並びます。"
           action={
             <div className="flex flex-col gap-3">
               <AppShellLink
                 href="/templates"
-                className="app-touch-btn app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold text-white"
+                className="app-touch-btn app-touch-btn-primary app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white no-underline hover:!text-white"
               >
                 テンプレートへ
               </AppShellLink>

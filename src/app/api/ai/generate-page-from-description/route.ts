@@ -12,6 +12,7 @@ import {
   type AiPageImageDefaults,
 } from "@/lib/ai-page-theme-images";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { normalizeMaxPublishedPages } from "@/lib/plan-limits";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
@@ -506,10 +507,12 @@ export async function POST(request: Request) {
 
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("max_published_pages")
+    .select("max_published_pages,plan")
     .eq("hotel_id", membership.hotel_id)
     .maybeSingle();
-  const maxPages = sub?.max_published_pages ?? 3;
+  const maxPages = sub
+    ? normalizeMaxPublishedPages(sub.plan as "free" | "pro" | "business", sub.max_published_pages)
+    : 3;
   const { count } = await supabase
     .from("pages")
     .select("id", { count: "exact", head: true })

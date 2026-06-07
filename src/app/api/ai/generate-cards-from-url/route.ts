@@ -3,6 +3,7 @@ import { finalizeAiPageCards } from "@/lib/ai-page-content-enrichment";
 import { AI_GENERATED_PAGE_TITLE, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { normalizeMaxPublishedPages } from "@/lib/plan-limits";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -286,10 +287,12 @@ export async function POST(request: Request) {
       }
       const { data: sub } = await supabase
         .from("subscriptions")
-        .select("max_published_pages")
+        .select("max_published_pages,plan")
         .eq("hotel_id", membership.hotel_id)
         .maybeSingle();
-      const maxPages = sub?.max_published_pages ?? 3;
+      const maxPages = sub
+        ? normalizeMaxPublishedPages(sub.plan as "free" | "pro" | "business", sub.max_published_pages)
+        : 3;
       const { count } = await supabase
         .from("pages")
         .select("id", { count: "exact", head: true })

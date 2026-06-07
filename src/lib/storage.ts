@@ -17,6 +17,12 @@ import type {
   MultiPageTemplateId,
   MultiPageTemplate,
 } from "@/lib/multi-page-templates/types";
+import type { PlanLimitTier } from "@/lib/plan-limits";
+import {
+  formatPublishLimitError,
+  normalizeMaxPublishedPages,
+  resolveMaxPublishedPagesByPlan,
+} from "@/lib/plan-limits";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
 
@@ -520,7 +526,7 @@ function blocksToImages(blocks: InformationBlock[]): string[] {
     .slice(0, 3);
 }
 
-export type SubscriptionPlan = "free" | "pro" | "business";
+export type SubscriptionPlan = PlanLimitTier;
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 
 export type HotelSubscription = {
@@ -808,9 +814,7 @@ function applyTemplateInitialDefaults(blocks: InformationBlock[]): InformationBl
 }
 
 function resolveLimitByPlan(plan: SubscriptionPlan): number {
-  if (plan === "business") return 999;
-  if (plan === "pro") return 10;
-  return 3;
+  return resolveMaxPublishedPagesByPlan(plan);
 }
 
 function applyDevBusinessOverrideToSubscription(
@@ -1124,11 +1128,20 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     return null;
   }
 
+  const normalizedLimit = normalizeMaxPublishedPages(data.plan, data.max_published_pages);
+
+  if (data.max_published_pages !== normalizedLimit) {
+    void supabase
+      .from("subscriptions")
+      .update({ max_published_pages: normalizedLimit })
+      .eq("id", data.id);
+  }
+
   const subscription: HotelSubscription = {
     id: data.id,
     plan: data.plan,
     status: data.status,
-    maxPublishedPages: data.max_published_pages,
+    maxPublishedPages: normalizedLimit,
     cancelAtPeriodEnd: Boolean((data as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
     cancelAt: (data as { cancel_at?: string | null }).cancel_at ?? null,
     currentPeriodEnd: data.current_period_end,
@@ -1400,7 +1413,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       id: latestSub.id,
       plan: latestSub.plan,
       status: latestSub.status,
-      maxPublishedPages: latestSub.max_published_pages,
+      maxPublishedPages: normalizeMaxPublishedPages(latestSub.plan, latestSub.max_published_pages),
       cancelAtPeriodEnd: Boolean((latestSub as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
       cancelAt: (latestSub as { cancel_at?: string | null }).cancel_at ?? null,
       currentPeriodEnd: latestSub.current_period_end,
@@ -1857,7 +1870,7 @@ export async function updateInformation(
 
         const { data: sub, error: subError } = await supabase
           .from("subscriptions")
-          .select("max_published_pages,status")
+          .select("max_published_pages,status,plan")
           .eq("hotel_id", current.hotel_id)
           .maybeSingle();
 
@@ -1882,10 +1895,11 @@ export async function updateInformation(
         }
 
         const publishedCount = count ?? 0;
-        if (!overrideEnabled && sub && publishedCount >= sub.max_published_pages) {
-          throw new Error(
-            `無料枠の上限に達しました（公開上限: ${sub.max_published_pages}件）。プラン変更をご検討ください。`,
-          );
+        const publishLimit = sub
+          ? normalizeMaxPublishedPages(sub.plan as SubscriptionPlan, sub.max_published_pages)
+          : 0;
+        if (!overrideEnabled && sub && publishedCount >= publishLimit) {
+          throw new Error(formatPublishLimitError(sub.plan as SubscriptionPlan, publishLimit));
         }
       }
     }

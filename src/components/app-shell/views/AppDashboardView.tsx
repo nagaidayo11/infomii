@@ -11,7 +11,7 @@ import {
   type DashboardBootstrapData,
   type PageRow,
 } from "@/lib/storage";
-import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-label";
+import { formatDisplayNameWithSan } from "@/lib/user-label";
 import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
@@ -63,15 +63,6 @@ export function AppDashboardView() {
 
   const displayName = profileDisplayName?.trim() ?? "";
   const greetingName = displayName ? formatDisplayNameWithSan(displayName) : null;
-  const workspaceName = bootstrap?.hotelName?.trim();
-  const showWorkspaceName =
-    profileLoaded &&
-    Boolean(displayName) &&
-    Boolean(workspaceName) &&
-    workspaceName !== "Infomii" &&
-    workspaceName !== "マイワークスペース" &&
-    !displayNamesEquivalent(workspaceName, displayName) &&
-    !displayNamesEquivalent(workspaceName, greetingName);
 
   const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
   const recent = pages.slice(0, 4);
@@ -105,15 +96,7 @@ export function AppDashboardView() {
     <div className="mx-auto w-full max-w-lg space-y-5 pb-4">
       {profileLoaded && greetingName ? (
         <header className="app-reveal">
-          {showWorkspaceName ? (
-            <p className="text-sm font-medium text-[var(--app-text-muted)]">{workspaceName}</p>
-          ) : null}
-          <h1
-            className={
-              (showWorkspaceName ? "mt-1 " : "") +
-              "text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]"
-            }
-          >
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]">
             {greetingName}
           </h1>
         </header>

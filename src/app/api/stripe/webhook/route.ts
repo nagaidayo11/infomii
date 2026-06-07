@@ -10,6 +10,7 @@ import {
 } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
+import { resolveMaxPublishedPagesByPlan } from "@/lib/plan-limits";
 
 export const runtime = "nodejs";
 
@@ -41,12 +42,6 @@ function mapPlanByPriceId(priceId: string | null): PlanType {
     /* env not set, fallback to pro */
   }
   return "pro";
-}
-
-function resolveMaxPagesByPlan(plan: PlanType): number {
-  if (plan === "business") return 999;
-  if (plan === "pro") return 10;
-  return 3;
 }
 
 function toIsoOrNull(unixSeconds: number | null | undefined): string | null {
@@ -248,7 +243,7 @@ export async function POST(request: NextRequest) {
             hotelId,
             plan: mappedPlan,
             status: mappedStatus,
-            maxPublishedPages: resolveMaxPagesByPlan(mappedPlan),
+            maxPublishedPages: resolveMaxPublishedPagesByPlan(mappedPlan),
             stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
             stripeSubscriptionId: subscriptionId,
             stripePriceId,
@@ -288,7 +283,7 @@ export async function POST(request: NextRequest) {
           hotelId,
           plan: mappedPlan,
           status: mappedStatus,
-          maxPublishedPages: resolveMaxPagesByPlan(mappedPlan),
+          maxPublishedPages: resolveMaxPublishedPagesByPlan(mappedPlan),
           stripeCustomerId:
             typeof subscription.customer === "string" ? subscription.customer : null,
           stripeSubscriptionId: subscription.id,
