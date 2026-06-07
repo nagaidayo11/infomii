@@ -5,6 +5,7 @@ import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
+import { APP_NAV_ITEMS } from "./app-nav-items";
 
 type TopbarProps = {
   title?: string;
@@ -15,22 +16,25 @@ type TopbarProps = {
 };
 
 const SECTION_TITLES: Record<string, string> = {
-  "/dashboard": "ダッシュボード",
-  "/dashboard/pages": "ページ",
-  "/templates": "テンプレート",
-  "/dashboard/analytics": "分析",
-  "/settings": "設定",
+  "/dashboard/summary": "ダッシュボード",
 };
 
 function getSectionTitle(pathname: string | null): string {
   if (!pathname) return "";
   if (pathname.startsWith("/editor")) return "編集";
-  const exact = SECTION_TITLES[pathname];
-  if (exact) return exact;
-  const matched = Object.entries(SECTION_TITLES)
-    .filter(([path]) => path !== "/dashboard" && pathname.startsWith(path))
-    .sort(([a], [b]) => b.length - a.length)[0];
-  return matched ? matched[1] : pathname.startsWith("/dashboard") ? "ダッシュボード" : "";
+
+  const extra = SECTION_TITLES[pathname];
+  if (extra) return extra;
+
+  const exactNav = APP_NAV_ITEMS.find((item) => item.href === pathname);
+  if (exactNav) return exactNav.label;
+
+  const prefixNav = [...APP_NAV_ITEMS]
+    .filter((item) => item.href !== "/dashboard" && pathname.startsWith(item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  if (prefixNav) return prefixNav.label;
+
+  return pathname.startsWith("/dashboard") ? "ダッシュボード" : "";
 }
 
 function getInitials(email: string | undefined): string {
@@ -141,7 +145,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
 
   return (
     <header
-      className="app-page-enter flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:gap-4 sm:px-4"
+      className="app-content-enter flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:gap-4 sm:px-4"
       style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">

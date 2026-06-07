@@ -24,7 +24,7 @@ import type { DashboardBootstrapData } from "@/lib/storage";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
-import { FadeIn, ScrollReveal } from "@/components/motion";
+import { ScrollReveal } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppDashboardView } from "@/components/app-shell/views/AppDashboardView";
@@ -198,42 +198,39 @@ function DashboardViewWeb() {
           {inviteNotice.text}
         </div>
       ) : null}
-      <FadeIn>
-        <header className="app-page-header">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-            {bootstrap?.hotelName ?? "施設"}
-          </p>
-          <h1 className="mt-1 app-page-title">ダッシュボード</h1>
-          <p className="app-page-subtitle">
-            案内を1つ作って、QRでお客様に届けます
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            <Link
-              href="/dashboard/summary"
-              className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
-            >
-              一覧・統計ビュー
-            </Link>
-            <span className="text-slate-400">（表形式）</span>
-          </p>
-        </header>
-      </FadeIn>
+      <header className="app-page-header">
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
+          {bootstrap?.hotelName ?? "施設"}
+        </p>
+        <h1 className="mt-1 app-page-title">ダッシュボード</h1>
+        <p className="app-page-subtitle">
+          案内を1つ作って、QRでお客様に届けます
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          <Link
+            href="/dashboard/summary"
+            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
+          >
+            一覧・統計ビュー
+          </Link>
+          <span className="text-slate-400">（表形式）</span>
+        </p>
+      </header>
 
-      {/* Upgrade CTA: Free → Pro, Pro（上限接近）→ Business */}
-      {!loading && bootstrap?.subscription && (
-        <ScrollReveal>
-          <UpgradeCtaBanner
-            currentPlan={bootstrap.subscription.plan as "free" | "pro" | "business"}
-            publishedCount={published.length}
-            maxPublishedPages={bootstrap.subscription.maxPublishedPages}
-          />
-        </ScrollReveal>
-      )}
+      {/* Upgrade CTA: reserve height while loading to avoid layout jump */}
+      {loading ? (
+        <div className="min-h-[88px] rounded-xl border border-transparent sm:min-h-[76px]" aria-hidden />
+      ) : bootstrap?.subscription ? (
+        <UpgradeCtaBanner
+          currentPlan={bootstrap.subscription.plan as "free" | "pro" | "business"}
+          publishedCount={published.length}
+          maxPublishedPages={bootstrap.subscription.maxPublishedPages}
+        />
+      ) : null}
 
       {/* Primary action: create once, deliver via QR（ロード中は空の白カードになるため非表示） */}
       {!loading && (
-        <ScrollReveal>
-          <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
             {role === "viewer" && (
               <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
                 閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
@@ -276,7 +273,6 @@ function DashboardViewWeb() {
               </p>
             )}
           </section>
-        </ScrollReveal>
       )}
 
       {/* Analytics summary */}
@@ -367,7 +363,7 @@ function DashboardViewWeb() {
               </p>
               <Link
                 href="/templates"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white no-underline transition hover:bg-emerald-700 hover:!text-white"
               >
                 テンプレートを選ぶ
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

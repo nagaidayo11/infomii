@@ -590,6 +590,7 @@ body.lux-shell:has(.lp-page)::before {
   }
 
   .app-page-enter,
+  .app-content-enter,
   .app-stagger > *,
   .app-ambient-bg::before {
     animation: none !important;
@@ -828,6 +829,11 @@ body.lux-shell:has(.lp-page)::before {
   animation: app-fade-up 280ms var(--ui-ease-out) both;
 }
 
+/* App shell route content: fade only — avoids vertical jump on load/navigation */
+.app-content-enter {
+  animation: ui-fade-in 180ms var(--ui-ease-out) both;
+}
+
 .ui-fade-in {
   animation: ui-fade-in 180ms var(--ui-ease-out) both;
 }
@@ -957,6 +963,7 @@ body.lux-shell:has(.lp-page)::before {
 
 @media (prefers-reduced-motion: reduce) {
   .app-page-enter,
+  .app-content-enter,
   .ui-fade-in,
   .ui-overlay-fade,
   .ui-pop-in,

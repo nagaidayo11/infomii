@@ -42,7 +42,7 @@ export function AppLayout({
             className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
           >
-            <div key={pathname} className="app-page-enter">
+            <div key={pathname} className="app-content-enter">
               {children}
             </div>
           </main>

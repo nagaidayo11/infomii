@@ -448,6 +448,15 @@ export default function TeamPage() {
   return (
     <AuthGate>
       <div className="app-main-container space-y-6 sm:space-y-8">
+        <FadeIn>
+          <header className="app-page-header">
+            <h1 className="app-page-title">チーム・招待</h1>
+            <p className="app-page-subtitle">
+              施設のメンバーを招待し、編集権限または閲覧権限を付与できます。
+            </p>
+          </header>
+        </FadeIn>
+
         {businessChecked && !isBusiness ? (
           <FadeIn>
             <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
@@ -465,14 +474,6 @@ export default function TeamPage() {
             </section>
           </FadeIn>
         ) : null}
-        <FadeIn>
-          <header className="app-page-header">
-            <h1 className="app-page-title">チーム・招待</h1>
-            <p className="app-page-subtitle">
-              施設のメンバーを招待し、編集権限または閲覧権限を付与できます。
-            </p>
-          </header>
-        </FadeIn>
 
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
