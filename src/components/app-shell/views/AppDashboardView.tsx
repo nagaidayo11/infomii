@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-label";
+import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
 import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
@@ -36,6 +37,8 @@ export function AppDashboardView() {
   const { showToast } = useAppToast();
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
+
+  useNotifyNativeAppShellWhenReady(!loading && profileLoaded);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,11 +154,13 @@ export function AppDashboardView() {
       ) : null}
 
       {loading ? (
-        <div className="space-y-3">
-          <div className="app-shell-skeleton h-40 rounded-2xl" />
-          <div className="app-shell-skeleton h-24 rounded-2xl" />
-          <div className="app-shell-skeleton h-20 rounded-2xl" />
-        </div>
+        isNativeAppWebView() ? null : (
+          <div className="space-y-3">
+            <div className="app-shell-skeleton h-40 rounded-2xl" />
+            <div className="app-shell-skeleton h-24 rounded-2xl" />
+            <div className="app-shell-skeleton h-20 rounded-2xl" />
+          </div>
+        )
       ) : (
         <>
           {canEdit ? (

@@ -184,6 +184,7 @@ export function Editor2({
   );
   const updateCard = useEditor2Store((s) => s.updateCard);
   const reorderCards = useEditor2Store((s) => s.reorderCards);
+  const moveCard = useEditor2Store((s) => s.moveCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const removeCard = useEditor2Store((s) => s.removeCard);
   const duplicateCard = useEditor2Store((s) => s.duplicateCard);
@@ -458,6 +459,24 @@ export function Editor2({
     () => cards.find((c) => c.id === selectedCardId) ?? null,
     [cards, selectedCardId]
   );
+  const sortedCardsForReorder = useMemo(
+    () => [...cards].sort((a, b) => a.order - b.order),
+    [cards]
+  );
+  const selectedCardOrderIndex = selectedCardId
+    ? sortedCardsForReorder.findIndex((c) => c.id === selectedCardId)
+    : -1;
+  const canMoveSelectedCardUp = selectedCardOrderIndex > 0;
+  const canMoveSelectedCardDown =
+    selectedCardOrderIndex >= 0 && selectedCardOrderIndex < sortedCardsForReorder.length - 1;
+  const scrollSelectedCardIntoView = useCallback(() => {
+    if (!selectedCardId) return;
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-card-id="${selectedCardId}"]`)
+        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [selectedCardId]);
   const currentContentSignature = useMemo(
     () =>
       buildEditorContentSignature({
@@ -1496,6 +1515,24 @@ export function Editor2({
               onUpdate={updateCard}
               onDuplicateCard={duplicateCard}
               onRemoveCard={removeCard}
+              onMoveCardUp={
+                selectedCardId && sortedCardsForReorder.length > 1
+                  ? () => {
+                      moveCard(selectedCardId, "up");
+                      scrollSelectedCardIntoView();
+                    }
+                  : undefined
+              }
+              onMoveCardDown={
+                selectedCardId && sortedCardsForReorder.length > 1
+                  ? () => {
+                      moveCard(selectedCardId, "down");
+                      scrollSelectedCardIntoView();
+                    }
+                  : undefined
+              }
+              canMoveCardUp={canMoveSelectedCardUp}
+              canMoveCardDown={canMoveSelectedCardDown}
               lastAddedCardId={lastAddedCardId}
               demoMode={isDemoMode}
               onLockedAction={(message) => setDemoLockMessage(message)}

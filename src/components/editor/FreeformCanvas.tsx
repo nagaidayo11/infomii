@@ -5,6 +5,7 @@ import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
+import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
 import { getBlockStyle, isMediaCardType, type CardType, type EditorCard } from "./types";
 
 const FIXED_VIEWPORT_WIDTH = 375;
@@ -414,6 +415,20 @@ export function FreeformCanvas({
     [cards, contentWidth, getRenderHeight]
   );
 
+  const commitReorderAtY = useCallback(
+    (id: string, y: number) => {
+      const nextCards = reorderCardsAtTargetY(cards, id, y, contentWidth);
+      if (onReorderCards) {
+        onReorderCards(nextCards);
+        return;
+      }
+      const movedCard = nextCards.find((c) => c.id === id);
+      if (!movedCard) return;
+      onUpdateCard(id, { style: movedCard.style as Record<string, unknown> });
+    },
+    [cards, contentWidth, onReorderCards, onUpdateCard]
+  );
+
   const handleDragStop = useCallback(
     (id: string, _e: unknown, d: { x: number; y: number }) => {
       setDragState(null);
@@ -424,65 +439,9 @@ export function FreeformCanvas({
       const w = pos.w ?? DEFAULT_W;
       const h = getRenderHeight(card, index);
       const { y } = computeSnap(id, d.x, d.y, w, h, cards, contentWidth);
-      const snappedY = Math.round(y / GRID) * GRID;
-      const positions = new Map<
-        string,
-        {
-          card: EditorCard;
-          w: number;
-          h: number;
-          y: number;
-          manualH: boolean;
-        }
-      >();
-      for (const c of cards) {
-        const i = cards.findIndex((row) => row.id === c.id);
-        const p = getPosition(c, i, contentWidth, cards);
-        const savedPos = (c.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
-        positions.set(c.id, {
-          card: c,
-          w: p.w ?? DEFAULT_W,
-          h: getRenderHeight(c, i),
-          y: p.y,
-          manualH: savedPos?.manualH === true,
-        });
-      }
-      const moved = positions.get(id);
-      if (!moved) return;
-      moved.y = snappedY;
-
-      const sorted = [...positions.values()].sort((a, b) => a.y - b.y);
-      let currentY = 24;
-      const nextCards = sorted.map((entry, order) => {
-        const centeredX = Math.round((contentWidth - entry.w) / 2);
-        const next = {
-          ...entry.card,
-          order,
-          style: {
-            ...(entry.card.style ?? {}),
-            [POSITION_KEY]: {
-              x: centeredX,
-              y: currentY,
-              w: entry.w,
-              h: entry.h,
-              manualH: entry.manualH,
-            },
-          },
-        };
-        currentY += entry.h + STACK_GAP_Y;
-        return next;
-      });
-
-      if (onReorderCards) {
-        onReorderCards(nextCards);
-        return;
-      }
-
-      const movedCard = nextCards.find((c) => c.id === id);
-      if (!movedCard) return;
-      onUpdateCard(id, { style: movedCard.style as Record<string, unknown> });
+      commitReorderAtY(id, y);
     },
-    [cards, onUpdateCard, onReorderCards, contentWidth, getRenderHeight]
+    [cards, contentWidth, getRenderHeight, commitReorderAtY]
   );
 
   const handleResizeStop = useCallback(
@@ -602,6 +561,8 @@ export function FreeformCanvas({
             const h = getRenderHeight(card, idx);
             const isDragging = dragState?.id === card.id;
             const isSelected = selectedCardId === card.id;
+            const displayX = isDragging ? dragState.x : pos.x;
+            const displayY = isDragging ? dragState.y : pos.y;
             const measuredContentHeight = autoHeights[card.id];
             const isOverflowing =
               typeof measuredContentHeight === "number" &&
@@ -629,7 +590,7 @@ export function FreeformCanvas({
                 key={card.id}
                 data-card-id={card.id}
                 size={{ width: w, height: h }}
-                position={{ x: pos.x, y: pos.y }}
+                position={{ x: displayX, y: displayY }}
                 minWidth={MIN_W}
                 minHeight={MIN_H}
                 onDrag={(_e, d) => handleDrag(card.id, _e, d)}

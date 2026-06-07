@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { nanoid } from "nanoid";
+import { moveCardInStack } from "@/lib/freeform-stack";
 import type { CardStyle, EditorCard, CardType } from "./types";
 import { createEmptyCard } from "./types";
 
@@ -73,6 +74,7 @@ export type Editor2State = {
   addCard: (type: CardType, index?: number, audience?: "hotel" | "personal") => void;
   updateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   reorderCards: (cards: EditorCard[]) => void;
+  moveCard: (id: string, direction: "up" | "down") => void;
   selectCard: (id: string | null) => void;
   removeCard: (id: string) => void;
   duplicateCard: (id: string) => void;
@@ -365,6 +367,13 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     const { historyPast } = get();
     const withOrder = cards.map((c, i) => ({ ...c, order: i }));
     set({ cards: withOrder, historyPast: pushHistory(historyPast, get().cards), historyFuture: [] });
+  },
+
+  moveCard: (id, direction) => {
+    const { cards, historyPast } = get();
+    const next = moveCardInStack(cards, id, direction);
+    if (!next) return;
+    set({ cards: next, historyPast: pushHistory(historyPast, cards), historyFuture: [] });
   },
 
   selectCard: (id) => set({ selectedCardId: id }),

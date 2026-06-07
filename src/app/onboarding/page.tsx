@@ -9,10 +9,15 @@ import {
   isLaunchOnboardingCompleted,
   isLaunchOnboardingRequired,
 } from "@/lib/launch-onboarding";
+import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 
 export default function LaunchOnboardingPage() {
   const router = useRouter();
   const { isAppShell } = useClientShell();
+
+  const onboardingReady =
+    isLaunchOnboardingRequired(isAppShell) && !isLaunchOnboardingCompleted();
+  useNotifyNativeAppShellWhenReady(isAppShell && onboardingReady);
 
   useEffect(() => {
     if (!isLaunchOnboardingRequired(isAppShell)) {
@@ -34,6 +39,7 @@ export default function LaunchOnboardingPage() {
   }, []);
 
   if (!isLaunchOnboardingRequired(isAppShell) || isLaunchOnboardingCompleted()) {
+    if (isAppShell && isNativeAppWebView()) return null;
     return (
       <main className="flex min-h-[100dvh] items-center justify-center bg-slate-50 text-sm text-slate-500">
         読み込み中…

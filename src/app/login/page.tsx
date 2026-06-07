@@ -33,6 +33,7 @@ import {
   buildAuthCallbackUrl,
 } from "@/lib/auth-redirect";
 import { ACCESS_REVOKED_MESSAGE } from "@/lib/access-revoked";
+import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -119,6 +120,8 @@ function LoginForm() {
   const [inviteInput, setInviteInput] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  useNotifyNativeAppShellWhenReady(isAppShell && !loading && !user);
 
   useEffect(() => {
     if (loading || user) return;
@@ -374,6 +377,7 @@ function LoginForm() {
   }
 
   if (loading || user) {
+    if (isAppShell && isNativeAppWebView()) return null;
     const showInvite =
       typeof window !== "undefined" &&
       user &&

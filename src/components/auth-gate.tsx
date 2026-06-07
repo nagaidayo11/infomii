@@ -7,6 +7,7 @@ import { AppAuthBootScreen } from "@/components/app-shell/AppAuthBootScreen";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
+import { isNativeAppWebView } from "@/lib/native-app-bridge";
 import { ensureUserHotelScope, ensureUserHotelScopeForOnboarding } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
@@ -72,6 +73,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (loading || !user || (user && !scopeChecked)) {
     if (isAppShell) {
+      if (isNativeAppWebView()) return null;
       const isEditor = (pathname ?? "").startsWith("/editor");
       return <AppAuthBootScreen variant={isEditor ? "editor" : "tabs"} />;
     }

@@ -114,6 +114,10 @@ export type CardSettingsProps = {
   onUpdate: (id: string, patch: CardUpdatePatch) => void;
   onDuplicateCard?: (id: string) => void;
   onRemoveCard?: (id: string) => void;
+  onMoveCardUp?: () => void;
+  onMoveCardDown?: () => void;
+  canMoveCardUp?: boolean;
+  canMoveCardDown?: boolean;
   demoMode?: boolean;
   onLockedAction?: (message: string) => void;
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
@@ -2123,6 +2127,10 @@ export function CardSettings({
   onUpdate,
   onDuplicateCard,
   onRemoveCard,
+  onMoveCardUp,
+  onMoveCardDown,
+  canMoveCardUp = false,
+  canMoveCardDown = false,
   demoMode = false,
   onLockedAction,
   lastAddedCardId = null,
@@ -2262,6 +2270,7 @@ export function CardSettings({
   const supportsTitleFontWeight = supportsTitleFontSize;
   const supportsBodyFontWeight = supportsBodyFontSize;
   const canEditCard = Boolean(onDuplicateCard || onRemoveCard);
+  const canReorderCard = Boolean(onMoveCardUp || onMoveCardDown);
   const jumpToSection = (sectionId: string) => {
     const container = scrollRef.current;
     if (!container) return;
@@ -2366,8 +2375,30 @@ export function CardSettings({
               <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
                 {CARD_TYPE_LABELS[card.type]}
               </p>
-              {canEditCard ? (
+              {canEditCard || canReorderCard ? (
                 <div className="flex items-center gap-1.5">
+                  {canReorderCard ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={onMoveCardUp}
+                        disabled={!canMoveCardUp}
+                        aria-label="ブロックを上へ移動"
+                        className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onMoveCardDown}
+                        disabled={!canMoveCardDown}
+                        aria-label="ブロックを下へ移動"
+                        className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                      >
+                        ↓
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     onClick={handleDuplicateCard}
@@ -2438,8 +2469,30 @@ export function CardSettings({
             <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
               {CARD_TYPE_LABELS[card.type]}
             </p>
-            {canEditCard ? (
+            {canEditCard || canReorderCard ? (
               <div className="flex items-center gap-1.5">
+                {canReorderCard ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onMoveCardUp}
+                      disabled={!canMoveCardUp}
+                      aria-label="ブロックを上へ移動"
+                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onMoveCardDown}
+                      disabled={!canMoveCardDown}
+                      aria-label="ブロックを下へ移動"
+                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      ↓
+                    </button>
+                  </>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleDuplicateCard}
@@ -2459,7 +2512,9 @@ export function CardSettings({
               </div>
             ) : null}
           </div>
-          <p className="text-xs text-slate-500">変更はリアルタイムで反映されます</p>
+          <p className="text-xs text-slate-500">
+            {canReorderCard ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます" : "変更はリアルタイムで反映されます"}
+          </p>
           <div className="flex gap-0.5 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 px-0.5 py-px">
             <button
               type="button"

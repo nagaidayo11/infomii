@@ -129,7 +129,20 @@ export function InfomiiWebView() {
         armLoadTimeout();
       }
     },
-    onLoadEnd: finishLoading,
+    onLoadEnd: () => {
+      applySafeAreaToWeb();
+      if (!hasLoadedOnceRef.current) return;
+    },
+    onMessage: (event: { nativeEvent: { data: string } }) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data) as { type?: string };
+        if (data.type === "app-shell-ready") {
+          finishLoading();
+        }
+      } catch {
+        /* ignore non-JSON messages */
+      }
+    },
     onError: (event: { nativeEvent: { description?: string } }) => {
       finishLoading();
       setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
@@ -157,7 +170,6 @@ export function InfomiiWebView() {
         <ConfigErrorPanel
           title="設定を直してください"
           message={originResolution.message}
-          entryUrl={entryUrl}
           onRetry={() => DevSettings.reload()}
         />
       </SafeAreaView>
@@ -184,11 +196,6 @@ export function InfomiiWebView() {
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#0d9488" />
           <Text style={styles.loadingLabel}>読み込み中…</Text>
-          {__DEV__ ? (
-            <Text style={styles.loadingUrl} numberOfLines={2}>
-              {entryUrl}
-            </Text>
-          ) : null}
         </View>
       ) : null}
 
@@ -196,7 +203,6 @@ export function InfomiiWebView() {
         <ConfigErrorPanel
           title="接続できません"
           message={loadError}
-          entryUrl={entryUrl}
           onRetry={() => {
             setLoadError(null);
             hasLoadedOnceRef.current = false;
@@ -213,19 +219,16 @@ export function InfomiiWebView() {
 function ConfigErrorPanel({
   title,
   message,
-  entryUrl,
   onRetry,
 }: {
   title: string;
   message: string;
-  entryUrl: string;
   onRetry: () => void;
 }) {
   return (
     <View style={styles.errorOverlay}>
       <Text style={styles.errorTitle}>{title}</Text>
       <Text style={styles.errorBody}>{message}</Text>
-      {__DEV__ ? <Text style={styles.errorHint}>{entryUrl}</Text> : null}
       <Pressable style={styles.retryButton} onPress={onRetry}>
         <Text style={styles.retryLabel}>再試行</Text>
       </Pressable>
@@ -265,12 +268,6 @@ const styles = StyleSheet.create({
     color: "#334155",
     textAlign: "center",
   },
-  loadingUrl: {
-    marginTop: 10,
-    fontSize: 11,
-    color: "#64748b",
-    textAlign: "center",
-  },
   errorOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
@@ -287,12 +284,6 @@ const styles = StyleSheet.create({
   errorBody: {
     fontSize: 14,
     color: "#475569",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  errorHint: {
-    fontSize: 11,
-    color: "#94a3b8",
     textAlign: "center",
     marginBottom: 20,
   },
