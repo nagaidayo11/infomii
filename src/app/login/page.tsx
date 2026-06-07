@@ -29,6 +29,9 @@ import {
   formatOAuthCallbackError,
 } from "@/lib/auth-oauth-errors";
 import { getLegalPageUrl } from "@/lib/app-store-compliance";
+import {
+  buildAuthCallbackUrl,
+} from "@/lib/auth-redirect";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -112,6 +115,11 @@ function LoginForm() {
     );
     if (!oauthError) return;
     setMessage(oauthError);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("confirmed") !== "1") return;
+    setMessage("メールアドレスの確認が完了しました。メールとパスワードでログインしてください。");
   }, [searchParams]);
 
   useEffect(() => {
@@ -222,7 +230,16 @@ function LoginForm() {
     }
 
     if (isSignUp) {
-      const { error } = await client.auth.signUp({ email, password });
+      const { error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: buildAuthCallbackUrl({
+            type: "signup",
+            client: isAppShell ? "app" : undefined,
+          }),
+        },
+      });
       if (error) {
         setMessage(formatEmailAuthError(error.message ?? ""));
         setSubmitting(false);
@@ -271,14 +288,20 @@ function LoginForm() {
       writePendingInviteCode(inviteInput);
     }
 
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const redirectPath =
-      next === "/dashboard"
-        ? "/login"
-        : `/login?next=${encodeURIComponent(next)}`;
+      next === "/dashboard" || next === withAppClientQuery("/dashboard")
+        ? isAppShell
+          ? withAppClientQuery("/dashboard")
+          : "/dashboard"
+        : next;
     const { error } = await client.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${origin}${redirectPath}` },
+      options: {
+        redirectTo: buildAuthCallbackUrl({
+          next: redirectPath,
+          client: isAppShell ? "app" : undefined,
+        }),
+      },
     });
 
     if (error) {
@@ -351,7 +374,7 @@ function LoginForm() {
         {message ? (
           <p
             className={`mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ${
-              message.startsWith("登録しました")
+              message.startsWith("登録しました") || message.includes("確認が完了")
                 ? "text-emerald-700"
                 : "text-rose-600"
             }`}

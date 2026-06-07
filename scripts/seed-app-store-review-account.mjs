@@ -15,6 +15,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const REVIEW_EMAIL = "review@infomii.com";
+const SUPPORT_EMAIL = "support@infomii.com";
 const REVIEW_SLUG = "app-store-review";
 const REVIEW_PAGE_TITLE = "App Store 審査デモ";
 
@@ -187,50 +188,65 @@ async function ensurePublishedDemoPage(admin, hotelId) {
   }
 }
 
-async function main() {
-  loadEnvLocal();
-  const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const serviceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
-
-  const admin = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  let user = await findUserByEmail(admin, REVIEW_EMAIL);
+async function ensureConfirmedAuthUser(admin, email, displayName, password) {
+  let user = await findUserByEmail(admin, email);
   let created = false;
 
   if (!user) {
-    const password = requireEnv("APP_STORE_REVIEW_PASSWORD");
     const { data, error } = await admin.auth.admin.createUser({
-      email: REVIEW_EMAIL,
+      email,
       password,
       email_confirm: true,
-      user_metadata: { display_name: "審査用" },
+      user_metadata: { display_name: displayName },
     });
     if (error) throw new Error(error.message);
     user = data.user;
     created = true;
-    console.log("Created auth user:", REVIEW_EMAIL);
+    console.log("Created auth user:", email);
   } else {
-    console.log("Auth user already exists:", REVIEW_EMAIL);
-    const password = process.env.APP_STORE_REVIEW_PASSWORD?.trim();
-    if (password) {
-      const { error } = await admin.auth.admin.updateUserById(user.id, { password });
-      if (error) throw new Error(error.message);
-      console.log("Password updated from APP_STORE_REVIEW_PASSWORD");
-    }
+    console.log("Auth user already exists:", email);
+    const { error } = await admin.auth.admin.updateUserById(user.id, {
+      password,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    console.log("Password/email_confirm updated for:", email);
   }
 
   await admin.from("profiles").upsert(
     {
       user_id: user.id,
-      display_name: "審査用",
+      display_name: displayName,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
   );
 
-  const hotelId = await ensureHotel(admin, user.id, REVIEW_EMAIL);
+  await ensureHotel(admin, user.id, email);
+  return { user, created };
+}
+
+async function main() {
+  loadEnvLocal();
+  const url = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const password = requireEnv("APP_STORE_REVIEW_PASSWORD");
+
+  const admin = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { created: reviewCreated } = await ensureConfirmedAuthUser(
+    admin,
+    REVIEW_EMAIL,
+    "審査用",
+    password,
+  );
+  await ensureConfirmedAuthUser(admin, SUPPORT_EMAIL, "Infomii Support", password);
+
+  const reviewUser = await findUserByEmail(admin, REVIEW_EMAIL);
+  if (!reviewUser) throw new Error("Review user missing after seed");
+  const hotelId = await ensureHotel(admin, reviewUser.id, REVIEW_EMAIL);
   await ensurePublishedDemoPage(admin, hotelId);
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.infomii.com").replace(
@@ -238,12 +254,12 @@ async function main() {
     "",
   );
 
-  console.log("\n--- App Store review account ---");
-  console.log("Email:", REVIEW_EMAIL);
-  if (created) {
-    console.log("Password: (from APP_STORE_REVIEW_PASSWORD — store in 1Password / App Store Connect)");
-  } else {
-    console.log("Password: unchanged (set APP_STORE_REVIEW_PASSWORD to rotate)");
+  console.log("\n--- App Store review accounts ---");
+  console.log("Review email:", REVIEW_EMAIL);
+  console.log("Support email:", SUPPORT_EMAIL);
+  console.log("Password: (from APP_STORE_REVIEW_PASSWORD — store in App Store Connect / 1Password)");
+  if (reviewCreated) {
+    console.log("Note: review account was newly created.");
   }
   console.log("Public URL:", `${appUrl}/p/${REVIEW_SLUG}`);
   console.log("Dashboard: sign in → pages list should include", REVIEW_PAGE_TITLE);

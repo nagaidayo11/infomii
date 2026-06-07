@@ -155,6 +155,37 @@ create policy "authenticated cards via pages" on public.cards for all to authent
 
 ---
 
+## 3.0 認証メールを日本語にする（Supabase）
+
+デフォルトの Supabase メール（英語・送信者名 "Supabase Auth"）は **Supabase ダッシュボード側のテンプレート** で変更します。アプリのコードだけでは件名・本文は変わりません。
+
+### 方法 A — スクリプトで一括適用（推奨）
+
+1. [Account → Access Tokens](https://supabase.com/dashboard/account/tokens) で Personal Access Token を作成
+2. `.env.local` に追加:
+
+```bash
+SUPABASE_ACCESS_TOKEN=sbp_...
+```
+
+3. 実行:
+
+```bash
+npm run supabase:email-templates-ja
+```
+
+テンプレート本文は `scripts/supabase-email-templates-ja.mjs` にあります（件名例: `【Infomii】メールアドレスの確認`）。
+
+### 方法 B — ダッシュボードで手動
+
+**Authentication → Email Templates → Confirm signup** などで、上記ファイルの HTML をコピー＆ペースト。
+
+### 送信者名を「Infomii」にしたい場合
+
+**Authentication → SMTP Settings** で Resend / SendGrid 等のカスタム SMTP を設定し、送信者を `Infomii <noreply@infomii.com>` のように指定してください（テンプレート日本語化とは別設定）。
+
+---
+
 ## 3. 動作の流れ
 
 1. **環境変数**
@@ -186,9 +217,13 @@ create policy "authenticated cards via pages" on public.cards for all to authent
    - **Authentication → Providers → Google** を有効化
    - Google Cloud で作成した Client ID / Client Secret を入力
 3. **Redirect URLs**
-   - **Authentication → URL Configuration** で、アプリで使うURLを追加
-  - Web 例: `http://localhost:3000/login`, `https://your-domain.com/login`, `http://localhost:3000/settings`, `https://your-domain.com/settings`
-   - `signInWithOAuth` の `redirectTo` と **完全一致** していることを確認。
+   - **Authentication → URL Configuration** で以下を追加（`www` / 非 `www` 両方推奨）
+   - `https://www.infomii.com/**`
+   - `https://infomii.com/**`
+   - `http://localhost:3000/**`（開発）
+   - メール確認・OAuth・パスワード再設定は **`/auth/callback`** 経由（`emailRedirectTo` / `redirectTo` と一致させる）
+   - 例: `https://www.infomii.com/auth/callback`, `https://infomii.com/auth/callback`
+   - ネイティブ: `infomii://**`（将来のディープリンク用）
 
 注意:
 - 新規登録はメール専用運用です。Google はログイン導線として扱います。
@@ -205,7 +240,7 @@ App Store 提出時は **Google ログインと併用する場合、Sign in with
    - Key（Sign in with Apple）を作成し `.p8` をダウンロード
 2. **Supabase ダッシュボード** → **Authentication** → **Providers** → **Apple**
    - Services ID、Team ID、Key ID、Secret（`.p8` から生成）を設定
-3. **Redirect URLs**（Authentication → URL Configuration）に本番・開発の `/login` を含める
+3. **Redirect URLs**（Authentication → URL Configuration）に `https://www.infomii.com/auth/callback` と `https://infomii.com/auth/callback`（または `/**` ワイルドカード）を含める
 
 詳細チェックリスト: [docs/APP_STORE_REVIEW.md](./APP_STORE_REVIEW.md)
 

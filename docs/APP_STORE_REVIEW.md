@@ -4,7 +4,7 @@
 
 | 項目 | 値 |
 |------|-----|
-| メール | `review@infomii.com` |
+| メール | `review@infomii.com`（審査用） / `support@infomii.com`（サポート・審査ログイン確認用） |
 | パスワード | `.env.local` の `APP_STORE_REVIEW_PASSWORD`（本番のみ。App Store Connect に記載） |
 | 公開デモ URL | `https://www.infomii.com/p/app-store-review` |
 | 備考 | Google / Apple ログインは使わずメールログインで確認可能にする |

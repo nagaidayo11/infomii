@@ -14,7 +14,13 @@ export function getBrowserSupabaseClient() {
   }
 
   if (!cachedClient) {
-    cachedClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+    cachedClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        detectSessionInUrl: true,
+        flowType: "pkce",
+        persistSession: true,
+      },
+    });
   }
 
   return cachedClient;

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
+import { buildAuthCallbackUrl } from "@/lib/auth-redirect";
 import { FadeIn } from "@/components/motion";
 
 const COOLDOWN_SECONDS = 60;
@@ -41,9 +42,8 @@ export default function ForgotPasswordPage() {
     setMessage("");
     setSent(false);
 
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/reset-password`,
+      redirectTo: buildAuthCallbackUrl({ type: "recovery" }),
     });
 
     if (error) {
