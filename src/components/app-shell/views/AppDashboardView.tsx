@@ -154,7 +154,6 @@ export function AppDashboardView() {
             {recent.length === 0 ? (
               <div className="mt-3">
                 <AppEmptyState
-                  emoji="📄"
                   title="まだ作品がありません"
                   description="AIでつくるか、テンプレートタブから始めるとここに表示されます。"
                   action={
