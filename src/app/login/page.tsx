@@ -26,7 +26,7 @@ import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 import {
   formatAppleAuthError,
   formatGoogleAuthError,
-  formatOAuthCallbackError,
+  formatAuthCallbackError,
 } from "@/lib/auth-oauth-errors";
 import { getLegalPageUrl } from "@/lib/app-store-compliance";
 import {
@@ -110,12 +110,12 @@ function LoginForm() {
   }, [searchParams, router, next]);
 
   useEffect(() => {
-    const oauthError = formatOAuthCallbackError(
+    const authCallbackError = formatAuthCallbackError(
       searchParams.get("error"),
       searchParams.get("error_description"),
     );
-    if (!oauthError) return;
-    setMessage(oauthError);
+    if (!authCallbackError) return;
+    setMessage(authCallbackError);
   }, [searchParams]);
 
   useEffect(() => {

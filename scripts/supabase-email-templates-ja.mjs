@@ -27,6 +27,13 @@ function linkFallback(hrefVar) {
   );
 }
 
+/** Direct app link with token_hash — works when the mail app opens a different browser (PKCE-safe). */
+function tokenHashCallbackLink(fallbackType) {
+  return (
+    `{{ if .RedirectTo }}{{ .RedirectTo }}&token_hash={{ .TokenHash }}{{ else }}{{ .SiteURL }}/auth/callback?type=${fallbackType}&token_hash={{ .TokenHash }}{{ end }}`
+  );
+}
+
 /** Keys match Supabase Management API auth config (mailer_*). */
 export const SUPABASE_EMAIL_TEMPLATES_JA = {
   mailer_subjects_confirmation: "【Infomii】メールアドレスの確認",
@@ -35,8 +42,8 @@ export const SUPABASE_EMAIL_TEMPLATES_JA = {
     `<h2 style="margin:0 0 12px;font-size:20px;">メールアドレスの確認</h2>` +
     `<p>Infomii へのご登録ありがとうございます。</p>` +
     `<p>下のボタンを押して、メールアドレスの確認を完了してください。確認後、メールアドレスとパスワードでログインできます。</p>` +
-    button("メールアドレスを確認する", "{{ .ConfirmationURL }}") +
-    linkFallback("{{ .ConfirmationURL }}") +
+    button("メールアドレスを確認する", tokenHashCallbackLink("signup")) +
+    linkFallback(tokenHashCallbackLink("signup")) +
     FOOTER +
     `</div>`,
 
@@ -46,8 +53,8 @@ export const SUPABASE_EMAIL_TEMPLATES_JA = {
     `<h2 style="margin:0 0 12px;font-size:20px;">パスワード再設定</h2>` +
     `<p>Infomii アカウントのパスワード再設定のリクエストを受け付けました。</p>` +
     `<p>下のボタンから新しいパスワードを設定してください（リンクの有効期限は限られています）。</p>` +
-    button("パスワードを再設定する", "{{ .ConfirmationURL }}") +
-    linkFallback("{{ .ConfirmationURL }}") +
+    button("パスワードを再設定する", tokenHashCallbackLink("recovery")) +
+    linkFallback(tokenHashCallbackLink("recovery")) +
     `<p style="font-size:13px;color:#475569;">ご本人による操作でない場合は、このメールを無視してください。</p>` +
     FOOTER +
     `</div>`,
@@ -57,8 +64,8 @@ export const SUPABASE_EMAIL_TEMPLATES_JA = {
     `<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;line-height:1.7;max-width:560px;">` +
     `<h2 style="margin:0 0 12px;font-size:20px;">ログインリンク</h2>` +
     `<p>Infomii へのログイン用リンクです。下のボタンを押してログインしてください。</p>` +
-    button("ログインする", "{{ .ConfirmationURL }}") +
-    linkFallback("{{ .ConfirmationURL }}") +
+    button("ログインする", tokenHashCallbackLink("magiclink")) +
+    linkFallback(tokenHashCallbackLink("magiclink")) +
     FOOTER +
     `</div>`,
 
@@ -68,8 +75,8 @@ export const SUPABASE_EMAIL_TEMPLATES_JA = {
     `<h2 style="margin:0 0 12px;font-size:20px;">Infomii への招待</h2>` +
     `<p>Infomii のアカウント作成に招待されました。</p>` +
     `<p>下のボタンから登録を完了してください。</p>` +
-    button("招待を受け取る", "{{ .ConfirmationURL }}") +
-    linkFallback("{{ .ConfirmationURL }}") +
+    button("招待を受け取る", tokenHashCallbackLink("invite")) +
+    linkFallback(tokenHashCallbackLink("invite")) +
     FOOTER +
     `</div>`,
 
@@ -79,8 +86,8 @@ export const SUPABASE_EMAIL_TEMPLATES_JA = {
     `<h2 style="margin:0 0 12px;font-size:20px;">メールアドレス変更の確認</h2>` +
     `<p>メールアドレスを <strong>{{ .NewEmail }}</strong> に変更するリクエストを受け付けました。</p>` +
     `<p>下のボタンを押して変更を確定してください。</p>` +
-    button("新しいメールアドレスを確認する", "{{ .ConfirmationURL }}") +
-    linkFallback("{{ .ConfirmationURL }}") +
+    button("新しいメールアドレスを確認する", tokenHashCallbackLink("email_change")) +
+    linkFallback(tokenHashCallbackLink("email_change")) +
     `<p style="font-size:13px;color:#475569;">ご本人による操作でない場合は、このメールを無視してください。</p>` +
     FOOTER +
     `</div>`,

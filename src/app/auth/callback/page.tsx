@@ -2,13 +2,44 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatOAuthCallbackError } from "@/lib/auth-oauth-errors";
+import { formatAuthCallbackError } from "@/lib/auth-oauth-errors";
 import { buildAuthConfirmedUrl, buildLoginConfirmedUrl } from "@/lib/auth-redirect";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 function sanitizeNextPath(raw: string | null): string | null {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
   return raw;
+}
+
+type EmailOtpType = "signup" | "invite" | "magiclink" | "recovery" | "email_change" | "email";
+
+function resolveEmailOtpType(flowType: string | null): EmailOtpType {
+  switch (flowType) {
+    case "signup":
+      return "signup";
+    case "invite":
+      return "invite";
+    case "magiclink":
+      return "magiclink";
+    case "recovery":
+      return "recovery";
+    case "email_change":
+      return "email_change";
+    default:
+      return "email";
+  }
+}
+
+function redirectToLoginWithAuthError(
+  router: ReturnType<typeof useRouter>,
+  error: string,
+  errorDescription: string,
+) {
+  const params = new URLSearchParams({
+    error,
+    error_description: errorDescription,
+  });
+  router.replace(`/login?${params.toString()}`);
 }
 
 function AuthCallbackInner() {
@@ -23,16 +54,16 @@ function AuthCallbackInner() {
       return;
     }
 
-    const oauthError = formatOAuthCallbackError(
+    const authError = formatAuthCallbackError(
       searchParams.get("error"),
       searchParams.get("error_description"),
     );
-    if (oauthError) {
-      const params = new URLSearchParams({
-        error: searchParams.get("error") ?? "auth_error",
-        error_description: oauthError,
-      });
-      router.replace(`/login?${params.toString()}`);
+    if (authError) {
+      redirectToLoginWithAuthError(
+        router,
+        searchParams.get("error") ?? "auth_error",
+        authError,
+      );
       return;
     }
 
@@ -40,20 +71,35 @@ function AuthCallbackInner() {
     const nextPath = sanitizeNextPath(searchParams.get("next"));
     const isAppClient = searchParams.get("client") === "app";
     const code = searchParams.get("code");
+    const tokenHash = searchParams.get("token_hash");
 
     let active = true;
 
     void (async () => {
       try {
-        if (code) {
+        if (tokenHash) {
+          const { error } = await client.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: resolveEmailOtpType(flowType),
+          });
+          if (error) {
+            if (!active) return;
+            redirectToLoginWithAuthError(
+              router,
+              "email_confirm_failed",
+              error.message ?? "メール確認リンクの処理に失敗しました。",
+            );
+            return;
+          }
+        } else if (code) {
           const { error } = await client.auth.exchangeCodeForSession(code);
           if (error) {
             if (!active) return;
-            const params = new URLSearchParams({
-              error: "exchange_failed",
-              error_description: error.message ?? "認証コードの処理に失敗しました。",
-            });
-            router.replace(`/login?${params.toString()}`);
+            redirectToLoginWithAuthError(
+              router,
+              "exchange_failed",
+              error.message ?? "認証コードの処理に失敗しました。",
+            );
             return;
           }
         }
@@ -61,11 +107,11 @@ function AuthCallbackInner() {
         const { data, error: sessionError } = await client.auth.getSession();
         if (sessionError) {
           if (!active) return;
-          const params = new URLSearchParams({
-            error: "session_error",
-            error_description: sessionError.message ?? "セッションの取得に失敗しました。",
-          });
-          router.replace(`/login?${params.toString()}`);
+          redirectToLoginWithAuthError(
+            router,
+            "session_error",
+            sessionError.message ?? "セッションの取得に失敗しました。",
+          );
           return;
         }
 
@@ -113,11 +159,7 @@ function AuthCallbackInner() {
         if (!active) return;
         const description =
           err instanceof Error ? err.message : "認証処理中にエラーが発生しました。";
-        const params = new URLSearchParams({
-          error: "callback_failed",
-          error_description: description,
-        });
-        router.replace(`/login?${params.toString()}`);
+        redirectToLoginWithAuthError(router, "callback_failed", description);
       }
     })();
 
