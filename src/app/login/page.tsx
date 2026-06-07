@@ -41,13 +41,53 @@ function isEmailCollisionMessage(message: string): boolean {
     normalized.includes("already exists") ||
     normalized.includes("email exists") ||
     normalized.includes("email address is already in use") ||
-    normalized.includes("identity already exists")
+    normalized.includes("identity already exists") ||
+    normalized.includes("user already registered")
   );
 }
 
-function formatEmailAuthError(message: string): string {
+function isEmailRateLimitMessage(message: string, code?: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    code === "over_email_send_rate_limit" ||
+    normalized.includes("rate limit") ||
+    normalized.includes("security purposes") ||
+    normalized.includes("once every") ||
+    normalized.includes("too many requests")
+  );
+}
+
+function formatSignUpError(message: string, code?: string): string {
+  if (isEmailCollisionMessage(message)) {
+    return "このメールアドレスは既に登録されています。「ログイン画面へ」からメールでログインしてください。";
+  }
+  if (isEmailRateLimitMessage(message, code)) {
+    return "確認メールの送信上限に達しました。数分待ってから再度お試しください。すでに登録済みの場合は、新規登録ではなくログインしてください。";
+  }
+  const normalized = message.toLowerCase();
+  if (
+    normalized.includes("password") &&
+    (normalized.includes("weak") ||
+      normalized.includes("easy to guess") ||
+      normalized.includes("leaked"))
+  ) {
+    return "このパスワードは使用できません。別のパスワードを設定してください。";
+  }
+  if (normalized.includes("valid password") || normalized.includes("at least 6")) {
+    return "パスワードは6文字以上で設定してください。";
+  }
+  if (normalized.includes("signup") && normalized.includes("disabled")) {
+    return "現在、新規登録を受け付けていません。";
+  }
+  return "新規登録に失敗しました。時間をおいて再度お試しください。";
+}
+
+function formatEmailAuthError(message: string, code?: string): string {
   if (isEmailCollisionMessage(message)) {
     return "このメールアドレスは既に使用されています。メールでログインしてください。";
+  }
+  if (isEmailRateLimitMessage(message, code)) {
+    return "試行回数が多すぎます。数分待ってから再度お試しください。";
   }
   const normalized = message.toLowerCase();
   if (normalized.includes("invalid login credentials")) {
@@ -116,7 +156,12 @@ function LoginForm() {
     );
     if (!authCallbackError) return;
     setMessage(authCallbackError);
-  }, [searchParams]);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("error");
+    params.delete("error_description");
+    const qs = params.toString();
+    router.replace(qs ? `/login?${qs}` : "/login", { scroll: false });
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (searchParams.get("confirmed") !== "1") return;
@@ -239,7 +284,7 @@ function LoginForm() {
     }
 
     if (isSignUp) {
-      const { error } = await client.auth.signUp({
+      const { data, error } = await client.auth.signUp({
         email,
         password,
         options: {
@@ -250,7 +295,15 @@ function LoginForm() {
         },
       });
       if (error) {
-        setMessage(formatEmailAuthError(error.message ?? ""));
+        setMessage(formatSignUpError(error.message ?? "", error.code));
+        setSubmitting(false);
+        return;
+      }
+      if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+        setMessage(
+          "このメールアドレスは既に登録されています。「ログイン画面へ」からメールでログインしてください。",
+        );
+        setIsSignUp(false);
         setSubmitting(false);
         return;
       }
@@ -273,7 +326,7 @@ function LoginForm() {
         password,
       });
       if (error) {
-        setMessage(formatEmailAuthError(error.message ?? ""));
+        setMessage(formatEmailAuthError(error.message ?? "", error.code));
         setSubmitting(false);
         return;
       }
