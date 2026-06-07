@@ -22,7 +22,7 @@
     "mobile:tunnel": "npm run restart:tunnel --prefix apps/mobile",
     "mobile:ios": "npm run ios --prefix apps/mobile",
     "mobile:sim": "npm run restart:sim --prefix apps/mobile",
-    "mobile:build:ios": "npm exec --prefix apps/mobile -- eas-cli@latest build --platform ios --profile production",
+    "mobile:build:ios": "npm run build:ios --prefix apps/mobile",
     "app-store:seed-review": "node scripts/seed-app-store-review-account.mjs",
     "app-store:verify": "node scripts/verify-app-store-readiness.mjs",
     "supabase:email-templates-ja": "node scripts/apply-supabase-email-templates-ja.mjs",
