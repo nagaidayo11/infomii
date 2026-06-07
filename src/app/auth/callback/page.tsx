@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatAuthCallbackError } from "@/lib/auth-oauth-errors";
 import { buildAuthConfirmedUrl, buildLoginConfirmedUrl } from "@/lib/auth-redirect";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { ensureUserHotelScope } from "@/lib/storage";
 
 function sanitizeNextPath(raw: string | null): string | null {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
@@ -145,6 +146,12 @@ function AuthCallbackInner() {
           if (!active) return;
           router.replace(buildLoginConfirmedUrl(isAppClient ? "app" : undefined));
           return;
+        }
+
+        try {
+          await ensureUserHotelScope();
+        } catch {
+          /* AuthGate / login will retry; still send user toward their destination. */
         }
 
         if (nextPath) {

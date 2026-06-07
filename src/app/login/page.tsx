@@ -7,7 +7,7 @@ import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import {
-  ensureUserHotelScopeForOnboarding,
+  ensureUserHotelScope,
   redeemHotelInvite,
 } from "@/lib/storage";
 import { formatHotelInviteRedeemError } from "@/lib/invite-redeem-errors";
@@ -32,7 +32,7 @@ import { getLegalPageUrl } from "@/lib/app-store-compliance";
 import {
   buildAuthCallbackUrl,
 } from "@/lib/auth-redirect";
-import { ACCESS_REVOKED_MESSAGE } from "@/lib/access-revoked";
+import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 
 function isEmailCollisionMessage(message: string): boolean {
@@ -101,7 +101,6 @@ function formatEmailAuthError(message: string, code?: string): string {
 }
 
 function LoginForm() {
-  const ONBOARDING_SCOPE_BOOTSTRAP_KEY = "infomii_onboarding_scope_bootstrap";
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useAuth();
@@ -173,10 +172,25 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams.get("access") !== "revoked") return;
-    const client = getBrowserSupabaseClient();
-    void client?.auth.signOut();
-    setMessage(ACCESS_REVOKED_MESSAGE);
-  }, [searchParams]);
+    if (loading) return;
+    void (async () => {
+      if (user) {
+        try {
+          await ensureUserHotelScope();
+          router.replace(next);
+          return;
+        } catch (error) {
+          if (!isAccessRevokedError(error)) {
+            router.replace(next);
+            return;
+          }
+        }
+      }
+      const client = getBrowserSupabaseClient();
+      await client?.auth.signOut();
+      setMessage(ACCESS_REVOKED_MESSAGE);
+    })();
+  }, [searchParams, loading, user, next, router]);
 
   useEffect(() => {
     if (searchParams.get("access") === "revoked") return;
@@ -185,18 +199,17 @@ function LoginForm() {
     if (typeof window === "undefined") return;
     const pending = readPendingInviteCode();
     if (!pending) {
-      const needsBootstrap =
-        localStorage.getItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY) === "1";
-      if (needsBootstrap) {
-        localStorage.removeItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY);
-        void ensureUserHotelScopeForOnboarding()
-          .catch(() => null)
-          .finally(() => {
-            router.replace(next);
-          });
-        return;
-      }
-      router.replace(next);
+      void (async () => {
+        try {
+          await ensureUserHotelScope();
+        } catch (error) {
+          if (isAccessRevokedError(error)) {
+            router.replace(`/login?access=revoked&next=${encodeURIComponent(next)}`);
+            return;
+          }
+        }
+        router.replace(next);
+      })();
       return;
     }
     if (sessionStorage.getItem(INVITE_REDEEM_LOCK_KEY) === "1") {
@@ -313,9 +326,6 @@ function LoginForm() {
       setMessage(
         "登録しました。確認メールをご確認の上、メールアドレスでログインしてください。",
       );
-      if (typeof window !== "undefined") {
-        localStorage.setItem(ONBOARDING_SCOPE_BOOTSTRAP_KEY, "1");
-      }
       if (inviteInput.trim()) {
         writePendingInviteCode(inviteInput);
       }

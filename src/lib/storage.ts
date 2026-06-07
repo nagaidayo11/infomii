@@ -957,7 +957,7 @@ export async function ensureUserHotelScope(): Promise<string | null> {
     return membership.hotel_id;
   }
 
-  throw new AccessRevokedError();
+  return ensureUserHotelScopeForOnboarding();
 }
 
 /**
@@ -990,35 +990,22 @@ export async function ensureUserHotelScopeForOnboarding(): Promise<string | null
     throw toError(membershipError, "施設所属の確認に失敗しました");
   }
   if (membership?.hotel_id) {
+    await supabase.rpc("ensure_hotel_subscription", {
+      target_hotel_id: membership.hotel_id,
+    });
     return membership.hotel_id;
   }
 
-  const hotelId = crypto.randomUUID();
-  const { error: hotelError } = await supabase
-    .from("hotels")
-    .insert({
-      id: hotelId,
-      name: buildDefaultHotelName(user.email),
-      owner_user_id: user.id,
-    });
-  if (hotelError) {
-    throw toError(hotelError, "施設作成に失敗しました");
-  }
-
-  const { error: insertMembershipError } = await supabase
-    .from("hotel_memberships")
-    .insert({ user_id: user.id, hotel_id: hotelId });
-  if (insertMembershipError) {
-    throw toError(insertMembershipError, "施設所属の作成に失敗しました");
-  }
-
-  const { error: ensureSubscriptionError } = await supabase.rpc("ensure_hotel_subscription", {
-    target_hotel_id: hotelId,
+  const defaultName = buildDefaultHotelName(user.email);
+  const { data: hotelId, error: bootstrapError } = await supabase.rpc("bootstrap_user_workspace", {
+    default_name: defaultName,
   });
-  if (ensureSubscriptionError) {
-    throw toError(ensureSubscriptionError, "サブスクリプション初期化に失敗しました");
+  if (bootstrapError) {
+    throw toError(bootstrapError, "ワークスペースの作成に失敗しました");
   }
-
+  if (typeof hotelId !== "string" || !hotelId) {
+    throw new Error("ワークスペースの作成に失敗しました");
+  }
   return hotelId;
 }
 

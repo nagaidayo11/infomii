@@ -8,7 +8,7 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 import { isNativeAppWebView } from "@/lib/native-app-bridge";
-import { ensureUserHotelScope, ensureUserHotelScopeForOnboarding } from "@/lib/storage";
+import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -42,15 +42,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       } catch (error) {
         if (!active) return;
         if (isAccessRevokedError(error)) {
-          try {
-            await ensureUserHotelScopeForOnboarding();
-            if (active) setScopeChecked(true);
-            return;
-          } catch {
-            const loginNext = isAppShell ? withAppClientQuery("/dashboard") : "/dashboard";
-            router.replace(`/login?access=revoked&next=${encodeURIComponent(loginNext)}`);
-            return;
-          }
+          const loginNext = isAppShell ? withAppClientQuery("/dashboard") : "/dashboard";
+          router.replace(`/login?access=revoked&next=${encodeURIComponent(loginNext)}`);
+          return;
         }
         setScopeChecked(true);
       }

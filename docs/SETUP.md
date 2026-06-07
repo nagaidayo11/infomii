@@ -195,11 +195,12 @@ npm run supabase:email-templates-ja
 3. **ログイン**
   `/login` では、招待コードだけで施設に参加する（**「招待コードでログイン」**）か、メールとパスワードで新規登録・ログインするかを選べます。招待コードのみの導線を使う場合は、下記「3.2 Anonymous サインイン」の設定が必要です。Google ログインを使う場合は「3.1 Google OAuth 設定」を先に完了する。
 4. **初回ログイン時**
-  アプリ側で「このユーザーに紐づく施設がない」と判定されると、自動で  
+  アプリ側で「このユーザーに紐づく施設がない」と判定されると、`bootstrap_user_workspace`（`supabase/migrations/20260608000000_bootstrap_user_workspace.sql`）により自動で  
   - 施設（`hotels`）が1件作成され、  
   - その施設とユーザーの紐付け（`hotel_memberships`）が1件作成され、  
+  - プロフィール（`profiles`）が未作成なら1件作成され、  
   - その施設用のサブスク（`subscriptions`）が `ensure_hotel_subscription` で1件作成されます。  
-   **招待コードや管理者の操作は不要**です。
+   **招待コードや管理者の操作は不要**です。本番 Supabase には当該 migration を適用してください。
 5. **ページを作成**
   ダッシュボードの「ページを作成」を押すと、上記で作られた施設に紐づく `pages` が1件作成され、エディタ（`/editor/[id]`）に遷移します。
 
