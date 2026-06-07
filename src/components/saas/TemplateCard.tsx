@@ -95,15 +95,15 @@ export function TemplateCard({
       <div
         className={
           isApp
-            ? "flex flex-1 flex-col bg-[var(--app-surface)] p-3"
-            : "flex flex-1 flex-col bg-white p-3"
+            ? "flex min-h-0 flex-1 flex-col bg-[var(--app-surface)] p-3"
+            : "flex min-h-0 flex-1 flex-col bg-white p-3"
         }
       >
         <h3
           className={
             isApp
-              ? "min-h-[2.8rem] line-clamp-2 text-[0.95rem] font-semibold leading-6 text-[var(--app-text)]"
-              : "min-h-[2.8rem] line-clamp-2 text-[0.95rem] font-semibold leading-6 text-slate-900"
+              ? "h-[3rem] shrink-0 line-clamp-2 text-[0.95rem] font-semibold leading-6 text-[var(--app-text)]"
+              : "h-[3rem] shrink-0 line-clamp-2 text-[0.95rem] font-semibold leading-6 text-slate-900"
           }
         >
           {name}
@@ -111,13 +111,13 @@ export function TemplateCard({
         <p
           className={
             isApp
-              ? "mt-1.5 min-h-[2.7rem] line-clamp-2 text-sm leading-[1.35rem] text-[var(--app-text-muted)]"
-              : "mt-1.5 min-h-[2.7rem] line-clamp-2 text-sm leading-[1.35rem] text-slate-600"
+              ? "mt-1.5 h-[2.75rem] shrink-0 line-clamp-2 text-sm leading-[1.375rem] text-[var(--app-text-muted)]"
+              : "mt-1.5 h-[2.75rem] shrink-0 line-clamp-2 text-sm leading-[1.375rem] text-slate-600"
           }
         >
           {description || "説明なし"}
         </p>
-        <div className="mt-auto flex flex-col gap-2 pt-3">
+        <div className="mt-auto flex shrink-0 flex-col gap-2 pt-3">
           <button
             type="button"
             disabled={!!using}

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
-import { useAuth } from "@/components/auth-provider";
 import {
   deletePage,
   getCurrentHotelViewMetrics,
@@ -12,8 +11,8 @@ import {
   type DashboardBootstrapData,
   type PageRow,
 } from "@/lib/storage";
-import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { displayNamesEquivalent, formatDisplayNameWithSan } from "@/lib/user-label";
+import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
 import { AppWorksListItem } from "../AppWorksListItem";
@@ -24,10 +23,8 @@ import { AppSection } from "../primitives/AppSection";
 import { useAppToast } from "../AppToastProvider";
 
 export function AppDashboardView() {
-  const { user } = useAuth();
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
-  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const { displayName: profileDisplayName, loaded: profileLoaded } = useProfileDisplayName();
   const [pages, setPages] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
@@ -63,37 +60,6 @@ export function AppDashboardView() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setProfileDisplayName(null);
-      setProfileLoaded(true);
-      return;
-    }
-    const supabase = getBrowserSupabaseClient();
-    if (!supabase) {
-      setProfileLoaded(true);
-      return;
-    }
-    let active = true;
-    setProfileLoaded(false);
-    void (async () => {
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (!active) return;
-        setProfileDisplayName(data?.display_name ?? null);
-      } finally {
-        if (active) setProfileLoaded(true);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [user?.id]);
 
   const displayName = profileDisplayName?.trim() ?? "";
   const greetingName = displayName ? formatDisplayNameWithSan(displayName) : null;

@@ -5,6 +5,7 @@ import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { dispatchProfileDisplayNameUpdated } from "@/lib/use-profile-display-name";
 
 export function ProfileDisplayNameSection() {
   const { user } = useAuth();
@@ -61,6 +62,7 @@ export function ProfileDisplayNameSection() {
     } else {
       setMessageTone("success");
       setMessage("表示名を保存しました。");
+      dispatchProfileDisplayNameUpdated(trimmed || null);
     }
     setSaving(false);
   }
@@ -72,6 +74,9 @@ export function ProfileDisplayNameSection() {
   return (
     <AppSettingsCard>
       <h2 className="text-base font-semibold text-slate-900">表示名</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        ダッシュボードの挨拶と、右上アカウントメニューに表示されます。
+      </p>
       {loading ? (
         <div className="app-settings-loading mt-3 app-shell-skeleton h-12 rounded-xl" aria-label="読み込み中" />
       ) : (

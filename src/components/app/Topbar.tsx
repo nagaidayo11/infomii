@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { APP_NAV_ITEMS } from "./app-nav-items";
+import { useProfileDisplayName } from "@/lib/use-profile-display-name";
+import { getAvatarInitials } from "@/lib/user-label";
 
 type TopbarProps = {
   title?: string;
@@ -37,20 +39,10 @@ function getSectionTitle(pathname: string | null): string {
   return pathname.startsWith("/dashboard") ? "ダッシュボード" : "";
 }
 
-function getInitials(email: string | undefined): string {
-  if (!email) return "?";
-  const part = email.split("@")[0] ?? "";
-  if (part.length >= 2) return part.slice(0, 2).toUpperCase();
-  return part.slice(0, 1).toUpperCase() || "?";
-}
-
-/**
- * トップバー — ワークスペース名・セクション・ユーザーアバター・ログアウトメニュー
- * Linear / Notion / Stripe 風
- */
 export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobileNav }: TopbarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { displayName } = useProfileDisplayName();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -101,7 +93,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
 
   const sectionTitle = getSectionTitle(pathname);
   const email = user?.email;
-  const initials = getInitials(email);
+  const initials = getAvatarInitials(displayName, email);
 
   const userMenu =
     menuOpen && typeof document !== "undefined" ? (
@@ -117,7 +109,14 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
         >
           <div className="border-b border-slate-100 px-3 py-2">
             <p className="truncate text-xs font-medium text-slate-500">ログイン中</p>
-            <p className="truncate text-sm text-slate-800">{email || "—"}</p>
+            {displayName ? (
+              <>
+                <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
+                {email ? <p className="truncate text-xs text-slate-500">{email}</p> : null}
+              </>
+            ) : (
+              <p className="truncate text-sm text-slate-800">{email || "—"}</p>
+            )}
           </div>
           <Link
             href="/settings"
@@ -195,7 +194,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
           className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
           aria-expanded={menuOpen}
           aria-haspopup="true"
-          aria-label="ユーザーメニュー"
+          aria-label={displayName ? `${displayName}のメニュー` : "ユーザーメニュー"}
         >
           {initials}
         </button>

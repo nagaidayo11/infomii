@@ -390,7 +390,7 @@ export default function TemplatesPage() {
                     aria-label={`${group.label} テンプレート一覧（横スクロール）`}
                     tabIndex={0}
                   >
-                    <div className="flex w-max min-w-full items-stretch gap-3 sm:gap-4">
+                    <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
                       {group.items.map((template) => {
                         const highlighted = highlightSlug === template.slug;
                         return (
@@ -398,7 +398,7 @@ export default function TemplatesPage() {
                             key={template.id}
                             id={template.slug ? `template-${template.slug}` : undefined}
                             className={
-                              "w-[min(88vw,280px)] shrink-0 scroll-mt-24 rounded-xl transition-shadow sm:w-[300px] lg:w-[320px] " +
+                              "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
                               (highlighted
                                 ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
                                 : "")

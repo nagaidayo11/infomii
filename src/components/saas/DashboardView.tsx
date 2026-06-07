@@ -30,6 +30,8 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppDashboardView } from "@/components/app-shell/views/AppDashboardView";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
+import { useProfileDisplayName } from "@/lib/use-profile-display-name";
+import { formatDisplayNameWithSan } from "@/lib/user-label";
 
 export function DashboardView() {
   const { isAppShell } = useClientShell();
@@ -38,6 +40,8 @@ export function DashboardView() {
 
 function DashboardViewWeb() {
   const router = useRouter();
+  const { displayName, loaded: profileLoaded } = useProfileDisplayName();
+  const greetingName = displayName ? formatDisplayNameWithSan(displayName) : null;
   const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
   const [viewMetrics, setViewMetrics] = useState<HotelViewMetrics | null>(null);
   const [pageViewAnalytics, setPageViewAnalytics] = useState<PageViewAnalytics | null>(null);
@@ -199,10 +203,12 @@ function DashboardViewWeb() {
         </div>
       ) : null}
       <header className="app-page-header">
-        <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-          {bootstrap?.hotelName ?? "施設"}
-        </p>
-        <h1 className="mt-1 app-page-title">ダッシュボード</h1>
+        {profileLoaded && greetingName ? (
+          <p className="text-sm font-medium text-slate-600">{greetingName}</p>
+        ) : null}
+        <h1 className={profileLoaded && greetingName ? "mt-1 app-page-title" : "app-page-title"}>
+          ダッシュボード
+        </h1>
         <p className="app-page-subtitle">
           案内を1つ作って、QRでお客様に届けます
         </p>

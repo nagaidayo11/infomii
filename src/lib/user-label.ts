@@ -36,3 +36,20 @@ export function resolveUserLabel(args: {
   if (args.userId.length >= 8) return `ユーザー ${args.userId.slice(0, 8)}`;
   return `ユーザー ${args.userId}`;
 }
+
+/** アバター用イニシャル（表示名優先、なければメール） */
+export function getAvatarInitials(
+  displayName: string | null | undefined,
+  email: string | undefined,
+): string {
+  const name = displayName?.trim();
+  if (name) {
+    const chars = [...name];
+    if (chars.length >= 2) return chars.slice(0, 2).join("");
+    return chars[0] ?? "?";
+  }
+  if (!email) return "?";
+  const part = email.split("@")[0] ?? "";
+  if (part.length >= 2) return part.slice(0, 2).toUpperCase();
+  return part.slice(0, 1).toUpperCase() || "?";
+}
