@@ -32,6 +32,7 @@ import { getLegalPageUrl } from "@/lib/app-store-compliance";
 import {
   buildAuthCallbackUrl,
 } from "@/lib/auth-redirect";
+import { ACCESS_REVOKED_MESSAGE } from "@/lib/access-revoked";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -123,6 +124,14 @@ function LoginForm() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (searchParams.get("access") !== "revoked") return;
+    const client = getBrowserSupabaseClient();
+    void client?.auth.signOut();
+    setMessage(ACCESS_REVOKED_MESSAGE);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("access") === "revoked") return;
     if (searchParams.get("mobile") === "1") return;
     if (loading || !user) return;
     if (typeof window === "undefined") return;
@@ -374,8 +383,12 @@ function LoginForm() {
         {message ? (
           <p
             className={`mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm ${
-              message.startsWith("登録しました") || message.includes("確認が完了")
-                ? "text-emerald-700"
+              message.startsWith("登録しました") ||
+              message.includes("確認が完了") ||
+              message.includes("所属していません")
+                ? message.includes("所属していません")
+                  ? "text-amber-800"
+                  : "text-emerald-700"
                 : "text-rose-600"
             }`}
             role="status"
