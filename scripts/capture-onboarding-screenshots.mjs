@@ -133,7 +133,7 @@ async function capture(page, outPath, { scrollTo, anonymize = false } = {}) {
 }
 
 const CAMP_TEMPLATE_SLUG = "travel-camp-outdoor";
-const MARKETPLACE_SEED_VERSION = 13;
+const MARKETPLACE_SEED_VERSION = 14;
 
 async function waitForTemplatesLoaded(page) {
   await page.getByRole("heading", { name: "テンプレート" }).waitFor({ timeout: 60_000 });

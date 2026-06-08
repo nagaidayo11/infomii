@@ -24,7 +24,7 @@ export function sectionHeading(title: string, lead = ""): CardDraft {
 export function hubLinks(
   title: string,
   items: Array<{ label: string; icon: string }>,
-  columns: 2 | 3 | 4 = 4,
+  columns: 2 | 3 | 4 = 2,
 ): CardDraft {
   return block("pageLinks", {
     title,

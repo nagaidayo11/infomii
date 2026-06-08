@@ -273,6 +273,9 @@ function sanitizeCardContent(type: string, content: Record<string, unknown>, img
       const items = Array.isArray(content.items) ? content.items : [];
       return {
         title: normalizeText(content.title, 80) || "リンク",
+        columns: 2,
+        iconSize: "md",
+        styleVariant: "tile",
         items: items.slice(0, 10).map((item) => {
           const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
           return {

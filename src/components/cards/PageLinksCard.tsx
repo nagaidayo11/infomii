@@ -57,7 +57,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
           : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
-  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
+  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const rawStyleVariant = typeof c?.styleVariant === "string" ? c.styleVariant : "";

@@ -752,7 +752,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "pageLinks":
       return {
         title: "メニュー",
-        columns: 3,
+        columns: 2,
         iconSize: "md",
         styleVariant: "tile",
         tileShadowStrength: "md",

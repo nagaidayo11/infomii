@@ -60,7 +60,7 @@ const comparePricing = (
   pricingRows: Array<{ label: string; values: string[] }>,
   highlightColumnIndex = 0,
 ) => ({ layout: "pricing", title, pricingColumnHeaders, pricingRows, highlightColumnIndex });
-const pageLinks = (title: string, items: Array<{ label: string; icon: string }>, columns = 3) => ({
+const pageLinks = (title: string, items: Array<{ label: string; icon: string }>, columns = 2) => ({
   title,
   columns,
   iconSize: "md",

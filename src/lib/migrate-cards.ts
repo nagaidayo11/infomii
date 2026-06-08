@@ -65,8 +65,11 @@ export function migrateCardsForEditor(cards: Array<{ id: string; type: string; c
     } else if (type === "pageLinks") {
       const c = card.content as Record<string, unknown>;
       const items = Array.isArray(c?.items) ? c.items : [];
+      const rawColumns = typeof c.columns === "number" ? c.columns : Number(c.columns);
+      const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
       content = {
         ...c,
+        columns,
         items: items.map((entry) => {
           const item = (entry ?? {}) as Record<string, unknown>;
           return { ...item, icon: normalizeLegacyIcon(item.icon, "link") };

@@ -4,6 +4,7 @@ import { btocTemplatePreviewPath, templatePreviewPublicPath } from "@/lib/templa
 import { MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-templates";
 import {
   ensurePageLinksAfterOpening,
+  normalizePageLinksCardContent,
   stripDeprecatedIconCards,
   templateCardsContainIcon,
 } from "@/lib/template-marketplace";
@@ -241,16 +242,15 @@ function buildCardContentByType(type: string): Record<string, unknown> {
     case "gallery":
       return { title: "ギャラリー", columns: 2, items: [] };
     case "pageLinks":
-      return {
+      return normalizePageLinksCardContent({
         title: "関連ページ",
-        columns: 3,
         iconSize: "md",
         items: [
           { label: "朝食", icon: "utensils", linkType: "page", pageSlug: "", link: "" },
           { label: "Wi-Fi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
           { label: "周辺", icon: "map-pin", linkType: "page", pageSlug: "", link: "" },
         ],
-      };
+      });
     case "nearby":
       return {
         title: "周辺案内",
@@ -476,6 +476,9 @@ function enrichCriticalCardContent(
       if (typeof content.note !== "string" || !content.note.trim()) {
         content.note = "体調不良・事故時はフロントへご連絡ください。";
       }
+    }
+    if (card.type === "pageLinks") {
+      return { ...card, content: normalizePageLinksCardContent(content) };
     }
     if (card.type === "notice" && typeof content.body === "string" && content.body.length > 110) {
       content.body = `${content.body.slice(0, 107)}...`;

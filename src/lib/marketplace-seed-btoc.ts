@@ -38,7 +38,7 @@ const checklist = (title: string, items: string[]) => ({
 const pageLinks = (
   title: string,
   items: { label: string; icon: string }[],
-  columns: 2 | 3 | 4 = 4,
+  columns: 2 | 3 | 4 = 2,
 ) => hubLinks(title, items, columns);
 const map = (title: string, address: string) => ({ title, address, mapEmbedUrl: "" });
 const steps = (title: string, items: { title: string; description: string }[]) => ({ title, items });

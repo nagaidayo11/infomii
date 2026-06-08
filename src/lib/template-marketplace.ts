@@ -1,5 +1,21 @@
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 13;
+export const MARKETPLACE_SEED_VERSION = 14;
+
+/** Default grid columns for pageLinks blocks in marketplace templates. */
+export const PAGE_LINKS_DEFAULT_COLUMNS = 2;
+
+export function normalizePageLinksCardContent(
+  content: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    ...content,
+    columns: PAGE_LINKS_DEFAULT_COLUMNS,
+    iconSize: content.iconSize ?? "md",
+    styleVariant: content.styleVariant ?? "tile",
+    tileShadowStrength: content.tileShadowStrength ?? "md",
+    circleIconShadowStrength: content.circleIconShadowStrength ?? "md",
+  };
+}
 
 type TemplateCardLike = { type: string; order?: number };
 

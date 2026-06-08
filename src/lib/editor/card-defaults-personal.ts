@@ -124,7 +124,7 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
     case "pageLinks":
       return {
         title: "リンクまとめ",
-        columns: 3,
+        columns: 2,
         iconSize: "md",
         styleVariant: "tile",
         tileShadowStrength: "md",
