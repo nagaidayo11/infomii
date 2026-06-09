@@ -18,28 +18,27 @@ export function shouldUseAppleIapBilling(userAgent?: string): boolean {
   return isNativeIosAppClient(userAgent);
 }
 
-/** @deprecated Use shouldUseAppleIapBilling — kept for transitional imports. */
-export function shouldBlockInAppSubscriptionCheckout(_userAgent?: string): boolean {
-  return false;
-}
-
-/** In-app path (same origin). proxy.ts allows /lp/saas for native WebView. */
-export const WEB_PRICING_LP_PATH = "/lp/saas#pricing";
-
-/** Public pricing LP — used for iOS app new subscriptions (Guideline 3.1.1). */
-export function getWebPricingLpUrl(): string {
-  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}${WEB_PRICING_LP_PATH}`;
-}
-
-/** Navigate away from app tab shell to the marketing pricing section. */
+/** @deprecated App shell must not open the marketing LP for billing — use navigateToAppBilling. */
 export function navigateToWebPricingLp(): void {
   if (typeof window === "undefined") return;
+  if (shouldUseAppleIapBilling()) {
+    window.location.assign("/settings/billing");
+    return;
+  }
   window.location.assign(WEB_PRICING_LP_PATH);
 }
 
-/** @deprecated Prefer getWebPricingLpUrl for app-shell billing CTAs. */
-export function getWebBillingUrl(): string {
-  return getWebPricingLpUrl();
+/** @deprecated Use shouldUseAppleIapBilling — kept for transitional imports. */
+export function shouldBlockInAppSubscriptionCheckout(_userAgent?: string): boolean {
+  return shouldUseAppleIapBilling(_userAgent);
+}
+
+/** Web marketing LP path (not used for in-app billing). */
+export const WEB_PRICING_LP_PATH = "/lp/saas#pricing";
+
+/** Public pricing LP — web only. */
+export function getWebPricingLpUrl(): string {
+  return `${INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "")}${WEB_PRICING_LP_PATH}`;
 }
 
 export function getLegalPageUrl(path: "/terms" | "/privacy" | "/commerce", appShell: boolean): string {

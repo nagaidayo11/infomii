@@ -1,7 +1,16 @@
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
+import { isInfomiiAppUserAgent } from "@/lib/client-shell";
+
 export const OWNER_ONLY_BILLING_MESSAGE =
   "課金操作はオーナーのみ実行できます。オーナーに依頼してください。";
+
+export const NATIVE_APP_STRIPE_BLOCKED_MESSAGE =
+  "アプリでは App Store からお申し込みください。プランタブを開いてください。";
+
+export function isNativeAppBillingRequest(userAgent: string | null): boolean {
+  return isInfomiiAppUserAgent(userAgent ?? "");
+}
 
 export async function requireBillingOwner(token: string): Promise<
   | { ok: true; userId: string; hotelId: string }

@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { purchaseAppleSubscription } from "@/lib/apple-iap-client";
+import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
+import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
+import { isNativeIapAvailable } from "@/lib/native-iap";
 import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { Button } from "@/components/ui";
 import { useEffect, useState } from "react";
 
@@ -26,6 +31,8 @@ export function AnalyticsProGate({ plan, children }: AnalyticsProGateProps) {
 }
 
 function AnalyticsUpgradePrompt() {
+  const { isAppShell } = useClientShell();
+  const useAppStore = isAppShell || (shouldUseAppleIapBilling() && isNativeIapAvailable());
   const [loading, setLoading] = useState(false);
   const [canManageBilling, setCanManageBilling] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -59,6 +66,11 @@ function AnalyticsUpgradePrompt() {
     setLoading(true);
     try {
       await trackUpgradeClick("dashboard-pro");
+      if (useAppStore) {
+        await purchaseAppleSubscription("pro", "monthly");
+        window.location.assign("/dashboard/analytics?billing=success");
+        return;
+      }
       const url = await createStripeCheckoutSession({
         plan: "pro",
         successPath: "/dashboard/analytics?billing=success",
@@ -103,12 +115,21 @@ function AnalyticsUpgradePrompt() {
             総閲覧数・日別推移・国別・言語別・人気ページの詳細分析をご利用いただけます。
           </p>
           <div className="flex flex-col items-stretch justify-center gap-3 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
-            <Link
-              href="/lp/saas#pricing-plans"
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 sm:min-h-0"
-            >
-              料金を見る
-            </Link>
+            {useAppStore ? (
+              <Link
+                href={APP_BILLING_PATH}
+                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 sm:min-h-0"
+              >
+                プランを見る
+              </Link>
+            ) : (
+              <Link
+                href="/lp/saas#pricing-plans"
+                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 sm:min-h-0"
+              >
+                料金を見る
+              </Link>
+            )}
             <Button
               type="button"
               variant="primary"
@@ -117,7 +138,7 @@ function AnalyticsUpgradePrompt() {
               onClick={handleUpgrade}
               disabled={loading || !canManageBilling}
             >
-              {loading ? "処理中…" : "プランをアップグレードする"}
+              {loading ? "処理中…" : useAppStore ? "Proを申し込む" : "プランをアップグレードする"}
             </Button>
           </div>
           {!canManageBilling ? (

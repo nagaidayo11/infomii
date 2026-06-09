@@ -460,13 +460,24 @@ async function captureGuestDemo(page, outPath) {
   console.log("saved", path.relative(ROOT, outPath));
 }
 
+async function captureBilling(page, outPath) {
+  await page.goto(`${BASE}/settings/billing?client=app`, {
+    waitUntil: "domcontentloaded",
+    timeout: 120_000,
+  });
+  await page.getByRole("heading", { name: "プラン" }).first().waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(600);
+  await hideDevOverlays(page);
+  await capture(page, outPath);
+}
+
 async function main() {
   const env = await loadEnv();
   const only = process.env.APP_STORE_CAPTURE_ONLY?.split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const shouldCapture = (name) => !only?.length || only.includes(name);
-  const needsAuth = shouldCapture("01") || shouldCapture("02") || shouldCapture("03");
+  const needsAuth = shouldCapture("01") || shouldCapture("02") || shouldCapture("03") || shouldCapture("06");
   const needsSupabase = shouldCapture("03");
 
   await mkdir(OUT_DIR, { recursive: true });
@@ -515,6 +526,9 @@ async function main() {
   }
   if (shouldCapture("05")) {
     await captureGuestDemo(page, path.join(OUT_DIR, "05-guest.png"));
+  }
+  if (shouldCapture("06")) {
+    await captureBilling(page, path.join(OUT_DIR, "06-billing.png"));
   }
 
   await browser.close();

@@ -17,9 +17,9 @@ function isLpPublicAssetPath(pathname: string): boolean {
   return /\.(avif|gif|ico|jpe?g|png|svg|webp|woff2?)$/i.test(pathname);
 }
 
-/** iOS/WebView billing CTAs open SaaS pricing LP (App Store 3.1.1). */
-function isLpAllowedForAppClient(pathname: string): boolean {
-  return pathname === "/lp/saas" || pathname === "/lp/saas/";
+/** iOS/WebView: marketing LP is not used for billing — redirect to Plan tab. */
+function isLpAllowedForAppClient(_pathname: string): boolean {
+  return false;
 }
 
 export function proxy(request: NextRequest) {

@@ -9,7 +9,7 @@ export function AppBillingView() {
       <header className="app-screen-header">
         <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">プラン</h1>
         <p className="app-screen-header-desc text-base text-[var(--app-text-muted)]">
-          料金プランの確認とアップグレード。iOS アプリでは App Store、Web では Stripe でお支払いいただけます。
+          料金プランの確認とアップグレード。お申し込みは App Store 経由です。
         </p>
       </header>
 

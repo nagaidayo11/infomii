@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAppBaseUrl, getStripeServerClient } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
+import { isNativeAppBillingRequest, NATIVE_APP_STRIPE_BLOCKED_MESSAGE } from "@/lib/server/billing-auth";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,10 @@ async function appendBillingLog(hotelId: string, action: string, message: string
 export async function POST(request: NextRequest) {
   let auditHotelId: string | null = null;
   try {
+    if (isNativeAppBillingRequest(request.headers.get("user-agent"))) {
+      return NextResponse.json({ message: NATIVE_APP_STRIPE_BLOCKED_MESSAGE }, { status: 403 });
+    }
+
     const authHeader = request.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ")
       ? authHeader.slice("Bearer ".length)

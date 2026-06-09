@@ -29,7 +29,7 @@ Infomii is a WebView shell for our responsive web app at https://www.infomii.com
 
 Sign in: email/password (demo account above), Sign in with Apple, or Google.
 
-Subscriptions: New Pro/Business purchases on iOS use App Store In-App Purchase (StoreKit). The Plan tab shows tiers and purchase buttons; restore is available in Settings. Web subscribers (Stripe) see the same plan after login. Manage App Store subscriptions in iOS Settings → Apple ID → Subscriptions; manage Stripe subscriptions from the Plan tab (Customer Portal).
+Subscriptions: New Pro/Business purchases on iOS use App Store In-App Purchase (StoreKit) only. Open the Plan tab (bottom navigation) to view tiers and subscribe. Restore purchases in Settings. Web (Stripe) subscribers see the same plan after login but must manage billing on the website (infomii.com). Manage App Store subscriptions in iOS Settings → Apple ID → Subscriptions.
 
 Account deletion: Settings → Delete account.
 
@@ -73,6 +73,18 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
 4. Supabase マイグレーション `20260609120000_apple_iap_subscriptions.sql` を適用
 5. iOS は **EAS ビルド必須**（`react-native-iap`）。Expo Go では課金テスト不可
 6. サンドボックス Apple ID で Plan タブから購入 → サーバー同期 → Web でも同プラン表示を確認
+
+### 審査用スクリーンショット（Plan タブ）
+
+1. 開発サーバー起動: リポジトリルートで `npm run dev`
+2. 自動キャプチャ（Plan タブ含む）:
+   ```bash
+   npm run app-store:capture-screenshots
+   # Plan タブのみ: APP_STORE_CAPTURE_ONLY=06 npm run app-store:capture-screenshots
+   ```
+3. 出力: `public/app-store/screenshots/raw/06-billing.png`（Free プラン・Pro/Business 申し込みボタン・料金表）
+4. 手動の場合: ログイン後、下部ナビの **プラン** → 画面全体を撮影（Stripe の表記が出ていないことを確認）
+5. 復元: **設定** →「App Store の購入を復元」画面も任意で追加
 
 ## プッシュ通知
 

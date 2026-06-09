@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 type PlanLimitModalProps = {
   open: boolean;
@@ -16,9 +18,11 @@ const pricingHref = "/lp/saas#pricing-plans";
  * ページ数上限到達時に表示するモーダル。Pro/Business プランへのアップグレードを促す。
  */
 export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }: PlanLimitModalProps) {
+  const { isAppShell } = useClientShell();
   if (!open) return null;
 
   const isPro = currentPlan === "pro";
+  const upgradeHref = isAppShell ? APP_BILLING_PATH : pricingHref;
   const defaultMessage = isPro
     ? "Proプランでは10ページまでです。Businessプランにアップグレードすると無制限で作成できます。"
     : "無料プランでは3ページまで作成できます。Proプランで10ページ、Businessプランで無制限まで拡張できます。";
@@ -44,21 +48,21 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
         <div className="mt-6 flex flex-wrap gap-3">
           {!isPro && (
             <Link
-              href={pricingHref}
+              href={upgradeHref}
               className="app-button-native inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800"
             >
-              Proプラン（¥1,280/月）
+              {isAppShell ? "Proプランを申し込む" : "Proプラン（¥1,280/月）"}
             </Link>
           )}
           <Link
-            href={pricingHref}
+            href={upgradeHref}
             className={
               isPro
                 ? "app-button-native inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800"
                 : "app-button-native inline-flex rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"
             }
           >
-            Businessプラン（¥3,480/月）
+            {isAppShell ? "Businessプランを申し込む" : "Businessプラン（¥3,480/月）"}
           </Link>
           <button
             type="button"

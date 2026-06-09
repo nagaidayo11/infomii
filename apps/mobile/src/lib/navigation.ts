@@ -10,7 +10,6 @@ function hostMatchesOrigin(hostname: string, origin: URL): boolean {
 }
 
 const EXTERNAL_ALLOW_SUFFIXES = [
-  "stripe.com",
   "google.com",
   "google.co.jp",
   "gstatic.com",
@@ -28,8 +27,7 @@ function isAllowedExternalHost(hostname: string): boolean {
 }
 
 /**
- * Keep OAuth, Stripe Checkout, and Supabase inside the WebView.
- * Block arbitrary external sites (open in system browser later if needed).
+ * Keep OAuth and Supabase inside the WebView. App billing uses StoreKit only.
  */
 export function isAllowedNavigationUrl(url: string): boolean {
   try {

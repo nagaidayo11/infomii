@@ -5,6 +5,7 @@ import type {
   InformationTheme,
 } from "@/types/information";
 import { createSlug } from "@/lib/slug";
+import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { starterTemplates, type StarterTemplate } from "@/lib/templates";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -3906,6 +3907,9 @@ export async function runOpsWeeklyReport(
 export async function createStripeCheckoutSession(
   options?: CheckoutSessionOptions,
 ): Promise<string> {
+  if (shouldUseAppleIapBilling()) {
+    throw new Error("アプリでは App Store からお申し込みください。プランタブを開いてください。");
+  }
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");
@@ -3954,6 +3958,9 @@ export async function createStripeCheckoutSession(
 }
 
 export async function createStripePortalSession(): Promise<string> {
+  if (shouldUseAppleIapBilling()) {
+    throw new Error("アプリでは App Store のサブスクリプション管理をご利用ください。");
+  }
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase設定が未完了です");

@@ -1581,13 +1581,13 @@ export function Editor2({
                   閉じる
                 </button>
                 <a
-                  href="/lp/saas#pricing-plans"
+                  href={isAppShell ? "/settings/billing" : "/lp/saas#pricing-plans"}
                   onClick={() => {
                     void trackUpgradeClick("editor");
                   }}
                   className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-violet-700 px-4 py-2 text-sm font-semibold !text-white no-underline hover:bg-violet-600"
                 >
-                  Businessプランを見る
+                  {isAppShell ? "プランを見る" : "Businessプランを見る"}
                 </a>
               </div>
             </div>

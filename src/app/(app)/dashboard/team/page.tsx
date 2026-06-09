@@ -15,6 +15,8 @@ import { resolveUserLabel } from "@/lib/user-label";
 import { HOTEL_TEAM_MAX_MEMBERS } from "@/lib/team-constants";
 import { FadeIn } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
 import { TEAM_PENDING_RED_DOT_PREVIEW } from "@/components/app/usePendingPublishApprovalCount";
 
 type PublishApprovalRow = {
@@ -126,6 +128,8 @@ function groupAuditLogsByDay(logs: TeamAuditLogRow[], todayJst: string): AuditLo
 }
 
 export default function TeamPage() {
+  const { isAppShell } = useClientShell();
+  const businessUpgradeHref = isAppShell ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
   const [members, setMembers] = useState<HotelMember[]>([]);
   const [invites, setInvites] = useState<HotelInvite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -466,10 +470,10 @@ export default function TeamPage() {
                 現在のプランではこの画面の操作はできません。
               </p>
               <a
-                href="/lp/saas#pricing-plans"
+                href={businessUpgradeHref}
                 className="app-button-native mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 hover:!text-white"
               >
-                Businessプランを見る
+                {isAppShell ? "Businessプランを申し込む" : "Businessプランを見る"}
               </a>
             </section>
           </FadeIn>

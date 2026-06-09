@@ -38,10 +38,13 @@ export function BusinessPlanSection({
   const [message, setMessage] = useState<string | null>(null);
   const [canManageBilling, setCanManageBilling] = useState(false);
   const [roleLoaded, setRoleLoaded] = useState(false);
-  const [useIosIap, setUseIosIap] = useState(false);
+  const [nativeIapReady, setNativeIapReady] = useState(false);
+
+  const appStoreOnly = isAppLayout;
+  const useIosIap = appStoreOnly || (shouldUseAppleIapBilling() && nativeIapReady);
 
   useEffect(() => {
-    setUseIosIap(shouldUseAppleIapBilling() && isNativeIapAvailable());
+    setNativeIapReady(isNativeIapAvailable());
   }, []);
 
   const plan = subscription?.plan ?? "free";
@@ -166,7 +169,13 @@ export function BusinessPlanSection({
       setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
       return;
     }
-    if (useIosIap && isAppleBilling) {
+    if (appStoreOnly && isStripeBilling) {
+      setMessage(
+        "Web でご契約中のプランです。プランの変更・解約はブラウザ（infomii.com）の設定から行ってください。",
+      );
+      return;
+    }
+    if (useIosIap && (isAppleBilling || appStoreOnly)) {
       setMessage("App Store のサブスクリプションは、iPhone の「設定」→「Apple ID」→「サブスクリプション」から管理・解約できます。");
       return;
     }
@@ -189,7 +198,7 @@ export function BusinessPlanSection({
       }
       setBusyAction(null);
     }
-  }, [canManageBilling, confirmExternalPayment, isAppleBilling, useIosIap]);
+  }, [appStoreOnly, canManageBilling, confirmExternalPayment, isAppleBilling, isStripeBilling, useIosIap]);
 
   const scheduledCancel = Boolean(cancelAtPeriodEnd && status !== "canceled");
   const statusLabel =
@@ -260,21 +269,24 @@ export function BusinessPlanSection({
   };
 
   const selectProTier =
-    plan === "free" ? () => void openCheckout("pro") : undefined;
+    plan === "free" && !(appStoreOnly && isStripeBilling) ? () => void openCheckout("pro") : undefined;
   const selectBusinessTier =
     plan === "free"
       ? () => void openCheckout("business")
       : plan === "pro" && useIosIap && isAppleBilling
         ? () => void openApplePurchase("business")
-        : plan === "pro" && !(useIosIap && isAppleBilling)
+        : plan === "pro" && !appStoreOnly && !(useIosIap && isAppleBilling)
           ? () => void openPortal()
           : undefined;
+
+  const showStripeWebContractNotice = appStoreOnly && isPaid && isStripeBilling;
+  const showAppPurchaseActions = !showStripeWebContractNotice;
 
   return (
     <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>
       <div className={isAppLayout ? "" : "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"}>
         <div className="min-w-0">
-          <h2 className="text-base font-semibold text-slate-900">プランと請求</h2>
+          <h2 className="text-base font-semibold text-slate-900">{isAppLayout ? "プラン" : "プランと請求"}</h2>
           {isAppLayout ? null : (
             <p className="app-settings-card-desc mt-1 text-sm leading-relaxed text-slate-600">
               多言語翻訳の自動補助、分析の CSV ダウンロード、公開ページ数の拡張など、運用が大きくなった施設向けのプランです。
@@ -282,11 +294,21 @@ export function BusinessPlanSection({
           )}
         </div>
       </div>
-      {useIosIap && isAppLayout ? (
+      {appStoreOnly ? (
         <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
-          iOS アプリからのお申し込みは App Store 経由で行います。Web（Stripe）で契約中の場合は、同じアカウントでログインするとプランが反映されます。
+          お申し込み・復元は App Store 経由です。同じアカウントでログインしていれば、既存のプランが反映されます。
+        </p>
+      ) : useIosIap ? (
+        <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
+          iOS アプリからのお申し込みは App Store 経由で行います。
         </p>
       ) : null}
+      {showStripeWebContractNotice ? (
+        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-900">
+          現在 Web でご契約中です。プランの変更・解約はブラウザ（infomii.com）の設定から行ってください。
+        </p>
+      ) : null}
+      {showAppPurchaseActions ? (
       <div
         className={
           isAppLayout
@@ -305,7 +327,7 @@ export function BusinessPlanSection({
                 (isAppLayout ? " app-touch-btn-primary app-plan-cta-primary w-full max-w-full" : "")
               }
             >
-              {busyAction === "pro" ? "処理中…" : useIosIap ? "Proを申し込む（App Store）" : "Proを申し込む"}
+              {busyAction === "pro" ? "処理中…" : appStoreOnly ? "Proを申し込む" : useIosIap ? "Proを申し込む（App Store）" : "Proを申し込む"}
             </button>
             <button
               type="button"
@@ -316,11 +338,11 @@ export function BusinessPlanSection({
                 (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
-              {busyAction === "business" ? "処理中…" : useIosIap ? "Businessを申し込む（App Store）" : "Businessプランを申し込む"}
+              {busyAction === "business" ? "処理中…" : appStoreOnly ? "Businessを申し込む" : useIosIap ? "Businessを申し込む（App Store）" : "Businessプランを申し込む"}
             </button>
           </>
         ) : null}
-        {plan === "pro" ? (
+        {plan === "pro" && showAppPurchaseActions ? (
           <>
             <button
               type="button"
@@ -348,11 +370,11 @@ export function BusinessPlanSection({
                 (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
-              サブスクリプションを管理 / 解約する
+              {appStoreOnly ? "サブスクリプションを管理" : "サブスクリプションを管理 / 解約する"}
             </button>
           </>
         ) : null}
-        {plan === "business" ? (
+        {plan === "business" && showAppPurchaseActions ? (
           <>
             <button
               type="button"
@@ -363,7 +385,7 @@ export function BusinessPlanSection({
                 (isAppLayout ? " app-touch-btn-primary app-plan-cta-primary w-full max-w-full" : "")
               }
             >
-              {busyAction === "portal" ? "処理中…" : "請求情報を管理"}
+              {busyAction === "portal" ? "処理中…" : appStoreOnly ? "サブスクリプションを管理" : "請求情報を管理"}
             </button>
             <button
               type="button"
@@ -374,11 +396,11 @@ export function BusinessPlanSection({
                 (isAppLayout ? " app-plan-cta-secondary w-full max-w-full" : "")
               }
             >
-              サブスクリプションを管理 / 解約する
+              {appStoreOnly ? "サブスクリプションを管理" : "サブスクリプションを管理 / 解約する"}
             </button>
           </>
         ) : null}
-        {useIosIap ? (
+        {useIosIap && showAppPurchaseActions ? (
           <button
             type="button"
             onClick={() => void openAppleRestore()}
@@ -392,6 +414,7 @@ export function BusinessPlanSection({
           </button>
         ) : null}
       </div>
+      ) : null}
       <div
         className={
           isAppLayout
@@ -544,10 +567,10 @@ export function BusinessPlanSection({
           </div>
         </div>
       </div>
-      {plan === "pro" && isStripeBilling ? (
+      {plan === "pro" && isStripeBilling && !appStoreOnly ? (
         <p className="mt-2 text-xs text-slate-500">現在の契約から決済ページでBusinessプランへ変更できます。</p>
       ) : null}
-      {isPaid && isActiveLike && isStripeBilling ? (
+      {isPaid && isActiveLike && isStripeBilling && !appStoreOnly ? (
         <p className="mt-2 text-xs text-slate-500">解約は Stripe の管理画面でいつでも行えます。</p>
       ) : null}
       {isPaid && isActiveLike && isAppleBilling ? (
