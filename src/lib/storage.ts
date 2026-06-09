@@ -529,6 +529,8 @@ function blocksToImages(blocks: InformationBlock[]): string[] {
 export type SubscriptionPlan = PlanLimitTier;
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 
+export type BillingProvider = "stripe" | "apple";
+
 export type HotelSubscription = {
   id: string;
   plan: SubscriptionPlan;
@@ -538,6 +540,8 @@ export type HotelSubscription = {
   cancelAt: string | null;
   currentPeriodEnd: string | null;
   hasStripeCustomer: boolean;
+  billingProvider: BillingProvider | null;
+  hasAppleSubscription: boolean;
   updatedAt: string;
 };
 
@@ -838,6 +842,8 @@ function createDevBusinessOverrideSubscriptionFallback(): HotelSubscription {
     cancelAt: null,
     currentPeriodEnd: null,
     hasStripeCustomer: false,
+    billingProvider: null,
+    hasAppleSubscription: false,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -1090,7 +1096,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
   let { data: rows, error } = await supabase
     .from("subscriptions")
     .select(
-      "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,updated_at"
+      "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,billing_provider,apple_original_transaction_id,updated_at"
     )
     .eq("hotel_id", hotelId)
     .order("updated_at", { ascending: false })
@@ -1111,6 +1117,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
           ...row,
           cancel_at_period_end: false,
           cancel_at: null,
+          billing_provider: null,
+          apple_original_transaction_id: null,
         }))
       : null;
     error = fallback.error;
@@ -1137,6 +1145,12 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
       .eq("id", data.id);
   }
 
+  const billingProvider =
+    (data as { billing_provider?: BillingProvider | null }).billing_provider ?? null;
+  const appleOriginalTransactionId =
+    (data as { apple_original_transaction_id?: string | null }).apple_original_transaction_id ??
+    null;
+
   const subscription: HotelSubscription = {
     id: data.id,
     plan: data.plan,
@@ -1146,6 +1160,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     cancelAt: (data as { cancel_at?: string | null }).cancel_at ?? null,
     currentPeriodEnd: data.current_period_end,
     hasStripeCustomer: Boolean(data.stripe_customer_id),
+    billingProvider,
+    hasAppleSubscription: Boolean(appleOriginalTransactionId) || billingProvider === "apple",
     updatedAt: data.updated_at,
   };
 
@@ -1360,7 +1376,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     supabase
       .from("subscriptions")
       .select(
-        "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,updated_at"
+        "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,billing_provider,apple_original_transaction_id,updated_at"
       )
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false })
@@ -1389,6 +1405,8 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
           ...row,
           cancel_at_period_end: false,
           cancel_at: null,
+          billing_provider: null,
+          apple_original_transaction_id: null,
         }))
       : null;
     subError = fallback.error;
@@ -1418,6 +1436,11 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       cancelAt: (latestSub as { cancel_at?: string | null }).cancel_at ?? null,
       currentPeriodEnd: latestSub.current_period_end,
       hasStripeCustomer: Boolean(latestSub.stripe_customer_id),
+      billingProvider:
+        (latestSub as { billing_provider?: BillingProvider | null }).billing_provider ?? null,
+      hasAppleSubscription:
+        Boolean((latestSub as { apple_original_transaction_id?: string | null }).apple_original_transaction_id) ||
+        (latestSub as { billing_provider?: BillingProvider | null }).billing_provider === "apple",
       updatedAt: latestSub.updated_at,
     }
     : null;

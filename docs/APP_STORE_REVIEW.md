@@ -18,7 +18,7 @@ npm run app-store:seed-review
 
 1. ワークスペース 1 件（オーナー: 審査用アカウント）
 2. 公開ページ `app-store-review`（シードで `published`）
-3. 無料プランのまま（有料は Web 課金の説明どおり）
+3. 無料プランのまま（有料は App Store IAP または Web Stripe の説明どおり）
 
 提出前のローカル確認: `npm run app-store:verify`（本番 AASA を叩く。オフラインのみなら `--skip-remote`）
 
@@ -29,7 +29,7 @@ Infomii is a WebView shell for our responsive web app at https://www.infomii.com
 
 Sign in: email/password (demo account above), Sign in with Apple, or Google.
 
-Subscriptions: New Pro/Business purchases are completed on our website (Stripe), not via In-App Purchase. The iOS app shows plan info and links to the web billing page. Existing subscribers can manage billing via Stripe Customer Portal from the Plan tab.
+Subscriptions: New Pro/Business purchases on iOS use App Store In-App Purchase (StoreKit). The Plan tab shows tiers and purchase buttons; restore is available in Settings. Web subscribers (Stripe) see the same plan after login. Manage App Store subscriptions in iOS Settings → Apple ID → Subscriptions; manage Stripe subscriptions from the Plan tab (Customer Portal).
 
 Account deletion: Settings → Delete account.
 
@@ -60,6 +60,19 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
 2. Supabase Dashboard → Authentication → Apple を有効化
 3. Redirect URL: `https://<project>.supabase.co/auth/v1/callback`
 4. 本番 Web の Site URL / Redirect URLs に `https://www.infomii.com/**` を含める
+
+## Apple In-App Purchase（StoreKit）
+
+1. **App Store Connect** → アプリ → **サブスクリプション** でグループを作成し、次の Product ID を登録（審査用スクリーンショット付き）:
+   - `com.infomii.app.pro.monthly`（Pro 月額 ¥1,280 税込）
+   - `com.infomii.app.pro.annual`（Pro 年額 ¥12,800）
+   - `com.infomii.app.business.monthly`（Business 月額 ¥3,480）
+   - `com.infomii.app.business.annual`（Business 年額 ¥34,800）
+2. **In-App Purchase 用 API キー**（.p8）を発行し、Vercel に `APPLE_IAP_*` を設定（`.env.example` 参照）
+3. **App Store Server Notifications** の Production / Sandbox URL を `https://www.infomii.com/api/apple/webhook` に設定
+4. Supabase マイグレーション `20260609120000_apple_iap_subscriptions.sql` を適用
+5. iOS は **EAS ビルド必須**（`react-native-iap`）。Expo Go では課金テスト不可
+6. サンドボックス Apple ID で Plan タブから購入 → サーバー同期 → Web でも同プラン表示を確認
 
 ## プッシュ通知
 

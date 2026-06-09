@@ -165,6 +165,7 @@ async function upsertStripeSubscription(params: {
       plan: params.plan,
       status: params.status,
       max_published_pages: params.maxPublishedPages,
+      billing_provider: params.plan === "free" ? null : "stripe",
       stripe_customer_id: params.stripeCustomerId ?? null,
       stripe_subscription_id: params.stripeSubscriptionId ?? null,
       stripe_price_id: params.stripePriceId ?? null,

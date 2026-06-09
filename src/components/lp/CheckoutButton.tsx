@@ -8,7 +8,10 @@ import {
   getCurrentUserHotelRole,
   trackUpgradeClick,
 } from "@/lib/storage";
+import { purchaseAppleSubscription } from "@/lib/apple-iap-client";
+import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { buildBillingLoginHref, isLoginRequiredMessage } from "@/lib/billing-auth";
+import { isNativeIapAvailable } from "@/lib/native-iap";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui";
 
@@ -101,6 +104,18 @@ export function CheckoutButton({
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "lp-pricing-business" : "lp-pricing-pro");
+
+      if (shouldUseAppleIapBilling() && isNativeIapAvailable()) {
+        if (shouldOpenPortal && subscription?.billingProvider === "apple") {
+          window.location.href = "/settings/billing";
+          return;
+        }
+        if (!shouldOpenPortal) {
+          await purchaseAppleSubscription(plan, interval === "yearly" ? "yearly" : "monthly");
+          window.location.href = "/settings/billing?billing=success";
+          return;
+        }
+      }
 
       const url = shouldOpenPortal
         ? await createStripePortalSession()

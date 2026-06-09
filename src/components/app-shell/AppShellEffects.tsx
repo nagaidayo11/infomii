@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { dispatchNativeIapResult } from "@/lib/native-iap";
 import { useClientShell } from "./useClientShell";
 
 function applyDocumentShell(client: "web" | "app") {
@@ -22,6 +23,16 @@ export function AppShellEffects() {
     return () => {
       delete document.documentElement.dataset.clientShell;
       delete document.documentElement.dataset.appTheme;
+    };
+  }, [client]);
+
+  useEffect(() => {
+    if (client !== "app") return;
+    (window as Window & { dispatchNativeIapResult?: typeof dispatchNativeIapResult }).dispatchNativeIapResult =
+      dispatchNativeIapResult;
+    return () => {
+      delete (window as Window & { dispatchNativeIapResult?: typeof dispatchNativeIapResult })
+        .dispatchNativeIapResult;
     };
   }, [client]);
 

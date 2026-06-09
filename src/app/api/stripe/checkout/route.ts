@@ -115,9 +115,23 @@ export async function POST(request: NextRequest) {
 
     const { data: sub } = await admin
       .from("subscriptions")
-      .select("plan,status,stripe_customer_id")
+      .select("plan,status,stripe_customer_id,billing_provider")
       .eq("hotel_id", hotelId)
       .maybeSingle();
+
+    if (
+      sub?.billing_provider === "apple" &&
+      (sub.plan === "pro" || sub.plan === "business") &&
+      (sub.status === "active" || sub.status === "trialing")
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "App Store で有料契約中です。Web からの新規お申し込みはできません。iOS の設定アプリからサブスクリプションを管理してください。",
+        },
+        { status: 409 },
+      );
+    }
 
     if (
       (sub?.plan === "pro" || sub?.plan === "business") &&

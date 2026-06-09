@@ -13,6 +13,10 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           stripe_price_id: string | null;
+          billing_provider: "stripe" | "apple" | null;
+          apple_original_transaction_id: string | null;
+          apple_product_id: string | null;
+          apple_environment: "Sandbox" | "Production" | null;
           cancel_at_period_end: boolean;
           cancel_at: string | null;
           current_period_end: string | null;
@@ -28,6 +32,10 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
+          billing_provider?: "stripe" | "apple" | null;
+          apple_original_transaction_id?: string | null;
+          apple_product_id?: string | null;
+          apple_environment?: "Sandbox" | "Production" | null;
           cancel_at_period_end?: boolean;
           cancel_at?: string | null;
           current_period_end?: string | null;
@@ -42,6 +50,10 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           stripe_price_id?: string | null;
+          billing_provider?: "stripe" | "apple" | null;
+          apple_original_transaction_id?: string | null;
+          apple_product_id?: string | null;
+          apple_environment?: "Sandbox" | "Production" | null;
           cancel_at_period_end?: boolean;
           cancel_at?: string | null;
           current_period_end?: string | null;

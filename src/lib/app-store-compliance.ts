@@ -13,12 +13,14 @@ export function isNativeIosAppClient(userAgent?: string): boolean {
   return isNativeInfomiiAppClient(ua) && IOS_UA_RE.test(ua);
 }
 
-/**
- * App Store Guideline 3.1.1: avoid new digital subscription checkout inside the iOS app shell.
- * Existing subscribers may still open Stripe Customer Portal to manage/cancel.
- */
-export function shouldBlockInAppSubscriptionCheckout(userAgent?: string): boolean {
+/** iOS native shell uses App Store IAP for new subscriptions (Guideline 3.1.1). */
+export function shouldUseAppleIapBilling(userAgent?: string): boolean {
   return isNativeIosAppClient(userAgent);
+}
+
+/** @deprecated Use shouldUseAppleIapBilling — kept for transitional imports. */
+export function shouldBlockInAppSubscriptionCheckout(_userAgent?: string): boolean {
+  return false;
 }
 
 /** In-app path (same origin). proxy.ts allows /lp/saas for native WebView. */

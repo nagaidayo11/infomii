@@ -19,7 +19,7 @@ module.exports = {
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
-    backgroundColor: "#0d9488",
+    backgroundColor: "#ffffff",
   },
   updates: {
     enabled: false,
@@ -50,6 +50,7 @@ module.exports = {
     },
   },
   plugins: [
+    "react-native-iap",
     [
       "expo-build-properties",
       {

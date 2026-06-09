@@ -1,0 +1,154 @@
+import { Platform } from "react-native";
+import {
+  endConnection,
+  finishTransaction,
+  getAvailablePurchases,
+  getSubscriptions,
+  initConnection,
+  purchaseErrorListener,
+  purchaseUpdatedListener,
+  requestSubscription,
+  type ProductPurchase,
+  type PurchaseError,
+  type Subscription,
+  type SubscriptionPurchase,
+} from "react-native-iap";
+
+export const APPLE_IAP_PRODUCT_IDS = [
+  "com.infomii.app.pro.monthly",
+  "com.infomii.app.pro.annual",
+  "com.infomii.app.business.monthly",
+  "com.infomii.app.business.annual",
+] as const;
+
+export type IapSuccessPayload = {
+  transactionId: string;
+  originalTransactionId: string | null;
+  productId: string;
+  environment?: "Sandbox" | "Production";
+};
+
+let connectionReady = false;
+let purchaseUpdateSub: { remove: () => void } | null = null;
+let purchaseErrorSub: { remove: () => void } | null = null;
+
+let pendingPurchase: {
+  productId: string;
+  resolve: (value: IapSuccessPayload) => void;
+  reject: (error: Error) => void;
+} | null = null;
+
+function isUserCancelled(error: PurchaseError): boolean {
+  return error.code === "E_USER_CANCELLED";
+}
+
+function purchaseToPayload(purchase: ProductPurchase | SubscriptionPurchase): IapSuccessPayload {
+  const transactionId =
+    purchase.transactionId ??
+    (purchase as SubscriptionPurchase & { id?: string }).id ??
+    purchase.transactionReceipt ??
+    "";
+
+  return {
+    transactionId,
+    originalTransactionId:
+      (purchase as SubscriptionPurchase).originalTransactionIdentifierIOS ??
+      purchase.transactionId ??
+      null,
+    productId: purchase.productId,
+    environment: __DEV__ ? "Sandbox" : "Production",
+  };
+}
+
+async function ensureConnection(): Promise<void> {
+  if (Platform.OS !== "ios") {
+    throw new Error("App Store 課金は iOS でのみ利用できます");
+  }
+  if (connectionReady) return;
+
+  await initConnection();
+  await getSubscriptions({ skus: [...APPLE_IAP_PRODUCT_IDS] });
+  connectionReady = true;
+
+  purchaseUpdateSub?.remove();
+  purchaseErrorSub?.remove();
+
+  purchaseUpdateSub = purchaseUpdatedListener(async (purchase) => {
+    if (!pendingPurchase || pendingPurchase.productId !== purchase.productId) {
+      return;
+    }
+
+    const current = pendingPurchase;
+    pendingPurchase = null;
+
+    try {
+      await finishTransaction({ purchase, isConsumable: false });
+      current.resolve(purchaseToPayload(purchase));
+    } catch (error) {
+      current.reject(
+        error instanceof Error ? error : new Error("購入の完了処理に失敗しました"),
+      );
+    }
+  });
+
+  purchaseErrorSub = purchaseErrorListener((error) => {
+    if (!pendingPurchase) return;
+    const current = pendingPurchase;
+    pendingPurchase = null;
+    if (isUserCancelled(error)) {
+      current.reject(Object.assign(new Error("購入がキャンセルされました"), { userCancelled: true }));
+      return;
+    }
+    current.reject(new Error(error.message || "App Store 課金に失敗しました"));
+  });
+}
+
+export async function purchaseAppleProduct(productId: string): Promise<IapSuccessPayload> {
+  await ensureConnection();
+
+  if (pendingPurchase) {
+    throw new Error("別の購入処理が進行中です");
+  }
+
+  return new Promise((resolve, reject) => {
+    pendingPurchase = { productId, resolve, reject };
+    void requestSubscription({ sku: productId }).catch((error: Error) => {
+      if (pendingPurchase?.productId === productId) {
+        pendingPurchase = null;
+      }
+      reject(error);
+    });
+  });
+}
+
+export async function restoreApplePurchases(): Promise<IapSuccessPayload> {
+  await ensureConnection();
+  const purchases = await getAvailablePurchases({ onlyIncludeActiveItems: true });
+  const latest = purchases
+    .filter((purchase) =>
+      APPLE_IAP_PRODUCT_IDS.includes(purchase.productId as (typeof APPLE_IAP_PRODUCT_IDS)[number]),
+    )
+    .sort((a, b) => Number(b.transactionDate ?? 0) - Number(a.transactionDate ?? 0))[0];
+
+  if (!latest) {
+    throw new Error("復元できる App Store の購入が見つかりませんでした");
+  }
+
+  return purchaseToPayload(latest);
+}
+
+export async function listAppleSubscriptions(): Promise<Subscription[]> {
+  await ensureConnection();
+  return getSubscriptions({ skus: [...APPLE_IAP_PRODUCT_IDS] });
+}
+
+export async function teardownIapConnection(): Promise<void> {
+  purchaseUpdateSub?.remove();
+  purchaseErrorSub?.remove();
+  purchaseUpdateSub = null;
+  purchaseErrorSub = null;
+  pendingPurchase = null;
+  if (!connectionReady) return;
+  await endConnection();
+  connectionReady = false;
+}
