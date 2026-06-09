@@ -42,9 +42,6 @@ import {
   trackUpgradeClick,
 } from "@/lib/storage";
 import {
-  inferLibraryAudience,
-  persistLibraryAudience,
-  readStoredLibraryAudience,
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
 import { navigateGuestPageUrl } from "@/lib/app-href";
@@ -122,11 +119,7 @@ export function Editor2({
     open: boolean;
     lockedType: CardType | null;
   }>({ open: false, lockedType: null });
-  const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>(() => {
-    if (typeof window === "undefined") return "hotel";
-    return readStoredLibraryAudience() ?? "hotel";
-  });
-  const libraryAudienceInferredRef = useRef(false);
+  const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>("hotel");
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
@@ -139,20 +132,7 @@ export function Editor2({
 
   const handleLibraryAudienceChange = useCallback((audience: LibraryAudience) => {
     setLibraryAudience(audience);
-    if (!isDemoMode) persistLibraryAudience(audience);
-    libraryAudienceInferredRef.current = true;
-  }, [isDemoMode]);
-
-  useEffect(() => {
-    if (isDemoMode || libraryAudienceInferredRef.current) return;
-    if (readStoredLibraryAudience()) {
-      libraryAudienceInferredRef.current = true;
-      return;
-    }
-    if (cards.length === 0) return;
-    libraryAudienceInferredRef.current = true;
-    setLibraryAudience(inferLibraryAudience(cards));
-  }, [cards, isDemoMode]);
+  }, []);
 
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);

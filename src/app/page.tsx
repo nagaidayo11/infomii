@@ -12,7 +12,7 @@ export default function RootPage() {
     if (typeof window === "undefined") return;
     if (loading) return;
     if (!enabled || !user) {
-      window.location.replace("/lp/saas");
+      window.location.replace("/lp/business");
       return;
     }
     window.location.replace("/dashboard");

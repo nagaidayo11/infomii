@@ -33,8 +33,8 @@ export function InlineEditable({
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setLocal(value);
-  }, [value]);
+    if (!editing) setLocal(value);
+  }, [value, editing]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -53,11 +53,20 @@ export function InlineEditable({
     prevEditableRef.current = editable;
   }, [editable, editing, value, onSave]);
 
+  const handleChange = (next: string) => {
+    setLocal(next);
+    onSave(next);
+  };
+
   const commit = () => {
     setEditing(false);
     const trimmed = local.trim();
-    if (trimmed !== value) onSave(trimmed);
-    else setLocal(value);
+    if (trimmed !== local) {
+      setLocal(trimmed);
+      if (trimmed !== value) onSave(trimmed);
+    } else if (trimmed !== value) {
+      onSave(trimmed);
+    }
   };
 
   const canInlineEdit = editable || Boolean(onActivate);
@@ -100,7 +109,7 @@ export function InlineEditable({
         <textarea
           ref={inputRef as React.RefObject<HTMLTextAreaElement>}
           value={local}
-          onChange={(e) => setLocal(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
             if (e.key === "Backspace" || e.key === "Delete") {
@@ -122,7 +131,7 @@ export function InlineEditable({
         ref={inputRef as React.RefObject<HTMLInputElement>}
         type="text"
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Backspace" || e.key === "Delete") {
