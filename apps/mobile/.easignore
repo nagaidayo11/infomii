@@ -1,0 +1,21 @@
+# Monorepo: only apps/mobile is needed for the native build.
+# Paths are relative to this file (next to eas.json).
+
+# Next.js web app
+../../src
+../../public
+../../.next
+../../out
+../../coverage
+../../supabase
+../../scripts
+../../docs
+../../e2e
+../../tests
+../../.vercel
+
+# Root web dependencies (mobile ships its own node_modules)
+../../node_modules
+
+# Other apps under apps/
+../web

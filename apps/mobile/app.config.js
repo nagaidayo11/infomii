@@ -12,6 +12,9 @@ module.exports = {
   name: "Infomii",
   slug: "infomii",
   version: "1.0.0",
+  // react-native-iap v12 declares RCT-Folly when New Architecture is on, which
+  // conflicts with Expo SDK 54 precompiled React Native during pod install.
+  newArchEnabled: false,
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
