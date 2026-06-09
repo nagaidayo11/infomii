@@ -23,7 +23,7 @@ export function buildXShareUrl(
   options?: { shell?: "web" | "app" },
 ): string {
   const message = buildPublishShareMessage(pageTitle, publicUrl, options);
-  const text = message.split("\n")[0] ?? pageTitle.trim() || "Infomii";
+  const text = message.split("\n")[0] ?? (pageTitle.trim() || "Infomii");
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(publicUrl)}`;
 }
 
