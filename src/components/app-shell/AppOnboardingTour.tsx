@@ -2,25 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 import { AppShellLink } from "./AppShellLink";
 import { trackOnboardingWizardEvent } from "@/lib/storage";
 
-const STORAGE_KEY = "infomii_app_onboarding_completed";
+const STORAGE_KEY = "infomii_app_onboarding_v2_completed";
 
 const STEPS = [
   {
-    title: "友だちと一緒に、すぐつくれる",
-    body: "Infomii は“作ってシェア”のためのアプリ。案内ページやメニュー、イベント告知を、テンプレから数分で仕上げられます。",
+    title: "あなただけのインフォメーション",
+    body: "旅行やイベントの案内を1ページにまとめて、リンクやQRで届けられます。推し活の予定やおでかけのまとめにも使えます。",
     emoji: "👋",
   },
   {
     title: "テンプレを選んで、あとは編集だけ",
-    body: "「テンプレート」タブでテンプレを選び、写真や文言を差し替えるだけ。白紙からでも OK です。",
+    body: "「テンプレート」タブで型を選び、写真や文言を差し替えるだけ。白紙からでも OK です。",
     emoji: "🎨",
   },
   {
-    title: "「作品」にまとまる",
-    body: "できあがったページは「作品」タブに一覧表示。公開してリンクや QR で友だちに届けましょう。",
+    title: `「${APP_PAGES_TAB_LABEL}」にまとまる`,
+    body: `できあがった案内は「${APP_PAGES_TAB_LABEL}」タブに一覧表示。公開してリンクや QR で友だちに届けましょう。`,
     emoji: "🚀",
   },
 ];

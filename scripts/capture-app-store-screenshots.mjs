@@ -231,7 +231,7 @@ async function stylizeAiHomeForAppStore(page) {
   const textarea = page.locator("textarea").first();
   if (await textarea.count()) {
     await textarea.fill(
-      "友達5人で沖縄3泊の旅行しおり。飛行機・レンタカー・宿・役割分担とリンクを1ページに。",
+      "友達5人で沖縄3泊の旅行。飛行機・レンタカー・宿・役割分担とリンクを1ページに。",
     );
   }
 }

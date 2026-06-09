@@ -10,7 +10,7 @@
 | `02-ai-home.png` | ホーム（AIでつくる・ゲストさん） | 一文で下書き |
 | `03-editor.png` | エディタ（リンクブロック設定中） | ブロック編集がわかる |
 | `04-publish.png` | 公開モーダル（QR・共有/リンク/開く） | QRとリンクで配布 |
-| `05-guest.png` | 公開ページ（ゲスト視点） | 友だちが開くしおり |
+| `05-guest.png` | 公開ページ（ゲスト視点） | 友だちが開く案内ページ |
 
 - 公開URL（見本）: `https://www.infomii.com/v/okinawa-group-sample`
 - ゲスト画面: `/demo/okinawa-group-sample`
@@ -33,7 +33,7 @@ PLAYWRIGHT_BROWSERS_PATH="$HOME/Library/Caches/ms-playwright" npm run app-store:
 2. **02-ai-home** — キャッチ: 「書くだけで、役割分担まで下書き」／サブ: AIでつくる
 3. **03-editor** — キャッチ: 「リンクも日程も、ブロックで編集」／サブ: スマホでその場編集
 4. **04-publish** — キャッチ: 「QRもリンクも、すぐ共有」／サブ: 公開したら共有・コピー・プレビュー
-5. **05-guest** — キャッチ: 「開いた瞬間、みんなのしおり」／サブ: 友だちはアプリ不要
+5. **05-guest** — キャッチ: 「開いた瞬間、みんなのインフォ」／サブ: 友だちはアプリ不要
 
 ### 加工時の注意
 

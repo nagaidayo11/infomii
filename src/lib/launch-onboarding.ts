@@ -1,5 +1,5 @@
 /** First-launch onboarding (pre-login, app only). Web は LP が担当。 */
-export const LAUNCH_ONBOARDING_STORAGE_KEY = "infomii_launch_onboarding_v1_completed";
+export const LAUNCH_ONBOARDING_STORAGE_KEY = "infomii_launch_onboarding_v2_completed";
 
 export type LaunchOnboardingStep = {
   id: string;
@@ -24,17 +24,17 @@ const ONBOARDING_IMAGES = {
 export const LAUNCH_ONBOARDING_STEPS: LaunchOnboardingStep[] = [
   {
     id: "templates",
-    kicker: "テンプレート",
-    title: "館内案内も旅行しおりも、型からすぐ",
-    body: "ホテル・旅館向けの館内案内から、個人の旅行・イベントまで。テンプレートを選び、写真と文言を差し替えるだけで形になります。",
+    kicker: "ようこそ",
+    title: "旅のインフォメーション、あなただけの案内を",
+    body: "旅行の日程やリンク、推し活の予定、おでかけのまとめを1ページに。友だちと共有する案内も、自分用のメモにも使えます。",
     image: ONBOARDING_IMAGES.templates,
     imageAlt: "テンプレート一覧",
   },
   {
     id: "editor",
     kicker: "ブロック編集",
-    title: "スマホ1ページに、必要な案内だけ",
-    body: "ヒーロー・スケジュール・地図・FAQ などをブロックで並べます。見出しや写真はその場で編集できます。",
+    title: "スマホ1ページに、伝えたいことだけ",
+    body: "日程・地図・FAQ・リンクをブロックで並べます。見出しや写真はその場で編集できます。",
     image: ONBOARDING_IMAGES.editor,
     imageAlt: "ページ編集画面",
   },
@@ -42,7 +42,7 @@ export const LAUNCH_ONBOARDING_STEPS: LaunchOnboardingStep[] = [
     id: "ai",
     kicker: "AI作成",
     title: "説明文から、下書きまで一気に",
-    body: "施設の説明やイベント概要を入力するだけで、カード構成と文案のたたき台を自動で用意。あとから自由に直せます。",
+    body: "「沖縄3泊5人で…」のように書くだけで、カード構成と文案のたたき台を自動で用意。あとから自由に直せます。",
     image: ONBOARDING_IMAGES.ai,
     imageObjectPosition: "center 22%",
     imageAlt: "AIでページ作成",
@@ -50,18 +50,18 @@ export const LAUNCH_ONBOARDING_STEPS: LaunchOnboardingStep[] = [
   {
     id: "publish",
     kicker: "公開・共有",
-    title: "リンクとQRで、ゲストへ届ける",
-    body: "公開すると専用URLとQRコードが用意されます。印刷物やフロント掲示、LINE共有にもそのまま使えます。",
+    title: "リンクとQRで、みんなに届ける",
+    body: "公開すると専用URLとQRコードが用意されます。LINEやSNSでシェア。友だちはアプリ不要で開けます。",
     image: ONBOARDING_IMAGES.publish,
     imageAlt: "公開・共有",
   },
   {
     id: "works",
-    kicker: "作品管理",
-    title: "案内ページを、まとめて管理",
-    body: "作成したページは一覧で管理。下書きと公開を切り替えながら、複数施設・複数用途の案内を運用できます。",
+    kicker: "ページ管理",
+    title: "作ったインフォを、まとめて管理",
+    body: "旅行も推し活も、作成したページは一覧で管理。下書きと公開を切り替えながら使えます。",
     image: ONBOARDING_IMAGES.works,
-    imageAlt: "作品一覧",
+    imageAlt: "ページ一覧",
   },
 ];
 
@@ -85,7 +85,9 @@ export function shouldShowLaunchOnboarding(isAppShell: boolean): boolean {
 }
 
 const LEGACY_ONBOARDING_KEYS = [
+  "infomii_launch_onboarding_v1_completed",
   "infomii_app_onboarding_completed",
+  "infomii_app_onboarding_v2_completed",
   "infomii_onboarding_tour_completed",
 ] as const;
 
@@ -100,4 +102,3 @@ export function markLaunchOnboardingCompleted(): void {
     /* private mode */
   }
 }
-

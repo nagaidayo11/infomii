@@ -15,6 +15,7 @@ import {
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
 import { AppWorksListItem } from "../AppWorksListItem";
+import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
 import { useAppToast } from "../AppToastProvider";
@@ -157,9 +158,9 @@ export function AppPagesListView() {
       <header className="app-screen-header app-reveal">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">作品</h1>
+            <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">{APP_PAGES_TAB_LABEL}</h1>
             <p className="app-screen-header-desc text-base text-[var(--app-text-muted)]">
-              カードをタップで編集。公開スイッチでゲストへの表示を切り替えられます。
+              あなたのインフォメーション一覧。タップで編集、公開スイッチで表示を切り替えられます。
             </p>
           </div>
           {!loading && pages.length > 0 ? (
@@ -183,8 +184,8 @@ export function AppPagesListView() {
         </div>
       ) : pages.length === 0 ? (
         <AppEmptyState
-          title="作品がまだありません"
-          description="ホームのAIやテンプレートタブから作ると、ここに並びます。"
+          title="ページがまだありません"
+          description="ホームのAIやテンプレートから案内を作ると、ここに並びます。"
           action={
             <div className="flex flex-col gap-3">
               <AppShellLink

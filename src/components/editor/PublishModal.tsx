@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { buildAppSharePageLabel } from "@/lib/app-branding";
 import { navigateGuestPageUrl } from "@/lib/app-href";
 import {
   buildLineShareUrl,
@@ -93,7 +94,8 @@ export function PublishModal({
   }, [onClose]);
 
   const qrImageUrl = qrCodeImageUrl(publicUrl, QR_SIZE);
-  const shareMessage = buildPublishShareMessage(pageTitle, publicUrl);
+  const shareShell = isAppShell ? "app" : "web";
+  const shareMessage = buildPublishShareMessage(pageTitle, publicUrl, { shell: shareShell });
 
   const handleCopyUrl = async () => {
     try {
@@ -123,7 +125,7 @@ export function PublishModal({
       try {
         await navigator.share({
           title: pageTitle,
-          text: `${pageTitle}のしおり`,
+          text: isAppShell ? buildAppSharePageLabel(pageTitle) : `${pageTitle}のしおり`,
           url: publicUrl,
         });
         return;
@@ -148,7 +150,7 @@ export function PublishModal({
       id: "x",
       label: "X",
       onClick: () => {
-        openShareWindow(buildXShareUrl(pageTitle, publicUrl));
+        openShareWindow(buildXShareUrl(pageTitle, publicUrl, { shell: shareShell }));
         setShareMenuOpen(false);
       },
     },

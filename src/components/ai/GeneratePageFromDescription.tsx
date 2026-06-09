@@ -106,7 +106,14 @@ function PromptChipRow({
   );
 }
 
-const APP_HOME_PROMPT_TEMPLATES = PROMPT_TEMPLATES_PERSONAL.slice(0, 4);
+const APP_HOME_PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    id: "travel",
+    label: "旅行の案内",
+    text: "友達3人で京都2泊3日の旅行。1日目の新幹線と宿、2日目は嵐山、3日目はお土産と帰り。持ち物リスト、集合場所のMAP、割り勘はLINEで話す旨も入れて。",
+  },
+  ...PROMPT_TEMPLATES_PERSONAL.slice(1, 4),
+];
 
 export function GeneratePageFromDescription({
   className = "",
@@ -207,7 +214,7 @@ export function GeneratePageFromDescription({
         )}
         {isApp && (
           <p className="mt-1 text-sm text-[var(--app-text-muted)]">
-            作りたい内容を書くか、例文をタップしてください
+            旅の案内やイベントのまとめを書くか、例文をタップしてください
           </p>
         )}
       </div>
@@ -274,7 +281,7 @@ export function GeneratePageFromDescription({
               onChange={(e) => setDescription(e.target.value)}
               placeholder={
                 isApp
-                  ? "例: 友達と京都2泊3日の旅行しおり。集合場所と持ち物も入れて"
+                  ? "例: 友達と京都2泊3日の旅行。集合場所・持ち物・日程も入れて"
                   : "例: 友達と沖縄3泊… / ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい、など自由に書いてください"
               }
               rows={isApp ? 4 : 3}

@@ -142,7 +142,7 @@ export function AppDashboardView() {
 
           <AppSection revealDelay={140}>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-lg font-bold text-[var(--app-text)]">最近の作品</h2>
+              <h2 className="text-lg font-bold text-[var(--app-text)]">最近のページ</h2>
               <AppShellLink
                 href="/dashboard/pages"
                 className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
@@ -154,7 +154,7 @@ export function AppDashboardView() {
             {recent.length === 0 ? (
               <div className="mt-3">
                 <AppEmptyState
-                  title="まだ作品がありません"
+                  title="まだページがありません"
                   description="AIでつくるか、テンプレートタブから始めるとここに表示されます。"
                   action={
                     <AppShellLink

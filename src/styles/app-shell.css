@@ -1258,6 +1258,32 @@
   gap: 0.5rem;
 }
 
+.launch-onboarding-brand-block {
+  text-align: center;
+}
+
+.launch-onboarding-brand {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--app-text, #0f172a);
+}
+
+.launch-onboarding-tagline {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--app-accent, #0d9488);
+}
+
+.launch-onboarding-subline {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--app-text-muted, #64748b);
+}
+
 .launch-onboarding-main {
   position: relative;
   z-index: 2;

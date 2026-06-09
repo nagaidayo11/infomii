@@ -20,6 +20,7 @@ import {
   INVITE_REDEEM_LOCK_KEY,
 } from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
+import { APP_BRAND_SUBLINE, APP_BRAND_TAGLINE } from "@/lib/app-branding";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
@@ -474,6 +475,10 @@ function LoginForm() {
         >
           {isAppShell ? (
             <div className="space-y-3 border-b border-[var(--app-border)] p-4">
+              <div className="pb-1 text-center">
+                <p className="text-lg font-bold text-[var(--app-text)]">{APP_BRAND_TAGLINE}</p>
+                <p className="mt-1 text-sm text-[var(--app-text-muted)]">{APP_BRAND_SUBLINE}</p>
+              </div>
               <button
                 type="button"
                 onClick={() => void handleOAuthLogin("apple")}

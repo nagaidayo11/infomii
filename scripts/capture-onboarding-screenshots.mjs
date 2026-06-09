@@ -315,7 +315,7 @@ async function main() {
 
   await appPage.goto(`${BASE}/dashboard/pages?client=app`, { waitUntil: "networkidle", timeout: 120_000 });
   await capture(appPage, path.join(OUT_APP, "works.png"), {
-    scrollTo: "text=最近の作品",
+    scrollTo: "text=最近のページ",
   });
 
   await browser.close();
