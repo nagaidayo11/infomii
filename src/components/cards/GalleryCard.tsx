@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import type { EditorCard } from "@/components/editor/types";
+import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
@@ -10,7 +10,6 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 type GalleryItem = { src?: string; alt?: string };
 
@@ -61,15 +60,12 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
         {items.slice(0, 12).map((item, i) => (
           <div key={i} data-inner-surface className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
             {item?.src ? (
-              <div className="absolute inset-0">
-                <Image
-                  src={item.src}
-                  alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
-                  fill
-                  className="object-cover object-center"
-                  unoptimized={shouldUseUnoptimizedImage(item.src)}
-                />
-              </div>
+              <EditorCoverImage
+                src={item.src}
+                alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
+                sizes="160px"
+                className="object-cover object-center"
+              />
             ) : (
               <div className="flex h-full items-center justify-center text-slate-400" style={getBodyFontSizeStyle()}>
                 {labels.emptyImage}

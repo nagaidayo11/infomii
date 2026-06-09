@@ -12,6 +12,7 @@ type EditorCoverImageProps = {
   priority?: boolean;
   style?: CSSProperties;
   onLoad?: () => void;
+  onError?: () => void;
   /** Hero slider etc.: avoid undecoded frames on mobile WebView */
   decoding?: "async" | "sync" | "auto";
 };
@@ -28,6 +29,7 @@ export function EditorCoverImage({
   priority = false,
   style,
   onLoad,
+  onError,
   decoding = "async",
 }: EditorCoverImageProps) {
   const trimmed = src.trim();
@@ -45,6 +47,7 @@ export function EditorCoverImage({
         decoding={decoding}
         draggable={false}
         onLoad={onLoad}
+        onError={onError}
       />
     );
   }
@@ -59,6 +62,7 @@ export function EditorCoverImage({
       priority={priority}
       style={style}
       onLoad={onLoad}
+      onError={onError}
     />
   );
 }

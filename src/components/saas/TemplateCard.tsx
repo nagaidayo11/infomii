@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import {
   resolveTemplateCardImageSrc,
   TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
 } from "@/lib/template-preview";
-import { shouldUseUnoptimizedImage } from "@/lib/static-image";
 
 const DEFAULT_FALLBACK = "/preset-hero-sample.png";
 
@@ -35,12 +34,24 @@ export function TemplateCard({
   const isApp = variant === "app";
   const categoryFallback =
     (category ? TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[category] : "") || DEFAULT_FALLBACK;
-  const imageSrc = resolveTemplateCardImageSrc(preview_image, category ?? null, name, categoryFallback);
-  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const displaySrc =
-    imageSrc && failedSrc === imageSrc ? categoryFallback : imageSrc;
-  const imageReady = displaySrc != null && loadedSrc === displaySrc;
+  const primarySrc = resolveTemplateCardImageSrc(
+    preview_image,
+    category ?? null,
+    name,
+    categoryFallback,
+  );
+  const [displaySrc, setDisplaySrc] = useState(primarySrc);
+  const [imageReady, setImageReady] = useState(false);
+
+  useEffect(() => {
+    setDisplaySrc(primarySrc);
+    setImageReady(false);
+    if (!primarySrc) return;
+    // Cached static assets (Safari / WebView) may not fire onLoad after src changes.
+    const timer = window.setTimeout(() => setImageReady(true), 600);
+    return () => window.clearTimeout(timer);
+  }, [primarySrc]);
+
   const placeholderGradient =
     category === "travel"
       ? "from-emerald-100 via-teal-50 to-white"
@@ -74,17 +85,24 @@ export function TemplateCard({
                 (imageReady ? "opacity-0" : "opacity-100")
               }
             />
-            <Image
+            <EditorCoverImage
               src={displaySrc}
               alt=""
-              fill
-              className={"object-cover transition-opacity duration-200 " + (imageReady ? "opacity-100" : "opacity-0")}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              unoptimized={shouldUseUnoptimizedImage(displaySrc)}
-              onLoad={() => setLoadedSrc(displaySrc)}
+              priority
+              decoding="sync"
+              sizes="(max-width: 640px) 88vw, 320px"
+              className={
+                "object-cover object-center transition-opacity duration-200 " +
+                (imageReady ? "opacity-100" : "opacity-0")
+              }
+              onLoad={() => setImageReady(true)}
               onError={() => {
-                if (displaySrc === imageSrc) setFailedSrc(imageSrc);
-                else setFailedSrc(displaySrc);
+                if (displaySrc !== categoryFallback) {
+                  setDisplaySrc(categoryFallback);
+                  setImageReady(false);
+                  return;
+                }
+                setDisplaySrc(null);
               }}
             />
           </>

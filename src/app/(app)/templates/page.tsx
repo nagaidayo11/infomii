@@ -17,6 +17,10 @@ import { LocaleProvider } from "@/components/locale-context";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import {
+  resolveTemplateMediaSrc,
+  TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
+} from "@/lib/template-preview";
+import {
   BTOC_MARKETPLACE_CATEGORIES,
   HOTEL_MARKETPLACE_CATEGORIES,
   TEMPLATE_CATEGORY_LABELS,
@@ -222,22 +226,59 @@ export default function TemplatesPage() {
     }
   }
 
+  function resolvePreviewMediaSrc(
+    src: string | undefined,
+    template: TemplateRow,
+  ): string {
+    const categoryFallback =
+      TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[template.category ?? ""] ??
+      PRESET_HERO_SAMPLE_IMAGE;
+    return resolveTemplateMediaSrc(
+      src,
+      template.preview_image,
+      template.category ?? null,
+      template.name,
+      categoryFallback,
+    );
+  }
+
   function normalizeTemplatePreviewContent(
     type: CardType,
     content: Record<string, unknown> | undefined,
+    template: TemplateRow,
   ): Record<string, unknown> {
     const base = { ...(content ?? {}) };
-    if (type === "hero" && (typeof base.image !== "string" || !base.image.trim())) {
-      base.image = PRESET_HERO_SAMPLE_IMAGE;
+    if (type === "hero") {
+      base.image = resolvePreviewMediaSrc(
+        typeof base.image === "string" ? base.image : undefined,
+        template,
+      );
     }
-    if (type === "image" && (typeof base.src !== "string" || !base.src.trim())) {
-      base.src = PRESET_HERO_SAMPLE_IMAGE;
+    if (type === "image") {
+      base.src = resolvePreviewMediaSrc(
+        typeof base.src === "string" ? base.src : undefined,
+        template,
+      );
     }
     if (type === "gallery" && Array.isArray(base.items)) {
       base.items = base.items.map((item, i) => {
         const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
-        if (typeof row.src !== "string" || !row.src.trim()) row.src = PRESET_HERO_SAMPLE_IMAGE;
+        row.src = resolvePreviewMediaSrc(
+          typeof row.src === "string" ? row.src : undefined,
+          template,
+        );
         if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${i + 1}`;
+        return row;
+      });
+    }
+    if (type === "hero_slider" && Array.isArray(base.items)) {
+      base.items = base.items.map((item, i) => {
+        const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+        row.src = resolvePreviewMediaSrc(
+          typeof row.src === "string" ? row.src : undefined,
+          template,
+        );
+        if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `slide-${i + 1}`;
         return row;
       });
     }
@@ -257,7 +298,11 @@ export default function TemplatesPage() {
     return stripDeprecatedIconCards(template.cards ?? []).map((card, index) => ({
       id: `${template.id}-${index}`,
       type: (card.type ?? "text") as CardType,
-      content: normalizeTemplatePreviewContent((card.type ?? "text") as CardType, card.content),
+      content: normalizeTemplatePreviewContent(
+        (card.type ?? "text") as CardType,
+        card.content,
+        template,
+      ),
       order: typeof card.order === "number" ? card.order : index,
     }));
   }

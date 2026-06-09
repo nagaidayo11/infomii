@@ -86,6 +86,26 @@ export function templateListingUsesPlaceholder(
   return !previewImage?.trim();
 }
 
+export function resolveTemplateMediaSrc(
+  src: string | undefined,
+  previewImage: string | undefined,
+  category: string | null | undefined,
+  name: string,
+  categoryFallback: string = "/preset-hero-sample.png",
+): string {
+  const trimmed = src?.trim() ?? "";
+  if (trimmed.startsWith("/templates/previews/")) {
+    return trimmed;
+  }
+  const resolved = resolveTemplateCardImageSrc(
+    trimmed || previewImage,
+    category,
+    name,
+    categoryFallback,
+  );
+  return resolved ?? categoryFallback;
+}
+
 export function resolveTemplateCardImageSrc(
   previewImage: string | undefined,
   category: string | null | undefined,

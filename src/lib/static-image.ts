@@ -5,6 +5,7 @@ export function shouldUseUnoptimizedImage(src: string): boolean {
     src.startsWith("https://") ||
     src.startsWith("data:") ||
     src.startsWith("/templates/") ||
+    src.startsWith("/template-") ||
     src.startsWith("/preset-") ||
     src.startsWith("/lp/") ||
     src.startsWith("/hero-") ||
