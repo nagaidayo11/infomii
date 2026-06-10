@@ -2,12 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { dispatchProfileDisplayNameUpdated } from "@/lib/use-profile-display-name";
 
 export function ProfileDisplayNameSection() {
+  const { isAppShell } = useClientShell();
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,47 @@ export function ProfileDisplayNameSection() {
 
   if (!user) {
     return null;
+  }
+
+  if (isAppShell) {
+    return (
+      <AppSettingsCard className="app-settings-profile-card">
+        {loading ? (
+          <div className="app-shell-skeleton h-11 rounded-xl" aria-label="読み込み中" />
+        ) : (
+          <form onSubmit={(ev) => void handleSubmit(ev)} className="app-settings-profile-form">
+            <label htmlFor="display-name" className="app-settings-profile-label">
+              表示名
+            </label>
+            <input
+              id="display-name"
+              name="display-name"
+              type="text"
+              value={value}
+              onChange={(ev) => setValue(ev.target.value)}
+              maxLength={80}
+              autoComplete="nickname"
+              className="app-settings-profile-input"
+              placeholder="例: 山田 花子"
+            />
+            <button
+              type="submit"
+              disabled={saving || !hasSupabaseEnv}
+              className="app-settings-profile-save app-pressable ui-pop-tap"
+            >
+              {saving ? "保存中…" : "保存"}
+            </button>
+          </form>
+        )}
+        {message ? (
+          <p
+            className={`app-settings-profile-message ${messageTone === "success" ? "is-success" : "is-error"}`}
+          >
+            {message}
+          </p>
+        ) : null}
+      </AppSettingsCard>
+    );
   }
 
   return (

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { deleteCurrentUserAccount } from "@/lib/account-api";
 import { withAppClientQuery } from "@/lib/app-href";
 
 export function AppSettingsAccountDeleteSection() {
+  const { isAppShell } = useClientShell();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +40,15 @@ export function AppSettingsAccountDeleteSection() {
 
   return (
     <AppSettingsCard className="app-settings-danger overflow-hidden">
-      <div className="px-4 py-3">
-        <h2 className="text-base font-semibold text-rose-800">アカウントを削除</h2>
-        <p className="mt-1 text-sm leading-relaxed text-rose-900/80">
-          ログイン情報とプロフィールを削除します。オーナーのみのワークスペースは関連データごと削除されます。
-          有料プラン契約中や他メンバーがいる場合は先に解約・権限移譲が必要です。
-        </p>
-      </div>
+      {isAppShell ? null : (
+        <div className="px-4 py-3">
+          <h2 className="text-base font-semibold text-rose-800">アカウントを削除</h2>
+          <p className="mt-1 text-sm leading-relaxed text-rose-900/80">
+            ログイン情報とプロフィールを削除します。オーナーのみのワークスペースは関連データごと削除されます。
+            有料プラン契約中や他メンバーがいる場合は先に解約・権限移譲が必要です。
+          </p>
+        </div>
+      )}
       {error ? <p className="px-4 pb-2 text-sm text-rose-700">{error}</p> : null}
       <button
         type="button"

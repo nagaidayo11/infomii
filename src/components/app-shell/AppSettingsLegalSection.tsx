@@ -12,14 +12,8 @@ export function AppSettingsLegalSection() {
   const { isAppShell } = useClientShell();
 
   return (
-    <AppSettingsCard className="overflow-hidden p-0">
-      <div className="border-b border-slate-100/90 px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--app-text)]">サポート・法務</h2>
-        <p className="mt-1 text-sm text-[var(--app-text-muted)]">
-          お問い合わせと各種ポリシーへのリンクです。
-        </p>
-      </div>
-      <div className="divide-y divide-slate-100/90">
+    <AppSettingsCard className="app-settings-legal-card overflow-hidden p-0">
+      <div className="app-settings-legal-list divide-y divide-slate-100/90">
         <a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>
           <span>お問い合わせ</span>
           <span className="text-[var(--app-text-muted)]">{SUPPORT_EMAIL}</span>

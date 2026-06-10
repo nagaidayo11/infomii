@@ -12,6 +12,7 @@ import {
   type HotelSubscription,
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 const EXTERNAL_PAYMENT_CONFIRM =
@@ -233,12 +234,12 @@ export function BusinessPlanSection({
   );
 
   if (subscription === undefined || !roleLoaded) {
+    if (isAppLayout) {
+      return <div className="app-shell-skeleton h-40 rounded-2xl" aria-hidden />;
+    }
     return (
-      <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>
-        <div
-          className={isAppLayout ? "app-shell-skeleton h-48 rounded-2xl" : "h-20 animate-pulse rounded-lg bg-slate-100"}
-          aria-hidden
-        />
+      <AppSettingsCard>
+        <div className="h-20 animate-pulse rounded-lg bg-slate-100" aria-hidden />
       </AppSettingsCard>
     );
   }
@@ -281,6 +282,90 @@ export function BusinessPlanSection({
 
   const showStripeWebContractNotice = appStoreOnly && isPaid && isStripeBilling;
   const showAppPurchaseActions = !showStripeWebContractNotice;
+
+  const currentPlanLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business";
+  const currentPlanPrice =
+    plan === "free"
+      ? "¥0"
+      : plan === "pro"
+        ? PLAN_PRICE_DISPLAY.pro.monthlyPerMonth
+        : PLAN_PRICE_DISPLAY.business.monthlyPerMonth;
+
+  if (isAppLayout) {
+    return (
+      <div className="app-plan-native">
+        <div className="app-plan-hero">
+          <p className="app-plan-hero-kicker">現在のプラン</p>
+          <div className="app-plan-hero-main">
+            <p className="app-plan-hero-name">{currentPlanLabel}</p>
+            <p className="app-plan-hero-price">{currentPlanPrice}</p>
+          </div>
+          {(statusLabel || showNextRenewal || showValidUntil) && (
+            <div className="app-plan-hero-meta">
+              {statusLabel ? <span>{statusLabel}</span> : null}
+              {showNextRenewal ? <span>次回更新 {currentPeriodEndLabel}</span> : null}
+              {showValidUntil && !showNextRenewal ? <span>有効期限 {periodLabel}</span> : null}
+            </div>
+          )}
+        </div>
+
+        {showStripeWebContractNotice ? (
+          <p className="app-plan-footnote app-plan-footnote--warn">
+            Web でご契約中です。変更・解約は infomii.com の設定から行ってください。
+          </p>
+        ) : null}
+
+        {showAppPurchaseActions && (plan !== "business" || useIosIap) ? (
+          <>
+            {plan !== "business" ? (
+              <div className="app-plan-section-block">
+                <p className="app-plan-section-label">
+                  {plan === "free" ? "プランを選ぶ" : "アップグレード"}
+                </p>
+                <AppPlanTiers
+                  currentPlan={plan}
+                  busyAction={busyAction}
+                  onSelectPro={selectProTier}
+                  onSelectBusiness={selectBusinessTier}
+                  showFreeTier={false}
+                />
+              </div>
+            ) : null}
+
+            {isPaid ? (
+              <button
+                type="button"
+                onClick={() => void openPortal()}
+                disabled={busyAction !== null || !canManageBilling}
+                className="app-plan-manage-btn app-pressable ui-pop-tap"
+              >
+                {busyAction === "portal" ? "処理中…" : "サブスクリプションを管理"}
+              </button>
+            ) : null}
+
+            {useIosIap ? (
+              <button
+                type="button"
+                onClick={() => void openAppleRestore()}
+                disabled={busyAction !== null || !canManageBilling}
+                className="app-plan-restore-btn app-pressable ui-pop-tap"
+              >
+                購入を復元
+              </button>
+            ) : null}
+          </>
+        ) : null}
+
+        {isPaid && isAppleBilling ? (
+          <p className="app-plan-footnote">
+            解約は iPhone の「設定」→「Apple ID」→「サブスクリプション」から行えます。
+          </p>
+        ) : null}
+
+        {message ? <p className="app-plan-message">{message}</p> : null}
+      </div>
+    );
+  }
 
   return (
     <AppSettingsCard className={isAppLayout ? "app-plan-section" : ""}>

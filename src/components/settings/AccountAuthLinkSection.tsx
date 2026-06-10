@@ -250,16 +250,20 @@ export function AccountAuthLinkSection() {
 
   return (
     <>
-      <AppSettingsCard>
-        <h2 className="text-base font-semibold text-slate-900">アカウント連携</h2>
-        <p className="app-settings-card-desc mt-1 text-sm text-slate-600">
-          Google連携を行うと、次回から Google でも同じアカウントにログインできます。
-        </p>
+      <AppSettingsCard className={isAppShell ? "app-settings-auth-card" : ""}>
+        {isAppShell ? null : (
+          <>
+            <h2 className="text-base font-semibold text-slate-900">アカウント連携</h2>
+            <p className="app-settings-card-desc mt-1 text-sm text-slate-600">
+              Google連携を行うと、次回から Google でも同じアカウントにログインできます。
+            </p>
+          </>
+        )}
 
         <div
           className={
             isAppShell
-              ? "app-settings-rows mt-4"
+              ? "app-settings-rows"
               : "app-settings-link-rows mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60 divide-y divide-slate-200"
           }
         >
@@ -304,14 +308,14 @@ export function AccountAuthLinkSection() {
           </div>
         </div>
 
-        <div
-          className={
-            isAppShell
-              ? "app-settings-actions mt-4 flex flex-col gap-2.5"
-              : "app-settings-link-actions mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
-          }
-        >
-          {!googleLinked ? (
+        {!googleLinked ? (
+          <div
+            className={
+              isAppShell
+                ? "app-settings-auth-action"
+                : "app-settings-link-actions mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+            }
+          >
             <button
               type="button"
               onClick={() => {
@@ -327,30 +331,43 @@ export function AccountAuthLinkSection() {
             >
               Googleを連携
             </button>
-          ) : (
-            <div className={isAppShell ? "flex flex-col gap-2.5" : "flex flex-wrap gap-2"}>
-              <button
-                type="button"
-                disabled
-                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-700 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed"
-              >
-                Google連携済み
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setUnlinkError("");
-                  setUnlinkPassword("");
-                  setUnlinkModalOpen(true);
-                }}
-                disabled={!canUseSupabase || checking || !hasUserEmail}
-                className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Google連携を解除
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : isAppShell ? (
+          <button
+            type="button"
+            onClick={() => {
+              setUnlinkError("");
+              setUnlinkPassword("");
+              setUnlinkModalOpen(true);
+            }}
+            disabled={!canUseSupabase || checking || !hasUserEmail}
+            className="app-settings-auth-unlink app-pressable ui-pop-tap"
+          >
+            Google連携を解除
+          </button>
+        ) : (
+          <div className="app-settings-link-actions mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-700 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed"
+            >
+              Google連携済み
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUnlinkError("");
+                setUnlinkPassword("");
+                setUnlinkModalOpen(true);
+              }}
+              disabled={!canUseSupabase || checking || !hasUserEmail}
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Google連携を解除
+            </button>
+          </div>
+        )}
 
         {message ? (
           <p className={`mt-3 text-sm ${messageTone === "success" ? "text-emerald-600" : "text-rose-600"}`}>

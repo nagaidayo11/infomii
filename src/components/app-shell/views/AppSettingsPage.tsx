@@ -6,9 +6,9 @@ import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
 import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSection";
+import { AppSettingsGroup } from "../AppSettingsGroup";
 import { AppSettingsLegalSection } from "../AppSettingsLegalSection";
 import { AppSettingsPushSection } from "../AppSettingsPushSection";
-import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
 
@@ -27,14 +27,36 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
-        <ProfileDisplayNameSection />
-        <AccountAuthLinkSection />
+        <AppSettingsGroup title="プロフィール">
+          <ProfileDisplayNameSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
+          title="アカウント"
+          footer="Google を連携すると、次回から Google でもログインできます。"
+        >
+          <AccountAuthLinkSection />
+        </AppSettingsGroup>
+
         <BusinessAuditLogExport />
-        <AppSettingsLegalSection />
-        <AppSettingsRestorePurchasesSection />
-        <AppSettingsPushSection />
-        <AppSettingsAccountDeleteSection />
-        <AppSettingsSignOutSection />
+
+        <AppSettingsGroup title="一般">
+          <AppSettingsPushSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup title="サポート">
+          <AppSettingsLegalSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup>
+          <AppSettingsSignOutSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
+          footer="削除するとワークスペースのデータにアクセスできなくなります。有料プランは先に解約してください。"
+        >
+          <AppSettingsAccountDeleteSection />
+        </AppSettingsGroup>
       </AppSettingsShell>
     );
   }
