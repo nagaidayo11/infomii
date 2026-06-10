@@ -32,6 +32,7 @@ async function getAccessToken(): Promise<string> {
 
 export async function verifyAppleIapTransaction(params: {
   transactionId: string;
+  signedTransactionInfo?: string;
   environment?: "Sandbox" | "Production";
 }): Promise<VerifyAppleIapResult> {
   const token = await getAccessToken();
@@ -61,6 +62,7 @@ export async function purchaseAppleSubscription(
   const purchase = await requestNativeIapPurchase(productId);
   return verifyAppleIapTransaction({
     transactionId: purchase.transactionId,
+    signedTransactionInfo: purchase.signedTransactionInfo,
     environment: purchase.environment,
   });
 }
@@ -72,6 +74,7 @@ export async function restoreAppleSubscriptions(): Promise<VerifyAppleIapResult>
   const purchase = await requestNativeIapRestore();
   return verifyAppleIapTransaction({
     transactionId: purchase.transactionId,
+    signedTransactionInfo: purchase.signedTransactionInfo,
     environment: purchase.environment,
   });
 }

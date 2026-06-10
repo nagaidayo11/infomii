@@ -6,6 +6,7 @@ import {
   upsertAppleSubscriptionFromTransaction,
 } from "@/lib/server/apple-subscription-sync";
 import {
+  decodeAppleTransactionFromSignedInfo,
   fetchAppleTransaction,
   isAppleIapServerConfigured,
   type AppleStoreEnvironment,
@@ -17,6 +18,7 @@ export const runtime = "nodejs";
 
 type VerifyRequestBody = {
   transactionId?: unknown;
+  signedTransactionInfo?: unknown;
   environment?: unknown;
 };
 
@@ -28,6 +30,7 @@ function parseEnvironment(value: unknown): AppleStoreEnvironment | undefined {
 
 export async function POST(request: NextRequest) {
   let hotelId: string | null = null;
+  let body: VerifyRequestBody = {};
 
   try {
     if (!isAppleIapServerConfigured()) {
@@ -45,7 +48,6 @@ export async function POST(request: NextRequest) {
     }
     hotelId = auth.hotelId;
 
-    let body: VerifyRequestBody = {};
     try {
       body = (await request.json()) as VerifyRequestBody;
     } catch {
@@ -54,8 +56,13 @@ export async function POST(request: NextRequest) {
 
     const transactionId =
       typeof body.transactionId === "string" ? body.transactionId.trim() : "";
-    if (!transactionId) {
-      return NextResponse.json({ message: "transactionId が必要です" }, { status: 400 });
+    const signedTransactionInfo =
+      typeof body.signedTransactionInfo === "string" ? body.signedTransactionInfo.trim() : "";
+    if (!transactionId && !signedTransactionInfo) {
+      return NextResponse.json(
+        { message: "transactionId または signedTransactionInfo が必要です" },
+        { status: 400 },
+      );
     }
 
     const billing = await getSubscriptionBillingState(hotelId);
@@ -73,10 +80,9 @@ export async function POST(request: NextRequest) {
     }
 
     const preferredEnvironment = parseEnvironment(body.environment);
-    const { transaction, environment } = await fetchAppleTransaction(
-      transactionId,
-      preferredEnvironment,
-    );
+    const { transaction, environment } = signedTransactionInfo
+      ? await decodeAppleTransactionFromSignedInfo(signedTransactionInfo, preferredEnvironment)
+      : await fetchAppleTransaction(transactionId, preferredEnvironment);
 
     const result = await upsertAppleSubscriptionFromTransaction({
       hotelId,
@@ -116,6 +122,12 @@ export async function POST(request: NextRequest) {
         hotelId,
         action: "billing.apple_iap_verify_failed",
         message: `Apple IAP 検証失敗: ${error instanceof Error ? error.message : "unknown"}`,
+        metadata: {
+          transactionId: typeof body?.transactionId === "string" ? body.transactionId : null,
+          hasSignedTransactionInfo:
+            typeof body?.signedTransactionInfo === "string" && body.signedTransactionInfo.length > 0,
+          environment: typeof body?.environment === "string" ? body.environment : null,
+        },
       });
     }
     return NextResponse.json(

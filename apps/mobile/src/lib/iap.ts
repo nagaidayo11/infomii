@@ -8,6 +8,7 @@ import {
   purchaseErrorListener,
   purchaseUpdatedListener,
   requestSubscription,
+  setup,
   type ProductPurchase,
   type PurchaseError,
   type Subscription,
@@ -25,6 +26,7 @@ export type IapSuccessPayload = {
   transactionId: string;
   originalTransactionId: string | null;
   productId: string;
+  signedTransactionInfo?: string;
   environment?: "Sandbox" | "Production";
 };
 
@@ -46,17 +48,21 @@ function purchaseToPayload(purchase: ProductPurchase | SubscriptionPurchase): Ia
   const transactionId =
     purchase.transactionId ??
     (purchase as SubscriptionPurchase & { id?: string }).id ??
-    purchase.transactionReceipt ??
     "";
+  const signedTransactionInfo = purchase.verificationResultIOS?.trim() || undefined;
+
+  if (!transactionId && !signedTransactionInfo) {
+    throw new Error("App Store から取引 ID を取得できませんでした");
+  }
 
   return {
-    transactionId,
+    transactionId: transactionId || "unknown",
     originalTransactionId:
       (purchase as SubscriptionPurchase).originalTransactionIdentifierIOS ??
       purchase.transactionId ??
       null,
     productId: purchase.productId,
-    environment: __DEV__ ? "Sandbox" : "Production",
+    signedTransactionInfo,
   };
 }
 
@@ -66,6 +72,7 @@ async function ensureConnection(): Promise<void> {
   }
   if (connectionReady) return;
 
+  setup({ storekitMode: "STOREKIT_HYBRID_MODE" });
   await initConnection();
   await getSubscriptions({ skus: [...APPLE_IAP_PRODUCT_IDS] });
   connectionReady = true;

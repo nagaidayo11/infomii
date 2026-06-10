@@ -1,4 +1,5 @@
 import {
+  APIException,
   AppStoreServerAPIClient,
   Environment,
   SignedDataVerifier,
@@ -7,6 +8,26 @@ import {
 import { APPLE_IAP_BUNDLE_ID } from "@/lib/apple-iap-products";
 
 export type AppleStoreEnvironment = "Sandbox" | "Production";
+
+function formatAppleStoreError(error: unknown): Error {
+  if (error instanceof APIException) {
+    const detail = error.errorMessage?.trim();
+    if (detail) return new Error(detail);
+    return new Error(`Apple API error (HTTP ${error.httpStatusCode})`);
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error;
+  }
+  return new Error("Apple transaction lookup failed");
+}
+
+function environmentOrder(
+  preferredEnvironment?: AppleStoreEnvironment,
+): AppleStoreEnvironment[] {
+  if (preferredEnvironment === "Production") return ["Production", "Sandbox"];
+  if (preferredEnvironment === "Sandbox") return ["Sandbox", "Production"];
+  return ["Sandbox", "Production"];
+}
 
 function readApplePrivateKey(): string {
   const raw = process.env.APPLE_IAP_PRIVATE_KEY?.trim();
@@ -101,20 +122,32 @@ export function isAppleIapServerConfigured(): boolean {
   );
 }
 
+export async function decodeAppleTransactionFromSignedInfo(
+  signedTransactionInfo: string,
+  preferredEnvironment?: AppleStoreEnvironment,
+): Promise<{ transaction: JWSTransactionDecodedPayload; environment: AppleStoreEnvironment }> {
+  let lastError: unknown = null;
+
+  for (const environment of environmentOrder(preferredEnvironment)) {
+    try {
+      const verifier = getSignedDataVerifier(environment);
+      const transaction = await verifier.verifyAndDecodeTransaction(signedTransactionInfo);
+      return { transaction, environment };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw formatAppleStoreError(lastError);
+}
+
 export async function fetchAppleTransaction(
   transactionId: string,
   preferredEnvironment?: AppleStoreEnvironment,
 ): Promise<{ transaction: JWSTransactionDecodedPayload; environment: AppleStoreEnvironment }> {
-  const environments: AppleStoreEnvironment[] =
-    preferredEnvironment === "Production"
-      ? ["Production", "Sandbox"]
-      : preferredEnvironment === "Sandbox"
-        ? ["Sandbox", "Production"]
-        : ["Production", "Sandbox"];
-
   let lastError: unknown = null;
 
-  for (const environment of environments) {
+  for (const environment of environmentOrder(preferredEnvironment)) {
     try {
       const client = getApiClient(environment);
       const response = await client.getTransactionInfo(transactionId);
@@ -129,7 +162,7 @@ export async function fetchAppleTransaction(
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error("Apple transaction lookup failed");
+  throw formatAppleStoreError(lastError);
 }
 
 export async function decodeAppleNotification(

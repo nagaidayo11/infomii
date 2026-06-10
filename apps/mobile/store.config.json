@@ -1,0 +1,121 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0",
+    "copyright": "© 2026 Infomii",
+    "release": {
+      "automaticRelease": true
+    },
+    "info": {
+      "en-US": {
+        "description": "Infomiiは、旅行のしおりやおでかけ情報を簡単にまとめて共有できるアプリです。\n\nテンプレートを選んで編集するだけで、リンク・日程・持ち物・役割分担などを1ページに整理できます。\n\nAI作成機能を使えば、旅行内容を入力するだけで下書きを自動生成できます。\n\n作成したページはURLやQRコードで共有可能。閲覧側はアプリ不要で利用できます。\n\n旅行、推し活、イベント、おでかけなど様々なシーンで活用できます。",
+        "keywords": [
+          "旅行",
+          "しおり",
+          "旅程表",
+          "旅行計画",
+          "共有",
+          "QRコード",
+          "リンク集",
+          "推し活",
+          "イベント",
+          "スケジュール",
+          "AI"
+        ],
+        "marketingUrl": "https://www.infomii.com",
+        "promoText": "旅行のしおり、推し活まとめ、おでかけ共有を簡単に。テンプレートとAIで誰でもすぐ作成できます。",
+        "supportUrl": "https://www.infomii.com/privacy",
+        "title": "Infomii",
+        "privacyPolicyUrl": "https://www.infomii.com/privacy",
+        "screenshots": {
+          "APP_IPHONE_65": [
+            "store/apple/screenshot/en-US/APP_IPHONE_65/ios_1_1.png",
+            "store/apple/screenshot/en-US/APP_IPHONE_65/ios_1_2.png",
+            "store/apple/screenshot/en-US/APP_IPHONE_65/ios_1_3.png",
+            "store/apple/screenshot/en-US/APP_IPHONE_65/ios_1_4.png",
+            "store/apple/screenshot/en-US/APP_IPHONE_65/ios_1_5.png"
+          ]
+        }
+      },
+      "ja": {
+        "description": "Infomiiは旅行のしおり、館内案内、情報ページを簡単に作成・共有できるアプリです。\n\n旅行計画の共有、グループ旅行の情報整理、リンク集の作成、イベントページの作成などをスマートに行えます。\n\n主な機能\n・旅行しおり作成\n・リンク集作成\n・QRコード共有\n・グループ旅行管理\n・情報ページ作成\n・スマートフォン最適化表示",
+        "keywords": [
+          "旅行",
+          "旅のしおり",
+          "観光",
+          "ホテル",
+          "旅程",
+          "共有",
+          "QRコード",
+          "イベント",
+          "ガイド",
+          "旅行計画",
+          "インフォメーション"
+        ],
+        "promoText": "旅行のしおり、ホテル案内、イベント情報を簡単作成。QRコード共有で必要な情報をスマートに届けられます。",
+        "supportUrl": "https://www.infomii.com/privacy",
+        "title": "Infomii",
+        "privacyPolicyUrl": "https://www.infomii.com/privacy",
+        "screenshots": {
+          "APP_IPHONE_65": [
+            "store/apple/screenshot/ja/APP_IPHONE_65/ios_1_1.png",
+            "store/apple/screenshot/ja/APP_IPHONE_65/ios_1_2.png",
+            "store/apple/screenshot/ja/APP_IPHONE_65/ios_1_3.png",
+            "store/apple/screenshot/ja/APP_IPHONE_65/ios_1_4.png",
+            "store/apple/screenshot/ja/APP_IPHONE_65/ios_1_5.png"
+          ],
+          "APP_IPAD_PRO_3GEN_129": [
+            "store/apple/screenshot/ja/APP_IPAD_PRO_3GEN_129/ipad_1_1.png",
+            "store/apple/screenshot/ja/APP_IPAD_PRO_3GEN_129/ipad_1_2.png",
+            "store/apple/screenshot/ja/APP_IPAD_PRO_3GEN_129/ipad_1_3.png",
+            "store/apple/screenshot/ja/APP_IPAD_PRO_3GEN_129/ipad_1_4.png",
+            "store/apple/screenshot/ja/APP_IPAD_PRO_3GEN_129/ipad_1_5.png"
+          ]
+        }
+      }
+    },
+    "categories": [
+      "TRAVEL",
+      "LIFESTYLE"
+    ],
+    "advisory": {
+      "ageRatingOverride": "NONE",
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "kidsAgeBand": null,
+      "koreaAgeRatingOverride": "NONE",
+      "lootBox": false,
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "unrestrictedWebAccess": false,
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "advertising": false,
+      "ageAssurance": false,
+      "ageRatingOverrideV2": "NONE",
+      "developerAgeRatingInfoUrl": null,
+      "gunsOrOtherWeapons": "NONE",
+      "healthOrWellnessTopics": false,
+      "messagingAndChat": false,
+      "parentalControls": false,
+      "userGeneratedContent": true
+    },
+    "review": {
+      "firstName": "Katsunori",
+      "lastName": "Nagai",
+      "email": "support@infomii.com",
+      "phone": "+81 9063327471",
+      "demoUsername": "review@infomii.com",
+      "demoPassword": "InfomiiReview2026!",
+      "demoRequired": true,
+      "notes": "Infomii allows users to create and share travel guides, link collections, event pages and information pages.\n\nReview account:\nEmail: review@infomii.com\nPassword: InfomiiReview2026!\n\nLogin methods available:\n- Email and Password\n- Sign in with Google\n- Sign in with Apple\n\nNo special permissions are required.\nAll features can be tested with the review account.\n\n\nUsers can report inappropriate content.\nContent can be removed by the service administrator when necessary."
+    }
+  }
+}

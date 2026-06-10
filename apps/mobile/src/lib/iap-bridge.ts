@@ -13,6 +13,7 @@ type IapBridgeResult = {
   transactionId?: string;
   originalTransactionId?: string | null;
   productId?: string;
+  signedTransactionInfo?: string;
   environment?: "Sandbox" | "Production";
   error?: string;
   userCancelled?: boolean;
@@ -66,6 +67,7 @@ export async function handleIapBridgeMessage(
         transactionId: purchase.transactionId,
         originalTransactionId: purchase.originalTransactionId,
         productId: purchase.productId,
+        signedTransactionInfo: purchase.signedTransactionInfo,
         environment: purchase.environment,
       });
     } catch (error) {
@@ -90,6 +92,7 @@ export async function handleIapBridgeMessage(
         transactionId: purchase.transactionId,
         originalTransactionId: purchase.originalTransactionId,
         productId: purchase.productId,
+        signedTransactionInfo: purchase.signedTransactionInfo,
         environment: purchase.environment,
       });
     } catch (error) {

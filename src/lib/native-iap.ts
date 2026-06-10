@@ -6,6 +6,7 @@ export type NativeIapPurchaseResult = {
   transactionId: string;
   originalTransactionId: string | null;
   productId: string;
+  signedTransactionInfo?: string;
   environment?: "Sandbox" | "Production";
 };
 
@@ -20,6 +21,7 @@ type IapBridgeResponse = {
   transactionId?: string;
   originalTransactionId?: string | null;
   productId?: string;
+  signedTransactionInfo?: string;
   environment?: "Sandbox" | "Production";
   error?: string;
   userCancelled?: boolean;
@@ -57,14 +59,15 @@ function ensureListener(): void {
       entry.reject(new Error(detail.error || "App Store 課金に失敗しました"));
       return;
     }
-    if (!detail.transactionId || !detail.productId) {
+    if ((!detail.transactionId && !detail.signedTransactionInfo) || !detail.productId) {
       entry.reject(new Error("App Store から取引情報を取得できませんでした"));
       return;
     }
     entry.resolve({
-      transactionId: detail.transactionId,
+      transactionId: detail.transactionId ?? "unknown",
       originalTransactionId: detail.originalTransactionId ?? null,
       productId: detail.productId,
+      signedTransactionInfo: detail.signedTransactionInfo,
       environment: detail.environment,
     });
   });
