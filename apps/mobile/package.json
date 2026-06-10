@@ -36,7 +36,8 @@
     "ios": "EXPO_NO_METRO_LAZY=1 expo start --ios --host localhost",
     "web": "expo start --web",
     "build:ios": "eas build --platform ios --profile production",
-    "build:android": "eas build --platform android --profile production"
+    "build:android": "eas build --platform android --profile production",
+    "icons:generate": "python3 scripts/generate-icon-assets.py"
   },
   "private": true
 }

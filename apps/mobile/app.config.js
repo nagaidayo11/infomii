@@ -2,10 +2,10 @@
  * Slug must match the EAS project (expo.dev → infomii). Updates are disabled below for Expo Go.
  *
  * App icon assets live in ./assets/
- * - icon.png (1024×1024) — iOS App Store + default app icon
- * - android-icon-foreground.png — Android adaptive icon foreground
- * - splash-icon.png — launch splash on #16c59a (resizeMode: contain)
- * - android-icon-foreground.png — same tile as splash; background is flat #16c59a
+ * - icon-ai-source.png — original AI artwork (do not edit by hand)
+ * - icon.png (1024×1024) — denoised full-bleed glossy icon (npm run icons:generate)
+ * - splash-icon.png — white “i” on transparent; splash bg #16c59a
+ * - android-icon-foreground.png — same as icon.png
  * - favicon.png — Expo web preview
  */
 /** @type {import('expo/config').ExpoConfig} */
