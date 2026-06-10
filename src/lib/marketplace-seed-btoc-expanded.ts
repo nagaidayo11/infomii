@@ -550,12 +550,16 @@ export const BTOC_EXPANDED_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[]
     category: "travel",
     cards: ordered([
       b("hero", hero("富士山麓キャンプ", "2泊 / 車2台 / 食材分担", pv("travel", "travel-camp-outdoor"))),
-      hubLinks("キャンプ導線", [
-        { label: "持ち物", icon: "checklist" },
-        { label: "分担表", icon: "package" },
-        { label: "キャンプ場", icon: "map-pin" },
-        { label: "ルール", icon: "notice" },
-      ]),
+      hubLinks(
+        "キャンプ導線",
+        [
+          { label: "持ち物", icon: "checklist" },
+          { label: "分担表", icon: "package" },
+          { label: "キャンプ場", icon: "map-pin" },
+          { label: "ルール", icon: "notice" },
+        ],
+        2,
+      ),
       sectionHeading("持ち物", "チェックリストを各自コピーして使ってね"),
       b(
         "checklist",

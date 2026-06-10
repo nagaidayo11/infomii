@@ -20,7 +20,7 @@ const BASE = process.env.APP_STORE_CAPTURE_BASE ?? "http://127.0.0.1:3000";
 
 const LAUNCH_ONBOARDING_KEY = "infomii_launch_onboarding_v1_completed";
 const TEMPLATE_SLUG = "travel-group";
-const MARKETPLACE_SEED_VERSION = 14;
+const MARKETPLACE_SEED_VERSION = 15;
 const SAMPLE_SLUG = "okinawa-group-sample";
 const SAMPLE_URL = `https://www.infomii.com/v/${SAMPLE_SLUG}`;
 const SAMPLE_TITLE = "沖縄、3泊5人";

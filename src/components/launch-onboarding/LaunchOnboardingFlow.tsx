@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { APP_BRAND_SUBLINE, APP_BRAND_TAGLINE } from "@/lib/app-branding";
+import { APP_BRAND_SUBLINE } from "@/lib/app-branding";
 import { withAppClientQuery } from "@/lib/app-href";
 import { LAUNCH_ONBOARDING_STEPS, markLaunchOnboardingCompleted } from "@/lib/launch-onboarding";
 import { LaunchOnboardingPhone } from "./LaunchOnboardingPhone";
@@ -98,7 +98,6 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
       <div className="launch-onboarding-main">
         <div className="launch-onboarding-brand-block">
           <p className="launch-onboarding-brand">Infomii</p>
-          <p className="launch-onboarding-tagline">{APP_BRAND_TAGLINE}</p>
           <p className="launch-onboarding-subline">{APP_BRAND_SUBLINE}</p>
         </div>
 
@@ -124,7 +123,6 @@ export function LaunchOnboardingFlow({ className = "" }: LaunchOnboardingFlowPro
               />
 
               <div className="launch-onboarding-copy">
-                <p className="launch-onboarding-kicker">{current.kicker}</p>
                 <h1 className="launch-onboarding-title">{current.title}</h1>
                 <p className="launch-onboarding-body">{current.body}</p>
               </div>
