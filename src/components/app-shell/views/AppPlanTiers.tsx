@@ -120,8 +120,8 @@ export function AppPlanTiers({
     : currentPlan === "free"
       ? ["pro", "business"]
       : currentPlan === "pro"
-        ? ["business"]
-        : [];
+        ? ["pro", "business"]
+        : ["business"];
 
   if (tiers.length === 0) return null;
 

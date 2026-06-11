@@ -7,14 +7,14 @@ import {
   deletePage,
   getCurrentUserHotelRole,
   getDashboardBootstrapData,
-  listPagesForHotel,
+  listPageConnectionSetsForHotel,
   PAGE_LIMIT_REACHED,
   setInformationStatusBySlug,
+  type PageConnectionSet,
   type PageRow,
 } from "@/lib/storage";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
-import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
-import { AppWorksListItem } from "../AppWorksListItem";
+import { AppPageSetsList } from "../AppPageSetsList";
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
@@ -25,7 +25,7 @@ import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 
 export function AppPagesListView() {
   const router = useRouter();
-  const [pages, setPages] = useState<PageRow[]>([]);
+  const [sets, setSets] = useState<PageConnectionSet[]>([]);
   const [infoBySlug, setInfoBySlug] = useState<
     Map<string, { status?: string; updatedAt?: string }>
   >(new Map());
@@ -40,17 +40,18 @@ export function AppPagesListView() {
   const { showToast } = useAppToast();
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const pageCount = sets.reduce((acc, set) => acc + set.pageCount, 0);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [bootstrap, list, r] = await Promise.all([
+      const [bootstrap, connectionSets, r] = await Promise.all([
         getDashboardBootstrapData(),
-        listPagesForHotel(),
+        listPageConnectionSetsForHotel().catch(() => []),
         getCurrentUserHotelRole().catch(() => null),
       ]);
       setRole(r);
-      setPages(list);
+      setSets(connectionSets);
       setInfoBySlug(
         new Map(
           (bootstrap.informations ?? []).map((info) => [
@@ -60,7 +61,7 @@ export function AppPagesListView() {
         ),
       );
     } catch {
-      setPages([]);
+      setSets([]);
     } finally {
       setLoading(false);
     }
@@ -92,7 +93,7 @@ export function AppPagesListView() {
   }
 
   async function handleTogglePublish(id: string, nextStatus: "draft" | "published") {
-    const target = pages.find((p) => p.id === id);
+    const target = sets.flatMap((s) => s.pages).find((p) => p.id === id);
     if (!target) return;
 
     const prev = infoBySlug.get(target.slug);
@@ -139,12 +140,7 @@ export function AppPagesListView() {
     setDeletingId(page.id);
     try {
       await deletePage(page.id);
-      setPages((prev) => prev.filter((p) => p.id !== page.id));
-      setInfoBySlug((map) => {
-        const next = new Map(map);
-        next.delete(page.slug);
-        return next;
-      });
+      await load();
       showToast("削除しました", "success");
     } catch (e) {
       showToast((e as Error).message || "削除に失敗しました", "error");
@@ -157,12 +153,12 @@ export function AppPagesListView() {
   return (
     <AppTabPage
       title={APP_PAGES_TAB_LABEL}
-      description={loading ? undefined : `${pages.length}件`}
+      description={loading ? undefined : `${pageCount}件`}
       className="app-pages-tab"
       contentClassName="app-reveal"
       style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}
       headerAction={
-        !loading && pages.length > 0 ? (
+        !loading && pageCount > 0 ? (
           <button
             type="button"
             onClick={() => void load()}
@@ -180,7 +176,7 @@ export function AppPagesListView() {
             <div key={i} className="app-shell-skeleton h-[5.5rem] rounded-2xl" />
           ))}
         </div>
-      ) : pages.length === 0 ? (
+      ) : pageCount === 0 ? (
         <AppEmptyState
           title="ページがまだありません"
           description="ホームのAIやテンプレートから案内を作ると、ここに並びます。"
@@ -203,26 +199,15 @@ export function AppPagesListView() {
           }
         />
       ) : (
-        <AppWorksList variant="grouped">
-          {pages.map((page, index) => {
-            const info = infoBySlug.get(page.slug);
-            return (
-              <AppWorksListItemMotion key={page.id} index={index}>
-                <AppWorksListItem
-                  id={page.id}
-                  title={page.title}
-                  slug={page.slug}
-                  status={info?.status === "published" ? "published" : "draft"}
-                  updatedAt={info?.updatedAt ?? new Date().toISOString()}
-                  publishToggling={togglingId === page.id}
-                  deleting={deletingId === page.id}
-                  onTogglePublish={canEdit ? handleTogglePublish : undefined}
-                  onDelete={canEdit ? () => void handleDelete(page) : undefined}
-                />
-              </AppWorksListItemMotion>
-            );
-          })}
-        </AppWorksList>
+        <AppPageSetsList
+          sets={sets}
+          infoBySlug={infoBySlug}
+          togglingId={togglingId}
+          deletingId={deletingId}
+          canEdit={canEdit}
+          onTogglePublish={handleTogglePublish}
+          onDelete={(page) => void handleDelete(page)}
+        />
       )}
 
       <AppFabPortal onClick={() => void handleCreate()} disabled={creating} />

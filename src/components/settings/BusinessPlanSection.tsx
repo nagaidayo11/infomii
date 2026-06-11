@@ -314,22 +314,24 @@ export function BusinessPlanSection({
           </p>
         ) : null}
 
-        {showAppPurchaseActions && (plan !== "business" || useIosIap) ? (
+        {showAppPurchaseActions ? (
           <>
-            {plan !== "business" ? (
-              <div className="app-plan-section-block">
-                <p className="app-plan-section-label">
-                  {plan === "free" ? "プランを選ぶ" : "アップグレード"}
-                </p>
-                <AppPlanTiers
-                  currentPlan={plan}
-                  busyAction={busyAction}
-                  onSelectPro={selectProTier}
-                  onSelectBusiness={selectBusinessTier}
-                  showFreeTier={false}
-                />
-              </div>
-            ) : null}
+            <div className="app-plan-section-block">
+              <p className="app-plan-section-label">
+                {plan === "free"
+                  ? "プランを選ぶ"
+                  : plan === "business"
+                    ? "現在のプラン"
+                    : "プラン"}
+              </p>
+              <AppPlanTiers
+                currentPlan={plan}
+                busyAction={busyAction}
+                onSelectPro={selectProTier}
+                onSelectBusiness={selectBusinessTier}
+                showFreeTier={false}
+              />
+            </div>
 
             {isPaid ? (
               <button

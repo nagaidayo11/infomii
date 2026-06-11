@@ -1442,26 +1442,6 @@
   gap: 1.25rem;
 }
 
-[data-client-shell="app"] .app-home-shortcuts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.625rem;
-}
-
-[data-client-shell="app"] .app-home-shortcut {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  border-radius: 0.875rem;
-  border: 1px solid var(--app-border);
-  background: var(--app-surface);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--app-text);
-  text-decoration: none;
-}
-
 [data-client-shell="app"] .app-home-compose {
   border-radius: 1.125rem;
   border: 1px solid color-mix(in srgb, var(--app-accent) 22%, var(--app-border));
@@ -1510,6 +1490,56 @@
 [data-client-shell="app"] .app-works-list--grouped .app-reveal + .app-reveal .app-shell-card,
 [data-client-shell="app"] .app-works-list--grouped .app-reveal:not(:first-child) .app-shell-card {
   border-top: 1px solid var(--app-border);
+}
+
+[data-client-shell="app"] .app-page-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-client-shell="app"] .app-page-set--linked {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 22%, var(--app-border));
+  background: color-mix(in srgb, var(--app-accent-soft) 40%, var(--app-surface));
+  padding: 0.625rem 0.625rem 0;
+  overflow: hidden;
+}
+
+[data-client-shell="app"] .app-page-set-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem 0.625rem;
+}
+
+[data-client-shell="app"] .app-page-set-title {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+[data-client-shell="app"] .app-page-set-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+
+[data-client-shell="app"] .app-page-set--linked .app-works-list--grouped {
+  border: none;
+  border-radius: 0.875rem 0.875rem 0 0;
 }
 
 [data-client-shell="app"] .app-template-rail {

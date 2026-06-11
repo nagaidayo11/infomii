@@ -109,19 +109,8 @@ export function AppDashboardView() {
         )
       ) : (
         <>
-          <AppSection revealDelay={0}>
-            <nav className="app-home-shortcuts app-reveal" aria-label="ショートカット">
-              <AppShellLink href="/templates" className="app-home-shortcut ui-pop-tap">
-                テンプレート
-              </AppShellLink>
-              <AppShellLink href="/dashboard/pages" className="app-home-shortcut ui-pop-tap">
-                ページ一覧
-              </AppShellLink>
-            </nav>
-          </AppSection>
-
           {canEdit ? (
-            <AppSection revealDelay={40}>
+            <AppSection revealDelay={0}>
               <div className="app-home-compose app-reveal">
                 <GeneratePageFromDescription variant="app" className="mb-0" />
               </div>
@@ -176,7 +165,7 @@ export function AppDashboardView() {
                   />
                 </div>
               ) : (
-                <AppWorksList className="mt-3" variant="grouped">
+                <AppWorksList className="mt-3">
                   {recent.map((item, index) => {
                     const info = infoBySlug.get(item.slug);
                     return (
