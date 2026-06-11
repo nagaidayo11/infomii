@@ -13,6 +13,8 @@ import {
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
+import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
+import { AppPlanBillingPanel } from "@/components/app-shell/views/AppPlanBillingPanel";
 import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
@@ -181,7 +183,7 @@ export function BusinessPlanSection({
       return;
     }
     if (useIosIap && (isAppleBilling || appStoreOnly)) {
-      setMessage("App Store のサブスクリプションは、iPhone の「設定」→「Apple ID」→「サブスクリプション」から管理・解約できます。");
+      openAppleSubscriptionManagement();
       return;
     }
     if (!confirmExternalPayment()) return;
@@ -332,58 +334,23 @@ export function BusinessPlanSection({
           </p>
         ) : null}
 
-        {showAppPurchaseActions ? (
-          <>
-            <div className="app-plan-section-block">
-              <p className="app-plan-section-label">
-                {plan === "free"
-                  ? "プランを選ぶ"
-                  : plan === "business"
-                    ? "現在のプラン"
-                    : "プラン"}
-              </p>
-              {billingIntervalToggle}
-              <AppPlanTiers
-                currentPlan={plan}
-                busyAction={busyAction}
-                billingInterval={billingInterval}
-                onSelectPro={selectProTier}
-                onSelectBusiness={selectBusinessTier}
-                showFreeTier={false}
-              />
-            </div>
-
-            {isPaid ? (
-              <button
-                type="button"
-                onClick={() => void openPortal()}
-                disabled={busyAction !== null || !canManageBilling}
-                className="app-plan-manage-btn app-pressable ui-pop-tap"
-              >
-                {busyAction === "portal" ? "処理中…" : "サブスクリプションを管理"}
-              </button>
-            ) : null}
-
-            {useIosIap ? (
-              <button
-                type="button"
-                onClick={() => void openAppleRestore()}
-                disabled={busyAction !== null || !canManageBilling}
-                className="app-plan-restore-btn app-pressable ui-pop-tap"
-              >
-                購入を復元
-              </button>
-            ) : null}
-          </>
-        ) : null}
-
-        {isPaid && isAppleBilling ? (
-          <p className="app-plan-footnote">
-            解約は iPhone の「設定」→「Apple ID」→「サブスクリプション」から行えます。
-          </p>
-        ) : null}
-
-        {message ? <p className="app-plan-message">{message}</p> : null}
+        <AppPlanBillingPanel
+          plan={plan}
+          isPaid={isPaid}
+          isAppleBilling={isAppleBilling}
+          billingInterval={billingInterval}
+          billingIntervalToggle={billingIntervalToggle}
+          busyAction={busyAction}
+          canManageBilling={canManageBilling}
+          showAppPurchaseActions={showAppPurchaseActions}
+          onSubscribePro={() => void openCheckout("pro")}
+          onSubscribeBusiness={() => void openCheckout("business")}
+          onUpgradeBusiness={() =>
+            void (useIosIap && isAppleBilling ? openApplePurchase("business") : openCheckout("business"))
+          }
+          onRestore={() => void openAppleRestore()}
+          message={message}
+        />
       </div>
     );
   }

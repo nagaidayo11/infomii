@@ -73,6 +73,7 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
 4. Supabase マイグレーション `20260609120000_apple_iap_subscriptions.sql` を適用
 5. iOS は **EAS ビルド必須**（`react-native-iap`）。Expo Go では課金テスト不可
 6. サンドボックス Apple ID で Plan タブから購入 → サーバー同期 → Web でも同プラン表示を確認
+7. 解約テスト: Plan タブの **「App Store で解約・プラン変更」** または 設定 → App Store → サンドボックスアカウント（TestFlight では通常の「サブスクリプション」に表示されない場合あり）
 
 ### 審査用スクリーンショット（Plan タブ）
 

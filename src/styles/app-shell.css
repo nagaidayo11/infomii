@@ -1386,8 +1386,22 @@
   color: #fff;
 }
 
+[data-client-shell="app"] .app-plan-billing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+[data-client-shell="app"] .app-plan-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
 [data-client-shell="app"] .app-plan-manage-btn,
-[data-client-shell="app"] .app-plan-restore-btn {
+[data-client-shell="app"] .app-plan-restore-btn,
+[data-client-shell="app"] .app-plan-cta-primary,
+[data-client-shell="app"] .app-plan-cta-secondary {
   width: 100%;
   min-height: var(--app-tap-min);
   border-radius: 0.875rem;
@@ -1395,16 +1409,63 @@
   font-weight: 600;
 }
 
-[data-client-shell="app"] .app-plan-manage-btn {
+[data-client-shell="app"] .app-plan-manage-btn,
+[data-client-shell="app"] .app-plan-cta-primary {
   border: none;
   background: var(--app-accent);
   color: #fff;
 }
 
-[data-client-shell="app"] .app-plan-restore-btn {
+[data-client-shell="app"] .app-plan-restore-btn,
+[data-client-shell="app"] .app-plan-cta-secondary {
   border: 1px solid var(--app-border);
   background: var(--app-surface);
+  color: var(--app-text);
+}
+
+[data-client-shell="app"] .app-plan-restore-btn {
   color: var(--app-text-muted);
+  font-weight: 500;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide {
+  border-radius: 0.875rem;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-muted);
+  padding: 0.75rem 0.875rem;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--app-text);
+  list-style: none;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide-body {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--app-text-muted);
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide-body ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.125rem;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide-body li + li {
+  margin-top: 0.375rem;
+}
+
+[data-client-shell="app"] .app-plan-sandbox-guide-note {
+  margin: 0.625rem 0 0;
+  font-size: 0.75rem;
 }
 
 [data-client-shell="app"] .app-plan-footnote {

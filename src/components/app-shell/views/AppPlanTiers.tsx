@@ -10,6 +10,8 @@ type AppPlanTiersProps = {
   currentPlan: PlanId;
   busyAction: "pro" | "business" | "portal" | null;
   billingInterval?: AppleIapInterval;
+  /** When false, tiers are comparison-only (actions live in separate buttons). */
+  interactive?: boolean;
   onSelectPro?: () => void;
   onSelectBusiness?: () => void;
   showFreeTier?: boolean;
@@ -51,6 +53,7 @@ function PlanRow({
   onSelect,
   showPopular,
   billingInterval = "monthly",
+  interactive = true,
 }: {
   plan: PlanId;
   currentPlan: PlanId;
@@ -58,9 +61,11 @@ function PlanRow({
   billingInterval?: AppleIapInterval;
   onSelect?: () => void;
   showPopular?: boolean;
+  interactive?: boolean;
 }) {
   const isCurrent = plan === currentPlan;
-  const action = tierActionLabel(plan, currentPlan, busyAction === plan);
+  const selectable = interactive && Boolean(onSelect);
+  const action = interactive ? tierActionLabel(plan, currentPlan, busyAction === plan) : null;
   const price =
     plan === "free"
       ? "¥0"
@@ -80,11 +85,11 @@ function PlanRow({
 
   return (
     <div
-      {...tierSelectProps(onSelect)}
+      {...(selectable ? tierSelectProps(onSelect) : {})}
       className={
         "app-plan-row" +
         (isCurrent ? " app-plan-row--current" : "") +
-        (onSelect ? " app-plan-row--selectable ui-pop-tap" : "")
+        (selectable ? " app-plan-row--selectable ui-pop-tap" : "")
       }
     >
       <div className="app-plan-row-main">
@@ -127,6 +132,7 @@ export function AppPlanTiers({
   currentPlan,
   busyAction,
   billingInterval = "monthly",
+  interactive = true,
   onSelectPro,
   onSelectBusiness,
   showFreeTier = false,
@@ -150,16 +156,19 @@ export function AppPlanTiers({
           currentPlan={currentPlan}
           busyAction={busyAction}
           billingInterval={billingInterval}
+          interactive={interactive}
           onSelect={
-            tier === "pro"
-              ? busyAction === "pro"
-                ? undefined
-                : onSelectPro
-              : tier === "business"
-                ? busyAction === "business"
+            !interactive
+              ? undefined
+              : tier === "pro"
+                ? busyAction === "pro"
                   ? undefined
-                  : onSelectBusiness
-                : undefined
+                  : onSelectPro
+                : tier === "business"
+                  ? busyAction === "business"
+                    ? undefined
+                    : onSelectBusiness
+                  : undefined
           }
           showPopular={tier === "business"}
         />
