@@ -1,6 +1,7 @@
 import { mapAppleProductIdToPlan } from "@/lib/apple-iap-products";
 import { resolveMaxPublishedPagesByPlan } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { updateHotelSubscription } from "@/lib/server/subscription-update";
 import {
   mapAppleTransactionStatus,
   transactionPeriodEndIso,
@@ -77,24 +78,19 @@ export async function upsertAppleSubscriptionFromTransaction(params: {
   const admin = getSupabaseAdminServerClient();
   await admin.rpc("ensure_hotel_subscription", { target_hotel_id: hotelId });
 
-  const { error } = await admin
-    .from("subscriptions")
-    .update({
-      plan,
-      status: mappedStatus,
-      max_published_pages: resolveMaxPublishedPagesByPlan(plan),
-      billing_provider: mappedStatus === "canceled" ? null : "apple",
-      apple_original_transaction_id: originalTransactionId,
-      apple_product_id: productId,
-      apple_environment: environment,
-      current_period_end: transactionPeriodEndIso(transaction),
-      cancel_at_period_end: false,
-      cancel_at: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("hotel_id", hotelId);
-
-  if (error) throw new Error(error.message);
+  await updateHotelSubscription(admin, hotelId, {
+    plan,
+    status: mappedStatus,
+    max_published_pages: resolveMaxPublishedPagesByPlan(plan),
+    billing_provider: mappedStatus === "canceled" ? null : "apple",
+    apple_original_transaction_id: originalTransactionId,
+    apple_product_id: productId,
+    apple_environment: environment,
+    current_period_end: transactionPeriodEndIso(transaction),
+    cancel_at_period_end: false,
+    cancel_at: null,
+    updated_at: new Date().toISOString(),
+  });
 
   return { plan, status: mappedStatus };
 }

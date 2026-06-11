@@ -1103,9 +1103,11 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     .order("updated_at", { ascending: false })
     .limit(1);
 
+  const errorMessage = (error as { message?: string } | null)?.message ?? "";
+  const errorCode = (error as { code?: string } | null)?.code ?? "";
   const missingCancelColumns =
-    (error as { code?: string; message?: string } | null)?.code === "42703" &&
-    Boolean((error as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
+    (errorCode === "42703" || errorCode === "PGRST204" || /schema cache/i.test(errorMessage)) &&
+    (/cancel_at_period_end/i.test(errorMessage) || /cancel_at/i.test(errorMessage));
   if (missingCancelColumns) {
     const fallback = await supabase
       .from("subscriptions")
@@ -1391,9 +1393,11 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   ]);
   let subRows = subResInitial.data;
   let subError = subResInitial.error;
+  const subErrorMessage = (subError as { message?: string } | null)?.message ?? "";
+  const subErrorCode = (subError as { code?: string } | null)?.code ?? "";
   const bootstrapMissingCancelColumns =
-    (subError as { code?: string; message?: string } | null)?.code === "42703" &&
-    Boolean((subError as { message?: string } | null)?.message?.includes("cancel_at_period_end"));
+    (subErrorCode === "42703" || subErrorCode === "PGRST204" || /schema cache/i.test(subErrorMessage)) &&
+    (/cancel_at_period_end/i.test(subErrorMessage) || /cancel_at/i.test(subErrorMessage));
   if (bootstrapMissingCancelColumns) {
     const fallback = await supabase
       .from("subscriptions")
