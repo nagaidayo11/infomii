@@ -29,11 +29,11 @@ Infomii is a WebView shell for our responsive web app at https://www.infomii.com
 
 Sign in: email/password (demo account above), Sign in with Apple, or Google.
 
-Subscriptions: New Pro/Business purchases on iOS use App Store In-App Purchase (StoreKit) only. Open the Plan tab (bottom navigation) to view tiers and subscribe. Restore purchases in Settings. Web (Stripe) subscribers see the same plan after login but must manage billing on the website (infomii.com). Manage App Store subscriptions in iOS Settings → Apple ID → Subscriptions.
+Subscriptions: New Pro/Business purchases on iOS use App Store In-App Purchase (StoreKit) only. Open the Plan tab (bottom navigation) to view tiers, monthly/annual options, and subscribe. Terms and Privacy links appear at the bottom of the Plan screen. Restore purchases: Settings → App Store → Restore Purchases (syncs App Store entitlements to the signed-in Infomii account). Web (Stripe) subscribers see the same plan after login but must manage billing on the website (infomii.com). Cancel or change App Store plans from the Plan tab → “Manage in App Store”.
 
 Account deletion: Settings → Delete account.
 
-Legal: Settings → Terms / Privacy / Commerce disclosure.
+Legal: Settings → Terms / Privacy / Commerce disclosure (also linked on Plan tab).
 ```
 
 ## App Store Connect — プライバシー
@@ -85,7 +85,8 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
    ```
 3. 出力: `public/app-store/screenshots/raw/06-billing.png`（Free プラン・Pro/Business 申し込みボタン・料金表）
 4. 手動の場合: ログイン後、下部ナビの **プラン** → 画面全体を撮影（Stripe の表記が出ていないことを確認）
-5. 別端末: 同じ Infomii アカウントでログインすればプランは自動共有（手動の「購入復元」は不要）
+5. 購入の復元: **設定** → **App Store** →「購入を復元」（プラン未反映時のみ。通常はログインで自動共有）
+6. プラン画面下部に利用規約・プライバシーポリシーリンクがあることを確認
 
 ## プッシュ通知
 

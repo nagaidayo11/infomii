@@ -5,6 +5,7 @@ import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
 import { billingIntervalLabel, type BillingInterval } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
+import { AppPlanLegalFootnote } from "./AppPlanLegalFootnote";
 import { AppPlanTiers } from "./AppPlanTiers";
 
 type PlanId = "free" | "pro" | "business";
@@ -220,6 +221,8 @@ export function AppPlanBillingPanel({
       </details>
 
       {message ? <p className="app-plan-message">{message}</p> : null}
+
+      <AppPlanLegalFootnote />
     </div>
   );
 }

@@ -87,7 +87,7 @@ export async function purchaseAppleSubscription(
     const purchasedPlan = mapAppleProductIdToPlan(purchase.productId);
     if (purchasedPlan === plan) {
       throw new Error(
-        "App Store での購入は完了しましたが、プランの反映に失敗しました。しばらくしてからプラン画面を開き直すか、サポートへお問い合わせください。",
+        "App Store での購入は完了しましたが、プランの反映に失敗しました。設定の「購入を復元」をお試しください。",
       );
     }
   }
@@ -95,8 +95,15 @@ export async function purchaseAppleSubscription(
   return result;
 }
 
-/** Internal: re-read StoreKit entitlements when post-purchase sync returns a lower tier. */
 async function syncAppleSubscriptionFromStore(): Promise<VerifyAppleIapResult> {
   const purchase = await requestNativeIapRestore();
   return syncApplePurchaseToServer(purchase);
+}
+
+/** Settings → Restore purchases (App Store Guideline 3.1.1). */
+export async function restoreAppleSubscriptions(): Promise<VerifyAppleIapResult> {
+  if (!isNativeIapAvailable()) {
+    throw new Error("購入の復元は iOS アプリ内でのみ利用できます");
+  }
+  return syncAppleSubscriptionFromStore();
 }

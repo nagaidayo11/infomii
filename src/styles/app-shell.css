@@ -1405,6 +1405,25 @@
   color: var(--app-text-muted);
 }
 
+[data-client-shell="app"] .app-plan-legal-footnote {
+  margin: 0;
+  padding-top: 0.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+[data-client-shell="app"] .app-plan-legal-link {
+  color: var(--app-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+[data-client-shell="app"] .app-settings-restore-btn {
+  border: none;
+  background: transparent;
+}
+
 [data-client-shell="app"] .app-plan-action-stack {
   display: flex;
   flex-direction: column;

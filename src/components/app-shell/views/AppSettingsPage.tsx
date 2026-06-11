@@ -9,6 +9,7 @@ import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSect
 import { AppSettingsGroup } from "../AppSettingsGroup";
 import { AppSettingsLegalSection } from "../AppSettingsLegalSection";
 import { AppSettingsPushSection } from "../AppSettingsPushSection";
+import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
 
@@ -42,6 +43,13 @@ export function AppSettingsPage() {
 
         <AppSettingsGroup title="一般">
           <AppSettingsPushSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
+          title="App Store"
+          footer="同じ Infomii アカウントでログインしていれば、プランは通常自動で共有されます。反映されない場合のみご利用ください。"
+        >
+          <AppSettingsRestorePurchasesSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup title="サポート">
