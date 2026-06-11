@@ -6,9 +6,8 @@ import {
   upsertAppleSubscriptionFromTransaction,
 } from "@/lib/server/apple-subscription-sync";
 import {
-  decodeAppleTransactionFromSignedInfo,
-  fetchAppleTransaction,
   isAppleIapServerConfigured,
+  resolveAppleTransaction,
   type AppleStoreEnvironment,
 } from "@/lib/server/apple-store-server";
 import { extractBearerToken, requireBillingOwner } from "@/lib/server/billing-auth";
@@ -80,9 +79,11 @@ export async function POST(request: NextRequest) {
     }
 
     const preferredEnvironment = parseEnvironment(body.environment);
-    const { transaction, environment } = signedTransactionInfo
-      ? await decodeAppleTransactionFromSignedInfo(signedTransactionInfo, preferredEnvironment)
-      : await fetchAppleTransaction(transactionId, preferredEnvironment);
+    const { transaction, environment } = await resolveAppleTransaction({
+      transactionId,
+      signedTransactionInfo,
+      preferredEnvironment,
+    });
 
     const result = await upsertAppleSubscriptionFromTransaction({
       hotelId,

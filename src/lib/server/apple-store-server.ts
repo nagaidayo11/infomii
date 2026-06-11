@@ -6,19 +6,23 @@ import {
   type JWSTransactionDecodedPayload,
 } from "@apple/app-store-server-library";
 import { APPLE_IAP_BUNDLE_ID } from "@/lib/apple-iap-products";
+import { loadAppleRootCertificates } from "@/lib/server/apple-root-certificates";
 
 export type AppleStoreEnvironment = "Sandbox" | "Production";
 
-function formatAppleStoreError(error: unknown): Error {
+function formatAppleStoreError(error: unknown, context: string): Error {
   if (error instanceof APIException) {
     const detail = error.errorMessage?.trim();
     if (detail) return new Error(detail);
     return new Error(`Apple API error (HTTP ${error.httpStatusCode})`);
   }
   if (error instanceof Error && error.message.trim()) {
-    return error;
+    return new Error(`${context}: ${error.message.trim()}`);
   }
-  return new Error("Apple transaction lookup failed");
+  if (typeof error === "string" && error.trim()) {
+    return new Error(`${context}: ${error.trim()}`);
+  }
+  return new Error(context);
 }
 
 function environmentOrder(
@@ -88,11 +92,12 @@ let sandboxVerifier: SignedDataVerifier | null = null;
 function getSignedDataVerifier(environment: AppleStoreEnvironment): SignedDataVerifier {
   const appAppleId = process.env.APPLE_IAP_APP_APPLE_ID?.trim();
   const appAppleIdNumber = appAppleId ? Number(appAppleId) : undefined;
+  const appleRootCAs = loadAppleRootCertificates();
 
   if (environment === "Production") {
     if (!productionVerifier) {
       productionVerifier = new SignedDataVerifier(
-        [],
+        appleRootCAs,
         true,
         Environment.PRODUCTION,
         getBundleId(),
@@ -104,7 +109,7 @@ function getSignedDataVerifier(environment: AppleStoreEnvironment): SignedDataVe
 
   if (!sandboxVerifier) {
     sandboxVerifier = new SignedDataVerifier(
-      [],
+      appleRootCAs,
       true,
       Environment.SANDBOX,
       getBundleId(),
@@ -138,7 +143,38 @@ export async function decodeAppleTransactionFromSignedInfo(
     }
   }
 
-  throw formatAppleStoreError(lastError);
+  throw formatAppleStoreError(lastError, "Apple signed transaction verification failed");
+}
+
+export async function resolveAppleTransaction(params: {
+  transactionId?: string;
+  signedTransactionInfo?: string;
+  preferredEnvironment?: AppleStoreEnvironment;
+}): Promise<{ transaction: JWSTransactionDecodedPayload; environment: AppleStoreEnvironment }> {
+  const transactionId = params.transactionId?.trim() ?? "";
+  const signedTransactionInfo = params.signedTransactionInfo?.trim() ?? "";
+  const preferredEnvironment = params.preferredEnvironment;
+
+  if (signedTransactionInfo) {
+    try {
+      return await decodeAppleTransactionFromSignedInfo(signedTransactionInfo, preferredEnvironment);
+    } catch (decodeError) {
+      if (transactionId && transactionId !== "unknown") {
+        try {
+          return await fetchAppleTransaction(transactionId, preferredEnvironment);
+        } catch {
+          throw decodeError;
+        }
+      }
+      throw decodeError;
+    }
+  }
+
+  if (!transactionId || transactionId === "unknown") {
+    throw new Error("App Store から有効な取引情報を取得できませんでした");
+  }
+
+  return fetchAppleTransaction(transactionId, preferredEnvironment);
 }
 
 export async function fetchAppleTransaction(
@@ -162,7 +198,7 @@ export async function fetchAppleTransaction(
     }
   }
 
-  throw formatAppleStoreError(lastError);
+  throw formatAppleStoreError(lastError, "Apple transaction lookup failed");
 }
 
 export async function decodeAppleNotification(

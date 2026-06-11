@@ -44,12 +44,26 @@ function isUserCancelled(error: PurchaseError): boolean {
   return error.code === "E_USER_CANCELLED";
 }
 
+function readSignedTransactionInfo(
+  purchase: ProductPurchase | SubscriptionPurchase,
+): string | undefined {
+  const direct = purchase.verificationResultIOS?.trim();
+  if (direct) return direct;
+
+  const raw = purchase as SubscriptionPurchase & {
+    verificationResult?: string;
+    jwsRepresentationIos?: string;
+  };
+  const alt = raw.verificationResult?.trim() || raw.jwsRepresentationIos?.trim();
+  return alt || undefined;
+}
+
 function purchaseToPayload(purchase: ProductPurchase | SubscriptionPurchase): IapSuccessPayload {
   const transactionId =
     purchase.transactionId ??
     (purchase as SubscriptionPurchase & { id?: string }).id ??
     "";
-  const signedTransactionInfo = purchase.verificationResultIOS?.trim() || undefined;
+  const signedTransactionInfo = readSignedTransactionInfo(purchase);
 
   if (!transactionId && !signedTransactionInfo) {
     throw new Error("App Store から取引 ID を取得できませんでした");
