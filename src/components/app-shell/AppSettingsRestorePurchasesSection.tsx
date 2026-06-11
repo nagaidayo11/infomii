@@ -13,8 +13,10 @@ export function AppSettingsRestorePurchasesSection() {
     setBusy(true);
     setMessage(null);
     try {
-      await restoreAppleSubscriptions();
-      setMessage("購入情報を同期しました。プランタブで契約状況をご確認ください。");
+      const result = await restoreAppleSubscriptions();
+      const planLabel =
+        result.plan === "business" ? "Business" : result.plan === "pro" ? "Pro" : "Free";
+      setMessage(`購入情報を同期しました（${planLabel}プラン）。プランタブでご確認ください。`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "購入の復元に失敗しました");
     } finally {

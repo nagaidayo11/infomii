@@ -1,9 +1,13 @@
 import {
   APIException,
   AppStoreServerAPIClient,
+  AutoRenewStatus,
   Environment,
+  Order,
+  ProductType,
   SignedDataVerifier,
   Status,
+  type JWSRenewalInfoDecodedPayload,
   type JWSTransactionDecodedPayload,
 } from "@apple/app-store-server-library";
 import {
@@ -188,17 +192,88 @@ const ACTIVE_APPLE_SUBSCRIPTION_STATUSES = new Set<Status>([
   Status.BILLING_RETRY,
 ]);
 
+type AppleSubscriptionCandidate = {
+  transaction: JWSTransactionDecodedPayload;
+  effectiveProductId: string;
+};
+
+export function resolveEffectiveAppleProductId(
+  transaction: JWSTransactionDecodedPayload,
+  renewal: JWSRenewalInfoDecodedPayload | null,
+): string {
+  const current = transaction.productId?.trim() ?? "";
+  const autoRenew = renewal?.autoRenewProductId?.trim() ?? "";
+  if (!current) return autoRenew;
+  if (!autoRenew) return current;
+  if (renewal?.autoRenewStatus === AutoRenewStatus.OFF) return current;
+  if (compareAppleProductTier(autoRenew, current) > 0) return autoRenew;
+  return current;
+}
+
+function withEffectiveProductId(
+  transaction: JWSTransactionDecodedPayload,
+  effectiveProductId: string,
+): JWSTransactionDecodedPayload {
+  return { ...transaction, productId: effectiveProductId };
+}
+
+export function pickHighestTierAppleSubscription(
+  candidates: AppleSubscriptionCandidate[],
+): AppleSubscriptionCandidate {
+  return candidates.reduce((best, current) => {
+    const tierDiff = compareAppleProductTier(
+      current.effectiveProductId,
+      best.effectiveProductId,
+    );
+    if (tierDiff > 0) return current;
+    if (tierDiff < 0) return best;
+    const bestExpiry = best.transaction.expiresDate ?? 0;
+    const currentExpiry = current.transaction.expiresDate ?? 0;
+    return currentExpiry > bestExpiry ? current : best;
+  });
+}
+
 export function pickHighestTierAppleTransaction(
   transactions: JWSTransactionDecodedPayload[],
 ): JWSTransactionDecodedPayload {
-  return transactions.reduce((best, current) => {
-    const tierDiff = compareAppleProductTier(current.productId, best.productId);
-    if (tierDiff > 0) return current;
-    if (tierDiff < 0) return best;
-    const bestExpiry = best.expiresDate ?? 0;
-    const currentExpiry = current.expiresDate ?? 0;
-    return currentExpiry > bestExpiry ? current : best;
-  });
+  const candidates = transactions.map((transaction) => ({
+    transaction,
+    effectiveProductId: transaction.productId?.trim() ?? "",
+  }));
+  const best = pickHighestTierAppleSubscription(candidates);
+  return withEffectiveProductId(best.transaction, best.effectiveProductId);
+}
+
+async function fetchActiveCandidatesFromHistory(
+  client: AppStoreServerAPIClient,
+  verifier: SignedDataVerifier,
+  anyTransactionId: string,
+): Promise<AppleSubscriptionCandidate[]> {
+  const response = await client.getTransactionHistory(
+    anyTransactionId,
+    null,
+    {
+      productTypes: [ProductType.AUTO_RENEWABLE],
+      sort: Order.DESCENDING,
+    },
+  );
+
+  const now = Date.now();
+  const candidates: AppleSubscriptionCandidate[] = [];
+
+  for (const signed of response.signedTransactions ?? []) {
+    const decoded = await verifier.verifyAndDecodeTransaction(signed);
+    if (!mapAppleProductIdToPlan(decoded.productId)) continue;
+    if (decoded.revocationDate) continue;
+    const expires = decoded.expiresDate ?? 0;
+    if (expires && expires <= now) continue;
+    candidates.push({
+      transaction: decoded,
+      effectiveProductId: decoded.productId?.trim() ?? "",
+    });
+  }
+
+  return candidates;
 }
 
 /** Resolves the customer's current active subscription (handles Pro → Business upgrades). */
@@ -216,7 +291,7 @@ export async function resolveActiveAppleSubscriptionTransaction(params: {
       const client = getApiClient(environment);
       const statusResponse = await client.getAllSubscriptionStatuses(anyTransactionId);
       const verifier = getSignedDataVerifier(environment);
-      const activeTransactions: JWSTransactionDecodedPayload[] = [];
+      const candidates: AppleSubscriptionCandidate[] = [];
 
       for (const group of statusResponse.data ?? []) {
         for (const item of group.lastTransactions ?? []) {
@@ -226,15 +301,30 @@ export async function resolveActiveAppleSubscriptionTransaction(params: {
             continue;
           }
           const decoded = await verifier.verifyAndDecodeTransaction(item.signedTransactionInfo);
-          if (!mapAppleProductIdToPlan(decoded.productId)) continue;
-          activeTransactions.push(decoded);
+          let renewal: JWSRenewalInfoDecodedPayload | null = null;
+          if (item.signedRenewalInfo) {
+            renewal = await verifier.verifyAndDecodeRenewalInfo(item.signedRenewalInfo);
+          }
+          const effectiveProductId = resolveEffectiveAppleProductId(decoded, renewal);
+          if (!mapAppleProductIdToPlan(effectiveProductId)) continue;
+          candidates.push({ transaction: decoded, effectiveProductId });
         }
       }
 
-      if (activeTransactions.length === 0) return null;
+      if (candidates.length === 0) {
+        const historyCandidates = await fetchActiveCandidatesFromHistory(
+          client,
+          verifier,
+          anyTransactionId,
+        );
+        candidates.push(...historyCandidates);
+      }
 
+      if (candidates.length === 0) return null;
+
+      const best = pickHighestTierAppleSubscription(candidates);
       return {
-        transaction: pickHighestTierAppleTransaction(activeTransactions),
+        transaction: withEffectiveProductId(best.transaction, best.effectiveProductId),
         environment,
       };
     } catch (error) {

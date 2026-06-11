@@ -62,9 +62,11 @@ export async function upsertAppleSubscriptionFromTransaction(params: {
   hotelId: string;
   transaction: JWSTransactionDecodedPayload;
   environment: AppleStoreEnvironment;
+  /** When set, overrides transaction.productId for plan mapping (renewal-aware sync). */
+  effectiveProductId?: string | null;
 }): Promise<{ plan: PlanType; status: SubscriptionStatus }> {
   const { hotelId, transaction, environment } = params;
-  const productId = transaction.productId ?? null;
+  const productId = params.effectiveProductId ?? transaction.productId ?? null;
   const mappedPlan = mapAppleProductIdToPlan(productId);
   if (!mappedPlan) {
     throw new Error(`Unknown Apple product id: ${productId ?? "null"}`);

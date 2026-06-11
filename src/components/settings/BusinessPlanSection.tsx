@@ -1,6 +1,10 @@
 "use client";
-import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
-import { purchaseAppleSubscription } from "@/lib/apple-iap-client";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  purchaseAppleSubscription,
+  restoreAppleSubscriptions,
+  syncAppleSubscriptionToAccount,
+} from "@/lib/apple-iap-client";
 import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
@@ -46,6 +50,8 @@ export function BusinessPlanSection({
   const [roleLoaded, setRoleLoaded] = useState(false);
   const [nativeIapReady, setNativeIapReady] = useState(false);
   const [billingInterval, setBillingInterval] = useState<AppleIapInterval>("monthly");
+  const [planSyncing, setPlanSyncing] = useState(false);
+  const didAutoSyncRef = useRef(false);
 
   const appStoreOnly = isAppLayout;
   const useIosIap = appStoreOnly || (shouldUseAppleIapBilling() && nativeIapReady);
@@ -98,6 +104,35 @@ export function BusinessPlanSection({
   useEffect(() => {
     void load();
   }, [load]);
+
+  const syncPlanFromApple = useCallback(async () => {
+    if (!canManageBilling) return;
+    setPlanSyncing(true);
+    try {
+      if (isNativeIapAvailable()) {
+        try {
+          await syncAppleSubscriptionToAccount();
+        } catch {
+          await restoreAppleSubscriptions();
+        }
+      } else {
+        await syncAppleSubscriptionToAccount();
+      }
+      await load();
+    } catch {
+      /* auto-sync is best-effort */
+    } finally {
+      setPlanSyncing(false);
+    }
+  }, [canManageBilling, load]);
+
+  useEffect(() => {
+    if (didAutoSyncRef.current) return;
+    if (!roleLoaded || !canManageBilling) return;
+    if (!appStoreOnly && !(useIosIap && nativeIapReady)) return;
+    didAutoSyncRef.current = true;
+    void syncPlanFromApple();
+  }, [appStoreOnly, canManageBilling, nativeIapReady, roleLoaded, syncPlanFromApple, useIosIap]);
 
   const confirmExternalPayment = useCallback((): boolean => {
     return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
@@ -354,14 +389,17 @@ export function BusinessPlanSection({
             <p className="app-plan-hero-name">{currentPlanLabel}</p>
             <p className="app-plan-hero-price">{currentPlanPrice}</p>
           </div>
-          {(statusLabel || showNextRenewal || showValidUntil || activeBillingInterval) && (
+          {(statusLabel || showNextRenewal || showValidUntil || activeBillingInterval || planSyncing) && (
             <div className="app-plan-hero-meta">
-              {statusLabel ? <span>{statusLabel}</span> : null}
-              {activeBillingInterval ? (
+              {planSyncing ? <span>App Store と同期中…</span> : null}
+              {!planSyncing && statusLabel ? <span>{statusLabel}</span> : null}
+              {!planSyncing && activeBillingInterval ? (
                 <span>{billingIntervalLabel(activeBillingInterval)}</span>
               ) : null}
-              {showNextRenewal ? <span>次回更新 {currentPeriodEndLabel}</span> : null}
-              {showValidUntil && !showNextRenewal ? <span>有効期限 {periodLabel}</span> : null}
+              {!planSyncing && showNextRenewal ? <span>次回更新 {currentPeriodEndLabel}</span> : null}
+              {!planSyncing && showValidUntil && !showNextRenewal ? (
+                <span>有効期限 {periodLabel}</span>
+              ) : null}
             </div>
           )}
         </div>

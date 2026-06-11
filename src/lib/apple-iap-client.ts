@@ -95,15 +95,49 @@ export async function purchaseAppleSubscription(
   return result;
 }
 
-async function syncAppleSubscriptionFromStore(): Promise<VerifyAppleIapResult> {
-  const purchase = await requestNativeIapRestore();
-  return syncApplePurchaseToServer(purchase);
-}
-
 /** Settings → Restore purchases (App Store Guideline 3.1.1). */
 export async function restoreAppleSubscriptions(): Promise<VerifyAppleIapResult> {
   if (!isNativeIapAvailable()) {
     throw new Error("購入の復元は iOS アプリ内でのみ利用できます");
   }
-  return syncAppleSubscriptionFromStore();
+  const purchase = await requestNativeIapRestore();
+  return syncAppleSubscriptionToAccount({
+    transactionId: purchase.transactionId,
+    signedTransactionInfo: purchase.signedTransactionInfo,
+    environment: purchase.environment,
+    productId: purchase.productId,
+  });
+}
+
+/** Re-sync App Store entitlements to the signed-in Infomii account (plan tab / restore). */
+export async function syncAppleSubscriptionToAccount(params?: {
+  transactionId?: string;
+  signedTransactionInfo?: string;
+  environment?: "Sandbox" | "Production";
+  productId?: string;
+}): Promise<VerifyAppleIapResult> {
+  const token = await getAccessToken();
+  const response = await fetch("/api/apple/iap/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params ?? {}),
+  });
+  const payload = (await response.json()) as VerifyAppleIapResult & { message?: string };
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload.message || "Apple IAP の同期に失敗しました");
+  }
+  return payload;
+}
+
+async function syncAppleSubscriptionFromStore(): Promise<VerifyAppleIapResult> {
+  const purchase = await requestNativeIapRestore();
+  return syncAppleSubscriptionToAccount({
+    transactionId: purchase.transactionId,
+    signedTransactionInfo: purchase.signedTransactionInfo,
+    environment: purchase.environment,
+    productId: purchase.productId,
+  });
 }
