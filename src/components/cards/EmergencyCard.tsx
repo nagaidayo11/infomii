@@ -71,7 +71,7 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className={`flex flex-wrap items-center gap-1.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <SosMark />
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />

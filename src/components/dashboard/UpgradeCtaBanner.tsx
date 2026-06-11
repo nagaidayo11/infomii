@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { purchaseAppleSubscription } from "@/lib/apple-iap-client";
+import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
+import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
+import { isNativeIapAvailable } from "@/lib/native-iap";
 import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { Button } from "@/components/ui";
-import { useEffect } from "react";
 
 type Plan = "free" | "pro" | "business";
 
@@ -23,11 +27,17 @@ export function UpgradeCtaBanner({
   publishedCount,
   maxPublishedPages,
 }: UpgradeCtaBannerProps) {
+  const { isAppShell } = useClientShell();
+  const useAppStore = isAppShell || (shouldUseAppleIapBilling() && isNativeIapAvailable());
+
   if (currentPlan === "business") return null;
 
   const isFree = currentPlan === "free";
   const isProNearLimit =
     currentPlan === "pro" && maxPublishedPages <= 10 && publishedCount >= Math.max(1, maxPublishedPages - 1);
+
+  const pricingHref = useAppStore ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
+  const pricingLabel = useAppStore ? "プランを見る" : "料金を見る";
 
   if (isFree) {
     return (
@@ -43,13 +53,14 @@ export function UpgradeCtaBanner({
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
-              href="/lp/saas#pricing-plans"
+              href={pricingHref}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
             >
-              料金を見る
+              {pricingLabel}
             </Link>
             <DashboardCheckoutButton
               plan="pro"
+              useAppStore={useAppStore}
               variant="secondary"
               className="w-full justify-center !rounded-xl !border-emerald-600 !bg-emerald-600 !px-3 !py-2.5 !text-sm !font-medium !text-white shadow-sm hover:!border-emerald-700 hover:!bg-emerald-700 sm:w-auto sm:!py-2"
             >
@@ -75,12 +86,12 @@ export function UpgradeCtaBanner({
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
-              href="/lp/saas#pricing-plans"
+              href={pricingHref}
               className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
             >
-              料金を見る
+              {pricingLabel}
             </Link>
-            <DashboardCheckoutButton plan="business" variant="secondary" className="w-full justify-center sm:w-auto">
+            <DashboardCheckoutButton plan="business" useAppStore={useAppStore} variant="secondary" className="w-full justify-center sm:w-auto">
               Businessプランを申し込む（¥3,480/月）
             </DashboardCheckoutButton>
           </div>
@@ -94,11 +105,13 @@ export function UpgradeCtaBanner({
 
 function DashboardCheckoutButton({
   plan,
+  useAppStore,
   variant = "primary",
   className = "",
   children,
 }: {
   plan: "pro" | "business";
+  useAppStore: boolean;
   variant?: "primary" | "secondary";
   className?: string;
   children: React.ReactNode;
@@ -136,6 +149,11 @@ function DashboardCheckoutButton({
     setLoading(true);
     try {
       await trackUpgradeClick(plan === "business" ? "dashboard-business" : "dashboard-pro");
+      if (useAppStore) {
+        await purchaseAppleSubscription(plan, "monthly");
+        window.location.assign(`${APP_BILLING_PATH}?billing=success`);
+        return;
+      }
       const url = await createStripeCheckoutSession({
         plan,
         successPath: "/dashboard?billing=success",
@@ -145,7 +163,9 @@ function DashboardCheckoutButton({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setLoading(false);
-      setMessage(msg || "申し込みの開始に失敗しました");
+      if (!msg.includes("キャンセル")) {
+        setMessage(msg || "申し込みの開始に失敗しました");
+      }
     }
   };
 

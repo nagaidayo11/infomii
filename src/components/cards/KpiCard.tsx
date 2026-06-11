@@ -38,7 +38,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
 
   return (
     <Card padding="md">
-      {title ? (
+      {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

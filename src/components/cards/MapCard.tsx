@@ -96,7 +96,7 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
         </p>

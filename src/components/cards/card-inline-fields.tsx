@@ -22,6 +22,7 @@ export function CardTitleInline({
   placeholder?: string;
   bind: InlineBind;
 }) {
+  if (!bind.editable && !title.trim()) return null;
   return (
     <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
       <InlineEditable

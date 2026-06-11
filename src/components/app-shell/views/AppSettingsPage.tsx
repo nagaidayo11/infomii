@@ -9,6 +9,7 @@ import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSect
 import { AppSettingsGroup } from "../AppSettingsGroup";
 import { AppSettingsLegalSection } from "../AppSettingsLegalSection";
 import { AppSettingsPushSection } from "../AppSettingsPushSection";
+import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
 
@@ -46,6 +47,13 @@ export function AppSettingsPage() {
 
         <AppSettingsGroup title="サポート">
           <AppSettingsLegalSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
+          title="購入の復元"
+          footer="新規お申し込みは下部ナビの「プラン」タブから行えます。"
+        >
+          <AppSettingsRestorePurchasesSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup>

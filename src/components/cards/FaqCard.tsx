@@ -53,7 +53,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

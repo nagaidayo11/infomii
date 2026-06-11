@@ -1065,6 +1065,10 @@
   padding: 0;
 }
 
+[data-client-shell="app"] .app-settings-restore-card .app-settings-card-inner {
+  padding: 0;
+}
+
 [data-client-shell="app"] .app-settings-auth-card .app-settings-rows {
   border: none;
   border-radius: 0;

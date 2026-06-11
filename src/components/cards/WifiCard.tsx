@@ -47,7 +47,7 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
     <Card padding="none" className="">
       <div data-inner-surface className={`flex flex-col gap-1.5 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2.5`}>
       {/* Block title: CARD_BLOCK_TITLE_CLASS = color only; weight from getTitleFontSizeStyle + CSS vars */}
-      {title ? (
+      {(editable || title) ? (
         <p className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

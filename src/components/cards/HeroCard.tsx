@@ -46,7 +46,7 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
       <div className="absolute bottom-0 left-0 right-0 z-20 p-4 text-white">
-        {title ? (
+        {(editable || title) ? (
           <h2 className="leading-tight" style={getTitleFontSizeStyle()}>
             <InlineEditable value={title} onSave={(v) => update("title", v)} editable={editable} onActivate={onActivate} className="text-white" placeholder={labels.titlePlaceholder} />
           </h2>

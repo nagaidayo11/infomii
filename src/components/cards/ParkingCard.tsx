@@ -46,7 +46,7 @@ export function ParkingCard({ card, isSelected, locale = "ja" }: ParkingCardProp
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
         </p>

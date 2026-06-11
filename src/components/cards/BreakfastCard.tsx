@@ -44,7 +44,7 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={`text-sm ${CARD_BLOCK_TITLE_CLASS}`} placeholder={labels.titlePlaceholder} />
         </p>

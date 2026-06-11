@@ -65,7 +65,7 @@ export function TaxiCard({ card, isSelected, locale = "ja" }: TaxiCardProps) {
 
   return (
     <Card padding="md" className="">
-      {title ? (
+      {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
         </p>

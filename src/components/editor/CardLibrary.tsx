@@ -394,12 +394,12 @@ function DescriptionWithTooltip({
   };
 
   return (
-    <span className="relative block h-4 w-4 shrink-0">
+    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">
       <button
         type="button"
         data-mobile-tooltip-trigger="true"
         aria-label="説明文を表示"
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-500 lg:hidden"
+        className="inline-flex h-8 w-8 touch-manipulation items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-semibold leading-none text-slate-500 lg:hidden"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={toggleMobileTooltip}
         aria-expanded={showTooltip}
@@ -895,7 +895,7 @@ function LibraryItemButton({
       >
         {CARD_ICONS[item.type] ?? CARD_ICONS.text}
       </span>
-      <div className="relative min-w-0 flex-1 pr-6">
+      <div className="relative min-w-0 flex-1 pr-9">
         <span
           className={
             "flex h-9 items-center gap-1 truncate text-[15px] font-medium leading-none " +

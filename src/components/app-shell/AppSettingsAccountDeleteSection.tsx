@@ -38,26 +38,37 @@ export function AppSettingsAccountDeleteSection() {
     }
   }
 
+  const deleteButton = (
+    <button
+      type="button"
+      className="app-settings-danger-btn app-pressable w-full px-4 py-3.5 text-center text-base font-semibold disabled:opacity-60"
+      onClick={() => void handleDelete()}
+      disabled={busy}
+    >
+      {busy ? "削除中…" : "アカウントを削除"}
+    </button>
+  );
+
+  if (isAppShell) {
+    return (
+      <section className="app-settings-danger app-shell-card overflow-hidden">
+        {error ? <p className="px-4 py-2 text-sm text-rose-700">{error}</p> : null}
+        {deleteButton}
+      </section>
+    );
+  }
+
   return (
-    <AppSettingsCard className="app-settings-danger overflow-hidden">
-      {isAppShell ? null : (
-        <div className="px-4 py-3">
-          <h2 className="text-base font-semibold text-rose-800">アカウントを削除</h2>
-          <p className="mt-1 text-sm leading-relaxed text-rose-900/80">
-            ログイン情報とプロフィールを削除します。オーナーのみのワークスペースは関連データごと削除されます。
-            有料プラン契約中や他メンバーがいる場合は先に解約・権限移譲が必要です。
-          </p>
-        </div>
-      )}
+    <AppSettingsCard className="app-settings-danger overflow-hidden" padding="none">
+      <div className="px-4 py-3">
+        <h2 className="text-base font-semibold text-rose-800">アカウントを削除</h2>
+        <p className="mt-1 text-sm leading-relaxed text-rose-900/80">
+          ログイン情報とプロフィールを削除します。オーナーのみのワークスペースは関連データごと削除されます。
+          有料プラン契約中や他メンバーがいる場合は先に解約・権限移譲が必要です。
+        </p>
+      </div>
       {error ? <p className="px-4 pb-2 text-sm text-rose-700">{error}</p> : null}
-      <button
-        type="button"
-        className="app-settings-danger-btn app-pressable w-full px-4 py-3.5 text-center text-base font-semibold disabled:opacity-60"
-        onClick={() => void handleDelete()}
-        disabled={busy}
-      >
-        {busy ? "削除中…" : "アカウントを削除"}
-      </button>
+      {deleteButton}
     </AppSettingsCard>
   );
 }

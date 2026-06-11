@@ -12,7 +12,9 @@ import {
   type HotelSubscription,
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
+import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 const EXTERNAL_PAYMENT_CONFIRM =
@@ -40,6 +42,7 @@ export function BusinessPlanSection({
   const [canManageBilling, setCanManageBilling] = useState(false);
   const [roleLoaded, setRoleLoaded] = useState(false);
   const [nativeIapReady, setNativeIapReady] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<AppleIapInterval>("monthly");
 
   const appStoreOnly = isAppLayout;
   const useIosIap = appStoreOnly || (shouldUseAppleIapBilling() && nativeIapReady);
@@ -104,7 +107,7 @@ export function BusinessPlanSection({
     setMessage(null);
     setBusyAction(targetPlan);
     try {
-      await purchaseAppleSubscription(targetPlan, "monthly");
+      await purchaseAppleSubscription(targetPlan, billingInterval);
       await load();
       setMessage("App Store でのお申し込みが完了しました。");
     } catch (error) {
@@ -115,7 +118,7 @@ export function BusinessPlanSection({
     } finally {
       setBusyAction(null);
     }
-  }, [canManageBilling, load]);
+  }, [billingInterval, canManageBilling, load]);
 
   const openAppleRestore = useCallback(async () => {
     if (!canManageBilling) {
@@ -150,6 +153,7 @@ export function BusinessPlanSection({
     try {
       const url = await createStripeCheckoutSession({
         plan: targetPlan,
+        interval: billingInterval,
         successPath,
         cancelPath,
       });
@@ -163,7 +167,7 @@ export function BusinessPlanSection({
       setMessage(msg || "決済ページの起動に失敗しました。");
       setBusyAction(null);
     }
-  }, [canManageBilling, cancelPath, confirmExternalPayment, openApplePurchase, successPath, useIosIap]);
+  }, [billingInterval, canManageBilling, cancelPath, confirmExternalPayment, openApplePurchase, successPath, useIosIap]);
 
   const openPortal = useCallback(async () => {
     if (!canManageBilling) {
@@ -282,6 +286,20 @@ export function BusinessPlanSection({
   const showStripeWebContractNotice = appStoreOnly && isPaid && isStripeBilling;
   const showAppPurchaseActions = !showStripeWebContractNotice;
 
+  const billingIntervalToggle =
+    useIosIap && showAppPurchaseActions ? (
+      <AppSegmentedControl
+        options={[
+          { id: "monthly", label: "月払い" },
+          { id: "yearly", label: `年払い（${PLAN_ANNUAL_SAVINGS_LABEL}）` },
+        ]}
+        value={billingInterval}
+        onChange={(id) => setBillingInterval(id as AppleIapInterval)}
+        ariaLabel="お支払い周期"
+        className={isAppLayout ? "mb-3" : "mt-3"}
+      />
+    ) : null;
+
   const currentPlanLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Business";
   const currentPlanPrice =
     plan === "free"
@@ -324,9 +342,11 @@ export function BusinessPlanSection({
                     ? "現在のプラン"
                     : "プラン"}
               </p>
+              {billingIntervalToggle}
               <AppPlanTiers
                 currentPlan={plan}
                 busyAction={busyAction}
+                billingInterval={billingInterval}
                 onSelectPro={selectProTier}
                 onSelectBusiness={selectBusinessTier}
                 showFreeTier={false}
@@ -402,6 +422,7 @@ export function BusinessPlanSection({
             : "app-settings-billing-actions mt-4 flex flex-col items-start gap-3"
         }
       >
+        {billingIntervalToggle}
         {plan === "free" ? (
           <>
             <button

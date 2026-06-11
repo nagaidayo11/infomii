@@ -1,6 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 type PlanId = "free" | "pro" | "business";
@@ -8,6 +9,7 @@ type PlanId = "free" | "pro" | "business";
 type AppPlanTiersProps = {
   currentPlan: PlanId;
   busyAction: "pro" | "business" | "portal" | null;
+  billingInterval?: AppleIapInterval;
   onSelectPro?: () => void;
   onSelectBusiness?: () => void;
   showFreeTier?: boolean;
@@ -48,10 +50,12 @@ function PlanRow({
   busyAction,
   onSelect,
   showPopular,
+  billingInterval = "monthly",
 }: {
   plan: PlanId;
   currentPlan: PlanId;
   busyAction: AppPlanTiersProps["busyAction"];
+  billingInterval?: AppleIapInterval;
   onSelect?: () => void;
   showPopular?: boolean;
 }) {
@@ -60,9 +64,13 @@ function PlanRow({
   const price =
     plan === "free"
       ? "¥0"
-      : plan === "pro"
-        ? PLAN_PRICE_DISPLAY.pro.monthlyPerMonth
-        : PLAN_PRICE_DISPLAY.business.monthlyPerMonth;
+      : billingInterval === "yearly"
+        ? plan === "pro"
+          ? `${PLAN_PRICE_DISPLAY.pro.annual}/年`
+          : `${PLAN_PRICE_DISPLAY.business.annual}/年`
+        : plan === "pro"
+          ? PLAN_PRICE_DISPLAY.pro.monthlyPerMonth
+          : PLAN_PRICE_DISPLAY.business.monthlyPerMonth;
   const annual =
     plan === "pro"
       ? PLAN_PRICE_DISPLAY.pro.annual
@@ -88,9 +96,16 @@ function PlanRow({
           {showPopular && !isCurrent ? <span className="app-plan-row-popular">人気</span> : null}
         </div>
         <p className="app-plan-row-price">{price}</p>
-        {annual ? (
+        {annual && billingInterval === "monthly" ? (
           <p className="app-plan-row-annual">
             年払い {annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
+          </p>
+        ) : null}
+        {annual && billingInterval === "yearly" ? (
+          <p className="app-plan-row-annual">
+            {plan === "pro"
+              ? PLAN_PRICE_DISPLAY.pro.effectiveMonthlyFromAnnual
+              : PLAN_PRICE_DISPLAY.business.effectiveMonthlyFromAnnual}
           </p>
         ) : null}
         <ul className="app-plan-row-features">
@@ -111,6 +126,7 @@ function PlanRow({
 export function AppPlanTiers({
   currentPlan,
   busyAction,
+  billingInterval = "monthly",
   onSelectPro,
   onSelectBusiness,
   showFreeTier = false,
@@ -133,6 +149,7 @@ export function AppPlanTiers({
           plan={tier}
           currentPlan={currentPlan}
           busyAction={busyAction}
+          billingInterval={billingInterval}
           onSelect={
             tier === "pro"
               ? busyAction === "pro"

@@ -44,7 +44,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         >
           <LineIcon name={icon} className="h-5 w-5" />
         </span>
-        {title ? (
+        {(editable || title) ? (
           <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
             <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
           </h3>
@@ -60,7 +60,20 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
               data-inner-surface
               className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
             >
-              <span className="break-words font-normal text-slate-500">{row.label ?? "—"}</span>
+              <span className="break-words font-normal text-slate-500">
+                <InlineEditable
+                  value={row.label ?? ""}
+                  onSave={(v) => {
+                    const next = [...rows];
+                    next[i] = { ...next[i], label: v };
+                    update({ rows: next });
+                  }}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="text-slate-500"
+                  placeholder="ラベル"
+                />
+              </span>
               <span className="text-right break-all leading-snug">
                 <InlineEditable
                   value={row.value ?? ""}

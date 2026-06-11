@@ -49,7 +49,7 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
         data-inner-surface
         className={`${editorInnerRadiusClassName} flex flex-col gap-2 px-3 py-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
       >
-        {title ? (
+        {(editable || title) ? (
           <div className={`min-w-0 leading-tight ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
             <InlineEditable
               value={title}

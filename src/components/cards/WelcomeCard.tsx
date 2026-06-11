@@ -46,7 +46,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
       padding="lg"
       className=""
     >
-      {title ? (
+      {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

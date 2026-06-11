@@ -328,7 +328,18 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   if (!hasSlides || !current || normalizedSlides.length === 0) {
     return (
       <section data-inner-surface className={`${editorInnerRadiusClassName} border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500`}>
-        {title ? <p className={`mb-1 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>{title}</p> : null}
+        {bind.editable ? (
+          <CardTitleInline
+            title={title}
+            onSave={(v) => editor.setPlainField("title", v)}
+            placeholder="見出し（任意）"
+            bind={bind}
+          />
+        ) : title ? (
+          <p className={`mb-1 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+            {title}
+          </p>
+        ) : null}
         スライド画像が未設定です。設定パネルから画像を追加してください。
       </section>
     );

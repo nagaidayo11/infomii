@@ -118,7 +118,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
 
   return (
     <Card padding="md">
-      {title ? (
+      {(editable || title) ? (
         <h3 className={`mb-2.5 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
@@ -174,22 +174,18 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
                   }
                   style={getBodyFontSizeStyle()}
                 >
-                  {isSelected ? (
-                    <InlineEditable
-                      value={item.label ?? ""}
-                      onSave={(v) => {
-                        const next = [...items];
-                        next[i] = { ...next[i], label: v };
-                        update({ items: next });
-                      }}
-                      editable
-                      onActivate={onActivate}
-                      className="text-slate-700"
-                      placeholder={labels.labelPlaceholder}
-                    />
-                  ) : (
-                    (item.label ?? labels.item)
-                  )}
+                  <InlineEditable
+                    value={item.label ?? ""}
+                    onSave={(v) => {
+                      const next = [...items];
+                      next[i] = { ...next[i], label: v };
+                      update({ items: next });
+                    }}
+                    editable={editable}
+                    onActivate={onActivate}
+                    className="text-slate-700"
+                    placeholder={labels.labelPlaceholder}
+                  />
                 </span>
               </div>
             );
