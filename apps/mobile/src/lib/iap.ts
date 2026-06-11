@@ -58,6 +58,22 @@ function readSignedTransactionInfo(
   return alt || undefined;
 }
 
+function isOurProductId(productId: string): productId is (typeof APPLE_IAP_PRODUCT_IDS)[number] {
+  return APPLE_IAP_PRODUCT_IDS.includes(productId as (typeof APPLE_IAP_PRODUCT_IDS)[number]);
+}
+
+function productTierRank(productId: string): number {
+  if (productId.includes(".business.")) return 2;
+  if (productId.includes(".pro.")) return 1;
+  return 0;
+}
+
+function shouldAcceptPendingPurchase(requestedProductId: string, receivedProductId: string): boolean {
+  if (!isOurProductId(receivedProductId)) return false;
+  if (receivedProductId === requestedProductId) return true;
+  return productTierRank(receivedProductId) >= productTierRank(requestedProductId);
+}
+
 function purchaseToPayload(purchase: ProductPurchase | SubscriptionPurchase): IapSuccessPayload {
   const transactionId =
     purchase.transactionId ??
@@ -95,7 +111,10 @@ async function ensureConnection(): Promise<void> {
   purchaseErrorSub?.remove();
 
   purchaseUpdateSub = purchaseUpdatedListener(async (purchase) => {
-    if (!pendingPurchase || pendingPurchase.productId !== purchase.productId) {
+    if (
+      !pendingPurchase ||
+      !shouldAcceptPendingPurchase(pendingPurchase.productId, purchase.productId)
+    ) {
       return;
     }
 
@@ -146,10 +165,12 @@ export async function restoreApplePurchases(): Promise<IapSuccessPayload> {
   await ensureConnection();
   const purchases = await getAvailablePurchases({ onlyIncludeActiveItems: true });
   const latest = purchases
-    .filter((purchase) =>
-      APPLE_IAP_PRODUCT_IDS.includes(purchase.productId as (typeof APPLE_IAP_PRODUCT_IDS)[number]),
-    )
-    .sort((a, b) => Number(b.transactionDate ?? 0) - Number(a.transactionDate ?? 0))[0];
+    .filter((purchase) => isOurProductId(purchase.productId))
+    .sort((a, b) => {
+      const tierDiff = productTierRank(b.productId) - productTierRank(a.productId);
+      if (tierDiff !== 0) return tierDiff;
+      return Number(b.transactionDate ?? 0) - Number(a.transactionDate ?? 0);
+    })[0];
 
   if (!latest) {
     throw new Error("復元できる App Store の購入が見つかりませんでした");

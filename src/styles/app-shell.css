@@ -1392,6 +1392,19 @@
   gap: 1.25rem;
 }
 
+[data-client-shell="app"] .app-plan-interval-current {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+[data-client-shell="app"] .app-plan-interval-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
 [data-client-shell="app"] .app-plan-action-stack {
   display: flex;
   flex-direction: column;

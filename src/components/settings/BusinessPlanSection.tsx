@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
-import { purchaseAppleSubscription, restoreAppleSubscriptions } from "@/lib/apple-iap-client";
+import { purchaseAppleSubscription } from "@/lib/apple-iap-client";
 import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
@@ -16,6 +16,7 @@ import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmen
 import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
 import { AppPlanBillingPanel } from "@/components/app-shell/views/AppPlanBillingPanel";
 import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
+import { billingIntervalLabel } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
@@ -63,6 +64,7 @@ export function BusinessPlanSection({
   const cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd ?? false;
   const cancelAt = subscription?.cancelAt ?? null;
   const isPaid = plan === "pro" || plan === "business";
+  const activeBillingInterval = subscription?.billingInterval ?? null;
   const isActiveLike = status === "active" || status === "trialing";
   const formatDateYmd = (value: string | null): string | null => {
     if (!value) return null;
@@ -101,44 +103,33 @@ export function BusinessPlanSection({
     return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
   }, []);
 
-  const openApplePurchase = useCallback(async (targetPlan: "pro" | "business") => {
-    if (!canManageBilling) {
-      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
-      return;
-    }
-    setMessage(null);
-    setBusyAction(targetPlan);
-    try {
-      await purchaseAppleSubscription(targetPlan, billingInterval);
-      await load();
-      setMessage("App Store でのお申し込みが完了しました。");
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      if (!msg.includes("キャンセル")) {
-        setMessage(msg || "App Store 課金に失敗しました。");
+  const openApplePurchase = useCallback(
+    async (targetPlan: "pro" | "business", intervalOverride?: AppleIapInterval) => {
+      if (!canManageBilling) {
+        setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+        return;
       }
-    } finally {
-      setBusyAction(null);
-    }
-  }, [billingInterval, canManageBilling, load]);
-
-  const openAppleRestore = useCallback(async () => {
-    if (!canManageBilling) {
-      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
-      return;
-    }
-    setMessage(null);
-    setBusyAction("portal");
-    try {
-      await restoreAppleSubscriptions();
-      await load();
-      setMessage("購入情報を復元しました。");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "購入の復元に失敗しました。");
-    } finally {
-      setBusyAction(null);
-    }
-  }, [canManageBilling, load]);
+      const interval = intervalOverride ?? billingInterval;
+      setMessage(null);
+      setBusyAction(targetPlan);
+      try {
+        const result = await purchaseAppleSubscription(targetPlan, interval);
+        await load();
+        const planLabel =
+          result.plan === "business" ? "Business" : result.plan === "pro" ? "Pro" : "Free";
+        const intervalLabel = interval === "yearly" ? "年払い" : "月払い";
+        setMessage(`App Store でのお申し込みが完了しました。（${planLabel}プラン・${intervalLabel}）`);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (!msg.includes("キャンセル")) {
+          setMessage(msg || "App Store 課金に失敗しました。");
+        }
+      } finally {
+        setBusyAction(null);
+      }
+    },
+    [billingInterval, canManageBilling, load],
+  );
 
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
     if (!canManageBilling) {
@@ -206,6 +197,46 @@ export function BusinessPlanSection({
       setBusyAction(null);
     }
   }, [appStoreOnly, canManageBilling, confirmExternalPayment, isAppleBilling, isStripeBilling, useIosIap]);
+
+  const openSwitchToAnnual = useCallback(async () => {
+    if (plan !== "pro" && plan !== "business") return;
+    if (!canManageBilling) {
+      setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
+      return;
+    }
+    if (activeBillingInterval === "yearly") return;
+
+    if (useIosIap && (isAppleBilling || appStoreOnly)) {
+      await openApplePurchase(plan, "yearly");
+      return;
+    }
+
+    if (isStripeBilling) {
+      if (!confirmExternalPayment()) return;
+      setMessage(null);
+      setBusyAction("portal");
+      try {
+        const url = await createStripePortalSession();
+        window.location.href = url;
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "請求ポータルの起動に失敗しました。");
+        setBusyAction(null);
+      }
+      return;
+    }
+
+    setMessage("お支払い周期の変更は、ご契約中の決済方法から行ってください。");
+  }, [
+    activeBillingInterval,
+    appStoreOnly,
+    canManageBilling,
+    confirmExternalPayment,
+    isAppleBilling,
+    isStripeBilling,
+    openApplePurchase,
+    plan,
+    useIosIap,
+  ]);
 
   const scheduledCancel = Boolean(cancelAtPeriodEnd && status !== "canceled");
   const statusLabel =
@@ -306,9 +337,13 @@ export function BusinessPlanSection({
   const currentPlanPrice =
     plan === "free"
       ? "¥0"
-      : plan === "pro"
-        ? PLAN_PRICE_DISPLAY.pro.monthlyPerMonth
-        : PLAN_PRICE_DISPLAY.business.monthlyPerMonth;
+      : activeBillingInterval === "yearly"
+        ? plan === "pro"
+          ? `${PLAN_PRICE_DISPLAY.pro.annual}/年`
+          : `${PLAN_PRICE_DISPLAY.business.annual}/年`
+        : plan === "pro"
+          ? PLAN_PRICE_DISPLAY.pro.monthlyPerMonth
+          : PLAN_PRICE_DISPLAY.business.monthlyPerMonth;
 
   if (isAppLayout) {
     return (
@@ -319,9 +354,12 @@ export function BusinessPlanSection({
             <p className="app-plan-hero-name">{currentPlanLabel}</p>
             <p className="app-plan-hero-price">{currentPlanPrice}</p>
           </div>
-          {(statusLabel || showNextRenewal || showValidUntil) && (
+          {(statusLabel || showNextRenewal || showValidUntil || activeBillingInterval) && (
             <div className="app-plan-hero-meta">
               {statusLabel ? <span>{statusLabel}</span> : null}
+              {activeBillingInterval ? (
+                <span>{billingIntervalLabel(activeBillingInterval)}</span>
+              ) : null}
               {showNextRenewal ? <span>次回更新 {currentPeriodEndLabel}</span> : null}
               {showValidUntil && !showNextRenewal ? <span>有効期限 {periodLabel}</span> : null}
             </div>
@@ -339,6 +377,7 @@ export function BusinessPlanSection({
           isPaid={isPaid}
           isAppleBilling={isAppleBilling}
           billingInterval={billingInterval}
+          activeBillingInterval={activeBillingInterval}
           billingIntervalToggle={billingIntervalToggle}
           busyAction={busyAction}
           canManageBilling={canManageBilling}
@@ -348,7 +387,7 @@ export function BusinessPlanSection({
           onUpgradeBusiness={() =>
             void (useIosIap && isAppleBilling ? openApplePurchase("business") : openCheckout("business"))
           }
-          onRestore={() => void openAppleRestore()}
+          onSwitchToAnnual={() => void openSwitchToAnnual()}
           message={message}
         />
       </div>
@@ -369,7 +408,7 @@ export function BusinessPlanSection({
       </div>
       {appStoreOnly ? (
         <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
-          お申し込み・復元は App Store 経由です。同じアカウントでログインしていれば、既存のプランが反映されます。
+          お申し込みは App Store 経由です。同じ Infomii アカウントでログインすれば、プランは端末を問わず共有されます。
         </p>
       ) : useIosIap ? (
         <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
@@ -389,7 +428,30 @@ export function BusinessPlanSection({
             : "app-settings-billing-actions mt-4 flex flex-col items-start gap-3"
         }
       >
-        {billingIntervalToggle}
+        {plan === "free" ? billingIntervalToggle : null}
+        {isPaid && activeBillingInterval ? (
+          <p className="text-sm text-slate-600">
+            現在のお支払い周期: <span className="font-medium">{billingIntervalLabel(activeBillingInterval)}</span>
+          </p>
+        ) : null}
+        {isPaid && activeBillingInterval !== "yearly" ? (
+          <button
+            type="button"
+            onClick={() => void openSwitchToAnnual()}
+            disabled={busyAction !== null || !canManageBilling}
+            className="app-button-native app-plan-cta-secondary ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {busyAction === plan
+              ? "処理中…"
+              : plan === "pro"
+                ? `Pro を年払いに切り替える（${PLAN_PRICE_DISPLAY.pro.annual}・${PLAN_ANNUAL_SAVINGS_LABEL}）`
+                : `Business を年払いに切り替える（${PLAN_PRICE_DISPLAY.business.annual}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
+          </button>
+        ) : null}
+        {plan === "pro" ? (
+          <p className="text-sm text-slate-500">Business へのアップグレード時の周期</p>
+        ) : null}
+        {plan === "pro" ? billingIntervalToggle : null}
         {plan === "free" ? (
           <>
             <button
@@ -473,19 +535,6 @@ export function BusinessPlanSection({
               {appStoreOnly ? "サブスクリプションを管理" : "サブスクリプションを管理 / 解約する"}
             </button>
           </>
-        ) : null}
-        {useIosIap && showAppPurchaseActions ? (
-          <button
-            type="button"
-            onClick={() => void openAppleRestore()}
-            disabled={busyAction !== null || !canManageBilling}
-            className={
-              "app-button-native ui-pop-tap inline-flex min-h-[44px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 " +
-              (isAppLayout ? " w-full max-w-full" : "")
-            }
-          >
-            購入を復元
-          </button>
         ) : null}
       </div>
       ) : null}

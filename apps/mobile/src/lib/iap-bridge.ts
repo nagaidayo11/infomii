@@ -100,7 +100,7 @@ export async function handleIapBridgeMessage(
         type: "iap-result",
         requestId: message.requestId,
         ok: false,
-        error: error instanceof Error ? error.message : "購入の復元に失敗しました",
+        error: error instanceof Error ? error.message : "App Store の契約情報の取得に失敗しました",
         userCancelled: isUserCancelled(error),
       });
     }

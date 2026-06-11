@@ -4,7 +4,11 @@ import {
   findHotelIdByAppleOriginalTransactionId,
   upsertAppleSubscriptionFromTransaction,
 } from "@/lib/server/apple-subscription-sync";
-import { decodeAppleNotification, isAppleIapServerConfigured } from "@/lib/server/apple-store-server";
+import {
+  decodeAppleNotification,
+  isAppleIapServerConfigured,
+  resolveAuthoritativeAppleSubscription,
+} from "@/lib/server/apple-store-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 
@@ -45,10 +49,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, unmatched: true });
     }
 
-    await upsertAppleSubscriptionFromTransaction({
-      hotelId,
+    const authoritative = await resolveAuthoritativeAppleSubscription({
       transaction,
       environment: notification.environment,
+    });
+
+    await upsertAppleSubscriptionFromTransaction({
+      hotelId,
+      transaction: authoritative.transaction,
+      environment: authoritative.environment,
     });
 
     await appendAppleBillingLog({
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
         notificationType: notification.notificationType ?? null,
         subtype: notification.subtype ?? null,
         originalTransactionId,
-        productId: transaction.productId ?? null,
+        productId: authoritative.transaction.productId ?? null,
       },
     });
 

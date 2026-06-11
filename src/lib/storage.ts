@@ -19,6 +19,7 @@ import type {
   MultiPageTemplate,
 } from "@/lib/multi-page-templates/types";
 import type { PlanLimitTier } from "@/lib/plan-limits";
+import { inferSubscriptionBillingInterval } from "@/lib/billing-interval";
 import {
   formatPublishLimitError,
   normalizeMaxPublishedPages,
@@ -543,6 +544,7 @@ export type HotelSubscription = {
   hasStripeCustomer: boolean;
   billingProvider: BillingProvider | null;
   hasAppleSubscription: boolean;
+  billingInterval: "monthly" | "yearly" | null;
   updatedAt: string;
 };
 
@@ -845,6 +847,7 @@ function createDevBusinessOverrideSubscriptionFallback(): HotelSubscription {
     hasStripeCustomer: false,
     billingProvider: null,
     hasAppleSubscription: false,
+    billingInterval: null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -1097,7 +1100,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
   let { data: rows, error } = await supabase
     .from("subscriptions")
     .select(
-      "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,billing_provider,apple_original_transaction_id,updated_at"
+      "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,stripe_price_id,billing_provider,apple_original_transaction_id,apple_product_id,updated_at"
     )
     .eq("hotel_id", hotelId)
     .order("updated_at", { ascending: false })
@@ -1122,6 +1125,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
           cancel_at: null,
           billing_provider: null,
           apple_original_transaction_id: null,
+          apple_product_id: null,
+          stripe_price_id: null,
         }))
       : null;
     error = fallback.error;
@@ -1153,6 +1158,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
   const appleOriginalTransactionId =
     (data as { apple_original_transaction_id?: string | null }).apple_original_transaction_id ??
     null;
+  const appleProductId = (data as { apple_product_id?: string | null }).apple_product_id ?? null;
+  const stripePriceId = (data as { stripe_price_id?: string | null }).stripe_price_id ?? null;
 
   const subscription: HotelSubscription = {
     id: data.id,
@@ -1165,6 +1172,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     hasStripeCustomer: Boolean(data.stripe_customer_id),
     billingProvider,
     hasAppleSubscription: Boolean(appleOriginalTransactionId) || billingProvider === "apple",
+    billingInterval: inferSubscriptionBillingInterval({ appleProductId, stripePriceId }),
     updatedAt: data.updated_at,
   };
 
@@ -1379,7 +1387,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     supabase
       .from("subscriptions")
       .select(
-        "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,billing_provider,apple_original_transaction_id,updated_at"
+        "id,plan,status,max_published_pages,cancel_at_period_end,cancel_at,current_period_end,stripe_customer_id,stripe_price_id,billing_provider,apple_original_transaction_id,apple_product_id,updated_at"
       )
       .eq("hotel_id", hotelId)
       .order("updated_at", { ascending: false })
@@ -1412,6 +1420,8 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
           cancel_at: null,
           billing_provider: null,
           apple_original_transaction_id: null,
+          apple_product_id: null,
+          stripe_price_id: null,
         }))
       : null;
     subError = fallback.error;
@@ -1446,6 +1456,10 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
       hasAppleSubscription:
         Boolean((latestSub as { apple_original_transaction_id?: string | null }).apple_original_transaction_id) ||
         (latestSub as { billing_provider?: BillingProvider | null }).billing_provider === "apple",
+      billingInterval: inferSubscriptionBillingInterval({
+        appleProductId: (latestSub as { apple_product_id?: string | null }).apple_product_id ?? null,
+        stripePriceId: (latestSub as { stripe_price_id?: string | null }).stripe_price_id ?? null,
+      }),
       updatedAt: latestSub.updated_at,
     }
     : null;

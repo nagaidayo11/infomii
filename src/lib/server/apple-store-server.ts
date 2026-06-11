@@ -3,9 +3,14 @@ import {
   AppStoreServerAPIClient,
   Environment,
   SignedDataVerifier,
+  Status,
   type JWSTransactionDecodedPayload,
 } from "@apple/app-store-server-library";
-import { APPLE_IAP_BUNDLE_ID } from "@/lib/apple-iap-products";
+import {
+  APPLE_IAP_BUNDLE_ID,
+  compareAppleProductTier,
+  mapAppleProductIdToPlan,
+} from "@/lib/apple-iap-products";
 import { loadAppleRootCertificates } from "@/lib/server/apple-root-certificates";
 
 export type AppleStoreEnvironment = "Sandbox" | "Production";
@@ -175,6 +180,99 @@ export async function resolveAppleTransaction(params: {
   }
 
   return fetchAppleTransaction(transactionId, preferredEnvironment);
+}
+
+const ACTIVE_APPLE_SUBSCRIPTION_STATUSES = new Set<Status>([
+  Status.ACTIVE,
+  Status.BILLING_GRACE_PERIOD,
+  Status.BILLING_RETRY,
+]);
+
+export function pickHighestTierAppleTransaction(
+  transactions: JWSTransactionDecodedPayload[],
+): JWSTransactionDecodedPayload {
+  return transactions.reduce((best, current) => {
+    const tierDiff = compareAppleProductTier(current.productId, best.productId);
+    if (tierDiff > 0) return current;
+    if (tierDiff < 0) return best;
+    const bestExpiry = best.expiresDate ?? 0;
+    const currentExpiry = current.expiresDate ?? 0;
+    return currentExpiry > bestExpiry ? current : best;
+  });
+}
+
+/** Resolves the customer's current active subscription (handles Pro → Business upgrades). */
+export async function resolveActiveAppleSubscriptionTransaction(params: {
+  anyTransactionId: string;
+  preferredEnvironment?: AppleStoreEnvironment;
+}): Promise<{ transaction: JWSTransactionDecodedPayload; environment: AppleStoreEnvironment } | null> {
+  const anyTransactionId = params.anyTransactionId.trim();
+  if (!anyTransactionId) return null;
+
+  let lastError: unknown = null;
+
+  for (const environment of environmentOrder(params.preferredEnvironment)) {
+    try {
+      const client = getApiClient(environment);
+      const statusResponse = await client.getAllSubscriptionStatuses(anyTransactionId);
+      const verifier = getSignedDataVerifier(environment);
+      const activeTransactions: JWSTransactionDecodedPayload[] = [];
+
+      for (const group of statusResponse.data ?? []) {
+        for (const item of group.lastTransactions ?? []) {
+          if (!item.signedTransactionInfo) continue;
+          const status = item.status;
+          if (status === undefined || !ACTIVE_APPLE_SUBSCRIPTION_STATUSES.has(status as Status)) {
+            continue;
+          }
+          const decoded = await verifier.verifyAndDecodeTransaction(item.signedTransactionInfo);
+          if (!mapAppleProductIdToPlan(decoded.productId)) continue;
+          activeTransactions.push(decoded);
+        }
+      }
+
+      if (activeTransactions.length === 0) return null;
+
+      return {
+        transaction: pickHighestTierAppleTransaction(activeTransactions),
+        environment,
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw formatAppleStoreError(lastError, "Apple subscription status lookup failed");
+}
+
+export async function resolveAuthoritativeAppleSubscription(params: {
+  transaction: JWSTransactionDecodedPayload;
+  environment: AppleStoreEnvironment;
+}): Promise<{ transaction: JWSTransactionDecodedPayload; environment: AppleStoreEnvironment }> {
+  const originalTransactionId =
+    params.transaction.originalTransactionId ?? params.transaction.transactionId ?? "";
+  if (!originalTransactionId) {
+    return params;
+  }
+
+  try {
+    const active = await resolveActiveAppleSubscriptionTransaction({
+      anyTransactionId: originalTransactionId,
+      preferredEnvironment: params.environment,
+    });
+    if (!active) return params;
+
+    const activeTier = compareAppleProductTier(
+      active.transaction.productId,
+      params.transaction.productId,
+    );
+    if (activeTier >= 0) {
+      return active;
+    }
+    return params;
+  } catch {
+    return params;
+  }
 }
 
 export async function fetchAppleTransaction(

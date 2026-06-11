@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
+import { billingIntervalLabel, type BillingInterval } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
+import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 import { AppPlanTiers } from "./AppPlanTiers";
 
 type PlanId = "free" | "pro" | "business";
@@ -12,6 +14,7 @@ type AppPlanBillingPanelProps = {
   isPaid: boolean;
   isAppleBilling: boolean;
   billingInterval: AppleIapInterval;
+  activeBillingInterval: BillingInterval | null;
   billingIntervalToggle: ReactNode;
   busyAction: "pro" | "business" | "portal" | null;
   canManageBilling: boolean;
@@ -19,7 +22,7 @@ type AppPlanBillingPanelProps = {
   onSubscribePro: () => void;
   onSubscribeBusiness: () => void;
   onUpgradeBusiness: () => void;
-  onRestore: () => void;
+  onSwitchToAnnual: () => void;
   message: string | null;
 };
 
@@ -53,26 +56,56 @@ export function AppPlanBillingPanel({
   isAppleBilling,
   billingIntervalToggle,
   billingInterval,
+  activeBillingInterval,
   busyAction,
   canManageBilling,
   showAppPurchaseActions,
   onSubscribePro,
   onSubscribeBusiness,
   onUpgradeBusiness,
-  onRestore,
+  onSwitchToAnnual,
   message,
 }: AppPlanBillingPanelProps) {
   if (!showAppPurchaseActions) return null;
 
   const busy = busyAction !== null || !canManageBilling;
+  const isOnMonthly = isPaid && activeBillingInterval !== "yearly";
+  const annualPriceLabel =
+    plan === "pro"
+      ? PLAN_PRICE_DISPLAY.pro.annual
+      : plan === "business"
+        ? PLAN_PRICE_DISPLAY.business.annual
+        : null;
 
   return (
     <div className="app-plan-billing-panel">
       <div className="app-plan-section-block">
         <p className="app-plan-section-label">
-          {plan === "free" ? "1. お支払い周期を選ぶ" : plan === "business" ? "ご契約中のプラン" : "1. プラン内容を確認"}
+          {plan === "free"
+            ? "1. お支払い周期を選ぶ"
+            : isPaid
+              ? "ご契約中のお支払い周期"
+              : "1. プラン内容を確認"}
         </p>
-        {plan !== "business" ? billingIntervalToggle : null}
+        {plan === "free" ? billingIntervalToggle : null}
+        {plan === "pro" ? (
+          <>
+            {activeBillingInterval ? (
+              <p className="app-plan-interval-current">
+                現在: {billingIntervalLabel(activeBillingInterval)}
+                {activeBillingInterval === "yearly" ? `（${PLAN_ANNUAL_SAVINGS_LABEL}）` : null}
+              </p>
+            ) : null}
+            <p className="app-plan-interval-note">Business へのアップグレード時の周期</p>
+            {billingIntervalToggle}
+          </>
+        ) : null}
+        {plan === "business" && activeBillingInterval ? (
+          <p className="app-plan-interval-current">
+            現在: {billingIntervalLabel(activeBillingInterval)}
+            {activeBillingInterval === "yearly" ? `（${PLAN_ANNUAL_SAVINGS_LABEL}）` : null}
+          </p>
+        ) : null}
       </div>
 
       <div className="app-plan-section-block">
@@ -116,6 +149,13 @@ export function AppPlanBillingPanel({
 
           {plan === "pro" ? (
             <>
+              {isOnMonthly ? (
+                <ActionButton variant="secondary" disabled={busy} onClick={onSwitchToAnnual}>
+                  {busyAction === plan
+                    ? "処理中…"
+                    : `年払いに切り替える（${annualPriceLabel ?? ""}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
+                </ActionButton>
+              ) : null}
               <ActionButton variant="primary" disabled={busy} onClick={onUpgradeBusiness}>
                 {busyAction === "business" ? "処理中…" : "Business にアップグレード（App Store）"}
               </ActionButton>
@@ -131,19 +171,26 @@ export function AppPlanBillingPanel({
             </>
           ) : null}
 
-          {plan === "business" && isAppleBilling ? (
-            <ActionButton
-              variant="secondary"
-              disabled={busy}
-              onClick={() => openAppleSubscriptionManagement()}
-            >
-              App Store で解約・プラン変更
-            </ActionButton>
+          {plan === "business" ? (
+            <>
+              {isOnMonthly ? (
+                <ActionButton variant="primary" disabled={busy} onClick={onSwitchToAnnual}>
+                  {busyAction === plan
+                    ? "処理中…"
+                    : `年払いに切り替える（${annualPriceLabel ?? ""}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
+                </ActionButton>
+              ) : null}
+              {isAppleBilling ? (
+                <ActionButton
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() => openAppleSubscriptionManagement()}
+                >
+                  App Store で解約・プラン変更
+                </ActionButton>
+              ) : null}
+            </>
           ) : null}
-
-          <ActionButton variant="ghost" disabled={busy} onClick={onRestore}>
-            {busyAction === "portal" ? "処理中…" : "別デバイスで購入した場合は復元"}
-          </ActionButton>
         </div>
       </div>
 

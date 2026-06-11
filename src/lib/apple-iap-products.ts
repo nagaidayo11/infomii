@@ -25,6 +25,25 @@ export function getAppleProductId(plan: AppleIapPlan, interval: AppleIapInterval
   return interval === "yearly" ? APPLE_IAP_PRODUCT_IDS.business_annual : APPLE_IAP_PRODUCT_IDS.business_monthly;
 }
 
+export function mapAppleProductIdToInterval(
+  productId: string | null | undefined,
+): AppleIapInterval | null {
+  if (!productId) return null;
+  if (
+    productId === APPLE_IAP_PRODUCT_IDS.pro_annual ||
+    productId === APPLE_IAP_PRODUCT_IDS.business_annual
+  ) {
+    return "yearly";
+  }
+  if (
+    productId === APPLE_IAP_PRODUCT_IDS.pro_monthly ||
+    productId === APPLE_IAP_PRODUCT_IDS.business_monthly
+  ) {
+    return "monthly";
+  }
+  return null;
+}
+
 export function mapAppleProductIdToPlan(productId: string | null | undefined): AppleIapPlan | null {
   if (!productId) return null;
   if (
@@ -41,4 +60,20 @@ export function mapAppleProductIdToPlan(productId: string | null | undefined): A
 
 export function isAppleIapProductId(productId: string): productId is AppleIapProductId {
   return (ALL_APPLE_IAP_PRODUCT_IDS as string[]).includes(productId);
+}
+
+export function applePlanTierRank(plan: AppleIapPlan | null | undefined): number {
+  if (plan === "business") return 2;
+  if (plan === "pro") return 1;
+  return 0;
+}
+
+export function compareAppleProductTier(
+  productIdA: string | null | undefined,
+  productIdB: string | null | undefined,
+): number {
+  return (
+    applePlanTierRank(mapAppleProductIdToPlan(productIdA)) -
+    applePlanTierRank(mapAppleProductIdToPlan(productIdB))
+  );
 }

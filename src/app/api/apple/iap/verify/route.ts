@@ -8,6 +8,7 @@ import {
 import {
   isAppleIapServerConfigured,
   resolveAppleTransaction,
+  resolveAuthoritativeAppleSubscription,
   type AppleStoreEnvironment,
 } from "@/lib/server/apple-store-server";
 import { extractBearerToken, requireBillingOwner } from "@/lib/server/billing-auth";
@@ -79,11 +80,12 @@ export async function POST(request: NextRequest) {
     }
 
     const preferredEnvironment = parseEnvironment(body.environment);
-    const { transaction, environment } = await resolveAppleTransaction({
+    const resolved = await resolveAppleTransaction({
       transactionId,
       signedTransactionInfo,
       preferredEnvironment,
     });
+    const { transaction, environment } = await resolveAuthoritativeAppleSubscription(resolved);
 
     const result = await upsertAppleSubscriptionFromTransaction({
       hotelId,

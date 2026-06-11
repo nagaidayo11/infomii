@@ -85,7 +85,7 @@ Legal: Settings → Terms / Privacy / Commerce disclosure.
    ```
 3. 出力: `public/app-store/screenshots/raw/06-billing.png`（Free プラン・Pro/Business 申し込みボタン・料金表）
 4. 手動の場合: ログイン後、下部ナビの **プラン** → 画面全体を撮影（Stripe の表記が出ていないことを確認）
-5. 復元: **設定** →「購入の復元」、または **プラン** タブ →「購入を復元」
+5. 別端末: 同じ Infomii アカウントでログインすればプランは自動共有（手動の「購入復元」は不要）
 
 ## プッシュ通知
 
