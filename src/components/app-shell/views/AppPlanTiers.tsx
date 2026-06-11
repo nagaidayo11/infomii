@@ -134,7 +134,15 @@ export function AppPlanTiers({
           currentPlan={currentPlan}
           busyAction={busyAction}
           onSelect={
-            tier === "pro" ? onSelectPro : tier === "business" ? onSelectBusiness : undefined
+            tier === "pro"
+              ? busyAction === "pro"
+                ? undefined
+                : onSelectPro
+              : tier === "business"
+                ? busyAction === "business"
+                  ? undefined
+                  : onSelectBusiness
+                : undefined
           }
           showPopular={tier === "business"}
         />

@@ -20,6 +20,7 @@ import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
 import { AppListRow } from "../primitives/AppListRow";
 import { AppSection } from "../primitives/AppSection";
+import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 
 export function AppDashboardView() {
@@ -93,35 +94,42 @@ export function AppDashboardView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-5 pb-4">
-      {profileLoaded && greetingName ? (
-        <header className="app-reveal">
-          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-[var(--app-text)]">
-            {greetingName}
-          </h1>
-        </header>
-      ) : null}
-
+    <AppTabPage
+      title={greetingName ?? "ホーム"}
+      className="pb-4"
+      contentClassName="space-y-5"
+    >
       {loading ? (
         isNativeAppWebView() ? null : (
           <div className="space-y-3">
-            <div className="app-shell-skeleton h-40 rounded-2xl" />
-            <div className="app-shell-skeleton h-24 rounded-2xl" />
-            <div className="app-shell-skeleton h-20 rounded-2xl" />
+            <div className="app-shell-skeleton app-home-skeleton h-36 rounded-2xl" />
+            <div className="app-shell-skeleton app-home-skeleton h-28 rounded-2xl" />
+            <div className="app-shell-skeleton app-home-skeleton h-24 rounded-2xl" />
           </div>
         )
       ) : (
         <>
+          <AppSection revealDelay={0}>
+            <nav className="app-home-shortcuts app-reveal" aria-label="ショートカット">
+              <AppShellLink href="/templates" className="app-home-shortcut ui-pop-tap">
+                テンプレート
+              </AppShellLink>
+              <AppShellLink href="/dashboard/pages" className="app-home-shortcut ui-pop-tap">
+                ページ一覧
+              </AppShellLink>
+            </nav>
+          </AppSection>
+
           {canEdit ? (
-            <AppSection revealDelay={0}>
-              <div className="app-shell-hero p-4">
+            <AppSection revealDelay={40}>
+              <div className="app-home-compose app-reveal">
                 <GeneratePageFromDescription variant="app" className="mb-0" />
               </div>
             </AppSection>
           ) : null}
 
-          <AppSection revealDelay={70}>
-            <section className="app-shell-card overflow-hidden">
+          <AppSection revealDelay={90}>
+            <section className="app-home-stats app-reveal overflow-hidden">
               <div className="grid grid-cols-2 divide-x divide-[var(--app-border)]">
                 <div className="p-4 text-center">
                   <p className="app-stat-value">{totalViews7d}</p>
@@ -140,56 +148,58 @@ export function AppDashboardView() {
             </section>
           </AppSection>
 
-          <AppSection revealDelay={140}>
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-lg font-bold text-[var(--app-text)]">最近のページ</h2>
-              <AppShellLink
-                href="/dashboard/pages"
-                className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
-              >
-                すべて
-              </AppShellLink>
-            </div>
-
-            {recent.length === 0 ? (
-              <div className="mt-3">
-                <AppEmptyState
-                  title="まだページがありません"
-                  description="AIでつくるか、テンプレートタブから始めるとここに表示されます。"
-                  action={
-                    <AppShellLink
-                      href="/templates"
-                      className="app-touch-btn app-touch-btn-primary app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
-                    >
-                      テンプレートを見る
-                    </AppShellLink>
-                  }
-                />
+          <AppSection revealDelay={150}>
+            <div className="app-reveal">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-bold text-[var(--app-text)]">最近のページ</h2>
+                <AppShellLink
+                  href="/dashboard/pages"
+                  className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
+                >
+                  すべて
+                </AppShellLink>
               </div>
-            ) : (
-              <AppWorksList className="mt-3">
-                {recent.map((item, index) => {
-                  const info = infoBySlug.get(item.slug);
-                  return (
-                    <AppWorksListItemMotion key={item.id} index={index}>
-                      <AppWorksListItem
-                        id={item.id}
-                        title={item.title}
-                        slug={item.slug}
-                        status={info?.status === "published" ? "published" : "draft"}
-                        updatedAt={info?.updatedAt ?? new Date().toISOString()}
-                        showPublishSwitch={false}
-                        deleting={deletingId === item.id}
-                        onDelete={canEdit ? () => void handleDelete(item) : undefined}
-                      />
-                    </AppWorksListItemMotion>
-                  );
-                })}
-              </AppWorksList>
-            )}
+
+              {recent.length === 0 ? (
+                <div className="mt-3">
+                  <AppEmptyState
+                    title="まだページがありません"
+                    description="AIでつくるか、テンプレートから始めるとここに表示されます。"
+                    action={
+                      <AppShellLink
+                        href="/templates"
+                        className="app-touch-btn app-touch-btn-primary app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
+                      >
+                        テンプレートを見る
+                      </AppShellLink>
+                    }
+                  />
+                </div>
+              ) : (
+                <AppWorksList className="mt-3" variant="grouped">
+                  {recent.map((item, index) => {
+                    const info = infoBySlug.get(item.slug);
+                    return (
+                      <AppWorksListItemMotion key={item.id} index={index}>
+                        <AppWorksListItem
+                          id={item.id}
+                          title={item.title}
+                          slug={item.slug}
+                          status={info?.status === "published" ? "published" : "draft"}
+                          updatedAt={info?.updatedAt ?? new Date().toISOString()}
+                          showPublishSwitch={false}
+                          deleting={deletingId === item.id}
+                          onDelete={canEdit ? () => void handleDelete(item) : undefined}
+                        />
+                      </AppWorksListItemMotion>
+                    );
+                  })}
+                </AppWorksList>
+              )}
+            </div>
           </AppSection>
         </>
       )}
-    </div>
+    </AppTabPage>
   );
 }

@@ -1,19 +1,16 @@
 "use client";
 
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { AppTabPage } from "../primitives/AppTabPage";
 
 export function AppBillingView() {
   return (
-    <div className="app-billing-page app-shell-page-enter mx-auto w-full max-w-lg pb-8">
-      <header className="app-screen-header">
-        <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">プラン</h1>
-      </header>
-
+    <AppTabPage title="プラン" className="pb-8" contentClassName="app-plan-page-content">
       <BusinessPlanSection
         layout="app"
         successPath="/settings/billing?billing=success"
         cancelPath="/settings/billing"
       />
-    </div>
+    </AppTabPage>
   );
 }

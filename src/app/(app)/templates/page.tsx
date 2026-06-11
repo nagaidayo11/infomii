@@ -28,6 +28,7 @@ import {
 } from "@/lib/template-marketplace-meta";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AppSection } from "@/components/app-shell/primitives/AppSection";
+import { AppTabPage } from "@/components/app-shell/primitives/AppTabPage";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
@@ -311,175 +312,9 @@ export default function TemplatesPage() {
   const previewFrameClassName =
     "mx-auto w-full max-w-[375px] rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.12)]";
 
-  return (
-    <div
-      className={
-        isAppShell
-          ? "mx-auto w-full max-w-lg space-y-4 pb-4"
-          : "app-main-container space-y-4"
-      }
-    >
-      <header className={isAppShell ? "mb-1" : "app-page-header"}>
-        <h1
-          className={
-            isAppShell
-              ? "text-[1.75rem] font-bold text-[var(--app-text)]"
-              : "app-page-title"
-          }
-        >
-          テンプレート
-        </h1>
-        <p
-          className={
-            isAppShell
-              ? "mt-2 text-base text-[var(--app-text-muted)]"
-              : "app-page-subtitle"
-          }
-        >
-          {isAppShell
-            ? "旅行の日程から推し活まで。型を選んで、あなただけのインフォメーションをすぐつくれます。"
-            : "旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。"}
-        </p>
-      </header>
-
-      {isAppShell ? (
-        <AppSegmentedControl
-          options={TEMPLATE_CATEGORIES}
-          value={category}
-          onChange={setCategory}
-          ariaLabel="テンプレートカテゴリ"
-        />
-      ) : (
-        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
-          {TEMPLATE_CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setCategory(c.id)}
-              className={
-                "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm shadow-sm transition " +
-                (category === c.id
-                  ? "bg-slate-900 !text-white font-semibold"
-                  : "bg-slate-100 font-medium text-slate-600 hover:bg-slate-200")
-              }
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      <div>
-        {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <div className="aspect-[5/3] animate-pulse rounded-lg bg-slate-100" />
-                <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
-                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-            <p className="text-slate-600">テンプレートがまだありません。</p>
-            <p className="mt-1 text-sm text-slate-500">
-              管理者が Supabase の templates テーブルに登録するとここに表示されます。
-            </p>
-            <Link
-              href="/dashboard"
-              className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
-            >
-              ダッシュボードに戻る
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {groupsToRender.map((group, index) => {
-              const prev = groupsToRender[index - 1];
-              const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
-              return (
-                <AppSection
-                  key={`${group.sectionId}-${group.category}`}
-                  className="space-y-2"
-                >
-                  {showSectionHeading ? (
-                    <h2
-                      className={
-                        isAppShell
-                          ? "text-base font-bold tracking-tight text-[var(--app-text)]"
-                          : "text-base font-bold tracking-tight text-slate-800"
-                      }
-                    >
-                      {group.sectionLabel}
-                    </h2>
-                  ) : null}
-                  <h3
-                    className={
-                      isAppShell
-                        ? "text-sm font-semibold text-[var(--app-text-muted)]"
-                        : "text-sm font-semibold text-slate-700"
-                    }
-                  >
-                    {group.label}
-                  </h3>
-                  <div
-                    className="-mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-                    role="region"
-                    aria-label={`${group.label} テンプレート一覧（横スクロール）`}
-                    tabIndex={0}
-                  >
-                    <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
-                      {group.items.map((template) => {
-                        const highlighted = highlightSlug === template.slug;
-                        return (
-                          <div
-                            key={template.id}
-                            id={template.slug ? `template-${template.slug}` : undefined}
-                            className={
-                              "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
-                              (highlighted
-                                ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
-                                : "")
-                            }
-                          >
-                            <TemplateCard
-                              id={template.id}
-                              name={template.name}
-                              description={template.description}
-                              preview_image={template.preview_image}
-                              category={template.category}
-                              variant={isAppShell ? "app" : "default"}
-                              onUse={() => handleUseTemplate(template.id)}
-                              onPreview={() => void handlePreview(template)}
-                              using={usingId === template.id}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </AppSection>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <p className="text-center text-sm text-slate-400">
-        <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
-        {" · "}
-        <Link href="/dashboard/pages" className="hover:text-slate-600">ページ一覧</Link>
-      </p>
-
-      {mounted && previewTemplate &&
-        createPortal(
+  const previewDialog =
+    mounted && previewTemplate
+      ? createPortal(
           <div
             className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4 py-6"
             role="dialog"
@@ -523,8 +358,236 @@ export default function TemplatesPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
+        )
+      : null;
+
+  if (isAppShell) {
+    return (
+      <>
+        <AppTabPage
+          title="テンプレート"
+          description="型を選んで、すぐつくれます"
+          className="pb-4"
+          contentClassName="space-y-4"
+        >
+          <AppSection revealDelay={0}>
+            <AppSegmentedControl
+              options={TEMPLATE_CATEGORIES}
+              value={category}
+              onChange={setCategory}
+              ariaLabel="テンプレートカテゴリ"
+            />
+          </AppSection>
+
+          {error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
+            </div>
+          ) : null}
+
+          <div>
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="space-y-2 app-reveal">
+                    <div className="app-shell-skeleton h-4 w-24 rounded-md" />
+                    <div className="app-shell-skeleton h-52 rounded-2xl" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="app-shell-hero p-8 text-center">
+                <p className="text-[var(--app-text)]">テンプレートがまだありません。</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {groupsToRender.map((group, index) => {
+                  const prev = groupsToRender[index - 1];
+                  const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
+                  return (
+                    <AppSection
+                      key={`${group.sectionId}-${group.category}`}
+                      className="space-y-2"
+                      revealDelay={Math.min(index * 50, 200)}
+                    >
+                      {showSectionHeading ? (
+                        <h2 className="text-base font-bold tracking-tight text-[var(--app-text)]">
+                          {group.sectionLabel}
+                        </h2>
+                      ) : null}
+                      <h3 className="text-sm font-semibold text-[var(--app-text-muted)]">{group.label}</h3>
+                      <div
+                        className="app-template-rail -mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+                        role="region"
+                        aria-label={`${group.label} テンプレート一覧（横スクロール）`}
+                        tabIndex={0}
+                      >
+                        <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
+                          {group.items.map((template) => {
+                            const highlighted = highlightSlug === template.slug;
+                            return (
+                              <div
+                                key={template.id}
+                                id={template.slug ? `template-${template.slug}` : undefined}
+                                className={
+                                  "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
+                                  (highlighted
+                                    ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
+                                    : "")
+                                }
+                              >
+                                <TemplateCard
+                                  id={template.id}
+                                  name={template.name}
+                                  description={template.description}
+                                  preview_image={template.preview_image}
+                                  category={template.category}
+                                  variant="app"
+                                  onUse={() => handleUseTemplate(template.id)}
+                                  onPreview={() => void handlePreview(template)}
+                                  using={usingId === template.id}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </AppSection>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </AppTabPage>
+        {mounted && previewTemplate ? previewDialog : null}
+      </>
+    );
+  }
+
+  return (
+    <div className="app-main-container space-y-4">
+      <header className="app-page-header">
+        <h1 className="app-page-title">テンプレート</h1>
+        <p className="app-page-subtitle">
+          旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。
+        </p>
+      </header>
+
+      <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
+        {TEMPLATE_CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setCategory(c.id)}
+            className={
+              "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm shadow-sm transition " +
+              (category === c.id
+                ? "bg-slate-900 !text-white font-semibold"
+                : "bg-slate-100 font-medium text-slate-600 hover:bg-slate-200")
+            }
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      <div>
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm">
+                <div className="aspect-[5/3] animate-pulse rounded-lg bg-slate-100" />
+                <div className="mt-4 h-5 w-3/4 animate-pulse rounded bg-slate-100" />
+                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-50" />
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
+            <p className="text-slate-600">テンプレートがまだありません。</p>
+            <p className="mt-1 text-sm text-slate-500">
+              管理者が Supabase の templates テーブルに登録するとここに表示されます。
+            </p>
+            <Link
+              href="/dashboard"
+              className="app-button-native mt-3 inline-block rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
+            >
+              ダッシュボードに戻る
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {groupsToRender.map((group, index) => {
+              const prev = groupsToRender[index - 1];
+              const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
+              return (
+                <AppSection
+                  key={`${group.sectionId}-${group.category}`}
+                  className="space-y-2"
+                >
+                  {showSectionHeading ? (
+                    <h2 className="text-base font-bold tracking-tight text-slate-800">
+                      {group.sectionLabel}
+                    </h2>
+                  ) : null}
+                  <h3 className="text-sm font-semibold text-slate-700">{group.label}</h3>
+                  <div
+                    className="-mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+                    role="region"
+                    aria-label={`${group.label} テンプレート一覧（横スクロール）`}
+                    tabIndex={0}
+                  >
+                    <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
+                      {group.items.map((template) => {
+                        const highlighted = highlightSlug === template.slug;
+                        return (
+                          <div
+                            key={template.id}
+                            id={template.slug ? `template-${template.slug}` : undefined}
+                            className={
+                              "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
+                              (highlighted
+                                ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
+                                : "")
+                            }
+                          >
+                            <TemplateCard
+                              id={template.id}
+                              name={template.name}
+                              description={template.description}
+                              preview_image={template.preview_image}
+                              category={template.category}
+                              variant="default"
+                              onUse={() => handleUseTemplate(template.id)}
+                              onPreview={() => void handlePreview(template)}
+                              using={usingId === template.id}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </AppSection>
+              );
+            })}
+          </div>
         )}
+      </div>
+
+      <p className="text-center text-sm text-slate-400">
+        <Link href="/dashboard" className="hover:text-slate-600">← ダッシュボード</Link>
+        {" · "}
+        <Link href="/dashboard/pages" className="hover:text-slate-600">ページ一覧</Link>
+      </p>
+
+      {previewDialog}
 
     </div>
   );

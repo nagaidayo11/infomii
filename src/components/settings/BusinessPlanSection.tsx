@@ -269,8 +269,7 @@ export function BusinessPlanSection({
     };
   };
 
-  const selectProTier =
-    plan === "free" && !(appStoreOnly && isStripeBilling) ? () => void openCheckout("pro") : undefined;
+  const selectProTier = plan === "free" ? () => void openCheckout("pro") : undefined;
   const selectBusinessTier =
     plan === "free"
       ? () => void openCheckout("business")

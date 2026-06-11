@@ -18,6 +18,7 @@ import { AppWorksListItem } from "../AppWorksListItem";
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 import { AppEmptyState } from "../AppEmptyState";
 import { AppShellLink } from "../AppShellLink";
+import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
@@ -154,32 +155,29 @@ export function AppPagesListView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg" style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}>
-      <header className="app-screen-header app-reveal">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[1.75rem] font-bold text-[var(--app-text)]">{APP_PAGES_TAB_LABEL}</h1>
-            <p className="app-screen-header-desc text-base text-[var(--app-text-muted)]">
-              あなたのインフォメーション一覧。タップで編集、公開スイッチで表示を切り替えられます。
-            </p>
-          </div>
-          {!loading && pages.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="app-pressable ui-pop-tap shrink-0 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
-              aria-label="一覧を更新"
-            >
-              更新
-            </button>
-          ) : null}
-        </div>
-      </header>
-
+    <AppTabPage
+      title={APP_PAGES_TAB_LABEL}
+      description={loading ? undefined : `${pages.length}件`}
+      className="app-pages-tab"
+      contentClassName="app-reveal"
+      style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}
+      headerAction={
+        !loading && pages.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="app-pressable ui-pop-tap rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
+            aria-label="一覧を更新"
+          >
+            更新
+          </button>
+        ) : undefined
+      }
+    >
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="app-shell-skeleton h-[7.25rem] rounded-2xl" />
+            <div key={i} className="app-shell-skeleton h-[5.5rem] rounded-2xl" />
           ))}
         </div>
       ) : pages.length === 0 ? (
@@ -205,7 +203,7 @@ export function AppPagesListView() {
           }
         />
       ) : (
-        <AppWorksList>
+        <AppWorksList variant="grouped">
           {pages.map((page, index) => {
             const info = infoBySlug.get(page.slug);
             return (
@@ -230,6 +228,6 @@ export function AppPagesListView() {
       <AppFabPortal onClick={() => void handleCreate()} disabled={creating} />
 
       <PlanLimitModal open={planLimitModalOpen} onClose={() => setPlanLimitModalOpen(false)} />
-    </div>
+    </AppTabPage>
   );
 }
