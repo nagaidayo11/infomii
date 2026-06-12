@@ -2,7 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { restoreAppleSubscriptions } from "@/lib/apple-iap-client";
+import { openWebBillingManagement } from "@/lib/app-billing-nav";
 import { isNativeIapAvailable } from "@/lib/native-iap";
+import {
+  getCurrentHotelSubscription,
+  syncStripeSubscriptionFromServer,
+} from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 
 export function AppSettingsRestorePurchasesSection() {
@@ -13,12 +18,27 @@ export function AppSettingsRestorePurchasesSection() {
     setBusy(true);
     setMessage(null);
     try {
+      const sub = await getCurrentHotelSubscription();
+      const stripeManaged =
+        Boolean(sub?.hasStripeCustomer) || sub?.billingProvider === "stripe";
+      if (stripeManaged) {
+        await syncStripeSubscriptionFromServer();
+        setMessage("ご契約情報を同期しました。プランタブでご確認ください。");
+        return;
+      }
+
       const result = await restoreAppleSubscriptions();
       const planLabel =
         result.plan === "business" ? "Business" : result.plan === "pro" ? "Pro" : "Free";
       setMessage(`購入情報を同期しました（${planLabel}プラン）。プランタブでご確認ください。`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "購入の復元に失敗しました");
+      const msg = error instanceof Error ? error.message : "購入の復元に失敗しました";
+      if (msg.includes("プラン画面から")) {
+        window.alert(msg);
+        openWebBillingManagement();
+        return;
+      }
+      setMessage(msg);
     } finally {
       setBusy(false);
     }

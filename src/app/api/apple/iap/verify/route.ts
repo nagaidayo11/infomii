@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   appendAppleBillingLog,
+  AppleTransactionLinkedToOtherHotelError,
+  EXTERNAL_BILLING_MANAGED_MESSAGE,
   getSubscriptionBillingState,
   isPaidSubscriptionActive,
+  reconcileStripeSubscriptionIfPresent,
   upsertAppleSubscriptionFromTransaction,
 } from "@/lib/server/apple-subscription-sync";
 import {
@@ -65,16 +68,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const stripeSynced = await reconcileStripeSubscriptionIfPresent(hotelId);
+    if (stripeSynced && isPaidSubscriptionActive(stripeSynced.plan, stripeSynced.status)) {
+      return NextResponse.json(
+        { message: EXTERNAL_BILLING_MANAGED_MESSAGE },
+        { status: 409 },
+      );
+    }
+
     const billing = await getSubscriptionBillingState(hotelId);
     if (
       billing.billingProvider === "stripe" &&
       isPaidSubscriptionActive(billing.plan, billing.status)
     ) {
       return NextResponse.json(
-        {
-          message:
-            "Web（Stripe）で有料契約中です。App Store からの新規お申し込みはできません。",
-        },
+        { message: EXTERNAL_BILLING_MANAGED_MESSAGE },
         { status: 409 },
       );
     }
@@ -116,6 +124,9 @@ export async function POST(request: NextRequest) {
         : null,
     });
   } catch (error) {
+    if (error instanceof AppleTransactionLinkedToOtherHotelError) {
+      return NextResponse.json({ message: error.message }, { status: 409 });
+    }
     await sendOpsAlert(
       "Apple IAP Verify Error",
       error instanceof Error ? error.message : "Apple IAP verification failed",

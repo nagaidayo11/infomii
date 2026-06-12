@@ -95,9 +95,8 @@ export function BusinessPlanSection({
       setCanManageBilling(role === "owner");
       let sub = await getCurrentHotelSubscription();
       const stripeManaged =
-        sub &&
-        (sub.billingProvider === "stripe" ||
-          (sub.hasStripeCustomer && sub.billingProvider !== "apple"));
+        Boolean(sub?.hasStripeCustomer) ||
+        sub?.billingProvider === "stripe";
       if (role === "owner" && stripeManaged) {
         try {
           const synced = await syncStripeSubscriptionFromServer();
@@ -155,7 +154,7 @@ export function BusinessPlanSection({
     if (!roleLoaded || !canManageBilling || subscription === undefined) return;
     if (!appStoreOnly && !(useIosIap && nativeIapReady)) return;
     didAutoSyncRef.current = true;
-    if (isStripeBilling) return;
+    if (isStripeBilling || subscription?.hasStripeCustomer) return;
     void syncPlanFromApple();
   }, [
     appStoreOnly,
@@ -178,6 +177,11 @@ export function BusinessPlanSection({
         setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
         return;
       }
+      if (appStoreOnly && isStripeBilling) {
+        window.alert("現在のご契約の変更はプラン画面から行えます。");
+        openWebBillingManagement();
+        return;
+      }
       const interval = intervalOverride ?? billingInterval;
       setMessage(null);
       setBusyAction(targetPlan);
@@ -197,7 +201,7 @@ export function BusinessPlanSection({
         setBusyAction(null);
       }
     },
-    [billingInterval, canManageBilling, load],
+    [appStoreOnly, billingInterval, canManageBilling, isStripeBilling, load],
   );
 
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {

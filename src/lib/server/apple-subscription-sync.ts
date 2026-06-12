@@ -1,5 +1,9 @@
 import { mapAppleProductIdToPlan } from "@/lib/apple-iap-products";
 import { resolveMaxPublishedPagesByPlan } from "@/lib/plan-limits";
+import {
+  syncStripeSubscriptionForHotel,
+  type StripeSubscriptionSyncResult,
+} from "@/lib/server/stripe-subscription-sync";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { updateHotelSubscription } from "@/lib/server/subscription-update";
 import {
@@ -8,6 +12,26 @@ import {
   type AppleStoreEnvironment,
 } from "@/lib/server/apple-store-server";
 import type { JWSTransactionDecodedPayload } from "@apple/app-store-server-library";
+
+export const EXTERNAL_BILLING_MANAGED_MESSAGE =
+  "現在のご契約はプラン画面から変更・解約できます。";
+
+export class AppleTransactionLinkedToOtherHotelError extends Error {
+  constructor() {
+    super(
+      "この App Store の購入は別の Infomii アカウントに紐づいています。購入時と同じアカウントでログインしてください。",
+    );
+    this.name = "AppleTransactionLinkedToOtherHotelError";
+  }
+}
+
+function isAppleOriginalTransactionIdConflict(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("subscriptions_apple_original_transaction_id_key") ||
+    message.includes("duplicate key value violates unique constraint")
+  );
+}
 
 type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 type PlanType = "free" | "pro" | "business";
@@ -58,6 +82,28 @@ export function isPaidSubscriptionActive(
   return (plan === "pro" || plan === "business") && (status === "active" || status === "trialing");
 }
 
+export async function assertAppleTransactionForHotel(
+  hotelId: string,
+  originalTransactionId: string | null | undefined,
+): Promise<void> {
+  if (!originalTransactionId) return;
+  const linkedHotelId = await findHotelIdByAppleOriginalTransactionId(originalTransactionId);
+  if (linkedHotelId && linkedHotelId !== hotelId) {
+    throw new AppleTransactionLinkedToOtherHotelError();
+  }
+}
+
+/** Prefer live Stripe state when the hotel has a Stripe customer (prevents App restore from overwriting Web billing). */
+export async function reconcileStripeSubscriptionIfPresent(
+  hotelId: string,
+): Promise<StripeSubscriptionSyncResult | null> {
+  const billing = await getSubscriptionBillingState(hotelId);
+  if (!billing.stripeCustomerId && billing.billingProvider !== "stripe") {
+    return null;
+  }
+  return syncStripeSubscriptionForHotel(hotelId);
+}
+
 export async function upsertAppleSubscriptionFromTransaction(params: {
   hotelId: string;
   transaction: JWSTransactionDecodedPayload;
@@ -77,22 +123,31 @@ export async function upsertAppleSubscriptionFromTransaction(params: {
   const originalTransactionId =
     transaction.originalTransactionId ?? transaction.transactionId ?? null;
 
+  await assertAppleTransactionForHotel(hotelId, originalTransactionId);
+
   const admin = getSupabaseAdminServerClient();
   await admin.rpc("ensure_hotel_subscription", { target_hotel_id: hotelId });
 
-  await updateHotelSubscription(admin, hotelId, {
-    plan,
-    status: mappedStatus,
-    max_published_pages: resolveMaxPublishedPagesByPlan(plan),
-    billing_provider: mappedStatus === "canceled" ? null : "apple",
-    apple_original_transaction_id: originalTransactionId,
-    apple_product_id: productId,
-    apple_environment: environment,
-    current_period_end: transactionPeriodEndIso(transaction),
-    cancel_at_period_end: false,
-    cancel_at: null,
-    updated_at: new Date().toISOString(),
-  });
+  try {
+    await updateHotelSubscription(admin, hotelId, {
+      plan,
+      status: mappedStatus,
+      max_published_pages: resolveMaxPublishedPagesByPlan(plan),
+      billing_provider: mappedStatus === "canceled" ? null : "apple",
+      apple_original_transaction_id: originalTransactionId,
+      apple_product_id: productId,
+      apple_environment: environment,
+      current_period_end: transactionPeriodEndIso(transaction),
+      cancel_at_period_end: false,
+      cancel_at: null,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (isAppleOriginalTransactionIdConflict(error)) {
+      throw new AppleTransactionLinkedToOtherHotelError();
+    }
+    throw error;
+  }
 
   return { plan, status: mappedStatus };
 }

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   appendAppleBillingLog,
+  AppleTransactionLinkedToOtherHotelError,
   getSubscriptionBillingState,
+  isPaidSubscriptionActive,
+  reconcileStripeSubscriptionIfPresent,
   upsertAppleSubscriptionFromTransaction,
 } from "@/lib/server/apple-subscription-sync";
 import {
   isAppleIapServerConfigured,
+  mapAppleTransactionStatus,
   resolveActiveAppleSubscriptionTransaction,
   resolveAppleTransaction,
   resolveAuthoritativeAppleSubscription,
@@ -60,6 +64,18 @@ export async function POST(request: NextRequest) {
       typeof body.signedTransactionInfo === "string" ? body.signedTransactionInfo.trim() : "";
     const preferredEnvironment = parseEnvironment(body.environment);
 
+    const stripeSynced = await reconcileStripeSubscriptionIfPresent(hotelId);
+    if (stripeSynced && isPaidSubscriptionActive(stripeSynced.plan, stripeSynced.status)) {
+      return NextResponse.json({
+        ok: true,
+        plan: stripeSynced.plan,
+        status: stripeSynced.status,
+        productId: null,
+        originalTransactionId: null,
+        currentPeriodEnd: stripeSynced.currentPeriodEnd,
+      });
+    }
+
     const billing = await getSubscriptionBillingState(hotelId);
     const lookupId =
       transactionId ||
@@ -103,6 +119,20 @@ export async function POST(request: NextRequest) {
       environment = active.environment;
     }
 
+    const mappedStatus = mapAppleTransactionStatus(transaction);
+    if (mappedStatus === "canceled" && billing.stripeCustomerId) {
+      const refreshed = stripeSynced ?? (await reconcileStripeSubscriptionIfPresent(hotelId));
+      const currentBilling = await getSubscriptionBillingState(hotelId);
+      return NextResponse.json({
+        ok: true,
+        plan: refreshed?.plan ?? currentBilling.plan,
+        status: refreshed?.status ?? currentBilling.status,
+        productId: transaction.productId ?? null,
+        originalTransactionId: transaction.originalTransactionId ?? null,
+        currentPeriodEnd: refreshed?.currentPeriodEnd ?? null,
+      });
+    }
+
     const result = await upsertAppleSubscriptionFromTransaction({
       hotelId,
       transaction,
@@ -132,6 +162,9 @@ export async function POST(request: NextRequest) {
         : null,
     });
   } catch (error) {
+    if (error instanceof AppleTransactionLinkedToOtherHotelError) {
+      return NextResponse.json({ message: error.message }, { status: 409 });
+    }
     await sendOpsAlert(
       "Apple IAP Sync Error",
       error instanceof Error ? error.message : "Apple IAP sync failed",
