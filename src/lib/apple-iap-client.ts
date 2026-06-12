@@ -80,6 +80,19 @@ export async function purchaseAppleSubscription(
 
   const expectedRank = planRank(plan);
   if (planRank(result.plan) < expectedRank) {
+    try {
+      result = await syncAppleSubscriptionToAccount({
+        transactionId: purchase.transactionId,
+        signedTransactionInfo: purchase.signedTransactionInfo,
+        environment: purchase.environment,
+        productId: purchase.productId,
+      });
+    } catch {
+      /* fall through to restore */
+    }
+  }
+
+  if (planRank(result.plan) < expectedRank) {
     result = await syncAppleSubscriptionFromStore();
   }
 

@@ -4,7 +4,9 @@ import {
   purchaseAppleSubscription,
   restoreAppleSubscriptions,
   syncAppleSubscriptionToAccount,
+  type VerifyAppleIapResult,
 } from "@/lib/apple-iap-client";
+import { mergeAppleIapResultIntoSubscription } from "@/lib/merge-apple-iap-subscription";
 import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
@@ -33,6 +35,19 @@ import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricin
 
 const EXTERNAL_PAYMENT_CONFIRM =
   "決済ページ（別ページ）に遷移しますがよろしいですか？";
+
+async function reloadSubscriptionWithRetry(
+  load: () => Promise<HotelSubscription | null>,
+  expectPlan: VerifyAppleIapResult["plan"],
+): Promise<void> {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    if (attempt > 0) {
+      await new Promise((resolve) => window.setTimeout(resolve, 600 * attempt));
+    }
+    const sub = await load();
+    if (sub?.plan === expectPlan) return;
+  }
+}
 
 type BusinessPlanSectionProps = {
   successPath?: string;
@@ -96,7 +111,7 @@ export function BusinessPlanSection({
     return Number.isFinite(end) && end > Date.now();
   })();
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<HotelSubscription | null> => {
     try {
       const role = await getCurrentUserHotelRole();
       setCanManageBilling(role === "owner");
@@ -114,9 +129,11 @@ export function BusinessPlanSection({
       }
       sub = await getCurrentHotelSubscription();
       setSubscription(sub);
+      return sub;
     } catch {
       setSubscription(null);
       setCanManageBilling(false);
+      return null;
     } finally {
       setRoleLoaded(true);
     }
@@ -125,6 +142,17 @@ export function BusinessPlanSection({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!isAppLayout || typeof document === "undefined") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void load();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [isAppLayout, load]);
 
   const syncPlanFromApple = useCallback(async () => {
     if (!canManageBilling) return;
@@ -192,11 +220,19 @@ export function BusinessPlanSection({
       setBusyAction(targetPlan);
       try {
         const result = await purchaseAppleSubscription(targetPlan, interval);
-        await load();
+        const planRank = (value: VerifyAppleIapResult["plan"]) =>
+          value === "business" ? 2 : value === "pro" ? 1 : 0;
+        const optimisticPlan =
+          planRank(result.plan) >= planRank(targetPlan) ? result.plan : targetPlan;
+        setSubscription((current) =>
+          mergeAppleIapResultIntoSubscription(current, { ...result, plan: optimisticPlan }),
+        );
+        setBusyAction(null);
         const planLabel =
-          result.plan === "business" ? "Business" : result.plan === "pro" ? "Pro" : "Free";
+          optimisticPlan === "business" ? "Business" : optimisticPlan === "pro" ? "Pro" : "Free";
         const intervalLabel = interval === "yearly" ? "年払い" : "月払い";
         setMessage(`App Store でのお申し込みが完了しました。（${planLabel}プラン・${intervalLabel}）`);
+        void reloadSubscriptionWithRetry(load, optimisticPlan);
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         if (!msg.includes("キャンセル")) {
