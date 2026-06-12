@@ -3975,6 +3975,22 @@ export async function createStripeCheckoutSession(
   return checkoutUrl;
 }
 
+/** Refresh Stripe subscription metadata (e.g. current_period_end) from Stripe API. */
+export async function syncStripeSubscriptionFromServer(): Promise<void> {
+  const token = await getAccessTokenOrThrow();
+  const response = await fetch("/api/stripe/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const payload = (await response.json()) as { message?: string };
+  if (!response.ok) {
+    throw new Error(payload.message || "Stripe 契約の同期に失敗しました");
+  }
+}
+
 export async function createStripePortalSession(): Promise<string> {
   if (shouldUseAppleIapBilling()) {
     throw new Error("アプリでは App Store のサブスクリプション管理をご利用ください。");

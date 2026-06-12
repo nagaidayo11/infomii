@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { openAppleSubscriptionManagement, openWebBillingManagement } from "@/lib/app-billing-nav";
+import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
 import { billingIntervalLabel, type BillingInterval } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
@@ -25,6 +25,7 @@ type AppPlanBillingPanelProps = {
   onUpgradeBusiness: () => void;
   onSwitchToAnnual: () => void;
   onManageWebBilling: () => void;
+  nextRenewalLabel?: string | null;
   message: string | null;
 };
 
@@ -67,6 +68,7 @@ export function AppPlanBillingPanel({
   onUpgradeBusiness,
   onSwitchToAnnual,
   onManageWebBilling,
+  nextRenewalLabel,
   message,
 }: AppPlanBillingPanelProps) {
   const busy = busyAction !== null || !canManageBilling;
@@ -112,6 +114,9 @@ export function AppPlanBillingPanel({
             現在: {billingIntervalLabel(activeBillingInterval)}
             {activeBillingInterval === "yearly" ? `（${PLAN_ANNUAL_SAVINGS_LABEL}）` : null}
           </p>
+        ) : null}
+        {isPaid && nextRenewalLabel ? (
+          <p className="app-plan-interval-current">次回更新: {nextRenewalLabel}</p>
         ) : null}
       </div>
 

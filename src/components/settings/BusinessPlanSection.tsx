@@ -13,6 +13,7 @@ import {
   createStripePortalSession,
   getCurrentHotelSubscription,
   getCurrentUserHotelRole,
+  syncStripeSubscriptionFromServer,
   type HotelSubscription,
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
@@ -90,9 +91,22 @@ export function BusinessPlanSection({
 
   const load = useCallback(async () => {
     try {
-      const [sub, role] = await Promise.all([getCurrentHotelSubscription(), getCurrentUserHotelRole()]);
-      setSubscription(sub);
+      const role = await getCurrentUserHotelRole();
       setCanManageBilling(role === "owner");
+      let sub = await getCurrentHotelSubscription();
+      const stripeManaged =
+        sub &&
+        (sub.billingProvider === "stripe" ||
+          (sub.hasStripeCustomer && sub.billingProvider !== "apple"));
+      if (role === "owner" && stripeManaged) {
+        try {
+          await syncStripeSubscriptionFromServer();
+          sub = await getCurrentHotelSubscription();
+        } catch {
+          /* best-effort: show cached subscription if Stripe sync fails */
+        }
+      }
+      setSubscription(sub);
     } catch {
       setSubscription(null);
       setCanManageBilling(false);
@@ -430,6 +444,7 @@ export function BusinessPlanSection({
           }
           onSwitchToAnnual={() => void openSwitchToAnnual()}
           onManageWebBilling={() => openWebBillingManagement()}
+          nextRenewalLabel={showNextRenewal ? currentPeriodEndLabel : null}
           message={message}
         />
       </div>

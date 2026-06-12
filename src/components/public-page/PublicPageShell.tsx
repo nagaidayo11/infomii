@@ -21,6 +21,42 @@ type PublicPageShellProps = {
   pageBackground?: PageBackgroundStyle | null;
 };
 
+function PageHeader({
+  title,
+  backButton,
+  headerActions,
+  className = "px-4 py-3",
+}: {
+  title: string;
+  backButton?: ReactNode;
+  headerActions?: ReactNode;
+  className?: string;
+}) {
+  if (!backButton && !title.trim() && !headerActions) return null;
+
+  return (
+    <header
+      className={`app-page-enter shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm safe-area-inset-top z-20 ${className}`}
+    >
+      <div
+        className="mx-auto flex w-full flex-col gap-2.5"
+        style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
+      >
+        {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
+        {(title.trim() || headerActions) && (
+          <div className="flex flex-col gap-1.5">
+            {title.trim() ? (
+              <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+                {title}
+              </h1>
+            ) : null}
+            {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
 
 function PageContent({
   title,
@@ -28,28 +64,26 @@ function PageContent({
   children,
   contactActions,
   headerActions,
-}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground">) {
+  headerClassName,
+  mainClassName,
+}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground"> & {
+  headerClassName?: string;
+  mainClassName?: string;
+}) {
   return (
-    <>
-      <header className="app-page-enter sticky top-0 z-20 bg-white/95 px-4 py-3 backdrop-blur-sm safe-area-inset-top">
-        <div
-          className="mx-auto flex w-full flex-col gap-2.5"
-          style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
-        >
-          {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
-          {(title.trim() || headerActions) && (
-            <div className="flex flex-col gap-1.5">
-              {title.trim() ? (
-                <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
-                  {title}
-                </h1>
-              ) : null}
-              {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
-            </div>
-          )}
-        </div>
-      </header>
-      <main className="min-w-0 flex-1 px-4 pb-6 pt-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <PageHeader
+        title={title}
+        backButton={backButton}
+        headerActions={headerActions}
+        className={headerClassName}
+      />
+      <main
+        className={
+          "template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain " +
+          (mainClassName ?? "px-4 pb-6 pt-4")
+        }
+      >
         <div
           className="app-stagger mx-auto w-full space-y-3"
           style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
@@ -58,13 +92,13 @@ function PageContent({
         </div>
       </main>
       {contactActions ? (
-        <footer className="app-page-enter bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
+        <footer className="app-page-enter shrink-0 border-t border-slate-200/80 bg-white px-4 py-5" style={{ animationDelay: "180ms" }}>
           <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
             {contactActions}
           </div>
         </footer>
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -91,39 +125,16 @@ export function PublicPageShell({
   if (isEmbed) {
     return (
       <div className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3" style={{ background: pageBackgroundStyle }}>
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">
-          {backButton ? (
-            <div className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2 pt-2.5 backdrop-blur-sm">
-              <div className="mx-auto w-full" style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}>
-                {backButton}
-              </div>
-            </div>
-          ) : null}
-          {(title.trim() || headerActions) && (
-            <header className="shrink-0 border-b border-slate-200/80 bg-white/95 px-3.5 pb-2.5 pt-3 backdrop-blur-sm">
-              <div
-                className="mx-auto flex w-full flex-col gap-1.5"
-                style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
-              >
-                {title.trim() ? (
-                  <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900">
-                    {title}
-                  </h1>
-                ) : null}
-                {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
-              </div>
-            </header>
-          )}
-          <main className="template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 pb-6 pt-4">
-            <div
-              className="app-stagger mx-auto w-full space-y-3 overflow-hidden"
-              style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
-            >
-              {children}
-            </div>
-          </main>
-          {contactActions ? <footer className="shrink-0 bg-white/80 px-4 py-5 backdrop-blur-sm">{contactActions}</footer> : null}
-        </div>
+        <PageContent
+          title={title}
+          backButton={backButton}
+          contactActions={contactActions}
+          headerActions={headerActions}
+          headerClassName="px-3.5 pb-2.5 pt-3"
+          mainClassName="px-3.5 pb-6 pt-4"
+        >
+          {children}
+        </PageContent>
       </div>
     );
   }
@@ -147,21 +158,17 @@ export function PublicPageShell({
               "flex min-h-[100dvh] w-full flex-1 flex-col overflow-hidden bg-white " +
               "md:min-h-[480px] md:h-[84vh] md:max-h-[84vh] md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
             }
+            data-guest-page-shell
+            style={{ background: pageBackgroundStyle }}
           >
-            <div
-              className="template-preview-scroll flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
-              data-guest-page-shell
-              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y", background: pageBackgroundStyle }}
+            <PageContent
+              title={title}
+              backButton={backButton}
+              contactActions={contactActions}
+              headerActions={headerActions}
             >
-              <PageContent
-                title={title}
-                backButton={backButton}
-                contactActions={contactActions}
-                headerActions={headerActions}
-              >
-                {children}
-              </PageContent>
-            </div>
+              {children}
+            </PageContent>
           </div>
         </div>
       </div>
