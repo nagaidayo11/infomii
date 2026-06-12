@@ -852,7 +852,7 @@ function createDevBusinessOverrideSubscriptionFallback(): HotelSubscription {
   };
 }
 
-async function getIsDevBusinessOverrideEnabledForCurrentUser(): Promise<boolean> {
+export async function isDevBusinessOverrideActiveForCurrentUser(): Promise<boolean> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) {
     return false;
@@ -1138,7 +1138,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
 
   const data = rows?.[0] ?? null;
   if (!data) {
-    if (await getIsDevBusinessOverrideEnabledForCurrentUser()) {
+    if (await isDevBusinessOverrideActiveForCurrentUser()) {
       return createDevBusinessOverrideSubscriptionFallback();
     }
     return null;
@@ -1176,7 +1176,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     updatedAt: data.updated_at,
   };
 
-  if (await getIsDevBusinessOverrideEnabledForCurrentUser()) {
+  if (await isDevBusinessOverrideActiveForCurrentUser()) {
     return applyDevBusinessOverrideToSubscription(subscription);
   }
 
@@ -1464,7 +1464,7 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
     }
     : null;
 
-  const overrideEnabled = await getIsDevBusinessOverrideEnabledForCurrentUser();
+  const overrideEnabled = await isDevBusinessOverrideActiveForCurrentUser();
   const normalizedSubscription = subscription && overrideEnabled
     ? applyDevBusinessOverrideToSubscription(subscription)
     : subscription ?? (overrideEnabled ? createDevBusinessOverrideSubscriptionFallback() : null);
@@ -1905,7 +1905,7 @@ export async function updateInformation(
       }
 
       if (current.status !== "published") {
-        const overrideEnabled = await getIsDevBusinessOverrideEnabledForCurrentUser();
+        const overrideEnabled = await isDevBusinessOverrideActiveForCurrentUser();
         if (!current.hotel_id) {
           throw new Error("施設情報が紐づいていないため公開できません");
         }

@@ -50,6 +50,13 @@ function resolveAllowEmails(): string[] {
 
 export function canUseDevBusinessOverride(user: AuthLikeUser | null | undefined): boolean {
   if (!user) return false;
+
+  const email = user.email?.trim().toLowerCase() ?? "";
+  const allowEmails = resolveAllowEmails();
+  if (email.length > 0 && allowEmails.includes(email)) {
+    return true;
+  }
+
   if (!isOverrideFeatureEnabled()) return false;
   if (isProductionLocked()) return false;
 
@@ -58,13 +65,11 @@ export function canUseDevBusinessOverride(user: AuthLikeUser | null | undefined)
     return true;
   }
 
-  const allowEmails = resolveAllowEmails();
   if (allowEmails.length === 0) {
     // Fallback for client-side checks where non-public env vars are not readable.
     // If override feature is explicitly enabled, allow the signed-in user.
     return true;
   }
 
-  const email = user.email?.trim().toLowerCase() ?? "";
-  return email.length > 0 && allowEmails.includes(email);
+  return false;
 }

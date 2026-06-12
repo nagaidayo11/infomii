@@ -9,10 +9,16 @@ import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { isLoginRequiredMessage } from "@/lib/billing-auth";
 import {
+  WEB_BILLING_CHANGE_ALERT,
+  WEB_BILLING_PRO_UPGRADE_ALERT,
+  WEB_BILLING_PRO_UPGRADE_HINT,
+} from "@/lib/external-billing-messages";
+import {
   createStripeCheckoutSession,
   createStripePortalSession,
   getCurrentHotelSubscription,
   getCurrentUserHotelRole,
+  isDevBusinessOverrideActiveForCurrentUser,
   syncStripeSubscriptionFromServer,
   type HotelSubscription,
 } from "@/lib/storage";
@@ -73,6 +79,7 @@ export function BusinessPlanSection({
   const isPaid = plan === "pro" || plan === "business";
   const activeBillingInterval = subscription?.billingInterval ?? null;
   const isActiveLike = status === "active" || status === "trialing";
+  const hasActiveWebBilling = isStripeBilling && isPaid && isActiveLike;
   const formatDateYmd = (value: string | null): string | null => {
     if (!value) return null;
     const date = new Date(value);
@@ -94,27 +101,18 @@ export function BusinessPlanSection({
       const role = await getCurrentUserHotelRole();
       setCanManageBilling(role === "owner");
       let sub = await getCurrentHotelSubscription();
+      const devOverride = await isDevBusinessOverrideActiveForCurrentUser();
       const stripeManaged =
-        Boolean(sub?.hasStripeCustomer) ||
-        sub?.billingProvider === "stripe";
+        !devOverride &&
+        (Boolean(sub?.hasStripeCustomer) || sub?.billingProvider === "stripe");
       if (role === "owner" && stripeManaged) {
         try {
-          const synced = await syncStripeSubscriptionFromServer();
-          sub = await getCurrentHotelSubscription();
-          if (sub) {
-            sub = {
-              ...sub,
-              plan: synced.plan ?? sub.plan,
-              status: synced.status ?? sub.status,
-              currentPeriodEnd: synced.currentPeriodEnd ?? sub.currentPeriodEnd,
-              billingInterval: sub.billingInterval ?? synced.billingInterval,
-              billingProvider: sub.billingProvider ?? "stripe",
-            };
-          }
+          await syncStripeSubscriptionFromServer();
         } catch {
           /* best-effort: show cached subscription if sync fails */
         }
       }
+      sub = await getCurrentHotelSubscription();
       setSubscription(sub);
     } catch {
       setSubscription(null);
@@ -130,6 +128,7 @@ export function BusinessPlanSection({
 
   const syncPlanFromApple = useCallback(async () => {
     if (!canManageBilling) return;
+    if (await isDevBusinessOverrideActiveForCurrentUser()) return;
     setPlanSyncing(true);
     try {
       if (isNativeIapAvailable()) {
@@ -177,9 +176,15 @@ export function BusinessPlanSection({
         setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
         return;
       }
-      if (appStoreOnly && isStripeBilling) {
-        window.alert("現在のご契約の変更はプラン画面から行えます。");
-        openWebBillingManagement();
+      if (hasActiveWebBilling) {
+        const alertMessage =
+          plan === "pro" && targetPlan === "business"
+            ? WEB_BILLING_PRO_UPGRADE_ALERT
+            : WEB_BILLING_CHANGE_ALERT;
+        window.alert(alertMessage);
+        if (appStoreOnly) {
+          openWebBillingManagement();
+        }
         return;
       }
       const interval = intervalOverride ?? billingInterval;
@@ -201,7 +206,7 @@ export function BusinessPlanSection({
         setBusyAction(null);
       }
     },
-    [appStoreOnly, billingInterval, canManageBilling, isStripeBilling, load],
+    [appStoreOnly, billingInterval, canManageBilling, hasActiveWebBilling, load, plan],
   );
 
   const openCheckout = useCallback(async (targetPlan: "pro" | "business") => {
@@ -240,7 +245,7 @@ export function BusinessPlanSection({
       setMessage("課金操作はオーナーのみ可能です。オーナーに依頼してください。");
       return;
     }
-    if (appStoreOnly && isStripeBilling) {
+    if (appStoreOnly && hasActiveWebBilling) {
       openWebBillingManagement();
       return;
     }
@@ -267,7 +272,7 @@ export function BusinessPlanSection({
       }
       setBusyAction(null);
     }
-  }, [appStoreOnly, canManageBilling, confirmExternalPayment, isAppleBilling, isStripeBilling, useIosIap]);
+  }, [appStoreOnly, canManageBilling, confirmExternalPayment, hasActiveWebBilling, isAppleBilling, useIosIap]);
 
   const openSwitchToAnnual = useCallback(async () => {
     if (plan !== "pro" && plan !== "business") return;
@@ -282,7 +287,7 @@ export function BusinessPlanSection({
       return;
     }
 
-    if (isStripeBilling) {
+    if (hasActiveWebBilling) {
       if (appStoreOnly) {
         openWebBillingManagement();
         return;
@@ -307,7 +312,7 @@ export function BusinessPlanSection({
     canManageBilling,
     confirmExternalPayment,
     isAppleBilling,
-    isStripeBilling,
+    hasActiveWebBilling,
     openApplePurchase,
     plan,
     useIosIap,
@@ -455,11 +460,18 @@ export function BusinessPlanSection({
           canManageBilling={canManageBilling}
           onSubscribePro={() => void openCheckout("pro")}
           onSubscribeBusiness={() => void openCheckout("business")}
-          onUpgradeBusiness={() =>
-            void (useIosIap && isAppleBilling && !isStripeBilling
-              ? openApplePurchase("business")
-              : openWebBillingManagement())
-          }
+          onUpgradeBusiness={() => {
+            if (hasActiveWebBilling && plan === "pro") {
+              window.alert(WEB_BILLING_PRO_UPGRADE_ALERT);
+              openWebBillingManagement();
+              return;
+            }
+            if (useIosIap && isAppleBilling && !hasActiveWebBilling) {
+              void openApplePurchase("business");
+              return;
+            }
+            openWebBillingManagement();
+          }}
           onSwitchToAnnual={() => void openSwitchToAnnual()}
           onManageExternalBilling={() => openWebBillingManagement()}
           nextRenewalLabel={showNextRenewal ? currentPeriodEndLabel : null}
@@ -490,9 +502,9 @@ export function BusinessPlanSection({
           iOS アプリからのお申し込みは App Store 経由で行います。
         </p>
       ) : null}
-      {isStripeBilling && !appStoreOnly ? (
+      {hasActiveWebBilling && !appStoreOnly ? (
         <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
-          Web（Stripe）でご契約中です。変更・解約は infomii.com のプラン画面から行えます。
+          Web でお申し込みのご契約です。変更・解約はこの画面から行えます。
         </p>
       ) : null}
       <div
@@ -763,11 +775,11 @@ export function BusinessPlanSection({
           </div>
         </div>
       </div>
-      {plan === "pro" && isStripeBilling && !appStoreOnly ? (
-        <p className="mt-2 text-xs text-slate-500">現在の契約から決済ページでBusinessプランへ変更できます。</p>
+      {plan === "pro" && hasActiveWebBilling && !appStoreOnly ? (
+        <p className="mt-2 text-xs text-slate-500">{WEB_BILLING_PRO_UPGRADE_HINT}</p>
       ) : null}
-      {isPaid && isActiveLike && isStripeBilling && !appStoreOnly ? (
-        <p className="mt-2 text-xs text-slate-500">解約は Stripe の管理画面でいつでも行えます。</p>
+      {isPaid && isActiveLike && hasActiveWebBilling && !appStoreOnly ? (
+        <p className="mt-2 text-xs text-slate-500">解約もこの画面の「サブスクリプションを管理」から行えます。</p>
       ) : null}
       {isPaid && isActiveLike && isAppleBilling ? (
         <p className="mt-2 text-xs text-slate-500">
