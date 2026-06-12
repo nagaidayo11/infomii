@@ -1,4 +1,4 @@
-import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
+import { INFOMII_PUBLIC_ORIGIN, shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 
 /** In-app shell Plan tab (StoreKit billing). */
@@ -19,4 +19,11 @@ export function navigateToAppBilling(): void {
 export function openAppleSubscriptionManagement(): void {
   if (typeof window === "undefined") return;
   window.location.assign(APPLE_SUBSCRIPTIONS_URL);
+}
+
+/** Stripe / Web 契約のプラン変更・解約（アプリ内 WebView から本番 Web へ） */
+export function openWebBillingManagement(): void {
+  if (typeof window === "undefined") return;
+  const base = INFOMII_PUBLIC_ORIGIN.replace(/\/$/, "");
+  window.location.assign(`${base}/settings/billing`);
 }

@@ -787,6 +787,7 @@ export function Editor2({
       "accent",
     ]);
 
+    const requiredLocales: SupportedLocale[] = ["ja", "en", "zh", "ko"];
     const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
       if (typeof value === "string") {
         const ja = value.trim();
@@ -798,7 +799,11 @@ export function Editor2({
         const localized = value as Record<string, unknown>;
         if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
           const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
-          if (ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
+          const hasMissingLocale = requiredLocales.some((localeCode) => {
+            const val = localized[localeCode];
+            return typeof val !== "string" || val.trim().length === 0;
+          });
+          if (hasMissingLocale && ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
           return out;
         }
       }
@@ -812,14 +817,20 @@ export function Editor2({
       return out;
     };
 
-    const translateBatch = async (targets: string[]) => {
+    const translateBatchChunk = async (targets: string[], attempt = 1): Promise<void> => {
       if (targets.length === 0) return;
       const res = await fetch("/api/ai/translate-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texts: targets }),
       });
-      if (!res.ok) throw new Error("batch translate failed");
+      if (!res.ok) {
+        if (attempt < 2) {
+          await translateBatchChunk(targets, attempt + 1);
+          return;
+        }
+        throw new Error(`batch translate failed (${res.status})`);
+      }
       const data = (await res.json()) as { items?: Array<{ i: number; en: string; zh: string; ko: string }> };
       const items = Array.isArray(data.items) ? data.items : [];
       for (const item of items) {
@@ -828,6 +839,13 @@ export function Editor2({
         if (typeof item.en === "string" && typeof item.zh === "string" && typeof item.ko === "string") {
           cache.set(source, { en: item.en, zh: item.zh, ko: item.ko });
         }
+      }
+    };
+
+    const translateBatch = async (targets: string[]) => {
+      const chunkSize = 25;
+      for (let offset = 0; offset < targets.length; offset += chunkSize) {
+        await translateBatchChunk(targets.slice(offset, offset + chunkSize));
       }
     };
 
@@ -959,10 +977,14 @@ export function Editor2({
     try {
       const translatedCount = await translateAllCardsToMultilingual();
       if (translatedCount > 0) {
-        await trackCurrentHotelTranslationRun({
-          translatedItems: translatedCount,
-          source: flow === "preview" ? "preview" : "pre_publish",
-        });
+        try {
+          await trackCurrentHotelTranslationRun({
+            translatedItems: translatedCount,
+            source: flow === "preview" ? "preview" : "pre_publish",
+          });
+        } catch {
+          /* translation usage logging must not block publish */
+        }
       }
       const latestCards = useEditor2Store.getState().cards;
       const remainingTargets = Array.from(

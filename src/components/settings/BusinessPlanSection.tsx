@@ -17,7 +17,7 @@ import {
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
-import { openAppleSubscriptionManagement } from "@/lib/app-billing-nav";
+import { openAppleSubscriptionManagement, openWebBillingManagement } from "@/lib/app-billing-nav";
 import { AppPlanBillingPanel } from "@/components/app-shell/views/AppPlanBillingPanel";
 import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
 import { billingIntervalLabel } from "@/lib/billing-interval";
@@ -128,11 +128,21 @@ export function BusinessPlanSection({
 
   useEffect(() => {
     if (didAutoSyncRef.current) return;
-    if (!roleLoaded || !canManageBilling) return;
+    if (!roleLoaded || !canManageBilling || subscription === undefined) return;
     if (!appStoreOnly && !(useIosIap && nativeIapReady)) return;
     didAutoSyncRef.current = true;
+    if (isStripeBilling) return;
     void syncPlanFromApple();
-  }, [appStoreOnly, canManageBilling, nativeIapReady, roleLoaded, syncPlanFromApple, useIosIap]);
+  }, [
+    appStoreOnly,
+    canManageBilling,
+    isStripeBilling,
+    nativeIapReady,
+    roleLoaded,
+    subscription,
+    syncPlanFromApple,
+    useIosIap,
+  ]);
 
   const confirmExternalPayment = useCallback((): boolean => {
     return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
@@ -203,9 +213,7 @@ export function BusinessPlanSection({
       return;
     }
     if (appStoreOnly && isStripeBilling) {
-      setMessage(
-        "Web でご契約中のプランです。プランの変更・解約はブラウザ（infomii.com）の設定から行ってください。",
-      );
+      openWebBillingManagement();
       return;
     }
     if (useIosIap && (isAppleBilling || appStoreOnly)) {
@@ -351,11 +359,8 @@ export function BusinessPlanSection({
           ? () => void openPortal()
           : undefined;
 
-  const showStripeWebContractNotice = appStoreOnly && isPaid && isStripeBilling;
-  const showAppPurchaseActions = !showStripeWebContractNotice;
-
   const billingIntervalToggle =
-    useIosIap && showAppPurchaseActions ? (
+    useIosIap ? (
       <AppSegmentedControl
         options={[
           { id: "monthly", label: "月払い" },
@@ -391,41 +396,40 @@ export function BusinessPlanSection({
           </div>
           {(statusLabel || showNextRenewal || showValidUntil || activeBillingInterval || planSyncing) && (
             <div className="app-plan-hero-meta">
-              {planSyncing ? <span>App Store と同期中…</span> : null}
-              {!planSyncing && statusLabel ? <span>{statusLabel}</span> : null}
-              {!planSyncing && activeBillingInterval ? (
+              {planSyncing && !isStripeBilling ? <span>App Store と同期中…</span> : null}
+              {(!planSyncing || isStripeBilling) && statusLabel ? <span>{statusLabel}</span> : null}
+              {(!planSyncing || isStripeBilling) && activeBillingInterval ? (
                 <span>{billingIntervalLabel(activeBillingInterval)}</span>
               ) : null}
-              {!planSyncing && showNextRenewal ? <span>次回更新 {currentPeriodEndLabel}</span> : null}
-              {!planSyncing && showValidUntil && !showNextRenewal ? (
+              {(!planSyncing || isStripeBilling) && showNextRenewal ? (
+                <span>次回更新 {currentPeriodEndLabel}</span>
+              ) : null}
+              {(!planSyncing || isStripeBilling) && showValidUntil && !showNextRenewal ? (
                 <span>有効期限 {periodLabel}</span>
               ) : null}
             </div>
           )}
         </div>
 
-        {showStripeWebContractNotice ? (
-          <p className="app-plan-footnote app-plan-footnote--warn">
-            Web でご契約中です。変更・解約は infomii.com の設定から行ってください。
-          </p>
-        ) : null}
-
         <AppPlanBillingPanel
           plan={plan}
           isPaid={isPaid}
           isAppleBilling={isAppleBilling}
+          isStripeBilling={isStripeBilling}
           billingInterval={billingInterval}
           activeBillingInterval={activeBillingInterval}
           billingIntervalToggle={billingIntervalToggle}
           busyAction={busyAction}
           canManageBilling={canManageBilling}
-          showAppPurchaseActions={showAppPurchaseActions}
           onSubscribePro={() => void openCheckout("pro")}
           onSubscribeBusiness={() => void openCheckout("business")}
           onUpgradeBusiness={() =>
-            void (useIosIap && isAppleBilling ? openApplePurchase("business") : openCheckout("business"))
+            void (useIosIap && isAppleBilling && !isStripeBilling
+              ? openApplePurchase("business")
+              : openWebBillingManagement())
           }
           onSwitchToAnnual={() => void openSwitchToAnnual()}
+          onManageWebBilling={() => openWebBillingManagement()}
           message={message}
         />
       </div>
@@ -453,12 +457,11 @@ export function BusinessPlanSection({
           iOS アプリからのお申し込みは App Store 経由で行います。
         </p>
       ) : null}
-      {showStripeWebContractNotice ? (
-        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-900">
-          現在 Web でご契約中です。プランの変更・解約はブラウザ（infomii.com）の設定から行ってください。
+      {isStripeBilling && !appStoreOnly ? (
+        <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
+          Web（Stripe）でご契約中です。変更・解約は infomii.com のプラン画面から行えます。
         </p>
       ) : null}
-      {showAppPurchaseActions ? (
       <div
         className={
           isAppLayout
@@ -516,7 +519,7 @@ export function BusinessPlanSection({
             </button>
           </>
         ) : null}
-        {plan === "pro" && showAppPurchaseActions ? (
+        {plan === "pro" ? (
           <>
             <button
               type="button"
@@ -548,7 +551,7 @@ export function BusinessPlanSection({
             </button>
           </>
         ) : null}
-        {plan === "business" && showAppPurchaseActions ? (
+        {plan === "business" ? (
           <>
             <button
               type="button"
@@ -575,7 +578,6 @@ export function BusinessPlanSection({
           </>
         ) : null}
       </div>
-      ) : null}
       <div
         className={
           isAppLayout
