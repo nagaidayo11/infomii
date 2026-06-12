@@ -13,10 +13,8 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = Path(__file__).resolve().parents[3]
 ASSETS = ROOT / "assets"
 AI_SOURCE = ASSETS / "icon-ai-source.png"
-WEB_ICON = REPO_ROOT / "public" / "icon-512.png"
 BRAND = (22, 197, 154)
 SIZE = 1024
 
@@ -86,17 +84,7 @@ def denoise_ai_icon(img: Image.Image) -> Image.Image:
     return cleaned.filter(ImageFilter.UnsharpMask(radius=1.1, percent=100, threshold=4))
 
 
-def build_clean_brand_icon(size: int = SIZE) -> Image.Image:
-    """Flat teal + white i — matches public/icon-512.png (no black outline)."""
-    canvas = Image.new("RGBA", (size, size), (*BRAND, 255))
-    draw_clean_i(canvas, cx=size / 2, cy=size / 2, scale=size * 0.42)
-    return canvas
-
-
 def build_app_icon(source: Image.Image, size: int = SIZE) -> Image.Image:
-    if WEB_ICON.exists():
-        web = Image.open(WEB_ICON).convert("RGBA")
-        return web.resize((size, size), Image.Resampling.LANCZOS)
     crop = crop_ai_content(source)
     upscaled = crop.resize((size, size), Image.Resampling.LANCZOS)
     return denoise_ai_icon(upscaled)
@@ -142,12 +130,11 @@ def build_monochrome(icon: Image.Image) -> Image.Image:
 
 
 def main() -> None:
-    if WEB_ICON.exists():
-        icon = build_app_icon(Image.open(WEB_ICON).convert("RGBA"))
-    elif AI_SOURCE.exists():
-        icon = build_app_icon(Image.open(AI_SOURCE).convert("RGBA"))
-    else:
-        icon = build_clean_brand_icon()
+    if not AI_SOURCE.exists():
+        raise SystemExit(f"Missing AI source: {AI_SOURCE}")
+
+    source = Image.open(AI_SOURCE).convert("RGBA")
+    icon = build_app_icon(source)
     splash = build_splash_glyph()
     bg = Image.new("RGBA", (SIZE, SIZE), (*BRAND, 255))
 
