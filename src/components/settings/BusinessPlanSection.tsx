@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
-  purchaseAppleSubscription,
+  buildOptimisticAppleIapResult,
+  requestAppleStorePurchase,
   restoreAppleSubscriptions,
+  syncApplePurchaseAfterNative,
   syncAppleSubscriptionToAccount,
   type VerifyAppleIapResult,
 } from "@/lib/apple-iap-client";
@@ -47,6 +49,15 @@ async function reloadSubscriptionWithRetry(
     const sub = await load();
     if (sub?.plan === expectPlan) return;
   }
+}
+
+function resolveOptimisticPlan(
+  result: VerifyAppleIapResult,
+  targetPlan: VerifyAppleIapResult["plan"],
+): VerifyAppleIapResult["plan"] {
+  const rank = (value: VerifyAppleIapResult["plan"]) =>
+    value === "business" ? 2 : value === "pro" ? 1 : 0;
+  return rank(result.plan) >= rank(targetPlan) ? result.plan : targetPlan;
 }
 
 type BusinessPlanSectionProps = {
@@ -219,20 +230,31 @@ export function BusinessPlanSection({
       setMessage(null);
       setBusyAction(targetPlan);
       try {
-        const result = await purchaseAppleSubscription(targetPlan, interval);
-        const planRank = (value: VerifyAppleIapResult["plan"]) =>
-          value === "business" ? 2 : value === "pro" ? 1 : 0;
-        const optimisticPlan =
-          planRank(result.plan) >= planRank(targetPlan) ? result.plan : targetPlan;
+        const purchase = await requestAppleStorePurchase(targetPlan, interval);
+        const optimistic = buildOptimisticAppleIapResult(purchase, targetPlan);
+        const optimisticPlan = resolveOptimisticPlan(optimistic, targetPlan);
         setSubscription((current) =>
-          mergeAppleIapResultIntoSubscription(current, { ...result, plan: optimisticPlan }),
+          mergeAppleIapResultIntoSubscription(current, { ...optimistic, plan: optimisticPlan }),
         );
         setBusyAction(null);
+
         const planLabel =
           optimisticPlan === "business" ? "Business" : optimisticPlan === "pro" ? "Pro" : "Free";
         const intervalLabel = interval === "yearly" ? "年払い" : "月払い";
         setMessage(`App Store でのお申し込みが完了しました。（${planLabel}プラン・${intervalLabel}）`);
-        void reloadSubscriptionWithRetry(load, optimisticPlan);
+
+        void (async () => {
+          try {
+            const synced = await syncApplePurchaseAfterNative(purchase, targetPlan);
+            const finalPlan = resolveOptimisticPlan(synced, targetPlan);
+            setSubscription((current) =>
+              mergeAppleIapResultIntoSubscription(current, { ...synced, plan: finalPlan }),
+            );
+            await reloadSubscriptionWithRetry(load, finalPlan);
+          } catch {
+            await reloadSubscriptionWithRetry(load, optimisticPlan);
+          }
+        })();
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         if (!msg.includes("キャンセル")) {

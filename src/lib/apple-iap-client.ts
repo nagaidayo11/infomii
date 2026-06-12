@@ -6,7 +6,12 @@ import {
   type AppleIapInterval,
   type AppleIapPlan,
 } from "@/lib/apple-iap-products";
-import { isNativeIapAvailable, requestNativeIapPurchase, requestNativeIapRestore } from "@/lib/native-iap";
+import {
+  isNativeIapAvailable,
+  requestNativeIapPurchase,
+  requestNativeIapRestore,
+  type NativeIapPurchaseResult,
+} from "@/lib/native-iap";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 export type VerifyAppleIapResult = {
@@ -17,6 +22,43 @@ export type VerifyAppleIapResult = {
   originalTransactionId: string | null;
   currentPeriodEnd: string | null;
 };
+
+const SERVER_SYNC_TIMEOUT_MS = 12_000;
+const RESTORE_SYNC_TIMEOUT_MS = 8_000;
+
+function planRank(value: VerifyAppleIapResult["plan"] | AppleIapPlan): number {
+  if (value === "business") return 2;
+  if (value === "pro") return 1;
+  return 0;
+}
+
+function promiseWithTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallback: T,
+): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(fallback);
+    }, timeoutMs);
+    promise
+      .then((value) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        resolve(fallback);
+      });
+  });
+}
 
 async function getAccessToken(): Promise<string> {
   const supabase = getBrowserSupabaseClient();
@@ -29,6 +71,21 @@ async function getAccessToken(): Promise<string> {
     throw new Error("ログインが必要です。サインインしてから再度お試しください。");
   }
   return session.access_token;
+}
+
+export function buildOptimisticAppleIapResult(
+  purchase: Pick<NativeIapPurchaseResult, "productId" | "originalTransactionId">,
+  expectedPlan?: AppleIapPlan,
+): VerifyAppleIapResult {
+  const plan = mapAppleProductIdToPlan(purchase.productId) ?? expectedPlan ?? "pro";
+  return {
+    ok: true,
+    plan,
+    status: "active",
+    productId: purchase.productId,
+    originalTransactionId: purchase.originalTransactionId ?? null,
+    currentPeriodEnd: null,
+  };
 }
 
 export async function verifyAppleIapTransaction(params: {
@@ -54,67 +111,9 @@ export async function verifyAppleIapTransaction(params: {
 }
 
 async function syncApplePurchaseToServer(
-  purchase: Awaited<ReturnType<typeof requestNativeIapPurchase>>,
+  purchase: NativeIapPurchaseResult,
 ): Promise<VerifyAppleIapResult> {
   return verifyAppleIapTransaction({
-    transactionId: purchase.transactionId,
-    signedTransactionInfo: purchase.signedTransactionInfo,
-    environment: purchase.environment,
-    productId: purchase.productId,
-  });
-}
-
-export async function purchaseAppleSubscription(
-  plan: AppleIapPlan,
-  interval: AppleIapInterval = "monthly",
-): Promise<VerifyAppleIapResult> {
-  if (!isNativeIapAvailable()) {
-    throw new Error("App Store 課金は iOS アプリ内でのみ利用できます");
-  }
-  const productId = getAppleProductId(plan, interval);
-  const purchase = await requestNativeIapPurchase(productId);
-  let result = await syncApplePurchaseToServer(purchase);
-
-  const planRank = (value: VerifyAppleIapResult["plan"] | AppleIapPlan) =>
-    value === "business" ? 2 : value === "pro" ? 1 : 0;
-
-  const expectedRank = planRank(plan);
-  if (planRank(result.plan) < expectedRank) {
-    try {
-      result = await syncAppleSubscriptionToAccount({
-        transactionId: purchase.transactionId,
-        signedTransactionInfo: purchase.signedTransactionInfo,
-        environment: purchase.environment,
-        productId: purchase.productId,
-      });
-    } catch {
-      /* fall through to restore */
-    }
-  }
-
-  if (planRank(result.plan) < expectedRank) {
-    result = await syncAppleSubscriptionFromStore();
-  }
-
-  if (planRank(result.plan) < expectedRank) {
-    const purchasedPlan = mapAppleProductIdToPlan(purchase.productId);
-    if (purchasedPlan === plan) {
-      throw new Error(
-        "App Store での購入は完了しましたが、プランの反映に失敗しました。設定の「購入を復元」をお試しください。",
-      );
-    }
-  }
-
-  return result;
-}
-
-/** Settings → Restore purchases (App Store Guideline 3.1.1). */
-export async function restoreAppleSubscriptions(): Promise<VerifyAppleIapResult> {
-  if (!isNativeIapAvailable()) {
-    throw new Error("購入の復元は iOS アプリ内でのみ利用できます");
-  }
-  const purchase = await requestNativeIapRestore();
-  return syncAppleSubscriptionToAccount({
     transactionId: purchase.transactionId,
     signedTransactionInfo: purchase.signedTransactionInfo,
     environment: purchase.environment,
@@ -153,4 +152,87 @@ async function syncAppleSubscriptionFromStore(): Promise<VerifyAppleIapResult> {
     environment: purchase.environment,
     productId: purchase.productId,
   });
+}
+
+/** Server sync after native purchase. Never blocks on restore longer than RESTORE_SYNC_TIMEOUT_MS. */
+export async function syncApplePurchaseAfterNative(
+  purchase: NativeIapPurchaseResult,
+  expectedPlan: AppleIapPlan,
+): Promise<VerifyAppleIapResult> {
+  const fallback = buildOptimisticAppleIapResult(purchase, expectedPlan);
+  const expectedRank = planRank(expectedPlan);
+
+  let result = fallback;
+  try {
+    result = await promiseWithTimeout(
+      syncApplePurchaseToServer(purchase),
+      SERVER_SYNC_TIMEOUT_MS,
+      fallback,
+    );
+  } catch {
+    result = fallback;
+  }
+
+  if (planRank(result.plan) >= expectedRank) {
+    return result;
+  }
+
+  try {
+    result = await promiseWithTimeout(
+      syncAppleSubscriptionToAccount({
+        transactionId: purchase.transactionId,
+        signedTransactionInfo: purchase.signedTransactionInfo,
+        environment: purchase.environment,
+        productId: purchase.productId,
+      }),
+      SERVER_SYNC_TIMEOUT_MS,
+      fallback,
+    );
+  } catch {
+    result = fallback;
+  }
+
+  if (planRank(result.plan) >= expectedRank) {
+    return result;
+  }
+
+  try {
+    result = await promiseWithTimeout(
+      syncAppleSubscriptionFromStore(),
+      RESTORE_SYNC_TIMEOUT_MS,
+      fallback,
+    );
+  } catch {
+    result = fallback;
+  }
+
+  return planRank(result.plan) >= expectedRank ? result : fallback;
+}
+
+export async function requestAppleStorePurchase(
+  plan: AppleIapPlan,
+  interval: AppleIapInterval = "monthly",
+): Promise<NativeIapPurchaseResult> {
+  if (!isNativeIapAvailable()) {
+    throw new Error("App Store 課金は iOS アプリ内でのみ利用できます");
+  }
+  return requestNativeIapPurchase(getAppleProductId(plan, interval));
+}
+
+export async function purchaseAppleSubscription(
+  plan: AppleIapPlan,
+  interval: AppleIapInterval = "monthly",
+): Promise<VerifyAppleIapResult> {
+  const purchase = await requestAppleStorePurchase(plan, interval);
+  return syncApplePurchaseAfterNative(purchase, plan);
+}
+
+/** Settings → Restore purchases (App Store Guideline 3.1.1). */
+export async function restoreAppleSubscriptions(): Promise<VerifyAppleIapResult> {
+  if (!isNativeIapAvailable()) {
+    throw new Error("購入の復元は iOS アプリ内でのみ利用できます");
+  }
+  const purchase = await requestNativeIapRestore();
+  const plan = mapAppleProductIdToPlan(purchase.productId) ?? "pro";
+  return syncApplePurchaseAfterNative(purchase, plan);
 }

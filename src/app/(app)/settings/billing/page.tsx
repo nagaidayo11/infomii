@@ -5,7 +5,7 @@ import { AppBillingView } from "@/components/app-shell/views/AppBillingView";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
 /**
- * プラン・請求（アプリタブ「プラン」向け）。Stripe Checkout / Customer Portal。
+ * プラン・請求（Web ブラウザ向け）。
  */
 export default function SettingsBillingPage() {
   const { isAppShell } = useClientShell();
@@ -19,7 +19,7 @@ export default function SettingsBillingPage() {
       <header className="app-page-header">
         <h1 className="app-page-title">プラン</h1>
         <p className="app-page-subtitle">
-          料金プランの確認とアップグレード。お支払いは Stripe の安全な決済ページで行います。
+          料金プランの確認とアップグレード。お支払いは安全な決済ページで行います。
         </p>
       </header>
 
