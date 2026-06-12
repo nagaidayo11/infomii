@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/app-store-compliance";
 
 export default function RefundPage() {
   return (
@@ -31,7 +32,9 @@ export default function RefundPage() {
               <p>
                 返金・請求に関するお問い合わせ:
                 {" "}
-                {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@informe.jp"}
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700 underline">
+                  {SUPPORT_EMAIL}
+                </a>
               </p>
             </section>
           </div>

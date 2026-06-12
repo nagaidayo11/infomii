@@ -1,7 +1,7 @@
 "use client";
 
-import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
+import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
@@ -38,8 +38,6 @@ export function AppSettingsPage() {
         >
           <AccountAuthLinkSection />
         </AppSettingsGroup>
-
-        <BusinessAuditLogExport />
 
         <AppSettingsGroup title="一般">
           <AppSettingsPushSection />

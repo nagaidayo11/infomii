@@ -38,13 +38,15 @@ Legal: Settings → Terms / Privacy / Commerce disclosure (also linked on Plan t
 
 ## App Store Connect — プライバシー
 
-申告の目安:
+申告の目安（**iOS アプリ** — `/privacy?client=app` と整合）:
 
 - 連絡先情報（メール）
 - ユーザー ID
-- 利用状況データ（GA4 本番時）
 - コンテンツ（ユーザー作成ページ）
-- 第三者: Supabase, Stripe, Google, Apple, AI プロバイダ
+- 購入履歴（App Store サブスクリプションの製品 ID・取引 ID 等。カード番号は Apple が処理）
+- 端末 ID（プッシュ通知トークン — 通知許可時）
+- 第三者: Supabase, Apple（Sign in with Apple / App Store 課金）, Google（OAuth）, Expo（プッシュ）, AI プロバイダ
+- **Stripe はアプリ内新規課金には不使用**（Web で既契約ユーザーの契約状態参照のみ）
 
 ## ユニバーサルリンク
 
