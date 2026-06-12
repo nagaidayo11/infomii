@@ -24,7 +24,7 @@ type AppPlanBillingPanelProps = {
   onSubscribeBusiness: () => void;
   onUpgradeBusiness: () => void;
   onSwitchToAnnual: () => void;
-  onManageWebBilling: () => void;
+  onManageExternalBilling: () => void;
   nextRenewalLabel?: string | null;
   message: string | null;
 };
@@ -67,7 +67,7 @@ export function AppPlanBillingPanel({
   onSubscribeBusiness,
   onUpgradeBusiness,
   onSwitchToAnnual,
-  onManageWebBilling,
+  onManageExternalBilling,
   nextRenewalLabel,
   message,
 }: AppPlanBillingPanelProps) {
@@ -80,7 +80,13 @@ export function AppPlanBillingPanel({
         ? PLAN_PRICE_DISPLAY.business.annual
         : null;
   const showAppleBillingActions = isAppleBilling && !isStripeBilling;
-  const showWebBillingActions = isStripeBilling && isPaid;
+  const showExternalBillingActions = isStripeBilling && isPaid;
+  const manageBilling = showAppleBillingActions
+    ? () => openAppleSubscriptionManagement()
+    : onManageExternalBilling;
+  const manageBillingLabel = showAppleBillingActions
+    ? "App Store で解約・プラン変更"
+    : "プランの変更・解約";
 
   return (
     <div className="app-plan-billing-panel">
@@ -101,7 +107,7 @@ export function AppPlanBillingPanel({
                 {activeBillingInterval === "yearly" ? `（${PLAN_ANNUAL_SAVINGS_LABEL}）` : null}
               </p>
             ) : null}
-            {!isStripeBilling ? (
+            {!showExternalBillingActions ? (
               <>
                 <p className="app-plan-interval-note">Business へのアップグレード時の周期</p>
                 {billingIntervalToggle}
@@ -157,74 +163,37 @@ export function AppPlanBillingPanel({
                 <ActionButton variant="secondary" disabled={busy} onClick={onSwitchToAnnual}>
                   {busyAction === plan
                     ? "処理中…"
-                    : isStripeBilling
-                      ? `年払いに切り替える（Web）`
-                      : `年払いに切り替える（${annualPriceLabel ?? ""}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
+                    : `年払いに切り替える（${annualPriceLabel ?? ""}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
                 </ActionButton>
               ) : null}
-              {showWebBillingActions ? (
-                <>
-                  <ActionButton variant="primary" disabled={busy} onClick={onManageWebBilling}>
-                    Business にアップグレード（Web）
-                  </ActionButton>
-                  <ActionButton variant="secondary" disabled={busy} onClick={onManageWebBilling}>
-                    Web で解約・プラン変更
-                  </ActionButton>
-                </>
-              ) : (
-                <>
-                  <ActionButton variant="primary" disabled={busy} onClick={onUpgradeBusiness}>
-                    {busyAction === "business" ? "処理中…" : "Business にアップグレード（App Store）"}
-                  </ActionButton>
-                  {showAppleBillingActions ? (
-                    <ActionButton
-                      variant="secondary"
-                      disabled={busy}
-                      onClick={() => openAppleSubscriptionManagement()}
-                    >
-                      App Store で解約・プラン変更
-                    </ActionButton>
-                  ) : null}
-                </>
+              <ActionButton variant="primary" disabled={busy} onClick={onUpgradeBusiness}>
+                {busyAction === "business" ? "処理中…" : "Business にアップグレード"}
+              </ActionButton>
+              {(showAppleBillingActions || showExternalBillingActions) && (
+                <ActionButton variant="secondary" disabled={busy} onClick={manageBilling}>
+                  {manageBillingLabel}
+                </ActionButton>
               )}
             </>
           ) : null}
 
           {plan === "business" ? (
             <>
-              {isOnMonthly && showAppleBillingActions ? (
+              {isOnMonthly ? (
                 <ActionButton variant="primary" disabled={busy} onClick={onSwitchToAnnual}>
-                  {busyAction === plan
+                  {busyAction === plan || busyAction === "portal"
                     ? "処理中…"
                     : `年払いに切り替える（${annualPriceLabel ?? ""}・${PLAN_ANNUAL_SAVINGS_LABEL}）`}
                 </ActionButton>
               ) : null}
-              {isOnMonthly && showWebBillingActions ? (
-                <ActionButton variant="primary" disabled={busy} onClick={onSwitchToAnnual}>
-                  {busyAction === "portal" ? "処理中…" : "年払いに切り替える（Web）"}
+              {(showAppleBillingActions || showExternalBillingActions) && (
+                <ActionButton variant="secondary" disabled={busy} onClick={manageBilling}>
+                  {manageBillingLabel}
                 </ActionButton>
-              ) : null}
-              {showWebBillingActions ? (
-                <ActionButton variant="secondary" disabled={busy} onClick={onManageWebBilling}>
-                  Web で解約・プラン変更
-                </ActionButton>
-              ) : showAppleBillingActions ? (
-                <ActionButton
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => openAppleSubscriptionManagement()}
-                >
-                  App Store で解約・プラン変更
-                </ActionButton>
-              ) : null}
+              )}
             </>
           ) : null}
         </div>
-        {showWebBillingActions ? (
-          <p className="app-plan-interval-note mt-2">
-            Web（Stripe）でご契約中です。変更・解約は infomii.com のプラン画面から行えます。
-          </p>
-        ) : null}
       </div>
 
       {showAppleBillingActions ? (

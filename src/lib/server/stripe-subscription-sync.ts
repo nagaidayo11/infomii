@@ -182,7 +182,22 @@ export async function syncStripeSubscriptionForHotel(
     throw new Error(error.message);
   }
 
-  const subscriptionId = row?.stripe_subscription_id ?? null;
+  let subscriptionId = row?.stripe_subscription_id ?? null;
+  const customerId = row?.stripe_customer_id ?? null;
+
+  if (!subscriptionId && customerId) {
+    const listed = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 10,
+    });
+    const preferred =
+      listed.data.find((item) => item.status === "active" || item.status === "trialing") ??
+      listed.data[0] ??
+      null;
+    subscriptionId = preferred?.id ?? null;
+  }
+
   if (!subscriptionId) {
     return null;
   }

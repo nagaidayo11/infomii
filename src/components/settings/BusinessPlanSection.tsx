@@ -100,10 +100,20 @@ export function BusinessPlanSection({
           (sub.hasStripeCustomer && sub.billingProvider !== "apple"));
       if (role === "owner" && stripeManaged) {
         try {
-          await syncStripeSubscriptionFromServer();
+          const synced = await syncStripeSubscriptionFromServer();
           sub = await getCurrentHotelSubscription();
+          if (sub) {
+            sub = {
+              ...sub,
+              plan: synced.plan ?? sub.plan,
+              status: synced.status ?? sub.status,
+              currentPeriodEnd: synced.currentPeriodEnd ?? sub.currentPeriodEnd,
+              billingInterval: sub.billingInterval ?? synced.billingInterval,
+              billingProvider: sub.billingProvider ?? "stripe",
+            };
+          }
         } catch {
-          /* best-effort: show cached subscription if Stripe sync fails */
+          /* best-effort: show cached subscription if sync fails */
         }
       }
       setSubscription(sub);
@@ -269,6 +279,10 @@ export function BusinessPlanSection({
     }
 
     if (isStripeBilling) {
+      if (appStoreOnly) {
+        openWebBillingManagement();
+        return;
+      }
       if (!confirmExternalPayment()) return;
       setMessage(null);
       setBusyAction("portal");
@@ -443,7 +457,7 @@ export function BusinessPlanSection({
               : openWebBillingManagement())
           }
           onSwitchToAnnual={() => void openSwitchToAnnual()}
-          onManageWebBilling={() => openWebBillingManagement()}
+          onManageExternalBilling={() => openWebBillingManagement()}
           nextRenewalLabel={showNextRenewal ? currentPeriodEndLabel : null}
           message={message}
         />

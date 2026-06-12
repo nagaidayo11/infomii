@@ -24,6 +24,10 @@ export function inferSubscriptionBillingInterval(params: {
   ].filter((value): value is string => Boolean(value));
   if (monthlyIds.includes(stripePriceId)) return "monthly";
 
+  // Stripe Price ID suffix heuristic when public env IDs are not configured in the shell.
+  if (/annual|year/i.test(stripePriceId)) return "yearly";
+  if (/month/i.test(stripePriceId)) return "monthly";
+
   return null;
 }
 

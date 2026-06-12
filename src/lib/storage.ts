@@ -3975,8 +3975,16 @@ export async function createStripeCheckoutSession(
   return checkoutUrl;
 }
 
-/** Refresh Stripe subscription metadata (e.g. current_period_end) from Stripe API. */
-export async function syncStripeSubscriptionFromServer(): Promise<void> {
+export type StripeSubscriptionSyncPayload = {
+  ok: true;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string | null;
+  billingInterval: "monthly" | "yearly" | null;
+};
+
+/** Refresh subscription metadata (e.g. current_period_end) from the billing provider. */
+export async function syncStripeSubscriptionFromServer(): Promise<StripeSubscriptionSyncPayload> {
   const token = await getAccessTokenOrThrow();
   const response = await fetch("/api/stripe/sync", {
     method: "POST",
@@ -3985,10 +3993,11 @@ export async function syncStripeSubscriptionFromServer(): Promise<void> {
       Authorization: `Bearer ${token}`,
     },
   });
-  const payload = (await response.json()) as { message?: string };
-  if (!response.ok) {
-    throw new Error(payload.message || "Stripe 契約の同期に失敗しました");
+  const payload = (await response.json()) as StripeSubscriptionSyncPayload & { message?: string };
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload.message || "契約情報の同期に失敗しました");
   }
+  return payload;
 }
 
 export async function createStripePortalSession(): Promise<string> {
