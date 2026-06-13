@@ -4,7 +4,7 @@
  * App icon assets live in ./assets/
  * - icon-ai-source.png — original AI artwork (do not edit by hand)
  * - icon.png (1024×1024) — denoised full-bleed glossy icon (npm run icons:generate)
- * - splash-icon.png — white “i” on transparent; splash bg #16c59a
+ * - splash-icon.png — white “i” from app icon on transparent; splash bg #16c59a
  * - android-icon-foreground.png — same as icon.png
  * - favicon.png — Expo web preview
  */

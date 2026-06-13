@@ -3,7 +3,7 @@
 Regenerate Infomii mobile icon assets from the AI-designed source.
 
 - App icon: AI glossy squircle (full bleed), background denoised, glyph kept sharp
-- Splash: solid #16c59a + white “i” only (extracted from cleaned icon)
+- Splash: solid #16c59a + white “i” from app icon (same glyph as home screen)
 """
 
 from __future__ import annotations
@@ -113,8 +113,68 @@ def draw_clean_i(canvas: Image.Image, *, cx: float, cy: float, scale: float) -> 
     )
 
 
+def glyph_mask_center(img: Image.Image, *, dilate: int = 5) -> Image.Image:
+    """Glyph mask limited to center disk — excludes squircle corner gloss without cropping the i."""
+    w, h = img.size
+    cx, cy = w / 2, h / 2
+    max_r = min(w, h) * 0.38
+    max_r_sq = max_r * max_r
+    mask = Image.new("L", (w, h), 0)
+    mp = mask.load()
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            dx, dy = x - cx, y - cy
+            if dx * dx + dy * dy > max_r_sq:
+                continue
+            if is_glyph(*px[x, y]):
+                mp[x, y] = 255
+    if dilate > 1:
+        mask = mask.filter(ImageFilter.MaxFilter(dilate))
+    return mask
+
+
+def expand_bbox(bbox: tuple[int, int, int, int], pad: int, bounds: tuple[int, int]) -> tuple[int, int, int, int]:
+    max_x, max_y = bounds
+    return (
+        max(0, bbox[0] - pad),
+        max(0, bbox[1] - pad),
+        min(max_x, bbox[2] + pad),
+        min(max_y, bbox[3] + pad),
+    )
+
+
+def build_splash_glyph_from_icon(icon: Image.Image, size: int = SIZE) -> Image.Image:
+    """White i extracted from the app icon (same glyph as home screen), on transparent."""
+    w, h = icon.size
+    mask = glyph_mask_center(icon, dilate=5)
+    bbox = mask.getbbox()
+    if not bbox:
+        raise RuntimeError("Could not extract glyph from app icon")
+
+    pad = max(12, int(max(bbox[2] - bbox[0], bbox[3] - bbox[1]) * 0.06))
+    bbox = expand_bbox(bbox, pad, (w, h))
+
+    cropped_icon = icon.crop(bbox)
+    cropped_mask = mask.crop(bbox)
+    glyph = Image.new("RGBA", cropped_icon.size, (0, 0, 0, 0))
+    glyph.paste(cropped_icon, mask=cropped_mask)
+
+    gw, gh = glyph.size
+    # Leave safe margin on splash canvas so dot/stem anti-aliasing is not clipped.
+    target = size * 0.44
+    scale = target / max(gw, gh)
+    new_w = max(1, int(gw * scale))
+    new_h = max(1, int(gh * scale))
+    scaled = glyph.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(scaled, ((size - new_w) // 2, (size - new_h) // 2), scaled)
+    return canvas
+
+
 def build_splash_glyph(size: int = SIZE) -> Image.Image:
-    """White i on transparent — splash bg is solid #16c59a in app.config."""
+    """Deprecated fallback — prefer build_splash_glyph_from_icon."""
     big = Image.new("RGBA", (size * 2, size * 2), (0, 0, 0, 0))
     draw_clean_i(big, cx=size, cy=size, scale=size * 0.56)
     return big.resize((size, size), Image.Resampling.LANCZOS)
@@ -135,7 +195,7 @@ def main() -> None:
 
     source = Image.open(AI_SOURCE).convert("RGBA")
     icon = build_app_icon(source)
-    splash = build_splash_glyph()
+    splash = build_splash_glyph_from_icon(icon)
     bg = Image.new("RGBA", (SIZE, SIZE), (*BRAND, 255))
 
     icon_rgb = icon.convert("RGB")
