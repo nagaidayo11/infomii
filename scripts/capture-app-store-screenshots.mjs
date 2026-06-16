@@ -18,7 +18,7 @@ const ROOT = path.resolve(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "public/app-store/screenshots/raw");
 const BASE = process.env.APP_STORE_CAPTURE_BASE ?? "http://127.0.0.1:3000";
 
-const LAUNCH_ONBOARDING_KEY = "infomii_launch_onboarding_v1_completed";
+const LAUNCH_ONBOARDING_KEY = "infomii_launch_onboarding_v2_completed";
 const TEMPLATE_SLUG = "travel-group";
 const MARKETPLACE_SEED_VERSION = 15;
 const SAMPLE_SLUG = "okinawa-group-sample";
@@ -73,10 +73,11 @@ async function loginForCapture(page, env) {
     localStorage.setItem("infomii_onboarding_tour_completed", "1");
   }, LAUNCH_ONBOARDING_KEY);
   await page.reload({ waitUntil: "domcontentloaded", timeout: 120_000 });
-  await page.getByRole("button", { name: "メールでログイン" }).click();
-  await page.fill('input[type="email"]', email);
+  const emailInput = page.locator('input[type="email"]');
+  await emailInput.waitFor({ state: "visible", timeout: 60_000 });
+  await emailInput.fill(email);
   await page.fill('input[type="password"]', password);
-  await page.locator('button[type="submit"]').click();
+  await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/dashboard/, { timeout: 90_000 });
   await page.locator("text=AIでつくる").first().waitFor({ timeout: 60_000 });
   console.log("Logged in as", email);
