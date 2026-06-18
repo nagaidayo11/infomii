@@ -125,6 +125,24 @@ export function AnalyticsView() {
 
   const plan = (bootstrap?.subscription?.plan ?? null) as "free" | "pro" | "business" | null;
 
+  if (!loading && error) {
+    return (
+      <div className="app-main-container space-y-4">
+        <header className="app-page-header">
+          <h1 className="app-page-title">分析ダッシュボード</h1>
+        </header>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {error}
+        </div>
+        <p className="text-sm text-slate-600">
+          <Link href="/dashboard" className="font-medium text-slate-800 hover:text-slate-900">
+            ← ダッシュボードに戻る
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   if (!bootstrap && loading) {
     return (
       <div className="app-main-container space-y-6">

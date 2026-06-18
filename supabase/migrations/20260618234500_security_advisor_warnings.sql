@@ -410,7 +410,7 @@ using (
   user_id = auth.uid()
   and (
     coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is false
-    or exists (select 1 from public.hotel_memberships m where m.user_id = auth.uid())
+    or coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is true
   )
 );
 
@@ -424,7 +424,7 @@ with check (
   )
   and (
     coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is false
-    or exists (select 1 from public.hotel_memberships m where m.user_id = auth.uid())
+    or coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is true
   )
 );
 
@@ -434,14 +434,14 @@ using (
   user_id = auth.uid()
   and (
     coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is false
-    or exists (select 1 from public.hotel_memberships m where m.user_id = auth.uid())
+    or coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is true
   )
 )
 with check (
   user_id = auth.uid()
   and (
     coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is false
-    or exists (select 1 from public.hotel_memberships m where m.user_id = auth.uid())
+    or coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is true
   )
 );
 
@@ -451,7 +451,7 @@ using (
   user_id = auth.uid()
   and (
     coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is false
-    or exists (select 1 from public.hotel_memberships m where m.user_id = auth.uid())
+    or coalesce((auth.jwt()->>'is_anonymous')::boolean, false) is true
   )
 );
 
