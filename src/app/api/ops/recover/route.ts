@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeServerClient } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 import { isOpsAdminUser } from "@/lib/server/ops-auth";
 
@@ -154,12 +155,7 @@ async function ensureHotelScope(userId: string, email: string | null | undefined
     }
   }
 
-  const { error: ensureError } = await admin.rpc("ensure_hotel_subscription", {
-    target_hotel_id: hotelId,
-  });
-  if (ensureError) {
-    throw new Error(ensureError.message);
-  }
+  await ensureHotelSubscriptionRpc(hotelId);
 
   return hotelId;
 }

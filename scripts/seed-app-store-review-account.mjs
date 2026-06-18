@@ -92,7 +92,7 @@ async function ensureHotel(admin, userId, email) {
     console.log("Created workspace:", hotelId);
   }
 
-  const { error: ensureError } = await admin.rpc("ensure_hotel_subscription", {
+  const { error: ensureError } = await admin.schema("private").rpc("ensure_hotel_subscription", {
     target_hotel_id: hotelId,
   });
   if (ensureError) throw new Error(ensureError.message);

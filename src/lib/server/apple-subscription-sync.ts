@@ -4,6 +4,7 @@ import {
   syncStripeSubscriptionForHotel,
   type StripeSubscriptionSyncResult,
 } from "@/lib/server/stripe-subscription-sync";
+import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { updateHotelSubscription } from "@/lib/server/subscription-update";
 import {
@@ -125,8 +126,9 @@ export async function upsertAppleSubscriptionFromTransaction(params: {
 
   await assertAppleTransactionForHotel(hotelId, originalTransactionId);
 
+  await ensureHotelSubscriptionRpc(hotelId);
+
   const admin = getSupabaseAdminServerClient();
-  await admin.rpc("ensure_hotel_subscription", { target_hotel_id: hotelId });
 
   try {
     await updateHotelSubscription(admin, hotelId, {

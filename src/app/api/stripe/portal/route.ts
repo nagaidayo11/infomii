@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAppBaseUrl, getStripeServerClient } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
+import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 import { isNativeAppBillingRequest, NATIVE_APP_STRIPE_BLOCKED_MESSAGE } from "@/lib/server/billing-auth";
 
@@ -84,15 +85,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: OWNER_ONLY_BILLING_MESSAGE }, { status: 403 });
     }
 
-    const { error: ensureError } = await admin.rpc("ensure_hotel_subscription", {
-      target_hotel_id: hotelId,
-    });
-
-    if (ensureError) {
+    try {
+      await ensureHotelSubscriptionRpc(hotelId);
+    } catch (ensureError) {
+      const message = ensureError instanceof Error ? ensureError.message : "ensure failed";
       if (auditHotelId) {
-        await appendBillingLog(auditHotelId, "billing.portal_failed", `Portal失敗: ${ensureError.message}`);
+        await appendBillingLog(auditHotelId, "billing.portal_failed", `Portal失敗: ${message}`);
       }
-      return NextResponse.json({ message: ensureError.message }, { status: 500 });
+      return NextResponse.json({ message }, { status: 500 });
     }
 
     const { data: subscription, error: subError } = await admin

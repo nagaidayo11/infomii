@@ -8,6 +8,7 @@ import {
   getStripeServerClient,
 } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
 
 type PlanType = "free" | "pro" | "business";
 type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
@@ -138,12 +139,9 @@ async function upsertStripeSubscription(params: {
   cancelAt?: string | null;
   currentPeriodEnd?: string | null;
 }) {
+  await ensureHotelSubscriptionRpc(params.hotelId);
+
   const admin = getSupabaseAdminServerClient();
-
-  await admin.rpc("ensure_hotel_subscription", {
-    target_hotel_id: params.hotelId,
-  });
-
   const { error } = await admin
     .from("subscriptions")
     .update({

@@ -9,6 +9,7 @@ import {
   getStripeBusinessAnnualPriceId,
 } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 import { resolveMaxPublishedPagesByPlan } from "@/lib/plan-limits";
 
@@ -153,12 +154,9 @@ async function upsertStripeSubscription(params: {
   cancelAt?: string | null;
   currentPeriodEnd?: string | null;
 }) {
+  await ensureHotelSubscriptionRpc(params.hotelId);
+
   const admin = getSupabaseAdminServerClient();
-
-  await admin.rpc("ensure_hotel_subscription", {
-    target_hotel_id: params.hotelId,
-  });
-
   const { error } = await admin
     .from("subscriptions")
     .update({

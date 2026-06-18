@@ -28,6 +28,36 @@ import {
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
 
+async function postAuthenticatedWorkspaceApi<T extends Record<string, unknown>>(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<T> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase設定が未完了です");
+  }
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) {
+    throw new Error("ログインが必要です");
+  }
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const payload = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) {
+    throw new Error(typeof payload.error === "string" ? payload.error : "リクエストに失敗しました");
+  }
+  return payload;
+}
+
 function toError(error: unknown, fallback: string): Error {
   if (error instanceof Error) {
     if (error.message.includes("row-level security policy") && error.message.includes("hotel_memberships")) {
@@ -965,8 +995,8 @@ export async function ensureUserHotelScope(): Promise<string | null> {
         .eq("id", membership.hotel_id)
         .is("owner_user_id", null);
     }
-    await supabase.rpc("ensure_hotel_subscription", {
-      target_hotel_id: membership.hotel_id,
+    await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
+      hotel_id: membership.hotel_id,
     });
     return membership.hotel_id;
   }
@@ -1004,19 +1034,18 @@ export async function ensureUserHotelScopeForOnboarding(): Promise<string | null
     throw toError(membershipError, "施設所属の確認に失敗しました");
   }
   if (membership?.hotel_id) {
-    await supabase.rpc("ensure_hotel_subscription", {
-      target_hotel_id: membership.hotel_id,
+    await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
+      hotel_id: membership.hotel_id,
     });
     return membership.hotel_id;
   }
 
   const defaultName = buildDefaultHotelName(user.email);
-  const { data: hotelId, error: bootstrapError } = await supabase.rpc("bootstrap_user_workspace", {
-    default_name: defaultName,
-  });
-  if (bootstrapError) {
-    throw toError(bootstrapError, "ワークスペースの作成に失敗しました");
-  }
+  const bootstrapResult = await postAuthenticatedWorkspaceApi<{ hotel_id?: string }>(
+    "/api/workspace/bootstrap",
+    { default_name: defaultName },
+  );
+  const hotelId = bootstrapResult.hotel_id;
   if (typeof hotelId !== "string" || !hotelId) {
     throw new Error("ワークスペースの作成に失敗しました");
   }
@@ -2540,14 +2569,17 @@ export async function redeemHotelInvite(inputCode: string): Promise<void> {
     throw new Error("ユーザー情報の取得に失敗しました");
   }
 
-  const { data: hotelId, error } = await supabase.rpc("redeem_hotel_invite", {
-    input_code: code,
-  });
-  if (error) {
-    throw toError(error, "招待コードの適用に失敗しました");
+  let safeHotelId: string | null = null;
+  try {
+    const redeemResult = await postAuthenticatedWorkspaceApi<{ hotel_id?: string }>(
+      "/api/invite/redeem",
+      { code },
+    );
+    safeHotelId = typeof redeemResult.hotel_id === "string" ? redeemResult.hotel_id : null;
+  } catch (err) {
+    throw toError(err, "招待コードの適用に失敗しました");
   }
 
-  const safeHotelId = typeof hotelId === "string" ? hotelId : null;
   if (!safeHotelId) {
     return;
   }
