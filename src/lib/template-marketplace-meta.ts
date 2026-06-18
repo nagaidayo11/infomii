@@ -51,6 +51,11 @@ export function buildLpTemplatesLoginHref(category: string, starter: string): st
 
 export const TEMPLATE_MARKETPLACE_SECTIONS = [
   {
+    id: "hospitality",
+    label: "宿泊施設",
+    categories: [...HOTEL_MARKETPLACE_CATEGORIES],
+  },
+  {
     id: "personal-daily",
     label: "個人・日常",
     categories: ["travel", "oshi", "personal"] as const,
@@ -60,12 +65,23 @@ export const TEMPLATE_MARKETPLACE_SECTIONS = [
     label: "飲食・お店づくり",
     categories: ["food", "lightbiz"] as const,
   },
-  {
-    id: "hospitality",
-    label: "宿泊施設",
-    categories: [...HOTEL_MARKETPLACE_CATEGORIES],
-  },
 ] as const;
+
+export type TemplateMarketplaceAudience = "hotel" | "personal" | "all";
+
+export const TEMPLATE_AUDIENCE_SECTION_IDS: Record<
+  Exclude<TemplateMarketplaceAudience, "all">,
+  readonly string[]
+> = {
+  hotel: ["hospitality"],
+  personal: ["personal-daily", "food-shop"],
+};
+
+export const TEMPLATE_AUDIENCE_LABELS: Record<TemplateMarketplaceAudience, string> = {
+  hotel: "ホテル向け",
+  personal: "個人向け",
+  all: "すべて",
+};
 
 export const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   all: "すべて",

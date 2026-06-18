@@ -561,7 +561,13 @@ export function BusinessPlanSection({
         </p>
       ) : null}
       {hasActiveWebBilling && !appStoreOnly ? (
-        <p className="mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]">
+        <p
+          className={
+            isAppLayout
+              ? "mt-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--app-text-muted)]"
+              : "mt-3 text-sm leading-relaxed text-slate-600"
+          }
+        >
           Web でお申し込みのご契約です。変更・解約はこの画面から行えます。
         </p>
       ) : null}

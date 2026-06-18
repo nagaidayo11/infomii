@@ -209,7 +209,7 @@ export function GeneratePageFromDescription({
         </h2>
         {!isApp && (
           <p className="mt-1 text-sm text-slate-500">
-            旅行のしおりや推し活メモなど個人向けのほか、ホテル・旅館の館内案内も同じ要領で作れます。
+            ホテル・旅館の館内案内を中心に、旅行のしおりなど個人向けのページも同じ要領で作れます。
           </p>
         )}
         {isApp && (
@@ -241,7 +241,18 @@ export function GeneratePageFromDescription({
           <div className={isApp ? "space-y-2" : "space-y-3"}>
             {!isApp && (
               <div>
-                <p className="mb-2 text-xs font-medium text-slate-600">個人・友達に送る（例文）</p>
+                <p className="mb-2 text-xs font-semibold text-slate-700">宿泊施設向け（例文）</p>
+                <PromptChipRow
+                  templates={PROMPT_TEMPLATES_HOSPITALITY}
+                  loading={loading}
+                  onSelect={setDescription}
+                  chipClassName="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-900 transition hover:bg-emerald-100 disabled:opacity-60"
+                />
+              </div>
+            )}
+            {!isApp && (
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-500">個人・友達に送る（例文）</p>
                 <PromptChipRow templates={PROMPT_TEMPLATES_PERSONAL} loading={loading} onSelect={setDescription} />
               </div>
             )}
@@ -252,17 +263,7 @@ export function GeneratePageFromDescription({
                 onSelect={setDescription}
                 chipClassName={chipClassName}
               />
-            ) : (
-              <div>
-                <p className="mb-2 text-xs font-medium text-slate-600">宿泊施設向け（例文）</p>
-                <PromptChipRow
-                  templates={PROMPT_TEMPLATES_HOSPITALITY}
-                  loading={loading}
-                  onSelect={setDescription}
-                  chipClassName="rounded-full border border-slate-300/80 bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-200/80 disabled:opacity-60"
-                />
-              </div>
-            )}
+            ) : null}
           </div>
           <div>
             <label
@@ -282,7 +283,7 @@ export function GeneratePageFromDescription({
               placeholder={
                 isApp
                   ? "例: 友達と京都2泊3日の旅行。集合場所・持ち物・日程も入れて"
-                  : "例: 友達と沖縄3泊… / ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい、など自由に書いてください"
+                  : "例: ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい / 友達と沖縄3泊の旅行しおり、など自由に書いてください"
               }
               rows={isApp ? 4 : 3}
               className={
@@ -300,7 +301,7 @@ export function GeneratePageFromDescription({
               }
             >
               {!isApp && (
-                <span>コツ: 個人向けは時間・場所・持ち物。宿泊向けは Wi-Fi・食事・チェックアウト・連絡先があると良いです。</span>
+                <span>コツ: 宿泊向けは Wi-Fi・食事・チェックアウト・連絡先。個人向けは時間・場所・持ち物があると良いです。</span>
               )}
               <span>{description.trim().length} 文字</span>
             </p>

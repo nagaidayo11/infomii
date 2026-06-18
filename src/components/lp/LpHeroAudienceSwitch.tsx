@@ -5,8 +5,8 @@ import Link from "next/link";
 export type LpHeroAudience = "personal" | "hotel";
 
 const ITEMS: { id: LpHeroAudience; label: string; href: string }[] = [
-  { id: "personal", label: "個人向け", href: "/lp/saas" },
   { id: "hotel", label: "ホテル向け", href: "/lp/business" },
+  { id: "personal", label: "個人向け", href: "/lp/saas" },
 ];
 
 type Props = {

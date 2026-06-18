@@ -56,7 +56,7 @@ export function AppPageSetsList({
             <div key={set.id} className="app-page-set app-page-set--linked app-reveal">
               <div className="app-page-set-header">
                 <p className="app-page-set-title">{set.name}</p>
-                <span className="app-page-set-badge">ページ連携</span>
+                <span className="app-page-set-badge">宿泊者向け・連携</span>
               </div>
               <AppWorksList variant="grouped">
                 {set.pages.map((page) => {

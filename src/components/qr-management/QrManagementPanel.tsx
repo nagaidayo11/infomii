@@ -68,57 +68,53 @@ export function QrManagementPanel() {
 
   return (
     <AuthGate>
-      <div className="min-h-screen bg-slate-50 px-4 py-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                QR管理
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                ゲストページ用QRの発行・印刷とスキャン分析
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <Link
-                href="/dashboard/qr-generator"
-                className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
-              >
-                QR作成・印刷
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-slate-600 hover:text-slate-900"
-              >
-                ← ダッシュボード
-              </Link>
-            </div>
+      <div className="app-main-container space-y-6 sm:space-y-8">
+        <header className="app-page-header">
+          <h1 className="app-page-title">QR管理</h1>
+          <p className="app-page-subtitle">
+            ゲストページ用QRの発行・印刷とスキャン分析
+          </p>
+        </header>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/qr-generator"
+            className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+          >
+            QR作成・印刷
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+          >
+            ← ダッシュボード
+          </Link>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              {error}
-            </div>
-          )}
+        {loading ? (
+          <div className="space-y-4">
+            <div className="h-48 animate-pulse rounded-xl bg-slate-200" />
+            <div className="h-32 animate-pulse rounded-xl bg-slate-200" />
+          </div>
+        ) : (
+          <>
+            <QrCharts
+              daily={daily}
+              qrScans7d={metrics?.qrViews7d ?? 0}
+              mostViewedTitle={topQrPage?.title ?? null}
+              mostViewedQrCount={topQrPage?.qrViews ?? 0}
+            />
 
-          {loading ? (
-            <div className="space-y-4">
-              <div className="h-48 animate-pulse rounded-xl bg-slate-200" />
-              <div className="h-32 animate-pulse rounded-xl bg-slate-200" />
-            </div>
-          ) : (
-            <>
-              <QrCharts
-                daily={daily}
-                qrScans7d={metrics?.qrViews7d ?? 0}
-                mostViewedTitle={topQrPage?.title ?? null}
-                mostViewedQrCount={topQrPage?.qrViews ?? 0}
-              />
-
-              <section className="mt-8">
-                <h2 className="text-lg font-semibold text-slate-900">
-                  ページ別QR
-                </h2>
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900">
+                ページ別QR
+              </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   表示・PNG保存・A4印刷・URLコピー
                 </p>
@@ -144,7 +140,6 @@ export function QrManagementPanel() {
               </section>
             </>
           )}
-        </div>
       </div>
     </AuthGate>
   );

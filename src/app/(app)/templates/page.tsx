@@ -23,8 +23,11 @@ import {
 import {
   BTOC_MARKETPLACE_CATEGORIES,
   HOTEL_MARKETPLACE_CATEGORIES,
+  TEMPLATE_AUDIENCE_LABELS,
+  TEMPLATE_AUDIENCE_SECTION_IDS,
   TEMPLATE_CATEGORY_LABELS,
   TEMPLATE_MARKETPLACE_SECTIONS,
+  type TemplateMarketplaceAudience,
 } from "@/lib/template-marketplace-meta";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AppSection } from "@/components/app-shell/primitives/AppSection";
@@ -34,9 +37,15 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 
 const TEMPLATE_CATEGORIES = [
   { id: "all", label: TEMPLATE_CATEGORY_LABELS.all },
-  ...BTOC_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
   ...HOTEL_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
+  ...BTOC_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
 ] as const;
+
+const TEMPLATE_AUDIENCE_OPTIONS: { id: TemplateMarketplaceAudience; label: string }[] = [
+  { id: "hotel", label: TEMPLATE_AUDIENCE_LABELS.hotel },
+  { id: "personal", label: TEMPLATE_AUDIENCE_LABELS.personal },
+  { id: "all", label: TEMPLATE_AUDIENCE_LABELS.all },
+];
 
 const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
 
@@ -92,6 +101,7 @@ export default function TemplatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [audience, setAudience] = useState<TemplateMarketplaceAudience>("hotel");
   const [category, setCategory] = useState<string>("all");
   const [highlightSlug, setHighlightSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +123,11 @@ export default function TemplatesPage() {
     const paramCategory = searchParams.get("category");
     if (paramCategory && VALID_CATEGORY_IDS.has(paramCategory)) {
       setCategory(paramCategory);
+      if ((HOTEL_MARKETPLACE_CATEGORIES as readonly string[]).includes(paramCategory)) {
+        setAudience("hotel");
+      } else if ((BTOC_MARKETPLACE_CATEGORIES as readonly string[]).includes(paramCategory)) {
+        setAudience("personal");
+      }
     }
   }, [searchParams]);
 
@@ -160,9 +175,24 @@ export default function TemplatesPage() {
   }, []);
 
   const filtered = filterByCategory(templates, category);
+  const visibleCategories = useMemo(() => {
+    if (audience === "all") return TEMPLATE_CATEGORIES;
+    const allowed = new Set<string>([
+      "all",
+      ...(audience === "hotel" ? HOTEL_MARKETPLACE_CATEGORIES : BTOC_MARKETPLACE_CATEGORIES),
+    ]);
+    return TEMPLATE_CATEGORIES.filter((c) => allowed.has(c.id));
+  }, [audience]);
+  useEffect(() => {
+    if (visibleCategories.some((c) => c.id === category)) return;
+    setCategory("all");
+  }, [audience, category, visibleCategories]);
   const groupedWhenAll = useMemo(
     () =>
-      TEMPLATE_MARKETPLACE_SECTIONS.flatMap((section) =>
+      TEMPLATE_MARKETPLACE_SECTIONS.filter((section) => {
+        if (audience === "all") return true;
+        return (TEMPLATE_AUDIENCE_SECTION_IDS[audience] as readonly string[]).includes(section.id);
+      }).flatMap((section) =>
         section.categories.map((catId) => ({
           sectionId: section.id,
           sectionLabel: section.label,
@@ -171,7 +201,7 @@ export default function TemplatesPage() {
           items: filterByCategory(templates, catId),
         })),
       ).filter((g) => g.items.length > 0),
-    [templates],
+    [templates, audience],
   );
   const selectedCategoryLabel =
     TEMPLATE_CATEGORIES.find((c) => c.id === category)?.label ?? "選択中カテゴリ";
@@ -367,13 +397,21 @@ export default function TemplatesPage() {
       <>
         <AppTabPage
           title="テンプレート"
-          description="型を選んで、すぐつくれます"
+          description="ホテル・旅館の館内案内から、旅行しおりまで。用途別の型からページを作成できます。"
           className="pb-4"
           contentClassName="space-y-4"
         >
           <AppSection revealDelay={0}>
             <AppSegmentedControl
-              options={TEMPLATE_CATEGORIES}
+              options={TEMPLATE_AUDIENCE_OPTIONS}
+              value={audience}
+              onChange={(next) => setAudience(next as TemplateMarketplaceAudience)}
+              ariaLabel="テンプレートの向け先"
+            />
+          </AppSection>
+          <AppSection revealDelay={0}>
+            <AppSegmentedControl
+              options={visibleCategories}
               value={category}
               onChange={setCategory}
               ariaLabel="テンプレートカテゴリ"
@@ -470,12 +508,30 @@ export default function TemplatesPage() {
       <header className="app-page-header">
         <h1 className="app-page-title">テンプレート</h1>
         <p className="app-page-subtitle">
-          旅行しおり・推し活・おでかけから、ホテル・旅館の館内案内まで。用途別の型からページを作成できます。
+          ホテル・旅館の館内案内を中心に、旅行しおりなど個人向けの型も選べます。用途別テンプレートからページを作成できます。
         </p>
       </header>
 
+      <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        {TEMPLATE_AUDIENCE_OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => setAudience(option.id)}
+            className={
+              "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+              (audience === option.id
+                ? "bg-slate-900 !text-white font-semibold"
+                : "text-slate-600 hover:bg-slate-100 font-medium")
+            }
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
-        {TEMPLATE_CATEGORIES.map((c) => (
+        {visibleCategories.map((c) => (
           <button
             key={c.id}
             type="button"

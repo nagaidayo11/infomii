@@ -257,8 +257,9 @@ export default function TeamPage() {
     try {
       const supabase = getBrowserSupabaseClient();
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
-      const token = session?.access_token;
+      const token = session?.access_token ?? null;
       setCurrentUserId(session?.user?.id ?? null);
+
       const membersApi = token
         ? await fetch("/api/team/members", {
             headers: { Authorization: `Bearer ${token}` },
@@ -273,11 +274,10 @@ export default function TeamPage() {
       const isBiz = membersApi.ok;
       setIsBusiness(isBiz);
       setBusinessChecked(true);
+
       if (isBiz) {
         const invitesData = await listCurrentHotelInvites();
         setInvites(invitesData);
-        await fetchApprovals(token ?? null, approvalFilter, true);
-        await fetchAuditLogs(token ?? null, true);
       } else {
         setInvites([]);
         setApprovals([]);
@@ -288,29 +288,30 @@ export default function TeamPage() {
     } finally {
       setLoading(false);
     }
-  }, [approvalFilter, fetchApprovals, fetchAuditLogs]);
+  }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    if (!businessChecked || !isBusiness) return;
+    if (loading || !businessChecked || !isBusiness) return;
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       await fetchApprovals(session?.access_token ?? null, approvalFilter, true);
     })();
-  }, [approvalFilter, businessChecked, fetchApprovals, isBusiness]);
+  }, [approvalFilter, businessChecked, fetchApprovals, isBusiness, loading]);
 
   useEffect(() => {
-    if (!businessChecked || !isBusiness || !(currentRole === "owner" || currentRole === "admin")) return;
+    if (loading || !businessChecked || !isBusiness) return;
+    if (currentRole !== "owner" && currentRole !== "admin") return;
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       await fetchAuditLogs(session?.access_token ?? null, true);
     })();
-  }, [businessChecked, currentRole, fetchAuditLogs, isBusiness]);
+  }, [businessChecked, currentRole, fetchAuditLogs, isBusiness, loading]);
 
   async function handleCreateInvite() {
     if (!isBusiness) {
