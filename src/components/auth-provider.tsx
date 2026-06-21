@@ -11,6 +11,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { clearCachedAuthScopeUserId } from "@/lib/session-resume-cache";
 
 type AuthContextValue = {
   user: User | null;
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     const client = getBrowserSupabaseClient();
+    clearCachedAuthScopeUserId();
     if (!client) {
       return;
     }

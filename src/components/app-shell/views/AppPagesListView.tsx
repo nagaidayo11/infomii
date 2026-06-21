@@ -22,19 +22,26 @@ import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
+import {
+  getPagesListViewCache,
+  setPagesListViewCache,
+} from "@/lib/session-resume-cache";
 
 export function AppPagesListView() {
   const router = useRouter();
-  const [sets, setSets] = useState<PageConnectionSet[]>([]);
+  const initialCache = getPagesListViewCache();
+  const [sets, setSets] = useState<PageConnectionSet[]>(initialCache?.sets ?? []);
   const [infoBySlug, setInfoBySlug] = useState<
     Map<string, { status?: string; updatedAt?: string }>
-  >(new Map());
-  const [loading, setLoading] = useState(true);
+  >(initialCache?.infoBySlug ?? new Map());
+  const [loading, setLoading] = useState(!initialCache);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
+  const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(
+    initialCache?.role ?? null,
+  );
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
   const { showToast } = useAppToast();
@@ -42,24 +49,31 @@ export function AppPagesListView() {
   const canEdit = role === "owner" || role === "admin" || role === "editor";
   const pageCount = sets.reduce((acc, set) => acc + set.pageCount, 0);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const hasCache = Boolean(getPagesListViewCache());
+    if (!opts?.silent && !hasCache) {
+      setLoading(true);
+    }
     try {
       const [bootstrap, connectionSets, r] = await Promise.all([
         getDashboardBootstrapData(),
         listPageConnectionSetsForHotel().catch(() => []),
         getCurrentUserHotelRole().catch(() => null),
       ]);
+      const nextInfoBySlug = new Map(
+        (bootstrap.informations ?? []).map((info) => [
+          info.slug,
+          { status: info.status, updatedAt: info.updatedAt },
+        ]),
+      );
       setRole(r);
       setSets(connectionSets);
-      setInfoBySlug(
-        new Map(
-          (bootstrap.informations ?? []).map((info) => [
-            info.slug,
-            { status: info.status, updatedAt: info.updatedAt },
-          ]),
-        ),
-      );
+      setInfoBySlug(nextInfoBySlug);
+      setPagesListViewCache({
+        sets: connectionSets,
+        infoBySlug: nextInfoBySlug,
+        role: r,
+      });
     } catch {
       setSets([]);
     } finally {
@@ -69,6 +83,16 @@ export function AppPagesListView() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void load({ silent: true });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [load]);
 
   async function handleCreate() {
@@ -161,7 +185,7 @@ export function AppPagesListView() {
         !loading && pageCount > 0 ? (
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={() => void load({ silent: true })}
             className="app-pressable ui-pop-tap rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
             aria-label="一覧を更新"
           >

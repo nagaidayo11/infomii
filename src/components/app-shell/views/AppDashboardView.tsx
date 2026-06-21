@@ -14,6 +14,10 @@ import {
 import { formatDisplayNameWithSan } from "@/lib/user-label";
 import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
+import {
+  getDashboardViewCache,
+  setDashboardViewCache,
+} from "@/lib/session-resume-cache";
 import { AppWorksList, AppWorksListItemMotion } from "../AppWorksList";
 import { AppWorksListItem } from "../AppWorksListItem";
 import { AppEmptyState } from "../AppEmptyState";
@@ -24,12 +28,17 @@ import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 
 export function AppDashboardView() {
-  const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(null);
+  const initialCache = getDashboardViewCache();
+  const [bootstrap, setBootstrap] = useState<DashboardBootstrapData | null>(
+    initialCache?.bootstrap ?? null,
+  );
   const { displayName: profileDisplayName, loaded: profileLoaded } = useProfileDisplayName();
-  const [pages, setPages] = useState<PageRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
-  const [totalViews7d, setTotalViews7d] = useState(0);
+  const [pages, setPages] = useState<PageRow[]>(initialCache?.pages ?? []);
+  const [loading, setLoading] = useState(!initialCache);
+  const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(
+    initialCache?.role ?? null,
+  );
+  const [totalViews7d, setTotalViews7d] = useState(initialCache?.totalViews7d ?? 0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const deleteBusyRef = useRef(false);
   const { showToast } = useAppToast();
@@ -38,8 +47,11 @@ export function AppDashboardView() {
 
   useNotifyNativeAppShellWhenReady(!loading && profileLoaded);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const hasCache = Boolean(getDashboardViewCache());
+    if (!opts?.silent && !hasCache) {
+      setLoading(true);
+    }
     try {
       const [b, r, pageResult, metrics] = await Promise.all([
         getDashboardBootstrapData(),
@@ -49,10 +61,18 @@ export function AppDashboardView() {
           .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
         getCurrentHotelViewMetrics().catch(() => null),
       ]);
+      const nextPages = pageResult.ok ? pageResult.pages : [];
+      const nextViews = metrics?.totalViews7d ?? 0;
       setBootstrap(b);
       setRole(r);
-      if (pageResult.ok) setPages(pageResult.pages);
-      setTotalViews7d(metrics?.totalViews7d ?? 0);
+      if (pageResult.ok) setPages(nextPages);
+      setTotalViews7d(nextViews);
+      setDashboardViewCache({
+        bootstrap: b,
+        pages: nextPages,
+        role: r,
+        totalViews7d: nextViews,
+      });
     } finally {
       setLoading(false);
     }
@@ -60,6 +80,16 @@ export function AppDashboardView() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void load({ silent: true });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [load]);
 
   const displayName = profileDisplayName?.trim() ?? "";

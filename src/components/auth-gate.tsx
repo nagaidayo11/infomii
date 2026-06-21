@@ -8,6 +8,11 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 import { isNativeAppWebView } from "@/lib/native-app-bridge";
+import {
+  clearCachedAuthScopeUserId,
+  hasCachedAuthScope,
+  writeCachedAuthScopeUserId,
+} from "@/lib/session-resume-cache";
 import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
@@ -22,6 +27,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!enabled || loading || user) {
       return;
     }
+    clearCachedAuthScopeUserId();
     if (shouldShowLaunchOnboarding(isAppShell)) {
       router.replace(withAppClientQuery("/onboarding"));
       return;
@@ -32,15 +38,28 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [enabled, isAppShell, loading, user, router, pathname]);
 
   useEffect(() => {
-    if (!enabled || loading || !user) return;
+    if (!enabled || loading || !user) {
+      if (!user) setScopeChecked(false);
+      return;
+    }
+
+    const scopeCached = hasCachedAuthScope(user.id);
+    if (scopeCached) {
+      setScopeChecked(true);
+    } else {
+      setScopeChecked(false);
+    }
+
     let active = true;
-    setScopeChecked(false);
     void (async () => {
       try {
         await ensureUserHotelScope();
-        if (active) setScopeChecked(true);
+        if (!active) return;
+        writeCachedAuthScopeUserId(user.id);
+        setScopeChecked(true);
       } catch (error) {
         if (!active) return;
+        clearCachedAuthScopeUserId();
         if (isAccessRevokedError(error)) {
           const loginNext = isAppShell ? withAppClientQuery("/dashboard") : "/dashboard";
           router.replace(`/login?access=revoked&next=${encodeURIComponent(loginNext)}`);
@@ -54,6 +73,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     };
   }, [enabled, loading, user, router, isAppShell]);
 
+  const scopeReady = Boolean(user && (scopeChecked || hasCachedAuthScope(user.id)));
+
   if (!enabled) {
     return (
       <main className="mx-auto min-h-screen w-full max-w-xl px-4 py-10 sm:px-6">
@@ -65,7 +86,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (loading || !user || (user && !scopeChecked)) {
+  if (loading || !user || !scopeReady) {
     if (isAppShell) {
       if (isNativeAppWebView()) return null;
       const isEditor = (pathname ?? "").startsWith("/editor");

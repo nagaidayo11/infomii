@@ -45,6 +45,7 @@ import {
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
 import { openGuestPageInNewTab } from "@/lib/app-href";
+import { canResumeEditorPage } from "@/lib/editor-resume";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -111,7 +112,10 @@ export function Editor2({
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
-  const [initialEditorLoading, setInitialEditorLoading] = useState<boolean>(() => !isDemoMode && Boolean(pageId));
+  const [initialEditorLoading, setInitialEditorLoading] = useState<boolean>(() => {
+    if (isDemoMode || !pageId) return false;
+    return !canResumeEditorPage(pageId);
+  });
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
   const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
@@ -365,7 +369,10 @@ export function Editor2({
       setPageMeta({ pageId: null, title: "", slug: "", publicUrl: null });
       return;
     }
-    setInitialEditorLoading(true);
+    const resume = canResumeEditorPage(pageId);
+    if (!resume) {
+      setInitialEditorLoading(true);
+    }
     let cancelled = false;
     void (async () => {
       try {

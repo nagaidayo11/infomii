@@ -14,6 +14,7 @@ import {
   rowToCard,
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
+import { canResumeEditorPage } from "@/lib/editor-resume";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -22,7 +23,7 @@ function EditorWithPageId() {
   const pageId = typeof params.id === "string" ? params.id : null;
   const fromTemplate = searchParams.get("from") === "template";
   const [pageFound, setPageFound] = useState<boolean | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => canResumeEditorPage(pageId));
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
@@ -31,6 +32,11 @@ function EditorWithPageId() {
 
   useEffect(() => {
     if (!pageId) return;
+    if (canResumeEditorPage(pageId)) {
+      setPageFound(true);
+      setLoaded(true);
+      return;
+    }
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
       if (!page) {
         const legacy = await getInformation(pageId).catch(() => null);
