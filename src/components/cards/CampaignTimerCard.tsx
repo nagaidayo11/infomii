@@ -5,6 +5,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
 
@@ -20,6 +21,7 @@ function toDate(value: unknown): Date | null {
 
 export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const resolveGuestHref = useGuestPageHref();
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const content = editor.content;
   const title = typeof content.title === "string" ? content.title : "キャンペーン";
@@ -131,7 +133,7 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
           </div>
         ) : ctaLabel && ctaUrl ? (
           <a
-            href={ctaUrl}
+            href={resolveGuestHref(ctaUrl)}
             target={ctaUrl.startsWith("/") ? undefined : "_blank"}
             rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
             className={`inline-flex ${editorInnerRadiusClassName} bg-slate-900 px-3 py-2 text-sm font-semibold !text-white hover:bg-slate-800`}

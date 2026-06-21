@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type ButtonCardProps = {
@@ -20,11 +21,13 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
-export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps) {
+export function ButtonCard({ card, locale = "ja" }: ButtonCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
-  const href = (c?.href as string) ?? "#";
+  const rawHref = (c?.href as string) ?? "#";
+  const href = editable ? rawHref : resolveGuestHref(rawHref);
   const labels =
     locale === "ko" ? { buttonPlaceholder: "버튼" } :
     locale === "zh" ? { buttonPlaceholder: "按钮" } :
@@ -39,15 +42,14 @@ export function ButtonCard({ card, isSelected, locale = "ja" }: ButtonCardProps)
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  const isEditor = isSelected !== undefined;
   return (
     <Card padding="md" className="">
       <a
         href={href}
         className={`inline-flex w-full items-center justify-center ${editorInnerRadiusClassName} bg-ds-primary px-4 py-3 font-semibold text-white shadow-[var(--shadow-ds-sm)]`}
         style={getTitleFontSizeStyle()}
-        onClick={isEditor ? (e) => e.preventDefault() : undefined}
-        aria-disabled={isEditor ? true : undefined}
+        onClick={editable ? (e) => e.preventDefault() : undefined}
+        aria-disabled={editable ? true : undefined}
       >
         <InlineEditable value={label} onSave={(v) => updateKey("label", v)} editable={editable} onActivate={onActivate} className="text-white" placeholder={labels.buttonPlaceholder} />
       </a>

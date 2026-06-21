@@ -5,6 +5,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
 
@@ -16,6 +17,7 @@ type CouponCardProps = {
 
 export function CouponCard({ card }: CouponCardProps) {
   const editor = useCardContentEditor(card);
+  const resolveGuestHref = useGuestPageHref();
   const content = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof content.title === "string" ? content.title : "クーポン";
@@ -123,7 +125,7 @@ export function CouponCard({ card }: CouponCardProps) {
           </div>
         ) : ctaUrl.trim() ? (
           <a
-            href={ctaUrl}
+            href={resolveGuestHref(ctaUrl)}
             target={ctaUrl.startsWith("/") ? undefined : "_blank"}
             rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
             className={`mt-3 inline-flex px-3 py-2 text-sm font-semibold ${editorInnerRadiusClassName}`}

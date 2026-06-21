@@ -8,6 +8,7 @@ import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } f
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, PlainInline } from "./card-inline-fields";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 
 type SlideItem = {
   src?: string;
@@ -65,6 +66,7 @@ function decodeImageUrl(src: string): Promise<void> {
 
 export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const resolveGuestHref = useGuestPageHref();
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const content = editor.content;
   const title = typeof content.title === "string" ? content.title : "";
@@ -155,7 +157,11 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
 
   const currentIndex = normalizedSlides.length === 0 ? 0 : index % normalizedSlides.length;
   const current = normalizedSlides[currentIndex];
-  const currentLink = resolveSlideLink(current);
+  const rawLink = resolveSlideLink(current);
+  const currentLink =
+    rawLink && !rawLink.external && !bind.editable
+      ? { ...rawLink, href: resolveGuestHref(rawLink.href) }
+      : rawLink;
   const canMove = normalizedSlides.length > 1;
   const hasCaption = showCaptions && current.caption.trim().length > 0;
   const shouldAnimate = transitionEnabled && !reducedMotion;

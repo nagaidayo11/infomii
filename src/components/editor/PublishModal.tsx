@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { buildAppSharePageLabel } from "@/lib/app-branding";
-import { navigateGuestPageUrl } from "@/lib/app-href";
+import { openGuestPageInNewTab } from "@/lib/app-href";
 import {
   buildLineShareUrl,
   buildMailShareUrl,
@@ -113,11 +113,7 @@ export function PublishModal({
   };
 
   const handleOpenPage = () => {
-    if (isAppShell) {
-      navigateGuestPageUrl(publicUrl);
-      return;
-    }
-    window.open(publicUrl, "_blank", "noopener,noreferrer");
+    openGuestPageInNewTab(publicUrl, { appClient: isAppShell });
   };
 
   const handleShare = async () => {

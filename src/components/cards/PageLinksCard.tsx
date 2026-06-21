@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
@@ -39,13 +39,26 @@ function pageLinkShadowClass(strength: string): string {
   }
 }
 
+/** Icon + wrapper sizes per variant (sm / md / lg). */
+const PAGE_LINK_ICON_SIZES = {
+  circle: {
+    sm: { wrap: "h-10 w-10", icon: "h-4 w-4" },
+    md: { wrap: "h-14 w-14", icon: "h-5.5 w-5.5" },
+    lg: { wrap: "h-[4.5rem] w-[4.5rem]", icon: "h-7 w-7" },
+  },
+  tile: {
+    sm: { wrap: "h-7 w-7", icon: "h-4 w-4" },
+    md: { wrap: "h-10 w-10", icon: "h-5.5 w-5.5" },
+    lg: { wrap: "h-12 w-12", icon: "h-7 w-7" },
+  },
+} as const;
+
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
-export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageLinksCardProps) {
+export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -84,15 +97,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
     const linkType = item.linkType ?? "page";
     if (linkType === "url" && item.link) return item.link;
     if (linkType === "page" && item.pageSlug) {
-      const parentSlug = pathname?.startsWith("/v/") ? pathname.replace(/^\/v\//, "").split("/")[0] : "";
-      const next = new URLSearchParams();
-      if (parentSlug) next.set("from", parentSlug);
-      const lang = searchParams?.get("lang");
-      if (lang) next.set("lang", lang);
-      const preview = searchParams?.get("preview");
-      if (preview === "1") next.set("preview", "1");
-      const qs = next.toString();
-      return `/v/${item.pageSlug}${qs ? `?${qs}` : ""}`;
+      return resolveGuestHref(`/v/${item.pageSlug}`);
     }
     return "#";
   };
@@ -102,19 +107,9 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
 
-  const iconWrapClass =
-    styleVariant === "circle"
-      ? iconSize === "sm"
-        ? "h-12 w-12"
-        : iconSize === "lg"
-          ? "h-16 w-16"
-          : "h-14 w-14"
-      : iconSize === "sm"
-        ? "h-8 w-8"
-        : iconSize === "lg"
-          ? "h-10 w-10"
-          : "h-9 w-9";
-  const iconClass = iconSize === "sm" ? "h-4.5 w-4.5" : iconSize === "lg" ? "h-6 w-6" : "h-5.5 w-5.5";
+  const iconSizes = PAGE_LINK_ICON_SIZES[styleVariant][iconSize];
+  const iconWrapClass = iconSizes.wrap;
+  const iconClass = iconSizes.icon;
 
   return (
     <Card padding="md">
@@ -161,7 +156,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
                   className={
                     styleVariant === "circle"
                       ? `flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 ${pageLinkShadowClass(circleShadowStrength)} ${iconWrapClass}`
-                      : `flex shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-white text-slate-700 ${iconWrapClass}`
+                      : `flex shrink-0 items-center justify-center text-slate-700 ${iconWrapClass}`
                   }
                 >
                   <LineIcon name={iconDisplay} className={iconClass} />
@@ -198,7 +193,7 @@ export function PageLinksCard({ card, isSelected = false, locale = "ja" }: PageL
                   target={isExternal(item) ? "_blank" : undefined}
                   rel={isExternal(item) ? "noreferrer" : undefined}
                   className="block touch-manipulation"
-                  onClick={(e) => isSelected && e.preventDefault()}
+                  onClick={(e) => editable && e.preventDefault()}
                 >
                   {content}
                 </Link>

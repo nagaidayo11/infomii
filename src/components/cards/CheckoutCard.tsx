@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type CheckoutCardProps = {
@@ -20,8 +21,9 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
-export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardProps) {
+export function CheckoutCard({ card, locale = "ja" }: CheckoutCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
@@ -79,11 +81,11 @@ export function CheckoutCard({ card, isSelected, locale = "ja" }: CheckoutCardPr
       </div>
       {linkUrl && (
         <a
-          href={linkUrl}
+          href={editable ? linkUrl : resolveGuestHref(linkUrl)}
           className="mt-2 inline-block font-normal text-ds-primary underline"
           style={getBodyFontSizeStyle()}
-          onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
-          aria-disabled={isSelected !== undefined ? true : undefined}
+          onClick={editable ? (e) => e.preventDefault() : undefined}
+          aria-disabled={editable ? true : undefined}
         >
           <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={editable} onActivate={onActivate} className="font-normal text-ds-primary underline" placeholder={labels.detailPlaceholder} />
         </a>

@@ -8,6 +8,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type NearbyItem = { name?: string; description?: string; link?: string };
@@ -22,8 +23,9 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
-export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps) {
+export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
@@ -137,10 +139,8 @@ export function NearbyCard({ card, isSelected, locale = "ja" }: NearbyCardProps)
                 </p>
               ) : item.link ? (
                 <a
-                  href={item.link}
+                  href={resolveGuestHref(item.link)}
                   className="mt-1 inline-block font-normal text-slate-600 underline"
-                  onClick={isSelected !== undefined ? (e) => e.preventDefault() : undefined}
-                  aria-disabled={isSelected !== undefined ? true : undefined}
                 >
                   {labels.detail}
                 </a>

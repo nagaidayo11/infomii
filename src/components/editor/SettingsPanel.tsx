@@ -891,7 +891,7 @@ function PageLinksItemsEditor({
             className={inputClass}
           >
             <option value="tile">カード</option>
-            <option value="circle">サークル（丸アイコン）</option>
+            <option value="circle">サークル</option>
           </select>
         </div>
         {styleVariant === "circle" ? (
@@ -2516,11 +2516,11 @@ export function CardSettings({
           <p className="text-xs text-slate-500">
             {canReorderCard ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます" : "変更はリアルタイムで反映されます"}
           </p>
-          <div className="flex gap-0.5 overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 px-0.5 py-px">
+          <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
             <button
               type="button"
               onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "content"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2531,7 +2531,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2542,7 +2542,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
                 activePalette === "appearance-spacing"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"

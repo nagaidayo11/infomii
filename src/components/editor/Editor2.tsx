@@ -44,7 +44,7 @@ import {
 import {
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
-import { navigateGuestPageUrl } from "@/lib/app-href";
+import { openGuestPageInNewTab } from "@/lib/app-href";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -1127,8 +1127,8 @@ export function Editor2({
       return previewWindow;
     };
 
-    const previewWindow = useAppEditorChrome ? null : openPreviewInBrowserTab();
-    if (!useAppEditorChrome && !previewWindow) return;
+    const previewWindow = openPreviewInBrowserTab();
+    if (!previewWindow) return;
 
     setPreviewBusy(true);
     try {
@@ -1177,14 +1177,10 @@ export function Editor2({
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
       const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
-      if (useAppEditorChrome) {
-        navigateGuestPageUrl(previewUrl, { preview: true });
-      } else if (previewWindow) {
-        try {
-          previewWindow.location.href = previewUrl;
-        } catch {
-          window.open(previewUrl, "_blank", "noopener,noreferrer");
-        }
+      try {
+        previewWindow.location.href = previewUrl;
+      } catch {
+        openGuestPageInNewTab(pageMeta.publicUrl, { preview: true, appClient: useAppEditorChrome });
       }
     } finally {
       setPreviewBusy(false);
