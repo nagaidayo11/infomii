@@ -720,6 +720,24 @@ body.lux-shell:has(.lp-page)::before {
   background: rgba(148, 163, 184, 0.55);
 }
 
+/* Guest preview (incl. app WebView): animated transforms on card wrappers break iOS link taps. */
+[data-guest-page-shell] .ui-pop-appear,
+[data-guest-page-shell] .app-stagger > * {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+[data-guest-page-shell] .guest-page-link,
+[data-guest-page-shell] a.guest-page-link,
+[data-guest-page-shell] a[href]:not([href="#"]) {
+  position: relative;
+  z-index: 1;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+}
+
 .editor-card-colorized :is(p, h1, h2, h3, h4, h5, h6, li, dt, dd, small, label, span) {
   color: var(--editor-card-text-color) !important;
 }

@@ -186,17 +186,30 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
             );
 
             if (href && href !== "#") {
+              if (editable) {
+                return (
+                  <Link
+                    key={i}
+                    href={href}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="block touch-manipulation"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
               return (
-                <Link
+                <a
                   key={i}
                   href={href}
                   target={isExternal(item) ? "_blank" : undefined}
                   rel={isExternal(item) ? "noreferrer" : undefined}
-                  className="block touch-manipulation"
-                  onClick={(e) => editable && e.preventDefault()}
+                  className="guest-page-link block touch-manipulation"
                 >
                   {content}
-                </Link>
+                </a>
               );
             }
             return (
