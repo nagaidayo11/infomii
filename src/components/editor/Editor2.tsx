@@ -44,7 +44,11 @@ import {
 import {
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
-import { openGuestPageInNewTab } from "@/lib/app-href";
+import {
+  closeGuestPreviewTab,
+  openGuestPageInNewTab,
+  openGuestPreviewPlaceholderTab,
+} from "@/lib/app-href";
 import { canResumeEditorPage } from "@/lib/editor-resume";
 
 /**
@@ -1098,47 +1102,32 @@ export function Editor2({
     }
     if (!pageMeta.publicUrl || !pageId) return;
 
-    await flushAutosaveNow();
-    const saveErr = useEditor2Store.getState().saveError;
-    if (saveErr) {
+    // Must open the tab synchronously on tap — await before window.open breaks mobile Safari / WebView.
+    const previewWindow = openGuestPreviewPlaceholderTab();
+    if (!previewWindow) {
       window.alert(
-        `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度プレビューを押してください。`,
+        "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
       );
       return;
     }
 
-    if (!guardPublishedBeforeGuestView()) return;
-
-    const openPreviewInBrowserTab = (): Window | null => {
-      const previewWindow = window.open("about:blank", "_blank");
-      if (!previewWindow) {
-        window.alert(
-          "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
-        );
-        return null;
-      }
-      previewWindow.opener = null;
-      try {
-        previewWindow.document.open();
-        previewWindow.document.write(
-          "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>プレビュー準備中</title></head>" +
-            "<body style=\"margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#475569;\">" +
-            "<div style=\"display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;\">" +
-            "<div><p style=\"margin:0;font-size:1rem;font-weight:600;color:#334155;\">プレビューを準備しています…</p>" +
-            "<p style=\"margin:0.75rem 0 0;font-size:0.875rem;\">このタブはまもなくゲスト表示に切り替わります。</p></div></div></body></html>"
-        );
-        previewWindow.document.close();
-      } catch {
-        /* 表示できなくても続行し、後で location で遷移する */
-      }
-      return previewWindow;
-    };
-
-    const previewWindow = openPreviewInBrowserTab();
-    if (!previewWindow) return;
-
     setPreviewBusy(true);
     try {
+      await flushAutosaveNow();
+      const saveErr = useEditor2Store.getState().saveError;
+      if (saveErr) {
+        closeGuestPreviewTab(previewWindow);
+        window.alert(
+          `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度プレビューを押してください。`,
+        );
+        return;
+      }
+
+      if (!guardPublishedBeforeGuestView()) {
+        closeGuestPreviewTab(previewWindow);
+        return;
+      }
+
       const state = useEditor2Store.getState();
       try {
         await savePageCards(pageId, state.cards, {
@@ -1157,13 +1146,7 @@ export function Editor2({
       }
       const translationError = await ensureTranslationsBeforePublish({ translationSource: "preview" });
       if (translationError) {
-        if (previewWindow) {
-          try {
-            previewWindow.close();
-          } catch {
-            /* ignore */
-          }
-        }
+        closeGuestPreviewTab(previewWindow);
         window.alert(translationError);
         return;
       }

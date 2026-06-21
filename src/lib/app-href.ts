@@ -1,3 +1,35 @@
+const PREVIEW_PLACEHOLDER_HTML =
+  "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>プレビュー準備中</title></head>" +
+  "<body style=\"margin:0;font-family:system-ui,sans-serif;background:#f8fafc;color:#475569;\">" +
+  "<div style=\"display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;text-align:center;\">" +
+  "<div><p style=\"margin:0;font-size:1rem;font-weight:600;color:#334155;\">プレビューを準備しています…</p>" +
+  "<p style=\"margin:0.75rem 0 0;font-size:0.875rem;\">このタブはまもなくゲスト表示に切り替わります。</p></div></div></body></html>";
+
+/** Open a placeholder tab synchronously (must run inside the user click/tap handler). */
+export function openGuestPreviewPlaceholderTab(): Window | null {
+  if (typeof window === "undefined") return null;
+  const previewWindow = window.open("about:blank", "_blank");
+  if (!previewWindow) return null;
+  previewWindow.opener = null;
+  try {
+    previewWindow.document.open();
+    previewWindow.document.write(PREVIEW_PLACEHOLDER_HTML);
+    previewWindow.document.close();
+  } catch {
+    /* location will be set after async prep */
+  }
+  return previewWindow;
+}
+
+export function closeGuestPreviewTab(previewWindow: Window | null | undefined): void {
+  if (!previewWindow) return;
+  try {
+    previewWindow.close();
+  } catch {
+    /* ignore */
+  }
+}
+
 function buildGuestPageTarget(publicUrl: string, opts?: { preview?: boolean; appClient?: boolean }): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://www.infomii.com";
   const url = new URL(publicUrl, origin);
