@@ -2,19 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { prepareImageForUpload } from "@/lib/prepare-image-upload";
 import { useEditor2Store } from "./store";
 import { nanoid } from "nanoid";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE_MB = 5;
-
-function getExt(mime: string): string {
-  if (mime === "image/jpeg") return "jpg";
-  if (mime === "image/png") return "png";
-  if (mime === "image/webp") return "webp";
-  if (mime === "image/gif") return "gif";
-  return "jpg";
-}
 
 export function ImageUpload({
   onUploaded,
@@ -36,25 +28,25 @@ export function ImageUpload({
         setError("JPEG、PNG、WebP、GIF のみ対応しています");
         return;
       }
-      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        setError(`最大 ${MAX_SIZE_MB}MB まで`);
-        return;
-      }
       const supabase = getBrowserSupabaseClient();
       if (!supabase) {
         setError("Supabase が設定されていません");
         return;
       }
       const pid = pageId ?? "temp";
-      const ext = getExt(file.type);
-      const path = `${pid}/${nanoid(12)}.${ext}`;
 
       setUploading(true);
       setError(null);
       try {
+        const prepared = await prepareImageForUpload(file);
+        const path = `${pid}/${nanoid(12)}.${prepared.ext}`;
+
         const { error: uploadError } = await supabase.storage
           .from("page-assets")
-          .upload(path, file, { upsert: true });
+          .upload(path, prepared.blob, {
+            upsert: true,
+            contentType: prepared.mime,
+          });
 
         if (uploadError) {
           const msg =
@@ -67,11 +59,13 @@ export function ImageUpload({
 
         const { data } = supabase.storage.from("page-assets").getPublicUrl(path);
         onUploaded(data.publicUrl);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "アップロードに失敗しました");
       } finally {
         setUploading(false);
       }
     },
-    [pageId, onUploaded]
+    [pageId, onUploaded],
   );
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,11 +103,13 @@ export function ImageUpload({
         disabled={disabled || uploading}
       />
       {uploading ? (
-        <span className="text-sm text-slate-500">アップロード中…</span>
+        <span className="text-sm text-slate-500">軽量化してアップロード中…</span>
       ) : (
         <>
           <span className="text-sm font-medium text-slate-600">クリックまたはドロップでアップロード</span>
-          <span className="mt-1 text-xs text-slate-400">JPEG, PNG, WebP, GIF（最大{MAX_SIZE_MB}MB）</span>
+          <span className="mt-1 text-xs text-slate-400">
+            JPEG / PNG / WebP / GIF（最大20MB・自動で軽量化）
+          </span>
         </>
       )}
       {error && <span className="mt-2 block text-xs text-red-600">{error}</span>}

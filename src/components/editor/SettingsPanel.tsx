@@ -7,6 +7,7 @@ import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
+import { ImageFramingControl } from "./ImageFramingControl";
 import { VideoUpload } from "./VideoUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
@@ -2596,6 +2597,17 @@ export function CardSettings({
                 <label className={labelClass}>画像</label>
                 <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
               </div>
+              {typeof content.image === "string" && content.image.trim() ? (
+                <div className="w-full">
+                  <label className={labelClass}>表示位置・ズーム</label>
+                  <ImageFramingControl
+                    imageUrl={content.image}
+                    content={content}
+                    onUpdate={update}
+                    previewAspectClass="aspect-[2/1]"
+                  />
+                </div>
+              ) : null}
             </SettingsSection>
           )}
 
@@ -2831,6 +2843,16 @@ export function CardSettings({
                     className="mt-1.5"
                   />
                 </div>
+                {typeof content.src === "string" && content.src.trim() ? (
+                  <div className="w-full">
+                    <label className={labelClass}>表示位置・ズーム</label>
+                    <ImageFramingControl
+                      imageUrl={content.src}
+                      content={content}
+                      onUpdate={update}
+                    />
+                  </div>
+                ) : null}
                 <Input
                   label="代替テキスト"
                   value={display("alt")}

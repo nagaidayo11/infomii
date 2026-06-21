@@ -259,10 +259,11 @@ drop function if exists public.redeem_hotel_invite(text);
 drop function if exists public.ensure_hotel_subscription(uuid);
 
 -- ---------------------------------------------------------------------------
--- 4) Storage: disable public listing; allow direct object reads
+-- 4) Storage: keep bucket public for guest/editor direct URLs; anon SELECT only
+--    (public=false + getPublicUrl breaks all images with 403)
 -- ---------------------------------------------------------------------------
 update storage.buckets
-set public = false
+set public = true
 where id = 'page-assets';
 
 drop policy if exists "Public read page assets" on storage.objects;

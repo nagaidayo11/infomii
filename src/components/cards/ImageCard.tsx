@@ -4,6 +4,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
+import { imageFramingClassName, imageFramingStyle, readImageFraming } from "@/lib/image-framing";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
@@ -27,6 +28,9 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const c = card.content as Record<string, unknown> | undefined;
   const src = (c?.src as string | undefined) ?? "";
   const alt = getLocalizedContent(c?.alt as LocalizedString | undefined, locale);
+  const framing = readImageFraming(c);
+  const framingStyle = imageFramingStyle(framing);
+  const framingClass = imageFramingClassName(framing);
   const labels =
     locale === "ko"
       ? { altPlaceholder: "설명(선택)" }
@@ -47,7 +51,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
     <Card padding="none" className="">
       {src ? (
         <div data-inner-surface className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
-          <EditorCoverImage src={src} alt={alt} sizes="420px" />
+          <EditorCoverImage src={src} alt={alt} sizes="420px" className={framingClass} style={framingStyle} />
         </div>
       ) : (
         <div className={`aspect-video w-full ${editorInnerRadiusClassName}`}>

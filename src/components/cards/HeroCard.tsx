@@ -5,6 +5,7 @@ import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { ImageUpload } from "@/components/editor/ImageUpload";
+import { imageFramingClassName, imageFramingStyle, readImageFraming } from "@/lib/image-framing";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
@@ -18,6 +19,9 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const image = (c?.image as string) ?? "";
+  const framing = readImageFraming(c);
+  const framingStyle = imageFramingStyle(framing);
+  const framingClass = imageFramingClassName(framing);
   const subtitle = getLocalizedContent(c?.subtitle as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"
@@ -39,7 +43,14 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
     >
       <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden bg-slate-800">
         {image ? (
-          <EditorCoverImage src={image} alt={title || "ヒーロー"} priority sizes="420px" />
+          <EditorCoverImage
+            src={image}
+            alt={title || "ヒーロー"}
+            priority
+            sizes="420px"
+            className={framingClass}
+            style={framingStyle}
+          />
         ) : (
           <ImageUpload onUploaded={(url) => update("image", url)} className="relative z-0 h-full min-h-[140px] w-full" />
         )}
