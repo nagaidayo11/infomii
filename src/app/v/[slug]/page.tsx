@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard, CardType } from "@/components/editor/types";
@@ -165,12 +164,12 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
       backButton={
         backLink ? (
-          <Link
+          <a
             href={backLink.href}
-            className="inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
+            className="guest-page-link inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
           >
             {backLink.label}
-          </Link>
+          </a>
         ) : null
       }
     />

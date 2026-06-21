@@ -1,7 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
+import { useCallback } from "react";
 import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
+import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 type PublicPageShellProps = {
@@ -19,6 +21,8 @@ type PublicPageShellProps = {
   isEmbed?: boolean;
   /** Page background style configured in editor */
   pageBackground?: PageBackgroundStyle | null;
+  /** Same-origin links use full page loads (required for app WebView / preview). */
+  hardNavigation?: boolean;
 };
 
 function PageHeader({
@@ -116,7 +120,16 @@ export function PublicPageShell({
   headerActions,
   isEmbed = false,
   pageBackground = null,
+  hardNavigation = true,
 }: PublicPageShellProps) {
+  const onGuestLinkCapture = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!hardNavigation) return;
+      interceptGuestAnchorHardNavigation(event.nativeEvent);
+    },
+    [hardNavigation],
+  );
+
   const pageBackgroundStyle =
     pageBackground?.mode === "gradient"
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
@@ -124,7 +137,11 @@ export function PublicPageShell({
 
   if (isEmbed) {
     return (
-      <div className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3" style={{ background: pageBackgroundStyle }}>
+      <div
+        className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
+        style={{ background: pageBackgroundStyle }}
+        onClickCapture={onGuestLinkCapture}
+      >
         <PageContent
           title={title}
           backButton={backButton}
@@ -160,6 +177,7 @@ export function PublicPageShell({
             }
             data-guest-page-shell
             style={{ background: pageBackgroundStyle }}
+            onClickCapture={onGuestLinkCapture}
           >
             <PageContent
               title={title}

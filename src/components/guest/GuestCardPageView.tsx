@@ -115,6 +115,7 @@ export function GuestCardPageView({
         pageBackground={pageBackground}
         headerActions={headerActions}
         isEmbed={isEmbed}
+        hardNavigation={!disableInteractions}
       >
         {hintVisible && localeToggleHint && (
           <div
