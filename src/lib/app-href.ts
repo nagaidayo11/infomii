@@ -30,19 +30,30 @@ export function closeGuestPreviewTab(previewWindow: Window | null | undefined): 
   }
 }
 
-function buildGuestPageTarget(publicUrl: string, opts?: { preview?: boolean; appClient?: boolean }): string {
+function buildGuestPageTarget(
+  publicUrl: string,
+  opts?: { preview?: boolean; appClient?: boolean; returnEditorPageId?: string },
+): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://www.infomii.com";
   const url = new URL(publicUrl, origin);
   if (opts?.preview) url.searchParams.set("preview", "1");
   if (opts?.appClient) url.searchParams.set("client", "app");
+  if (opts?.returnEditorPageId) url.searchParams.set("returnEditor", opts.returnEditorPageId);
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
 /** Open a public guest page inside the native WebView (same tab). */
-export function navigateGuestPageUrl(publicUrl: string, opts?: { preview?: boolean }): void {
+export function navigateGuestPageUrl(
+  publicUrl: string,
+  opts?: { preview?: boolean; returnEditorPageId?: string },
+): void {
   if (typeof window === "undefined") return;
   const appClient = new URLSearchParams(window.location.search).get("client") === "app";
-  const target = buildGuestPageTarget(publicUrl, { preview: opts?.preview, appClient });
+  const target = buildGuestPageTarget(publicUrl, {
+    preview: opts?.preview,
+    appClient,
+    returnEditorPageId: opts?.returnEditorPageId,
+  });
   window.location.assign(target);
 }
 
@@ -62,6 +73,32 @@ export function openGuestPageInNewTab(
   }
   navigateGuestPageUrl(publicUrl, { preview: opts?.preview });
   return false;
+}
+
+/** Back link for guest preview (parent page or editor in app shell). */
+export function buildGuestPreviewBackLink(opts: {
+  fromSlug?: string;
+  returnEditorPageId?: string;
+  isPreview: boolean;
+  lang?: string;
+  isAppClient?: boolean;
+}): { href: string; label: string } | null {
+  if (opts.fromSlug) {
+    const q = new URLSearchParams();
+    if (opts.isPreview) q.set("preview", "1");
+    if (opts.lang) q.set("lang", opts.lang);
+    if (opts.returnEditorPageId) q.set("returnEditor", opts.returnEditorPageId);
+    if (opts.isAppClient) q.set("client", "app");
+    const qs = q.toString();
+    return { href: `/v/${opts.fromSlug}${qs ? `?${qs}` : ""}`, label: "← 戻る" };
+  }
+  if (opts.returnEditorPageId) {
+    return {
+      href: withAppClientQuery(`/editor/${opts.returnEditorPageId}`),
+      label: "← 編集に戻る",
+    };
+  }
+  return null;
 }
 
 /** Preserve ?client=app for browser preview parity with native WebView. */

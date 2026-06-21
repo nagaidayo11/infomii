@@ -46,6 +46,7 @@ import {
 } from "@/lib/editor/card-library-config";
 import {
   closeGuestPreviewTab,
+  navigateGuestPageUrl,
   openGuestPageInNewTab,
   openGuestPreviewPlaceholderTab,
 } from "@/lib/app-href";
@@ -1102,13 +1103,17 @@ export function Editor2({
     }
     if (!pageMeta.publicUrl || !pageId) return;
 
-    // Must open the tab synchronously on tap — await before window.open breaks mobile Safari / WebView.
-    const previewWindow = openGuestPreviewPlaceholderTab();
-    if (!previewWindow) {
-      window.alert(
-        "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
-      );
-      return;
+    const useSameTabPreview = useAppEditorChrome;
+    let previewWindow: Window | null = null;
+    if (!useSameTabPreview) {
+      // Must open the tab synchronously on tap — await before window.open breaks mobile Safari.
+      previewWindow = openGuestPreviewPlaceholderTab();
+      if (!previewWindow) {
+        window.alert(
+          "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
+        );
+        return;
+      }
     }
 
     setPreviewBusy(true);
@@ -1167,10 +1172,14 @@ export function Editor2({
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
       const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
-      try {
-        previewWindow.location.href = previewUrl;
-      } catch {
-        openGuestPageInNewTab(pageMeta.publicUrl, { preview: true, appClient: useAppEditorChrome });
+      if (useSameTabPreview) {
+        navigateGuestPageUrl(pageMeta.publicUrl, { preview: true, returnEditorPageId: pageId });
+      } else {
+        try {
+          previewWindow!.location.href = previewUrl;
+        } catch {
+          openGuestPageInNewTab(pageMeta.publicUrl, { preview: true, appClient: false });
+        }
       }
     } finally {
       setPreviewBusy(false);

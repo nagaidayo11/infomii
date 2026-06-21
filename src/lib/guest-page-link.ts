@@ -49,6 +49,11 @@ export function resolveGuestPageHref(href: string, ctx: GuestLinkContext = {}): 
     params.set("client", "app");
   }
 
+  const returnEditor = ctx.searchParams?.get("returnEditor");
+  if (returnEditor && !params.has("returnEditor")) {
+    params.set("returnEditor", returnEditor);
+  }
+
   const qs = params.toString();
   return `/v/${slug}${qs ? `?${qs}` : ""}${hash}`;
 }
