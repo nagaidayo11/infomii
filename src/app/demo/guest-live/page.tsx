@@ -100,11 +100,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 1, {
             title: "人気メニュー",
-            columns: 3,
+            columns: 2,
             items: [
-              { label: "送迎", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
-              { label: "朝食", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
-              { label: "周辺", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
+              { label: "送迎時刻", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
+              { label: "朝食予約", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
+              { label: "周辺スポット", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
+              { label: "体験メニュー", icon: "info", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
           createCard("schedule", 2, {
@@ -197,11 +198,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 4, {
             title: "館内クイック導線",
-            columns: 3,
+            columns: 2,
             items: [
               { label: "ランドリー", icon: "laundry", linkType: "page", pageSlug: "", link: "" },
-              { label: "タクシー", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
-              { label: "会議室", icon: "info", linkType: "page", pageSlug: "", link: "" },
+              { label: "タクシー手配", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
+              { label: "会議室予約", icon: "info", linkType: "page", pageSlug: "", link: "" },
+              { label: "領収書案内", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
         ],
@@ -340,11 +342,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 4, {
             title: "クイックアクション",
-            columns: 3,
+            columns: 2,
             items: [
               { label: "テイクアウト", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
               { label: "席予約", icon: "info", linkType: "page", pageSlug: "", link: "" },
               { label: "アクセス", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
+              { label: "本日のメニュー", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
         ],
@@ -456,11 +459,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 3, {
             title: "リンク",
-            columns: 3,
+            columns: 2,
             items: [
               { label: "宿MAP", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
               { label: "予約確認", icon: "info", linkType: "page", pageSlug: "", link: "" },
               { label: "グループLINE", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { label: "持ち物メモ", icon: "notice", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
           createCard("notice", 4, {
@@ -529,11 +533,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 3, {
             title: "関連リンク",
-            columns: 3,
+            columns: 2,
             items: [
               { label: "会場MAP", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
               { label: "アンケート", icon: "info", linkType: "page", pageSlug: "", link: "" },
-              { label: "資料", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { label: "配布資料", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { label: "懇親会案内", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
           createCard("contact_hub", 4, {
@@ -562,11 +567,12 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
           }),
           createCard("pageLinks", 2, {
             title: "メニュー",
-            columns: 3,
+            columns: 2,
             items: [
               { label: "WiFi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
-              { label: "朝食", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
+              { label: "朝食時間", icon: "breakfast", linkType: "page", pageSlug: "", link: "" },
               { label: "チェックアウト", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { label: "館内マップ", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
             ],
           }),
           createCard("schedule", 3, {
