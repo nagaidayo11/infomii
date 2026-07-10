@@ -32,14 +32,14 @@ export function AppLayout({
   const pathname = usePathname();
 
   return (
-    <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-slate-100/90">
+    <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-[#f6f8fa]">
       <RouteProgressProvider>
         <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f8fa]">
           <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
           <main
-            className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+            className="app-page-atmosphere relative z-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 text-[0.9375rem] leading-relaxed sm:px-6 sm:py-7 lg:px-8"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
           >
             <div key={pathname} className="app-content-enter">

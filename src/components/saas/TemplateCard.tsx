@@ -54,23 +54,23 @@ export function TemplateCard({
 
   const placeholderGradient =
     category === "travel"
-      ? "from-emerald-100 via-teal-50 to-white"
+      ? "from-slate-100 via-slate-50 to-white"
       : category === "oshi"
-        ? "from-violet-100 via-fuchsia-50 to-white"
+        ? "from-slate-100 via-slate-50 to-white"
         : category === "personal"
           ? "from-sky-100 via-slate-50 to-white"
           : category === "food"
-            ? "from-orange-100 via-amber-50 to-white"
+            ? "from-slate-100 via-slate-50 to-white"
             : category === "lightbiz"
-              ? "from-indigo-100 via-slate-50 to-white"
+              ? "from-slate-100 via-slate-50 to-white"
               : "from-slate-200 via-slate-100 to-white";
 
   return (
     <article
       className={
         isApp
-          ? "app-template-card ui-pop-card flex h-full flex-col overflow-hidden rounded-xl border transition"
-          : "flex h-full flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+          ? "app-template-card ui-pop-card flex h-full flex-col overflow-hidden rounded-lg border transition"
+          : "flex h-full flex-col overflow-hidden rounded-lg border border-[#e6e8eb] bg-white transition hover:border-slate-300"
       }
     >
       <div
@@ -143,7 +143,7 @@ export function TemplateCard({
             className={
               isApp
                 ? "app-touch-btn app-touch-btn-primary app-pressable w-full bg-[var(--app-accent)] font-semibold !text-white disabled:opacity-50"
-                : "app-button-native w-full min-h-[42px] rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
+                : "app-button-native w-full min-h-[42px] rounded-md bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60 sm:min-h-0 sm:w-auto sm:py-2"
             }
           >
             {using ? "作成中…" : "このテンプレートを使う"}
@@ -154,7 +154,7 @@ export function TemplateCard({
             disabled={!onPreview}
             className={
               isApp
-                ? "app-pressable w-full rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] py-2.5 text-sm font-medium text-[var(--app-text)] disabled:opacity-40"
+                ? "app-pressable w-full rounded-md border border-[var(--app-border)] bg-[var(--app-surface-muted)] py-2.5 text-sm font-medium text-[var(--app-text)] disabled:opacity-40"
                 : "app-button-native w-full min-h-[42px] rounded-lg border border-slate-200 bg-white px-2.5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0 sm:w-auto sm:py-1.5 sm:text-xs"
             }
           >

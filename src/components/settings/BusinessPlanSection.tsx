@@ -410,7 +410,7 @@ export function BusinessPlanSection({
 
   if (subscription === undefined || !roleLoaded) {
     if (isAppLayout) {
-      return <div className="app-shell-skeleton h-40 rounded-2xl" aria-hidden />;
+      return <div className="app-shell-skeleton h-40 rounded-lg" aria-hidden />;
     }
     return (
       <AppSettingsCard>
@@ -425,7 +425,7 @@ export function BusinessPlanSection({
   }
 
   const tierClass = (active: boolean, selectable = false) =>
-    `app-plan-tier rounded-2xl border px-4 py-4 ${active ? "app-plan-tier--current" : "border-slate-200 bg-white"}${
+    `app-plan-tier rounded-lg border px-4 py-4 ${active ? "app-plan-tier--current" : "border-slate-200 bg-white"}${
       selectable ? " ui-pop-tap cursor-pointer transition active:scale-[0.98]" : ""
     }`;
 
@@ -691,21 +691,21 @@ export function BusinessPlanSection({
         className={
           isAppLayout
             ? "app-plan-table mt-5"
-            : "app-settings-plan-panel mt-0 rounded-2xl border border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 to-slate-50/60 p-5 sm:p-7"
+            : "app-settings-plan-panel mt-0 rounded-lg border border-[#e6e8eb] bg-white p-5 sm:p-6"
         }
       >
         <div
           className={
             isAppLayout
               ? "app-plan-table-head flex flex-col gap-2 pb-3"
-              : "flex flex-col gap-2 border-b border-emerald-100/80 pb-4 sm:flex-row sm:items-end sm:justify-between"
+              : "flex flex-col gap-2 border-b border-[#e6e8eb] pb-4 sm:flex-row sm:items-end sm:justify-between"
           }
         >
           <p
             className={
               isAppLayout
                 ? "text-sm font-bold text-[var(--app-text)]"
-                : "text-sm font-semibold uppercase tracking-wide text-emerald-800/90 sm:text-base"
+                : "text-sm font-semibold uppercase tracking-wide text-slate-500 sm:text-base"
             }
           >
             料金プラン
@@ -740,7 +740,7 @@ export function BusinessPlanSection({
               isAppLayout
                 ? tierClass(plan === "free")
                 : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-                    plan === "free" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                    plan === "free" ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"
                   }`
             }
           >
@@ -749,15 +749,15 @@ export function BusinessPlanSection({
                 className={
                   isAppLayout
                     ? "app-plan-badge mb-2"
-                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                    : "mb-2 inline-flex rounded-md border border-slate-900 bg-slate-900 px-2 py-0.5 text-xs font-medium text-white"
                 }
               >
                 現在のプラン
               </p>
             ) : null}
-            <p className={`text-sm font-semibold sm:text-base ${plan === "free" ? "text-emerald-700" : "text-slate-500"}`}>Free</p>
-            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "free" ? "text-emerald-900" : "text-slate-900"}`}>¥0</p>
-            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "free" ? "text-emerald-800" : "text-slate-600"}`}>
+            <p className={`text-sm font-semibold sm:text-base ${plan === "free" ? "text-slate-700" : "text-slate-500"}`}>Free</p>
+            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "free" ? "text-slate-900" : "text-slate-900"}`}>¥0</p>
+            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "free" ? "text-slate-700" : "text-slate-600"}`}>
               <li>・3ページ公開</li>
               <li>・基本編集（PC/スマホプレビュー）</li>
               <li>・QR共有 / 下書き公開切替</li>
@@ -769,7 +769,7 @@ export function BusinessPlanSection({
               isAppLayout
                 ? tierClass(plan === "pro", Boolean(selectProTier))
                 : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-                    plan === "pro" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                    plan === "pro" ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"
                   }${selectProTier ? " ui-pop-tap cursor-pointer" : ""}`
             }
           >
@@ -778,20 +778,20 @@ export function BusinessPlanSection({
                 className={
                   isAppLayout
                     ? "app-plan-badge mb-2"
-                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                    : "mb-2 inline-flex rounded-md border border-slate-900 bg-slate-900 px-2 py-0.5 text-xs font-medium text-white"
                 }
               >
                 現在のプラン
               </p>
             ) : null}
-            <p className={`text-sm font-semibold sm:text-base ${plan === "pro" ? "text-emerald-700" : "text-slate-500"}`}>Pro</p>
-            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "pro" ? "text-emerald-900" : "text-slate-900"}`}>
+            <p className={`text-sm font-semibold sm:text-base ${plan === "pro" ? "text-slate-700" : "text-slate-500"}`}>Pro</p>
+            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "pro" ? "text-slate-900" : "text-slate-900"}`}>
               {PLAN_PRICE_DISPLAY.pro.monthlyPerMonth}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               年払い {PLAN_PRICE_DISPLAY.pro.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
             </p>
-            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-emerald-800" : "text-slate-600"}`}>
+            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-slate-700" : "text-slate-600"}`}>
               <li>・最大10ページ公開</li>
               <li>・閲覧分析</li>
               <li>・用途別にページを分けて運用</li>
@@ -803,7 +803,7 @@ export function BusinessPlanSection({
               isAppLayout
                 ? tierClass(plan === "business", Boolean(selectBusinessTier))
                 : `rounded-xl border px-4 py-4 sm:px-5 sm:py-5 ${
-                    plan === "business" ? "border-emerald-300 bg-emerald-50/70" : "border-slate-200 bg-white"
+                    plan === "business" ? "border-slate-900 bg-slate-50" : "border-slate-200 bg-white"
                   }${selectBusinessTier ? " ui-pop-tap cursor-pointer" : ""}`
             }
           >
@@ -812,25 +812,25 @@ export function BusinessPlanSection({
                 className={
                   isAppLayout
                     ? "app-plan-badge mb-2"
-                    : "mb-2 inline-flex rounded-full border border-emerald-700 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"
+                    : "mb-2 inline-flex rounded-md border border-slate-900 bg-slate-900 px-2 py-0.5 text-xs font-medium text-white"
                 }
               >
                 現在のプラン
               </p>
             ) : null}
             <div className="flex items-center gap-2">
-              <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-emerald-700" : "text-slate-500"}`}>Business</p>
-              <span className="ui-pop-badge inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-sky-700">
+              <p className={`text-sm font-semibold sm:text-base ${plan === "business" ? "text-slate-700" : "text-slate-500"}`}>Business</p>
+              <span className="inline-flex rounded-md border border-[#e6e8eb] bg-slate-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-slate-600">
                 人気
               </span>
             </div>
-            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "business" ? "text-emerald-900" : "text-slate-900"}`}>
+            <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "business" ? "text-slate-900" : "text-slate-900"}`}>
               {PLAN_PRICE_DISPLAY.business.monthlyPerMonth}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               年払い {PLAN_PRICE_DISPLAY.business.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
             </p>
-            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-emerald-800" : "text-slate-600"}`}>
+            <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-slate-700" : "text-slate-600"}`}>
               <li>・公開ページ無制限</li>
               <li>・公開時の多言語自動翻訳</li>
               <li>・チーム招待（引き継ぎしやすい）</li>

@@ -18,7 +18,7 @@ export function LpHotelDemo({ ctaHref, demoEditorHref, samplePageHref }: LpHotel
       popTitle
     >
       <ScrollReveal>
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button
               href={demoEditorHref}

@@ -24,7 +24,6 @@ import type { DashboardBootstrapData } from "@/lib/storage";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
-import { ScrollReveal } from "@/components/motion";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppDashboardView } from "@/components/app-shell/views/AppDashboardView";
@@ -189,11 +188,11 @@ function DashboardViewWeb() {
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
 
   return (
-    <div className="app-main-container space-y-8">
+    <div className="app-main-container space-y-6">
       {inviteNotice ? (
         <div
           className={
-            "rounded-xl border px-4 py-3 text-sm " +
+            "rounded-lg border px-4 py-3 text-sm " +
             (inviteNotice.type === "ok"
               ? "border-emerald-200 bg-emerald-50 text-emerald-900"
               : "border-rose-200 bg-rose-50 text-rose-900")
@@ -202,31 +201,50 @@ function DashboardViewWeb() {
           {inviteNotice.text}
         </div>
       ) : null}
-      <header className="app-page-header">
-        {profileLoaded && greetingName ? (
-          <p className="text-sm font-medium text-slate-600">{greetingName}</p>
+
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          {profileLoaded && greetingName ? (
+            <p className="text-sm text-slate-500">{greetingName}</p>
+          ) : null}
+          <h1 className={profileLoaded && greetingName ? "mt-1 app-page-title" : "app-page-title"}>
+            ダッシュボード
+          </h1>
+          <p className="app-page-subtitle">案内ページの作成・公開・QR運用をここから進めます</p>
+        </div>
+        {!loading && canEdit ? (
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={handleCreatePage}
+              disabled={creating}
+              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60"
+            >
+              {creating ? "作成中…" : "ページを作成"}
+            </button>
+            <Link
+              href="/templates"
+              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              テンプレート
+            </Link>
+          </div>
         ) : null}
-        <h1 className={profileLoaded && greetingName ? "mt-1 app-page-title" : "app-page-title"}>
-          ダッシュボード
-        </h1>
-        <p className="app-page-subtitle">
-          案内を1つ作って、QRでお客様に届けます
-        </p>
-        <p className="mt-2 text-sm text-slate-500">
-          <Link
-            href="/dashboard/summary"
-            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
-          >
-            一覧・統計ビュー
-          </Link>
-          <span className="text-slate-400">（表形式）</span>
-        </p>
       </header>
 
-      {/* Upgrade CTA: reserve height while loading to avoid layout jump */}
-      {loading ? (
-        <div className="min-h-[88px] rounded-xl border border-transparent sm:min-h-[76px]" aria-hidden />
-      ) : bootstrap?.subscription ? (
+      {role === "viewer" && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+          閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
+        </p>
+      )}
+
+      {createError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {createError}
+        </div>
+      )}
+
+      {!loading && bootstrap?.subscription ? (
         <UpgradeCtaBanner
           currentPlan={bootstrap.subscription.plan as "free" | "pro" | "business"}
           publishedCount={published.length}
@@ -234,153 +252,97 @@ function DashboardViewWeb() {
         />
       ) : null}
 
-      {/* Primary action: create once, deliver via QR（ロード中は空の白カードになるため非表示） */}
-      {!loading && (
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-            {role === "viewer" && (
-              <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
-                閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
-              </p>
-            )}
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-              {canEdit && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleCreatePage}
-                    disabled={creating}
-                    className="app-button-native w-full rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:py-3"
-                  >
-                    {creating ? "作成中…" : "ページを作成"}
-                  </button>
-                  <Link
-                    href="/templates"
-                    className="app-button-native inline-flex w-full min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto sm:min-h-0 sm:py-3"
-                  >
-                    テンプレートから作成
-                  </Link>
-                </>
-              )}
-            </div>
-            {createError && (
-              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                {createError}
-              </div>
-            )}
-            {canEdit && (
-              <p className="mt-4 text-sm text-slate-500">
-                <Link
-                  href="/dashboard/pages"
-                  className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
-                >
-                  説明を書いてページを作る
-                </Link>
-                <span className="text-slate-400">（ページ画面）</span>
-              </p>
-            )}
-          </section>
-      )}
-
-      {/* Analytics summary */}
-      <ScrollReveal>
       <section>
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="app-section-title">分析サマリー</h2>
-          <Link
-            href="/dashboard/analytics"
-            className="text-xs font-medium text-slate-500 hover:text-slate-700"
-          >
-            詳細レポートへ
+          <h2 className="app-section-title">概要</h2>
+          <Link href="/dashboard/analytics" className="text-xs font-medium text-slate-500 hover:text-slate-800">
+            分析へ
           </Link>
         </div>
         {loading ? (
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />
+              <div key={i} className="h-[76px] animate-pulse rounded-lg bg-slate-100" />
             ))}
           </div>
         ) : (
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <AnalyticsSummaryCard
-              label="総閲覧数（7日）"
+              label="閲覧（7日）"
               value={totalViews}
               href="/dashboard/analytics"
             />
-            <AnalyticsSummaryCard label="本日の閲覧" value={todayViews} href="/dashboard/analytics" />
+            <AnalyticsSummaryCard label="本日" value={todayViews} href="/dashboard/analytics" />
             <AnalyticsSummaryCard
               label="公開中"
               value={published.length}
-              sub={bootstrap?.subscription ? `上限 ${bootstrap.subscription.maxPublishedPages} 件` : undefined}
-              href="/dashboard/analytics"
+              sub={bootstrap?.subscription ? `上限 ${bootstrap.subscription.maxPublishedPages}` : undefined}
+              href="/dashboard/pages"
             />
             <AnalyticsSummaryCard
               label="下書き"
               value={items.length - published.length}
-              href="/dashboard/analytics"
+              href="/dashboard/pages"
             />
           </div>
         )}
-        {!loading && topPages.length > 0 && (
-          <div className="mt-4 rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-            <h3 className="text-xs font-semibold text-slate-500">人気ページ（7日）</h3>
-            <ul className="mt-2 space-y-1.5">
+        {!loading && topPages.length > 0 ? (
+          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white">
+            <div className="flex items-center justify-between border-b border-[#e6e8eb] px-4 py-2.5">
+              <h3 className="text-xs font-medium text-slate-500">人気ページ（7日）</h3>
+              <Link href="/dashboard/analytics" className="text-xs font-medium text-slate-500 hover:text-slate-800">
+                詳細
+              </Link>
+            </div>
+            <ul className="divide-y divide-[#e6e8eb]">
               {topPages.map((p) => (
-                <li key={p.informationId} className="flex items-center justify-between text-sm">
+                <li key={p.informationId} className="flex items-center justify-between px-4 py-2.5 text-sm">
                   <span className="truncate text-slate-700">{p.title}</span>
-                  <span className="ml-2 shrink-0 text-slate-500">{p.views} 回</span>
+                  <span className="ml-3 shrink-0 tabular-nums text-slate-500">{p.views}</span>
                 </li>
               ))}
             </ul>
-            <Link
-              href="/dashboard/analytics"
-              className="mt-3 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
-            >
-              分析ページでグラフを見る
-            </Link>
           </div>
-        )}
+        ) : null}
       </section>
-      </ScrollReveal>
 
-      {/* Recently edited */}
-      <ScrollReveal>
       <section>
-        <div className="flex items-center justify-between">
-          <h2 className="app-section-title">最近編集したページ</h2>
-          <Link
-            href="/dashboard/pages"
-            className="text-xs font-medium text-slate-500 hover:text-slate-700"
-          >
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="app-section-title">最近のページ</h2>
+          <Link href="/dashboard/pages" className="text-xs font-medium text-slate-500 hover:text-slate-800">
             すべて見る
           </Link>
         </div>
         {loading ? (
           <div className="mt-3 space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 animate-pulse rounded-xl bg-slate-100" />
+              <div key={i} className="h-[72px] animate-pulse rounded-lg bg-slate-100" />
             ))}
           </div>
         ) : recent.length === 0 ? (
-          <div className="mt-4 space-y-4">
-            <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/80 p-6">
-              <h3 className="font-semibold text-emerald-900">テンプレートから始めましょう</h3>
-              <p className="mt-1 text-sm text-emerald-800">
-                館内案内・WiFi・朝食・チェックアウト・周辺観光の型が入ったテンプレートを使うと、編集するだけですぐ公開できます。
-              </p>
-              <Link
-                href="/templates"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white no-underline transition hover:bg-emerald-700 hover:!text-white"
-              >
-                テンプレートを選ぶ
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-              <p className="text-slate-600">まだ案内ページがありません</p>
-              <p className="mt-1 text-sm text-slate-500">1つ作ると、QRでお客様に届けられます。「ページを作成」から始めてください。</p>
-            </div>
+          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white px-5 py-8 text-center">
+            <p className="text-sm font-medium text-slate-800">まだ案内ページがありません</p>
+            <p className="mt-1 text-sm text-slate-500">
+              テンプレートから始めるか、空白ページを作成してください。
+            </p>
+            {canEdit ? (
+              <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                <Link
+                  href="/templates"
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
+                  テンプレートを選ぶ
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleCreatePage}
+                  disabled={creating}
+                  className="inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  空白から作成
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="mt-3 space-y-2">
@@ -408,47 +370,7 @@ function DashboardViewWeb() {
           </div>
         )}
       </section>
-      </ScrollReveal>
 
-      {/* Published pages */}
-      {!loading && published.length > 0 && (
-        <ScrollReveal>
-        <section>
-          <h2 className="app-section-title">公開中のページ</h2>
-          <div className="mt-3 space-y-2">
-            {published.slice(0, 5).map((item) => {
-              const stat = viewMetrics?.pageStats?.find((p) => p.informationId === item.id);
-              return (
-                <PageCard
-                  key={item.id}
-                  id={item.id}
-                  editHref={`/editor/${item.id}`}
-                  title={item.title}
-                  slug={item.slug}
-                  status="published"
-                  updatedAt={infoBySlug.get(item.slug)?.updatedAt ?? new Date().toISOString()}
-                  views7d={stat?.views}
-                  qrViews7d={stat?.qrViews}
-                  onDelete={deletingId ? undefined : handleDeletePage}
-                  onRename={canEdit ? handleRenamePage : undefined}
-                  onTogglePublish={canEdit ? handleTogglePublish : undefined}
-                  publishToggling={togglingPublishId === item.id}
-                  canEdit={canEdit}
-                />
-              );
-            })}
-          </div>
-          {published.length > 5 && (
-            <Link
-              href="/dashboard/pages"
-              className="mt-2 inline-block text-xs font-medium text-slate-500 hover:text-slate-700"
-            >
-              他 {published.length - 5} 件
-            </Link>
-          )}
-        </section>
-        </ScrollReveal>
-      )}
       <PlanLimitModal
         open={planLimitModalOpen}
         onClose={() => setPlanLimitModalOpen(false)}
@@ -457,14 +379,8 @@ function DashboardViewWeb() {
       {mounted && creating &&
         createPortal(
           <FullScreenLoadingOverlay
-            title={
-              creating ? "作成中…" : "処理中…"
-            }
-            subtitle={
-              creating
-                ? "新しい案内ページを用意しています"
-                : "処理を実行しています"
-            }
+            title="作成中…"
+            subtitle="新しい案内ページを用意しています"
             classNameZ="z-40"
           />,
           document.body

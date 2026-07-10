@@ -121,13 +121,13 @@ export function QrGeneratorPanel() {
           </header>
 
           {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800">
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800">
               {error}
             </div>
           )}
 
           {/* ページ選択 */}
-          <div className="mb-6 rounded-xl border border-ds-border bg-ds-card p-4 shadow-sm">
+          <div className="mb-6 rounded-lg border border-[#e6e8eb] bg-white p-4">
             <label className="block text-xs font-medium text-slate-500">
               ページを選択
             </label>
@@ -163,9 +163,9 @@ export function QrGeneratorPanel() {
 
           {/* 中央：大きなQR */}
           {selected && qrImageSrc && (
-            <div className="rounded-2xl border border-ds-border bg-ds-card p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+            <div className="rounded-lg border border-[#e6e8eb] bg-white p-6">
               <div className="flex justify-center">
-                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-inner">
+                <div className="rounded-lg border border-[#e6e8eb] bg-white p-4">
                   <Image
                     src={qrImageSrc}
                     alt="QRコード"
@@ -186,14 +186,14 @@ export function QrGeneratorPanel() {
                 <button
                   type="button"
                   onClick={() => void handleDownload()}
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  className="inline-flex justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
                 >
                   ダウンロード
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleCopyLink()}
-                  className="inline-flex justify-center rounded-xl border border-ds-border bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  className="inline-flex justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
                 >
                   {copied ? "コピーしました" : "URLをコピー"}
                 </button>
@@ -201,7 +201,7 @@ export function QrGeneratorPanel() {
                   href={printHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="app-button-native inline-flex justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:ml-auto"
+                  className="app-button-native inline-flex justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 sm:ml-auto"
                 >
                   印刷設定
                 </a>
@@ -209,7 +209,7 @@ export function QrGeneratorPanel() {
                   href={qrImageSrc}
                   target="_blank"
                   rel="noreferrer"
-                  className="app-button-native inline-flex justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold !text-white shadow-sm hover:bg-slate-800"
+                  className="app-button-native inline-flex justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium !text-white hover:bg-slate-800"
                 >
                   QRコード生成
                 </a>

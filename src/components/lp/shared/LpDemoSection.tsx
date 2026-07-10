@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Section } from "@/components/ui";
 import { ScrollReveal } from "@/components/motion";
 
@@ -18,13 +20,17 @@ export function LpDemoSection({
 }: LpDemoSectionProps) {
   return (
     <Section id="live-demo" kicker="体験" title={title} description={description} variant="muted" popTitle>
-      <ScrollReveal>
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:p-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <ScrollReveal intensity="strong">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/50 p-6 shadow-sm ring-1 ring-emerald-100/80 sm:p-8">
+          <div
+            className="lp-glow-pulse pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-300/20 blur-2xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button
               href={demoEditorHref}
               size="lg"
-              className="min-h-[48px] flex-1 sm:flex-none !bg-emerald-600 hover:!bg-emerald-700"
+              className="lp-cta-attention min-h-[48px] flex-1 sm:flex-none !bg-emerald-600 hover:!bg-emerald-700"
             >
               30秒デモを開く
             </Button>
@@ -35,7 +41,9 @@ export function LpDemoSection({
               無料ではじめる
             </Button>
           </div>
-          <p className="mt-4 text-sm text-slate-500">デモは体験用です。公開・QR共有は無料登録後のダッシュボードから。</p>
+          <p className="relative mt-4 text-sm text-slate-500">
+            デモは体験用です。公開・QR共有は無料登録後のダッシュボードから。
+          </p>
         </div>
       </ScrollReveal>
     </Section>

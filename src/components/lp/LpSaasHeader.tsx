@@ -16,6 +16,7 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
   const showBtocSections = variant === "saas";
   const audience = variant === "business" ? "hotel" : "personal";
   const homeHref = variant === "business" ? "/lp/business" : "/lp/saas";
+  const showAudienceSwitch = variant === "saas";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const firstMenuLinkRef = useRef<HTMLAnchorElement | null>(null);
   const navLinkClass =
@@ -52,9 +53,13 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
           Infomii
         </Link>
 
-        <div className="flex min-w-0 flex-1 items-center justify-center md:flex-none md:justify-start">
-          <LpHeroAudienceSwitch active={audience} compact />
-        </div>
+        {showAudienceSwitch ? (
+          <div className="flex min-w-0 flex-1 items-center justify-center md:flex-none md:justify-start">
+            <LpHeroAudienceSwitch active={audience} compact />
+          </div>
+        ) : (
+          <div className="min-w-0 flex-1 md:flex-none" />
+        )}
 
         <nav className="ml-auto hidden shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1 md:flex">
           {showBtocSections ? (
@@ -130,9 +135,11 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
           }`}
         >
           <div className="flex flex-col gap-2">
-            <div className="pb-1">
-              <LpHeroAudienceSwitch active={audience} compact className="w-full justify-center" />
-            </div>
+            {showAudienceSwitch ? (
+              <div className="pb-1">
+                <LpHeroAudienceSwitch active={audience} compact className="w-full justify-center" />
+              </div>
+            ) : null}
             {showBtocSections ? (
               <>
                 <a

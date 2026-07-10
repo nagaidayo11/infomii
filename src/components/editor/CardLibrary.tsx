@@ -23,6 +23,8 @@ type CardLibraryProps = {
   onLockedAddCard?: (type: CardType) => void;
   libraryAudience: LibraryAudience;
   onLibraryAudienceChange: (audience: LibraryAudience) => void;
+  /** Web hotel product hides personal library; App keeps the switch. Default true. */
+  showAudienceSwitch?: boolean;
 };
 
 function BusinessBadge() {
@@ -437,7 +439,7 @@ function DescriptionWithTooltip({
           >
             <div
               data-mobile-tooltip-panel="true"
-              className="pointer-events-auto mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-xl border border-slate-200 bg-white p-2.5 shadow-xl"
+              className="pointer-events-auto mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-lg border border-[#e6e8eb] bg-white p-2.5 shadow-md"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
             >
@@ -898,7 +900,7 @@ function LibraryItemButton({
       <div className="relative min-w-0 flex-1 pr-9">
         <span
           className={
-            "flex h-9 items-center gap-1 truncate text-[15px] font-medium leading-none " +
+            "flex h-9 items-center gap-1 truncate text-[13px] font-medium leading-none " +
             (isBusinessType ? "text-violet-700" : "text-slate-800")
           }
         >
@@ -934,9 +936,11 @@ export function CardLibrary({
   onLockedAddCard,
   libraryAudience,
   onLibraryAudienceChange,
+  showAudienceSwitch = true,
 }: CardLibraryProps) {
   const librarySections = getLibrarySections(libraryAudience);
   const quickPresets = getQuickPresets(libraryAudience);
+  const [presetsOpen, setPresetsOpen] = useState(false);
   const canAdd = (type: CardType) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(type);
   const canAddPreset = (types: CardType[]) => types.every((type) => canAdd(type));
   const handleAdd = (type: CardType) => {
@@ -955,59 +959,88 @@ export function CardLibrary({
     onAddPreset?.(preset.types);
   };
   return (
-    <div className="flex h-full flex-col overflow-visible [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+    <div className="flex h-full flex-col overflow-visible ">
       <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
-        <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+        <h2 className="text-sm font-semibold text-slate-700">
           ブロックライブラリ
         </h2>
         <p className="mt-1 text-xs text-slate-500">クリックでキャンバスに追加</p>
-        <div
-          className="mt-2.5 inline-flex w-full rounded-lg border border-slate-200 bg-slate-50/80 p-0.5"
-          role="tablist"
-          aria-label="ブロックライブラリの用途"
-        >
-          {(
-            [
-              { id: "hotel" as const, label: "宿泊施設" },
-              { id: "personal" as const, label: "個人・友達向け" },
-            ] as const
-          ).map((tab) => {
-            const selected = libraryAudience === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => onLibraryAudienceChange(tab.id)}
-                className={
-                  "ui-pop-tap min-h-[36px] flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-semibold transition " +
-                  (selected
-                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
-                    : "text-slate-500 lg:hover:text-slate-700")
-                }
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        {showAudienceSwitch ? (
+          <div
+            className="mt-2.5 inline-flex w-full rounded-lg border border-slate-200 bg-slate-50/80 p-0.5"
+            role="tablist"
+            aria-label="ブロックライブラリの用途"
+          >
+            {(
+              [
+                { id: "hotel" as const, label: "宿泊施設" },
+                { id: "personal" as const, label: "個人・友達向け" },
+              ] as const
+            ).map((tab) => {
+              const selected = libraryAudience === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => onLibraryAudienceChange(tab.id)}
+                  className={
+                    "ui-pop-tap min-h-[36px] flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-semibold transition " +
+                    (selected
+                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80"
+                      : "text-slate-500 lg:hover:text-slate-700")
+                  }
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <div className="space-y-3">
           {onAddPreset && (
             <section aria-label="おすすめセット" className="space-y-2">
-              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
-                おすすめセット
-              </h3>
+              <div className="flex items-center justify-between gap-2 px-0.5">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                  おすすめセット
+                </h3>
+                {quickPresets.length > 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setPresetsOpen((open) => !open)}
+                    aria-expanded={presetsOpen}
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+                  >
+                    {presetsOpen ? "閉じる" : `ほか ${quickPresets.length - 2} 件`}
+                    <svg
+                      className={
+                        "h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] " +
+                        (presetsOpen ? "rotate-180" : "")
+                      }
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                ) : null}
+              </div>
               <div className="space-y-1">
-                {quickPresets.map((preset) => (
+                {quickPresets.slice(0, 2).map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => handleAddPreset(preset)}
                     className={
-                      "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-all " +
+                      "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
                       (canAddPreset(preset.types)
                         ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
                         : "border-violet-300 bg-violet-50/70")
@@ -1026,6 +1059,51 @@ export function CardLibrary({
                   </button>
                 ))}
               </div>
+              {quickPresets.length > 2 ? (
+                <div
+                  className={
+                    "grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none " +
+                    (presetsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")
+                  }
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <div
+                      className={
+                        "space-y-1 pt-1 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none " +
+                        (presetsOpen
+                          ? "translate-y-0 opacity-100"
+                          : "-translate-y-1 opacity-0")
+                      }
+                    >
+                      {quickPresets.slice(2).map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleAddPreset(preset)}
+                          tabIndex={presetsOpen ? 0 : -1}
+                          className={
+                            "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
+                            (canAddPreset(preset.types)
+                              ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
+                              : "border-violet-300 bg-violet-50/70")
+                          }
+                          aria-label={`${preset.label}を追加`}
+                          title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
+                        >
+                          <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
+                            {preset.label}
+                            {preset.businessOnly ? (
+                              <BusinessBadge />
+                            ) : null}
+                          </span>
+                          <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
+                          <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </section>
           )}
           {librarySections.map((section) => (
@@ -1034,7 +1112,7 @@ export function CardLibrary({
               aria-label={section.title}
               className="relative isolate space-y-1 pt-3 first:pt-0"
             >
-              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+              <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-slate-500">
                 {section.title}
               </h3>
               <div className="relative space-y-1">

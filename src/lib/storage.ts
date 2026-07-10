@@ -4430,6 +4430,18 @@ export async function listPagesForHotel(): Promise<PageRow[]> {
   return (data ?? []) as PageRow[];
 }
 
+export type PageConnectionTreeNode = {
+  pageId: string;
+  children: PageConnectionTreeNode[];
+};
+
+export type PageConnectionFlatNode = {
+  page: PageRow;
+  depth: number;
+  isRoot: boolean;
+  hasChildren: boolean;
+};
+
 export type PageConnectionSet = {
   id: string;
   name: string;
@@ -4437,6 +4449,8 @@ export type PageConnectionSet = {
   pageCount: number;
   rootPageId: string;
   pages: PageRow[];
+  /** Directed tree from pageLinks (root → linked pages). */
+  tree: PageConnectionTreeNode;
 };
 
 type CardLinkRow = {
@@ -4449,10 +4463,91 @@ type PageLinkItem = {
   pageSlug?: string;
 };
 
+function comparePageTitle(a: PageRow | undefined, b: PageRow | undefined): number {
+  return (a?.title ?? "").localeCompare(b?.title ?? "", "ja");
+}
+
+function pickConnectionRootId(
+  groupIds: string[],
+  directedOut: Map<string, Set<string>>,
+  directedIn: Map<string, Set<string>>,
+  idToPage: Map<string, PageRow>,
+): string {
+  const sources = groupIds.filter((id) => (directedIn.get(id)?.size ?? 0) === 0);
+  const candidates = sources.length > 0 ? sources : groupIds;
+  return [...candidates].sort((a, b) => {
+    const outDiff = (directedOut.get(b)?.size ?? 0) - (directedOut.get(a)?.size ?? 0);
+    if (outDiff !== 0) return outDiff;
+    return comparePageTitle(idToPage.get(a), idToPage.get(b));
+  })[0]!;
+}
+
+function buildConnectionTree(
+  rootId: string,
+  groupIdSet: Set<string>,
+  directedOut: Map<string, Set<string>>,
+  idToPage: Map<string, PageRow>,
+): PageConnectionTreeNode {
+  const visited = new Set<string>();
+
+  const walk = (pageId: string): PageConnectionTreeNode => {
+    visited.add(pageId);
+    const childIds = [...(directedOut.get(pageId) ?? [])]
+      .filter((id) => groupIdSet.has(id) && !visited.has(id))
+      .sort((a, b) => comparePageTitle(idToPage.get(a), idToPage.get(b)));
+    return {
+      pageId,
+      children: childIds.map((id) => walk(id)),
+    };
+  };
+
+  const tree = walk(rootId);
+  const orphans = [...groupIdSet]
+    .filter((id) => !visited.has(id))
+    .sort((a, b) => comparePageTitle(idToPage.get(a), idToPage.get(b)));
+  for (const orphanId of orphans) {
+    tree.children.push(walk(orphanId));
+  }
+  return tree;
+}
+
+/** Flatten a connection tree for directory-style rendering. */
+export function flattenPageConnectionTree(
+  set: PageConnectionSet,
+): PageConnectionFlatNode[] {
+  if (!set.tree?.pageId) {
+    return set.pages.map((page) => ({
+      page,
+      depth: page.id === set.rootPageId ? 0 : 1,
+      isRoot: page.id === set.rootPageId,
+      hasChildren: false,
+    }));
+  }
+
+  const idToPage = new Map(set.pages.map((page) => [page.id, page]));
+  const rows: PageConnectionFlatNode[] = [];
+
+  const walk = (node: PageConnectionTreeNode, depth: number) => {
+    const page = idToPage.get(node.pageId);
+    if (!page) return;
+    rows.push({
+      page,
+      depth,
+      isRoot: depth === 0,
+      hasChildren: node.children.length > 0,
+    });
+    for (const child of node.children) walk(child, depth + 1);
+  };
+
+  walk(set.tree, 0);
+  return rows;
+}
+
 /**
  * Build connected page sets from pageLinks cards.
  * - 1 page: single
  * - 2+ pages connected by internal links: linked (UI label: ページ連携)
+ * - tree follows directed pageLinks edges from a chosen root
  */
 export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSet[]> {
   const supabase = getBrowserSupabaseClient();
@@ -4485,8 +4580,14 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
   const pageIds = pages.map((p) => p.id);
   const slugToId = new Map(pages.map((p) => [p.slug, p.id]));
   const idToPage = new Map(pages.map((p) => [p.id, p]));
-  const adjacency = new Map<string, Set<string>>();
-  for (const p of pages) adjacency.set(p.id, new Set<string>());
+  const undirected = new Map<string, Set<string>>();
+  const directedOut = new Map<string, Set<string>>();
+  const directedIn = new Map<string, Set<string>>();
+  for (const p of pages) {
+    undirected.set(p.id, new Set<string>());
+    directedOut.set(p.id, new Set<string>());
+    directedIn.set(p.id, new Set<string>());
+  }
 
   const { data: linkCards, error: cardsError } = await supabase
     .from("cards")
@@ -4502,19 +4603,17 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
         if (!slug) continue;
         const targetId = slugToId.get(slug);
         if (!targetId || targetId === row.page_id) continue;
-        adjacency.get(row.page_id)?.add(targetId);
-        adjacency.get(targetId)?.add(row.page_id);
+        undirected.get(row.page_id)?.add(targetId);
+        undirected.get(targetId)?.add(row.page_id);
+        directedOut.get(row.page_id)?.add(targetId);
+        directedIn.get(targetId)?.add(row.page_id);
       }
     }
   }
 
   const visited = new Set<string>();
   const sets: PageConnectionSet[] = [];
-  const sortedIds = [...pageIds].sort((a, b) => {
-    const ta = idToPage.get(a)?.title ?? "";
-    const tb = idToPage.get(b)?.title ?? "";
-    return ta.localeCompare(tb, "ja");
-  });
+  const sortedIds = [...pageIds].sort((a, b) => comparePageTitle(idToPage.get(a), idToPage.get(b)));
 
   for (const startId of sortedIds) {
     if (visited.has(startId)) continue;
@@ -4524,18 +4623,26 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
     while (stack.length > 0) {
       const cur = stack.pop() as string;
       groupIds.push(cur);
-      for (const next of adjacency.get(cur) ?? []) {
+      for (const next of undirected.get(cur) ?? []) {
         if (visited.has(next)) continue;
         visited.add(next);
         stack.push(next);
       }
     }
-    const groupPages = groupIds
+    const groupIdSet = new Set(groupIds);
+    const rootId = pickConnectionRootId(groupIds, directedOut, directedIn, idToPage);
+    const tree = buildConnectionTree(rootId, groupIdSet, directedOut, idToPage);
+    const orderedIds: string[] = [];
+    const collect = (node: PageConnectionTreeNode) => {
+      orderedIds.push(node.pageId);
+      for (const child of node.children) collect(child);
+    };
+    collect(tree);
+    const groupPages = orderedIds
       .map((id) => idToPage.get(id))
-      .filter((p): p is PageRow => Boolean(p))
-      .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? "", "ja"));
+      .filter((p): p is PageRow => Boolean(p));
     if (groupPages.length === 0) continue;
-    const root = groupPages[0];
+    const root = idToPage.get(rootId) ?? groupPages[0]!;
     const isLinked = groupPages.length > 1;
     sets.push({
       id: `set-${root.id}`,
@@ -4544,6 +4651,7 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
       pageCount: groupPages.length,
       rootPageId: root.id,
       pages: groupPages,
+      tree,
     });
   }
 

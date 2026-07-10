@@ -79,7 +79,7 @@ export function QrManagementPanel() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/dashboard/qr-generator"
-            className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900"
           >
             QR作成・印刷
           </Link>
@@ -99,8 +99,8 @@ export function QrManagementPanel() {
 
         {loading ? (
           <div className="space-y-4">
-            <div className="h-48 animate-pulse rounded-xl bg-slate-200" />
-            <div className="h-32 animate-pulse rounded-xl bg-slate-200" />
+            <div className="h-48 animate-pulse rounded-lg bg-slate-200" />
+            <div className="h-32 animate-pulse rounded-lg bg-slate-200" />
           </div>
         ) : (
           <>
@@ -120,7 +120,7 @@ export function QrManagementPanel() {
                 </p>
                 <div className="mt-4 space-y-4">
                   {informations.length === 0 && (
-                    <p className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center text-sm text-slate-500">
+                    <p className="rounded-lg border border-dashed border-[#e6e8eb] bg-white py-12 text-center text-sm text-slate-500">
                       ページがありません。ダッシュボードから作成してください。
                     </p>
                   )}

@@ -122,6 +122,12 @@ export default function TemplatesPage() {
   useEffect(() => {
     const paramCategory = searchParams.get("category");
     if (paramCategory && VALID_CATEGORY_IDS.has(paramCategory)) {
+      // Web is hotel-only; ignore BtoC category deep-links.
+      if (!isAppShell && (BTOC_MARKETPLACE_CATEGORIES as readonly string[]).includes(paramCategory)) {
+        setAudience("hotel");
+        setCategory("all");
+        return;
+      }
       setCategory(paramCategory);
       if ((HOTEL_MARKETPLACE_CATEGORIES as readonly string[]).includes(paramCategory)) {
         setAudience("hotel");
@@ -129,7 +135,13 @@ export default function TemplatesPage() {
         setAudience("personal");
       }
     }
-  }, [searchParams]);
+  }, [searchParams, isAppShell]);
+
+  useEffect(() => {
+    if (!isAppShell && audience !== "hotel") {
+      setAudience("hotel");
+    }
+  }, [isAppShell, audience]);
 
   useEffect(() => {
     if (!previewTemplate) return;
@@ -353,7 +365,7 @@ export default function TemplatesPage() {
             onClick={() => setPreviewTemplate(null)}
           >
             <div
-              className="ui-pop-in max-h-[92vh] w-full max-w-[600px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+              className="ui-pop-in max-h-[92vh] w-full max-w-[600px] overflow-hidden rounded-lg border border-[#e6e8eb] bg-white shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
@@ -430,7 +442,7 @@ export default function TemplatesPage() {
                 {[1, 2].map((i) => (
                   <div key={i} className="space-y-2 app-reveal">
                     <div className="app-shell-skeleton h-4 w-24 rounded-md" />
-                    <div className="app-shell-skeleton h-52 rounded-2xl" />
+                    <div className="app-shell-skeleton h-52 rounded-lg" />
                   </div>
                 ))}
               </div>
@@ -471,7 +483,7 @@ export default function TemplatesPage() {
                                 className={
                                   "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
                                   (highlighted
-                                    ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
+                                    ? "mt-1 shadow-[0_0_0_2px_rgb(15,23,42)] ring-2 ring-inset ring-slate-900"
                                     : "")
                                 }
                               >
@@ -508,27 +520,9 @@ export default function TemplatesPage() {
       <header className="app-page-header">
         <h1 className="app-page-title">テンプレート</h1>
         <p className="app-page-subtitle">
-          ホテル・旅館の館内案内を中心に、旅行しおりなど個人向けの型も選べます。用途別テンプレートからページを作成できます。
+          ホテル・旅館・民泊向けの館内案内テンプレートから、ページを作成できます。
         </p>
       </header>
-
-      <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-        {TEMPLATE_AUDIENCE_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => setAudience(option.id)}
-            className={
-              "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
-              (audience === option.id
-                ? "bg-slate-900 !text-white font-semibold"
-                : "text-slate-600 hover:bg-slate-100 font-medium")
-            }
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
 
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
         {visibleCategories.map((c) => (
@@ -537,10 +531,10 @@ export default function TemplatesPage() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={
-              "app-button-native shrink-0 rounded-lg px-3 py-2 text-sm shadow-sm transition " +
+              "app-button-native shrink-0 rounded-md px-3 py-2 text-sm transition " +
               (category === c.id
-                ? "bg-slate-900 !text-white font-semibold"
-                : "bg-slate-100 font-medium text-slate-600 hover:bg-slate-200")
+                ? "bg-slate-900 !text-white font-medium"
+                : "bg-white font-medium text-slate-600 ring-1 ring-[#e6e8eb] hover:bg-slate-50")
             }
           >
             {c.label}
@@ -610,7 +604,7 @@ export default function TemplatesPage() {
                             className={
                               "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
                               (highlighted
-                                ? "mt-1 shadow-[0_0_0_2px_rgb(16,185,129)] ring-2 ring-inset ring-emerald-500"
+                                ? "mt-1 shadow-[0_0_0_2px_rgb(15,23,42)] ring-2 ring-inset ring-slate-900"
                                 : "")
                             }
                           >

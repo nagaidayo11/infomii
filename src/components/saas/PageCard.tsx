@@ -70,7 +70,7 @@ export function PageCard({
   }
 
   return (
-    <article className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:p-5">
+    <article className="rounded-lg border border-[#e6e8eb] bg-white p-4 transition hover:border-slate-300 sm:p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export function PageCard({
                 className="w-full max-w-md rounded-md border border-slate-300 px-2.5 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400"
               />
             ) : (
-              <h3 className="truncate text-base font-semibold text-slate-900 sm:text-lg">
+              <h3 className="truncate text-[15px] font-semibold text-slate-900">
                 {title || ""}
               </h3>
             )}
@@ -104,7 +104,7 @@ export function PageCard({
                   setTitleValue(title ?? "");
                   setEditingTitle(true);
                 }}
-                className="app-button-native inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+                className="app-button-native inline-flex shrink-0 items-center rounded-md border border-[#e6e8eb] bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
                 名前変更
               </button>
@@ -114,7 +114,7 @@ export function PageCard({
             <div className="flex items-center gap-2">
               <span
                 className={
-                  status === "published" ? "text-emerald-600" : "text-slate-500"
+                  status === "published" ? "text-emerald-700" : "text-slate-500"
                 }
               >
                 {status === "published" ? "公開中" : "下書き"}
@@ -127,7 +127,7 @@ export function PageCard({
                   className={
                     "app-button-native inline-flex items-center p-0 text-sm font-normal transition disabled:opacity-50 " +
                     (status === "published"
-                      ? "text-emerald-600 hover:text-emerald-700"
+                      ? "text-emerald-700 hover:text-emerald-800"
                       : "text-slate-500 hover:text-slate-600")
                   }
                 >
@@ -150,7 +150,7 @@ export function PageCard({
             href={publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="app-button-native inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:min-h-0 sm:flex-initial sm:py-2"
+            className="app-button-native inline-flex min-h-[40px] flex-1 items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0 sm:flex-initial"
           >
             公開ページ
           </Link>
@@ -158,7 +158,7 @@ export function PageCard({
           <Link
             href={resolvedEditHref}
             onClick={() => setNavigating(true)}
-            className="app-button-native inline-flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:py-2"
+            className="app-button-native inline-flex min-h-[40px] flex-1 items-center justify-center rounded-md bg-slate-900 px-3 py-2 text-sm font-medium !text-white transition hover:bg-slate-800 sm:min-h-0 sm:flex-initial"
           >
             編集
           </Link>
@@ -169,7 +169,7 @@ export function PageCard({
               onClick={() => {
                 if (window.confirm(`${title?.trim() ? `「${title}」を` : "このページを"}削除しますか？`)) onDelete(id);
               }}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:py-2"
+              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0"
               aria-label="削除"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>

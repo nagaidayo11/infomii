@@ -1,4 +1,6 @@
-import { Card, Section } from "@/components/ui";
+"use client";
+
+import { Section } from "@/components/ui";
 import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
 type Item = { title: string; body: string };
@@ -26,22 +28,24 @@ export function LpContentGridSection({
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
       <ScrollReveal>
         <StaggerReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
-          {items.map((item) => (
-            <Card
+          {items.map((item, index) => (
+            <div
               key={item.title}
-              padding="lg"
               className={
-                "rounded-2xl border bg-white shadow-sm ring-1 transition duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-md " +
+                "group rounded-2xl border bg-white p-5 shadow-sm ring-1 transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-md sm:p-6 " +
                 (titleAccent
                   ? "border-emerald-100/80 ring-slate-100/60 motion-safe:hover:border-emerald-200/80"
                   : "border-slate-200/90 ring-slate-100/80")
               }
             >
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-sm font-bold text-emerald-700 ring-1 ring-emerald-100 transition duration-300 group-hover:scale-110 group-hover:bg-emerald-100">
+                {String(index + 1).padStart(2, "0")}
+              </div>
               <h3 className={`text-base font-semibold ${titleAccent ? "text-emerald-900" : "text-slate-900"}`}>
                 {item.title}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
-            </Card>
+            </div>
           ))}
         </StaggerReveal>
       </ScrollReveal>

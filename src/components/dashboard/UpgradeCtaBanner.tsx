@@ -36,25 +36,25 @@ export function UpgradeCtaBanner({
   const isProNearLimit =
     currentPlan === "pro" && maxPublishedPages <= 10 && publishedCount >= Math.max(1, maxPublishedPages - 1);
 
-  const pricingHref = useAppStore ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
+  const pricingHref = useAppStore ? APP_BILLING_PATH : "/lp/business#pricing";
   const pricingLabel = useAppStore ? "プランを見る" : "料金を見る";
 
   if (isFree) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">
               Proプランで10ページまで作成できます
             </h3>
-            <p className="mt-1 text-xs text-slate-600">
-              無料プランは3ページまで。Proにアップグレードで分析・複数ページ連携が使えます。
+            <p className="mt-1 text-xs text-slate-500">
+              無料プランは3ページまで。Proで分析・複数ページ連携が使えます。
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href={pricingHref}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
+              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0"
             >
               {pricingLabel}
             </Link>
@@ -62,7 +62,7 @@ export function UpgradeCtaBanner({
               plan="pro"
               useAppStore={useAppStore}
               variant="secondary"
-              className="w-full justify-center !rounded-xl !border-emerald-600 !bg-emerald-600 !px-3 !py-2.5 !text-sm !font-medium !text-white shadow-sm hover:!border-emerald-700 hover:!bg-emerald-700 sm:w-auto sm:!py-2"
+              className="w-full justify-center !rounded-md !border-slate-900 !bg-slate-900 !px-3 !py-2 !text-sm !font-medium !text-white hover:!border-slate-800 hover:!bg-slate-800 sm:w-auto"
             >
               Proを申し込む（¥1,280/月）
             </DashboardCheckoutButton>
@@ -74,8 +74,8 @@ export function UpgradeCtaBanner({
 
   if (isProNearLimit) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-amber-900">
               ページ数の上限に近づいています
@@ -87,11 +87,11 @@ export function UpgradeCtaBanner({
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href={pricingHref}
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0 sm:py-2"
+              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 sm:min-h-0"
             >
               {pricingLabel}
             </Link>
-            <DashboardCheckoutButton plan="business" useAppStore={useAppStore} variant="secondary" className="w-full justify-center sm:w-auto">
+            <DashboardCheckoutButton plan="business" useAppStore={useAppStore} variant="secondary" className="w-full justify-center !rounded-md sm:w-auto">
               Businessプランを申し込む（¥3,480/月）
             </DashboardCheckoutButton>
           </div>

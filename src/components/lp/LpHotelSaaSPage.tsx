@@ -14,10 +14,9 @@ import { LpWorkflowSection } from "@/components/lp/shared/LpWorkflowSection";
 import {
   HOTEL_LP_BEFORE_AFTER,
   HOTEL_LP_FAQ,
-  HOTEL_LP_OPERATIONS_BENEFITS,
-  HOTEL_LP_PAIN_POINTS,
   HOTEL_LP_PROPERTY_TYPES,
   HOTEL_LP_TRUST_POINTS,
+  HOTEL_LP_VALUE_POINTS,
   HOTEL_LP_WORKFLOW_STEPS,
   HOTEL_PLANS,
 } from "@/lib/lp/hotel-data";
@@ -43,7 +42,7 @@ export default function LpHotelSaaSPage() {
   return (
     <main
       className={
-        "lp-page min-h-screen w-full max-w-full min-w-0 overflow-x-clip bg-white text-slate-900 antialiased " +
+        "lp-page min-h-screen w-full max-w-full min-w-0 overflow-x-clip bg-[#f7fbf9] text-slate-900 antialiased " +
         "font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] " +
         LP_PAGE_TYPOGRAPHY_CLASS
       }
@@ -55,21 +54,13 @@ export default function LpHotelSaaSPage() {
       <LpTrustStrip points={HOTEL_LP_TRUST_POINTS} />
 
       <LpContentGridSection
-        id="pain-points"
-        kicker="現場の悩み"
-        title="フロントが抱える、いつもの負担"
-        description="紙・口頭・多言語のばらつきが、忙しい現場の負荷になっていませんか。"
-        items={HOTEL_LP_PAIN_POINTS}
-        variant="muted"
-      />
-
-      <LpContentGridSection
         id="operations"
         kicker="現場がラクになる"
-        title="「QRで作れる」より、運用が軽くなる"
-        description="館内案内の更新・説明・多言語を、フロントの日常業務に馴染む形でまとめます。"
-        items={HOTEL_LP_OPERATIONS_BENEFITS}
+        title="説明・印刷・多言語の負担を、QR運用にまとめる"
+        description="同じ説明の繰り返しや紙の差し替えを減らし、館内案内を1ページでそろえます。"
+        items={HOTEL_LP_VALUE_POINTS}
         titleAccent
+        variant="white"
       />
 
       <LpWorkflowSection
@@ -94,7 +85,7 @@ export default function LpHotelSaaSPage() {
         description="大規模チェーンでなくても、少人数のフロント運用から始められます。"
         scenes={HOTEL_LP_PROPERTY_TYPES}
         bullets={HOTEL_SCENE_BULLETS}
-        variant="muted"
+        variant="white"
       />
 
       <LpBeforeAfterSection
@@ -102,6 +93,7 @@ export default function LpHotelSaaSPage() {
         title="運用の変化が、現場に伝わる"
         description="派手な機能より、日々の案内業務がどう軽くなるかを重視しています。"
         rows={HOTEL_LP_BEFORE_AFTER}
+        variant="muted"
       />
 
       <LpPricing
@@ -111,7 +103,7 @@ export default function LpHotelSaaSPage() {
         hasBusinessAnnual={hasBusinessAnnual}
       />
 
-      <LpFaqSection items={HOTEL_LP_FAQ} variant="muted" />
+      <LpFaqSection items={HOTEL_LP_FAQ} variant="white" />
 
       <LpFinalCtaSection
         ctaHref={ctaHref}

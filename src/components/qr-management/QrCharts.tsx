@@ -27,7 +27,7 @@ export function QrCharts({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-lg border border-[#e6e8eb] bg-white p-5">
         <h3 className="text-sm font-semibold text-slate-900">
           過去7日のQRスキャン
         </h3>
@@ -45,7 +45,7 @@ export function QrCharts({
                 </span>
                 <div className="flex w-full flex-1 items-end justify-center">
                   <div
-                    className="w-full max-w-[28px] rounded-t-md bg-emerald-500 transition-all"
+                    className="w-full max-w-[28px] rounded-t-md bg-slate-700 transition-all"
                     style={{
                       height: `${Math.max(8, h)}%`,
                       minHeight: bucket.count > 0 ? 12 : 4,
@@ -62,7 +62,7 @@ export function QrCharts({
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-lg border border-[#e6e8eb] bg-white p-5">
         <h3 className="text-sm font-semibold text-slate-900">QRスキャン合計</h3>
         <p className="mt-1 text-xs text-slate-500">直近7日</p>
         <p className="mt-4 text-4xl font-bold tabular-nums tracking-tight text-slate-900">
@@ -77,7 +77,7 @@ export function QrCharts({
               <span className="truncate text-sm font-medium text-slate-800">
                 {mostViewedTitle}
               </span>
-              <span className="shrink-0 text-sm tabular-nums text-emerald-700">
+              <span className="shrink-0 text-sm tabular-nums text-slate-600">
                 QR {mostViewedQrCount}
               </span>
             </div>

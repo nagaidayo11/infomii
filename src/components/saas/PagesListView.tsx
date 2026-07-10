@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
-  buildPublicUrlV,
   createBlankPage,
   getDashboardBootstrapData,
   listPageConnectionSetsForHotel,
@@ -21,30 +20,7 @@ import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverl
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppPagesListView } from "@/components/app-shell/views/AppPagesListView";
-
-function modeLabel(mode: PageConnectionSet["mode"]): string {
-  return mode === "linked" ? "宿泊者向け・連携" : "単体ページ";
-}
-
-function modeBadgeClass(mode: PageConnectionSet["mode"]): string {
-  return mode === "linked"
-    ? "bg-emerald-600 text-white ring-1 ring-emerald-700/80 shadow-sm"
-    : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80";
-}
-
-function PagePublishBadge({ page }: { page: PageRow }) {
-  const published = page.publishStatus === "published";
-  return (
-    <span
-      className={
-        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold " +
-        (published ? "bg-emerald-600 text-white ring-1 ring-emerald-700/80" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80")
-      }
-    >
-      {published ? "公開中" : "非公開"}
-    </span>
-  );
-}
+import { PageConnectionSetCard } from "@/components/saas/PageConnectionSetCard";
 
 export function PagesListView() {
   const { isAppShell } = useClientShell();
@@ -55,7 +31,6 @@ function PagesListViewWeb() {
   const router = useRouter();
   const [sets, setSets] = useState<PageConnectionSet[]>([]);
   const [pageFilter, setPageFilter] = useState<"all" | "linked" | "single">("all");
-  const [viewMode, setViewMode] = useState<"table" | "nodes">("nodes");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
@@ -174,151 +149,20 @@ function PagesListViewWeb() {
     return sets;
   }, [pageFilter, sets]);
 
-  function renderNodeSet(set: PageConnectionSet) {
-    const root = set.pages.find((page) => page.id === set.rootPageId) ?? set.pages[0];
-    const children = set.pages.filter((page) => page.id !== root?.id);
-    const childCols = Math.min(3, Math.max(1, children.length));
-    const childRows = children.length > 0 ? Math.ceil(children.length / childCols) : 0;
-    const canvasHeight = children.length === 0 ? 140 : 180 + childRows * 88;
-
-    const rootNode = { x: 50, y: 18 };
-    const childNodes = children.map((page, index) => {
-      const col = index % childCols;
-      const row = Math.floor(index / childCols);
-      const x = childCols === 1 ? 50 : 16 + (col * 68) / Math.max(1, childCols - 1);
-      const y = 52 + row * 30;
-      return { page, x, y };
-    });
-
-    const publishedInSet = set.pages.filter((p) => p.publishStatus === "published").length;
-
-    return (
-      <article key={set.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
-          <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-slate-900">{set.name}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {set.pageCount}ページ · 公開中 {publishedInSet}/{set.pageCount}
-            </p>
-          </div>
-          <span
-            className={"rounded-full px-2.5 py-1 text-xs font-semibold " + modeBadgeClass(set.mode)}
-          >
-            {modeLabel(set.mode)}
-          </span>
-        </div>
-
-        <div className="px-4 py-4">
-          <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
-          <div
-            className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50"
-            style={{ height: `${canvasHeight}px`, minWidth: "min(100%, 520px)" }}
-          >
-            <svg className="absolute inset-0 h-full w-full" aria-hidden>
-              {root &&
-                childNodes.map((node) => (
-                  <line
-                    key={`${root.id}-${node.page.id}`}
-                    x1={`${rootNode.x}%`}
-                    y1={`${rootNode.y + 10}%`}
-                    x2={`${node.x}%`}
-                    y2={`${node.y - 6}%`}
-                    stroke="#94a3b8"
-                    strokeWidth={1.5}
-                  />
-                ))}
-            </svg>
-
-            {root && (
-              <button
-                type="button"
-                onClick={() => router.push(`/editor/${root.id}`)}
-                className="absolute max-w-[min(180px,45vw)] -translate-x-1/2 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-left text-[11px] shadow-sm transition hover:border-slate-400 hover:bg-slate-50 sm:w-[170px] sm:max-w-none sm:px-3 sm:text-xs"
-                style={{ left: `${rootNode.x}%`, top: `${rootNode.y}%` }}
-              >
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">ルート</div>
-                <div className="mt-1 flex flex-wrap items-center gap-1">
-                  <div className="line-clamp-1 min-w-0 flex-1 text-xs font-medium text-slate-900">
-                    {root.title || "(無題)"}
-                  </div>
-                  <PagePublishBadge page={root} />
-                </div>
-              </button>
-            )}
-
-            {childNodes.map((node) => (
-              <button
-                key={node.page.id}
-                type="button"
-                onClick={() => router.push(`/editor/${node.page.id}`)}
-                className="absolute max-w-[min(160px,42vw)] -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-left text-[11px] shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:w-[150px] sm:max-w-none sm:px-3 sm:text-xs"
-                style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              >
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">子ページ</div>
-                <div className="mt-1 flex flex-wrap items-center gap-1">
-                  <div className="line-clamp-1 min-w-0 flex-1 text-xs font-medium text-slate-800">
-                    {node.page.title || "(無題)"}
-                  </div>
-                  <PagePublishBadge page={node.page} />
-                </div>
-              </button>
-            ))}
-          </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            {set.pages.map((page) => (
-              <div
-                key={`${set.id}-${page.id}-actions`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1"
-              >
-                <PagePublishBadge page={page} />
-                <span className="max-w-[200px] truncate text-xs text-slate-700">{page.title || "(無題)"}</span>
-                <button
-                  type="button"
-                  onClick={() => router.push(`/editor/${page.id}`)}
-                  className="rounded px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                >
-                  編集
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleRenamePage(page)}
-                  className="rounded px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                >
-                  名前変更
-                </button>
-                <button
-                  type="button"
-                  disabled={deletingPageId === page.id}
-                  onClick={() => void handleDeleteCardPage(page)}
-                  className="rounded px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-                >
-                  削除
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </article>
-    );
-  }
-
   return (
     <div className="app-main-container">
-      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="app-page-title">ページ</h1>
           <p className="app-page-subtitle">
-            宿泊者向けの案内ページを、連携セットまたは単体ページとして管理できます。
+            宿泊者向けの案内ページを、連携セットまたは単体ページとして管理します。
           </p>
           {subscription ? (
-            <p className="mt-3 text-base font-bold leading-snug tracking-tight text-slate-900 tabular-nums [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+            <p className="mt-2 text-sm text-slate-500 tabular-nums">
               公開中{" "}
-              <span className="text-lg font-extrabold text-slate-950">
+              <span className="font-semibold text-slate-800">
                 {publishedCount}/{subscription.plan === "business" ? "∞" : subscription.maxPublishedPages}
-              </span>{" "}
-              件
+              </span>
             </p>
           ) : null}
         </div>
@@ -327,18 +171,16 @@ function PagesListViewWeb() {
             type="button"
             onClick={handleCreatePage}
             disabled={creating}
-            className="app-button-native inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto sm:min-h-0"
+            className="app-button-native inline-flex min-h-[40px] w-full shrink-0 items-center justify-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-lg leading-none">
-              +
-            </span>
+            <span className="text-base leading-none">+</span>
             ページを作成
           </button>
         </div>
       </header>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        <div className="inline-flex rounded-md border border-[#e6e8eb] bg-white p-0.5">
           {(
             [
               { id: "all", label: "すべて" },
@@ -351,37 +193,15 @@ function PagesListViewWeb() {
               type="button"
               onClick={() => setPageFilter(option.id)}
               className={
-                "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
+                "app-button-native min-h-[36px] rounded px-3 py-1.5 text-xs transition " +
                 (pageFilter === option.id
-                  ? "bg-slate-900 !text-white font-semibold"
-                  : "text-slate-600 hover:bg-slate-100 font-medium")
+                  ? "bg-slate-900 !text-white font-medium"
+                  : "text-slate-600 hover:bg-slate-50 font-medium")
               }
             >
               {option.label}
             </button>
           ))}
-        </div>
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-        <button
-          type="button"
-          onClick={() => setViewMode("nodes")}
-          className={
-            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
-            (viewMode === "nodes" ? "bg-slate-900 !text-white font-semibold" : "text-slate-600 hover:bg-slate-100 font-medium")
-          }
-        >
-          ノード表示
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode("table")}
-          className={
-            "app-button-native min-h-[44px] rounded-md px-4 py-2 text-xs shadow-sm transition sm:min-h-0 sm:px-3 sm:py-1.5 " +
-            (viewMode === "table" ? "bg-slate-900 !text-white font-semibold" : "text-slate-600 hover:bg-slate-100 font-medium")
-          }
-        >
-          テーブル表示
-        </button>
         </div>
       </div>
 
@@ -408,121 +228,38 @@ function PagesListViewWeb() {
       {loading ? (
         <div className="mt-8 space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-slate-100" />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-100" />
           ))}
         </div>
       ) : sets.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
+        <div className="mt-8 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 p-12 text-center">
           <p className="text-slate-600">まだページがありません</p>
           <p className="mt-1 text-sm text-slate-500">ページを作成すると、宿泊者向けの連携セットまたは単体ページとして管理できます。</p>
         </div>
       ) : visibleSets.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
+        <div className="mt-8 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 p-12 text-center">
           <p className="text-slate-600">該当するページがありません</p>
           <p className="mt-1 text-sm text-slate-500">フィルタを変えるか、新しいページを作成してください。</p>
         </div>
-      ) : viewMode === "nodes" ? (
-        <section className="mt-8 space-y-4">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">セット {visibleSets.length}</span>
-            <span className="rounded-full bg-emerald-600 px-3 py-1 font-semibold text-white shadow-sm">
-              宿泊者向け・連携 {linkedCount}
-            </span>
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">単体 {singleCount}</span>
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
-          </div>
-          {visibleSets.map((set) => renderNodeSet(set))}
-        </section>
       ) : (
         <section className="mt-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">セット {visibleSets.length}</span>
-            <span className="rounded-full bg-emerald-600 px-3 py-1 font-semibold text-white shadow-sm">
+            <span className="rounded-md bg-slate-900 px-2.5 py-0.5 text-xs font-medium text-white">
               宿泊者向け・連携 {linkedCount}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">単体 {singleCount}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
           </div>
-
           {visibleSets.map((set) => (
-            <article key={set.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
-                <div className="min-w-0">
-                  <h2 className="truncate text-sm font-semibold text-slate-900">{set.name}</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {set.pageCount}ページ · 公開中{" "}
-                    {set.pages.filter((p) => p.publishStatus === "published").length}/{set.pageCount} · ルート{" "}
-                    {set.pages.find((p) => p.id === set.rootPageId)?.title || ""}
-                  </p>
-                </div>
-                <span className={"rounded-full px-2.5 py-1 text-xs font-semibold " + modeBadgeClass(set.mode)}>
-                  {modeLabel(set.mode)}
-                </span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/70">
-                      <th className="px-4 py-2 text-xs font-semibold text-slate-600">ページ名</th>
-                      <th className="px-4 py-2 text-xs font-semibold text-slate-600">公開</th>
-                      <th className="px-4 py-2 text-xs font-semibold text-slate-600">役割</th>
-                      <th className="px-4 py-2 text-xs font-semibold text-slate-600">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {set.pages.map((page) => (
-                      <tr key={page.id} className="border-b border-slate-50 last:border-0">
-                        <td className="px-4 py-3 font-medium text-slate-900">{page.title || "(無題)"}</td>
-                        <td className="px-4 py-3 align-middle">
-                          <PagePublishBadge page={page} />
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-600">
-                          {page.id === set.rootPageId ? (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-700">ルート</span>
-                          ) : (
-                            <span className="text-slate-500">子ページ</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <a
-                              href={`/editor/${page.id}`}
-                              className="app-button-native inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
-                            >
-                              編集
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => void handleRenamePage(page)}
-                              className="app-button-native rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-                            >
-                              名前変更
-                            </button>
-                            <a
-                              href={buildPublicUrlV(page.slug)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="app-button-native inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-                            >
-                              公開ページ
-                            </a>
-                            <button
-                              type="button"
-                              disabled={deletingPageId === page.id}
-                              onClick={() => void handleDeleteCardPage(page)}
-                              className="app-button-native rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
-                            >
-                              {deletingPageId === page.id ? "削除中…" : "削除"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </article>
+            <PageConnectionSetCard
+              key={set.id}
+              set={set}
+              deletingPageId={deletingPageId}
+              onEdit={(page) => router.push(`/editor/${page.id}`)}
+              onRename={(page) => void handleRenamePage(page)}
+              onDelete={(page) => void handleDeleteCardPage(page)}
+            />
           ))}
         </section>
       )}

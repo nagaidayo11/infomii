@@ -17,7 +17,7 @@ export function LpHotelPricingCard({ plan, freeSignupHref, hasProAnnual }: LpHot
   const isBusiness = plan.id === "business";
 
   const shellClass = [
-    "flex h-full flex-col rounded-3xl border p-6 sm:p-8 transition duration-300 motion-safe:hover:-translate-y-1",
+    "flex h-full flex-col rounded-2xl border p-6 sm:p-8 transition duration-300 motion-safe:hover:-translate-y-1",
     plan.highlighted
       ? "border-2 border-emerald-400 bg-gradient-to-b from-emerald-50/90 to-white shadow-lg shadow-emerald-100/40 ring-1 ring-emerald-200/60 sm:scale-[1.02]"
       : plan.recommended

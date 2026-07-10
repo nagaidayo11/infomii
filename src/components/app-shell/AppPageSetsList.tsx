@@ -1,6 +1,6 @@
 "use client";
 
-import type { PageConnectionSet, PageRow } from "@/lib/storage";
+import { flattenPageConnectionTree, type PageConnectionSet, type PageRow } from "@/lib/storage";
 import { AppWorksList, AppWorksListItemMotion } from "./AppWorksList";
 import { AppWorksListItem } from "./AppWorksListItem";
 
@@ -20,13 +20,17 @@ function renderPageItem(
   page: PageRow,
   index: number,
   props: Omit<AppPageSetsListProps, "sets" | "motionStartIndex">,
+  opts?: { depth?: number; isRoot?: boolean },
 ) {
   const info = props.infoBySlug.get(page.slug);
+  const depth = opts?.depth ?? 0;
+  const titlePrefix = depth > 0 ? `${"　".repeat(Math.min(depth, 4))}└ ` : "";
+  const titleSuffix = opts?.isRoot ? "（ルート）" : "";
   return (
     <AppWorksListItemMotion key={page.id} index={index}>
       <AppWorksListItem
         id={page.id}
-        title={page.title}
+        title={`${titlePrefix}${page.title || "(無題)"}${titleSuffix}`}
         slug={page.slug}
         status={info?.status === "published" ? "published" : "draft"}
         updatedAt={info?.updatedAt ?? new Date().toISOString()}
@@ -52,6 +56,7 @@ export function AppPageSetsList({
     <div className="app-page-sets">
       {sets.map((set) => {
         if (set.mode === "linked") {
+          const rows = flattenPageConnectionTree(set);
           const group = (
             <div key={set.id} className="app-page-set app-page-set--linked app-reveal">
               <div className="app-page-set-header">
@@ -59,8 +64,11 @@ export function AppPageSetsList({
                 <span className="app-page-set-badge">宿泊者向け・連携</span>
               </div>
               <AppWorksList variant="grouped">
-                {set.pages.map((page) => {
-                  const node = renderPageItem(page, motionIndex, itemProps);
+                {rows.map((row) => {
+                  const node = renderPageItem(row.page, motionIndex, itemProps, {
+                    depth: row.depth,
+                    isRoot: row.isRoot,
+                  });
                   motionIndex += 1;
                   return node;
                 })}

@@ -45,7 +45,7 @@ const MOBILE_NAV_HEIGHT =
   "calc(58px + env(safe-area-inset-bottom, 0px))";
 
 const mobileSheetAsideClass =
-  "ui-pop-in fixed inset-x-0 z-[90] flex max-h-[min(88dvh,calc(100dvh-10rem))] min-h-0 flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-sm";
+  "ui-pop-in fixed inset-x-0 z-[90] flex max-h-[min(88dvh,calc(100dvh-10rem))] min-h-0 flex-col overflow-hidden rounded-t-lg border border-[#e6e8eb] bg-white shadow-md lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-none";
 
 export function EditorLayout({
   topBar,
@@ -187,7 +187,7 @@ export function EditorLayout({
 
   return (
     <div
-      className="app-ambient-bg flex h-[100dvh] max-lg:h-[100svh] w-full flex-col overflow-hidden bg-slate-100/95"
+      className="app-ambient-bg flex h-[100dvh] max-lg:h-[100svh] w-full flex-col overflow-hidden bg-[#f6f8fa]"
       role="application"
       aria-label="エディタ"
       data-editor-layout
@@ -223,7 +223,7 @@ export function EditorLayout({
           <aside
             data-editor-column="library"
             className={
-              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
               "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
               (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
             }
@@ -249,7 +249,7 @@ export function EditorLayout({
 
           <section
             data-editor-column="canvas"
-            className="app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-slate-100"
+            className="app-page-atmosphere app-page-enter flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden overscroll-contain bg-[#f6f8fa]"
             aria-label="キャンバス"
             style={{ animationDelay: "90ms" }}
           >
@@ -259,7 +259,7 @@ export function EditorLayout({
           <aside
             data-editor-column="settings"
             className={
-              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-slate-200/90 bg-white shadow-sm [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] " +
+              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
               "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
               (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
             }

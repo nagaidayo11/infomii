@@ -66,7 +66,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-4 rounded-lg border border-[#e6e8eb] bg-white p-4 sm:flex-row sm:items-center">
       <div className="flex shrink-0 items-center gap-4">
         <div className="overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
           <Image
@@ -108,7 +108,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
               URLをコピー
             </button>
             {copied && (
-              <div className="ui-pop-in pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white shadow-md">
+              <div className="ui-pop-in pointer-events-none absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white shadow-sm">
                 URLをコピーしました
               </div>
             )}
@@ -117,7 +117,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
             href={printHref}
             target="_blank"
             rel="noreferrer"
-            className="app-button-native inline-flex min-h-[36px] items-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold !text-white shadow-sm transition hover:bg-slate-800 sm:ml-auto"
+            className="app-button-native inline-flex min-h-[36px] items-center rounded-md bg-slate-900 px-3 py-2 text-xs font-medium !text-white transition hover:bg-slate-800 sm:ml-auto"
           >
             印刷設定
           </a>

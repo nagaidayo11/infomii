@@ -464,7 +464,7 @@ export default function TeamPage() {
 
         {businessChecked && !isBusiness ? (
           <FadeIn>
-            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+            <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <h2 className="text-base font-semibold">Businessプラン限定機能です</h2>
               <p className="mt-2 text-sm leading-relaxed">
                 チーム招待・公開申請の承認フローはBusinessプランでご利用いただけます。
@@ -490,7 +490,7 @@ export default function TeamPage() {
           <>
             {/* メンバー */}
             <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">メンバー</h2>
                 {loading ? (
                   <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
@@ -571,7 +571,7 @@ export default function TeamPage() {
 
             {/* 招待コードで参加 */}
             <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">招待コードで参加</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   招待コードを受け取った場合、ここで入力して施設に参加できます。
@@ -598,7 +598,7 @@ export default function TeamPage() {
 
             {/* 招待コードを発行 */}
             <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">招待コードを発行</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   コードを共有すると、相手がログイン後に施設に参加できます。1施設のメンバーは最大{HOTEL_TEAM_MAX_MEMBERS}名までです（オーナー含む）。
@@ -627,7 +627,7 @@ export default function TeamPage() {
 
             {/* 発行済み招待コード */}
             <FadeIn>
-              <section className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-6">
+              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">発行済み招待コード</h2>
                 {loading ? (
                   <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
@@ -675,7 +675,7 @@ export default function TeamPage() {
 
             {/* 公開申請 */}
             <FadeIn>
-              <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <section className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
@@ -745,7 +745,7 @@ export default function TeamPage() {
                                   (row.status === "pending"
                                     ? "bg-amber-50 text-amber-800"
                                     : row.status === "approved"
-                                      ? "bg-emerald-600 text-white"
+                                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
                                       : "bg-rose-50 text-rose-700")
                                 }
                               >
@@ -777,7 +777,7 @@ export default function TeamPage() {
                                   type="button"
                                   disabled={approvalActingId === row.id}
                                   onClick={() => void handleApprovalAction(row.id, "approve")}
-                                  className="app-button-native min-h-[40px] rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                                  className="app-button-native min-h-[40px] rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
                                 >
                                   承認して公開
                                 </button>
@@ -806,7 +806,7 @@ export default function TeamPage() {
 
             {canViewAuditLogs ? (
               <FadeIn>
-                <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                <section className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
                   <details className="group">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                       <div className="min-w-0">
@@ -905,7 +905,7 @@ export default function TeamPage() {
       </div>
       {rejectModalOpen && (
         <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="ui-pop-in w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+          <div className="ui-pop-in w-full max-w-md rounded-lg border border-[#e6e8eb] bg-white p-5 shadow-md">
             <h3 className="text-base font-semibold text-slate-900">公開申請を却下</h3>
             <p className="mt-1 text-sm text-slate-500">
               却下理由を入力できます（任意）。入力内容は履歴に記録されます。

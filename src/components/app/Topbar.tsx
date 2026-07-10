@@ -100,7 +100,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
       createPortal(
         <div
           ref={panelRef}
-          className="ui-pop-in fixed z-[200] min-w-[200px] max-w-[min(100vw-1rem,20rem)] rounded-xl border border-slate-200 bg-white py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
+          className="ui-pop-in fixed z-[200] min-w-[200px] max-w-[min(100vw-1rem,20rem)] rounded-lg border border-[#e6e8eb] bg-white py-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
           role="menu"
           style={{
             top: menuPos.top,
@@ -144,7 +144,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
 
   return (
     <header
-      className="app-content-enter flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white px-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:gap-4 sm:px-4"
+      className="flex min-h-12 shrink-0 items-center justify-between gap-2 border-b border-[#e6e8eb] bg-white px-3 sm:gap-4 sm:px-5"
       style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
@@ -152,7 +152,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
           <button
             type="button"
             onClick={onOpenMobileNav}
-            className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden"
+            className="app-button-native flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#e6e8eb] bg-white text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 lg:hidden"
             aria-label="メニューを開く"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
@@ -163,12 +163,12 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
         <div className="min-w-0 flex-1">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
             {sectionTitle && (
-              <h1 className="truncate text-sm font-semibold text-slate-800">{sectionTitle}</h1>
+              <h1 className="truncate text-sm font-medium text-slate-700">{sectionTitle}</h1>
             )}
           </div>
           <div className="min-w-0 sm:hidden">
             {sectionTitle && (
-              <h1 className="truncate text-sm font-semibold leading-tight text-slate-900">{sectionTitle}</h1>
+              <h1 className="truncate text-sm font-medium leading-tight text-slate-900">{sectionTitle}</h1>
             )}
           </div>
         </div>
@@ -191,7 +191,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
               return next;
             });
           }}
-          className="app-button-native flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="app-button-native flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
           aria-expanded={menuOpen}
           aria-haspopup="true"
           aria-label={displayName ? `${displayName}のメニュー` : "ユーザーメニュー"}

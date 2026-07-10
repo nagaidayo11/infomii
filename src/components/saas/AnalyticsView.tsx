@@ -131,7 +131,7 @@ export function AnalyticsView() {
         <header className="app-page-header">
           <h1 className="app-page-title">分析ダッシュボード</h1>
         </header>
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
           {error}
         </div>
         <p className="text-sm text-slate-600">
@@ -152,13 +152,13 @@ export function AnalyticsView() {
         </header>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-slate-100" />
           ))}
         </div>
-        <div className="h-44 animate-pulse rounded-xl bg-slate-100" />
+        <div className="h-44 animate-pulse rounded-lg bg-slate-100" />
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="h-52 animate-pulse rounded-xl bg-slate-100" />
-          <div className="h-52 animate-pulse rounded-xl bg-slate-100" />
+          <div className="h-52 animate-pulse rounded-lg bg-slate-100" />
+          <div className="h-52 animate-pulse rounded-lg bg-slate-100" />
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export function AnalyticsView() {
           <button
             type="button"
             onClick={() => triggerAnalyticsCsvDownload(metrics, pageViews)}
-            className="app-button-native inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-sm transition hover:bg-indigo-100 sm:min-h-0"
+            className="app-button-native inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0"
           >
             CSVをダウンロード（Business）
           </button>
@@ -186,7 +186,7 @@ export function AnalyticsView() {
       </header>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -233,7 +233,7 @@ export function AnalyticsView() {
                 onClick={() => setDayRange(days)}
                 className={`app-button-native min-h-[36px] rounded-md px-2.5 text-xs font-semibold sm:px-3 ${
                   dayRange === days
-                    ? "bg-emerald-600 !text-white shadow-sm"
+                    ? "bg-slate-900 !text-white"
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
                 aria-pressed={dayRange === days}
@@ -244,9 +244,9 @@ export function AnalyticsView() {
           </div>
         </div>
         {loading ? (
-          <div className="mt-3 h-40 animate-pulse rounded-xl bg-slate-100" />
+          <div className="mt-3 h-40 animate-pulse rounded-lg bg-slate-100" />
         ) : hasDayData ? (
-          <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-4">
+          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-3 sm:p-4">
             <div className="-mx-1 overflow-x-auto px-1 pb-1">
               <div className={`flex h-40 items-end ${dayRange <= 14 ? "justify-between gap-1" : "gap-1.5"}`}>
               {byDay.map(({ date, count }) => {
@@ -266,7 +266,7 @@ export function AnalyticsView() {
                     </span>
                     <div className="flex w-full flex-1 items-end justify-center">
                       <div
-                        className="w-full max-w-[28px] rounded-t-md bg-emerald-500 transition-all"
+                        className="w-full max-w-[28px] rounded-t-md bg-slate-700 transition-all"
                         style={{
                           height: `${Math.max(8, h)}%`,
                           minHeight: count > 0 ? 12 : 4,
@@ -283,7 +283,7 @@ export function AnalyticsView() {
             </div>
           </div>
         ) : (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-500">
+          <p className="mt-3 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 py-8 text-center text-sm text-slate-500">
             まだデータがありません
           </p>
         )}
@@ -295,9 +295,9 @@ export function AnalyticsView() {
           <h2 className="app-section-title">国別ビュー</h2>
           <p className="mt-1 text-sm text-slate-500">アクセス元の国・地域</p>
           {loading ? (
-            <div className="mt-3 h-48 animate-pulse rounded-xl bg-slate-100" />
+            <div className="mt-3 h-48 animate-pulse rounded-lg bg-slate-100" />
           ) : byCountry.length > 0 ? (
-            <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+            <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-4">
               {byCountry.slice(0, 10).map(({ country, count }) => (
                 <SimpleBarRow
                   key={country}
@@ -308,7 +308,7 @@ export function AnalyticsView() {
               ))}
             </div>
           ) : (
-            <p className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-500">
+            <p className="mt-3 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 py-8 text-center text-sm text-slate-500">
               データがありません
             </p>
           )}
@@ -318,9 +318,9 @@ export function AnalyticsView() {
           <h2 className="app-section-title">言語別ビュー</h2>
           <p className="mt-1 text-sm text-slate-500">ブラウザの言語設定</p>
           {loading ? (
-            <div className="mt-3 h-48 animate-pulse rounded-xl bg-slate-100" />
+            <div className="mt-3 h-48 animate-pulse rounded-lg bg-slate-100" />
           ) : byLanguage.length > 0 ? (
-            <div className="mt-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+            <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-4">
               {byLanguage.slice(0, 10).map(({ language, count }) => (
                 <SimpleBarRow
                   key={language}
@@ -331,7 +331,7 @@ export function AnalyticsView() {
               ))}
             </div>
           ) : (
-            <p className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-500">
+            <p className="mt-3 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 py-8 text-center text-sm text-slate-500">
               データがありません
             </p>
           )}
@@ -345,11 +345,11 @@ export function AnalyticsView() {
         {loading ? (
           <div className="mt-3 space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-slate-100" />
             ))}
           </div>
         ) : topPages.length > 0 ? (
-          <div className="mt-3 rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white">
             <ul className="divide-y divide-slate-100">
               {topPages.map((page, index) => (
                 <li
@@ -376,7 +376,7 @@ export function AnalyticsView() {
             </ul>
           </div>
         ) : (
-          <p className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-500">
+          <p className="mt-3 rounded-lg border border-dashed border-[#e6e8eb] bg-slate-50/50 py-8 text-center text-sm text-slate-500">
             まだデータがありません
           </p>
         )}

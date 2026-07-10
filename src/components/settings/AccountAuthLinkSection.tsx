@@ -273,7 +273,7 @@ export function AccountAuthLinkSection() {
               className={
                 isAppShell
                   ? "app-settings-status-pill app-settings-status-pill--on"
-                  : "inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700"
+                  : "inline-flex rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
               }
             >
               連携済み
@@ -289,7 +289,7 @@ export function AccountAuthLinkSection() {
                 className={
                   isAppShell
                     ? "app-settings-status-pill app-settings-status-pill--on"
-                    : "inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700"
+                    : "inline-flex rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
                 }
               >
                 連携済み
@@ -350,7 +350,7 @@ export function AccountAuthLinkSection() {
             <button
               type="button"
               disabled
-              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-xl border border-emerald-700 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed"
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-md border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed"
             >
               Google連携済み
             </button>
@@ -378,7 +378,7 @@ export function AccountAuthLinkSection() {
 
       {reauthModalOpen ? (
         <div className="app-settings-modal-overlay ui-overlay-fade fixed inset-0 z-[90] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-          <div className="app-settings-modal ui-pop-in w-full max-w-md rounded-t-2xl border border-slate-200 bg-white p-6 shadow-xl sm:rounded-2xl">
+          <div className="app-settings-modal ui-pop-in w-full max-w-md rounded-t-lg border border-[#e6e8eb] bg-white p-6 shadow-md sm:rounded-lg">
             <h3 className="text-lg font-semibold text-slate-900">本人確認</h3>
             <p className="mt-2 text-sm text-slate-600">
               セキュリティ保護のため、現在のパスワードを入力してください。
@@ -431,7 +431,7 @@ export function AccountAuthLinkSection() {
 
       {unlinkModalOpen ? (
         <div className="app-settings-modal-overlay ui-overlay-fade fixed inset-0 z-[90] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-          <div className="app-settings-modal ui-pop-in w-full max-w-md rounded-t-2xl border border-slate-200 bg-white p-6 shadow-xl sm:rounded-2xl">
+          <div className="app-settings-modal ui-pop-in w-full max-w-md rounded-t-lg border border-[#e6e8eb] bg-white p-6 shadow-md sm:rounded-lg">
             <h3 className="text-lg font-semibold text-slate-900">Google連携を解除</h3>
             <p className="mt-2 text-sm text-slate-600">
               セキュリティ保護のため、現在のパスワードを入力して解除を確定してください。

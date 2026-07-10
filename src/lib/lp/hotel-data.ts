@@ -5,47 +5,39 @@ import { LP_TRUST_POINTS } from "@/lib/lp/plans";
 
 export const HOTEL_LP_TRUST_POINTS = LP_TRUST_POINTS;
 
-export const HOTEL_LP_PAIN_POINTS = [
+/** 現場の悩みと Infomii での解決を1セットで見せる */
+export const HOTEL_LP_VALUE_POINTS = [
   {
-    title: "同じ説明を繰り返す",
-    body: "Wi-Fi・朝食・チェックアウトの質問がフロントに集中し、忙しい時間帯ほど負荷が増えます。",
+    title: "同じ説明を繰り返さない",
+    body: "Wi-Fi・朝食・チェックアウトをQRで自己解決。忙しい時間帯の口頭案内を減らします。",
   },
   {
-    title: "紙案内の差し替えが追いつかない",
-    body: "メニュー変更や臨時案内のたびに印刷・配布。更新のたびに現場が止まりがちです。",
+    title: "紙の差し替えから解放",
+    body: "朝食時間や館内ルールは編集してすぐ公開。印刷・配布のたびに現場が止まる状態を解消します。",
   },
   {
-    title: "多言語対応が後回し",
-    body: "英語・中国語・韓国語の案内をそろえるのに時間がかかり、ゲストによって情報格差が出ます。",
+    title: "多言語もまとめて運用",
+    body: "主要言語の案内を1ページでそろえ、ゲストごとの情報格差を減らします（Businessで多言語反映）。",
+  },
+  {
+    title: "QRひとつで案内を統一",
+    body: "客室・フロント・館内の案内先を同じURLに。迷子の問い合わせと案内ミスを防ぎます。",
+  },
+  {
+    title: "変更はその場で反映",
+    body: "臨時休業や時間変更も、スマホから更新してすぐゲストに届きます。",
+  },
+  {
+    title: "接続手順を固定できる",
+    body: "Wi-Fi案内を1ページに固定。ゲストもスタッフも迷いにくくなります。",
   },
 ] as const;
 
-export const HOTEL_LP_OPERATIONS_BENEFITS = [
-  {
-    title: "紙の差し替え不要",
-    body: "朝食時間や館内ルールを編集するだけ。印刷・配布の手間を減らせます。",
-  },
-  {
-    title: "フロント説明を削減",
-    body: "Wi-Fi・設備・FAQをQRで自己解決。繰り返しの口頭案内を減らします。",
-  },
-  {
-    title: "Wi-Fi案内ミスを防ぐ",
-    body: "接続手順を1ページに固定。ゲストもスタッフも迷いにくくなります。",
-  },
-  {
-    title: "朝食変更を即反映",
-    body: "時間変更や休業日も、その場で更新してすぐ公開できます。",
-  },
-  {
-    title: "多言語案内をすぐ更新",
-    body: "Businessプランでは公開時の多言語反映で、インバウンド対応を軽くします。",
-  },
-  {
-    title: "QRひとつで案内統一",
-    body: "客室・フロント・館内の案内先を1つのURLに。迷子の問い合わせを減らします。",
-  },
-] as const;
+/** @deprecated Use HOTEL_LP_VALUE_POINTS */
+export const HOTEL_LP_PAIN_POINTS = HOTEL_LP_VALUE_POINTS;
+
+/** @deprecated Use HOTEL_LP_VALUE_POINTS */
+export const HOTEL_LP_OPERATIONS_BENEFITS = HOTEL_LP_VALUE_POINTS;
 
 export const HOTEL_LP_WORKFLOW_STEPS = [
   {

@@ -209,7 +209,7 @@ export function GeneratePageFromDescription({
         </h2>
         {!isApp && (
           <p className="mt-1 text-sm text-slate-500">
-            ホテル・旅館の館内案内を中心に、旅行のしおりなど個人向けのページも同じ要領で作れます。
+            ホテル・旅館の館内案内を、短い説明から作成できます。
           </p>
         )}
         {isApp && (
@@ -223,7 +223,7 @@ export function GeneratePageFromDescription({
         className={
           isApp
             ? "space-y-3"
-            : "rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+            : "rounded-lg border border-[#e6e8eb] bg-white p-4"
         }
       >
         {error && (
@@ -246,14 +246,8 @@ export function GeneratePageFromDescription({
                   templates={PROMPT_TEMPLATES_HOSPITALITY}
                   loading={loading}
                   onSelect={setDescription}
-                  chipClassName="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-900 transition hover:bg-emerald-100 disabled:opacity-60"
+                  chipClassName="rounded-md border border-[#e6e8eb] bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
                 />
-              </div>
-            )}
-            {!isApp && (
-              <div>
-                <p className="mb-2 text-xs font-medium text-slate-500">個人・友達に送る（例文）</p>
-                <PromptChipRow templates={PROMPT_TEMPLATES_PERSONAL} loading={loading} onSelect={setDescription} />
               </div>
             )}
             {isApp ? (
@@ -283,13 +277,13 @@ export function GeneratePageFromDescription({
               placeholder={
                 isApp
                   ? "例: 友達と京都2泊3日の旅行。集合場所・持ち物・日程も入れて"
-                  : "例: ホテルの館内案内でWi-Fi・朝食・チェックアウトを載せたい / 友達と沖縄3泊の旅行しおり、など自由に書いてください"
+                  : "例: ビジネスホテルの館内案内。Wi-Fi・朝食・チェックアウト・周辺の駅を載せたい"
               }
               rows={isApp ? 4 : 3}
               className={
                 isApp
                   ? "w-full resize-none rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-3 text-base text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:border-[var(--app-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--app-accent)]/20"
-                  : "w-full resize-none rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
+                  : "w-full resize-none rounded-md border border-[#e6e8eb] px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
               }
               disabled={loading}
             />
@@ -301,7 +295,7 @@ export function GeneratePageFromDescription({
               }
             >
               {!isApp && (
-                <span>コツ: 宿泊向けは Wi-Fi・食事・チェックアウト・連絡先。個人向けは時間・場所・持ち物があると良いです。</span>
+                <span>コツ: Wi-Fi・食事・チェックアウト・連絡先・周辺案内を入れると作りやすいです。</span>
               )}
               <span>{description.trim().length} 文字</span>
             </p>
@@ -312,7 +306,7 @@ export function GeneratePageFromDescription({
             className={
               isApp
                 ? "app-touch-btn flex w-full items-center justify-center bg-[var(--app-accent)] font-semibold text-white disabled:opacity-50"
-                : "app-button-native rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60"
+                : "app-button-native rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60"
             }
           >
             {loading ? "つくってる…" : "つくって編集"}

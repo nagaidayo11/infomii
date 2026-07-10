@@ -46,7 +46,7 @@ export function BusinessAuditLogExport() {
   if (!planLoaded) {
     return (
       <AppSettingsCard>
-        <div className="app-shell-skeleton h-24 rounded-2xl" aria-hidden />
+        <div className="app-shell-skeleton h-24 rounded-lg" aria-hidden />
       </AppSettingsCard>
     );
   }

@@ -1,3 +1,5 @@
+"use client";
+
 import { Section } from "@/components/ui";
 import { ScrollReveal, StaggerReveal } from "@/components/motion";
 
@@ -23,20 +25,26 @@ export function LpWorkflowSection({
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
       <ScrollReveal>
-        <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.1}>
-          {steps.map((item) => (
-            <div
-              key={item.step}
-              className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-100/80 transition duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-md"
-            >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-base font-bold text-emerald-700 ring-1 ring-emerald-100">
-                {item.step}
-              </span>
-              <h3 className="mt-5 text-lg font-semibold text-slate-900">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.desc}</p>
-            </div>
-          ))}
-        </StaggerReveal>
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute left-[16.5%] right-[16.5%] top-11 hidden h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent sm:block"
+            aria-hidden
+          />
+          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.12}>
+            {steps.map((item) => (
+              <div
+                key={item.step}
+                className="relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-100/80 transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:border-emerald-200 motion-safe:hover:shadow-md"
+              >
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-base font-bold text-emerald-700 ring-1 ring-emerald-100 transition duration-300 motion-safe:group-hover:scale-105">
+                  {item.step}
+                </span>
+                <h3 className="mt-5 text-lg font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.desc}</p>
+              </div>
+            ))}
+          </StaggerReveal>
+        </div>
       </ScrollReveal>
     </Section>
   );

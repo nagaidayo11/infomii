@@ -54,7 +54,7 @@ function SettingsSection({
 }) {
   return (
     <div id={sectionId} className="space-y-3 scroll-mt-28">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 ">
         {title}
       </h3>
       <div className={`space-y-2.5 ${contentClassName ?? ""}`.trim()}>{children}</div>
@@ -76,7 +76,7 @@ function StyleGroup({
       open={defaultOpen}
       className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30 ">
         <span>{summary}</span>
         <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180" aria-hidden>
           ▼
@@ -2184,8 +2184,8 @@ export function CardSettings({
   if (!card) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="border-b border-slate-200 bg-white px-4 py-4 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
-          <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+        <div className="border-b border-slate-200 bg-white px-4 py-4 ">
+          <h2 className="text-sm font-semibold text-slate-700">
             ブロック設定
           </h2>
           <p className="mt-3 text-sm text-slate-500">
@@ -2341,10 +2341,10 @@ export function CardSettings({
   if (businessLocked) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 ">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+              <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
               <button
                 type="button"
                 onClick={toggleDeleteProtection}
@@ -2424,7 +2424,7 @@ export function CardSettings({
         </div>
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 "
         >
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
             このブロックの編集はBusinessプランでご利用いただけます。公開ページでの表示は維持されます。
@@ -2436,10 +2436,10 @@ export function CardSettings({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">
+      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 ">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-700 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]">ブロック設定</h2>
+            <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
             <button
               type="button"
               onClick={toggleDeleteProtection}
@@ -2520,7 +2520,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
                 activePalette === "content"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2531,7 +2531,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
                 activePalette === "appearance"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2542,7 +2542,7 @@ export function CardSettings({
             <button
               type="button"
               onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px] [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif] ${
+              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
                 activePalette === "appearance-spacing"
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-100"
@@ -2555,7 +2555,7 @@ export function CardSettings({
       </div>
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 "
       >
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (

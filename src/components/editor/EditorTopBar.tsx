@@ -89,7 +89,7 @@ function AutosaveStatus({
     const justSaved = savedAgoMs >= 0 && savedAgoMs < 4000;
     return (
       <span className="ui-pop-badge flex items-center gap-1.5 text-xs text-slate-500">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-700" />
         {justSaved ? "保存しました" : `${formatSavedAt(lastSavedAt)}に保存`}
       </span>
     );
@@ -179,7 +179,7 @@ export function EditorTopBar({
   const publishClusterNode =
     showPublishCluster ? (
       <div
-        className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-slate-200 bg-slate-50/90 px-2.5 py-2 shadow-sm sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
+        className="flex min-w-0 flex-col gap-1.5 rounded-lg border border-[#e6e8eb] bg-slate-50/90 px-2.5 py-2 sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
         role="group"
         aria-label="公開設定"
       >
@@ -200,8 +200,8 @@ export function EditorTopBar({
               onClick={onTogglePublished}
               disabled={publishToggleLoading || publishing}
               className={
-                "relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 " +
-                (publishToggleChecked ? "bg-emerald-600" : "bg-slate-300")
+                "relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 " +
+                (publishToggleChecked ? "bg-slate-900" : "bg-slate-300")
               }
             >
               {publishToggleLoading ? (
@@ -228,7 +228,7 @@ export function EditorTopBar({
           <span
             className={
               "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold " +
-              (isPublished ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700")
+              (isPublished ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200")
             }
           >
             {isPublished ? "公開中" : "非公開"}
@@ -266,7 +266,7 @@ export function EditorTopBar({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0 "
       role="banner"
       aria-label="エディタツールバー"
     >
@@ -318,7 +318,7 @@ export function EditorTopBar({
             />
           ) : (
             <h1
-              className="truncate text-sm font-semibold text-slate-900 [font-family:'M_PLUS_Rounded_1c','Noto_Sans_JP',sans-serif]"
+              className="truncate text-sm font-semibold text-slate-900 "
               title={pageTitle}
             >
               {pageTitle || ""}
@@ -442,7 +442,7 @@ export function EditorTopBar({
           <span
             className={
               "rounded-full px-2 py-0.5 text-[11px] font-semibold " +
-              (isPublished ? "bg-emerald-600 text-white" : "bg-amber-50 text-amber-800")
+              (isPublished ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-amber-50 text-amber-800 ring-1 ring-amber-200")
             }
           >
             {isPublished ? "公開中" : "公開OFF"}
@@ -551,7 +551,7 @@ export function EditorTopBar({
               e.stopPropagation();
               setMoreOpen((o) => !o);
             }}
-            className="ui-pop-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="ui-pop-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-[#e6e8eb] bg-white text-slate-700 transition hover:bg-slate-50"
             aria-expanded={moreOpen}
             aria-haspopup="true"
             aria-label="その他の操作"
@@ -573,7 +573,7 @@ export function EditorTopBar({
                 />
                 <div
                   ref={moreMenuPanelRef}
-                  className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl"
+                  className="ui-pop-in fixed right-2 top-14 z-[140] max-h-[min(360px,65vh)] w-[min(calc(100vw-1rem),300px)] overflow-y-auto rounded-lg border border-[#e6e8eb] bg-white py-2 shadow-md"
                   role="menu"
                 >
                 <div className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500">確認・共有</div>
