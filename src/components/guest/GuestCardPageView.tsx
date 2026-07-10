@@ -1,12 +1,17 @@
 "use client";
 
 import type { FormEvent, MouseEvent, ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
+import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
+import {
+  resolveVisibleGuestShellTabs,
+  type GuestShellConfig,
+} from "@/lib/guest-shell";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 type GuestCardPageViewProps = {
@@ -31,6 +36,14 @@ type GuestCardPageViewProps = {
   backButton?: ReactNode;
   /** true のときリンク・ボタンなどの操作を無効化（LP埋め込みプレビュー用） */
   disableInteractions?: boolean;
+  /** Facility-wide bottom tab config */
+  guestShell?: GuestShellConfig | null;
+  /** Current page slug (for active tab + navigation) */
+  currentSlug?: string;
+  /** Preview mode for guest links */
+  preview?: boolean;
+  /** App WebView client */
+  clientApp?: boolean;
 };
 
 /**
@@ -50,6 +63,10 @@ export function GuestCardPageView({
   businessFeaturesEnabled = false,
   backButton,
   disableInteractions = false,
+  guestShell = null,
+  currentSlug = "",
+  preview = false,
+  clientApp = false,
 }: GuestCardPageViewProps) {
   const [locale, setLocale] = useState<SupportedLocale>(() => {
     if (localeLocked || typeof navigator === "undefined") return initialLocale;
@@ -59,6 +76,16 @@ export function GuestCardPageView({
   const [hintVisible, setHintVisible] = useState(false);
   const [hintNonce, setHintNonce] = useState(0);
 
+  const shellTabs = useMemo(
+    () =>
+      guestShell
+        ? resolveVisibleGuestShellTabs(guestShell, { businessFeaturesEnabled })
+        : [],
+    [guestShell, businessFeaturesEnabled],
+  );
+  const shellHasLocaleTab = shellTabs.some((tab) => tab.type === "locale");
+  const showHeaderLocaleToggle = showLocaleToggle && !shellHasLocaleTab;
+
   const locales: Array<{ code: SupportedLocale; label: string }> = [
     { code: "ja", label: "JA" },
     { code: "en", label: "EN" },
@@ -66,7 +93,7 @@ export function GuestCardPageView({
     { code: "ko", label: "한국어" },
   ];
 
-  const headerActions = showLocaleToggle ? (
+  const headerActions = showHeaderLocaleToggle ? (
     <div className="flex flex-nowrap items-center justify-end gap-1">
       {locales.map((item) => {
         const active = locale === item.code;
@@ -107,6 +134,25 @@ export function GuestCardPageView({
     event.stopPropagation();
   };
 
+  const bottomChrome =
+    !isEmbed && !disableInteractions && shellTabs.length > 0 && currentSlug ? (
+      <GuestBottomTabBar
+        tabs={shellTabs}
+        currentSlug={currentSlug}
+        locale={locale}
+        onLocaleChange={(next) => {
+          if (!disableLocaleSwitch) setLocale(next);
+          if (localeToggleHint?.trim()) {
+            setHintNonce((prev) => prev + 1);
+            setHintVisible(true);
+          }
+        }}
+        preview={preview}
+        clientApp={clientApp}
+        localeHint={localeToggleHint}
+      />
+    ) : null;
+
   return (
     <LocaleProvider value={locale}>
       <PublicPageShell
@@ -114,6 +160,7 @@ export function GuestCardPageView({
         backButton={backButton}
         pageBackground={pageBackground}
         headerActions={headerActions}
+        bottomChrome={bottomChrome}
         isEmbed={isEmbed}
         hardNavigation={!disableInteractions}
       >

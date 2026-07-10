@@ -263,6 +263,39 @@ function buildCardContentByType(type: string): Record<string, unknown> {
       return { title: "タクシー", phone: "03-1234-5678", companyName: "○○タクシー", note: "" };
     case "notice":
       return { title: "お知らせ", body: "最新情報はこのページでご確認ください。", variant: "info" };
+    case "hero_slider":
+      return {
+        title: "ご滞在ガイド",
+        autoplay: true,
+        intervalSec: 4,
+        transitionEnabled: true,
+        transitionType: "fade",
+        transitionDurationMs: 500,
+        showCaptions: true,
+        height: "s",
+        slides: [
+          { src: DEFAULT_HERO_IMAGE, alt: "館内イメージ", caption: "ご滞在のご案内" },
+          { src: "/templates/previews/business/515b796d.jpg", alt: "朝食イメージ", caption: "朝食ビュッフェ" },
+        ],
+      };
+    case "icon_shortcuts":
+      return {
+        title: "",
+        items: [
+          { label: "WiFi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
+          { label: "フロント", icon: "phone", linkType: "page", pageSlug: "", link: "" },
+          { label: "FAQ", icon: "faq", linkType: "page", pageSlug: "", link: "" },
+        ],
+      };
+    case "image_tiles":
+      return {
+        title: "",
+        columns: 2,
+        items: [
+          { src: DEFAULT_HERO_IMAGE, label: "レストラン", linkType: "page", pageSlug: "", link: "" },
+          { src: DEFAULT_HERO_IMAGE, label: "大浴場", linkType: "page", pageSlug: "", link: "" },
+        ],
+      };
     default:
       return { title: "ご案内", content: "詳細をご確認ください。" };
   }

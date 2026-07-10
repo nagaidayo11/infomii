@@ -12,6 +12,8 @@ import { renderInformationIconVisual } from "@/components/information/Informatio
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
+import { parseGuestShellConfig } from "@/lib/guest-shell";
+import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -706,6 +708,36 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     }
   }
   const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
+  let guestShell = parseGuestShellConfig(null);
+  if (hotelIdForLocaleToggle) {
+    try {
+      const admin = getSupabaseAdminServerClient();
+      // Legacy /p/ pages: try matching card page by slug for root inheritance, else hotel fallback.
+      const { data: linkedPage } = await admin
+        .from("pages")
+        .select("id,hotel_id")
+        .eq("slug", slug)
+        .eq("hotel_id", hotelIdForLocaleToggle)
+        .maybeSingle();
+      if (linkedPage) {
+        guestShell = await fetchResolvedGuestShellForPage(admin, {
+          id: linkedPage.id,
+          hotel_id: linkedPage.hotel_id,
+        });
+      } else {
+        const { data: hotelRow } = await admin
+          .from("hotels")
+          .select("guest_shell")
+          .eq("id", hotelIdForLocaleToggle)
+          .maybeSingle();
+        guestShell = parseGuestShellConfig(
+          (hotelRow as { guest_shell?: unknown } | null)?.guest_shell,
+        );
+      }
+    } catch {
+      guestShell = parseGuestShellConfig(null);
+    }
+  }
 
   const themeStyle = {
     backgroundColor: theme.backgroundColor || "#ffffff",
@@ -1231,6 +1263,8 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           showLocaleToggle={showLocaleToggle}
           businessFeaturesEnabled={canShowLocaleToggle}
           localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
+          guestShell={guestShell}
+          currentSlug={slug}
           backButton={
             isChildPage ? (
               <PublicFooterBackButton

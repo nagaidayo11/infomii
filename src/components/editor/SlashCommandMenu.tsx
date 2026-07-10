@@ -4,18 +4,23 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { CARD_ICONS } from "./CardLibrary";
 import { flattenLibraryItems, type LibraryAudience } from "@/lib/editor/card-library-config";
-import { BUSINESS_ONLY_CARD_TYPES, type CardType } from "./types";
+import { canUseCardType, getMinimumPlanForCardType, isGatedCardType, type CardType, type EditorPlanTier } from "./types";
 
 const RECENT_STORAGE_KEY = "infomii-slash-recent";
 const RECENT_MAX = 5;
 
-function BusinessBadge() {
+function PlanGateBadge({ plan }: { plan: Exclude<EditorPlanTier, "free"> }) {
+  const isBusiness = plan === "business";
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700">
-      <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
-      </svg>
-      Business
+    <span
+      className={
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide " +
+        (isBusiness
+          ? "border-violet-300 bg-violet-100 text-violet-700"
+          : "border-sky-300 bg-sky-100 text-sky-700")
+      }
+    >
+      {isBusiness ? "Business" : "Pro"}
     </span>
   );
 }
@@ -46,6 +51,7 @@ type SlashCommandMenuProps = {
   onClose: () => void;
   onSelect: (type: CardType) => void;
   anchorRef?: React.RefObject<HTMLElement | null>;
+  canUseProBlocks?: boolean;
   canUseBusinessBlocks?: boolean;
   onLockedAddCard?: (type: CardType) => void;
   libraryAudience?: LibraryAudience;
@@ -56,6 +62,7 @@ export function SlashCommandMenu({
   onClose,
   onSelect,
   anchorRef,
+  canUseProBlocks = false,
   canUseBusinessBlocks = false,
   onLockedAddCard,
   libraryAudience = "hotel",
@@ -64,6 +71,10 @@ export function SlashCommandMenu({
   const [highlightIndex, setHighlightIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const planTier: EditorPlanTier = canUseBusinessBlocks ? "business" : canUseProBlocks ? "pro" : "free";
+
+  const canAdd = (type: CardType) => canUseCardType(type, planTier);
 
   const allItems = useMemo(() => flattenLibraryItems(libraryAudience), [libraryAudience]);
 
@@ -111,7 +122,7 @@ export function SlashCommandMenu({
         const item = displayItems[Math.min(highlightIndex, Math.max(0, displayItems.length - 1))];
         if (item) {
           persistRecent(item.type);
-          if (canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)) onSelect(item.type);
+          if (canAdd(item.type)) onSelect(item.type);
           else onLockedAddCard?.(item.type);
           onClose();
         }
@@ -120,7 +131,7 @@ export function SlashCommandMenu({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, onSelect, highlightIndex, displayItems, canUseBusinessBlocks, onLockedAddCard]);
+  }, [open, onClose, onSelect, highlightIndex, displayItems, canAdd, onLockedAddCard]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -132,7 +143,7 @@ export function SlashCommandMenu({
 
   const handleSelect = (item: FlatItem) => {
     persistRecent(item.type);
-    if (canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(item.type)) onSelect(item.type);
+    if (canAdd(item.type)) onSelect(item.type);
     else onLockedAddCard?.(item.type);
     onClose();
   };
@@ -170,7 +181,11 @@ export function SlashCommandMenu({
         {displayItems.length === 0 ? (
           <p className="px-3 py-4 text-center text-sm text-slate-500">該当なし</p>
         ) : (
-          displayItems.map((item, i) => (
+          displayItems.map((item, i) => {
+            const gated = isGatedCardType(item.type);
+            const planGate = getMinimumPlanForCardType(item.type);
+            const locked = gated && !canAdd(item.type);
+            return (
             <button
               key={item.type}
               type="button"
@@ -180,13 +195,19 @@ export function SlashCommandMenu({
               }`}
               onMouseEnter={() => setHighlightIndex(i)}
               onClick={() => handleSelect(item)}
-              title={!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "Businessプラン限定ブロックです" : undefined}
+              title={
+                locked
+                  ? `${planGate === "business" ? "Business" : "Pro"}プラン限定ブロックです`
+                  : undefined
+              }
             >
               <span
                 className={
                   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-slate-600 shadow-sm " +
-                  (!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type)
-                    ? "border-violet-300 bg-violet-100 text-violet-700"
+                  (locked
+                    ? planGate === "business"
+                      ? "border-violet-300 bg-violet-100 text-violet-700"
+                      : "border-sky-300 bg-sky-100 text-sky-700"
                     : "border-slate-200 bg-white")
                 }
               >
@@ -195,8 +216,8 @@ export function SlashCommandMenu({
               <div className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5 text-sm font-medium">
                   <span>{item.label}</span>
-                  {!canUseBusinessBlocks && BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? (
-                    <BusinessBadge />
+                  {gated && planGate !== "free" ? (
+                    <PlanGateBadge plan={planGate} />
                   ) : null}
                 </span>
                 {!showRecentLabel && (
@@ -204,7 +225,8 @@ export function SlashCommandMenu({
                 )}
               </div>
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </div>

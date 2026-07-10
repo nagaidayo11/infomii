@@ -6,11 +6,19 @@ import { CardRenderer } from "@/components/cards/CardRenderer";
 import {
   getLibrarySections,
   getQuickPresets,
+  getPresetMinimumPlan,
   type LibraryAudience,
   type LibraryItem,
   type QuickPreset,
 } from "@/lib/editor/card-library-config";
-import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, createEmptyCard, type CardType, type EditorCard } from "./types";
+import {
+  BUSINESS_ONLY_CARD_TYPES,
+  CARD_TYPE_LABELS,
+  createEmptyCard,
+  getMinimumPlanForCardType,
+  type CardType,
+  type EditorCard,
+} from "./types";
 import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
@@ -19,6 +27,7 @@ export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-li
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
   onAddPreset?: (types: CardType[]) => void;
+  canUseProBlocks?: boolean;
   canUseBusinessBlocks?: boolean;
   onLockedAddCard?: (type: CardType) => void;
   libraryAudience: LibraryAudience;
@@ -26,6 +35,26 @@ type CardLibraryProps = {
   /** Web hotel product hides personal library; App keeps the switch. Default true. */
   showAudienceSwitch?: boolean;
 };
+
+function PlanGateBadge({ plan }: { plan: "pro" | "business" }) {
+  const isBusiness = plan === "business";
+  return (
+    <span
+      className={
+        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border " +
+        (isBusiness
+          ? "border-violet-300 bg-violet-100 text-violet-700"
+          : "border-sky-300 bg-sky-100 text-sky-700")
+      }
+      aria-label={isBusiness ? "Business" : "Pro"}
+      title={isBusiness ? "Business" : "Pro"}
+    >
+      <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M4 18h16l-1.4-8.3a1 1 0 0 0-1.66-.58L13.7 12.1a1 1 0 0 1-1.4 0L7.06 9.12a1 1 0 0 0-1.66.58L4 18zm3.2-11.5a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zm9.6 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4zM12 8.1A1.9 1.9 0 1 0 12 4.3a1.9 1.9 0 0 0 0 3.8z" />
+      </svg>
+    </span>
+  );
+}
 
 function BusinessBadge() {
   return (
@@ -205,7 +234,8 @@ function LibraryTooltipPortal({
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const exitTimerRef = useRef<number | null>(null);
   const wasPlacedRef = useRef(false);
-  const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
+  const planGate = getMinimumPlanForCardType(item.type);
+  const isGatedType = planGate !== "free";
   const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
   const [position, setPosition] = useState<TooltipPosition>({ left: -99999, top: -99999, side: "right" });
@@ -340,7 +370,7 @@ function LibraryTooltipPortal({
           {renderPreviewVisual(item, spec, expandInner)}
         </div>
         <p className="mt-1.5 text-xs font-semibold text-slate-900">{spec.title}</p>
-        <p className={"mt-1 text-[11px] leading-[1.45] " + (isBusinessType ? "text-violet-600" : "text-slate-500")}>
+        <p className={"mt-1 text-[11px] leading-[1.45] " + (isGatedType ? (planGate === "business" ? "text-violet-600" : "text-sky-600") : "text-slate-500")}>
           {item.description}
         </p>
       </div>
@@ -366,6 +396,8 @@ function DescriptionWithTooltip({
   onMobilePreviewOpenChange: (open: boolean) => void;
   onCloseMobilePreview: () => void;
 }) {
+  const planGate = getMinimumPlanForCardType(item.type);
+  const isGatedType = planGate !== "free";
   const previewCard = useMemo(
     () => createEmptyCard(item.type, `preview-${item.type}-${libraryAudience}`, 0, libraryAudience),
     [item.type, libraryAudience],
@@ -449,7 +481,7 @@ function DescriptionWithTooltip({
                 <p
                   className={
                     "mt-1 text-[11px] leading-[1.45] " +
-                    (BUSINESS_ONLY_CARD_TYPES.includes(item.type) ? "text-violet-600" : "text-slate-500")
+                    (isGatedType ? (planGate === "business" ? "text-violet-600" : "text-sky-600") : "text-slate-500")
                   }
                 >
                   {item.description}
@@ -627,6 +659,22 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
     </svg>
   ),
+  icon_shortcuts: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="6" width="6" height="6" rx="1.5" strokeWidth={2} />
+      <rect x="11" y="6" width="6" height="6" rx="1.5" strokeWidth={2} />
+      <rect x="19" y="6" width="2" height="6" rx="1" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 16h12" />
+    </svg>
+  ),
+  image_tiles: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="8" height="8" rx="1.5" strokeWidth={2} />
+      <rect x="13" y="5" width="8" height="8" rx="1.5" strokeWidth={2} />
+      <rect x="3" y="15" width="8" height="4" rx="1" strokeWidth={2} />
+      <rect x="13" y="15" width="8" height="4" rx="1" strokeWidth={2} />
+    </svg>
+  ),
   quote: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8H6v4h3v4H5v-4c0-2.2 1.8-4 4-4zM19 8h-3v4h3v4h-4v-4c0-2.2 1.8-4 4-4z" />
@@ -778,14 +826,16 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
 function LibraryItemButton({
   sectionId,
   item,
-  isBusinessType,
+  planGate,
+  isGatedType,
   disabled,
   onAdd,
   libraryAudience,
 }: {
   sectionId: string;
   item: LibraryItem;
-  isBusinessType: boolean;
+  planGate: ReturnType<typeof getMinimumPlanForCardType>;
+  isGatedType: boolean;
   disabled: boolean;
   onAdd: (type: CardType) => void;
   libraryAudience: LibraryAudience;
@@ -901,13 +951,11 @@ function LibraryItemButton({
         <span
           className={
             "flex h-9 items-center gap-1 truncate text-[13px] font-medium leading-none " +
-            (isBusinessType ? "text-violet-700" : "text-slate-800")
+            (isGatedType ? (planGate === "business" ? "text-violet-700" : "text-sky-700") : "text-slate-800")
           }
         >
           <span className="truncate">{item.label}</span>
-          {isBusinessType ? (
-            <BusinessBadge />
-          ) : null}
+          {isGatedType ? <PlanGateBadge plan={planGate === "business" ? "business" : "pro"} /> : null}
         </span>
         <span className="absolute inset-y-0 right-0 flex items-center">
           <DescriptionWithTooltip
@@ -932,6 +980,7 @@ function LibraryItemButton({
 export function CardLibrary({
   onAddCard,
   onAddPreset,
+  canUseProBlocks = false,
   canUseBusinessBlocks = false,
   onLockedAddCard,
   libraryAudience,
@@ -941,7 +990,12 @@ export function CardLibrary({
   const librarySections = getLibrarySections(libraryAudience);
   const quickPresets = getQuickPresets(libraryAudience);
   const [presetsOpen, setPresetsOpen] = useState(false);
-  const canAdd = (type: CardType) => canUseBusinessBlocks || !BUSINESS_ONLY_CARD_TYPES.includes(type);
+  const canAdd = (type: CardType) => {
+    const minimum = getMinimumPlanForCardType(type);
+    if (minimum === "free") return true;
+    if (minimum === "pro") return canUseProBlocks;
+    return canUseBusinessBlocks;
+  };
   const canAddPreset = (types: CardType[]) => types.every((type) => canAdd(type));
   const handleAdd = (type: CardType) => {
     if (!canAdd(type)) {
@@ -1034,30 +1088,38 @@ export function CardLibrary({
                 ) : null}
               </div>
               <div className="space-y-1">
-                {quickPresets.slice(0, 2).map((preset) => (
+                {quickPresets.slice(0, 2).map((preset) => {
+                  const presetPlan = getPresetMinimumPlan(preset.types);
+                  const presetLocked = !canAddPreset(preset.types);
+                  return (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => handleAddPreset(preset)}
                     className={
                       "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
-                      (canAddPreset(preset.types)
+                      (!presetLocked
                         ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
-                        : "border-violet-300 bg-violet-50/70")
+                        : presetPlan === "business"
+                          ? "border-violet-300 bg-violet-50/70"
+                          : "border-sky-300 bg-sky-50/70")
                     }
                     aria-label={`${preset.label}を追加`}
-                    title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
+                    title={
+                      presetLocked
+                        ? `${presetPlan === "business" ? "Business" : "Pro"}プランで利用できます`
+                        : undefined
+                    }
                   >
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
                       {preset.label}
-                      {preset.businessOnly ? (
-                        <BusinessBadge />
-                      ) : null}
+                      {presetPlan !== "free" ? <PlanGateBadge plan={presetPlan} /> : null}
                     </span>
                     <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
                     <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
               {quickPresets.length > 2 ? (
                 <div
@@ -1075,7 +1137,10 @@ export function CardLibrary({
                           : "-translate-y-1 opacity-0")
                       }
                     >
-                      {quickPresets.slice(2).map((preset) => (
+                      {quickPresets.slice(2).map((preset) => {
+                        const presetPlan = getPresetMinimumPlan(preset.types);
+                        const presetLocked = !canAddPreset(preset.types);
+                        return (
                         <button
                           key={preset.id}
                           type="button"
@@ -1083,23 +1148,28 @@ export function CardLibrary({
                           tabIndex={presetsOpen ? 0 : -1}
                           className={
                             "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
-                            (canAddPreset(preset.types)
+                            (!presetLocked
                               ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
-                              : "border-violet-300 bg-violet-50/70")
+                              : presetPlan === "business"
+                                ? "border-violet-300 bg-violet-50/70"
+                                : "border-sky-300 bg-sky-50/70")
                           }
                           aria-label={`${preset.label}を追加`}
-                          title={canAddPreset(preset.types) ? undefined : "Businessプランで利用できます"}
+                          title={
+                            presetLocked
+                              ? `${presetPlan === "business" ? "Business" : "Pro"}プランで利用できます`
+                              : undefined
+                          }
                         >
                           <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
                             {preset.label}
-                            {preset.businessOnly ? (
-                              <BusinessBadge />
-                            ) : null}
+                            {presetPlan !== "free" ? <PlanGateBadge plan={presetPlan} /> : null}
                           </span>
                           <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
                           <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1117,13 +1187,15 @@ export function CardLibrary({
               </h3>
               <div className="relative space-y-1">
                 {section.items.map((item) => {
-                  const isBusinessType = BUSINESS_ONLY_CARD_TYPES.includes(item.type);
+                  const planGate = getMinimumPlanForCardType(item.type);
+                  const isGatedType = planGate !== "free";
                   return (
                     <LibraryItemButton
                       key={`${section.id}-${item.type}`}
                       sectionId={section.id}
                       item={item}
-                      isBusinessType={isBusinessType}
+                      planGate={planGate}
+                      isGatedType={isGatedType}
                       disabled={!canAdd(item.type)}
                       onAdd={handleAdd}
                       libraryAudience={libraryAudience}

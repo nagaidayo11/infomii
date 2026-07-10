@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_TITLE_CLASS, CARD_CONTENT_INSET, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -35,7 +35,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
 
   return (
     <Card padding="none" hover>
-      <section data-inner-surface className={`${editorInnerRadiusClassName} bg-white px-3 py-3`}>
+      <section data-inner-surface className={`${editorInnerRadiusClassName} bg-white ${CARD_CONTENT_INSET}`}>
         <h3 className={`${CARD_BLOCK_TITLE_CLASS} leading-tight`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}

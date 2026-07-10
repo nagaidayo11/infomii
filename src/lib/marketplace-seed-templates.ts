@@ -15,6 +15,7 @@ type HotelSeedDraft = Omit<MarketplaceSeedTemplate, "slug">;
 
 const HOTEL_SLUG_OVERRIDES: Record<string, string> = {
   "ビジネスホテル・即運用セット": LP_STARTER_TEMPLATE_SLUGS.hotel,
+  "コアガイド・トップハブ": "core-guide-hub",
 };
 
 function attachHotelSlugs(drafts: HotelSeedDraft[]): MarketplaceSeedTemplate[] {
@@ -68,6 +69,44 @@ const pageLinks = (title: string, items: Array<{ label: string; icon: string }>,
   tileShadowStrength: "md",
   circleIconShadowStrength: "md",
   items: items.map((item) => ({ ...item, linkType: "page", pageSlug: "", link: "" })),
+});
+const heroSlider = (title: string) => ({
+  title,
+  autoplay: true,
+  intervalSec: 4,
+  transitionEnabled: true,
+  transitionType: "fade",
+  transitionDurationMs: 500,
+  showCaptions: true,
+  height: "s",
+  slides: [
+    { src: PREVIEW_IMAGE, alt: "館内イメージ", caption: "ご滞在のご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+    { src: "/templates/previews/business/515b796d.jpg", alt: "朝食イメージ", caption: "朝食ビュッフェ", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+    { src: "/templates/previews/business/4bfe5cc6.jpg", alt: "施設イメージ", caption: "館内施設", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
+  ],
+});
+const circlePageLinks = (items: Array<{ label: string; icon: string }>) => ({
+  title: "",
+  columns: 3,
+  iconSize: "md",
+  styleVariant: "circle" as const,
+  tileShadowStrength: "md",
+  circleIconShadowStrength: "md",
+  items: items.map((item) => ({ ...item, linkType: "page", pageSlug: "", link: "" })),
+});
+const imageTiles = (
+  items: Array<{ label: string; src?: string }>,
+  columns = 2,
+) => ({
+  title: "",
+  columns,
+  items: items.map((item) => ({
+    src: item.src ?? PREVIEW_IMAGE,
+    label: item.label,
+    linkType: "page",
+    pageSlug: "",
+    link: "",
+  })),
 });
 const kpi = (title: string, items: Array<{ label: string; value: string }>) => ({ title, items });
 const schedule = (title: string, items: Array<{ day: string; time: string; label: string }>) => ({
@@ -190,6 +229,44 @@ const socialLinks = (title: string, handle: string) => ({
 });
 
 const HOTEL_SEED_DRAFTS = [
+  {
+    name: "コアガイド・トップハブ",
+    description: "ヒーロースライド・ページリンク・画像タイルでゲスト案内の入口を構成。下タブシェルと併用するCore Guide型です。",
+    preview_image: PREVIEW_IMAGE,
+    category: "guide",
+    cards: ordered([
+      block("hero_slider", heroSlider("ご滞在ガイド")),
+      block(
+        "pageLinks",
+        circlePageLinks([
+          { label: "WiFi", icon: "wifi" },
+          { label: "フロント", icon: "phone" },
+          { label: "館内施設", icon: "spa" },
+          { label: "FAQ", icon: "faq" },
+        ]),
+      ),
+      block(
+        "image_tiles",
+        imageTiles([
+          { label: "レストラン" },
+          { label: "大浴場" },
+          { label: "貸切風呂" },
+          { label: "交通案内" },
+        ]),
+      ),
+      block(
+        "pageLinks",
+        pageLinks("館内ガイド", [
+          { label: "チェックイン", icon: "welcome" },
+          { label: "WiFi", icon: "wifi" },
+          { label: "朝食", icon: "breakfast" },
+          { label: "チェックアウト", icon: "checkout" },
+          { label: "周辺案内", icon: "nearby" },
+          { label: "よくある質問", icon: "faq" },
+        ], 2),
+      ),
+    ]),
+  },
   {
     name: "ビジネスホテル・即運用セット",
     description: "出張客向けに、Wi-Fi・朝食・ランドリー・チェックアウト導線を最適化した構成です。",

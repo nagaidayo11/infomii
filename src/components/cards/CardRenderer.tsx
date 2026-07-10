@@ -31,6 +31,8 @@ import { GalleryCard } from "./GalleryCard";
 import { DividerCard } from "./DividerCard";
 import { ParkingCard } from "./ParkingCard";
 import { PageLinksCard } from "./PageLinksCard";
+import { IconShortcutsCard } from "./IconShortcutsCard";
+import { ImageTilesCard } from "./ImageTilesCard";
 import { QuoteCard } from "./QuoteCard";
 import { ChecklistCard } from "./ChecklistCard";
 import { StepsCard } from "./StepsCard";
@@ -229,6 +231,10 @@ function SingleCardRenderer({
       return <ParkingCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "pageLinks":
       return <PageLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "icon_shortcuts":
+      return <IconShortcutsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "image_tiles":
+      return <ImageTilesCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "button":
       return <ButtonCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image":

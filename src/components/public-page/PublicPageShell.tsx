@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
 import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation";
 import type { PageBackgroundStyle } from "@/lib/storage";
+import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
 
 type PublicPageShellProps = {
   /** Page or facility name — shown in header so guests quickly understand where they are */
@@ -15,6 +16,8 @@ type PublicPageShellProps = {
   children: ReactNode;
   /** Optional contact/CTA section at bottom */
   contactActions?: ReactNode;
+  /** Facility-wide bottom tab chrome (Core Guide–style) */
+  bottomChrome?: ReactNode;
   /** Optional actions rendered on the same row as title (e.g. language toggle) */
   headerActions?: ReactNode;
   /** Embed mode: no outer padding, no header chrome */
@@ -67,6 +70,7 @@ function PageContent({
   backButton,
   children,
   contactActions,
+  bottomChrome,
   headerActions,
   headerClassName,
   mainClassName,
@@ -102,21 +106,25 @@ function PageContent({
           </div>
         </footer>
       ) : null}
+      {bottomChrome ? (
+        <div className="guest-bottom-chrome shrink-0 z-30 bg-white">
+          {bottomChrome}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 /**
  * Public page layout for guests (QR / shared link).
- * Structure: header → main cards → optional contact actions footer.
- * Mobile-first, large touch targets.
- * On desktop: スマホ画面風のフレームで表示
+ * Mobile: full-bleed. Desktop: phone chassis filling most of the viewport height.
  */
 export function PublicPageShell({
   title,
   backButton,
   children,
   contactActions,
+  bottomChrome,
   headerActions,
   isEmbed = false,
   pageBackground = null,
@@ -146,6 +154,7 @@ export function PublicPageShell({
           title={title}
           backButton={backButton}
           contactActions={contactActions}
+          bottomChrome={bottomChrome}
           headerActions={headerActions}
           headerClassName="px-3.5 pb-2.5 pt-3"
           mainClassName="px-3.5 pb-6 pt-4"
@@ -156,39 +165,51 @@ export function PublicPageShell({
     );
   }
 
+  const inner = (
+    <PageContent
+      title={title}
+      backButton={backButton}
+      contactActions={contactActions}
+      bottomChrome={bottomChrome}
+      headerActions={headerActions}
+    >
+      {children}
+    </PageContent>
+  );
+
   return (
     <div
-      className="flex min-h-screen flex-col bg-[#f1f5f9] md:min-h-screen md:items-center md:justify-center md:bg-slate-300 md:py-8"
+      className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#e8eef4] md:bg-slate-300"
       data-guest-page-root
     >
-      <div className="flex w-full flex-1 flex-col md:flex-none">
-        <div
-          className={
-            "flex w-full flex-1 flex-col bg-[#f1f5f9] md:mx-auto md:max-w-[399px] md:flex-none " +
-            "md:rounded-[2rem] md:border md:border-slate-200/90 md:bg-slate-100/80 md:p-3 " +
-            "md:shadow-[0_8px_32px_rgba(0,0,0,0.15),0_2px_8px_rgba(0,0,0,0.08)]"
-          }
+      {/* Mobile: full-bleed, no chassis */}
+      <div
+        className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white md:hidden"
+        data-guest-page-shell
+        style={{ background: pageBackgroundStyle }}
+        onClickCapture={onGuestLinkCapture}
+      >
+        {inner}
+      </div>
+
+      {/* Desktop: fixed 400 screen width, with top/bottom inset */}
+      <div className="hidden h-full min-h-0 w-full flex-1 md:block">
+        <PhoneDeviceFrame
+          width={350}
+          fillHeight
+          verticalInset={28}
+          manageScroll={false}
+          className="h-full w-full"
+          screenStyle={{ background: pageBackgroundStyle }}
         >
-          <div className="mx-auto mb-1 hidden h-2 w-16 shrink-0 rounded-full bg-slate-300/70 md:block" aria-hidden />
           <div
-            className={
-              "flex min-h-[100dvh] w-full flex-1 flex-col overflow-hidden bg-white " +
-              "md:min-h-[480px] md:h-[84vh] md:max-h-[84vh] md:max-w-[375px] md:rounded-[1.25rem] md:border md:border-slate-200/80"
-            }
+            className="flex h-full min-h-0 flex-col overflow-hidden"
             data-guest-page-shell
-            style={{ background: pageBackgroundStyle }}
             onClickCapture={onGuestLinkCapture}
           >
-            <PageContent
-              title={title}
-              backButton={backButton}
-              contactActions={contactActions}
-              headerActions={headerActions}
-            >
-              {children}
-            </PageContent>
+            {inner}
           </div>
-        </div>
+        </PhoneDeviceFrame>
       </div>
     </div>
   );

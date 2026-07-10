@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
@@ -11,14 +11,11 @@ import { ImageFramingControl } from "./ImageFramingControl";
 import { VideoUpload } from "./VideoUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
-import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, PRO_AND_ABOVE_CARD_TYPES } from "./types";
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
-import { useEditor2Store } from "./store";
 
-const TRANSLATE_DEBOUNCE_MS = 1200;
-const MIN_TEXT_LENGTH_FOR_TRANSLATE = 2;
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
@@ -124,6 +121,8 @@ export type CardSettingsProps = {
   /** When set and card.id matches, scroll panel to top instantly (no smooth scroll) so new-card flow feels immediate. */
   lastAddedCardId?: string | null;
   isBusinessEnabled?: boolean;
+  isBusinessPlan?: boolean;
+  canUseProBlocks?: boolean;
   libraryAudience?: LibraryAudience;
 };
 
@@ -142,18 +141,6 @@ function readJaText(value: unknown): string {
 
 function writeJaTextPreserving<T extends string | boolean>(_prev: unknown, value: T): T {
   return value;
-}
-
-async function translateJaToEnZhKo(text: string): Promise<{ en: string; zh: string; ko: string } | null> {
-  const res = await fetch("/api/ai/translate-content", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as { en?: string; zh?: string; ko?: string };
-  if (typeof data.en !== "string" || typeof data.zh !== "string" || typeof data.ko !== "string") return null;
-  return { en: data.en, zh: data.zh, ko: data.ko };
 }
 
 type NearbyItem = { name?: string; description?: string; link?: string };
@@ -341,6 +328,342 @@ function GalleryItemsEditor({
             onChange={(e) => updateItem(i, "alt", e.target.value)}
             placeholder="任意"
           />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type IconShortcutItem = {
+  label?: string;
+  icon?: string;
+  linkType?: "page" | "url";
+  pageSlug?: string;
+  link?: string;
+};
+
+function IconShortcutsItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const [pages, setPages] = useState<PageRow[]>([]);
+  useEffect(() => {
+    listPagesForHotel().then(setPages);
+  }, []);
+
+  const items = (Array.isArray(content.items) ? content.items : []) as IconShortcutItem[];
+  const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
+  const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
+  const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 ? rawColumns : 3;
+  const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
+  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
+  const rawCircleShadow =
+    typeof content.circleIconShadowStrength === "string" ? content.circleIconShadowStrength : "";
+  const circleShadowStrength =
+    rawCircleShadow === "none" || rawCircleShadow === "sm" || rawCircleShadow === "lg"
+      ? rawCircleShadow
+      : "md";
+  const rawTileShadow =
+    typeof content.tileShadowStrength === "string" ? content.tileShadowStrength : "";
+  const tileShadowStrength =
+    rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
+      ? rawTileShadow
+      : "md";
+  const setItems = (next: IconShortcutItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof IconShortcutItem, value: string) => {
+    const next = [...items];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setItems(next);
+  };
+  const defaultPageSlug = pages[0]?.slug ?? "";
+  const addItem = () =>
+    setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: defaultPageSlug, link: "" }]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <StyleGroup summary="アイコン・表示・影" defaultOpen={false}>
+        <div className="w-full">
+          <label className={labelClass}>列数</label>
+          <select
+            aria-label="列数"
+            value={columns}
+            onChange={(e) => onUpdate("columns", Number(e.target.value))}
+            className={inputClass}
+          >
+            <option value={2}>2列</option>
+            <option value={3}>3列</option>
+          </select>
+        </div>
+        <div className="w-full">
+          <label className={labelClass}>アイコンサイズ</label>
+          <select
+            aria-label="アイコンサイズ"
+            value={iconSize}
+            onChange={(e) => onUpdate("iconSize", e.target.value)}
+            className={inputClass}
+          >
+            <option value="sm">小</option>
+            <option value="md">標準</option>
+            <option value="lg">大</option>
+          </select>
+        </div>
+        <div className="w-full">
+          <label className={labelClass}>表示スタイル</label>
+          <select
+            aria-label="表示スタイル"
+            value={styleVariant}
+            onChange={(e) => onUpdate("styleVariant", e.target.value)}
+            className={inputClass}
+          >
+            <option value="tile">カード</option>
+            <option value="circle">サークル</option>
+          </select>
+        </div>
+        {styleVariant === "circle" ? (
+          <div className="w-full">
+            <label className={labelClass}>丸アイコンの影</label>
+            <select
+              aria-label="丸アイコンの影の強さ"
+              value={circleShadowStrength}
+              onChange={(e) => onUpdate("circleIconShadowStrength", e.target.value)}
+              className={inputClass}
+            >
+              <option value="none">なし</option>
+              <option value="sm">弱い</option>
+              <option value="md">標準</option>
+              <option value="lg">強い</option>
+            </select>
+          </div>
+        ) : (
+          <div className="w-full">
+            <label className={labelClass}>カードタイルの影</label>
+            <select
+              aria-label="カードタイルの影の強さ"
+              value={tileShadowStrength}
+              onChange={(e) => onUpdate("tileShadowStrength", e.target.value)}
+              className={inputClass}
+            >
+              <option value="none">なし</option>
+              <option value="sm">弱い</option>
+              <option value="md">標準</option>
+              <option value="lg">強い</option>
+            </select>
+          </div>
+        )}
+      </StyleGroup>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">ショートカット</span>
+        <button type="button" onClick={addItem} className={addButtonClass}>
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
+              削除
+            </button>
+          </div>
+          <Input
+            label="ラベル"
+            value={readJaText(item.label)}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder="WiFi"
+          />
+          <IconTokenSelect
+            label="アイコン"
+            value={item.icon}
+            onChange={(next) => updateItem(i, "icon", next)}
+            className={inputClass}
+            labelClassName={labelClass}
+          />
+          <div className="w-full">
+            <label className={labelClass}>リンク先</label>
+            <select
+              value={item.linkType ?? "page"}
+              onChange={(e) => {
+                const nextType = e.target.value as "page" | "url";
+                const next = [...items];
+                const current = next[i] ?? {};
+                next[i] = {
+                  ...current,
+                  linkType: nextType,
+                  pageSlug:
+                    nextType === "page"
+                      ? (typeof current.pageSlug === "string" && current.pageSlug) || defaultPageSlug
+                      : current.pageSlug,
+                };
+                setItems(next);
+              }}
+              className={inputClass}
+            >
+              <option value="page">Infomii内ページ</option>
+              <option value="url">外部URL</option>
+            </select>
+          </div>
+          {(item.linkType ?? "page") === "page" ? (
+            <div className="w-full">
+              <label className={labelClass}>ページを選択</label>
+              <select
+                value={readJaText(item.pageSlug) || defaultPageSlug}
+                onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
+                className={inputClass}
+              >
+                {pages.length === 0 ? <option value="">ページがありません</option> : null}
+                {pages.map((p) => (
+                  <option key={p.id} value={p.slug}>
+                    {p.title || p.slug || ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <Input
+              label="URL"
+              value={readJaText(item.link)}
+              onChange={(e) => updateItem(i, "link", e.target.value)}
+              placeholder="https://..."
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type ImageTileItem = {
+  src?: string;
+  label?: string;
+  alt?: string;
+  linkType?: "page" | "url";
+  pageSlug?: string;
+  link?: string;
+};
+
+function ImageTilesItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const [pages, setPages] = useState<PageRow[]>([]);
+  useEffect(() => {
+    listPagesForHotel().then(setPages);
+  }, []);
+
+  const items = (Array.isArray(content.items) ? content.items : []) as ImageTileItem[];
+  const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
+  const columns = rawColumns === 2 || rawColumns === 3 ? rawColumns : 2;
+  const setItems = (next: ImageTileItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof ImageTileItem, value: string) => {
+    const next = [...items];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setItems(next);
+  };
+  const defaultPageSlug = pages[0]?.slug ?? "";
+  const addItem = () =>
+    setItems([
+      ...items,
+      { src: "", label: "新規", linkType: "page", pageSlug: defaultPageSlug, link: "" },
+    ]);
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-3">
+      <div className="w-full">
+        <label className={labelClass}>列数</label>
+        <select
+          value={String(columns)}
+          onChange={(e) => onUpdate("columns", Number(e.target.value))}
+          className={inputClass}
+        >
+          <option value="2">2列</option>
+          <option value="3">3列</option>
+        </select>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">タイル</span>
+        <button type="button" onClick={addItem} className={addButtonClass}>
+          + 追加
+        </button>
+      </div>
+      {items.slice(0, 12).map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
+              削除
+            </button>
+          </div>
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "src", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input
+            label="ラベル"
+            value={readJaText(item.label) || readJaText(item.alt)}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder="レストラン"
+          />
+          <div className="w-full">
+            <label className={labelClass}>リンク先</label>
+            <select
+              value={item.linkType ?? "page"}
+              onChange={(e) => {
+                const nextType = e.target.value as "page" | "url";
+                const next = [...items];
+                const current = next[i] ?? {};
+                next[i] = {
+                  ...current,
+                  linkType: nextType,
+                  pageSlug:
+                    nextType === "page"
+                      ? (typeof current.pageSlug === "string" && current.pageSlug) || defaultPageSlug
+                      : current.pageSlug,
+                };
+                setItems(next);
+              }}
+              className={inputClass}
+            >
+              <option value="page">Infomii内ページ</option>
+              <option value="url">外部URL</option>
+            </select>
+          </div>
+          {(item.linkType ?? "page") === "page" ? (
+            <div className="w-full">
+              <label className={labelClass}>ページを選択</label>
+              <select
+                value={readJaText(item.pageSlug) || defaultPageSlug}
+                onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
+                className={inputClass}
+              >
+                {pages.length === 0 ? <option value="">ページがありません</option> : null}
+                {pages.map((p) => (
+                  <option key={p.id} value={p.slug}>
+                    {p.title || p.slug || ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <Input
+              label="URL"
+              value={readJaText(item.link)}
+              onChange={(e) => updateItem(i, "link", e.target.value)}
+              placeholder="https://..."
+            />
+          )}
         </div>
       ))}
     </div>
@@ -2136,10 +2459,10 @@ export function CardSettings({
   onLockedAction,
   lastAddedCardId = null,
   isBusinessEnabled = false,
+  isBusinessPlan = false,
+  canUseProBlocks = false,
   libraryAudience = "hotel",
 }: CardSettingsProps) {
-  const translateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRef = useRef<{ cardId: string; key: string; ja: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activePalette, setActivePalette] = useState<SettingsPalette>("content");
 
@@ -2149,37 +2472,6 @@ export function CardSettings({
       scrollRef.current?.scrollTo({ top: 0, behavior: isNewlyAdded ? "auto" : "smooth" });
     }
   }, [card?.id, lastAddedCardId]);
-
-  const flushTranslate = useCallback(() => {
-    if (translateTimeoutRef.current) {
-      clearTimeout(translateTimeoutRef.current);
-      translateTimeoutRef.current = null;
-    }
-    const pending = pendingRef.current;
-    pendingRef.current = null;
-    if (!pending) return;
-    const { cardId, key, ja } = pending;
-    translateJaToEnZhKo(ja).then((result) => {
-      if (!result) return;
-      const currentCard = useEditor2Store.getState().cards.find((c) => c.id === cardId);
-      if (!currentCard) return;
-      const curVal = (currentCard.content as Record<string, unknown>)?.[key];
-      const currentJa = getLocalizedContent(curVal as LocalizedString | undefined, "ja");
-      if (currentJa !== ja) return;
-      onUpdate(cardId, {
-        content: {
-          ...(currentCard.content as Record<string, unknown>),
-          [key]: { ja, en: result.en, zh: result.zh, ko: result.ko },
-        },
-      });
-    });
-  }, [onUpdate]);
-
-  useEffect(() => {
-    return () => {
-      if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
-    };
-  }, []);
 
   if (!card) {
     return (
@@ -2224,10 +2516,13 @@ export function CardSettings({
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
 
   const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
+  const isProOnlyCard = PRO_AND_ABOVE_CARD_TYPES.includes(card.type);
   const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
   const supportsBusinessTonePreset =
-    isBusinessOnlyCard && card.type !== "hero_slider" && card.type !== "menu_time_band";
+    isBusinessOnlyCard && card.type !== "menu_time_band";
+  const proLocked = isProOnlyCard && !canUseProBlocks;
   const businessLocked = isBusinessOnlyCard && !isBusinessEnabled;
+  const planLocked = proLocked || businessLocked;
   const noTextFormattingCardTypes: Array<EditorCard["type"]> = ["image", "video", "divider", "space"];
   const noTitleTypographyCardTypes: Array<EditorCard["type"]> = ["text", "image", "video", "divider", "space"];
   const noBodyTypographyCardTypes: Array<EditorCard["type"]> = ["button", "action", "image", "video", "divider", "space"];
@@ -2308,16 +2603,11 @@ export function CardSettings({
       ? display("menu") || display("description") || display("note")
       : display("menu");
 
-  /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。入力後に自動で en/zh/ko を翻訳。 */
+  /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。翻訳は公開・プレビュー時に一括実行。 */
   const updateLocalized = (key: string, value: string) => {
     const cur = content[key];
     const next = isLocalizedObject(cur) ? { ...cur, ja: value } : value;
     update(key, next);
-
-    if (value.length < MIN_TEXT_LENGTH_FOR_TRANSLATE) return;
-    if (translateTimeoutRef.current) clearTimeout(translateTimeoutRef.current);
-    pendingRef.current = { cardId: card.id, key, ja: value };
-    translateTimeoutRef.current = setTimeout(flushTranslate, TRANSLATE_DEBOUNCE_MS);
   };
 
   const updateFacilityLocalized = (key: "title" | "time" | "location" | "menu", value: string) => {
@@ -2338,7 +2628,7 @@ export function CardSettings({
     updateLocalized(key, value);
   };
 
-  if (businessLocked) {
+  if (planLocked) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 ">
@@ -2419,7 +2709,9 @@ export function CardSettings({
                 </div>
               ) : null}
             </div>
-            <p className="text-xs text-slate-500">Businessプラン限定ブロック</p>
+            <p className="text-xs text-slate-500">
+              {businessLocked ? "Businessプラン限定ブロック" : "Proプラン以上のブロック"}
+            </p>
           </div>
         </div>
         <div
@@ -2427,7 +2719,9 @@ export function CardSettings({
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 "
         >
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-            このブロックの編集はBusinessプランでご利用いただけます。公開ページでの表示は維持されます。
+            {businessLocked
+              ? "このブロックの編集はBusinessプランでご利用いただけます。公開ページでの表示は維持されます。"
+              : "このブロックの編集はProプラン以上でご利用いただけます。公開ページでの表示は維持されます。"}
           </section>
         </div>
       </div>
@@ -2516,6 +2810,11 @@ export function CardSettings({
           <p className="text-xs text-slate-500">
             {canReorderCard ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます" : "変更はリアルタイムで反映されます"}
           </p>
+          {isBusinessPlan ? (
+            <p className="text-[11px] leading-relaxed text-emerald-800/80">
+              多言語（EN / 中文 / 한국어）は、ゲスト公開オン・公開更新・プレビュー時にまとめて自動翻訳されます。
+            </p>
+          ) : null}
           <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
             <button
               type="button"
@@ -3156,6 +3455,33 @@ export function CardSettings({
                 placeholder="メニュー"
               />
               <PageLinksItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "icon_shortcuts" && (
+            <SettingsSection title="コンテンツ">
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                このブロックは廃止予定です。新規追加は「ページリンク」をご利用ください（既存ページの表示・編集は継続できます）。
+              </p>
+              <Input
+                label="タイトル（任意）"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="よく使う案内"
+              />
+              <IconShortcutsItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "image_tiles" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル（任意）"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="施設案内"
+              />
+              <ImageTilesItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 
@@ -3911,6 +4237,9 @@ export function CardSettings({
 
           {card.type === "salon_service_menu" && (
             <SettingsSection title="コンテンツ">
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                このブロックは廃止予定です。新規追加はできません（既存ページの表示・編集は継続できます）。
+              </p>
               <Input
                 label="タイトル"
                 value={display("title")}

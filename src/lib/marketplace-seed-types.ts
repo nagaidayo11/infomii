@@ -56,7 +56,9 @@ export type MarketplaceSeedCardType =
   | "progress_steps"
   | "menu_categories"
   | "daily_special"
-  | "drink_menu";
+  | "drink_menu"
+  | "hero_slider"
+  | "image_tiles";
 
 export type MarketplaceSeedCard = {
   type: MarketplaceSeedCardType;

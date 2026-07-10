@@ -1,5 +1,5 @@
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
-import type { CardType, EditorCard } from "@/components/editor/types";
+import { usesHeroColumnWidth, type CardType, type EditorCard } from "@/components/editor/types";
 
 /** Matches FreeformCanvas fixed preview width. */
 export const FREEFORM_VIEWPORT_WIDTH_PX = 375;
@@ -41,6 +41,8 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   divider: 52,
   parking: 96,
   pageLinks: 104,
+  icon_shortcuts: 96,
+  image_tiles: 180,
   quote: 84,
   checklist: 104,
   steps: 104,
@@ -93,12 +95,20 @@ function getInitialStackY(cards: EditorCard[], index: number): number {
 function getPosition(card: EditorCard, index: number, contentWidth: number, cards: EditorCard[] = []): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
-  const w = typeof pos?.w === "number" ? pos.w : contentWidth;
+  const forceHeroWidth = usesHeroColumnWidth(card.type);
+  const w = forceHeroWidth
+    ? contentWidth
+    : typeof pos?.w === "number"
+      ? pos.w
+      : contentWidth;
   const h = typeof pos?.h === "number" ? pos.h : initialH;
   const blockW = Math.min(w, contentWidth);
   const centeredX = Math.round((contentWidth - blockW) / 2);
 
   if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
+    if (forceHeroWidth) {
+      return { x: 0, y: pos.y, w: contentWidth, h };
+    }
     const savedX = pos.x;
     const isLegacyLeftAligned = savedX <= 60;
     return {

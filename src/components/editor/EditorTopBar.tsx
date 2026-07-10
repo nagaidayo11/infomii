@@ -36,6 +36,11 @@ export type EditorTopBarProps = {
   onRenamePageTitle?: (nextTitle: string) => Promise<void> | void;
   scrollPriorityMode?: boolean;
   onToggleScrollPriority?: () => void;
+  /**
+   * Publish status hint shown inline in the header publish cluster
+   * (never as a strip under the toolbar — that would shrink the canvas).
+   */
+  publishNotice?: "draft_off" | "unpublished_changes" | null;
 };
 
 function formatSavedAt(ms: number): string {
@@ -144,6 +149,7 @@ export function EditorTopBar({
   onRenamePageTitle,
   scrollPriorityMode = true,
   onToggleScrollPriority,
+  publishNotice = null,
 }: EditorTopBarProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
@@ -187,9 +193,11 @@ export function EditorTopBar({
           <div
             className="flex min-w-0 items-center gap-2"
             title={
-              publishToggleChecked
-                ? "ON: 公開URL・QRから閲覧できます。OFFにするとゲストは閲覧できません（編集の反映とは別です）。"
-                : "OFF: ゲストは閲覧できません。ONにするとURL・QRが有効になります。"
+              publishNotice === "draft_off"
+                ? "公開OFFです。ONにするとプレビュー・QR・公開URLが使えます。"
+                : publishToggleChecked
+                  ? "ON: 公開URL・QRから閲覧できます。OFFにするとゲストは閲覧できません（編集の反映とは別です）。"
+                  : "OFF: ゲストは閲覧できません。ONにするとURL・QRが有効になります。"
             }
           >
             <button
@@ -219,8 +227,17 @@ export function EditorTopBar({
             </button>
             <div className="min-w-0 leading-tight">
               <div className="text-xs font-semibold text-slate-800">ゲスト公開</div>
-              <div className="hidden text-[10px] text-slate-500 lg:block">
-                {publishToggleChecked ? "閲覧を許可" : "閲覧は不可"}
+              <div
+                className={
+                  "hidden text-[10px] lg:block " +
+                  (publishNotice === "draft_off" ? "font-medium text-amber-700" : "text-slate-500")
+                }
+              >
+                {publishNotice === "draft_off"
+                  ? "OFF（閲覧不可）"
+                  : publishToggleChecked
+                    ? "閲覧を許可"
+                    : "閲覧は不可"}
               </div>
             </div>
           </div>
@@ -228,10 +245,15 @@ export function EditorTopBar({
           <span
             className={
               "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold " +
-              (isPublished ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200")
+              (isPublished ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-amber-50 text-amber-800 ring-1 ring-amber-200")
+            }
+            title={
+              publishNotice === "draft_off"
+                ? "公開OFFです。公開後にプレビュー・QRが使えます。"
+                : undefined
             }
           >
-            {isPublished ? "公開中" : "非公開"}
+            {isPublished ? "公開中" : "公開OFF"}
           </span>
         ) : null}
 
@@ -244,10 +266,23 @@ export function EditorTopBar({
             type="button"
             onClick={onPublish}
             disabled={publishing || qrPreparing}
-            title="編集を公開ページに反映します（翻訳チェックあり）。未反映がなくても実行できます。"
-            className="ui-pop-tap ui-dark-label shrink-0 rounded-lg px-3 py-2 text-xs font-semibold shadow-sm transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5"
+            title={
+              publishNotice === "unpublished_changes"
+                ? "未反映の変更を公開ページへ反映します"
+                : "編集を公開ページに反映します（翻訳チェックあり）。未反映がなくても実行できます。"
+            }
+            className={
+              "ui-pop-tap shrink-0 rounded-lg px-3.5 py-2 text-xs font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:py-1.5 " +
+              (publishNotice === "unpublished_changes"
+                ? "bg-emerald-600 text-white shadow-emerald-600/30 ring-2 ring-emerald-300 ring-offset-1 hover:bg-emerald-500"
+                : "ui-dark-label hover:bg-slate-800")
+            }
           >
-            {publishing ? "処理中…" : publishActionLabel}
+            {publishing
+              ? "処理中…"
+              : publishNotice === "unpublished_changes"
+                ? `● ${publishActionLabel}`
+                : publishActionLabel}
           </button>
         ) : null}
       </div>
@@ -266,7 +301,7 @@ export function EditorTopBar({
 
   return (
     <header
-      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0 "
+      className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-2 py-1.5 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0"
       role="banner"
       aria-label="エディタツールバー"
     >
@@ -444,9 +479,23 @@ export function EditorTopBar({
               "rounded-full px-2 py-0.5 text-[11px] font-semibold " +
               (isPublished ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-amber-50 text-amber-800 ring-1 ring-amber-200")
             }
+            title={
+              publishNotice === "draft_off"
+                ? "公開OFFです。ONにするとプレビュー・QR・公開URLが使えます。"
+                : undefined
+            }
           >
             {isPublished ? "公開中" : "公開OFF"}
           </span>
+          {publishNotice === "unpublished_changes" ? (
+            <span
+              className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm shadow-emerald-600/25"
+              title="未反映の変更があります。プレビュー・QR・公開更新のいずれかで公開ページへ反映できます"
+              role="status"
+            >
+              未反映
+            </span>
+          ) : null}
           <AutosaveStatus saving={saving} lastSavedAt={lastSavedAt} saveError={saveError} onRetry={onRetry} />
           <button
             type="button"
@@ -630,13 +679,22 @@ export function EditorTopBar({
                     type="button"
                     role="menuitem"
                     disabled={publishing || qrPreparing}
-                    className="flex w-full px-4 py-3 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-40"
+                    className={
+                      "flex w-full px-4 py-3 text-left text-sm font-bold disabled:opacity-40 " +
+                      (publishNotice === "unpublished_changes"
+                        ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                        : "text-slate-900 hover:bg-slate-50")
+                    }
                     onClick={() => {
                       setMoreOpen(false);
                       onPublish();
                     }}
                   >
-                    {publishing ? "処理中…" : publishActionLabel}
+                    {publishing
+                      ? "処理中…"
+                      : publishNotice === "unpublished_changes"
+                        ? `● ${publishActionLabel}`
+                        : publishActionLabel}
                   </button>
                 )}
                 {!demoMode && onRenamePageTitle && (

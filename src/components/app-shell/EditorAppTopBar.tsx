@@ -35,6 +35,7 @@ type EditorAppTopBarProps = Pick<
   | "canClearAll"
   | "onRenamePageTitle"
   | "onBulkFont"
+  | "publishNotice"
 >;
 
 function PreviewIcon({ className }: { className?: string }) {
@@ -123,6 +124,7 @@ export function EditorAppTopBar({
   canClearAll = false,
   onRenamePageTitle,
   onBulkFont,
+  publishNotice = null,
 }: EditorAppTopBarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -174,6 +176,24 @@ export function EditorAppTopBar({
       </div>
 
       <div className="flex shrink-0 items-center justify-end gap-1">
+        {publishNotice === "unpublished_changes" ? (
+          <span
+            className="rounded-full bg-amber-300 px-1.5 py-0.5 text-[10px] font-bold text-amber-950 shadow-sm"
+            title="未反映の変更があります。プレビュー・QR・公開更新で反映できます"
+            role="status"
+          >
+            未反映
+          </span>
+        ) : null}
+        {publishNotice === "draft_off" ? (
+          <span
+            className="rounded-full bg-amber-300/90 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950"
+            title="公開OFFです。ONにすると共有できます"
+            role="status"
+          >
+            OFF
+          </span>
+        ) : null}
         {canTogglePublish ? (
           <AppSwitch
             variant="on-dark"
@@ -257,13 +277,20 @@ export function EditorAppTopBar({
               type="button"
               role="menuitem"
               disabled={publishing || qrPreparing}
-              className="app-sheet-action app-sheet-action--primary"
+              className={
+                "app-sheet-action app-sheet-action--primary" +
+                (publishNotice === "unpublished_changes" ? " !bg-emerald-600 !text-white" : "")
+              }
               onClick={() => {
                 setMoreOpen(false);
                 onPublish();
               }}
             >
-              {publishing ? "処理中…" : publishActionLabel}
+              {publishing
+                ? "処理中…"
+                : publishNotice === "unpublished_changes"
+                  ? `● ${publishActionLabel}`
+                  : publishActionLabel}
             </button>
           </AppSheetSection>
         ) : null}

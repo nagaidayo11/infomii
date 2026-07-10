@@ -17,14 +17,16 @@ import { SlashCommandMenu } from "./SlashCommandMenu";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import {
-  BUSINESS_ONLY_CARD_TYPES,
+  canUseCardType,
+  getMinimumPlanForCardType,
   CARD_TYPE_LABELS,
   createEmptyCard,
   STARTER_CARD_TYPES,
   type EditorCard,
+  type EditorPlanTier,
   type CardType,
 } from "./types";
-import { getLocalizedContent, type LocalizedString, type SupportedLocale } from "@/lib/localized-content";
+import { type SupportedLocale } from "@/lib/localized-content";
 import {
   getInformationBySlug,
   getPage,
@@ -36,10 +38,11 @@ import {
   approvePublishApprovalBySlug,
   updatePageTitle,
   getCurrentHotelSubscription,
-  getCurrentHotelTranslationUsage,
-  trackCurrentHotelTranslationRun,
   getCurrentUserHotelRole,
   trackUpgradeClick,
+  getPageGuestShellEditorState,
+  getCurrentHotelTranslationUsage,
+  trackCurrentHotelTranslationRun,
 } from "@/lib/storage";
 import {
   type LibraryAudience,
@@ -51,6 +54,12 @@ import {
   openGuestPreviewPlaceholderTab,
 } from "@/lib/app-href";
 import { canResumeEditorPage } from "@/lib/editor-resume";
+import { createDefaultGuestShellConfig } from "@/lib/guest-shell";
+import { GuestShellPagePanel } from "@/components/settings/GuestShellPagePanel";
+import {
+  batchTranslateEditorCards,
+  collectMissingTranslationTargets,
+} from "@/lib/editor/batch-translate-cards";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -107,7 +116,10 @@ export function Editor2({
   const [bulkFontAnchor, setBulkFontAnchor] = useState<{ top: number; left: number } | null>(null);
   const editorLocale: SupportedLocale = "ja";
   const [localeTranslating, setLocaleTranslating] = useState(false);
-  const [translationEnabled, setTranslationEnabled] = useState(false);
+  const [planTier, setPlanTier] = useState<EditorPlanTier>("free");
+  const isBusinessPlan = planTier === "business";
+  const canUseProBlocks = planTier === "pro" || planTier === "business";
+  const canUseBusinessBlocks = planTier === "business";
   const [demoLockMessage, setDemoLockMessage] = useState<string | null>(null);
   const [publishStatus, setPublishStatus] = useState<"draft" | "published">("draft");
   const [publishToggleLoading, setPublishToggleLoading] = useState(false);
@@ -116,6 +128,7 @@ export function Editor2({
   const [scrollPriorityMode, setScrollPriorityMode] = useState(true);
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewGuestShell, setPreviewGuestShell] = useState(() => createDefaultGuestShellConfig());
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [initialEditorLoading, setInitialEditorLoading] = useState<boolean>(() => {
     if (isDemoMode || !pageId) return false;
@@ -124,17 +137,23 @@ export function Editor2({
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
   const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
-  const [businessUpsellState, setBusinessUpsellState] = useState<{
+  const [planUpsellState, setPlanUpsellState] = useState<{
     open: boolean;
     lockedType: CardType | null;
-  }>({ open: false, lockedType: null });
+    requiredPlan: "pro" | "business";
+  }>({ open: false, lockedType: null, requiredPlan: "business" });
   const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>("hotel");
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
-  const openBusinessUpsell = useCallback((type: CardType) => {
+  const openPlanUpsell = useCallback((type: CardType) => {
     void trackUpgradeClick("editor");
-    setBusinessUpsellState({ open: true, lockedType: type });
+    const requiredPlan = getMinimumPlanForCardType(type);
+    setPlanUpsellState({
+      open: true,
+      lockedType: type,
+      requiredPlan: requiredPlan === "business" ? "business" : "pro",
+    });
   }, []);
 
   const cards = useEditor2Store((s) => s.cards);
@@ -419,16 +438,36 @@ export function Editor2({
     })();
     getCurrentHotelSubscription()
       .then((sub) => {
-        setTranslationEnabled(Boolean(sub && sub.plan === "business"));
+        const plan = sub?.plan;
+        setPlanTier(plan === "business" || plan === "pro" ? plan : "free");
       })
       .catch(() => {
-        setTranslationEnabled(false);
+        setPlanTier("free");
       });
     getCurrentUserHotelRole().then(setHotelRole).catch(() => setHotelRole(null));
     return () => {
       cancelled = true;
     };
   }, [isDemoMode, pageId, setPageMeta]);
+
+  useEffect(() => {
+    if (isDemoMode || !pageId) {
+      setPreviewGuestShell(createDefaultGuestShellConfig());
+      return;
+    }
+    let cancelled = false;
+    getPageGuestShellEditorState(pageId)
+      .then((state) => {
+        if (cancelled || !state) return;
+        setPreviewGuestShell(state.effective);
+      })
+      .catch(() => {
+        if (!cancelled) setPreviewGuestShell(createDefaultGuestShellConfig());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDemoMode, pageId]);
 
   useEffect(() => {
     if (isDemoMode || !pageMeta.slug) return;
@@ -639,18 +678,75 @@ export function Editor2({
 
   const handleSlashSelect = useCallback(
     (type: CardType) => {
-      if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+      if (!canUseCardType(type, planTier)) {
         if (isDemoMode) {
-          setDemoLockMessage("このブロックはBusinessプラン限定です。");
+          const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
+          setDemoLockMessage(`このブロックは${tierLabel}プラン限定です。`);
         } else {
-          openBusinessUpsell(type);
+          openPlanUpsell(type);
         }
         return;
       }
       addCard(type);
       setSlashMenuOpen(false);
     },
-    [addCard, translationEnabled, isDemoMode, openBusinessUpsell]
+    [addCard, planTier, isDemoMode, openPlanUpsell]
+  );
+
+  const ensureTranslationsBeforeGuestAction = useCallback(
+    async (opts?: { translationSource?: "pre_publish" | "preview" }): Promise<string | null> => {
+      if (!isBusinessPlan) return null;
+      const flow = opts?.translationSource === "preview" ? "preview" : "publish";
+      const latestCards = useEditor2Store.getState().cards;
+      const targets = collectMissingTranslationTargets(latestCards);
+      if (targets.length === 0) return null;
+
+      const usage = await getCurrentHotelTranslationUsage().catch(() => null);
+      if (usage && usage.usedRuns >= usage.includedRuns) {
+        return flow === "preview"
+          ? `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているためプレビューできません。`
+          : `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているため公開できません。`;
+      }
+
+      setLocaleTranslating(true);
+      try {
+        const { cards: nextCards, translatedCount } = await batchTranslateEditorCards(latestCards);
+        if (translatedCount > 0) {
+          setCards(nextCards);
+          await trackCurrentHotelTranslationRun({
+            translatedItems: translatedCount,
+            source: flow === "preview" ? "preview" : "pre_publish",
+          });
+          if (pageId) {
+            const state = useEditor2Store.getState();
+            await savePageCards(pageId, state.cards, {
+              pageStyle: {
+                background: {
+                  mode: state.pageBackgroundMode,
+                  color: state.pageBackgroundColor,
+                  from: state.pageGradientFrom,
+                  to: state.pageGradientTo,
+                  angle: state.pageGradientAngle,
+                },
+              },
+            }).catch(() => undefined);
+          }
+        }
+        const remaining = collectMissingTranslationTargets(useEditor2Store.getState().cards);
+        if (remaining.length > 0) {
+          // Soft continue: warn but don't hard-block so UX stays natural if API partially fails.
+          console.warn("[translate] remaining targets", remaining.length);
+        }
+        return null;
+      } catch {
+        return flow === "preview"
+          ? "自動翻訳に失敗しました。時間をおいて再試行するか、そのままプレビューを続けられます。"
+          : "自動翻訳に失敗しました。時間をおいて再試行してください。";
+      } finally {
+        setLocaleTranslating(false);
+      }
+    },
+    [isBusinessPlan, pageId, setCards],
   );
 
   const publishNow = useCallback(async (opts?: { silent?: boolean }) => {
@@ -659,6 +755,11 @@ export function Editor2({
       return;
     }
     if (!pageId) return;
+    const translationError = await ensureTranslationsBeforeGuestAction({ translationSource: "pre_publish" });
+    if (translationError) {
+      window.alert(translationError);
+      return;
+    }
     setPublishing(true);
     try {
       const state = useEditor2Store.getState();
@@ -694,7 +795,7 @@ export function Editor2({
     } finally {
       setPublishing(false);
     }
-  }, [isDemoMode, pageId, currentContentSignature]);
+  }, [isDemoMode, pageId, currentContentSignature, ensureTranslationsBeforeGuestAction]);
 
   const handlePublishClick = useCallback(async () => {
     if (isDemoMode) {
@@ -708,11 +809,12 @@ export function Editor2({
     (types: CardType[]) => {
       let placed = 0;
       for (const type of types) {
-        if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+        if (!canUseCardType(type, planTier)) {
           if (isDemoMode) {
-            setDemoLockMessage("このセットにはBusinessプラン限定ブロックが含まれています。");
+            const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
+            setDemoLockMessage(`このセットには${tierLabel}プラン限定ブロックが含まれています。`);
           } else {
-            openBusinessUpsell(type);
+            openPlanUpsell(type);
           }
           continue;
         }
@@ -723,7 +825,7 @@ export function Editor2({
         showToast(`${placed}件のブロックを配置しました`, "success");
       }
     },
-    [addCardRaw, libraryAudience, translationEnabled, isDemoMode, openBusinessUpsell, useAppEditorChrome, showToast]
+    [addCardRaw, libraryAudience, planTier, isDemoMode, openPlanUpsell, useAppEditorChrome, showToast]
   );
 
   const handleClearAll = useCallback(async () => {
@@ -788,248 +890,6 @@ export function Editor2({
     }
   }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading, currentContentSignature]);
 
-  const translateAllCardsToMultilingual = useCallback(async (): Promise<number> => {
-    if (cards.length === 0) return 0;
-    const cache = new Map<string, { en: string; zh: string; ko: string }>();
-    const nonTranslatable = new Set([
-      "href",
-      "link",
-      "linkUrl",
-      "linkType",
-      "src",
-      "mapEmbedUrl",
-      "pageSlug",
-      "icon",
-      "variant",
-      "style",
-      "color",
-      "accent",
-    ]);
-
-    const requiredLocales: SupportedLocale[] = ["ja", "en", "zh", "ko"];
-    const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
-      if (typeof value === "string") {
-        const ja = value.trim();
-        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return out;
-        out.add(ja);
-        return out;
-      }
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        const localized = value as Record<string, unknown>;
-        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
-          const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
-          const hasMissingLocale = requiredLocales.some((localeCode) => {
-            const val = localized[localeCode];
-            return typeof val !== "string" || val.trim().length === 0;
-          });
-          if (hasMissingLocale && ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
-          return out;
-        }
-      }
-      if (Array.isArray(value)) {
-        value.forEach((v) => collectTargets(v, key, out));
-        return out;
-      }
-      if (value && typeof value === "object") {
-        Object.entries(value as Record<string, unknown>).forEach(([k, v]) => collectTargets(v, k, out));
-      }
-      return out;
-    };
-
-    const translateBatchChunk = async (targets: string[], attempt = 1): Promise<void> => {
-      if (targets.length === 0) return;
-      const res = await fetch("/api/ai/translate-content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texts: targets }),
-      });
-      if (!res.ok) {
-        if (attempt < 2) {
-          await translateBatchChunk(targets, attempt + 1);
-          return;
-        }
-        throw new Error(`batch translate failed (${res.status})`);
-      }
-      const data = (await res.json()) as { items?: Array<{ i: number; en: string; zh: string; ko: string }> };
-      const items = Array.isArray(data.items) ? data.items : [];
-      for (const item of items) {
-        const source = targets[item.i];
-        if (!source) continue;
-        if (typeof item.en === "string" && typeof item.zh === "string" && typeof item.ko === "string") {
-          cache.set(source, { en: item.en, zh: item.zh, ko: item.ko });
-        }
-      }
-    };
-
-    const translateBatch = async (targets: string[]) => {
-      const chunkSize = 25;
-      for (let offset = 0; offset < targets.length; offset += chunkSize) {
-        await translateBatchChunk(targets.slice(offset, offset + chunkSize));
-      }
-    };
-
-    const walk = async (value: unknown, key?: string): Promise<{ value: unknown; count: number }> => {
-      if (typeof value === "string") {
-        const ja = value.trim();
-        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return { value, count: 0 };
-        const translated = cache.get(ja);
-        if (!translated) return { value, count: 0 };
-        return { value: { ja: value, en: translated.en, zh: translated.zh, ko: translated.ko }, count: 1 };
-      }
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        const localized = value as Record<string, unknown>;
-        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
-          const ja = getLocalizedContent(localized as LocalizedString, "ja");
-          const translated = cache.get(ja.trim());
-          if (!translated) return { value, count: 0 };
-          return {
-            value: { ...localized, ja, en: translated.en, zh: translated.zh, ko: translated.ko },
-            count: 1,
-          };
-        }
-      }
-      if (Array.isArray(value)) {
-        const next: unknown[] = [];
-        let total = 0;
-        for (const item of value) {
-          const result = await walk(item, key);
-          next.push(result.value);
-          total += result.count;
-        }
-        return { value: next, count: total };
-      }
-      if (value && typeof value === "object") {
-        const next: Record<string, unknown> = {};
-        let total = 0;
-        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-          const result = await walk(v, k);
-          next[k] = result.value;
-          total += result.count;
-        }
-        return { value: next, count: total };
-      }
-      return { value, count: 0 };
-    };
-
-    const targets = Array.from(cards.reduce((set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set), new Set<string>()));
-    await translateBatch(targets);
-
-    const nextCards = [...cards];
-    let translatedCount = 0;
-    for (let i = 0; i < nextCards.length; i += 1) {
-      const card = nextCards[i];
-      const result = await walk(card.content as Record<string, unknown>);
-      translatedCount += result.count;
-      nextCards[i] = { ...card, content: result.value as Record<string, unknown> };
-    }
-    if (translatedCount > 0) setCards(nextCards);
-    return translatedCount;
-  }, [cards, setCards]);
-
-  const ensureTranslationsBeforePublish = useCallback(
-    async (opts?: { translationSource?: "pre_publish" | "preview" }): Promise<string | null> => {
-    // Translation flow is Business-only. Free/Pro should skip checks and alerts.
-    if (!translationEnabled) return null;
-    const flow = opts?.translationSource === "preview" ? "preview" : "publish";
-    const nonTranslatable = new Set([
-      "href",
-      "link",
-      "linkUrl",
-      "linkType",
-      "src",
-      "mapEmbedUrl",
-      "pageSlug",
-      "icon",
-      "variant",
-      "style",
-      "color",
-      "accent",
-    ]);
-    const requiredLocales: SupportedLocale[] = ["ja", "en", "zh", "ko"];
-    const collectTargets = (value: unknown, key?: string, out: Set<string> = new Set()): Set<string> => {
-      if (typeof value === "string") {
-        const ja = value.trim();
-        if (!ja || (key && nonTranslatable.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) return out;
-        out.add(ja);
-        return out;
-      }
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        const localized = value as Record<string, unknown>;
-        if ("ja" in localized || "en" in localized || "zh" in localized || "ko" in localized) {
-          const ja = getLocalizedContent(localized as LocalizedString, "ja").trim();
-          const hasMissingLocale = requiredLocales.some((localeCode) => {
-            const val = localized[localeCode];
-            return typeof val !== "string" || val.trim().length === 0;
-          });
-          if (hasMissingLocale && ja && ja.length >= 2 && !/^https?:\/\//i.test(ja)) out.add(ja);
-          return out;
-        }
-      }
-      if (Array.isArray(value)) {
-        value.forEach((v) => collectTargets(v, key, out));
-        return out;
-      }
-      if (value && typeof value === "object") {
-        Object.entries(value as Record<string, unknown>).forEach(([k, v]) => collectTargets(v, k, out));
-      }
-      return out;
-    };
-    const targetsBefore = Array.from(
-      cards.reduce((set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set), new Set<string>())
-    );
-    if (targetsBefore.length === 0) return null;
-
-    const subscription = await getCurrentHotelSubscription().catch(() => null);
-    if (!subscription || subscription.plan !== "business") {
-      return flow === "preview"
-        ? "未翻訳項目があります。プレビュー前に翻訳を完了するにはBusinessプランが必要です。"
-        : "未翻訳項目があります。公開前に翻訳を完了するにはBusinessプランが必要です。";
-    }
-    const usage = await getCurrentHotelTranslationUsage().catch(() => null);
-    if (usage && usage.usedRuns >= usage.includedRuns) {
-      return flow === "preview"
-        ? `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているためプレビューできません。`
-        : `未翻訳項目があります。今月の翻訳実行枠（${usage.includedRuns}回）に達しているため公開できません。`;
-    }
-
-    setLocaleTranslating(true);
-    try {
-      const translatedCount = await translateAllCardsToMultilingual();
-      if (translatedCount > 0) {
-        try {
-          await trackCurrentHotelTranslationRun({
-            translatedItems: translatedCount,
-            source: flow === "preview" ? "preview" : "pre_publish",
-          });
-        } catch {
-          /* translation usage logging must not block publish */
-        }
-      }
-      const latestCards = useEditor2Store.getState().cards;
-      const remainingTargets = Array.from(
-        latestCards.reduce(
-          (set, card) => collectTargets(card.content as Record<string, unknown>, undefined, set),
-          new Set<string>()
-        )
-      );
-      if (remainingTargets.length > 0) {
-        return flow === "preview"
-          ? `未翻訳項目が ${remainingTargets.length} 件残っています。失敗言語: EN / 中文 / 한국어。編集内容を確認して再試行してください。`
-          : `未翻訳項目が ${remainingTargets.length} 件残っています。失敗言語: EN / 中文 / 한국어。公開更新を中断しました。編集内容を確認して再試行してください。`;
-      }
-      return null;
-    } catch {
-      return flow === "preview"
-        ? "自動翻訳に失敗しました。失敗言語: EN / 中文 / 한국어。時間をおいて再試行してください。"
-        : "自動翻訳に失敗したため公開更新を中断しました。失敗言語: EN / 中文 / 한국어。時間をおいて再試行してください。";
-    } finally {
-      setLocaleTranslating(false);
-    }
-  },
-    [cards, translateAllCardsToMultilingual, translationEnabled]
-  );
-
-  /** 公開済みで未反映のとき、プレビュー／QR は開かず公開更新（または公開申請）を促す */
   const guardPublishedBeforeGuestView = useCallback((): boolean => {
     if (publishStatus !== "published" || !hasUnpublishedChanges) return true;
 
@@ -1135,6 +995,16 @@ export function Editor2({
         return;
       }
 
+      const translationError = await ensureTranslationsBeforeGuestAction({ translationSource: "preview" });
+      if (translationError) {
+        // Soft: warn but still allow preview so editing flow isn't blocked.
+        const continuePreview = window.confirm(`${translationError}\n\nこのままプレビューを開きますか？`);
+        if (!continuePreview) {
+          closeGuestPreviewTab(previewWindow);
+          return;
+        }
+      }
+
       if (!guardPublishedBeforeGuestView()) {
         closeGuestPreviewTab(previewWindow);
         return;
@@ -1155,12 +1025,6 @@ export function Editor2({
         });
       } catch {
         // Even if save fails, allow user to inspect current public page.
-      }
-      const translationError = await ensureTranslationsBeforePublish({ translationSource: "preview" });
-      if (translationError) {
-        closeGuestPreviewTab(previewWindow);
-        window.alert(translationError);
-        return;
       }
       try {
         const after = useEditor2Store.getState();
@@ -1195,10 +1059,10 @@ export function Editor2({
     guardDemoAction,
     pageMeta.publicUrl,
     pageId,
-    ensureTranslationsBeforePublish,
     flushAutosaveNow,
     guardPublishedBeforeGuestView,
     useAppEditorChrome,
+    ensureTranslationsBeforeGuestAction,
   ]);
 
   const handlePublishClickStrict = useCallback(async () => {
@@ -1217,14 +1081,6 @@ export function Editor2({
     }
     setPublishFlowBusy(true);
     try {
-      const translationError =
-        publishStatus === "published" && !hasUnpublishedChanges
-          ? null
-          : await ensureTranslationsBeforePublish();
-      if (translationError) {
-        window.alert(translationError);
-        return;
-      }
       if (hotelRole === "editor") {
         if (!pageMeta.slug) {
           window.alert("公開申請対象ページが見つかりません。");
@@ -1248,7 +1104,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, publishStatus, hasUnpublishedChanges, ensureTranslationsBeforePublish, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId, publishNow]);
+  }, [guardDemoAction, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -1269,11 +1125,6 @@ export function Editor2({
         );
         return;
       }
-      const translationError = await ensureTranslationsBeforePublish();
-      if (translationError) {
-        window.alert(translationError);
-        return;
-      }
       await publishNow({ silent: true });
     } finally {
       setTogglePublishBusy(false);
@@ -1281,7 +1132,6 @@ export function Editor2({
   }, [
     isDemoMode,
     publishStatus,
-    ensureTranslationsBeforePublish,
     handleTogglePublished,
     flushAutosaveNow,
     publishNow,
@@ -1323,6 +1173,15 @@ export function Editor2({
     [cards, cloneCardsSnapshot, isDemoMode, useAppEditorChrome],
   );
 
+  const publishNotice =
+    isDemoMode || initialEditorLoading
+      ? null
+      : publishStatus !== "published"
+        ? ("draft_off" as const)
+        : hasUnpublishedChanges
+          ? ("unpublished_changes" as const)
+          : null;
+
   const topBar =
     pageId || isDemoMode ? (
       useAppEditorChrome ? (
@@ -1352,6 +1211,7 @@ export function Editor2({
           publishToggleLoading={publishToggleLoading}
           publishToggleChecked={publishStatus === "published"}
           onRenamePageTitle={handleRenamePageTitle}
+          publishNotice={publishNotice}
         />
       ) : (
         <EditorTopBar
@@ -1384,12 +1244,13 @@ export function Editor2({
           onRenamePageTitle={isDemoMode ? undefined : handleRenamePageTitle}
           scrollPriorityMode={scrollPriorityMode}
           onToggleScrollPriority={() => setScrollPriorityMode((prev) => !prev)}
+          publishNotice={publishNotice}
         />
       )
     ) : null;
   const showEditorBusyOverlay =
     previewBusy || publishFlowBusy || publishing || togglePublishBusy || qrModalPreparing;
-  const showBusinessTranslationOverlay = translationEnabled && localeTranslating;
+  const showBusinessTranslationOverlay = isBusinessPlan && localeTranslating;
   let editorBusyTitle = "公開中...";
   let editorBusySubtitle = "保存と公開設定を実行しています";
   if (previewBusy && showBusinessTranslationOverlay) {
@@ -1444,23 +1305,26 @@ export function Editor2({
           library={
             <CardLibrary
               onAddCard={(type) => {
-                if (BUSINESS_ONLY_CARD_TYPES.includes(type) && !translationEnabled) {
+                if (!canUseCardType(type, planTier)) {
                   if (isDemoMode) {
-                    setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                    const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
+                    setDemoLockMessage(`このブロックは${tierLabel}プラン限定です。`);
                   } else {
-                    openBusinessUpsell(type);
+                    openPlanUpsell(type);
                   }
                   return;
                 }
                 addCard(type);
               }}
               onAddPreset={handleAddPreset}
-              canUseBusinessBlocks={translationEnabled}
+              canUseProBlocks={canUseProBlocks}
+              canUseBusinessBlocks={canUseBusinessBlocks}
               onLockedAddCard={(type) => {
                 if (isDemoMode) {
-                  setDemoLockMessage("このブロックはBusinessプラン限定です。");
+                  const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
+                  setDemoLockMessage(`このブロックは${tierLabel}プラン限定です。`);
                 } else {
-                  openBusinessUpsell(type);
+                  openPlanUpsell(type);
                 }
               }}
               libraryAudience={libraryAudience}
@@ -1471,23 +1335,7 @@ export function Editor2({
           canvas={
             <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
               <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
-              {!isDemoMode && !initialEditorLoading && publishStatus !== "published" && (
-                <div
-                  className={
-                    useAppEditorChrome
-                      ? "mx-3 mt-2 rounded-xl border border-amber-200/90 bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-900"
-                      : "mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 px-0 py-1.5 text-center text-sm leading-tight text-amber-800"
-                  }
-                >
-                  {useAppEditorChrome
-                    ? "非公開です。公開スイッチをONにすると共有できます。"
-                    : "現在公開OFFになっています（プレビュー/QRアクセス時は公開OFFエラーになります）。"}
-                </div>
-              )}
-              {!isDemoMode && !initialEditorLoading && publishStatus === "published" && hasUnpublishedChanges && (
-                <div className="mx-4 mt-3 rounded-lg border border-emerald-200 bg-emerald-50/80 px-0 py-1.5 text-center text-sm leading-tight text-emerald-800">未反映の変更があります。プレビュー・QR・公開更新のいずれかで公開ページへ反映できます</div>
-              )}
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-6">
+              <div className="min-h-0 flex-1 overflow-hidden">
                 <FreeformCanvas
                   cards={cards}
                   selectedCardId={selectedCardId}
@@ -1502,6 +1350,9 @@ export function Editor2({
                     to: pageGradientTo,
                     angle: pageGradientAngle,
                   }}
+                  guestShell={previewGuestShell}
+                  pageSlug={pageMeta.slug}
+                  isBusinessPlan={isBusinessPlan}
                 />
               </div>
               </div>
@@ -1515,6 +1366,14 @@ export function Editor2({
             </div>
           }
           settings={
+            !selectedCard && pageId && !isDemoMode ? (
+              <GuestShellPagePanel
+                pageId={pageId}
+                pageSlug={pageMeta.slug}
+                isBusinessPlan={isBusinessPlan}
+                onConfigChange={setPreviewGuestShell}
+              />
+            ) : (
             <CardSettings
               card={selectedCard}
               onUpdate={updateCard}
@@ -1541,9 +1400,12 @@ export function Editor2({
               lastAddedCardId={lastAddedCardId}
               demoMode={isDemoMode}
               onLockedAction={(message) => setDemoLockMessage(message)}
-              isBusinessEnabled={translationEnabled}
+              isBusinessEnabled={canUseBusinessBlocks}
+              isBusinessPlan={isBusinessPlan}
+              canUseProBlocks={canUseProBlocks}
               libraryAudience={libraryAudience}
             />
+            )
           }
         />
         <SlashCommandMenu
@@ -1551,23 +1413,33 @@ export function Editor2({
           onClose={() => setSlashMenuOpen(false)}
           onSelect={handleSlashSelect}
           anchorRef={canvasRef}
-          canUseBusinessBlocks={translationEnabled}
+          canUseProBlocks={canUseProBlocks}
+          canUseBusinessBlocks={canUseBusinessBlocks}
           libraryAudience={libraryAudience}
           onLockedAddCard={(type) => {
             if (isDemoMode) {
-              setDemoLockMessage("このブロックはBusinessプラン限定です。");
+              const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
+              setDemoLockMessage(`このブロックは${tierLabel}プラン限定です。`);
             } else {
-              openBusinessUpsell(type);
+              openPlanUpsell(type);
             }
           }}
         />
-        {businessUpsellState.open && (
+        {planUpsellState.open && (
           <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
             <div className="ui-pop-in w-full max-w-lg rounded-lg border border-[#e6e8eb] bg-white p-5 shadow-md">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">この機能はBusinessプラン限定です</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Businessプランにアップグレードすると、今選んだ機能をすぐ使えます。</p>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {planUpsellState.requiredPlan === "business"
+                      ? "この機能はBusinessプラン限定です"
+                      : "この機能はProプラン以上で利用できます"}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    {planUpsellState.requiredPlan === "business"
+                      ? "Businessプランにアップグレードすると、今選んだ機能をすぐ使えます。"
+                      : "Proプランにアップグレードすると、訴求ブロックやページ上限の拡張が利用できます。"}
+                  </p>
                 </div>
                 <span
                   className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-slate-700"
@@ -1592,15 +1464,15 @@ export function Editor2({
                   <p className="mt-1 text-[11px]">無制限 + 多言語/運用</p>
                 </div>
               </div>
-              {businessUpsellState.lockedType ? (
+              {planUpsellState.lockedType ? (
                 <p className="mt-3 text-xs text-slate-500">
-                  選択ブロック: {CARD_TYPE_LABELS[businessUpsellState.lockedType] ?? businessUpsellState.lockedType}
+                  選択ブロック: {CARD_TYPE_LABELS[planUpsellState.lockedType] ?? planUpsellState.lockedType}
                 </p>
               ) : null}
               <div className="mt-5 flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setBusinessUpsellState({ open: false, lockedType: null })}
+                  onClick={() => setPlanUpsellState({ open: false, lockedType: null, requiredPlan: "business" })}
                   className="min-h-[44px] rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                 >
                   閉じる
@@ -1612,7 +1484,11 @@ export function Editor2({
                   }}
                   className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white no-underline hover:bg-slate-800"
                 >
-                  {isAppShell ? "プランを見る" : "Businessプランを見る"}
+                  {isAppShell
+                    ? "プランを見る"
+                    : planUpsellState.requiredPlan === "business"
+                      ? "Businessプランを見る"
+                      : "Proプランを見る"}
                 </a>
               </div>
             </div>

@@ -69,7 +69,7 @@ export function DailySpecialCard({ card, locale = "ja" }: { card: EditorCard; is
     return (
       <Card padding="none" className="overflow-hidden">
         <MenuCardHeroImage heroSrc={heroSrc} heroAlt={heroAlt} locale={locale} />
-        <div className="px-4 py-3">{body}</div>
+        <div className="px-3 py-3">{body}</div>
       </Card>
     );
   }

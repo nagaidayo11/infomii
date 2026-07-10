@@ -794,7 +794,7 @@ export function BusinessPlanSection({
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-slate-700" : "text-slate-600"}`}>
               <li>・最大10ページ公開</li>
               <li>・閲覧分析</li>
-              <li>・用途別にページを分けて運用</li>
+              <li>・訴求ブロック（ティッカー・クーポン・タイマー）</li>
             </ul>
           </div>
           <div
@@ -832,9 +832,9 @@ export function BusinessPlanSection({
             </p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-slate-700" : "text-slate-600"}`}>
               <li>・公開ページ無制限</li>
-              <li>・公開時の多言語自動翻訳</li>
+              <li>・多言語編集・ゲスト言語切替</li>
               <li>・チーム招待（引き継ぎしやすい）</li>
-              <li>・動的ブロック</li>
+              <li>・動的ブロック（期間・時間帯連動）</li>
             </ul>
           </div>
         </div>

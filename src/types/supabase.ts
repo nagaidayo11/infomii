@@ -70,6 +70,7 @@ export type Database = {
           created_at: string;
           custom_domain: string | null;
           hide_guest_footer: boolean;
+          guest_shell: Record<string, unknown>;
         };
         Insert: {
           id?: string;
@@ -78,6 +79,7 @@ export type Database = {
           created_at?: string;
           custom_domain?: string | null;
           hide_guest_footer?: boolean;
+          guest_shell?: Record<string, unknown>;
         };
         Update: {
           name?: string;
@@ -85,6 +87,7 @@ export type Database = {
           created_at?: string;
           custom_domain?: string | null;
           hide_guest_footer?: boolean;
+          guest_shell?: Record<string, unknown>;
         };
         Relationships: [];
       };
@@ -285,9 +288,29 @@ export type Database = {
         Relationships: [];
       };
       pages: {
-        Row: { id: string; hotel_id: string; title: string; slug: string; created_at: string };
-        Insert: { id?: string; hotel_id: string; title: string; slug: string; created_at?: string };
-        Update: { hotel_id?: string; title?: string; slug?: string; created_at?: string };
+        Row: {
+          id: string;
+          hotel_id: string;
+          title: string;
+          slug: string;
+          created_at: string;
+          guest_shell: Record<string, unknown> | null;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          title: string;
+          slug: string;
+          created_at?: string;
+          guest_shell?: Record<string, unknown> | null;
+        };
+        Update: {
+          hotel_id?: string;
+          title?: string;
+          slug?: string;
+          created_at?: string;
+          guest_shell?: Record<string, unknown> | null;
+        };
         Relationships: [];
       };
       cards: {

@@ -4,6 +4,7 @@ import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import { buildGuestPreviewBackLink } from "@/lib/app-href";
+import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 const STYLE_KEY = "_style";
@@ -97,6 +98,10 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     .order("updated_at", { ascending: false })
     .limit(1);
   const canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
+  const guestShell = await fetchResolvedGuestShellForPage(supabase, {
+    id: page.id,
+    hotel_id: hotelIdForLocaleToggle,
+  });
   const isPublished = infoRow?.status === "published";
   if (!isPublished && !isPreviewRequest) {
     return (
@@ -162,6 +167,10 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       showLocaleToggle={showLocaleToggle}
       businessFeaturesEnabled={canShowLocaleToggle}
       localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
+      guestShell={guestShell}
+      currentSlug={page.slug}
+      preview={isPreviewRequest}
+      clientApp={isAppClient}
       backButton={
         backLink ? (
           <a

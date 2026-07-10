@@ -40,6 +40,9 @@ export type CardType =
   | "divider"
   | "parking"
   | "pageLinks"
+  /** @deprecated Prefer pageLinks. Existing pages only — hidden from library. */
+  | "icon_shortcuts"
+  | "image_tiles"
   | "quote"
   | "checklist"
   | "steps"
@@ -61,6 +64,7 @@ export type CardType =
   | "menu_categories"
   | "daily_special"
   | "drink_menu"
+  /** @deprecated Existing pages only — hidden from library. */
   | "salon_service_menu"
   | "combo_set_menu"
   | "menu_grid"
@@ -134,11 +138,60 @@ export function getBodyFontSizeStyle(): import("react").CSSProperties {
  */
 export const CARD_BLOCK_TITLE_CLASS = "text-slate-800" as const;
 
+/**
+ * Horizontal/vertical content inset for text blocks.
+ * Matches 見出し＋本文セット (`HeadingBodyCard`) — keep titles on one vertical line.
+ */
+export const CARD_CONTENT_INSET_X = "px-3" as const;
+export const CARD_CONTENT_INSET_Y = "py-3" as const;
+export const CARD_CONTENT_INSET = "px-3 py-3" as const;
+
 const DEFAULT_TRANSPARENT_MEDIA_TYPES: readonly CardType[] = ["hero", "hero_slider", "image", "gallery"] as const;
 export const TRANSPARENT_MEDIA_CARD_TYPES = new Set<CardType>(DEFAULT_TRANSPARENT_MEDIA_TYPES);
 
 export function isMediaCardType(type: CardType | undefined): type is CardType {
   return Boolean(type && TRANSPARENT_MEDIA_CARD_TYPES.has(type));
+}
+
+/**
+ * Blocks that should always match the hero content-column width (page gutter intact).
+ * Text / form-like cards are excluded so they can stay narrower if intentionally resized.
+ */
+const HERO_COLUMN_WIDTH_TYPES: ReadonlySet<CardType> = new Set<CardType>([
+  "hero",
+  "hero_slider",
+  "image",
+  "gallery",
+  "image_tiles",
+  "video",
+  "map",
+  "pageLinks",
+  "icon_shortcuts",
+  "action",
+  "button",
+  "divider",
+  "notice",
+  "notice_ticker",
+  "campaign_timer",
+  "emergency_banner",
+  "scheduled_banner",
+  "social_links",
+  "contact_hub",
+  "coupon",
+  "menu",
+  "menu_categories",
+  "daily_special",
+  "drink_menu",
+  "salon_service_menu",
+  "combo_set_menu",
+  "menu_grid",
+  "menu_sheet_sync",
+  "menu_time_band",
+]);
+
+/** True when this card type should span the full hero column width. */
+export function usesHeroColumnWidth(type: CardType | undefined): boolean {
+  return Boolean(type && HERO_COLUMN_WIDTH_TYPES.has(type));
 }
 
 /**
@@ -290,6 +343,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   divider: "区切り線",
   parking: "駐車場",
   pageLinks: "ページリンク",
+  icon_shortcuts: "アイコンショートカット",
+  image_tiles: "画像タイル",
   quote: "引用",
   checklist: "チェックリスト",
   steps: "ステップ",
@@ -364,7 +419,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
 export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
-  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示" },
   { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を縦に表示" },
   { type: "info", label: "情報", description: "WiFi・構造化情報" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
@@ -379,27 +434,26 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
   { type: "compare", label: "比較・料金表", description: "2列比較または料金・プラン表（最大4列）" },
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Pro）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
-  { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Pro）" },
+  { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
   { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
   { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示" },
   { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
   { type: "gallery", label: "ギャラリー", description: "画像グリッド" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
   { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
-  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
   { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
-  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Businessプラン）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "divider", label: "区切り", description: "セクション区切り" },
   { type: "space", label: "スペース", description: "余白を追加" },
 ];
@@ -416,7 +470,7 @@ export const STARTER_CARD_TYPES: CardType[] = [
 /** Full list (all card types) — for backwards compatibility / migration. */
 export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; description: string }> = [
   { type: "hero", label: "ヒーロー", description: "大画像＋タイトル" },
-  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示（Business）" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数画像を切替表示" },
   { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を縦に表示" },
   { type: "info", label: "情報", description: "構造化情報・WiFi" },
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
@@ -442,10 +496,9 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
   { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
-  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
   { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
-  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Businessプラン）" },
+  { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
@@ -453,31 +506,57 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
   { type: "compare", label: "比較・料金表", description: "2列比較または料金表" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Business）" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Pro）" },
   { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Business）" },
-  { type: "coupon", label: "クーポン", description: "特典コード表示（Business）" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Pro）" },
+  { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
   { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
   { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示（Business）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先告知を表示" },
   { type: "scheduled_banner", label: "期間限定バナー", description: "期間内のみ表示（Business）" },
   { type: "space", label: "スペース", description: "余白" },
 ];
 
-export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
-  "hero_slider",
-  "campaign_timer",
+/** Pro 以上で利用可能なブロック（訴求・プロモ系） */
+export const PRO_AND_ABOVE_CARD_TYPES: CardType[] = [
   "notice_ticker",
   "coupon",
-  "emergency_banner",
+  "campaign_timer",
+];
+
+/** Business プラン限定ブロック（自動化・動的運用） */
+export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
   "scheduled_banner",
   "menu_sheet_sync",
   "menu_time_band",
 ];
+
+export type EditorPlanTier = "free" | "pro" | "business";
+
+export function getMinimumPlanForCardType(type: CardType): EditorPlanTier {
+  if (BUSINESS_ONLY_CARD_TYPES.includes(type)) return "business";
+  if (PRO_AND_ABOVE_CARD_TYPES.includes(type)) return "pro";
+  return "free";
+}
+
+export function canUseCardType(
+  type: CardType,
+  plan: EditorPlanTier | null | undefined,
+): boolean {
+  const minimum = getMinimumPlanForCardType(type);
+  if (minimum === "free") return true;
+  if (!plan) return false;
+  if (minimum === "pro") return plan === "pro" || plan === "business";
+  return plan === "business";
+}
+
+export function isGatedCardType(type: CardType): boolean {
+  return getMinimumPlanForCardType(type) !== "free";
+}
 
 /** Default sample image (hero / image / gallery block presets). */
 export const PRESET_HERO_SAMPLE_IMAGE = "/hero-block-default-1.png";
@@ -761,6 +840,55 @@ function defaultContent(type: CardType): Record<string, unknown> {
           { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },
           { label: "チェックアウト", icon: "checkout", linkType: "page" as const, pageSlug: "", link: "" },
+        ],
+      };
+    case "icon_shortcuts":
+      return {
+        title: "",
+        columns: 3,
+        iconSize: "md",
+        styleVariant: "circle",
+        tileShadowStrength: "md",
+        circleIconShadowStrength: "md",
+        items: [
+          { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
+          { label: "館内施設", icon: "spa", linkType: "page" as const, pageSlug: "", link: "" },
+          { label: "レストラン", icon: "restaurant", linkType: "page" as const, pageSlug: "", link: "" },
+        ],
+      };
+    case "image_tiles":
+      return {
+        title: "",
+        columns: 2,
+        items: [
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "レストラン",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "大浴場",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "貸切風呂",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "交通案内",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
         ],
       };
     case "quote":

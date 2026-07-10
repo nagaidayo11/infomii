@@ -2,7 +2,11 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -50,7 +54,14 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
     <Card padding="md" className="">
       {(editable || title) ? (
         <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={labels.titlePlaceholder}
+          />
         </p>
       ) : null}
       <div
@@ -58,7 +69,11 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.slice(0, 12).map((item, i) => (
-          <div key={i} data-inner-surface className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
+          <div
+            key={i}
+            data-inner-surface
+            className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}
+          >
             {item?.src ? (
               <EditorCoverImage
                 src={item.src}

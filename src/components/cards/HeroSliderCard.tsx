@@ -354,14 +354,16 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
   return (
     <section className="w-full space-y-3">
       {bind.editable ? (
-        <CardTitleInline
-          title={title}
-          onSave={(v) => editor.setPlainField("title", v)}
-          placeholder="見出し（任意）"
-          bind={bind}
-        />
+        <div className="px-3">
+          <CardTitleInline
+            title={title}
+            onSave={(v) => editor.setPlainField("title", v)}
+            placeholder="見出し（任意）"
+            bind={bind}
+          />
+        </div>
       ) : title ? (
-        <h3 className={`px-1 text-base ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+        <h3 className={`px-3 text-base ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           {title}
         </h3>
       ) : null}

@@ -6,33 +6,13 @@ import { CardRenderer } from "@/components/cards/CardRenderer";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
-import { getBlockStyle, isMediaCardType, type CardType, type EditorCard } from "./types";
-
-const FIXED_VIEWPORT_WIDTH = 375;
-
-function MobileCanvasFrame({
-  children,
-  width = 375,
-}: {
-  children: React.ReactNode;
-  width?: number;
-}) {
-  return (
-    <div className="flex shrink-0 flex-col items-center" aria-label="モバイルプレビュー（ゲスト表示）">
-      <div
-        className="flex min-h-[480px] min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/65 bg-white shadow-[0_12px_36px_-8px_rgba(15,23,42,0.12)]"
-        style={{ width }}
-      >
-        <div
-          className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-scroll"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
+import {
+  resolveVisibleGuestShellTabs,
+  type GuestShellConfig,
+} from "@/lib/guest-shell";
+import { getBlockStyle, isMediaCardType, usesHeroColumnWidth, type CardType, type EditorCard } from "./types";
 
 const DEFAULT_W = 280;
 const DEFAULT_H = 96;
@@ -98,6 +78,8 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   divider: 52,
   parking: 96,
   pageLinks: 104,
+  icon_shortcuts: 96,
+  image_tiles: 180,
   quote: 84,
   checklist: 104,
   steps: 104,
@@ -143,17 +125,24 @@ function getInitialStackY(cards: EditorCard[], index: number): number {
   return y;
 }
 
-/** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
+/** Hero-column types always span contentWidth; others keep saved width (capped) and stay centered. */
 function getPosition(card: EditorCard, index: number, contentWidth: number, cards: EditorCard[] = []): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
-  // New cards (no saved width) should start full-width in the content area.
-  const w = typeof pos?.w === "number" ? pos.w : contentWidth;
+  const forceHeroWidth = usesHeroColumnWidth(card.type);
+  const w = forceHeroWidth
+    ? contentWidth
+    : typeof pos?.w === "number"
+      ? pos.w
+      : contentWidth;
   const h = typeof pos?.h === "number" ? pos.h : initialH;
   const blockW = Math.min(w, contentWidth);
   const centeredX = Math.round((contentWidth - blockW) / 2);
 
   if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
+    if (forceHeroWidth) {
+      return { x: 0, y: pos.y, w: contentWidth, h };
+    }
     const savedX = pos.x;
     const isLegacyLeftAligned = savedX <= 60;
     return {
@@ -240,6 +229,9 @@ type FreeformCanvasProps = {
     to: string;
     angle: number;
   };
+  guestShell?: GuestShellConfig | null;
+  pageSlug?: string;
+  isBusinessPlan?: boolean;
 };
 
 export function FreeformCanvas({
@@ -250,11 +242,14 @@ export function FreeformCanvas({
   onReorderCards,
   scrollPriorityMode = false,
   pageBackground,
+  guestShell = null,
+  pageSlug = "",
+  isBusinessPlan = false,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const viewportWidth = FIXED_VIEWPORT_WIDTH;
+  const [viewportWidth, setViewportWidth] = useState(350);
   const contentWidth = guestCardColumnMaxWidthPx(viewportWidth);
   const [dragState, setDragState] = useState<{
     id: string;
@@ -265,6 +260,10 @@ export function FreeformCanvas({
     guides: { axis: "x" | "y"; value: number }[];
   } | null>(null);
   const [autoHeights, setAutoHeights] = useState<Record<string, number>>({});
+  const [previewLocale, setPreviewLocale] = useState<"ja" | "en" | "zh" | "ko">("ja");
+  const shellTabs = guestShell
+    ? resolveVisibleGuestShellTabs(guestShell, { businessFeaturesEnabled: isBusinessPlan })
+    : [];
 
   const setAutoHeightForCard = useCallback((id: string, measuredHeight: number) => {
     if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
@@ -455,8 +454,12 @@ export function FreeformCanvas({
     ) => {
       const card = cards.find((c) => c.id === id);
       if (!card) return;
-      const w = ref.offsetWidth;
+      const rawW = ref.offsetWidth;
       const h = ref.offsetHeight;
+      const w = usesHeroColumnWidth(card.type) ? contentWidth : Math.min(rawW, contentWidth);
+      const x = usesHeroColumnWidth(card.type)
+        ? 0
+        : Math.round(pos.x / GRID) * GRID;
       onUpdateCard(id, {
         ...(card.type === "space"
           ? {
@@ -469,7 +472,7 @@ export function FreeformCanvas({
         style: {
           ...card.style,
           [POSITION_KEY]: {
-            x: Math.round(pos.x / GRID) * GRID,
+            x,
             y: Math.round(pos.y / GRID) * GRID,
             w,
             h,
@@ -478,7 +481,7 @@ export function FreeformCanvas({
         },
       });
     },
-    [cards, onUpdateCard]
+    [cards, contentWidth, onUpdateCard]
   );
 
   const pageBackgroundStyle =
@@ -486,7 +489,6 @@ export function FreeformCanvas({
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
       : pageBackground?.color ?? "#ffffff";
 
-  const canvasW = viewportWidth;
   const canvasH = Math.max(
     800,
     cards.reduce((max, card, idx) => {
@@ -500,26 +502,44 @@ export function FreeformCanvas({
     <CardEditProvider inlineEditable>
     <div
       ref={canvasRef}
-      className="flex flex-1 flex-col overflow-hidden outline-none"
+      className="flex h-full min-h-0 flex-1 flex-col overflow-hidden outline-none"
       tabIndex={-1}
       onClick={() => onSelectCard(null)}
     >
-      <div className="editor-canvas-outer-scroll flex min-w-0 flex-1 justify-center overflow-auto bg-slate-100 p-5">
-        <MobileCanvasFrame width={viewportWidth}>
+      <div className="editor-canvas-outer flex h-full min-h-0 min-w-0 flex-1 justify-center overflow-hidden bg-slate-200/80">
+        <PhoneDeviceFrame
+          width={350}
+          fillHeight
+          verticalInset={28}
+          className="h-full w-full"
+          screenStyle={{ background: pageBackgroundStyle }}
+          onScreenWidthChange={setViewportWidth}
+          footer={
+            shellTabs.length > 0 ? (
+              <GuestBottomTabBar
+                tabs={shellTabs}
+                currentSlug={pageSlug}
+                locale={previewLocale}
+                onLocaleChange={setPreviewLocale}
+                previewMode
+              />
+            ) : null
+          }
+        >
           <div
-            className="relative"
-            style={{ width: canvasW, height: canvasH, minHeight: canvasH, background: pageBackgroundStyle }}
+            className="relative mx-auto"
+            style={{ width: contentWidth + CANVAS_PADDING_X * 2, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
             }}
           >
-          {/* Content area: 左右均等の余白で中央に配置 */}
           <div
-            className="absolute top-0"
+            className="relative"
             style={{
-              left: CANVAS_PADDING_X,
+              marginLeft: CANVAS_PADDING_X,
               width: contentWidth,
               height: canvasH,
+              minHeight: canvasH,
             }}
           >
           {/* Guide lines during drag - コンテンツエリア座標系 */}
@@ -604,7 +624,22 @@ export function FreeformCanvas({
                 className={(scrollPriorityMode ? "!cursor-default " : "!cursor-move ") + "editor-reorder-smooth"}
                 style={{ zIndex: isSelected || isDragging ? 200 : 1 }}
                 disableDragging={scrollPriorityMode}
-                enableResizing={isSelected && !scrollPriorityMode}
+                enableResizing={
+                  isSelected && !scrollPriorityMode
+                    ? usesHeroColumnWidth(card.type)
+                      ? {
+                          top: true,
+                          right: false,
+                          bottom: true,
+                          left: false,
+                          topRight: false,
+                          bottomRight: false,
+                          bottomLeft: false,
+                          topLeft: false,
+                        }
+                      : true
+                    : false
+                }
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
                   onSelectCard(card.id);
@@ -647,7 +682,7 @@ export function FreeformCanvas({
           })}
           </div>
           </div>
-        </MobileCanvasFrame>
+        </PhoneDeviceFrame>
       </div>
     </div>
     </CardEditProvider>

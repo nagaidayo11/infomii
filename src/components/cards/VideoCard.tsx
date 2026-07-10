@@ -86,7 +86,7 @@ export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCard
       )}
 
       <div
-        className={`relative mt-3 aspect-video w-full overflow-hidden bg-slate-100 ${editorInnerRadiusClassName}`}
+        className={`relative ${(title || isSelected) ? "mt-3" : ""} aspect-video w-full overflow-hidden bg-slate-100 ${editorInnerRadiusClassName}`}
         data-inner-surface
       >
         {parsed?.kind === "youtube" || parsed?.kind === "vimeo" ? (

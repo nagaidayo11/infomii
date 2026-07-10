@@ -11,6 +11,13 @@ import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
+import {
+  PAGE_LINK_ICON_SIZES,
+  pageLinkShadowClass,
+  readPageLinkIconSize,
+  readPageLinkShadowStrength,
+  readPageLinkStyleVariant,
+} from "@/lib/page-link-styles";
 
 type PageLinksItem = {
   label?: string;
@@ -23,35 +30,6 @@ type PageLinksItem = {
 function getIconDisplay(icon: string | undefined) {
   return normalizeIconToken(icon, "link");
 }
-
-/** Box shadow presets for page link tiles / circle icons (`none` | `sm` | `md` | `lg`). */
-function pageLinkShadowClass(strength: string): string {
-  switch (strength) {
-    case "none":
-      return "shadow-none";
-    case "sm":
-      return "shadow-[0_2px_8px_rgba(2,6,23,0.1)]";
-    case "lg":
-      return "shadow-[0_10px_28px_rgba(2,6,23,0.24)]";
-    case "md":
-    default:
-      return "shadow-[0_4px_12px_rgba(2,6,23,0.16)]";
-  }
-}
-
-/** Icon + wrapper sizes per variant (sm / md / lg). */
-const PAGE_LINK_ICON_SIZES = {
-  circle: {
-    sm: { wrap: "h-10 w-10", icon: "h-4 w-4" },
-    md: { wrap: "h-14 w-14", icon: "h-5.5 w-5.5" },
-    lg: { wrap: "h-[4.5rem] w-[4.5rem]", icon: "h-7 w-7" },
-  },
-  tile: {
-    sm: { wrap: "h-7 w-7", icon: "h-4 w-4" },
-    md: { wrap: "h-10 w-10", icon: "h-5.5 w-5.5" },
-    lg: { wrap: "h-12 w-12", icon: "h-7 w-7" },
-  },
-} as const;
 
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -71,22 +49,10 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
-  const rawIconSize = typeof c?.iconSize === "string" ? c.iconSize : "";
-  const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
-  const rawStyleVariant = typeof c?.styleVariant === "string" ? c.styleVariant : "";
-  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
-  const rawCircleShadow =
-    typeof c?.circleIconShadowStrength === "string" ? c.circleIconShadowStrength : "";
-  const circleShadowStrength =
-    rawCircleShadow === "none" || rawCircleShadow === "sm" || rawCircleShadow === "lg"
-      ? rawCircleShadow
-      : "md";
-  const rawTileShadow =
-    typeof c?.tileShadowStrength === "string" ? c.tileShadowStrength : "";
-  const tileShadowStrength =
-    rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
-      ? rawTileShadow
-      : "none";
+  const iconSize = readPageLinkIconSize(c?.iconSize);
+  const styleVariant = readPageLinkStyleVariant(c?.styleVariant);
+  const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
+  const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "none");
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
 
   const update = (patch: Record<string, unknown>) => {

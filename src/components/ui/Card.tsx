@@ -8,12 +8,14 @@ type CardProps = {
   hover?: boolean;
 };
 
-/** Consistent card padding (symmetric vertical): none | sm | md | lg. */
+/** Consistent card padding (symmetric vertical): none | sm | md | lg.
+ * Horizontal inset matches 見出し＋本文セット (`px-3`).
+ */
 const paddingClass = {
   none: "",
   sm: "px-3 py-2.5",
-  md: "px-4 py-3",
-  lg: "px-4 py-3",
+  md: "px-3 py-3",
+  lg: "px-3 py-3",
 };
 
 /**

@@ -4,7 +4,10 @@ import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { moveCardInStack } from "@/lib/freeform-stack";
 import type { CardStyle, EditorCard, CardType } from "./types";
-import { createEmptyCard } from "./types";
+import { CARD_TYPE_LABELS, createEmptyCard } from "./types";
+
+/** All registered card types may be inserted / loaded. */
+const ALLOWED_CARD_TYPES: CardType[] = Object.keys(CARD_TYPE_LABELS) as CardType[];
 
 export type GeneratedCardInput = {
   type: string;
@@ -204,66 +207,8 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   loadGeneratedCards: (inputs) => {
-    const allowed: CardType[] = [
-      "hero",
-      "hero_slider",
-      "heading_body",
-      "info",
-      "highlight",
-      "action",
-      "welcome",
-      "wifi",
-      "breakfast",
-      "checkout",
-      "notice",
-      "nearby",
-      "map",
-      "button",
-      "image",
-      "video",
-      "text",
-      "faq",
-      "emergency",
-      "laundry",
-      "taxi",
-      "restaurant",
-      "spa",
-      "gallery",
-      "divider",
-      "schedule",
-      "menu",
-      "parking",
-      "pageLinks",
-      "quote",
-      "checklist",
-      "steps",
-      "compare",
-      "kpi",
-      "space",
-      "campaign_timer",
-      "tabs_info",
-      "faq_search",
-      "notice_ticker",
-      "coupon",
-      "accordion_info",
-      "open_status",
-      "social_links",
-      "contact_hub",
-      "progress_steps",
-      "emergency_banner",
-      "scheduled_banner",
-      "icon",
-      "menu_categories",
-      "daily_special",
-      "drink_menu",
-      "salon_service_menu",
-      "combo_set_menu",
-      "menu_grid",
-      "menu_sheet_sync",
-      "menu_time_band",
-    ];
     const cards: EditorCard[] = inputs
-      .filter((c) => allowed.includes(c.type as CardType))
+      .filter((c) => ALLOWED_CARD_TYPES.includes(c.type as CardType))
       .sort((a, b) => a.order - b.order)
       .map((c, i) => ({
         id: nanoid(10),
@@ -275,64 +220,7 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   },
 
   addCard: (type, index?: number, audience: "hotel" | "personal" = "hotel") => {
-    const allowed: CardType[] = [
-      "hero",
-      "hero_slider",
-      "heading_body",
-      "info",
-      "highlight",
-      "action",
-      "welcome",
-      "wifi",
-      "breakfast",
-      "checkout",
-      "notice",
-      "nearby",
-      "map",
-      "button",
-      "image",
-      "video",
-      "text",
-      "faq",
-      "emergency",
-      "laundry",
-      "taxi",
-      "restaurant",
-      "spa",
-      "gallery",
-      "divider",
-      "schedule",
-      "menu",
-      "parking",
-      "pageLinks",
-      "quote",
-      "checklist",
-      "steps",
-      "compare",
-      "kpi",
-      "space",
-      "campaign_timer",
-      "tabs_info",
-      "faq_search",
-      "notice_ticker",
-      "coupon",
-      "accordion_info",
-      "open_status",
-      "social_links",
-      "contact_hub",
-      "progress_steps",
-      "emergency_banner",
-      "scheduled_banner",
-      "icon",
-      "menu_categories",
-      "daily_special",
-      "drink_menu",
-      "salon_service_menu",
-      "combo_set_menu",
-      "menu_grid",
-      "menu_time_band",
-    ];
-    if (!allowed.includes(type)) return;
+    if (!ALLOWED_CARD_TYPES.includes(type)) return;
     const { cards, historyPast } = get();
     const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;
     const id = nanoid(10);

@@ -19,6 +19,16 @@ import type {
   MultiPageTemplate,
 } from "@/lib/multi-page-templates/types";
 import type { PlanLimitTier } from "@/lib/plan-limits";
+import {
+  createDefaultGuestShellConfig,
+  parseGuestShellConfig,
+  type GuestShellConfig,
+} from "@/lib/guest-shell";
+import {
+  buildPageGuestShellEditorState,
+  getConnectionRootPageIdForPage,
+  type PageGuestShellEditorState,
+} from "@/lib/page-guest-shell";
 import { inferSubscriptionBillingInterval } from "@/lib/billing-interval";
 import {
   formatPublishLimitError,
@@ -1335,6 +1345,213 @@ export async function getCurrentHotelName(): Promise<string | null> {
   }
 
   return data?.name ?? null;
+}
+
+export async function getCurrentHotelGuestShell(): Promise<GuestShellConfig> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return createDefaultGuestShellConfig();
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return createDefaultGuestShellConfig();
+
+  const { data, error } = await supabase
+    .from("hotels")
+    .select("guest_shell")
+    .eq("id", hotelId)
+    .maybeSingle();
+
+  if (error) {
+    // Column may be missing until migration is applied.
+    return createDefaultGuestShellConfig();
+  }
+
+  return parseGuestShellConfig((data as { guest_shell?: unknown } | null)?.guest_shell);
+}
+
+/** Whether hotels.guest_shell exists in the connected Supabase project. */
+export async function isGuestShellColumnAvailable(): Promise<boolean> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return false;
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return false;
+
+  const { error } = await supabase
+    .from("hotels")
+    .select("guest_shell")
+    .eq("id", hotelId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!error) return true;
+
+  const message =
+    typeof error === "object" && error && "message" in error
+      ? String((error as { message?: unknown }).message)
+      : "";
+  if (message.includes("guest_shell") && message.includes("schema cache")) {
+    return false;
+  }
+  // Other errors (RLS, network): assume column exists and surface the real issue on save.
+  return true;
+}
+
+export async function isPageGuestShellColumnAvailable(): Promise<boolean> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return false;
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return false;
+
+  const { error } = await supabase
+    .from("pages")
+    .select("guest_shell")
+    .eq("hotel_id", hotelId)
+    .limit(1)
+    .maybeSingle();
+
+  if (!error) return true;
+
+  const message =
+    typeof error === "object" && error && "message" in error
+      ? String((error as { message?: unknown }).message)
+      : "";
+  if (message.includes("guest_shell") && message.includes("schema cache")) {
+    return false;
+  }
+  return true;
+}
+
+export async function getPageGuestShellEditorState(
+  pageId: string,
+): Promise<PageGuestShellEditorState | null> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) return null;
+
+  const [{ data: pageRow, error: pageError }, columnReady, hotelShell] = await Promise.all([
+    supabase.from("pages").select("id,guest_shell").eq("id", pageId).eq("hotel_id", hotelId).maybeSingle(),
+    isPageGuestShellColumnAvailable().catch(() => true),
+    getCurrentHotelGuestShell().catch(() => createDefaultGuestShellConfig()),
+  ]);
+
+  if (pageError || !pageRow) return null;
+
+  const { rootPageId, rootPageTitle } = await getConnectionRootPageIdForPage(supabase, hotelId, pageId);
+
+  let rootShell: unknown | null = null;
+  if (rootPageId !== pageId && columnReady) {
+    const { data: rootRow } = await supabase
+      .from("pages")
+      .select("guest_shell")
+      .eq("id", rootPageId)
+      .maybeSingle();
+    rootShell = (rootRow as { guest_shell?: unknown } | null)?.guest_shell ?? null;
+  }
+
+  const pageShell = columnReady
+    ? ((pageRow as { guest_shell?: unknown }).guest_shell ?? null)
+    : null;
+
+  return buildPageGuestShellEditorState({
+    pageId,
+    pageShell,
+    rootPageId,
+    rootPageTitle,
+    rootShell,
+    hotelShell,
+    columnReady,
+  });
+}
+
+export async function updatePageGuestShell(
+  pageId: string,
+  config: GuestShellConfig,
+): Promise<GuestShellConfig> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("ページの更新対象が見つかりません");
+
+  const next = parseGuestShellConfig(config);
+  const { error } = await supabase
+    .from("pages")
+    .update({ guest_shell: next })
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId);
+
+  if (error) {
+    const message =
+      typeof error === "object" && error && "message" in error
+        ? String((error as { message?: unknown }).message)
+        : "";
+    if (message.includes("guest_shell") && message.includes("schema cache")) {
+      throw new Error(
+        "データベースに pages.guest_shell 列がまだありません。Supabase マイグレーション（page_guest_shell）を適用してください。",
+      );
+    }
+    throw toError(error, "ページの下タブナビ保存に失敗しました");
+  }
+
+  return next;
+}
+
+export async function clearPageGuestShellOverride(pageId: string): Promise<void> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("ページの更新対象が見つかりません");
+
+  const { error } = await supabase
+    .from("pages")
+    .update({ guest_shell: null })
+    .eq("id", pageId)
+    .eq("hotel_id", hotelId);
+
+  if (error) {
+    throw toError(error, "下タブナビの継承設定に戻せませんでした");
+  }
+}
+
+export async function updateCurrentHotelGuestShell(config: GuestShellConfig): Promise<GuestShellConfig> {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設情報の更新対象が見つかりません");
+
+  const next = parseGuestShellConfig(config);
+  const { error } = await supabase
+    .from("hotels")
+    .update({ guest_shell: next })
+    .eq("id", hotelId);
+
+  if (error) {
+    const message = typeof error === "object" && error && "message" in error
+      ? String((error as { message?: unknown }).message)
+      : "";
+    if (message.includes("guest_shell") && message.includes("schema cache")) {
+      throw new Error(
+        "データベースに guest_shell 列がまだありません。管理者が Supabase マイグレーション（hotel_guest_shell）を適用してください。",
+      );
+    }
+    throw toError(error, "ゲストナビ設定の更新に失敗しました");
+  }
+
+  await appendAuditLog({
+    hotelId,
+    action: "hotel.updated",
+    message: next.enabled ? "ゲスト下タブナビを更新しました" : "ゲスト下タブナビをOFFにしました",
+    targetType: "hotel",
+    targetId: hotelId,
+    metadata: { guest_shell_enabled: next.enabled, tab_count: next.tabs.length },
+  });
+
+  return next;
 }
 
 export async function updateCurrentHotelName(name: string): Promise<void> {

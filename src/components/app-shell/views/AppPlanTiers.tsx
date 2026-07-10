@@ -19,8 +19,8 @@ type AppPlanTiersProps = {
 
 const PLAN_FEATURES: Record<PlanId, string[]> = {
   free: ["3ページ公開", "基本編集", "QR共有"],
-  pro: ["最大10ページ", "閲覧分析", "用途別に運用"],
-  business: ["公開無制限", "多言語翻訳", "チーム招待", "動的ブロック"],
+  pro: ["最大10ページ", "閲覧分析", "訴求ブロック（ティッカー・クーポン等）"],
+  business: ["公開無制限", "多言語編集・言語切替", "チーム招待", "動的ブロック（期間・時間帯）"],
 };
 
 function tierActionLabel(plan: PlanId, current: PlanId, busy: boolean): string | null {

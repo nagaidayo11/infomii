@@ -48,7 +48,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const updateSrc = (v: string) => updateCard(card.id, { content: { ...c, src: v } });
 
   return (
-    <Card padding="none" className="">
+    <Card padding="md" className="">
       {src ? (
         <div data-inner-surface className={`relative aspect-video w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}>
           <EditorCoverImage src={src} alt={alt} sizes="420px" className={framingClass} style={framingStyle} />
@@ -59,7 +59,7 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
         </div>
       )}
       {(src || isSelected) && (isSelected || alt.trim().length > 0) && (
-        <p className="mt-2 px-1 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-500">
           <InlineEditable value={alt} onSave={(v) => updateKey("alt", v)} editable={editable} onActivate={onActivate} className="text-xs text-slate-500" placeholder={labels.altPlaceholder} />
         </p>
       )}

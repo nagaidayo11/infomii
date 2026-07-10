@@ -3,6 +3,7 @@
 import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { GuestShellSettingsSection } from "@/components/settings/GuestShellSettingsSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
 import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSection";
@@ -19,6 +20,7 @@ export function AppSettingsPage() {
   const settingsSections = (
     <>
       <ProfileDisplayNameSection />
+      <GuestShellSettingsSection />
       {!isAppShell ? <BusinessPlanSection /> : null}
       <AccountAuthLinkSection />
       <BusinessAuditLogExport />
@@ -30,6 +32,13 @@ export function AppSettingsPage() {
       <AppSettingsShell>
         <AppSettingsGroup title="プロフィール">
           <ProfileDisplayNameSection />
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
+          title="ゲスト表示"
+          footer="施設共通のフォールバック設定です。通常はエディタでルートページの下タブを編集します。"
+        >
+          <GuestShellSettingsSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup

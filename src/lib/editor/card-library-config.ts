@@ -1,4 +1,5 @@
-import type { CardType } from "@/components/editor/types";
+import type { CardType, EditorPlanTier } from "@/components/editor/types";
+import { getMinimumPlanForCardType } from "@/components/editor/types";
 
 export type LibraryAudience = "hotel" | "personal";
 
@@ -61,16 +62,16 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   checklist: { label: "持ち物・TODO", description: "持ち物や確認リスト" },
   contact_hub: { label: "連絡先", description: "電話・メール・LINEなど" },
   pageLinks: { label: "リンクまとめ", description: "予約・地図・SNSなどへの導線" },
-  hero_slider: { label: "写真スライド", description: "旅行・イベントの写真を切り替え表示（Business）" },
-  notice_ticker: { label: "お知らせスクロール", description: "当日の連絡を横に流して表示（Business）" },
-  emergency_banner: { label: "緊急連絡バナー", description: "集合変更など最優先の連絡（Business）" },
+  hero_slider: { label: "写真スライド", description: "旅行・イベントの写真を切り替え表示" },
+  notice_ticker: { label: "お知らせスクロール", description: "当日の連絡を横に流して表示（Pro）" },
+  emergency_banner: { label: "緊急連絡バナー", description: "集合変更など最優先の連絡" },
   scheduled_banner: { label: "期間限定のお知らせ", description: "イベント期間だけ表示する告知（Business）" },
   menu_sheet_sync: { label: "メニュー（表連携）", description: "スプレッドシートからメニュー更新（Business）" },
 };
 
 const MAIN_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
-  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示（Businessプラン限定）" },
+  { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示" },
   { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を上下で表示" },
   { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
   { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
@@ -93,14 +94,13 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
   { type: "drink_menu", label: "ドリンクメニュー", description: "サイズ価格・備考（飲料テーマの静的サンプル）" },
-  { type: "salon_service_menu", label: "施術メニュー", description: "時間・価格（サロンテーマの静的サンプル）" },
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
   { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
   { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Businessプラン）" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Businessプラン限定）" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示（Businessプラン限定）" },
-  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Businessプラン限定）" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Pro）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Business）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
   { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
@@ -109,8 +109,8 @@ const GUIDE_ITEMS: LibraryItem[] = [
 const OPERATION_ITEMS: LibraryItem[] = [
   { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
-  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Businessプラン限定）" },
-  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Businessプラン限定）" },
+  { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Pro）" },
+  { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Pro）" },
   { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図リンクを集約" },
 ];
@@ -130,6 +130,7 @@ const MEDIA_ITEMS: LibraryItem[] = [
   { type: "image", label: "画像", description: "写真を1枚表示" },
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
   { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
+  { type: "image_tiles", label: "画像タイル", description: "写真＋ラベルの2列グリッド導線" },
   { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
   { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
   { type: "space", label: "スペース", description: "上下の余白を調整" },
@@ -176,11 +177,10 @@ export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
   {
     id: "multilingual-ops",
     label: "多言語運用セット",
-    purpose: "多言語前提の運用導線を構築",
+    purpose: "ゲスト案内の基本導線を構築",
     description: "ヒーロースライド / 重要なお知らせ / WiFi案内 / よくある質問 / リンクボタン",
     types: ["hero_slider", "notice", "wifi", "faq", "button"],
     audience: "hotel",
-    businessOnly: true,
   },
   {
     id: "campaign-conversion",
@@ -189,7 +189,14 @@ export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
     description: "ヒーロースライド / キャンペーンタイマー / 強調ブロック / 比較 / リンクボタン",
     types: ["hero_slider", "campaign_timer", "highlight", "compare", "button"],
     audience: "hotel",
-    businessOnly: true,
+  },
+  {
+    id: "core-guide-hub",
+    label: "コアガイド・トップハブ",
+    purpose: "Core Guide型のゲスト入口を最短構築",
+    description: "ヒーロースライド / ページリンク / 画像タイル",
+    types: ["hero_slider", "pageLinks", "image_tiles"],
+    audience: "hotel",
   },
 ];
 
@@ -209,7 +216,6 @@ export const PERSONAL_QUICK_PRESETS: QuickPreset[] = [
     description: "写真スライド / 今日の予定 / 持ち物 / 大事な連絡 / 集合場所",
     types: ["hero_slider", "schedule", "checklist", "highlight", "map"],
     audience: "personal",
-    businessOnly: true,
   },
   {
     id: "btoc-oshi-live",
@@ -347,6 +353,16 @@ export function persistLibraryAudience(audience: LibraryAudience): void {
   } catch {
     /* ignore */
   }
+}
+
+export function getPresetMinimumPlan(types: CardType[]): EditorPlanTier {
+  let highest: EditorPlanTier = "free";
+  for (const type of types) {
+    const minimum = getMinimumPlanForCardType(type);
+    if (minimum === "business") return "business";
+    if (minimum === "pro") highest = "pro";
+  }
+  return highest;
 }
 
 /** @deprecated SlashCommandMenu 互換 — 宿泊施設向け一覧 */
