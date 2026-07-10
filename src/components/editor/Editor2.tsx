@@ -142,7 +142,10 @@ export function Editor2({
     lockedType: CardType | null;
     requiredPlan: "pro" | "business";
   }>({ open: false, lockedType: null, requiredPlan: "business" });
-  const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>("hotel");
+  const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>(
+    () => (useAppEditorChrome ? "personal" : "hotel"),
+  );
+  const didApplyAppDefaultAudienceRef = useRef(useAppEditorChrome);
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
@@ -164,6 +167,11 @@ export function Editor2({
   }, [useAppEditorChrome]);
 
   useEffect(() => {
+    if (useAppEditorChrome && !didApplyAppDefaultAudienceRef.current) {
+      didApplyAppDefaultAudienceRef.current = true;
+      setLibraryAudience("personal");
+      return;
+    }
     if (!useAppEditorChrome && libraryAudience !== "hotel") {
       setLibraryAudience("hotel");
     }
@@ -1353,6 +1361,7 @@ export function Editor2({
                   guestShell={previewGuestShell}
                   pageSlug={pageMeta.slug}
                   isBusinessPlan={isBusinessPlan}
+                  unframed={useAppEditorChrome}
                 />
               </div>
               </div>

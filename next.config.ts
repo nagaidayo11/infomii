@@ -6,6 +6,7 @@ const projectRoot = path.resolve(__dirname);
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
+  devIndicators: false,
   turbopack: {
     root: projectRoot,
   },

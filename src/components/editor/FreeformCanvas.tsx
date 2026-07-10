@@ -232,6 +232,7 @@ type FreeformCanvasProps = {
   guestShell?: GuestShellConfig | null;
   pageSlug?: string;
   isBusinessPlan?: boolean;
+  unframed?: boolean;
 };
 
 export function FreeformCanvas({
@@ -245,6 +246,7 @@ export function FreeformCanvas({
   guestShell = null,
   pageSlug = "",
   isBusinessPlan = false,
+  unframed = false,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
@@ -510,8 +512,9 @@ export function FreeformCanvas({
         <PhoneDeviceFrame
           width={350}
           fillHeight
-          verticalInset={28}
-          className="h-full w-full"
+          verticalInset={unframed ? 0 : 28}
+          showNotch={!unframed}
+          className={unframed ? "app-editor-unframed-preview h-full w-full" : "h-full w-full"}
           screenStyle={{ background: pageBackgroundStyle }}
           onScreenWidthChange={setViewportWidth}
           footer={

@@ -109,7 +109,7 @@ function PromptChipRow({
 const APP_HOME_PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     id: "travel",
-    label: "旅行の案内",
+    label: "旅のしおり",
     text: "友達3人で京都2泊3日の旅行。1日目の新幹線と宿、2日目は嵐山、3日目はお土産と帰り。持ち物リスト、集合場所のMAP、割り勘はLINEで話す旨も入れて。",
   },
   ...PROMPT_TEMPLATES_PERSONAL.slice(1, 4),
@@ -192,40 +192,46 @@ export function GeneratePageFromDescription({
   }
 
   const chipClassName = isApp
-    ? "rounded-full border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-xs font-medium text-[var(--app-text)] transition active:opacity-80 disabled:opacity-60"
+    ? "app-ai-chip app-pressable"
     : undefined;
 
   return (
     <section className={className}>
-      <div className="mb-3">
-        <h2
-          className={
-            isApp
-              ? "text-lg font-bold text-[var(--app-text)]"
-              : "text-base font-semibold text-slate-900"
-          }
-        >
-          {isApp ? "AIでつくる" : "説明を書くだけでページができる"}
-        </h2>
-        {!isApp && (
-          <p className="mt-1 text-sm text-slate-500">
-            ホテル・旅館の館内案内を、短い説明から作成できます。
-          </p>
-        )}
-        {isApp && (
-          <p className="mt-1 text-sm text-[var(--app-text-muted)]">
-            旅の案内やイベントのまとめを書くか、例文をタップしてください
-          </p>
-        )}
-      </div>
       <form
         onSubmit={handleSubmit}
         className={
           isApp
-            ? "space-y-3"
+            ? "app-ai-compose-card space-y-4"
             : "rounded-lg border border-[#e6e8eb] bg-white p-4"
         }
       >
+        {isApp ? (
+          <div className="flex items-start gap-3">
+            <div className="app-ai-compose-orb" aria-hidden>
+              ✦
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--app-accent)]">
+                AI Create
+              </p>
+              <h2 className="mt-1 text-xl font-bold leading-tight text-[var(--app-text)]">
+                AIにページをつくってもらう
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--app-text-muted)]">
+                旅行、推し活、デート、イベント。まとめたい内容を一言で始められます。
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-3">
+            <h2 className="text-base font-semibold text-slate-900">
+              説明を書くだけでページができる
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              ホテル・旅館の館内案内を、短い説明から作成できます。
+            </p>
+          </div>
+        )}
         {error && (
           <div
             className={
@@ -251,12 +257,17 @@ export function GeneratePageFromDescription({
               </div>
             )}
             {isApp ? (
-              <PromptChipRow
-                templates={APP_HOME_PROMPT_TEMPLATES}
-                loading={loading}
-                onSelect={setDescription}
-                chipClassName={chipClassName}
-              />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-[var(--app-text-muted)]">
+                  例から始める
+                </p>
+                <PromptChipRow
+                  templates={APP_HOME_PROMPT_TEMPLATES}
+                  loading={loading}
+                  onSelect={setDescription}
+                  chipClassName={chipClassName}
+                />
+              </div>
             ) : null}
           </div>
           <div>
@@ -268,7 +279,7 @@ export function GeneratePageFromDescription({
                   : "mb-1 block text-sm font-medium text-slate-700"
               }
             >
-              どんなページにする？
+              {isApp ? "作りたいページ" : "どんなページにする？"}
             </label>
             <textarea
               id={textareaId}
@@ -282,7 +293,7 @@ export function GeneratePageFromDescription({
               rows={isApp ? 4 : 3}
               className={
                 isApp
-                  ? "w-full resize-none rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-3 text-base text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:border-[var(--app-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--app-accent)]/20"
+                  ? "app-ai-textarea w-full resize-none px-4 py-3 text-base text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:outline-none"
                   : "w-full resize-none rounded-md border border-[#e6e8eb] px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
               }
               disabled={loading}
@@ -305,11 +316,12 @@ export function GeneratePageFromDescription({
             disabled={loading}
             className={
               isApp
-                ? "app-touch-btn flex w-full items-center justify-center bg-[var(--app-accent)] font-semibold text-white disabled:opacity-50"
+                ? "app-ai-submit app-touch-btn app-pressable flex w-full items-center justify-center gap-2 font-semibold text-white disabled:opacity-50"
                 : "app-button-native rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60"
             }
           >
-            {loading ? "つくってる…" : "つくって編集"}
+            <span>{loading ? "つくってる…" : "AIでページ作成"}</span>
+            {!loading && isApp ? <span aria-hidden>→</span> : null}
           </button>
         </div>
       </form>

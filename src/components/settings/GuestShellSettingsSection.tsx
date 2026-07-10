@@ -75,9 +75,9 @@ export function GuestShellSettingsSection() {
     <details
       open={open}
       onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
-      className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
+      className="app-guest-shell-details group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-1 py-1 text-left outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
+      <summary className="app-guest-shell-summary flex cursor-pointer list-none items-center justify-between gap-2 px-1 py-1 text-left outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
         <div>
           <h2 className={isAppShell ? "text-base font-semibold text-slate-900" : "text-sm font-semibold text-slate-900"}>
             ゲスト下タブナビ（施設共通）
@@ -91,7 +91,7 @@ export function GuestShellSettingsSection() {
         </span>
       </summary>
 
-      <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+      <div className="app-guest-shell-body mt-4 space-y-4 border-t border-slate-100 pt-4">
         {loading ? (
           <div className="h-24 animate-pulse rounded-lg bg-slate-100" aria-label="読み込み中" />
         ) : (

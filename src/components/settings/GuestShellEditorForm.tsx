@@ -85,6 +85,8 @@ export type GuestShellEditorFormProps = {
   secondaryActions?: React.ReactNode;
   /** Business: translate labels on save (not while typing) */
   isBusinessPlan?: boolean;
+  /** Show Business translation note in editor context only. */
+  showTranslationHint?: boolean;
 };
 
 export function GuestShellEditorForm({
@@ -98,6 +100,7 @@ export function GuestShellEditorForm({
   inheritBanner,
   secondaryActions,
   isBusinessPlan = false,
+  showTranslationHint = false,
 }: GuestShellEditorFormProps) {
   const [pages, setPages] = useState<PageRow[]>([]);
 
@@ -121,7 +124,7 @@ export function GuestShellEditorForm({
   const migrationTable = migrationScope === "page" ? "pages" : "hotels";
 
   return (
-    <div className="space-y-4">
+    <div className="app-guest-shell-form space-y-4">
       {inheritBanner}
 
       {!columnReady && migrationScope ? (
@@ -138,17 +141,18 @@ export function GuestShellEditorForm({
         </section>
       ) : null}
 
-      <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5">
+      <label className="app-guest-shell-toggle flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5">
         <span className="text-sm font-medium text-slate-800">下タブナビを表示する</span>
         <input
           type="checkbox"
           checked={config.enabled}
           onChange={(e) => onChange({ ...config, enabled: e.target.checked })}
-          className="h-4 w-4 rounded border-slate-300"
+          className="app-guest-shell-switch-input"
         />
+        <span className="app-guest-shell-switch" aria-hidden />
       </label>
 
-      {isBusinessPlan ? (
+      {isBusinessPlan && showTranslationHint ? (
         <p className="text-xs text-slate-500">
           Businessプランでは、保存時にラベルを EN / 中文 / 한국어 へまとめて翻訳します（入力中は翻訳しません）。
         </p>
@@ -156,8 +160,8 @@ export function GuestShellEditorForm({
 
       <div className={"space-y-3 " + (config.enabled ? "" : "pointer-events-none opacity-50")}>
         {config.tabs.map((tab) => (
-          <div key={tab.id} className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div key={tab.id} className="app-guest-shell-tab rounded-lg border border-slate-200 bg-white p-3">
+            <div className="app-guest-shell-tab-header flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {TYPE_LABEL[tab.type]}
@@ -166,7 +170,7 @@ export function GuestShellEditorForm({
                   type="text"
                   value={getGuestShellLabelJa(tab.label)}
                   onChange={(e) => handleLabelChange(tab, e.target.value)}
-                  className="mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
+                  className="app-guest-shell-label-input mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
                   maxLength={20}
                   aria-label={`${TYPE_LABEL[tab.type]}のラベル`}
                 />
@@ -180,19 +184,19 @@ export function GuestShellEditorForm({
                   </p>
                 ) : null}
               </div>
-              <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+              <label className="app-guest-shell-display-toggle inline-flex items-center gap-2 text-xs font-medium text-slate-600">
                 <input
                   type="checkbox"
                   checked={tab.enabled}
                   onChange={(e) => updateTab(tab.id, { enabled: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300"
+                  className="app-guest-shell-checkbox"
                 />
-                表示
+                <span>表示</span>
               </label>
             </div>
 
             {tab.type === "home" || tab.type === "page" ? (
-              <label className="mt-2 block text-xs text-slate-500">
+              <label className="app-guest-shell-field mt-2 block text-xs text-slate-500">
                 遷移先ページ
                 <select
                   value={tab.pageSlug ?? ""}
@@ -212,7 +216,7 @@ export function GuestShellEditorForm({
             ) : null}
 
             {tab.type === "phone" ? (
-              <label className="mt-2 block text-xs text-slate-500">
+              <label className="app-guest-shell-field mt-2 block text-xs text-slate-500">
                 フロント電話番号
                 <input
                   type="tel"
@@ -233,7 +237,7 @@ export function GuestShellEditorForm({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="app-guest-shell-actions flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => void onSave()}

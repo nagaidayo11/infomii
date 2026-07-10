@@ -144,6 +144,13 @@ export default function TemplatesPage() {
   }, [isAppShell, audience]);
 
   useEffect(() => {
+    if (!isAppShell) return;
+    if (searchParams.get("category")) return;
+    setAudience("personal");
+    setCategory("all");
+  }, [isAppShell, searchParams]);
+
+  useEffect(() => {
     if (!previewTemplate) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -409,10 +416,19 @@ export default function TemplatesPage() {
       <>
         <AppTabPage
           title="テンプレート"
-          description="ホテル・旅館の館内案内から、旅行しおりまで。用途別の型からページを作成できます。"
+          description="旅行、推し活、イベント、リンクまとめ。近い型からすぐ作れます。"
           className="pb-4"
           contentClassName="space-y-4"
         >
+          <AppSection revealDelay={0}>
+            <section className="app-template-intro">
+              <p className="app-template-intro-kicker">Template Library</p>
+              <h2 className="app-template-intro-title">迷ったら、型から始める</h2>
+              <p className="app-template-intro-body">
+                あとで編集できるので、用途に近いテンプレートを選んでください。
+              </p>
+            </section>
+          </AppSection>
           <AppSection revealDelay={0}>
             <AppSegmentedControl
               options={TEMPLATE_AUDIENCE_OPTIONS}
@@ -458,15 +474,15 @@ export default function TemplatesPage() {
                   return (
                     <AppSection
                       key={`${group.sectionId}-${group.category}`}
-                      className="space-y-2"
+                      className="app-template-group space-y-2"
                       revealDelay={Math.min(index * 50, 200)}
                     >
                       {showSectionHeading ? (
-                        <h2 className="text-base font-bold tracking-tight text-[var(--app-text)]">
+                        <h2 className="app-template-section-heading">
                           {group.sectionLabel}
                         </h2>
                       ) : null}
-                      <h3 className="text-sm font-semibold text-[var(--app-text-muted)]">{group.label}</h3>
+                      <h3 className="app-template-category-heading">{group.label}</h3>
                       <div
                         className="app-template-rail -mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
                         role="region"

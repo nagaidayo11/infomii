@@ -176,6 +176,7 @@ export function GuestShellPagePanel({
           migrationScope="page"
           inheritBanner={inheritBanner}
           isBusinessPlan={isBusinessPlan}
+          showTranslationHint
           secondaryActions={
             <button
               type="button"

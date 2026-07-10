@@ -98,6 +98,7 @@ export function AppDashboardView() {
   const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
   const recent = pages.slice(0, 4);
   const publishedCount = (bootstrap?.informations ?? []).filter((i) => i.status === "published").length;
+  const pageCount = pages.length;
 
   async function handleDelete(page: PageRow) {
     if (!canEdit || deleteBusyRef.current) return;
@@ -125,9 +126,19 @@ export function AppDashboardView() {
 
   return (
     <AppTabPage
-      title={greetingName ?? "ホーム"}
+      title={greetingName ?? "Infomii"}
+      description="好きな情報を、見やすい1ページに。"
       className="pb-4"
       contentClassName="space-y-5"
+      headerAction={
+        <AppShellLink
+          href="/settings"
+          className="app-home-avatar app-pressable"
+          aria-label="設定を開く"
+        >
+          I
+        </AppShellLink>
+      }
     >
       {loading ? (
         isNativeAppWebView() ? null : (
@@ -141,34 +152,38 @@ export function AppDashboardView() {
         <>
           {canEdit ? (
             <AppSection revealDelay={0}>
-              <div className="app-home-compose app-reveal">
+              <div id="app-ai-create" className="app-home-compose">
                 <GeneratePageFromDescription variant="app" className="mb-0" />
               </div>
             </AppSection>
           ) : null}
 
           <AppSection revealDelay={90}>
-            <section className="app-home-stats app-reveal overflow-hidden">
-              <div className="grid grid-cols-2 divide-x divide-[var(--app-border)]">
+            <section className="app-home-stats overflow-hidden">
+              <div className="grid grid-cols-3 divide-x divide-white/35">
                 <div className="p-4 text-center">
-                  <p className="app-stat-value">{totalViews7d}</p>
-                  <p className="app-meta mt-1">閲覧（7日）</p>
+                  <p className="app-stat-value">{pageCount}</p>
+                  <p className="app-meta mt-1">作成ページ</p>
                 </div>
                 <div className="p-4 text-center">
                   <p className="app-stat-value">{publishedCount}</p>
                   <p className="app-meta mt-1">公開中</p>
                 </div>
+                <div className="p-4 text-center">
+                  <p className="app-stat-value">{totalViews7d}</p>
+                  <p className="app-meta mt-1">7日閲覧</p>
+                </div>
               </div>
               <AppListRow
                 href="/dashboard/analytics"
-                title="詳しい分析を見る"
-                subtitle="ページ別の閲覧数とQRの状況"
+                title="ページの反応を見る"
+                subtitle="閲覧数とQRの状況を確認"
               />
             </section>
           </AppSection>
 
-          <AppSection revealDelay={150}>
-            <div className="app-reveal">
+          <AppSection revealDelay={130}>
+            <div>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-base font-bold text-[var(--app-text)]">最近のページ</h2>
                 <AppShellLink
@@ -183,7 +198,7 @@ export function AppDashboardView() {
                 <div className="mt-3">
                   <AppEmptyState
                     title="まだページがありません"
-                    description="AIでつくるか、テンプレートから始めるとここに表示されます。"
+                    description="AIでつくるか、テンプレートから始めるとここに並びます。"
                     action={
                       <AppShellLink
                         href="/templates"
