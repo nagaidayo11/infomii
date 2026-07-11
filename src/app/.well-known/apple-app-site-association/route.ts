@@ -9,8 +9,8 @@ function buildAasa(teamId: string) {
       details: [
         {
           appID: `${teamId}.${BUNDLE_ID}`,
-          // Guest public pages (/v/*, /p/*) must NOT be applinks — QR/camera
-          // should open the web guest page, not the Infomii app shell.
+          // Guest public pages must open in the browser (QR / share), not the app.
+          // Do not list /v/*, /p/*, /qr/*, or /go/* here.
           paths: [
             "/dashboard*",
             "/dashboard/pages*",
@@ -19,6 +19,10 @@ function buildAasa(teamId: string) {
             "/editor/*",
             "/login*",
             "/onboarding*",
+            "NOT /v/*",
+            "NOT /p/*",
+            "NOT /qr/*",
+            "NOT /go/*",
           ],
         },
       ],
@@ -41,7 +45,7 @@ export async function GET() {
   return NextResponse.json(buildAasa(teamId), {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=300",
     },
   });
 }

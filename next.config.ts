@@ -28,8 +28,19 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/.well-known/apple-app-site-association",
-        headers: [{ key: "Content-Type", value: "application/json" }],
+        headers: [
+          { key: "Content-Type", value: "application/json" },
+          // Short cache so path removals (e.g. /v/*) propagate faster to Apple/CDN.
+          { key: "Cache-Control", value: "public, max-age=300" },
+        ],
       },
+    ];
+  },
+  async rewrites() {
+    return [
+      // Share/QR entries — never listed in AASA applinks (avoids opening Infomii app).
+      { source: "/qr/:slug", destination: "/v/:slug" },
+      { source: "/go/:slug", destination: "/p/:slug" },
     ];
   },
   images: {

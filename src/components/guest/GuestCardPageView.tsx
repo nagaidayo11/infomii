@@ -83,7 +83,11 @@ export function GuestCardPageView({
         : [],
     [guestShell, businessFeaturesEnabled],
   );
-  const shellHasLocaleTab = shellTabs.some((tab) => tab.type === "locale");
+  // Footer「言語」チェック = shell enabled + locale tab enabled → header toggle off.
+  const shellHasLocaleTab = Boolean(
+    guestShell?.enabled &&
+      guestShell.tabs.some((tab) => tab.type === "locale" && tab.enabled),
+  );
   const showHeaderLocaleToggle = showLocaleToggle && !shellHasLocaleTab;
 
   const locales: Array<{ code: SupportedLocale; label: string }> = [

@@ -2295,17 +2295,26 @@ export function buildPublicUrl(slug: string): string {
   return `${window.location.origin}/p/${slug}`;
 }
 
+/** Classic /p page QR entry — `/go/` is never in AASA (avoids opening Infomii app). */
 export function buildPublicQrUrl(slug: string): string {
   if (typeof window === "undefined") {
-    return `/p/${slug}?src=qr`;
+    return `/go/${slug}?src=qr`;
   }
-  return `${window.location.origin}/p/${slug}?src=qr`;
+  return `${window.location.origin}/go/${slug}?src=qr`;
 }
 
-/** Public URL for card-based page (guest view at /v/[slug]). */
+/** Public URL for card-based guest pages.
+ * Use `/qr/[slug]` (not `/v/`) so iOS Camera / Universal Links open the web page
+ * instead of the Infomii app (legacy AASA may still claim `/v/*` on devices).
+ */
 export function buildPublicUrlV(slug: string): string {
-  if (typeof window === "undefined") return `/v/${slug}`;
-  return `${window.location.origin}/v/${slug}`;
+  if (typeof window === "undefined") return `/qr/${slug}`;
+  return `${window.location.origin}/qr/${slug}`;
+}
+
+/** Same as buildPublicUrlV — kept for call sites that want an explicit QR URL. */
+export function buildPublicQrUrlV(slug: string): string {
+  return buildPublicUrlV(slug);
 }
 
 export async function getCurrentHotelViewMetrics(): Promise<HotelViewMetrics> {

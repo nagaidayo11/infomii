@@ -196,17 +196,13 @@ export function parseGuestShellConfig(raw: unknown): GuestShellConfig {
   return { enabled, tabs };
 }
 
-/** Tabs visible on guest UI (enabled + plan rules). */
+/** Tabs visible on guest UI (enabled only). Locale tab follows the shell checkbox. */
 export function resolveVisibleGuestShellTabs(
   config: GuestShellConfig,
-  opts: { businessFeaturesEnabled: boolean },
+  _opts?: { businessFeaturesEnabled?: boolean },
 ): GuestShellTab[] {
   if (!config.enabled) return [];
-  return config.tabs.filter((tab) => {
-    if (!tab.enabled) return false;
-    if (tab.type === "locale" && !opts.businessFeaturesEnabled) return false;
-    return true;
-  });
+  return config.tabs.filter((tab) => tab.enabled);
 }
 
 export function toTelHref(phone: string): string | null {

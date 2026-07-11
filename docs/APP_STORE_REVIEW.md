@@ -55,7 +55,7 @@ Legal: Settings → Terms / Privacy / Commerce disclosure (also linked on Plan t
 3. `apps/mobile/app.config.js` の `associatedDomains` を EAS ビルドに反映
 4. Apple Developer → Identifiers → App ID → Associated Domains 有効化
 5. `https://www.infomii.com/.well-known/apple-app-site-association` が JSON（`Content-Type: application/json`）で返ることを確認
-6. **公開ゲストページ（`/v/*`, `/p/*`）は AASA に含めない** — QR 読取はブラウザで公開ページを開く（アプリ起動にしない）
+6. **公開ゲストページ（`/v/*`, `/p/*`, `/qr/*`, `/go/*`）は AASA に含めない** — QR 読取はブラウザで公開ページを開く（アプリ起動にしない）。カード公開の共有URLは `/qr/[slug]`（→ `/v`）、クラシックページQRは `/go/[slug]`（→ `/p`）を使用
 
 ## Sign in with Apple（Supabase）
 

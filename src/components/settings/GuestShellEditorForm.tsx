@@ -230,7 +230,7 @@ export function GuestShellEditorForm({
 
             {tab.type === "locale" ? (
               <p className="mt-2 text-xs text-slate-500">
-                Businessプランの公開ページで言語切替シートを開きます。Free/Proでは自動的に非表示です。
+                オンにするとフッターの「言語」から切替できます。このときヘッダーの言語トグルは非表示になります。
               </p>
             ) : null}
           </div>
