@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createDefaultGuestShellConfig,
+  getGuestShellNavStyle,
   getGuestShellTabLabel,
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
@@ -21,14 +22,12 @@ import {
 
 type GuestShellPagePanelProps = {
   pageId: string;
-  pageSlug: string;
   isBusinessPlan?: boolean;
   onConfigChange?: (config: GuestShellConfig) => void;
 };
 
 export function GuestShellPagePanel({
   pageId,
-  pageSlug,
   isBusinessPlan = false,
   onConfigChange,
 }: GuestShellPagePanelProps) {
@@ -77,7 +76,7 @@ export function GuestShellPagePanel({
       setConfig(ensureDefaultTabs(next));
       await load();
       setMessageTone("success");
-      setMessage("このページの下タブナビを保存しました。");
+      setMessage("このページのゲストナビを保存しました。");
     } catch (e) {
       setMessageTone("error");
       setMessage(e instanceof Error ? e.message : "保存に失敗しました");
@@ -117,7 +116,7 @@ export function GuestShellPagePanel({
       ) : state.mode === "inherited" ? (
         <div className="space-y-2">
           <p>
-            <strong>{state.rootPageTitle || "ルートページ"}</strong>の下タブ設定を継承しています。
+            <strong>{state.rootPageTitle || "ルートページ"}</strong>のゲストナビ設定を継承しています。
           </p>
           <button
             type="button"
@@ -129,7 +128,7 @@ export function GuestShellPagePanel({
         </div>
       ) : (
         <div className="space-y-2">
-          <p>ルートとは別の下タブ設定を使っています。</p>
+          <p>ルートとは別のゲストナビ設定を使っています。</p>
           <button
             type="button"
             onClick={() => void handleClearOverride()}
@@ -147,7 +146,7 @@ export function GuestShellPagePanel({
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-700">ゲスト下タブナビ</h2>
+          <h2 className="text-sm font-semibold text-slate-700">ゲストナビ</h2>
           <div className="mt-3 h-24 animate-pulse rounded-lg bg-slate-100" aria-label="読み込み中" />
         </div>
       </div>
@@ -161,9 +160,9 @@ export function GuestShellPagePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-sm font-semibold text-slate-700">ゲスト下タブナビ</h2>
+        <h2 className="text-sm font-semibold text-slate-700">ゲストナビ</h2>
         <p className="mt-1 text-xs text-slate-500">
-          ブロック未選択時に編集できます。プレビュー（{pageSlug || "—"}）に反映されます。
+          ブロック未選択時に編集できます。プレビューに反映されます。
         </p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
@@ -196,9 +195,12 @@ export function GuestShellPagePanel({
             {message}
           </p>
         ) : null}
-        {config.enabled && previewTabs.length > 0 ? (
+        {getGuestShellNavStyle(config) !== "off" && previewTabs.length > 0 ? (
           <p className="mt-3 text-xs text-slate-400">
-            有効タブ: {previewTabs.map((tab) => getGuestShellTabLabel(tab, "ja")).join(" / ")}
+            表示形式:{" "}
+            {getGuestShellNavStyle(config) === "hamburger" ? "ハンバーガー" : "下タブ"}
+            {" / "}
+            有効リンク: {previewTabs.map((tab) => getGuestShellTabLabel(tab, "ja")).join(" / ")}
           </p>
         ) : null}
       </div>

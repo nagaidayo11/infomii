@@ -62,7 +62,7 @@ export function GuestShellSettingsSection() {
       const next = await updateCurrentHotelGuestShell(toSave);
       setConfig(ensureDefaultTabs(next));
       setMessageTone("success");
-      setMessage("施設共通の下タブナビを保存しました。");
+      setMessage("施設共通のゲストナビを保存しました。");
     } catch (e) {
       setMessageTone("error");
       setMessage(e instanceof Error ? e.message : "保存に失敗しました");
@@ -80,7 +80,7 @@ export function GuestShellSettingsSection() {
       <summary className="app-guest-shell-summary flex cursor-pointer list-none items-center justify-between gap-2 px-1 py-1 text-left outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
         <div>
           <h2 className={isAppShell ? "text-base font-semibold text-slate-900" : "text-sm font-semibold text-slate-900"}>
-            ゲスト下タブナビ（施設共通）
+            ゲストナビ（施設共通）
           </h2>
           <p className="mt-1 text-sm text-slate-500">
             ルートページに設定がないときのフォールバックです。通常はエディタのルートページで編集します。

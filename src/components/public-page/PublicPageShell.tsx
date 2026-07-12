@@ -51,13 +51,15 @@ function PageHeader({
       >
         {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
         {(title.trim() || headerActions) && (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex items-start justify-between gap-2">
             {title.trim() ? (
-              <h1 className="w-full break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+              <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
                 {title}
               </h1>
-            ) : null}
-            {headerActions ? <div className="flex justify-end">{headerActions}</div> : null}
+            ) : (
+              <div className="min-w-0 flex-1" />
+            )}
+            {headerActions ? <div className="flex shrink-0 items-start justify-end">{headerActions}</div> : null}
           </div>
         )}
       </div>
@@ -184,7 +186,7 @@ export function PublicPageShell({
     >
       {/* Mobile: full-bleed, no chassis */}
       <div
-        className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white md:hidden"
+        className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white md:hidden"
         data-guest-page-shell
         style={{ background: pageBackgroundStyle }}
         onClickCapture={onGuestLinkCapture}
@@ -203,7 +205,7 @@ export function PublicPageShell({
           screenStyle={{ background: pageBackgroundStyle }}
         >
           <div
-            className="flex h-full min-h-0 flex-col overflow-hidden"
+            className="relative flex h-full min-h-0 flex-col overflow-hidden"
             data-guest-page-shell
             onClickCapture={onGuestLinkCapture}
           >

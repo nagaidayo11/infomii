@@ -7,8 +7,10 @@ import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import {
+  getGuestShellNavStyle,
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
@@ -36,7 +38,7 @@ type GuestCardPageViewProps = {
   backButton?: ReactNode;
   /** true のときリンク・ボタンなどの操作を無効化（LP埋め込みプレビュー用） */
   disableInteractions?: boolean;
-  /** Facility-wide bottom tab config */
+  /** Facility-wide guest nav config */
   guestShell?: GuestShellConfig | null;
   /** Current page slug (for active tab + navigation) */
   currentSlug?: string;
@@ -76,6 +78,7 @@ export function GuestCardPageView({
   const [hintVisible, setHintVisible] = useState(false);
   const [hintNonce, setHintNonce] = useState(0);
 
+  const navStyle = guestShell ? getGuestShellNavStyle(guestShell) : "off";
   const shellTabs = useMemo(
     () =>
       guestShell
@@ -83,10 +86,10 @@ export function GuestCardPageView({
         : [],
     [guestShell, businessFeaturesEnabled],
   );
-  // Footer「言語」チェック = shell enabled + locale tab enabled → header toggle off.
+  // Nav「言語」チェック = chrome on + locale tab enabled → header toggle off.
   const shellHasLocaleTab = Boolean(
-    guestShell?.enabled &&
-      guestShell.tabs.some((tab) => tab.type === "locale" && tab.enabled),
+    navStyle !== "off" &&
+      guestShell?.tabs.some((tab) => tab.type === "locale" && tab.enabled),
   );
   const showHeaderLocaleToggle = showLocaleToggle && !shellHasLocaleTab;
 
@@ -97,7 +100,15 @@ export function GuestCardPageView({
     { code: "ko", label: "한국어" },
   ];
 
-  const headerActions = showHeaderLocaleToggle ? (
+  const onLocaleFromNav = (next: SupportedLocale) => {
+    if (!disableLocaleSwitch) setLocale(next);
+    if (localeToggleHint?.trim()) {
+      setHintNonce((prev) => prev + 1);
+      setHintVisible(true);
+    }
+  };
+
+  const localeToggleActions = showHeaderLocaleToggle ? (
     <div className="flex flex-nowrap items-center justify-end gap-1">
       {locales.map((item) => {
         const active = locale === item.code;
@@ -128,6 +139,32 @@ export function GuestCardPageView({
     </div>
   ) : null;
 
+  const hamburgerMenu =
+    !isEmbed &&
+    !disableInteractions &&
+    navStyle === "hamburger" &&
+    shellTabs.length > 0 &&
+    currentSlug ? (
+      <GuestHamburgerMenu
+        tabs={shellTabs}
+        currentSlug={currentSlug}
+        locale={locale}
+        onLocaleChange={onLocaleFromNav}
+        preview={preview}
+        clientApp={clientApp}
+        localeHint={localeToggleHint}
+        contained
+      />
+    ) : null;
+
+  const headerActions =
+    localeToggleActions || hamburgerMenu ? (
+      <div className="flex flex-nowrap items-center justify-end gap-2">
+        {localeToggleActions}
+        {hamburgerMenu}
+      </div>
+    ) : null;
+
   const stopInteractiveAction = (event: MouseEvent<HTMLDivElement> | FormEvent<HTMLDivElement>) => {
     if (!disableInteractions) return;
     const target = event.target as HTMLElement | null;
@@ -139,18 +176,16 @@ export function GuestCardPageView({
   };
 
   const bottomChrome =
-    !isEmbed && !disableInteractions && shellTabs.length > 0 && currentSlug ? (
+    !isEmbed &&
+    !disableInteractions &&
+    navStyle === "tabs" &&
+    shellTabs.length > 0 &&
+    currentSlug ? (
       <GuestBottomTabBar
         tabs={shellTabs}
         currentSlug={currentSlug}
         locale={locale}
-        onLocaleChange={(next) => {
-          if (!disableLocaleSwitch) setLocale(next);
-          if (localeToggleHint?.trim()) {
-            setHintNonce((prev) => prev + 1);
-            setHintVisible(true);
-          }
-        }}
+        onLocaleChange={onLocaleFromNav}
         preview={preview}
         clientApp={clientApp}
         localeHint={localeToggleHint}

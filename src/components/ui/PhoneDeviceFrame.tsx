@@ -13,6 +13,8 @@ const BEZEL_PX = 10;
 
 type PhoneDeviceFrameProps = {
   children: ReactNode;
+  /** Optional header chrome (e.g. guest hamburger) pinned above scroll area */
+  header?: ReactNode;
   /** Optional footer chrome (e.g. guest bottom tabs) pinned below scroll area */
   footer?: ReactNode;
   /** Screen content width in CSS px (default 400). */
@@ -45,6 +47,7 @@ type PhoneDeviceFrameProps = {
  */
 export function PhoneDeviceFrame({
   children,
+  header,
   footer,
   width = PHONE_SCREEN_WIDTH,
   className = "",
@@ -93,13 +96,19 @@ export function PhoneDeviceFrame({
 
         <div
           className={
-            "flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.55rem] bg-white " +
+            "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.55rem] bg-white " +
             (showNotch ? "pt-9" : "pt-1")
           }
           style={screenStyle}
+          data-phone-screen
         >
           {manageScroll ? (
             <>
+              {header ? (
+                <div className="guest-header-chrome shrink-0 z-20 border-b border-slate-100 bg-white/95 px-3 py-2.5">
+                  {header}
+                </div>
+              ) : null}
               <div
                 className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
                 style={{ WebkitOverflowScrolling: "touch" }}
@@ -111,7 +120,17 @@ export function PhoneDeviceFrame({
               ) : null}
             </>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              {header ? (
+                <div className="guest-header-chrome shrink-0 z-20 border-b border-slate-100 bg-white/95 px-3 py-2.5">
+                  {header}
+                </div>
+              ) : null}
+              <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+              {footer ? (
+                <div className="guest-bottom-chrome shrink-0 z-20 bg-white">{footer}</div>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import {
   createDefaultGuestShellConfig,
   getGuestShellLabelJa,
+  getGuestShellNavStyle,
   guestShellLabelNeedsTranslation,
   GUEST_SHELL_MIGRATION_SQL,
+  withGuestShellNavStyle,
   writeGuestShellLabelJa,
   type GuestShellConfig,
+  type GuestShellNavStyle,
   type GuestShellTab,
   type GuestShellTabType,
 } from "@/lib/guest-shell";
@@ -22,8 +25,20 @@ const TYPE_LABEL: Record<GuestShellTabType, string> = {
   locale: "言語",
 };
 
+const NAV_STYLE_OPTIONS: Array<{ value: GuestShellNavStyle; label: string; hint: string }> = [
+  { value: "off", label: "なし", hint: "ナビを表示しません" },
+  { value: "tabs", label: "下タブ", hint: "画面下に常時表示" },
+  { value: "hamburger", label: "ハンバーガー", hint: "右上から必要な分だけ下に開く" },
+];
+
 function ensureDefaultTabs(config: GuestShellConfig): GuestShellConfig {
-  if (config.tabs.length > 0) return config;
+  const navStyle = getGuestShellNavStyle(config);
+  const normalized: GuestShellConfig = {
+    ...config,
+    navStyle,
+    enabled: navStyle !== "off",
+  };
+  if (normalized.tabs.length > 0) return normalized;
   return createDefaultGuestShellConfig();
 }
 
@@ -122,6 +137,8 @@ export function GuestShellEditorForm({
   const migrationSql =
     migrationScope === "page" ? PAGE_GUEST_SHELL_MIGRATION_SQL : GUEST_SHELL_MIGRATION_SQL;
   const migrationTable = migrationScope === "page" ? "pages" : "hotels";
+  const navStyle = getGuestShellNavStyle(config);
+  const navActive = navStyle !== "off";
 
   return (
     <div className="app-guest-shell-form space-y-4">
@@ -141,16 +158,41 @@ export function GuestShellEditorForm({
         </section>
       ) : null}
 
-      <label className="app-guest-shell-toggle flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5">
-        <span className="text-sm font-medium text-slate-800">下タブナビを表示する</span>
-        <input
-          type="checkbox"
-          checked={config.enabled}
-          onChange={(e) => onChange({ ...config, enabled: e.target.checked })}
-          className="app-guest-shell-switch-input"
-        />
-        <span className="app-guest-shell-switch" aria-hidden />
-      </label>
+      <fieldset className="app-guest-shell-nav-style space-y-2">
+        <legend className="text-sm font-medium text-slate-800">表示形式（いずれか1つ）</legend>
+        <p className="text-xs text-slate-500">
+          下タブとハンバーガーは同時に使えません。リンク設定は共通です。
+        </p>
+        <div className="flex flex-col gap-2">
+          {NAV_STYLE_OPTIONS.map((option) => {
+            const selected = navStyle === option.value;
+            return (
+              <label
+                key={option.value}
+                className={
+                  "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition " +
+                  (selected
+                    ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600"
+                    : "border-slate-200 bg-white hover:bg-slate-50")
+                }
+              >
+                <input
+                  type="radio"
+                  name="guest-shell-nav-style"
+                  value={option.value}
+                  checked={selected}
+                  onChange={() => onChange(withGuestShellNavStyle(config, option.value))}
+                  className="mt-0.5 accent-emerald-700"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-slate-900">{option.label}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{option.hint}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       {isBusinessPlan && showTranslationHint ? (
         <p className="text-xs text-slate-500">
@@ -158,83 +200,110 @@ export function GuestShellEditorForm({
         </p>
       ) : null}
 
-      <div className={"space-y-3 " + (config.enabled ? "" : "pointer-events-none opacity-50")}>
-        {config.tabs.map((tab) => (
-          <div key={tab.id} className="app-guest-shell-tab rounded-lg border border-slate-200 bg-white p-3">
-            <div className="app-guest-shell-tab-header flex flex-wrap items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {TYPE_LABEL[tab.type]}
-                </p>
-                <input
-                  type="text"
-                  value={getGuestShellLabelJa(tab.label)}
-                  onChange={(e) => handleLabelChange(tab, e.target.value)}
-                  className="app-guest-shell-label-input mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
-                  maxLength={20}
-                  aria-label={`${TYPE_LABEL[tab.type]}のラベル`}
-                />
-                {isBusinessPlan && typeof tab.label === "object" && tab.label ? (
-                  <p className="mt-1 truncate text-[10px] text-slate-400">
-                    EN {getLocalizedContent(tab.label, "en") || "—"}
-                    {" · "}
-                    中文 {getLocalizedContent(tab.label, "zh") || "—"}
-                    {" · "}
-                    KO {getLocalizedContent(tab.label, "ko") || "—"}
+      <div className={"space-y-2 " + (navActive ? "" : "pointer-events-none opacity-50")}>
+        <p className="text-xs font-medium text-slate-600">リンク（共通）</p>
+        {config.tabs.map((tab) => {
+          const enabledHint = tab.enabled ? "表示中" : "非表示";
+          return (
+            <details
+              key={tab.id}
+              className="app-guest-shell-tab group rounded-lg border border-slate-200 bg-white [&_summary::-webkit-details-marker]:hidden"
+            >
+              <summary className="app-guest-shell-tab-summary flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
+                <span className="min-w-0">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {TYPE_LABEL[tab.type]}
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">
+                    {getGuestShellLabelJa(tab.label) || TYPE_LABEL[tab.type]}
+                    <span className="ml-2 text-xs font-normal text-slate-400">{enabledHint}</span>
+                  </span>
+                </span>
+                <span
+                  className="shrink-0 text-[10px] text-slate-400 transition-transform group-open:rotate-180"
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </summary>
+
+              <div className="space-y-2 border-t border-slate-100 px-3 pb-3 pt-2">
+                <div className="app-guest-shell-tab-header flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <label className="block text-xs text-slate-500">
+                      ラベル
+                      <input
+                        type="text"
+                        value={getGuestShellLabelJa(tab.label)}
+                        onChange={(e) => handleLabelChange(tab, e.target.value)}
+                        className="app-guest-shell-label-input mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
+                        maxLength={20}
+                        aria-label={`${TYPE_LABEL[tab.type]}のラベル`}
+                      />
+                    </label>
+                    {isBusinessPlan && typeof tab.label === "object" && tab.label ? (
+                      <p className="mt-1 truncate text-[10px] text-slate-400">
+                        EN {getLocalizedContent(tab.label, "en") || "—"}
+                        {" · "}
+                        中文 {getLocalizedContent(tab.label, "zh") || "—"}
+                        {" · "}
+                        KO {getLocalizedContent(tab.label, "ko") || "—"}
+                      </p>
+                    ) : null}
+                  </div>
+                  <label className="app-guest-shell-display-toggle inline-flex items-center gap-2 text-xs font-medium text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={tab.enabled}
+                      onChange={(e) => updateTab(tab.id, { enabled: e.target.checked })}
+                      className="app-guest-shell-checkbox"
+                    />
+                    <span>表示</span>
+                  </label>
+                </div>
+
+                {tab.type === "home" || tab.type === "page" ? (
+                  <label className="app-guest-shell-field block text-xs text-slate-500">
+                    遷移先ページ
+                    <select
+                      value={tab.pageSlug ?? ""}
+                      onChange={(e) =>
+                        updateTab(tab.id, { pageSlug: e.target.value.trim() || null })
+                      }
+                      className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800"
+                    >
+                      <option value="">未設定</option>
+                      {pages.map((page) => (
+                        <option key={page.id} value={page.slug}>
+                          {page.title || "(無題)"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+
+                {tab.type === "phone" ? (
+                  <label className="app-guest-shell-field block text-xs text-slate-500">
+                    フロント電話番号
+                    <input
+                      type="tel"
+                      value={tab.phone ?? ""}
+                      onChange={(e) => updateTab(tab.id, { phone: e.target.value || null })}
+                      placeholder="例: 03-1234-5678"
+                      className="mt-1 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm text-slate-800"
+                    />
+                  </label>
+                ) : null}
+
+                {tab.type === "locale" ? (
+                  <p className="text-xs text-slate-500">
+                    オンにするとナビの「言語」から切替できます。このときヘッダーの言語トグルは非表示になります。
                   </p>
                 ) : null}
               </div>
-              <label className="app-guest-shell-display-toggle inline-flex items-center gap-2 text-xs font-medium text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={tab.enabled}
-                  onChange={(e) => updateTab(tab.id, { enabled: e.target.checked })}
-                  className="app-guest-shell-checkbox"
-                />
-                <span>表示</span>
-              </label>
-            </div>
-
-            {tab.type === "home" || tab.type === "page" ? (
-              <label className="app-guest-shell-field mt-2 block text-xs text-slate-500">
-                遷移先ページ
-                <select
-                  value={tab.pageSlug ?? ""}
-                  onChange={(e) =>
-                    updateTab(tab.id, { pageSlug: e.target.value.trim() || null })
-                  }
-                  className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800"
-                >
-                  <option value="">未設定</option>
-                  {pages.map((page) => (
-                    <option key={page.id} value={page.slug}>
-                      {page.title || "(無題)"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-
-            {tab.type === "phone" ? (
-              <label className="app-guest-shell-field mt-2 block text-xs text-slate-500">
-                フロント電話番号
-                <input
-                  type="tel"
-                  value={tab.phone ?? ""}
-                  onChange={(e) => updateTab(tab.id, { phone: e.target.value || null })}
-                  placeholder="例: 03-1234-5678"
-                  className="mt-1 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm text-slate-800"
-                />
-              </label>
-            ) : null}
-
-            {tab.type === "locale" ? (
-              <p className="mt-2 text-xs text-slate-500">
-                オンにするとフッターの「言語」から切替できます。このときヘッダーの言語トグルは非表示になります。
-              </p>
-            ) : null}
-          </div>
-        ))}
+            </details>
+          );
+        })}
       </div>
 
       <div className="app-guest-shell-actions flex flex-wrap items-center gap-2">

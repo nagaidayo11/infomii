@@ -1545,10 +1545,14 @@ export async function updateCurrentHotelGuestShell(config: GuestShellConfig): Pr
   await appendAuditLog({
     hotelId,
     action: "hotel.updated",
-    message: next.enabled ? "ゲスト下タブナビを更新しました" : "ゲスト下タブナビをOFFにしました",
+    message: next.enabled ? "ゲストナビを更新しました" : "ゲストナビをOFFにしました",
     targetType: "hotel",
     targetId: hotelId,
-    metadata: { guest_shell_enabled: next.enabled, tab_count: next.tabs.length },
+    metadata: {
+      guest_shell_enabled: next.enabled,
+      guest_shell_nav_style: next.navStyle,
+      tab_count: next.tabs.length,
+    },
   });
 
   return next;

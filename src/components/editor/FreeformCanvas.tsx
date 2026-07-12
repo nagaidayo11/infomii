@@ -7,8 +7,10 @@ import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
 import {
+  getGuestShellNavStyle,
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
@@ -231,6 +233,8 @@ type FreeformCanvasProps = {
   };
   guestShell?: GuestShellConfig | null;
   pageSlug?: string;
+  /** Shown in phone header when hamburger nav is on (matches guest preview). */
+  pageTitle?: string;
   isBusinessPlan?: boolean;
   unframed?: boolean;
 };
@@ -245,6 +249,7 @@ export function FreeformCanvas({
   pageBackground,
   guestShell = null,
   pageSlug = "",
+  pageTitle = "",
   isBusinessPlan = false,
   unframed = false,
 }: FreeformCanvasProps) {
@@ -263,6 +268,7 @@ export function FreeformCanvas({
   } | null>(null);
   const [autoHeights, setAutoHeights] = useState<Record<string, number>>({});
   const [previewLocale, setPreviewLocale] = useState<"ja" | "en" | "zh" | "ko">("ja");
+  const navStyle = guestShell ? getGuestShellNavStyle(guestShell) : "off";
   const shellTabs = guestShell
     ? resolveVisibleGuestShellTabs(guestShell, { businessFeaturesEnabled: isBusinessPlan })
     : [];
@@ -517,8 +523,26 @@ export function FreeformCanvas({
           className={unframed ? "app-editor-unframed-preview h-full w-full" : "h-full w-full"}
           screenStyle={{ background: pageBackgroundStyle }}
           onScreenWidthChange={setViewportWidth}
+          header={
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+                {pageTitle.trim() || "（無題）"}
+              </h1>
+              {navStyle === "hamburger" && shellTabs.length > 0 ? (
+                <div className="shrink-0">
+                  <GuestHamburgerMenu
+                    tabs={shellTabs}
+                    currentSlug={pageSlug}
+                    locale={previewLocale}
+                    onLocaleChange={setPreviewLocale}
+                    previewMode
+                  />
+                </div>
+              ) : null}
+            </div>
+          }
           footer={
-            shellTabs.length > 0 ? (
+            navStyle === "tabs" && shellTabs.length > 0 ? (
               <GuestBottomTabBar
                 tabs={shellTabs}
                 currentSlug={pageSlug}

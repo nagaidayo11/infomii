@@ -92,6 +92,21 @@ function buildEditorContentSignature(payload: {
   });
 }
 
+function buildEditorContentSignatureFromStore(
+  state: ReturnType<typeof useEditor2Store.getState> = useEditor2Store.getState(),
+): string {
+  return buildEditorContentSignature({
+    cards: state.cards,
+    background: {
+      mode: state.pageBackgroundMode,
+      color: state.pageBackgroundColor,
+      from: state.pageGradientFrom,
+      to: state.pageGradientTo,
+      angle: state.pageGradientAngle,
+    },
+  });
+}
+
 export function Editor2({
   pageId,
   mode = "full",
@@ -770,6 +785,7 @@ export function Editor2({
     }
     setPublishing(true);
     try {
+      // Read store after translation so save + baseline match what the guest page gets.
       const state = useEditor2Store.getState();
       await savePageCards(pageId, state.cards, {
         pageStyle: {
@@ -789,7 +805,7 @@ export function Editor2({
       }
       await setInformationStatusBySlug(page.slug, "published");
       setPublishStatus("published");
-      setPublishedBaselineSignature(currentContentSignature);
+      setPublishedBaselineSignature(buildEditorContentSignatureFromStore());
       const publicUrl = buildPublicUrlV(page.slug);
       if (!opts?.silent) {
         setPublishState({
@@ -803,7 +819,7 @@ export function Editor2({
     } finally {
       setPublishing(false);
     }
-  }, [isDemoMode, pageId, currentContentSignature, ensureTranslationsBeforeGuestAction]);
+  }, [isDemoMode, pageId, ensureTranslationsBeforeGuestAction]);
 
   const handlePublishClick = useCallback(async () => {
     if (isDemoMode) {
@@ -1104,7 +1120,7 @@ export function Editor2({
         await approvePublishApprovalBySlug(pageMeta.slug);
         setHasPendingApproval(false);
         setPublishStatus("published");
-        setPublishedBaselineSignature(currentContentSignature);
+        setPublishedBaselineSignature(buildEditorContentSignatureFromStore());
         window.alert("公開申請を承認し、公開しました。");
         return;
       }
@@ -1112,7 +1128,7 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, currentContentSignature, flushAutosaveNow, pageId, publishNow]);
+  }, [guardDemoAction, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, flushAutosaveNow, pageId, publishNow]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -1125,6 +1141,7 @@ export function Editor2({
         await handleTogglePublished();
         return;
       }
+      // First publish (draft → ON): save + publish content + open QR modal in one step.
       await flushAutosaveNow();
       const saveErr = useEditor2Store.getState().saveError;
       if (saveErr) {
@@ -1133,7 +1150,12 @@ export function Editor2({
         );
         return;
       }
-      await publishNow({ silent: true });
+      setPublishFlowBusy(true);
+      try {
+        await publishNow({ silent: false });
+      } finally {
+        setPublishFlowBusy(false);
+      }
     } finally {
       setTogglePublishBusy(false);
     }
@@ -1360,6 +1382,7 @@ export function Editor2({
                   }}
                   guestShell={previewGuestShell}
                   pageSlug={pageMeta.slug}
+                  pageTitle={pageMeta.title}
                   isBusinessPlan={isBusinessPlan}
                   unframed={useAppEditorChrome}
                 />
@@ -1378,7 +1401,6 @@ export function Editor2({
             !selectedCard && pageId && !isDemoMode ? (
               <GuestShellPagePanel
                 pageId={pageId}
-                pageSlug={pageMeta.slug}
                 isBusinessPlan={isBusinessPlan}
                 onConfigChange={setPreviewGuestShell}
               />

@@ -1,5 +1,5 @@
 /**
- * Facility-wide / page-level guest shell (bottom tabs).
+ * Facility-wide / page-level guest shell (bottom tabs or hamburger).
  * Stored on hotels.guest_shell or pages.guest_shell jsonb.
  */
 
@@ -11,6 +11,9 @@ import {
 } from "@/lib/localized-content";
 
 export type GuestShellTabType = "home" | "phone" | "page" | "locale";
+
+/** Exclusive chrome: off | bottom tabs | hamburger menu. */
+export type GuestShellNavStyle = "off" | "tabs" | "hamburger";
 
 export type GuestShellTab = {
   id: string;
@@ -25,8 +28,13 @@ export type GuestShellTab = {
 };
 
 export type GuestShellConfig = {
-  /** When false, bottom tabs are hidden (default for existing hotels). */
+  /**
+   * Legacy flag kept for older JSON / audit logs.
+   * Prefer `navStyle`. Synced on parse: true when navStyle !== "off".
+   */
   enabled: boolean;
+  /** Exclusive display mode for guest chrome. */
+  navStyle: GuestShellNavStyle;
   tabs: GuestShellTab[];
 };
 
@@ -51,6 +59,7 @@ add column if not exists guest_shell jsonb not null default '{}'::jsonb;`;
 export function createDefaultGuestShellConfig(): GuestShellConfig {
   return {
     enabled: false,
+    navStyle: "off",
     tabs: DEFAULT_GUEST_SHELL_TABS.map((tab) => ({
       ...tab,
       label:
@@ -69,6 +78,28 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function normalizeTabType(value: unknown): GuestShellTabType | null {
   if (value === "home" || value === "phone" || value === "page" || value === "locale") return value;
   return null;
+}
+
+function normalizeNavStyle(value: unknown, enabledLegacy: boolean): GuestShellNavStyle {
+  if (value === "off" || value === "tabs" || value === "hamburger") return value;
+  // Legacy: only `enabled` existed → treat as bottom tabs when on.
+  return enabledLegacy ? "tabs" : "off";
+}
+
+/** Canonical nav style (always prefer this over raw `enabled`). */
+export function getGuestShellNavStyle(config: GuestShellConfig): GuestShellNavStyle {
+  return normalizeNavStyle(config.navStyle, config.enabled === true);
+}
+
+export function withGuestShellNavStyle(
+  config: GuestShellConfig,
+  navStyle: GuestShellNavStyle,
+): GuestShellConfig {
+  return {
+    ...config,
+    navStyle,
+    enabled: navStyle !== "off",
+  };
 }
 
 function defaultLabelForType(type: GuestShellTabType): LocalizedContent {
@@ -178,10 +209,13 @@ export function parseGuestShellConfig(raw: unknown): GuestShellConfig {
   const obj = asRecord(raw);
   if (!obj) return defaults;
 
-  const enabled = obj.enabled === true;
+  const enabledLegacy = obj.enabled === true;
+  const navStyle = normalizeNavStyle(obj.navStyle, enabledLegacy);
+  const enabled = navStyle !== "off";
+
   const rawTabs = Array.isArray(obj.tabs) ? obj.tabs : null;
   if (!rawTabs || rawTabs.length === 0) {
-    return { enabled, tabs: defaults.tabs };
+    return { enabled, navStyle, tabs: defaults.tabs };
   }
 
   const tabs = rawTabs
@@ -190,18 +224,18 @@ export function parseGuestShellConfig(raw: unknown): GuestShellConfig {
     .slice(0, 5);
 
   if (tabs.length === 0) {
-    return { enabled, tabs: defaults.tabs };
+    return { enabled, navStyle, tabs: defaults.tabs };
   }
 
-  return { enabled, tabs };
+  return { enabled, navStyle, tabs };
 }
 
-/** Tabs visible on guest UI (enabled only). Locale tab follows the shell checkbox. */
+/** Tabs visible on guest UI when nav chrome is on (enabled tabs only). */
 export function resolveVisibleGuestShellTabs(
   config: GuestShellConfig,
   _opts?: { businessFeaturesEnabled?: boolean },
 ): GuestShellTab[] {
-  if (!config.enabled) return [];
+  if (getGuestShellNavStyle(config) === "off") return [];
   return config.tabs.filter((tab) => tab.enabled);
 }
 

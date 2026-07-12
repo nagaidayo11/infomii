@@ -112,10 +112,9 @@ export function GuestBottomTabBar({
 
   if (tabs.length === 0) return null;
 
-  const activeTabClass =
-    "bg-emerald-600 text-white shadow-[0_2px_8px_rgba(5,150,105,0.35)]";
-  const inactiveTabClass = "text-emerald-800/70 active:bg-emerald-50";
-  const disabledTabClass = "cursor-not-allowed text-emerald-300";
+  const activeTabClass = "bg-emerald-50 text-emerald-900 font-bold";
+  const inactiveTabClass = "text-slate-500 font-medium active:bg-slate-50";
+  const disabledTabClass = "cursor-not-allowed text-slate-300";
 
   function handleTab(tab: GuestShellTab) {
     if (previewMode) {
@@ -216,7 +215,7 @@ export function GuestBottomTabBar({
                 onClick={() => handleTab(tab)}
                 disabled={!previewMode && disabled && tab.type !== "phone" && tab.type !== "locale"}
                 className={
-                  "ui-pop-tap flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold transition-colors " +
+                  "ui-pop-tap flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] transition-colors " +
                   (active
                     ? activeTabClass
                     : disabled && !previewMode && tab.type !== "phone" && tab.type !== "locale"
