@@ -6,7 +6,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 export const metadata: Metadata = {
   title: "Infomii | 情報を1ページに。旅行・推し活・案内を無料ではじめる",
   description:
-    "旅行しおり、推し活、イベントまで。伝えたい情報をスマホでまとめてURL共有。クレジットカード不要で3ページまで無料公開。",
+    "旅行しおり、推し活、イベントまで。伝えたい情報をスマホでまとめてURL共有。クレジットカード不要で2ページまで無料公開。",
   alternates: { canonical: "https://www.infomii.com/lp/saas" },
   keywords: [
     "情報整理",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Infomii | 情報を1ページに",
-    description: "旅行しおり・推し活・イベント共有。無料3ページ・クレカ不要。",
+    description: "旅行しおり・推し活・イベント共有。無料2ページ・クレカ不要。",
   },
 };
 

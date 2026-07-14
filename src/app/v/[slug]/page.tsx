@@ -5,6 +5,7 @@ import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import { buildGuestPreviewBackLink } from "@/lib/app-href";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
+import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 const STYLE_KEY = "_style";
@@ -97,7 +98,9 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     .eq("hotel_id", hotelIdForLocaleToggle)
     .order("updated_at", { ascending: false })
     .limit(1);
-  const canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
+  const plan = (subRows?.[0]?.plan ?? "free") as "free" | "pro" | "business";
+  const canShowLocaleToggle = plan === "business";
+  const guestNavMaxVisible = resolveGuestNavLinkLimit(plan);
   const guestShell = await fetchResolvedGuestShellForPage(supabase, {
     id: page.id,
     hotel_id: hotelIdForLocaleToggle,
@@ -166,6 +169,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       unpublishedPreview={!isPublished && isPreviewRequest}
       showLocaleToggle={showLocaleToggle}
       businessFeaturesEnabled={canShowLocaleToggle}
+      guestNavMaxVisible={guestNavMaxVisible}
       localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
       guestShell={guestShell}
       currentSlug={page.slug}

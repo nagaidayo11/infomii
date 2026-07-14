@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import {
+  clampGuestShellConfigForPlan,
   createDefaultGuestShellConfig,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
+import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
 import {
   getCurrentHotelGuestShell,
   getCurrentHotelSubscription,
@@ -28,7 +30,8 @@ export function GuestShellSettingsSection() {
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const [columnReady, setColumnReady] = useState(true);
   const [open, setOpen] = useState(false);
-  const [isBusinessPlan, setIsBusinessPlan] = useState(false);
+  const [planTier, setPlanTier] = useState<PlanLimitTier>("free");
+  const isBusinessPlan = planTier === "business";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,7 +44,8 @@ export function GuestShellSettingsSection() {
       ]);
       setConfig(ensureDefaultTabs(shell));
       setColumnReady(ready);
-      setIsBusinessPlan(sub?.plan === "business");
+      const plan = sub?.plan;
+      setPlanTier(plan === "pro" || plan === "business" ? plan : "free");
     } finally {
       setLoading(false);
     }
@@ -55,9 +59,13 @@ export function GuestShellSettingsSection() {
     setSaving(true);
     setMessage("");
     try {
+      const clamped = clampGuestShellConfigForPlan(config, {
+        businessFeaturesEnabled: isBusinessPlan,
+        maxEnabledTabs: resolveGuestNavLinkLimit(planTier),
+      });
       const toSave = isBusinessPlan
-        ? await ensureGuestShellLabelsTranslated(config)
-        : config;
+        ? await ensureGuestShellLabelsTranslated(clamped)
+        : clamped;
       if (toSave !== config) setConfig(ensureDefaultTabs(toSave));
       const next = await updateCurrentHotelGuestShell(toSave);
       setConfig(ensureDefaultTabs(next));
@@ -104,6 +112,7 @@ export function GuestShellSettingsSection() {
               columnReady={columnReady}
               migrationScope="hotel"
               isBusinessPlan={isBusinessPlan}
+              planTier={planTier}
               secondaryActions={
                 <button
                   type="button"

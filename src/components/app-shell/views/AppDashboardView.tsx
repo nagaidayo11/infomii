@@ -198,13 +198,13 @@ export function AppDashboardView() {
                 <div className="mt-3">
                   <AppEmptyState
                     title="まだページがありません"
-                    description="AIでつくるか、テンプレートから始めるとここに並びます。"
+                    description="テンプレートから始めるか、新しいページを作成してください。"
                     action={
                       <AppShellLink
                         href="/templates"
                         className="app-touch-btn app-touch-btn-primary app-pressable flex items-center justify-center bg-[var(--app-accent)] font-semibold !text-white"
                       >
-                        テンプレートを見る
+                        テンプレートを選ぶ
                       </AppShellLink>
                     }
                   />

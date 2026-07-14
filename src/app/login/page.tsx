@@ -203,13 +203,14 @@ function LoginForm() {
       void (async () => {
         try {
           await ensureUserHotelScope();
+          router.replace(next);
         } catch (error) {
           if (isAccessRevokedError(error)) {
             router.replace(`/login?access=revoked&next=${encodeURIComponent(next)}`);
             return;
           }
+          router.replace(next);
         }
-        router.replace(next);
       })();
       return;
     }

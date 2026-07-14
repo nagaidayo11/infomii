@@ -31,8 +31,10 @@ import {
 } from "@/lib/page-guest-shell";
 import { inferSubscriptionBillingInterval } from "@/lib/billing-interval";
 import {
+  formatCreatePageLimitError,
   formatPublishLimitError,
   normalizeMaxPublishedPages,
+  resolveEffectivePageLimit,
   resolveMaxPublishedPagesByPlan,
 } from "@/lib/plan-limits";
 
@@ -2188,7 +2190,11 @@ export async function updateInformation(
 
         const publishedCount = count ?? 0;
         const publishLimit = sub
-          ? normalizeMaxPublishedPages(sub.plan as SubscriptionPlan, sub.max_published_pages)
+          ? resolveEffectivePageLimit({
+              plan: sub.plan as SubscriptionPlan,
+              storedMax: sub.max_published_pages,
+              existingCount: publishedCount,
+            })
           : 0;
         if (!overrideEnabled && sub && publishedCount >= publishLimit) {
           throw new Error(formatPublishLimitError(sub.plan as SubscriptionPlan, publishLimit));
@@ -4454,10 +4460,16 @@ export async function createBlankPage(title = ""): Promise<string> {
       .from("pages")
       .select("id", { count: "exact", head: true })
       .eq("hotel_id", hotelId);
-    if (!error && (count ?? 0) >= sub.maxPublishedPages) {
-      const e = new Error(
-        `ページ数の上限に達しました（${sub.maxPublishedPages}件）。Proプランで10ページまで作成できます。`
-      ) as Error & { code?: string };
+    const pageCount = count ?? 0;
+    const createLimit = resolveEffectivePageLimit({
+      plan: sub.plan,
+      storedMax: sub.maxPublishedPages,
+      existingCount: pageCount,
+    });
+    if (!error && pageCount >= createLimit) {
+      const e = new Error(formatCreatePageLimitError(sub.plan, createLimit)) as Error & {
+        code?: string;
+      };
       e.code = PAGE_LIMIT_REACHED;
       throw e;
     }

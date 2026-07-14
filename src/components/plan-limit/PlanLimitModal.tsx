@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { PLAN_PAGE_LIMITS } from "@/lib/plan-limits";
 
 type PlanLimitModalProps = {
   open: boolean;
@@ -24,8 +25,8 @@ export function PlanLimitModal({ open, onClose, message, currentPlan = "free" }:
   const isPro = currentPlan === "pro";
   const upgradeHref = isAppShell ? APP_BILLING_PATH : pricingHref;
   const defaultMessage = isPro
-    ? "Proプランでは10ページまでです。Businessプランにアップグレードすると無制限で作成できます。"
-    : "無料プランでは3ページまで作成できます。Proプランで10ページ、Businessプランで無制限まで拡張できます。";
+    ? `Proプランでは${PLAN_PAGE_LIMITS.pro}ページまでです。Businessプランにアップグレードすると無制限で作成できます。`
+    : `無料プランでは${PLAN_PAGE_LIMITS.free}ページまで作成できます。Proプランで${PLAN_PAGE_LIMITS.pro}ページ、Businessプランで無制限まで拡張できます。`;
 
   return (
     <div

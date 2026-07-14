@@ -2,6 +2,7 @@
 
 import type { KeyboardEvent } from "react";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
+import { PLAN_FEATURE_BULLETS } from "@/lib/plan-limits";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 
 type PlanId = "free" | "pro" | "business";
@@ -17,11 +18,7 @@ type AppPlanTiersProps = {
   showFreeTier?: boolean;
 };
 
-const PLAN_FEATURES: Record<PlanId, string[]> = {
-  free: ["3ページ公開", "基本編集", "QR共有"],
-  pro: ["最大10ページ", "閲覧分析", "訴求ブロック（ティッカー・クーポン等）"],
-  business: ["公開無制限", "多言語編集・言語切替", "チーム招待", "動的ブロック（期間・時間帯）"],
-};
+const PLAN_FEATURES: Record<PlanId, string[]> = PLAN_FEATURE_BULLETS;
 
 function tierActionLabel(plan: PlanId, current: PlanId, busy: boolean): string | null {
   if (plan === current) return null;

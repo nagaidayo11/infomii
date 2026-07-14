@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripeServerClient } from "@/lib/server/stripe-server";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 import { ensureHotelSubscriptionRpc } from "@/lib/server/private-supabase-rpc";
+import { resolveMaxPublishedPagesByPlan } from "@/lib/plan-limits";
 import { sendOpsAlert } from "@/lib/server/ops-alert";
 import { isOpsAdminUser } from "@/lib/server/ops-auth";
 
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
       .update({
         plan,
         status,
-        max_published_pages: plan === "pro" ? 10 : 3,
+        max_published_pages: resolveMaxPublishedPagesByPlan(plan),
         stripe_customer_id: typeof stripeSub.customer === "string" ? stripeSub.customer : null,
         stripe_subscription_id: stripeSub.id,
         stripe_price_id: firstItem?.price?.id ?? null,

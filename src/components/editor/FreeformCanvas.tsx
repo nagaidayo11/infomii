@@ -236,6 +236,8 @@ type FreeformCanvasProps = {
   /** Shown in phone header when hamburger nav is on (matches guest preview). */
   pageTitle?: string;
   isBusinessPlan?: boolean;
+  /** Guest nav visible-link ceiling (Free = few links). */
+  guestNavMaxVisible?: number;
   unframed?: boolean;
 };
 
@@ -251,6 +253,7 @@ export function FreeformCanvas({
   pageSlug = "",
   pageTitle = "",
   isBusinessPlan = false,
+  guestNavMaxVisible,
   unframed = false,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -270,7 +273,10 @@ export function FreeformCanvas({
   const [previewLocale, setPreviewLocale] = useState<"ja" | "en" | "zh" | "ko">("ja");
   const navStyle = guestShell ? getGuestShellNavStyle(guestShell) : "off";
   const shellTabs = guestShell
-    ? resolveVisibleGuestShellTabs(guestShell, { businessFeaturesEnabled: isBusinessPlan })
+    ? resolveVisibleGuestShellTabs(guestShell, {
+        businessFeaturesEnabled: isBusinessPlan,
+        maxVisibleTabs: guestNavMaxVisible,
+      })
     : [];
 
   const setAutoHeightForCard = useCallback((id: string, measuredHeight: number) => {

@@ -233,10 +233,57 @@ export function parseGuestShellConfig(raw: unknown): GuestShellConfig {
 /** Tabs visible on guest UI when nav chrome is on (enabled tabs only). */
 export function resolveVisibleGuestShellTabs(
   config: GuestShellConfig,
-  _opts?: { businessFeaturesEnabled?: boolean },
+  opts?: {
+    businessFeaturesEnabled?: boolean;
+    /** Max enabled items to show (Free caps link count). */
+    maxVisibleTabs?: number;
+  },
 ): GuestShellTab[] {
   if (getGuestShellNavStyle(config) === "off") return [];
-  return config.tabs.filter((tab) => tab.enabled);
+
+  const multilingual = opts?.businessFeaturesEnabled === true;
+  let tabs = config.tabs.filter((tab) => tab.enabled);
+  if (!multilingual) {
+    tabs = tabs.filter((tab) => tab.type !== "locale");
+  }
+
+  const cap = opts?.maxVisibleTabs;
+  if (typeof cap === "number" && Number.isFinite(cap) && cap >= 0) {
+    tabs = tabs.slice(0, Math.floor(cap));
+  }
+  return tabs;
+}
+
+/**
+ * Clamp config before save so Free cannot store more enabled links than allowed.
+ * Locale tabs are forced off when multilingual is unavailable.
+ */
+export function clampGuestShellConfigForPlan(
+  config: GuestShellConfig,
+  opts: { businessFeaturesEnabled: boolean; maxEnabledTabs: number },
+): GuestShellConfig {
+  const navStyle = getGuestShellNavStyle(config);
+  if (navStyle === "off") {
+    return { ...config, navStyle: "off", enabled: false };
+  }
+
+  let remaining = Math.max(0, opts.maxEnabledTabs);
+  const tabs = config.tabs.map((tab) => {
+    if (!opts.businessFeaturesEnabled && tab.type === "locale") {
+      return { ...tab, enabled: false };
+    }
+    if (!tab.enabled) return tab;
+    if (remaining <= 0) return { ...tab, enabled: false };
+    remaining -= 1;
+    return tab;
+  });
+
+  return {
+    ...config,
+    navStyle,
+    enabled: true,
+    tabs,
+  };
 }
 
 export function toTelHref(phone: string): string | null {

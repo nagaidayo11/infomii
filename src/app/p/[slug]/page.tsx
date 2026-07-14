@@ -11,6 +11,7 @@ import type { EditorCard } from "@/components/editor/types";
 import { renderInformationIconVisual } from "@/components/information/InformationIconVisual";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { parseGuestShellConfig } from "@/lib/guest-shell";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
@@ -691,6 +692,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     order: typeof c.order === "number" ? c.order : idx,
   }));
   const hasMultilingualContent = cardViewData.some((card) => hasLocalizedPayload(card.content));
+  let hotelPlan: "free" | "pro" | "business" = "free";
   let canShowLocaleToggle = false;
   const hotelIdForLocaleToggle = row.hotel_id ?? pageHotelId;
   if (hotelIdForLocaleToggle) {
@@ -702,11 +704,14 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
         .eq("hotel_id", hotelIdForLocaleToggle)
         .order("updated_at", { ascending: false })
         .limit(1);
-      canShowLocaleToggle = (subRows?.[0]?.plan ?? null) === "business";
+      const plan = subRows?.[0]?.plan;
+      if (plan === "pro" || plan === "business" || plan === "free") hotelPlan = plan;
+      canShowLocaleToggle = hotelPlan === "business";
     } catch {
       canShowLocaleToggle = false;
     }
   }
+  const guestNavMaxVisible = resolveGuestNavLinkLimit(hotelPlan);
   const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
   let guestShell = parseGuestShellConfig(null);
   if (hotelIdForLocaleToggle) {
@@ -1262,6 +1267,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           isEmbed={isEmbed}
           showLocaleToggle={showLocaleToggle}
           businessFeaturesEnabled={canShowLocaleToggle}
+          guestNavMaxVisible={guestNavMaxVisible}
           localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
           guestShell={guestShell}
           currentSlug={slug}

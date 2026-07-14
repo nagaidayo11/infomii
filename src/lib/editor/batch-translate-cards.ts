@@ -5,6 +5,7 @@
 
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import type { EditorCard } from "@/components/editor/types";
+import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 const NON_TRANSLATABLE_KEYS = new Set([
   "href",
@@ -74,9 +75,14 @@ async function translateBatch(
   const CHUNK = 80;
   for (let start = 0; start < targets.length; start += CHUNK) {
     const slice = targets.slice(start, start + CHUNK);
+    const supabase = getBrowserSupabaseClient();
+    const token = (await supabase?.auth.getSession())?.data.session?.access_token;
     const res = await fetch("/api/ai/translate-content", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ texts: slice }),
     });
     if (!res.ok) throw new Error("batch translate failed");

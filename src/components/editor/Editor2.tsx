@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
+import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
@@ -14,6 +15,7 @@ import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
 import { PublishModal } from "./PublishModal";
 import { SlashCommandMenu } from "./SlashCommandMenu";
+import { NewPageOnboarding } from "./NewPageOnboarding";
 import { useEditor2Store } from "./store";
 import { useAutoSaveCards } from "./useAutoSaveCards";
 import {
@@ -1366,6 +1368,9 @@ export function Editor2({
             <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
               <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
               <div className="min-h-0 flex-1 overflow-hidden">
+                {!isDemoMode && !initialEditorLoading && pageId && cards.length === 0 ? (
+                  <NewPageOnboarding pageId={pageId} pageTitle={pageMeta.title} />
+                ) : (
                 <FreeformCanvas
                   cards={cards}
                   selectedCardId={selectedCardId}
@@ -1384,8 +1389,10 @@ export function Editor2({
                   pageSlug={pageMeta.slug}
                   pageTitle={pageMeta.title}
                   isBusinessPlan={isBusinessPlan}
+                  guestNavMaxVisible={resolveGuestNavLinkLimit(planTier)}
                   unframed={useAppEditorChrome}
                 />
+                )}
               </div>
               </div>
               {!isDemoMode && initialEditorLoading && (
@@ -1402,6 +1409,7 @@ export function Editor2({
               <GuestShellPagePanel
                 pageId={pageId}
                 isBusinessPlan={isBusinessPlan}
+                planTier={planTier}
                 onConfigChange={setPreviewGuestShell}
               />
             ) : (
@@ -1488,7 +1496,7 @@ export function Editor2({
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-slate-600">
                   <p className="font-semibold text-slate-700">Pro</p>
-                  <p className="mt-1 text-[11px]">10ページ運用</p>
+                  <p className="mt-1 text-[11px]">ページ・分析の拡張</p>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-slate-700">
                   <p className="font-semibold">Business</p>
@@ -1531,6 +1539,7 @@ export function Editor2({
             pageTitle={publishState.pageTitle}
             slug={publishState.slug}
             onClose={() => setPublishState(null)}
+            showBusinessUpsell={planTier !== "business"}
           />
         )}
         {showEditorBusyOverlay && (

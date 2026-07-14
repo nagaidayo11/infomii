@@ -2,6 +2,7 @@ import {
   buildLpTemplatesLoginHref,
   LP_STARTER_TEMPLATE_SLUGS,
 } from "@/lib/template-marketplace-meta";
+import { PLAN_PAGE_LIMITS } from "@/lib/plan-limits";
 
 /** public/lp 画像差し替え時にインクリメント（Next/Image・ブラウザキャッシュ対策） */
 export const LP_ASSET_VERSION = "20260521b";
@@ -236,7 +237,7 @@ export const LP_FAQ = [
   },
   {
     q: "ITに詳しくなくても更新できますか？",
-    a: "はい。ブロック追加と文章差し替え中心の設計です。まずは3ページまで無料で試せます。",
+    a: `はい。ブロック追加と文章差し替え中心の設計です。まずは${PLAN_PAGE_LIMITS.free}ページまで無料で試せます。`,
   },
   {
     q: "どのプランを選べばいいですか？",

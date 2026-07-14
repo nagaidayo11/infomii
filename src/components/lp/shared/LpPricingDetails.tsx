@@ -55,8 +55,8 @@ export function LpPricingDetails({ freeSignupHref, hasProAnnual }: LpPricingDeta
                 <th scope="row" className="px-4 py-2.5 text-left font-medium text-slate-700">
                   公開ページ数
                 </th>
-                <td className="px-3 py-2.5 text-center tabular-nums">3本</td>
-                <td className="border-x border-slate-100 bg-emerald-50/40 px-3 py-2.5 text-center tabular-nums">最大10本</td>
+                <td className="px-3 py-2.5 text-center tabular-nums">2本</td>
+                <td className="border-x border-slate-100 bg-emerald-50/40 px-3 py-2.5 text-center tabular-nums">最大20本</td>
                 <td className="px-3 py-2.5 text-center font-semibold text-emerald-700">無制限</td>
               </tr>
               <tr>

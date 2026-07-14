@@ -34,6 +34,7 @@ import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
 import { billingIntervalLabel } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
+import { PLAN_FEATURE_BULLETS } from "@/lib/plan-limits";
 
 const EXTERNAL_PAYMENT_CONFIRM =
   "決済ページ（別ページ）に遷移しますがよろしいですか？";
@@ -758,9 +759,9 @@ export function BusinessPlanSection({
             <p className={`text-sm font-semibold sm:text-base ${plan === "free" ? "text-slate-700" : "text-slate-500"}`}>Free</p>
             <p className={`mt-1.5 text-xl font-semibold sm:text-2xl ${plan === "free" ? "text-slate-900" : "text-slate-900"}`}>¥0</p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "free" ? "text-slate-700" : "text-slate-600"}`}>
-              <li>・3ページ公開</li>
-              <li>・基本編集（PC/スマホプレビュー）</li>
-              <li>・QR共有 / 下書き公開切替</li>
+              {PLAN_FEATURE_BULLETS.free.map((feature) => (
+                <li key={feature}>・{feature}</li>
+              ))}
             </ul>
           </div>
           <div
@@ -792,9 +793,9 @@ export function BusinessPlanSection({
               年払い {PLAN_PRICE_DISPLAY.pro.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
             </p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "pro" ? "text-slate-700" : "text-slate-600"}`}>
-              <li>・最大10ページ公開</li>
-              <li>・閲覧分析</li>
-              <li>・訴求ブロック（ティッカー・クーポン・タイマー）</li>
+              {PLAN_FEATURE_BULLETS.pro.map((feature) => (
+                <li key={feature}>・{feature}</li>
+              ))}
             </ul>
           </div>
           <div
@@ -831,10 +832,9 @@ export function BusinessPlanSection({
               年払い {PLAN_PRICE_DISPLAY.business.annual}（{PLAN_ANNUAL_SAVINGS_LABEL}）
             </p>
             <ul className={`mt-3 space-y-2 text-sm leading-snug sm:text-[15px] ${plan === "business" ? "text-slate-700" : "text-slate-600"}`}>
-              <li>・公開ページ無制限</li>
-              <li>・多言語編集・ゲスト言語切替</li>
-              <li>・チーム招待（引き継ぎしやすい）</li>
-              <li>・動的ブロック（期間・時間帯連動）</li>
+              {PLAN_FEATURE_BULLETS.business.map((feature) => (
+                <li key={feature}>・{feature}</li>
+              ))}
             </ul>
           </div>
         </div>

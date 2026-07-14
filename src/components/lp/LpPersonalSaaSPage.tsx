@@ -111,7 +111,7 @@ export default function LpPersonalSaaSPage() {
         bullets={[
           "予定・MAP・リンクを1ページに",
           "URL / QR / SNSで共有",
-          "無料で3ページまで公開",
+          "無料で2ページまで公開",
           "宿泊施設向けは /lp/business へ",
         ]}
         variant="muted"

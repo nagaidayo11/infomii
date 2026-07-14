@@ -100,7 +100,7 @@ export function LpHero({
                   30秒デモを見る
                 </Button>
               </div>
-              <p className="mt-3 text-sm text-slate-500">クレジットカード不要 · 登録だけで3ページまで公開</p>
+              <p className="mt-3 text-sm text-slate-500">クレジットカード不要 · 登録だけで2ページまで公開</p>
             </div>
           </FadeIn>
 

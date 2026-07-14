@@ -12,7 +12,7 @@ import {
   type AiPageImageDefaults,
 } from "@/lib/ai-page-theme-images";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
-import { normalizeMaxPublishedPages } from "@/lib/plan-limits";
+import { formatCreatePageLimitError, PLAN_PAGE_LIMITS, resolveEffectivePageLimit } from "@/lib/plan-limits";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
@@ -513,16 +513,24 @@ export async function POST(request: Request) {
     .select("max_published_pages,plan")
     .eq("hotel_id", membership.hotel_id)
     .maybeSingle();
-  const maxPages = sub
-    ? normalizeMaxPublishedPages(sub.plan as "free" | "pro" | "business", sub.max_published_pages)
-    : 3;
   const { count } = await supabase
     .from("pages")
     .select("id", { count: "exact", head: true })
     .eq("hotel_id", membership.hotel_id);
-  if ((count ?? 0) >= maxPages) {
+  const pageCount = count ?? 0;
+  const maxPages = sub
+    ? resolveEffectivePageLimit({
+        plan: sub.plan as "free" | "pro" | "business",
+        storedMax: sub.max_published_pages,
+        existingCount: pageCount,
+      })
+    : PLAN_PAGE_LIMITS.free;
+  if (pageCount >= maxPages) {
     return NextResponse.json(
-      { error: `ページ数の上限に達しました（${maxPages}件）。Proプランで10ページまで作成できます。` },
+      { error: formatCreatePageLimitError(
+        (sub?.plan as "free" | "pro" | "business") ?? "free",
+        maxPages,
+      ) },
       { status: 403 }
     );
   }

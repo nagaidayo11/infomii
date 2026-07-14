@@ -14,9 +14,11 @@ import {
   type GuestShellTab,
   type GuestShellTabType,
 } from "@/lib/guest-shell";
+import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { PAGE_GUEST_SHELL_MIGRATION_SQL } from "@/lib/page-guest-shell";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
+import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 const TYPE_LABEL: Record<GuestShellTabType, string> = {
   home: "ホーム",
@@ -45,9 +47,14 @@ function ensureDefaultTabs(config: GuestShellConfig): GuestShellConfig {
 async function translateJaToEnZhKo(
   text: string,
 ): Promise<{ en: string; zh: string; ko: string } | null> {
+  const supabase = getBrowserSupabaseClient();
+  const token = (await supabase?.auth.getSession())?.data.session?.access_token;
   const res = await fetch("/api/ai/translate-content", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ text }),
   });
   if (!res.ok) return null;
@@ -100,6 +107,8 @@ export type GuestShellEditorFormProps = {
   secondaryActions?: React.ReactNode;
   /** Business: translate labels on save (not while typing) */
   isBusinessPlan?: boolean;
+  /** Current plan for Free guest-nav link caps (defaults from isBusinessPlan). */
+  planTier?: PlanLimitTier;
   /** Show Business translation note in editor context only. */
   showTranslationHint?: boolean;
 };
@@ -115,15 +124,30 @@ export function GuestShellEditorForm({
   inheritBanner,
   secondaryActions,
   isBusinessPlan = false,
+  planTier,
   showTranslationHint = false,
 }: GuestShellEditorFormProps) {
   const [pages, setPages] = useState<PageRow[]>([]);
+  const resolvedPlan: PlanLimitTier =
+    planTier ?? (isBusinessPlan ? "business" : "free");
+  const maxEnabledTabs = resolveGuestNavLinkLimit(resolvedPlan);
+  const enabledCount = config.tabs.filter((t) => t.enabled).length;
 
   useEffect(() => {
     listPagesForHotel().then(setPages).catch(() => setPages([]));
   }, []);
 
   function updateTab(tabId: string, patch: Partial<GuestShellTab>) {
+    if (patch.enabled === true) {
+      const current = config.tabs.find((t) => t.id === tabId);
+      const isLocale = (patch.type ?? current?.type) === "locale";
+      if (isLocale && !isBusinessPlan) {
+        return;
+      }
+      if (!current?.enabled && enabledCount >= maxEnabledTabs) {
+        return;
+      }
+    }
     onChange({
       ...config,
       tabs: config.tabs.map((tab) => (tab.id === tabId ? { ...tab, ...patch } : tab)),
@@ -200,8 +224,23 @@ export function GuestShellEditorForm({
         </p>
       ) : null}
 
+      {!isBusinessPlan && navActive ? (
+        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+          {resolvedPlan === "pro"
+            ? `ゲストナビは最大${maxEnabledTabs}件まで表示できます。言語切替はBusinessプランの機能です。`
+            : `Freeではゲストナビの表示リンクは最大${maxEnabledTabs}件です。言語切替・多言語はBusinessプランで利用できます。`}
+        </p>
+      ) : null}
+
       <div className={"space-y-2 " + (navActive ? "" : "pointer-events-none opacity-50")}>
-        <p className="text-xs font-medium text-slate-600">リンク（共通）</p>
+        <p className="text-xs font-medium text-slate-600">
+          リンク（共通）
+          {navActive ? (
+            <span className="ml-2 font-normal text-slate-400">
+              表示中 {enabledCount}/{maxEnabledTabs}
+            </span>
+          ) : null}
+        </p>
         {config.tabs.map((tab) => {
           const enabledHint = tab.enabled ? "表示中" : "非表示";
           return (
@@ -255,10 +294,19 @@ export function GuestShellEditorForm({
                     <input
                       type="checkbox"
                       checked={tab.enabled}
+                      disabled={
+                        (tab.type === "locale" && !isBusinessPlan) ||
+                        (!tab.enabled && enabledCount >= maxEnabledTabs)
+                      }
                       onChange={(e) => updateTab(tab.id, { enabled: e.target.checked })}
                       className="app-guest-shell-checkbox"
                     />
-                    <span>表示</span>
+                    <span>
+                      表示
+                      {tab.type === "locale" && !isBusinessPlan ? (
+                        <span className="ml-1 font-normal text-slate-400">（Business）</span>
+                      ) : null}
+                    </span>
                   </label>
                 </div>
 

@@ -7,6 +7,7 @@ import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
 import { shouldUseAppleIapBilling } from "@/lib/app-store-compliance";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
+import { PLAN_PAGE_LIMITS } from "@/lib/plan-limits";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { Button } from "@/components/ui";
 
@@ -34,7 +35,9 @@ export function UpgradeCtaBanner({
 
   const isFree = currentPlan === "free";
   const isProNearLimit =
-    currentPlan === "pro" && maxPublishedPages <= 10 && publishedCount >= Math.max(1, maxPublishedPages - 1);
+    currentPlan === "pro" &&
+    maxPublishedPages <= PLAN_PAGE_LIMITS.pro &&
+    publishedCount >= Math.max(1, maxPublishedPages - 1);
 
   const pricingHref = useAppStore ? APP_BILLING_PATH : "/lp/business#pricing";
   const pricingLabel = useAppStore ? "プランを見る" : "料金を見る";
@@ -45,10 +48,10 @@ export function UpgradeCtaBanner({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">
-              Proプランで10ページまで作成できます
+              Proプランで{PLAN_PAGE_LIMITS.pro}ページ・分析まで拡張できます
             </h3>
             <p className="mt-1 text-xs text-slate-500">
-              無料プランは3ページまで。Proで分析・複数ページ連携が使えます。
+              無料プランは{PLAN_PAGE_LIMITS.free}ページまで。インバウンドやチーム運用はBusinessが本命です。
             </p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">

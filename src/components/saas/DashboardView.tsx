@@ -56,6 +56,7 @@ function DashboardViewWeb() {
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
   const [inviteNotice, setInviteNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const canEdit = role === "owner" || role === "admin" || role === "editor";
 
   useRouteProgressLoading(loading);
 
@@ -69,8 +70,6 @@ function DashboardViewWeb() {
       setInviteNotice({ type: "err", text: err });
     }
   }, []);
-
-  const canEdit = role === "owner" || role === "admin" || role === "editor";
 
   const loadBootstrap = useCallback(async () => {
     setLoading(true);

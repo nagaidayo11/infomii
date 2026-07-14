@@ -105,17 +105,37 @@ export function GuestHamburgerMenu({
   const [phoneValue, setPhoneValue] = useState<string | null>(null);
   const [hintVisible, setHintVisible] = useState(false);
   const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
+  const [panelTopPx, setPanelTopPx] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleId = useId();
   const menuOpen = menuMounted;
 
   const MENU_ANIM_MS = 240;
+  const iconButtonClass =
+    "ui-pop-tap relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-50";
+
+  function measurePanelTop(host: HTMLElement | null): number {
+    if (!host) return 0;
+    const header = host.querySelector<HTMLElement>("[data-guest-header]");
+    if (!header) return 0;
+    const hostRect = host.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    return Math.max(0, Math.round(headerRect.bottom - hostRect.top));
+  }
 
   function openMenu() {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
+    }
+    const host =
+      triggerRef.current?.closest<HTMLElement>("[data-phone-screen]") ??
+      triggerRef.current?.closest<HTMLElement>("[data-guest-page-shell]") ??
+      overlayHost;
+    if (host) {
+      setOverlayHost(host);
+      setPanelTopPx(measurePanelTop(host));
     }
     setMenuMounted(true);
     requestAnimationFrame(() => {
@@ -268,15 +288,42 @@ export function GuestHamburgerMenu({
       <button
         ref={triggerRef}
         type="button"
-        onClick={openMenu}
-        className="ui-pop-tap inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-        aria-label={menuCopy.open}
+        onClick={() => (menuMounted ? closeMenu() : openMenu())}
+        className={iconButtonClass}
+        aria-label={menuEntered ? menuCopy.close : menuCopy.open}
         aria-expanded={menuEntered}
         aria-haspopup="dialog"
       >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
+        <span className="relative block h-5 w-5" aria-hidden>
+          <svg
+            className={
+              "absolute inset-0 h-5 w-5 transition-[opacity,transform] duration-[240ms] ease-out " +
+              (menuEntered
+                ? "rotate-90 scale-75 opacity-0"
+                : "rotate-0 scale-100 opacity-100")
+            }
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <svg
+            className={
+              "absolute inset-0 h-5 w-5 transition-[opacity,transform] duration-[240ms] ease-out " +
+              (menuEntered
+                ? "rotate-0 scale-100 opacity-100"
+                : "-rotate-90 scale-75 opacity-0")
+            }
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </span>
       </button>
 
       {menuMounted
@@ -288,35 +335,28 @@ export function GuestHamburgerMenu({
                   "absolute inset-0 cursor-default bg-slate-900/35 transition-opacity duration-[240ms] ease-out " +
                   (menuEntered ? "opacity-100" : "opacity-0")
                 }
+                style={panelTopPx > 0 ? { top: panelTopPx } : undefined}
                 aria-label={menuCopy.close}
                 onClick={closeMenu}
               />
-              {/* Compact panel: height follows links (no full-height empty drawer). */}
+              {/* Drops from under the page header; height follows links only. */}
               <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
                 className={
-                  "absolute left-0 right-0 top-0 z-[1] border-b border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] " +
+                  "absolute left-0 right-0 z-[1] border-b border-slate-200 bg-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] " +
                   "origin-top transition-[opacity,transform] duration-[240ms] ease-out will-change-transform " +
                   (menuEntered
                     ? "translate-y-0 opacity-100"
                     : "-translate-y-2 opacity-0")
                 }
+                style={{ top: panelTopPx }}
               >
-                <div className="flex items-center justify-between px-3 py-2.5">
-                  <h2 id={titleId} className="text-sm font-semibold text-slate-900">
-                    {menuCopy.menu}
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={closeMenu}
-                    className="rounded-lg px-2 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-50"
-                  >
-                    {menuCopy.close}
-                  </button>
-                </div>
-                <nav className="border-t border-slate-100 px-2 pb-2 pt-1" aria-label="館内ナビ">
+                <h2 id={titleId} className="sr-only">
+                  {menuCopy.menu}
+                </h2>
+                <nav className="px-2 py-2" aria-label="館内ナビ">
                   <ul className="space-y-0.5">
                     {tabs.map((tab) => {
                       const active = isTabActive(tab, currentSlug);

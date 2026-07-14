@@ -154,15 +154,9 @@ function AuthCallbackInner() {
           /* AuthGate / login will retry; still send user toward their destination. */
         }
 
-        if (nextPath) {
-          if (!active) return;
-          router.replace(nextPath);
-          return;
-        }
-
+        const preferred = nextPath ?? (isAppClient ? "/dashboard?client=app" : "/dashboard");
         if (!active) return;
-        router.replace(isAppClient ? "/dashboard?client=app" : "/dashboard");
-      } catch (err) {
+        router.replace(preferred);      } catch (err) {
         if (!active) return;
         const description =
           err instanceof Error ? err.message : "認証処理中にエラーが発生しました。";

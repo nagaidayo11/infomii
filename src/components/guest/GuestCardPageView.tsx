@@ -34,6 +34,8 @@ type GuestCardPageViewProps = {
   showLocaleToggle?: boolean;
   /** true のとき Business 動的機能を有効化 */
   businessFeaturesEnabled?: boolean;
+  /** Free: fewer links. Omit = no extra cap beyond config. */
+  guestNavMaxVisible?: number;
   /** Optional back button (for child pages). */
   backButton?: ReactNode;
   /** true のときリンク・ボタンなどの操作を無効化（LP埋め込みプレビュー用） */
@@ -63,6 +65,7 @@ export function GuestCardPageView({
   disableLocaleSwitch = false,
   showLocaleToggle = true,
   businessFeaturesEnabled = false,
+  guestNavMaxVisible,
   backButton,
   disableInteractions = false,
   guestShell = null,
@@ -82,15 +85,15 @@ export function GuestCardPageView({
   const shellTabs = useMemo(
     () =>
       guestShell
-        ? resolveVisibleGuestShellTabs(guestShell, { businessFeaturesEnabled })
+        ? resolveVisibleGuestShellTabs(guestShell, {
+            businessFeaturesEnabled,
+            maxVisibleTabs: guestNavMaxVisible,
+          })
         : [],
-    [guestShell, businessFeaturesEnabled],
+    [guestShell, businessFeaturesEnabled, guestNavMaxVisible],
   );
-  // Nav「言語」チェック = chrome on + locale tab enabled → header toggle off.
-  const shellHasLocaleTab = Boolean(
-    navStyle !== "off" &&
-      guestShell?.tabs.some((tab) => tab.type === "locale" && tab.enabled),
-  );
+  // Visible locale tab only (plan-gated); avoid double language chrome.
+  const shellHasLocaleTab = shellTabs.some((tab) => tab.type === "locale");
   const showHeaderLocaleToggle = showLocaleToggle && !shellHasLocaleTab;
 
   const locales: Array<{ code: SupportedLocale; label: string }> = [

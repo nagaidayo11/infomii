@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  clampGuestShellConfigForPlan,
   createDefaultGuestShellConfig,
   getGuestShellNavStyle,
   getGuestShellTabLabel,
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
+import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
 import type { PageGuestShellEditorState } from "@/lib/page-guest-shell";
 import {
   clearPageGuestShellOverride,
@@ -23,14 +25,18 @@ import {
 type GuestShellPagePanelProps = {
   pageId: string;
   isBusinessPlan?: boolean;
+  planTier?: PlanLimitTier;
   onConfigChange?: (config: GuestShellConfig) => void;
 };
 
 export function GuestShellPagePanel({
   pageId,
   isBusinessPlan = false,
+  planTier,
   onConfigChange,
 }: GuestShellPagePanelProps) {
+  const resolvedPlan: PlanLimitTier =
+    planTier ?? (isBusinessPlan ? "business" : "free");
   const [state, setState] = useState<PageGuestShellEditorState | null>(null);
   const [config, setConfig] = useState<GuestShellConfig>(() => createDefaultGuestShellConfig());
   const [loading, setLoading] = useState(true);
@@ -68,9 +74,13 @@ export function GuestShellPagePanel({
     setSaving(true);
     setMessage("");
     try {
+      const clamped = clampGuestShellConfigForPlan(config, {
+        businessFeaturesEnabled: isBusinessPlan,
+        maxEnabledTabs: resolveGuestNavLinkLimit(resolvedPlan),
+      });
       const toSave = isBusinessPlan
-        ? await ensureGuestShellLabelsTranslated(config)
-        : config;
+        ? await ensureGuestShellLabelsTranslated(clamped)
+        : clamped;
       if (toSave !== config) setConfig(ensureDefaultTabs(toSave));
       const next = await updatePageGuestShell(pageId, toSave);
       setConfig(ensureDefaultTabs(next));
@@ -155,6 +165,7 @@ export function GuestShellPagePanel({
 
   const previewTabs = resolveVisibleGuestShellTabs(config, {
     businessFeaturesEnabled: isBusinessPlan,
+    maxVisibleTabs: resolveGuestNavLinkLimit(resolvedPlan),
   });
 
   return (
@@ -175,6 +186,7 @@ export function GuestShellPagePanel({
           migrationScope="page"
           inheritBanner={inheritBanner}
           isBusinessPlan={isBusinessPlan}
+          planTier={resolvedPlan}
           showTranslationHint
           secondaryActions={
             <button

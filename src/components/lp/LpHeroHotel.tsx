@@ -156,7 +156,7 @@ export function LpHeroHotel({
                   30秒デモを見る
                 </Button>
               </div>
-              <p className="mt-4 text-sm text-slate-500">クレジットカード不要 · 登録だけで3ページまで公開</p>
+              <p className="mt-4 text-sm text-slate-500">クレジットカード不要 · 登録だけで2ページまで公開</p>
             </FadeIn>
           </div>
 

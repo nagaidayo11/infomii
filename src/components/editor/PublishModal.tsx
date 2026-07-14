@@ -20,6 +20,8 @@ type PublishModalProps = {
   onClose: () => void;
   /** 公開直後の成功表示か、一覧からの共有表示か */
   variant?: "publish-success" | "share";
+  /** Free/Pro向け: 公開成功後に Business アップセルを出す */
+  showBusinessUpsell?: boolean;
 };
 
 const QR_SIZE = 256;
@@ -69,6 +71,7 @@ export function PublishModal({
   slug: _slug,
   onClose,
   variant = "publish-success",
+  showBusinessUpsell = false,
 }: PublishModalProps) {
   const isShare = variant === "share";
   const { isAppShell } = useClientShell();
@@ -298,6 +301,30 @@ export function PublishModal({
               aria-label="Public page URL"
             />
           </div>
+
+          {!isShare && showBusinessUpsell ? (
+            <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-4">
+              <div
+                className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-300/30 blur-2xl"
+                aria-hidden
+              />
+              <p className="relative text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700/80">
+                Grow with Business
+              </p>
+              <p className="relative mt-1 text-sm font-semibold text-slate-900">
+                外国語ゲストにも同じ案内を届けませんか？
+              </p>
+              <p className="relative mt-1 text-xs leading-relaxed text-slate-600">
+                Businessなら公開時に主要言語へ展開し、言語切替・チーム編集まで施設単位で回せます。
+              </p>
+              <a
+                href="/settings/billing"
+                className="relative mt-3 inline-flex min-h-[40px] items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold !text-white shadow-sm hover:bg-emerald-800"
+              >
+                Businessを確認する
+              </a>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex justify-end border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4">

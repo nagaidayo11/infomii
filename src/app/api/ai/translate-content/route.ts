@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
+import { planHasMultilingual } from "@/lib/plan-limits";
+import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -44,9 +47,60 @@ function parseOpenAiError(raw: string): { code?: string; message?: string; type?
  * POST: 日本語テキストを英語・中国語・韓国語に翻訳する。
  * Body: { text: string }
  * Returns: { en: string, zh: string, ko: string }
+ * Businessプラン限定（Bearer 必須）
  */
 export async function POST(request: Request) {
   const requestId = Math.random().toString(36).slice(2, 10);
+
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  if (!token) {
+    logTranslateError("missing_auth", { requestId });
+    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  try {
+    const anon = getSupabaseAnonServerClient();
+    const admin = getSupabaseAdminServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await anon.auth.getUser(token);
+    if (userError || !user) {
+      logTranslateError("auth_failed", { requestId });
+      return NextResponse.json({ error: "認証に失敗しました" }, { status: 401 });
+    }
+
+    const { data: membership } = await admin
+      .from("hotel_memberships")
+      .select("hotel_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!membership?.hotel_id) {
+      return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
+    }
+
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("plan")
+      .eq("hotel_id", membership.hotel_id)
+      .maybeSingle();
+    const plan = (sub?.plan ?? "free") as "free" | "pro" | "business";
+    const override = await canUseDevBusinessOverride(user);
+    if (!override && !planHasMultilingual(plan)) {
+      return NextResponse.json(
+        { error: "自動翻訳はBusinessプランでご利用いただけます" },
+        { status: 403 },
+      );
+    }
+  } catch (e) {
+    logTranslateError("plan_gate_error", {
+      requestId,
+      message: e instanceof Error ? e.message : "unknown",
+    });
+    return NextResponse.json({ error: "プラン確認に失敗しました" }, { status: 500 });
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     logTranslateError("missing_api_key", { requestId });
