@@ -22,15 +22,16 @@ import {
 } from "@/lib/lp/hotel-data";
 import { LP_PAGE_TYPOGRAPHY_CLASS } from "@/lib/lp/typography";
 
-const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1&variant=city-hotel";
-const SAMPLE_PAGE_DEMO_HREF = "/lp/business?focus=templates";
+const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel";
+const SAMPLE_PAGE_FULL_HREF = "/demo/guest-live?variant=infomii-hotel";
 const DEMO_EDITOR_HREF = "/demo/editor";
+const HUB_BLOG_HREF = "/blog/hotel-information-smartphone";
 
 const HOTEL_SCENE_BULLETS = [
-  "フロント・館内案内・Wi-Fi・朝食",
-  "チェックアウト・FAQ・多言語（Business）",
-  "客室QR・共有URL・下書き公開",
-  "テンプレから最短数分で公開",
+  "客室のQRから、滞在中の案内をまとめて見せられる",
+  "Wi-Fi・食事時間・館内・周辺を1ページでそろえられる",
+  "変更はその場で更新。紙の差し替えが不要になる",
+  "Freeでまず1ページ公開してから広げられる",
 ] as const;
 
 export default function LpHotelSaaSPage() {
@@ -55,18 +56,18 @@ export default function LpHotelSaaSPage() {
 
       <LpContentGridSection
         id="operations"
-        kicker="現場がラクになる"
-        title="説明・印刷・多言語の負担を、QR運用にまとめる"
-        description="同じ説明の繰り返しや紙の差し替えを減らし、館内案内を1ページでそろえます。"
+        kicker="現場のあるあるを、そのまま軽くする"
+        title="ホテルのインフォメーションを、スマホで回す"
+        description="上の画面のような案内ページを作ると、フロントの繰り返し説明と紙の差し替えが減ります。"
         items={HOTEL_LP_VALUE_POINTS}
         titleAccent
         variant="white"
       />
 
       <LpWorkflowSection
-        kicker="操作の流れ"
-        title="3ステップで、今日から案内を統一"
-        description="難しい設定は不要。テンプレ選びから公開まで、現場目線で進められます。"
+        kicker="はじめかた"
+        title="3ステップで、客室に置ける案内になる"
+        description="専門知識は不要です。テンプレから始めて、今日聞かれやすい項目だけ整えれば公開できます。"
         steps={HOTEL_LP_WORKFLOW_STEPS}
         variant="muted"
       />
@@ -74,15 +75,16 @@ export default function LpHotelSaaSPage() {
       <LpDemoSection
         ctaHref={ctaHref}
         demoEditorHref={DEMO_EDITOR_HREF}
-        samplePageHref={SAMPLE_PAGE_DEMO_HREF}
-        title="登録前に、操作感だけ確かめる"
+        samplePageHref={SAMPLE_PAGE_FULL_HREF}
+        title="登録前に、作り心地だけ確かめる"
+        description="30秒デモか、上の枠のようなサンプル案内を開いて、軽さを先に体感できます。"
       />
 
       <LpScenesSection
         id="properties"
-        kicker="導入イメージ"
-        title="ホテル・旅館・民泊の現場向け"
-        description="大規模チェーンでなくても、少人数のフロント運用から始められます。"
+        kicker="こんな施設で"
+        title="シティホテルから、小規模宿まで"
+        description="大規模システム入れ替えではなく、まず1ページのインフォメーションから始められます。"
         scenes={HOTEL_LP_PROPERTY_TYPES}
         bullets={HOTEL_SCENE_BULLETS}
         variant="white"
@@ -90,11 +92,24 @@ export default function LpHotelSaaSPage() {
 
       <LpBeforeAfterSection
         kicker="Before / After"
-        title="運用の変化が、現場に伝わる"
-        description="派手な機能より、日々の案内業務がどう軽くなるかを重視しています。"
+        title="紙の館内案内から、スマホの運用へ"
+        description="機能の多さより、毎日の案内がどう変わるかを重視しています。"
         rows={HOTEL_LP_BEFORE_AFTER}
         variant="muted"
       />
+
+      <div className="bg-slate-50/90 py-6 text-center text-sm text-slate-600">
+        <Container>
+          置き換えの手順は
+          <Link
+            href={HUB_BLOG_HREF}
+            className="mx-1 font-semibold text-emerald-800 underline decoration-emerald-300/80 underline-offset-2 hover:text-emerald-950"
+          >
+            ホテルのインフォメーションをスマホで見せる方法
+          </Link>
+          にもまとめています。
+        </Container>
+      </div>
 
       <LpPricing
         plans={HOTEL_PLANS}
@@ -109,12 +124,12 @@ export default function LpHotelSaaSPage() {
         ctaHref={ctaHref}
         loginHref={loginHref}
         demoEditorHref={DEMO_EDITOR_HREF}
-        title="まず無料で、1ページ作ってみる"
+        title="まずは無料で、1ページ作ってみる"
         description={
           <>
-            ホテル現場で一番軽く使える案内ツールとして。
+            上のスマホ枠のようなホテル案内を、テンプレから始められます。
             <br className="hidden sm:inline" />
-            クレジットカード不要で、数分から公開できます。
+            クレジットカード不要。公開まで数分です。
           </>
         }
         trustPoints={HOTEL_LP_TRUST_POINTS}

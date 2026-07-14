@@ -27,9 +27,9 @@ export const HERO_TEMPLATE_PREVIEWS: HeroTemplatePreview[] = [
     id: "city-hotel",
     label: "ホテル案内",
     tag: "宿泊",
-    description: "WiFi・朝食・館内ルールを1ページに",
-    previewHref: `/demo/guest-live?embed=1&variant=city-hotel&lpv=${LP_ASSET_VERSION}`,
-    openHref: "/demo/guest-live?variant=city-hotel",
+    description: "お知らせ・施設・FAQを1ホームに",
+    previewHref: `/demo/guest-live?embed=1&variant=infomii-hotel&lpv=${LP_ASSET_VERSION}`,
+    openHref: "/demo/guest-live?variant=infomii-hotel",
   },
   {
     id: "travel",

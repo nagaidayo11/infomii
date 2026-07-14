@@ -11,6 +11,8 @@ const itemVariants: Variants = {
 type StaggerRevealProps = {
   children: ReactNode;
   className?: string;
+  /** Applied to each staggered item wrapper (e.g. h-full for equal-height grids) */
+  itemClassName?: string;
   /** 子要素の遅延（秒） */
   staggerDelay?: number;
   /** 一度表示したら再アニメーションしない */
@@ -24,13 +26,20 @@ type StaggerRevealProps = {
 export function StaggerReveal({
   children,
   className = "",
+  itemClassName = "",
   staggerDelay = 0.08,
   once = true,
 }: StaggerRevealProps) {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
-    return <div className={className}>{children}</div>;
+    return (
+      <div className={className}>
+        {Children.map(children, (child) =>
+          isValidElement(child) ? <div className={itemClassName}>{child}</div> : child,
+        )}
+      </div>
+    );
   }
 
   return (
@@ -50,7 +59,9 @@ export function StaggerReveal({
     >
       {Children.map(children, (child) =>
         isValidElement(child) ? (
-          <motion.div variants={itemVariants}>{child}</motion.div>
+          <motion.div variants={itemVariants} className={itemClassName}>
+            {child}
+          </motion.div>
         ) : (
           child
         )

@@ -23,6 +23,8 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const framingStyle = imageFramingStyle(framing);
   const framingClass = imageFramingClassName(framing);
   const subtitle = getLocalizedContent(c?.subtitle as LocalizedString | undefined, locale);
+  const overlayAlign = c?.overlayAlign === "center" ? "center" : "bottom";
+  const squareCorners = c?.cornerStyle === "square";
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }
@@ -39,9 +41,17 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   return (
     <div
       data-inner-surface
-      className={`app-interactive relative w-full overflow-hidden ${editorInnerRadiusClassName} bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5`}
+      className={
+        "app-interactive relative w-full overflow-hidden bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5 " +
+        (squareCorners ? "rounded-none" : editorInnerRadiusClassName)
+      }
     >
-      <div className="relative aspect-[2/1] min-h-[140px] w-full overflow-hidden bg-slate-800">
+      <div
+        className={
+          "relative w-full overflow-hidden bg-slate-800 " +
+          (overlayAlign === "center" ? "aspect-[16/10] min-h-[168px]" : "aspect-[2/1] min-h-[140px]")
+        }
+      >
         {image ? (
           <EditorCoverImage
             src={image}
@@ -54,19 +64,39 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
         ) : (
           <ImageUpload onUploaded={(url) => update("image", url)} className="relative z-0 h-full min-h-[140px] w-full" />
         )}
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/60 to-transparent" />
+        <div
+          className={
+            "pointer-events-none absolute inset-0 z-10 " +
+            (overlayAlign === "center"
+              ? "bg-gradient-to-b from-black/35 via-black/25 to-black/45"
+              : "bg-gradient-to-t from-black/60 to-transparent")
+          }
+        />
       </div>
-      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 text-white">
+      <div
+        className={
+          "absolute z-20 text-white " +
+          (overlayAlign === "center"
+            ? "inset-0 flex flex-col items-center justify-center px-5 text-center"
+            : "bottom-0 left-0 right-0 p-4")
+        }
+      >
         {(editable || title) ? (
-          <h2 className="leading-tight" style={getTitleFontSizeStyle()}>
+          <h2
+            className={"leading-snug " + (overlayAlign === "center" ? "text-[15px] font-semibold tracking-wide sm:text-base" : "leading-tight")}
+            style={overlayAlign === "center" ? undefined : getTitleFontSizeStyle()}
+          >
             <InlineEditable value={title} onSave={(v) => update("title", v)} editable={editable} onActivate={onActivate} className="text-white" placeholder={labels.titlePlaceholder} />
           </h2>
         ) : null}
-        {subtitle && (
-          <p className="mt-1 opacity-95" style={getBodyFontSizeStyle()}>
+        {(editable || subtitle) ? (
+          <p
+            className={"opacity-95 " + (overlayAlign === "center" ? "mt-2 text-[13px] font-medium tracking-wide sm:text-sm" : "mt-1")}
+            style={overlayAlign === "center" ? undefined : getBodyFontSizeStyle()}
+          >
             <InlineEditable value={subtitle} onSave={(v) => update("subtitle", v)} editable={editable} onActivate={onActivate} className="text-white/95" placeholder={labels.subtitlePlaceholder} />
           </p>
-        )}
+        ) : null}
       </div>
     </div>
   );

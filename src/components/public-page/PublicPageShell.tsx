@@ -10,6 +10,8 @@ import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
 type PublicPageShellProps = {
   /** Page or facility name — shown in header so guests quickly understand where they are */
   title: string;
+  /** Optional circular brand mark next to title */
+  brandLogoSrc?: string | null;
   /** Optional back link (e.g. when coming from hub) */
   backButton?: ReactNode;
   /** Primary + secondary content. Use large touch-friendly cards inside. */
@@ -22,19 +24,29 @@ type PublicPageShellProps = {
   headerActions?: ReactNode;
   /** Embed mode: no outer padding, no header chrome */
   isEmbed?: boolean;
+  /**
+   * How embed chrome nests in a host phone frame.
+   * - card: rounded inset (default, e.g. demo panels)
+   * - device: flush square screen for CSS/device shells (avoids double radius / notch clash)
+   */
+  embedFit?: "card" | "device";
   /** Page background style configured in editor */
   pageBackground?: PageBackgroundStyle | null;
   /** Same-origin links use full page loads (required for app WebView / preview). */
   hardNavigation?: boolean;
+  /** Flush main content (edge-to-edge hero/list hospitality home). */
+  contentInset?: "default" | "flush";
 };
 
 function PageHeader({
   title,
+  brandLogoSrc,
   backButton,
   headerActions,
   className = "px-4 py-3",
 }: {
   title: string;
+  brandLogoSrc?: string | null;
   backButton?: ReactNode;
   headerActions?: ReactNode;
   className?: string;
@@ -52,15 +64,29 @@ function PageHeader({
       >
         {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
         {(title.trim() || headerActions) && (
-          <div className="flex items-start justify-between gap-2">
+          <div className={"flex justify-between gap-2 " + (brandLogoSrc ? "items-center" : "items-start")}>
             {title.trim() ? (
-              <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
-                {title}
-              </h1>
+              brandLogoSrc ? (
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brandLogoSrc}
+                    alt=""
+                    className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-slate-200/80"
+                  />
+                  <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight tracking-tight text-slate-900 sm:text-base">
+                    {title}
+                  </h1>
+                </div>
+              ) : (
+                <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+                  {title}
+                </h1>
+              )
             ) : (
               <div className="min-w-0 flex-1" />
             )}
-            {headerActions ? <div className="flex shrink-0 items-start justify-end">{headerActions}</div> : null}
+            {headerActions ? <div className="flex shrink-0 items-center justify-end">{headerActions}</div> : null}
           </div>
         )}
       </div>
@@ -70,6 +96,7 @@ function PageHeader({
 
 function PageContent({
   title,
+  brandLogoSrc,
   backButton,
   children,
   contactActions,
@@ -77,14 +104,17 @@ function PageContent({
   headerActions,
   headerClassName,
   mainClassName,
-}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground"> & {
+  contentClassName,
+}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation" | "contentInset"> & {
   headerClassName?: string;
   mainClassName?: string;
+  contentClassName?: string;
 }) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <PageHeader
         title={title}
+        brandLogoSrc={brandLogoSrc}
         backButton={backButton}
         headerActions={headerActions}
         className={headerClassName}
@@ -96,7 +126,7 @@ function PageContent({
         }
       >
         <div
-          className="app-stagger mx-auto w-full space-y-3"
+          className={"app-stagger mx-auto w-full " + (contentClassName ?? "space-y-3")}
           style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
         >
           {children}
@@ -124,14 +154,17 @@ function PageContent({
  */
 export function PublicPageShell({
   title,
+  brandLogoSrc = null,
   backButton,
   children,
   contactActions,
   bottomChrome,
   headerActions,
   isEmbed = false,
+  embedFit = "card",
   pageBackground = null,
   hardNavigation = true,
+  contentInset = "default",
 }: PublicPageShellProps) {
   const onGuestLinkCapture = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -146,21 +179,43 @@ export function PublicPageShell({
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
       : pageBackground?.color ?? "#ffffff";
 
+  const flush = contentInset === "flush";
+  const deviceEmbed = isEmbed && embedFit === "device";
+  const mainClassName = flush
+    ? "px-0 pb-0 pt-0"
+    : isEmbed
+      ? deviceEmbed
+        ? "px-3 pb-5 pt-2"
+        : "px-3.5 pb-6 pt-4"
+      : "px-4 pb-6 pt-4";
+  const contentClassName = flush ? "space-y-0" : "space-y-3";
+  const headerClassName = deviceEmbed
+    ? "px-3 pb-2 pt-8"
+    : isEmbed
+      ? "px-3.5 pb-2.5 pt-3"
+      : "px-4 py-3";
+
   if (isEmbed) {
     return (
       <div
-        className="h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
+        className={
+          deviceEmbed
+            ? "flex h-full min-h-0 flex-col overflow-hidden bg-white"
+            : "h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
+        }
         style={{ background: pageBackgroundStyle }}
         onClickCapture={onGuestLinkCapture}
       >
         <PageContent
           title={title}
+          brandLogoSrc={brandLogoSrc}
           backButton={backButton}
           contactActions={contactActions}
           bottomChrome={bottomChrome}
           headerActions={headerActions}
-          headerClassName="px-3.5 pb-2.5 pt-3"
-          mainClassName="px-3.5 pb-6 pt-4"
+          headerClassName={headerClassName}
+          mainClassName={mainClassName}
+          contentClassName={contentClassName}
         >
           {children}
         </PageContent>
@@ -171,10 +226,14 @@ export function PublicPageShell({
   const inner = (
     <PageContent
       title={title}
+      brandLogoSrc={brandLogoSrc}
       backButton={backButton}
       contactActions={contactActions}
       bottomChrome={bottomChrome}
       headerActions={headerActions}
+      headerClassName={headerClassName}
+      mainClassName={mainClassName}
+      contentClassName={contentClassName}
     >
       {children}
     </PageContent>

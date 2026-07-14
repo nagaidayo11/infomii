@@ -53,7 +53,8 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
   const items = (Array.isArray(c?.items) ? c.items : []) as ShortcutItem[];
   const columns = readColumns(c?.columns, items.length);
   const iconSize = readPageLinkIconSize(c?.iconSize);
-  const styleVariant = readPageLinkStyleVariant(c?.styleVariant);
+  const styleVariantRaw = readPageLinkStyleVariant(c?.styleVariant);
+  const styleVariant = styleVariantRaw === "list" ? "tile" : styleVariantRaw;
   const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
   const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "md");
   const iconSizes = PAGE_LINK_ICON_SIZES[styleVariant][iconSize];

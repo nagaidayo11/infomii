@@ -4,8 +4,10 @@ import { useEffect, useId, useState } from "react";
 import {
   buildGuestPagePath,
   getGuestShellTabLabel,
+  resolveGuestShellTabIcon,
   toTelHref,
   type GuestShellTab,
+  type GuestShellTabIcon,
 } from "@/lib/guest-shell";
 import type { SupportedLocale } from "@/lib/localized-content";
 
@@ -30,16 +32,41 @@ const LOCALES: Array<{ code: SupportedLocale; label: string }> = [
   { code: "ko", label: "한국어" },
 ];
 
-function TabIcon({ type }: { type: GuestShellTab["type"] }) {
+function TabIcon({ name }: { name: GuestShellTabIcon }) {
   const className = "h-5 w-5";
-  if (type === "home") {
+  if (name === "home") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z" />
       </svg>
     );
   }
-  if (type === "phone") {
+  if (name === "search") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+      </svg>
+    );
+  }
+  if (name === "heart") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+        />
+      </svg>
+    );
+  }
+  if (name === "menu") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    );
+  }
+  if (name === "phone") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path
@@ -50,7 +77,7 @@ function TabIcon({ type }: { type: GuestShellTab["type"] }) {
       </svg>
     );
   }
-  if (type === "page") {
+  if (name === "page") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path
@@ -112,7 +139,7 @@ export function GuestBottomTabBar({
 
   if (tabs.length === 0) return null;
 
-  const activeTabClass = "bg-emerald-50 text-emerald-900 font-bold";
+  const activeTabClass = "text-[#2D7078] font-semibold";
   const inactiveTabClass = "text-slate-500 font-medium active:bg-slate-50";
   const disabledTabClass = "cursor-not-allowed text-slate-300";
 
@@ -198,7 +225,7 @@ export function GuestBottomTabBar({
   return (
     <>
       <nav
-        className="guest-bottom-tabs shrink-0 border-t border-emerald-100 bg-white/95 backdrop-blur-sm"
+        className="guest-bottom-tabs shrink-0 border-t border-slate-200/90 bg-white/95 backdrop-blur-sm"
         style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
         aria-label="館内ナビ"
       >
@@ -224,7 +251,7 @@ export function GuestBottomTabBar({
                 }
                 aria-current={active ? "page" : undefined}
               >
-                <TabIcon type={tab.type} />
+                <TabIcon name={resolveGuestShellTabIcon(tab)} />
                 <span className="max-w-full truncate">{getGuestShellTabLabel(tab, locale)}</span>
               </button>
             );
@@ -265,8 +292,8 @@ export function GuestBottomTabBar({
                     className={
                       "ui-pop-tap rounded-xl border px-3 py-3 text-sm font-medium transition " +
                       (active
-                        ? "border-emerald-600 bg-emerald-600 !text-white"
-                        : "border-emerald-100 bg-white text-emerald-900 hover:bg-emerald-50")
+                        ? "border-teal-700 bg-[#2D7078] !text-white"
+                        : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50")
                     }
                     style={active ? { color: "#ffffff" } : undefined}
                   >
@@ -309,7 +336,7 @@ export function GuestBottomTabBar({
                 <p className="mt-1 text-lg font-semibold tracking-wide text-slate-900">{phoneValue}</p>
                 <a
                   href={telHref}
-                  className="ui-pop-tap mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold !text-white"
+                  className="ui-pop-tap mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-[#2D7078] px-4 text-sm font-semibold !text-white"
                   style={{ color: "#ffffff" }}
                 >
                   {phoneSheetCopy.call}
@@ -332,7 +359,7 @@ export function GuestBottomTabBar({
       {hintVisible && localeHint ? (
         <div
           onAnimationEnd={() => setHintVisible(false)}
-          className="pointer-events-none fixed bottom-24 left-1/2 z-[90] w-[min(92vw,360px)] -translate-x-1/2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 shadow-sm toast-slide-in-out"
+          className="pointer-events-none fixed bottom-24 left-1/2 z-[90] w-[min(92vw,360px)] -translate-x-1/2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs leading-relaxed text-teal-900 shadow-sm toast-slide-in-out"
           style={{ animationDuration: "2s" }}
         >
           {localeHint}

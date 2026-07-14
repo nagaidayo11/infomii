@@ -33,6 +33,14 @@ function getIconDisplay(icon: string | undefined) {
 
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
 export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
   const resolveGuestHref = useGuestPageHref();
@@ -48,7 +56,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
           : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
-  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
+  const columns = rawColumns === 1 || rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const iconSize = readPageLinkIconSize(c?.iconSize);
   const styleVariant = readPageLinkStyleVariant(c?.styleVariant);
   const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
@@ -76,6 +84,99 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const iconSizes = PAGE_LINK_ICON_SIZES[styleVariant][iconSize];
   const iconWrapClass = iconSizes.wrap;
   const iconClass = iconSizes.icon;
+
+  if (styleVariant === "list") {
+    const listTitle =
+      editable || title ? (
+        <h3 className={`mb-1 px-4 pt-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={editable}
+            onActivate={onActivate}
+            className="text-slate-800"
+            placeholder={labels.titlePlaceholder}
+          />
+        </h3>
+      ) : null;
+
+    return (
+      <div className="overflow-hidden bg-white">
+        {listTitle}
+        {items.length === 0 ? (
+          <p className="px-4 py-4 text-slate-500" style={getBodyFontSizeStyle()}>
+            {labels.empty}
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 border-y border-slate-100">
+            {items.map((item, i) => {
+              const href = getHref(item);
+              const iconDisplay = getIconDisplay(item.icon);
+              const row = (
+                <div className="flex min-h-[56px] items-center gap-3 px-4 py-3.5 active:bg-slate-50">
+                  <span className={`flex shrink-0 items-center justify-center text-teal-800 ${iconWrapClass}`}>
+                    <LineIcon name={iconDisplay} className={iconClass} />
+                  </span>
+                  <span className="min-w-0 flex-1 font-medium leading-snug text-slate-800" style={getBodyFontSizeStyle()}>
+                    <InlineEditable
+                      value={item.label ?? ""}
+                      onSave={(v) => {
+                        const next = [...items];
+                        next[i] = { ...next[i], label: v };
+                        update({ items: next });
+                      }}
+                      editable={editable}
+                      onActivate={onActivate}
+                      className="text-slate-800"
+                      placeholder={labels.labelPlaceholder}
+                    />
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                </div>
+              );
+
+              if (href && href !== "#") {
+                if (editable) {
+                  return (
+                    <li key={i}>
+                      <Link href={href} className="block touch-manipulation" onClick={(e) => e.preventDefault()}>
+                        {row}
+                      </Link>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={i}>
+                    <a
+                      href={href}
+                      target={isExternal(item) ? "_blank" : undefined}
+                      rel={isExternal(item) ? "noreferrer" : undefined}
+                      className="guest-page-link block touch-manipulation"
+                    >
+                      {row}
+                    </a>
+                  </li>
+                );
+              }
+              return (
+                <li key={i}>
+                  <div
+                    className="block"
+                    onClick={onActivate}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && onActivate?.()}
+                  >
+                    {row}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

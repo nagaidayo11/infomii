@@ -25,10 +25,16 @@ export const PAGE_LINK_ICON_SIZES = {
     md: { wrap: "h-10 w-10", icon: "h-5.5 w-5.5" },
     lg: { wrap: "h-12 w-12", icon: "h-7 w-7" },
   },
+  /** Horizontal list rows (icon + label + chevron). */
+  list: {
+    sm: { wrap: "h-8 w-8", icon: "h-4 w-4" },
+    md: { wrap: "h-9 w-9", icon: "h-5 w-5" },
+    lg: { wrap: "h-11 w-11", icon: "h-6 w-6" },
+  },
 } as const;
 
 export type PageLinkIconSize = "sm" | "md" | "lg";
-export type PageLinkStyleVariant = "circle" | "tile";
+export type PageLinkStyleVariant = "circle" | "tile" | "list";
 export type PageLinkShadowStrength = "none" | "sm" | "md" | "lg";
 
 export function readPageLinkIconSize(raw: unknown): PageLinkIconSize {
@@ -36,7 +42,8 @@ export function readPageLinkIconSize(raw: unknown): PageLinkIconSize {
 }
 
 export function readPageLinkStyleVariant(raw: unknown): PageLinkStyleVariant {
-  return raw === "circle" ? "circle" : "tile";
+  if (raw === "circle" || raw === "list") return raw;
+  return "tile";
 }
 
 export function readPageLinkShadowStrength(raw: unknown, fallback: PageLinkShadowStrength = "md"): PageLinkShadowStrength {

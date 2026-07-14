@@ -27,12 +27,16 @@ export function LpContentGridSection({
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
       <ScrollReveal>
-        <StaggerReveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
+        <StaggerReveal
+          className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          itemClassName="h-full"
+          staggerDelay={0.06}
+        >
           {items.map((item, index) => (
             <div
               key={item.title}
               className={
-                "group rounded-2xl border bg-white p-5 shadow-sm ring-1 transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-md sm:p-6 " +
+                "group flex h-full flex-col rounded-2xl border bg-white p-5 shadow-sm ring-1 transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-md sm:p-6 " +
                 (titleAccent
                   ? "border-emerald-100/80 ring-slate-100/60 motion-safe:hover:border-emerald-200/80"
                   : "border-slate-200/90 ring-slate-100/80")
@@ -44,7 +48,7 @@ export function LpContentGridSection({
               <h3 className={`text-base font-semibold ${titleAccent ? "text-emerald-900" : "text-slate-900"}`}>
                 {item.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{item.body}</p>
             </div>
           ))}
         </StaggerReveal>

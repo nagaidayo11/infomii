@@ -1143,11 +1143,12 @@ function PageLinksItemsEditor({
 
   const items = (Array.isArray(content.items) ? content.items : []) as PageLinksItem[];
   const rawColumns = typeof content.columns === "number" ? content.columns : Number(content.columns);
-  const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
+  const columns = rawColumns === 1 || rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 3;
   const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
-  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
+  const styleVariant =
+    rawStyleVariant === "circle" || rawStyleVariant === "list" ? rawStyleVariant : "tile";
   const rawCircleShadow =
     typeof content.circleIconShadowStrength === "string" ? content.circleIconShadowStrength : "";
   const circleShadowStrength =
@@ -1182,10 +1183,12 @@ function PageLinksItemsEditor({
       <div className="w-full">
         <label className={labelClass}>列数</label>
         <select
-          value={String(columns)}
+          value={String(styleVariant === "list" ? 1 : columns)}
           onChange={(e) => onUpdate("columns", Number(e.target.value))}
           className={inputClass}
+          disabled={styleVariant === "list"}
         >
+          {styleVariant === "list" ? <option value="1">1列（リスト）</option> : null}
           <option value="2">2列</option>
           <option value="3">3列</option>
           <option value="4">4列</option>
@@ -1210,11 +1213,16 @@ function PageLinksItemsEditor({
           <select
             aria-label="表示スタイル"
             value={styleVariant}
-            onChange={(e) => onUpdate("styleVariant", e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              onUpdate("styleVariant", next);
+              if (next === "list") onUpdate("columns", 1);
+            }}
             className={inputClass}
           >
             <option value="tile">カード</option>
             <option value="circle">サークル</option>
+            <option value="list">リスト</option>
           </select>
         </div>
         {styleVariant === "circle" ? (
@@ -1232,7 +1240,7 @@ function PageLinksItemsEditor({
               <option value="lg">強い</option>
             </select>
           </div>
-        ) : (
+        ) : styleVariant === "list" ? null : (
           <div className="w-full">
             <label className={labelClass}>カードタイルの影</label>
             <select

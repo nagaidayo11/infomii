@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { LP_DEMO_HERO_IMAGES } from "@/lib/lp/data";
+import type { GuestShellConfig } from "@/lib/guest-shell";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
@@ -52,6 +53,7 @@ const FALLBACK_BG: PageBackgroundStyle = {
 };
 
 const TEMPLATE_VARIANTS = [
+  "infomii-hotel",
   "city-hotel",
   "travel",
   "oshi",
@@ -69,6 +71,59 @@ const TEMPLATE_VARIANTS = [
 
 type TemplateVariant = (typeof TEMPLATE_VARIANTS)[number];
 
+type VariantPreset = {
+  title: string;
+  cards: EditorCard[];
+  bg: PageBackgroundStyle;
+  guestShell?: GuestShellConfig;
+  brandLogoSrc?: string;
+  contentInset?: "default" | "flush";
+  localeToggleVariant?: "pills" | "language";
+  /** When false, hide JA/EN header chrome (LP value demos). */
+  showLocaleToggle?: boolean;
+  currentSlug?: string;
+};
+
+/** Bottom tabs = quick actions. Page body = browsable stay guide (no overlap). */
+const LP_HOTEL_SHELL: GuestShellConfig = {
+  enabled: true,
+  navStyle: "tabs",
+  tabs: [
+    {
+      id: "home",
+      type: "home",
+      label: { ja: "ホーム", en: "Home", zh: "首页", ko: "홈" },
+      enabled: true,
+      pageSlug: "home",
+      icon: "home",
+    },
+    {
+      id: "wifi",
+      type: "page",
+      label: { ja: "Wi-Fi", en: "Wi-Fi", zh: "Wi-Fi", ko: "Wi-Fi" },
+      enabled: true,
+      pageSlug: "wifi",
+      icon: "page",
+    },
+    {
+      id: "front",
+      type: "phone",
+      label: { ja: "フロント", en: "Front", zh: "前台", ko: "프론트" },
+      enabled: true,
+      phone: "0334125678",
+      icon: "phone",
+    },
+    {
+      id: "more",
+      type: "page",
+      label: { ja: "案内一覧", en: "Guide", zh: "导览", ko: "안내" },
+      enabled: true,
+      pageSlug: "guide",
+      icon: "menu",
+    },
+  ],
+};
+
 function createCard(type: CardType, order: number, content: Record<string, unknown>): EditorCard {
   return {
     id: `variant-${type}-${order}`,
@@ -79,7 +134,7 @@ function createCard(type: CardType, order: number, content: Record<string, unkno
   };
 }
 
-function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: EditorCard[]; bg: PageBackgroundStyle } {
+function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
   const baseBg: PageBackgroundStyle = {
     mode: "solid",
     color: "#ffffff",
@@ -88,6 +143,61 @@ function variantCardsAndBg(variant: TemplateVariant): { title: string; cards: Ed
     angle: 180,
   };
   switch (variant) {
+    case "infomii-hotel":
+      return {
+        title: "グランドシティホテル東京",
+        bg: baseBg,
+        brandLogoSrc: "/icon-192.png",
+        contentInset: "default",
+        showLocaleToggle: false,
+        currentSlug: "home",
+        guestShell: LP_HOTEL_SHELL,
+        cards: [
+          createCard("hero", 0, {
+            title: "ようこそ、グランドシティホテル東京へ",
+            subtitle: "本日もごゆっくりお過ごしください",
+            image: LP_DEMO_HERO_IMAGES.hotel,
+          }),
+          createCard("notice", 1, {
+            title: "本日のお知らせ",
+            body: "16階〜18階の客室清掃は 10:00–14:00 です。この時間帯は入室をお控えください。",
+            variant: "info",
+          }),
+          createCard("schedule", 2, {
+            title: "本日の主な時間",
+            items: [
+              { day: "朝食（1F ダイニング）", time: "6:30–10:00", label: "ラストオーダー 9:45" },
+              { day: "大浴場・サウナ", time: "15:00–翌1:00 / 6:00–10:00", label: "B1F" },
+              { day: "チェックアウト", time: "11:00", label: "延長はフロントまで" },
+            ],
+          }),
+          createCard("pageLinks", 3, {
+            title: "館内のご案内",
+            columns: 2,
+            items: [
+              { label: "レストラン・バー", icon: "restaurant", linkType: "page", pageSlug: "", link: "" },
+              { label: "フィットネス", icon: "spa", linkType: "page", pageSlug: "", link: "" },
+              { label: "コインランドリー", icon: "laundry", linkType: "page", pageSlug: "", link: "" },
+              { label: "駐車場・送迎", icon: "parking", linkType: "page", pageSlug: "", link: "" },
+            ],
+          }),
+          createCard("pageLinks", 4, {
+            title: "周辺おすすめ",
+            columns: 2,
+            items: [
+              { label: "徒歩圏のカフェ", icon: "coffee", linkType: "page", pageSlug: "", link: "" },
+              { label: "コンビニ・ATM", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
+              { label: "駅・空港アクセス", icon: "train", linkType: "page", pageSlug: "", link: "" },
+              { label: "観光スポット", icon: "map", linkType: "page", pageSlug: "", link: "" },
+            ],
+          }),
+          createCard("notice", 5, {
+            title: "荷物の一時預かり",
+            body: "チェックアウト後も17:00までフロントでお預かりできます。タグをお渡しします。",
+            variant: "info",
+          }),
+        ],
+      };
     case "resort":
       return {
         title: "リゾートご案内",
@@ -616,6 +726,7 @@ function normalizeBackground(value: unknown): PageBackgroundStyle | null {
 export default function DemoGuestLivePage() {
   const searchParams = useSearchParams();
   const isEmbed = searchParams.get("embed") === "1";
+  const embedFit = searchParams.get("fit") === "device" ? "device" : "card";
   const variantParam = searchParams.get("variant");
   const templateVariant: TemplateVariant | null = isTemplateVariant(variantParam) ? variantParam : null;
   const variantPreset = templateVariant ? variantCardsAndBg(templateVariant) : null;
@@ -669,10 +780,18 @@ export default function DemoGuestLivePage() {
       initialLocale="ja"
       localeLocked
       isEmbed={isEmbed}
+      embedFit={embedFit}
       disableInteractions={isEmbed}
       pageBackground={pageBackground}
-      localeToggleHint="Businessプラン加入時は、言語トグルでページ全体を一括翻訳できます。"
+      localeToggleHint={null}
       disableLocaleSwitch
+      showLocaleToggle={variantPreset?.showLocaleToggle ?? true}
+      brandLogoSrc={variantPreset?.brandLogoSrc ?? null}
+      guestShell={variantPreset?.guestShell ?? null}
+      currentSlug={variantPreset?.currentSlug ?? ""}
+      contentInset={variantPreset?.contentInset ?? "default"}
+      localeToggleVariant={variantPreset?.localeToggleVariant ?? "pills"}
+      guestNavMaxVisible={4}
     />
   );
 }

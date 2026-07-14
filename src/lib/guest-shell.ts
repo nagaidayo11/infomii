@@ -12,6 +12,16 @@ import {
 
 export type GuestShellTabType = "home" | "phone" | "page" | "locale";
 
+/** Optional visual override for bottom-tab icons (defaults follow `type`). */
+export type GuestShellTabIcon =
+  | "home"
+  | "search"
+  | "heart"
+  | "menu"
+  | "phone"
+  | "page"
+  | "locale";
+
 /** Exclusive chrome: off | bottom tabs | hamburger menu. */
 export type GuestShellNavStyle = "off" | "tabs" | "hamburger";
 
@@ -25,6 +35,8 @@ export type GuestShellTab = {
   pageSlug?: string | null;
   /** Phone number for phone tabs (digits / + / - / spaces) */
   phone?: string | null;
+  /** Optional icon override (e.g. search / heart / menu for hospitality demos). */
+  icon?: GuestShellTabIcon | null;
 };
 
 export type GuestShellConfig = {
@@ -78,6 +90,26 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function normalizeTabType(value: unknown): GuestShellTabType | null {
   if (value === "home" || value === "phone" || value === "page" || value === "locale") return value;
   return null;
+}
+
+function normalizeTabIcon(value: unknown): GuestShellTabIcon | null {
+  if (
+    value === "home" ||
+    value === "search" ||
+    value === "heart" ||
+    value === "menu" ||
+    value === "phone" ||
+    value === "page" ||
+    value === "locale"
+  ) {
+    return value;
+  }
+  return null;
+}
+
+/** Resolve which glyph to show for a tab (explicit icon, else type default). */
+export function resolveGuestShellTabIcon(tab: Pick<GuestShellTab, "type" | "icon">): GuestShellTabIcon {
+  return tab.icon ?? (tab.type === "locale" ? "locale" : tab.type);
 }
 
 function normalizeNavStyle(value: unknown, enabledLegacy: boolean): GuestShellNavStyle {
@@ -200,7 +232,8 @@ function normalizeTab(raw: unknown, index: number): GuestShellTab | null {
     typeof obj.phone === "string" && obj.phone.trim()
       ? obj.phone.trim().slice(0, 40)
       : null;
-  return { id, type, label, enabled, pageSlug, phone };
+  const icon = normalizeTabIcon(obj.icon);
+  return { id, type, label, enabled, pageSlug, phone, icon };
 }
 
 /** Parse DB jsonb into a safe config. Missing/invalid → defaults (disabled). */
