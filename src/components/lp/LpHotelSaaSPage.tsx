@@ -100,7 +100,7 @@ export default function LpHotelSaaSPage() {
 
       <div className="bg-slate-50/90 py-6 text-center text-sm text-slate-600">
         <Container>
-          置き換えの手順は
+          置き換えの手順や想定導入事例は
           <Link
             href={HUB_BLOG_HREF}
             className="mx-1 font-semibold text-emerald-800 underline decoration-emerald-300/80 underline-offset-2 hover:text-emerald-950"
