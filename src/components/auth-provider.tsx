@@ -12,6 +12,10 @@ import type { User } from "@supabase/supabase-js";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { clearCachedAuthScopeUserId } from "@/lib/session-resume-cache";
+import {
+  clearAuthPresenceCookie,
+  setAuthPresenceCookie,
+} from "@/lib/auth-presence-cookie";
 
 type AuthContextValue = {
   user: User | null;
@@ -44,14 +48,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!active) {
         return;
       }
-      setUser(data.session?.user ?? null);
+      const nextUser = data.session?.user ?? null;
+      setUser(nextUser);
+      if (nextUser) setAuthPresenceCookie();
+      else clearAuthPresenceCookie();
       setLoading(false);
     });
 
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      if (nextUser) setAuthPresenceCookie();
+      else clearAuthPresenceCookie();
       setLoading(false);
     });
 
@@ -64,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     const client = getBrowserSupabaseClient();
     clearCachedAuthScopeUserId();
+    clearAuthPresenceCookie();
     if (!client) {
       return;
     }

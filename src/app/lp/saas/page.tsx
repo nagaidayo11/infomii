@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Infomii | 情報を1ページに。旅行・推し活・案内を無料ではじめる",
   description:
     "旅行しおり、推し活、イベントまで。伝えたい情報をスマホでまとめてURL共有。クレジットカード不要で2ページまで無料公開。",
-  alternates: { canonical: "https://www.infomii.com/lp/saas" },
+  alternates: { canonical: `${appUrl}/lp/saas` },
   keywords: [
     "情報整理",
     "旅行しおり",

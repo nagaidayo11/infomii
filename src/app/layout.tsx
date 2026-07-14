@@ -25,14 +25,14 @@ export const metadata: Metadata = {
   },
   description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
   alternates: {
-    canonical: "/",
+    canonical: "/lp/business",
   },
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Infomii",
     locale: "ja_JP",
-    url: appUrl,
+    url: `${appUrl}/lp/business`,
     title: "Infomii | ホテル案内ページ作成SaaS",
     description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
     images: [
