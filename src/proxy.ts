@@ -23,29 +23,6 @@ function isLpAllowedForAppClient(_pathname: string): boolean {
   return false;
 }
 
-function debugLog(payload: {
-  hypothesisId: string;
-  location: string;
-  message: string;
-  data?: Record<string, unknown>;
-}) {
-  // #region agent log
-  fetch("http://127.0.0.1:7512/ingest/630ca5af-23fe-4043-a2d9-95e737add5ef", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "a35b2e",
-    },
-    body: JSON.stringify({
-      sessionId: "a35b2e",
-      runId: "post-fix",
-      timestamp: Date.now(),
-      ...payload,
-    }),
-  }).catch(() => {});
-  // #endregion
-}
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -55,14 +32,6 @@ export function proxy(request: NextRequest) {
     const signedIn =
       request.cookies.get(AUTH_PRESENCE_COOKIE)?.value === AUTH_PRESENCE_VALUE;
     const dest = signedIn ? "/dashboard" : "/lp/business";
-    // #region agent log
-    debugLog({
-      hypothesisId: "A",
-      location: "src/proxy.ts:root",
-      message: "root redirect via proxy only",
-      data: { pathname, signedIn, dest },
-    });
-    // #endregion
     const url = request.nextUrl.clone();
     url.pathname = dest;
     url.search = "";
@@ -80,14 +49,6 @@ export function proxy(request: NextRequest) {
     if (isLpAllowedForAppClient(pathname)) {
       return NextResponse.next();
     }
-    // #region agent log
-    debugLog({
-      hypothesisId: "B",
-      location: "src/proxy.ts:app-lp",
-      message: "app client LP redirect preserved",
-      data: { pathname },
-    });
-    // #endregion
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.searchParams.set("client", "app");
