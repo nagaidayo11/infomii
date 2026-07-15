@@ -10,6 +10,7 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
+import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -24,8 +25,8 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const framingClass = imageFramingClassName(framing);
   const subtitle = getLocalizedContent(c?.subtitle as LocalizedString | undefined, locale);
   const overlayAlign = c?.overlayAlign === "center" ? "center" : "bottom";
-  const squareCorners = c?.cornerStyle === "square" || c?.widthMode === "full";
-  const fullBleed = c?.widthMode === "full";
+  const fullBleed = readCardWidthMode(c) === "full";
+  const squareCorners = c?.cornerStyle === "square" || fullBleed;
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }

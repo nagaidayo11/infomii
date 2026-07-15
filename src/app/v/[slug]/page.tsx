@@ -7,6 +7,7 @@ import { buildGuestPreviewBackLink } from "@/lib/app-href";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
+import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
 
 const STYLE_KEY = "_style";
 const PAGE_STYLE_KEY = "_pageStyle";
@@ -142,9 +143,12 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     type: (r.type ?? "text") as CardType,
     content:
       typeof r.content === "object" && r.content && !Array.isArray(r.content)
-        ? Object.fromEntries(
-            Object.entries(r.content as Record<string, unknown>).filter(([key]) => key !== STYLE_KEY)
-              .filter(([key]) => key !== PAGE_STYLE_KEY)
+        ? normalizeCardWidthModeContent(
+            (r.type ?? "text") as string,
+            Object.fromEntries(
+              Object.entries(r.content as Record<string, unknown>).filter(([key]) => key !== STYLE_KEY)
+                .filter(([key]) => key !== PAGE_STYLE_KEY)
+            ),
           )
         : {},
     order: r.order ?? 0,

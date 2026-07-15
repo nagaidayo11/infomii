@@ -14,6 +14,7 @@ import { templatePageToInformationBlocks } from "@/lib/multi-page-templates/conv
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import { AccessRevokedError } from "@/lib/access-revoked";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
+import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -4632,7 +4633,7 @@ export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | nu
 
 /** Convert a DB row to Card: extract style from content._style, return content without it. */
 export function rowToCard(row: PageCardRow): { id: string; type: string; content: Record<string, unknown>; style?: Record<string, unknown>; order: number } {
-  const content = { ...row.content };
+  const content = normalizeCardWidthModeContent(row.type, { ...row.content });
   const style = content[STYLE_KEY] as Record<string, unknown> | undefined;
   delete content[STYLE_KEY];
   delete content[PAGE_STYLE_KEY];
@@ -5111,7 +5112,7 @@ export async function savePageCards(
 
   for (let index = 0; index < cards.length; index += 1) {
     const card = cards[index];
-    const contentBase = { ...card.content };
+    const contentBase = normalizeCardWidthModeContent(card.type, { ...card.content });
     delete contentBase[PAGE_STYLE_KEY];
     const contentWithPageStyle =
       hasPageStyle && index === 0

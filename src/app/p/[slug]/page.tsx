@@ -15,6 +15,7 @@ import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { parseGuestShellConfig } from "@/lib/guest-shell";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
+import { rowToCard } from "@/lib/storage";
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -685,12 +686,24 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     cardRows = [];
   }
   const cardBasedView = cardRows.length > 0;
-  const cardViewData: EditorCard[] = cardRows.map((c, idx) => ({
-    id: c.id,
-    type: (c.type as EditorCard["type"]) ?? "text",
-    content: typeof c.content === "object" && c.content && !Array.isArray(c.content) ? (c.content as Record<string, unknown>) : {},
-    order: typeof c.order === "number" ? c.order : idx,
-  }));
+  const cardViewData: EditorCard[] = cardRows.map((c, idx) => {
+    const mapped = rowToCard({
+      id: c.id,
+      type: (c.type as string) ?? "text",
+      content:
+        typeof c.content === "object" && c.content && !Array.isArray(c.content)
+          ? (c.content as Record<string, unknown>)
+          : {},
+      order: typeof c.order === "number" ? c.order : idx,
+    });
+    return {
+      id: mapped.id,
+      type: (mapped.type as EditorCard["type"]) ?? "text",
+      content: mapped.content,
+      order: mapped.order,
+      ...(mapped.style ? { style: mapped.style as EditorCard["style"] } : {}),
+    };
+  });
   const hasMultilingualContent = cardViewData.some((card) => hasLocalizedPayload(card.content));
   let hotelPlan: "free" | "pro" | "business" = "free";
   let canShowLocaleToggle = false;

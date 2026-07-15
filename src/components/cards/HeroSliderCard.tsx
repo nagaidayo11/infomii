@@ -6,6 +6,7 @@ import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { HERO_SLIDER_MAX_ITEMS } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
+import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, PlainInline } from "./card-inline-fields";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
@@ -154,7 +155,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       : heightPreset === "l"
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
-  const fullBleed = content.widthMode === "full";
+  const fullBleed = readCardWidthMode(content) === "full";
   const frameRadiusClass = fullBleed ? "rounded-none" : editorInnerRadiusClassName;
 
   const currentIndex = normalizedSlides.length === 0 ? 0 : index % normalizedSlides.length;

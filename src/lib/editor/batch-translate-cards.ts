@@ -12,6 +12,8 @@ const NON_TRANSLATABLE_KEYS = new Set([
   "link",
   "linkUrl",
   "src",
+  "image",
+  "videoUrl",
   "mapEmbedUrl",
   "pageSlug",
   "icon",
@@ -25,6 +27,17 @@ const NON_TRANSLATABLE_KEYS = new Set([
   "circleIconShadowStrength",
   "columns",
   "linkType",
+  // Layout / media enums — must stay plain strings (e.g. widthMode: "full").
+  "widthMode",
+  "height",
+  "cornerStyle",
+  "overlayAlign",
+  "transitionType",
+  "framing",
+  "objectFit",
+  "objectPosition",
+  "ssid",
+  "password",
 ]);
 
 function collectJaTargets(
@@ -33,9 +46,10 @@ function collectJaTargets(
   out: Set<string>,
   onlyMissingLocales: boolean,
 ): void {
+  if (key && NON_TRANSLATABLE_KEYS.has(key)) return;
   if (typeof value === "string") {
     const ja = value.trim();
-    if (!ja || (key && NON_TRANSLATABLE_KEYS.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) {
+    if (!ja || /^https?:\/\//i.test(ja) || ja.length < 2) {
       return;
     }
     out.add(ja);
@@ -104,9 +118,10 @@ function applyTranslations(
   key: string | undefined,
   cache: Map<string, { en: string; zh: string; ko: string }>,
 ): { value: unknown; count: number } {
+  if (key && NON_TRANSLATABLE_KEYS.has(key)) return { value, count: 0 };
   if (typeof value === "string") {
     const ja = value.trim();
-    if (!ja || (key && NON_TRANSLATABLE_KEYS.has(key)) || /^https?:\/\//i.test(ja) || ja.length < 2) {
+    if (!ja || /^https?:\/\//i.test(ja) || ja.length < 2) {
       return { value, count: 0 };
     }
     const translated = cache.get(ja);

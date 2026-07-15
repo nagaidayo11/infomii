@@ -15,6 +15,7 @@ import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, PRO_AND_ABOVE_CARD_TYPES } 
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
+import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
@@ -2903,7 +2904,7 @@ export function CardSettings({
               <div className="w-full">
                 <label className={labelClass}>幅</label>
                 <select
-                  value={(content.widthMode as string) === "full" ? "full" : "inset"}
+                  value={readCardWidthMode(content)}
                   onChange={(e) => update("widthMode", e.target.value)}
                   className={inputClass}
                 >
@@ -2944,7 +2945,7 @@ export function CardSettings({
               <div className="w-full">
                 <label className={labelClass}>幅</label>
                 <select
-                  value={(content.widthMode as string) === "full" ? "full" : "inset"}
+                  value={readCardWidthMode(content)}
                   onChange={(e) => update("widthMode", e.target.value)}
                   className={inputClass}
                 >
