@@ -2,15 +2,17 @@ import Link from "next/link";
 import { Container } from "@/components/ui";
 import { LpHeroHotel } from "@/components/lp/LpHeroHotel";
 import { LpSaasHeader } from "@/components/lp/LpSaasHeader";
-import { LpBeforeAfterSection } from "@/components/lp/shared/LpBeforeAfterSection";
-import { LpContentGridSection } from "@/components/lp/shared/LpContentGridSection";
+import {
+  LpHotelBeforeAfterMotion,
+  LpHotelScenesMarquee,
+  LpHotelTrustMarquee,
+  LpHotelValueMotion,
+  LpHotelWorkflowMotion,
+} from "@/components/lp/hotel/LpHotelAnimatedSections";
 import { LpDemoSection } from "@/components/lp/shared/LpDemoSection";
 import { LpFaqSection } from "@/components/lp/shared/LpFaqSection";
 import { LpFinalCtaSection } from "@/components/lp/shared/LpFinalCtaSection";
 import { LpPricing } from "@/components/lp/shared/LpPricing";
-import { LpScenesSection } from "@/components/lp/shared/LpScenesSection";
-import { LpTrustStrip } from "@/components/lp/shared/LpTrustStrip";
-import { LpWorkflowSection } from "@/components/lp/shared/LpWorkflowSection";
 import {
   HOTEL_LP_BEFORE_AFTER,
   HOTEL_LP_FAQ,
@@ -43,7 +45,7 @@ export default function LpHotelSaaSPage() {
   return (
     <main
       className={
-        "lp-page min-h-screen w-full max-w-full min-w-0 overflow-x-clip bg-[#f7fbf9] text-slate-900 antialiased " +
+        "lp-page lp-hotel-surface min-h-screen w-full max-w-full min-w-0 overflow-x-clip bg-[#f4faf7] text-slate-900 antialiased " +
         "font-['M_PLUS_Rounded_1c','Noto_Sans_JP',system-ui,sans-serif] " +
         LP_PAGE_TYPOGRAPHY_CLASS
       }
@@ -52,25 +54,11 @@ export default function LpHotelSaaSPage() {
 
       <LpHeroHotel ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} demoEditorHref={DEMO_EDITOR_HREF} />
 
-      <LpTrustStrip points={HOTEL_LP_TRUST_POINTS} />
+      <LpHotelTrustMarquee points={HOTEL_LP_TRUST_POINTS} />
 
-      <LpContentGridSection
-        id="operations"
-        kicker="現場のあるあるを、そのまま軽くする"
-        title="ホテルのインフォメーションを、スマホで回す"
-        description="上の画面のような案内ページを作ると、フロントの繰り返し説明と紙の差し替えが減ります。"
-        items={HOTEL_LP_VALUE_POINTS}
-        titleAccent
-        variant="white"
-      />
+      <LpHotelValueMotion items={HOTEL_LP_VALUE_POINTS} />
 
-      <LpWorkflowSection
-        kicker="はじめかた"
-        title="3ステップで、客室に置ける案内になる"
-        description="専門知識は不要です。テンプレから始めて、今日聞かれやすい項目だけ整えれば公開できます。"
-        steps={HOTEL_LP_WORKFLOW_STEPS}
-        variant="muted"
-      />
+      <LpHotelWorkflowMotion steps={HOTEL_LP_WORKFLOW_STEPS} />
 
       <LpDemoSection
         ctaHref={ctaHref}
@@ -80,23 +68,9 @@ export default function LpHotelSaaSPage() {
         description="30秒デモか、上の枠のようなサンプル案内を開いて、軽さを先に体感できます。"
       />
 
-      <LpScenesSection
-        id="properties"
-        kicker="こんな施設で"
-        title="シティホテルから、小規模宿まで"
-        description="大規模システム入れ替えではなく、まず1ページのインフォメーションから始められます。"
-        scenes={HOTEL_LP_PROPERTY_TYPES}
-        bullets={HOTEL_SCENE_BULLETS}
-        variant="white"
-      />
+      <LpHotelScenesMarquee scenes={HOTEL_LP_PROPERTY_TYPES} bullets={HOTEL_SCENE_BULLETS} />
 
-      <LpBeforeAfterSection
-        kicker="Before / After"
-        title="紙の館内案内から、スマホの運用へ"
-        description="機能の多さより、毎日の案内がどう変わるかを重視しています。"
-        rows={HOTEL_LP_BEFORE_AFTER}
-        variant="muted"
-      />
+      <LpHotelBeforeAfterMotion rows={HOTEL_LP_BEFORE_AFTER} />
 
       <div className="bg-slate-50/90 py-6 text-center text-sm text-slate-600">
         <Container>
@@ -133,6 +107,7 @@ export default function LpHotelSaaSPage() {
           </>
         }
         trustPoints={HOTEL_LP_TRUST_POINTS}
+        revealIntensity="strong"
       />
 
       <footer className="border-t border-slate-200 bg-slate-50/80 py-8">

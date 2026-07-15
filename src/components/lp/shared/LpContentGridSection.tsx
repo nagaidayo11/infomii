@@ -13,6 +13,7 @@ type LpContentGridSectionProps = {
   items: readonly Item[];
   variant?: "white" | "muted";
   titleAccent?: boolean;
+  revealIntensity?: "subtle" | "default" | "strong";
 };
 
 export function LpContentGridSection({
@@ -23,14 +24,15 @@ export function LpContentGridSection({
   items,
   variant = "white",
   titleAccent = false,
+  revealIntensity = "default",
 }: LpContentGridSectionProps) {
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
-      <ScrollReveal>
+      <ScrollReveal intensity={revealIntensity}>
         <StaggerReveal
           className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3"
           itemClassName="h-full"
-          staggerDelay={0.06}
+          staggerDelay={0.08}
         >
           {items.map((item, index) => (
             <div

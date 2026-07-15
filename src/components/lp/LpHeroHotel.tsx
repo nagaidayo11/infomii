@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui";
-import { FadeIn } from "@/components/motion";
+import { ClipReveal, WordReveal } from "@/components/lp/hotel/LpHotelMotion";
 import { LP_POP_HEADING_CLASS } from "@/lib/lp/typography";
 
-/** Single representative Infomii guest preview (flush device fit for phone shell). */
 const GUEST_PREVIEW_SRC = "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel";
 const HERO_IMAGE_SRC = "/lp/hero/hotel-desk-qr.png";
 const HERO_IMAGE_ALT =
@@ -17,21 +17,20 @@ type LpHeroHotelProps = {
   demoEditorHref?: string;
 };
 
-/**
- * Border-bezel phone shell (matches PhoneDeviceFrame radii).
- * Iframe fills the screen; notch clearance is padding inside the guest page.
- */
 function GuestPhoneMock({ src }: { src: string }) {
   const screenRadius = "1.55rem";
 
   return (
     <div className="relative mx-auto w-[min(100%,300px)] sm:w-[min(100%,320px)] lg:w-[336px]">
-      <div className="relative aspect-[9/19.2] max-h-[min(72svh,640px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+      <div
+        className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] bg-[radial-gradient(circle_at_50%_40%,rgba(45,212,191,0.28),transparent_62%)] blur-2xl"
+        aria-hidden
+      />
+      <div className="relative aspect-[9/19.2] max-h-[min(72svh,640px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),0_0_0_1px_rgba(45,212,191,0.12),inset_0_0_0_1px_rgba(255,255,255,0.06)]">
         <div
           className="pointer-events-none absolute left-1/2 top-2.5 z-30 h-7 w-[108px] -translate-x-1/2 rounded-full bg-black shadow-inner ring-1 ring-white/5"
           aria-hidden
         />
-
         <div
           className="absolute inset-0 overflow-hidden bg-white"
           style={{
@@ -52,13 +51,14 @@ function GuestPhoneMock({ src }: { src: string }) {
 }
 
 /**
- * Hotel LP hero: full-viewport photo + HTML copy + static CSS phone + live guest iframe.
+ * Hotel LP hero: photo + copy + phone. Text entrance only — no parallax / float / draw frame.
  */
 export function LpHeroHotel({
   ctaHref,
   demoEditorHref = "/demo/editor",
 }: LpHeroHotelProps) {
   const popHeadingClass = LP_POP_HEADING_CLASS;
+  const reduceMotion = useReducedMotion();
 
   return (
     <section className="relative isolate h-[100svh] max-h-[100svh] overflow-hidden border-b border-slate-900/20">
@@ -71,65 +71,91 @@ export function LpHeroHotel({
         className="absolute inset-0 -z-20 h-full w-full object-cover object-[62%_center]"
         draggable={false}
       />
+
       <div
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/15 sm:via-slate-950/50 sm:to-transparent"
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/93 via-slate-950/60 to-slate-950/20 sm:via-slate-950/54 sm:to-transparent"
         aria-hidden
       />
       <div
-        className="absolute inset-x-0 bottom-0 -z-10 h-36 bg-gradient-to-t from-slate-950/45 to-transparent"
+        className="absolute inset-x-0 bottom-0 -z-10 h-44 bg-gradient-to-t from-slate-950/55 to-transparent"
+        aria-hidden
+      />
+
+      <div
+        className="pointer-events-none absolute -left-24 top-1/4 -z-10 h-72 w-72 rounded-full bg-teal-400/22 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-16 bottom-8 -z-10 h-80 w-80 rounded-full bg-emerald-300/16 blur-3xl"
         aria-hidden
       />
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,360px)] lg:gap-10 xl:gap-14">
           <div className="max-w-xl text-white">
-            <FadeIn>
-              <p className="text-sm font-medium tracking-wide text-white/80">
+            <ClipReveal delay={0.05} duration={0.7}>
+              <p className="text-sm font-medium tracking-[0.14em] text-white/75 sm:tracking-[0.18em]">
                 ホテルのインフォメーションを、スマートに。
               </p>
-            </FadeIn>
-            <FadeIn delay={0.06}>
-              <p className="mt-3 text-5xl font-black tracking-tight sm:text-6xl lg:text-[4.1rem]">
+            </ClipReveal>
+
+            <ClipReveal delay={0.12} duration={0.85} className="mt-4">
+              <p className="text-5xl font-black tracking-tight sm:text-6xl lg:text-[4.35rem]">
                 Infom
-                <span className="text-teal-300">ii</span>
+                <span className="bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                  ii
+                </span>
               </p>
-            </FadeIn>
-            <FadeIn delay={0.12}>
-              <h1
-                className={`mt-4 text-[1.65rem] leading-snug text-white sm:text-3xl lg:text-[2.15rem] ${popHeadingClass}`}
-              >
-                紙の館内案内から、
-                <span className="whitespace-nowrap text-teal-300">スマホのインフォメーションへ。</span>
-              </h1>
-            </FadeIn>
-            <FadeIn delay={0.18}>
-              <p className="mt-3 text-base text-white/85 sm:text-lg">差し替え不要。その場で更新。</p>
-            </FadeIn>
-            <FadeIn delay={0.24}>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            </ClipReveal>
+
+            <div className={`mt-5 text-[1.65rem] leading-snug text-white sm:text-3xl lg:text-[2.2rem] ${popHeadingClass}`}>
+              <ClipReveal delay={0.22}>
+                <span className="block">紙の館内案内から、</span>
+              </ClipReveal>
+              <ClipReveal delay={0.32}>
+                <span className="block whitespace-nowrap bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                  スマホのインフォメーションへ。
+                </span>
+              </ClipReveal>
+            </div>
+            <h1 className="sr-only">紙の館内案内から、スマホのインフォメーションへ。</h1>
+
+            <ClipReveal delay={0.42} className="mt-4">
+              <p className="max-w-md text-base text-white/80 sm:text-lg">
+                <WordReveal text="差し替え不要。その場で更新。" delay={0.44} />
+              </p>
+            </ClipReveal>
+
+            <ClipReveal delay={0.52} className="mt-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button
                   href={ctaHref}
                   size="lg"
-                  className="lp-cta-attention min-h-[52px] w-full sm:w-auto !border-teal-500 !bg-teal-600 px-8 !text-base !text-white hover:!bg-teal-500 hover:!shadow-[0_12px_32px_rgba(13,148,136,0.35)]"
+                  className="lp-cta-attention min-h-[52px] w-full sm:w-auto !border-teal-400/80 !bg-teal-500 px-8 !text-base !text-white shadow-[0_0_28px_rgba(45,212,191,0.22)] hover:!bg-teal-400 hover:!shadow-[0_12px_36px_rgba(13,148,136,0.4)]"
                 >
                   無料で公開する
                 </Button>
                 <Link
                   href={demoEditorHref}
-                  className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-semibold text-teal-200 underline-offset-4 hover:text-white hover:underline"
+                  className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-semibold text-teal-100/90 underline-offset-4 transition hover:text-white hover:underline"
                 >
                   30秒デモを見る
                 </Link>
               </div>
-              <p className="mt-3 text-sm text-white/65">
+              <p className="mt-3 text-sm text-white/60">
                 クレジットカード不要 · 登録だけで2ページまで公開
               </p>
-            </FadeIn>
+            </ClipReveal>
           </div>
 
-          <div className="mx-auto w-full max-w-[360px] lg:mx-0 lg:justify-self-end">
+          <motion.div
+            className="mx-auto w-full max-w-[360px] lg:mx-0 lg:justify-self-end"
+            initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
             <GuestPhoneMock src={GUEST_PREVIEW_SRC} />
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

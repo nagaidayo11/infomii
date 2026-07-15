@@ -12,6 +12,7 @@ type LpBeforeAfterSectionProps = {
   description: string;
   rows: readonly Row[];
   variant?: "white" | "muted";
+  revealIntensity?: "subtle" | "default" | "strong";
 };
 
 export function LpBeforeAfterSection({
@@ -21,11 +22,12 @@ export function LpBeforeAfterSection({
   description,
   rows,
   variant = "white",
+  revealIntensity = "default",
 }: LpBeforeAfterSectionProps) {
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
-      <ScrollReveal>
-        <StaggerReveal className="grid gap-4" staggerDelay={0.09}>
+      <ScrollReveal intensity={revealIntensity}>
+        <StaggerReveal className="grid gap-4" staggerDelay={0.1}>
           {rows.map((row, index) => (
             <div
               key={row.before}

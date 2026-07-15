@@ -11,6 +11,7 @@ type LpScenesSectionProps = {
   scenes: readonly string[];
   bullets: readonly string[];
   variant?: "white" | "muted";
+  revealIntensity?: "subtle" | "default" | "strong";
 };
 
 export function LpScenesSection({
@@ -21,11 +22,12 @@ export function LpScenesSection({
   scenes,
   bullets,
   variant = "muted",
+  revealIntensity = "default",
 }: LpScenesSectionProps) {
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
-      <ScrollReveal>
-        <StaggerReveal className="flex flex-wrap justify-center gap-2.5 sm:gap-3" staggerDelay={0.05}>
+      <ScrollReveal intensity={revealIntensity}>
+        <StaggerReveal className="flex flex-wrap justify-center gap-2.5 sm:gap-3" staggerDelay={0.06}>
           {scenes.map((scene) => (
             <span
               key={scene}

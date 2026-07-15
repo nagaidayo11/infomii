@@ -12,6 +12,7 @@ type LpWorkflowSectionProps = {
   description?: string;
   steps: readonly Step[];
   variant?: "white" | "muted";
+  revealIntensity?: "subtle" | "default" | "strong";
 };
 
 export function LpWorkflowSection({
@@ -21,16 +22,17 @@ export function LpWorkflowSection({
   description,
   steps,
   variant = "muted",
+  revealIntensity = "default",
 }: LpWorkflowSectionProps) {
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
-      <ScrollReveal>
+      <ScrollReveal intensity={revealIntensity}>
         <div className="relative">
           <div
             className="pointer-events-none absolute left-[16.5%] right-[16.5%] top-11 hidden h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent sm:block"
             aria-hidden
           />
-          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.12}>
+          <StaggerReveal className="grid gap-8 sm:grid-cols-3" staggerDelay={0.14}>
             {steps.map((item) => (
               <div
                 key={item.step}

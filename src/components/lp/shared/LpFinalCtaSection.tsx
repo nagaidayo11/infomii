@@ -12,6 +12,7 @@ type LpFinalCtaSectionProps = {
   title: string;
   description: ReactNode;
   trustPoints: readonly string[];
+  revealIntensity?: "subtle" | "default" | "strong";
 };
 
 export function LpFinalCtaSection({
@@ -21,6 +22,7 @@ export function LpFinalCtaSection({
   title,
   description,
   trustPoints,
+  revealIntensity = "subtle",
 }: LpFinalCtaSectionProps) {
   return (
     <section
@@ -36,10 +38,14 @@ export function LpFinalCtaSection({
         style={{ animationDelay: "0.8s" }}
         aria-hidden
       />
-      <ScrollReveal intensity="subtle">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-300/40 to-transparent"
+        aria-hidden
+      />
+      <ScrollReveal intensity={revealIntensity}>
         <Container size="sm" className="relative text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/90">はじめ方</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">{title}</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200/90">はじめ方</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">{title}</h2>
           <p className="mt-4 text-lg leading-relaxed text-emerald-50/85">{description}</p>
           <StaggerReveal className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm font-medium" staggerDelay={0.06}>
             {trustPoints.map((point) => (
