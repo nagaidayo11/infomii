@@ -157,6 +157,7 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
             title: "ようこそ、グランドシティホテル東京へ",
             subtitle: "本日もごゆっくりお過ごしください",
             image: LP_DEMO_HERO_IMAGES.hotel,
+            widthMode: "full",
           }),
           createCard("notice", 1, {
             title: "本日のお知らせ",

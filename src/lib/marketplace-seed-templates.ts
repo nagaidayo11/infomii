@@ -28,7 +28,12 @@ function attachHotelSlugs(drafts: HotelSeedDraft[]): MarketplaceSeedTemplate[] {
   });
 }
 
-const hero = (title: string, subtitle: string) => ({ title, subtitle, image: PREVIEW_IMAGE });
+const hero = (title: string, subtitle: string) => ({
+  title,
+  subtitle,
+  image: PREVIEW_IMAGE,
+  widthMode: "full",
+});
 const welcome = (title: string, message: string) => ({ title, message });
 const notice = (title: string, body: string, variant = "info") => ({ title, body, variant });
 const headingBody = (title: string, body: string) => ({ title, body, dividerEnabled: false, dividerStyle: "solid" });
@@ -79,6 +84,7 @@ const heroSlider = (title: string) => ({
   transitionDurationMs: 500,
   showCaptions: true,
   height: "s",
+  widthMode: "full",
   slides: [
     { src: PREVIEW_IMAGE, alt: "館内イメージ", caption: "ご滞在のご案内", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },
     { src: "/templates/previews/business/515b796d.jpg", alt: "朝食イメージ", caption: "朝食ビュッフェ", linkEnabled: false, linkType: "internal", href: "", openInNewTab: false },

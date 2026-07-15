@@ -32,6 +32,7 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
         title: "旅のしおり",
         subtitle: "予定・持ち物・リンクをここにまとめたよ",
         image: PERSONAL_HERO_IMAGE,
+        widthMode: "inset",
       };
     case "hero_slider":
       return {
@@ -43,6 +44,7 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
         transitionDurationMs: 500,
         showCaptions: true,
         height: "s",
+        widthMode: "inset",
         slides: Array.from({ length: HERO_SLIDER_MAX_ITEMS }, (_, i) => createPersonalHeroSliderSlide(i)),
       };
     case "heading_body":

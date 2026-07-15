@@ -2901,6 +2901,20 @@ export function CardSettings({
                 placeholder="任意"
               />
               <div className="w-full">
+                <label className={labelClass}>幅</label>
+                <select
+                  value={(content.widthMode as string) === "full" ? "full" : "inset"}
+                  onChange={(e) => update("widthMode", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="inset">余白あり</option>
+                  <option value="full">画面いっぱい</option>
+                </select>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  画面いっぱいだと、ページ左右の余白を超えて写真が端まで広がります。
+                </p>
+              </div>
+              <div className="w-full">
                 <label className={labelClass}>画像</label>
                 <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
               </div>
@@ -2927,6 +2941,17 @@ export function CardSettings({
                 placeholder="おすすめ案内"
               />
               <HeroSliderItemsEditor content={content} onUpdate={update} libraryAudience={libraryAudience} />
+              <div className="w-full">
+                <label className={labelClass}>幅</label>
+                <select
+                  value={(content.widthMode as string) === "full" ? "full" : "inset"}
+                  onChange={(e) => update("widthMode", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="inset">余白あり</option>
+                  <option value="full">画面いっぱい</option>
+                </select>
+              </div>
               <div className="w-full">
                 <label className={labelClass}>高さ</label>
                 <select

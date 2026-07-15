@@ -257,7 +257,7 @@ export function GuestCardPageView({
             onAnimationEnd={() => setHintVisible(false)}
             className={
               "toast-slide-in-out rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs leading-relaxed text-teal-900 " +
-              (contentInset === "flush" ? "mx-3.5 mt-3" : "")
+              (contentInset === "flush" ? "mx-3.5 mt-3" : "card-content-inset")
             }
             style={{ animationDuration: "2s" }}
           >
@@ -271,7 +271,7 @@ export function GuestCardPageView({
           aria-disabled={disableInteractions || undefined}
         >
           {unpublishedPreview && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <div className="card-content-inset rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               現在公開OFFになっています（これはプレビュー表示です）。
             </div>
           )}

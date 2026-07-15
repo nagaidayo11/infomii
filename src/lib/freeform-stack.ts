@@ -1,9 +1,11 @@
-import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
+import { guestCardColumnMaxWidthPx, GUEST_PAGE_MAIN_PADDING_X_PX } from "@/lib/guest-page-layout";
+import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { usesHeroColumnWidth, type CardType, type EditorCard } from "@/components/editor/types";
 
 /** Matches FreeformCanvas fixed preview width. */
 export const FREEFORM_VIEWPORT_WIDTH_PX = 375;
 export const FREEFORM_CONTENT_WIDTH_PX = guestCardColumnMaxWidthPx(FREEFORM_VIEWPORT_WIDTH_PX);
+const CANVAS_PADDING_X = GUEST_PAGE_MAIN_PADDING_X_PX;
 
 const POSITION_KEY = "_position";
 const STACK_GAP_Y = 12;
@@ -95,20 +97,34 @@ function getInitialStackY(cards: EditorCard[], index: number): number {
 function getPosition(card: EditorCard, index: number, contentWidth: number, cards: EditorCard[] = []): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
+  const fullBleed = isCardFullBleed(card);
   const forceHeroWidth = usesHeroColumnWidth(card.type);
-  const w = forceHeroWidth
-    ? contentWidth
-    : typeof pos?.w === "number"
-      ? pos.w
-      : contentWidth;
+  const stageWidth = contentWidth + CANVAS_PADDING_X * 2;
   const h = typeof pos?.h === "number" ? pos.h : initialH;
+
+  if (fullBleed) {
+    return {
+      x: 0,
+      y: typeof pos?.y === "number" ? pos.y : getInitialStackY(cards, index),
+      w: stageWidth,
+      h,
+    };
+  }
+
+  if (forceHeroWidth) {
+    return {
+      x: CANVAS_PADDING_X,
+      y: typeof pos?.y === "number" ? pos.y : getInitialStackY(cards, index),
+      w: contentWidth,
+      h,
+    };
+  }
+
+  const w = typeof pos?.w === "number" ? pos.w : contentWidth;
   const blockW = Math.min(w, contentWidth);
-  const centeredX = Math.round((contentWidth - blockW) / 2);
+  const centeredX = CANVAS_PADDING_X + Math.round((contentWidth - blockW) / 2);
 
   if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
-    if (forceHeroWidth) {
-      return { x: 0, y: pos.y, w: contentWidth, h };
-    }
     const savedX = pos.x;
     const isLegacyLeftAligned = savedX <= 60;
     return {
@@ -136,7 +152,6 @@ export function reflowStackedCards(
     const pos = getPosition(card, order, contentWidth, cards);
     const w = pos.w ?? contentWidth;
     const h = getStackHeight(card);
-    const centeredX = Math.round((contentWidth - w) / 2);
     const savedPos = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
     const next = {
       ...card,
@@ -144,7 +159,7 @@ export function reflowStackedCards(
       style: {
         ...(card.style ?? {}),
         [POSITION_KEY]: {
-          x: centeredX,
+          x: pos.x,
           y: currentY,
           w,
           h,
@@ -196,16 +211,16 @@ export function reorderCardsAtTargetY(
   const sorted = [...positions.values()].sort((a, b) => a.y - b.y);
   let currentY = 24;
   return sorted.map((entry, order) => {
-    const centeredX = Math.round((contentWidth - entry.w) / 2);
+    const layout = getPosition(entry.card, order, contentWidth, cards);
     const next = {
       ...entry.card,
       order,
       style: {
         ...(entry.card.style ?? {}),
         [POSITION_KEY]: {
-          x: centeredX,
+          x: layout.x,
           y: currentY,
-          w: entry.w,
+          w: layout.w ?? entry.w,
           h: entry.h,
           manualH: entry.manualH,
         },

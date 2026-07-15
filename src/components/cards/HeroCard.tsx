@@ -24,7 +24,8 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const framingClass = imageFramingClassName(framing);
   const subtitle = getLocalizedContent(c?.subtitle as LocalizedString | undefined, locale);
   const overlayAlign = c?.overlayAlign === "center" ? "center" : "bottom";
-  const squareCorners = c?.cornerStyle === "square";
+  const squareCorners = c?.cornerStyle === "square" || c?.widthMode === "full";
+  const fullBleed = c?.widthMode === "full";
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }
@@ -42,7 +43,8 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
     <div
       data-inner-surface
       className={
-        "app-interactive relative w-full overflow-hidden bg-transparent transition-transform duration-200 ease-out hover:-translate-y-0.5 " +
+        "app-interactive relative w-full overflow-hidden bg-transparent transition-transform duration-200 ease-out " +
+        (fullBleed ? "" : "hover:-translate-y-0.5 ") +
         (squareCorners ? "rounded-none" : editorInnerRadiusClassName)
       }
     >

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Mous
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
-import { guestCardColumnMaxWidthPx } from "@/lib/guest-page-layout";
+import { guestCardColumnMaxWidthPx, GUEST_PAGE_MAIN_PADDING_X_PX } from "@/lib/guest-page-layout";
+import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
@@ -47,7 +48,7 @@ const STACK_GAP_Y = 12;
 type Position = { x: number; y: number; w?: number; h?: number; manualH?: boolean };
 const POSITION_KEY = "_position";
 
-const CANVAS_PADDING_X = 16;
+const CANVAS_PADDING_X = GUEST_PAGE_MAIN_PADDING_X_PX;
 
 const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   hero: 120,
@@ -127,25 +128,43 @@ function getInitialStackY(cards: EditorCard[], index: number): number {
   return y;
 }
 
-/** Hero-column types always span contentWidth; others keep saved width (capped) and stay centered. */
+/**
+ * Stage is full phone width (content + side gutters).
+ * Full-bleed heroes span the stage; inset cards sit in the content column.
+ */
 function getPosition(card: EditorCard, index: number, contentWidth: number, cards: EditorCard[] = []): Position {
   const pos = card.style?.[POSITION_KEY] as Position | undefined;
   const initialH = getCardDefaultHeight(card);
+  const fullBleed = isCardFullBleed(card);
   const forceHeroWidth = usesHeroColumnWidth(card.type);
-  const w = forceHeroWidth
-    ? contentWidth
-    : typeof pos?.w === "number"
-      ? pos.w
-      : contentWidth;
+  const stageWidth = contentWidth + CANVAS_PADDING_X * 2;
   const h = typeof pos?.h === "number" ? pos.h : initialH;
+
+  if (fullBleed) {
+    return {
+      x: 0,
+      y: typeof pos?.y === "number" ? pos.y : getInitialStackY(cards, index),
+      w: stageWidth,
+      h,
+    };
+  }
+
+  if (forceHeroWidth) {
+    return {
+      x: CANVAS_PADDING_X,
+      y: typeof pos?.y === "number" ? pos.y : getInitialStackY(cards, index),
+      w: contentWidth,
+      h,
+    };
+  }
+
+  const w = typeof pos?.w === "number" ? pos.w : contentWidth;
   const blockW = Math.min(w, contentWidth);
-  const centeredX = Math.round((contentWidth - blockW) / 2);
+  const centeredX = CANVAS_PADDING_X + Math.round((contentWidth - blockW) / 2);
 
   if (pos && typeof pos.x === "number" && typeof pos.y === "number") {
-    if (forceHeroWidth) {
-      return { x: 0, y: pos.y, w: contentWidth, h };
-    }
     const savedX = pos.x;
+    // Legacy positions were in the old content-only coordinate system (x≈0).
     const isLegacyLeftAligned = savedX <= 60;
     return {
       x: isLegacyLeftAligned ? centeredX : savedX,
@@ -261,6 +280,7 @@ export function FreeformCanvas({
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [viewportWidth, setViewportWidth] = useState(350);
   const contentWidth = guestCardColumnMaxWidthPx(viewportWidth);
+  const stageWidth = contentWidth + CANVAS_PADDING_X * 2;
   const [dragState, setDragState] = useState<{
     id: string;
     x: number;
@@ -374,12 +394,12 @@ export function FreeformCanvas({
       const pos = getPosition(card, idx, contentWidth, cards);
       const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
       const manualH = saved?.manualH === true;
-      const width = Math.min(pos.w ?? DEFAULT_W, contentWidth);
-      const centeredX = Math.round((contentWidth - width) / 2);
+      const width = pos.w ?? contentWidth;
+      const nextX = pos.x;
       const renderH = getRenderHeight(card, idx);
       const nextH = manualH ? (typeof saved?.h === "number" ? saved.h : renderH) : renderH;
       const nextPos: Position = {
-        x: centeredX,
+        x: nextX,
         y: currentY,
         w: width,
         h: nextH,
@@ -470,10 +490,18 @@ export function FreeformCanvas({
       if (!card) return;
       const rawW = ref.offsetWidth;
       const h = ref.offsetHeight;
-      const w = usesHeroColumnWidth(card.type) ? contentWidth : Math.min(rawW, contentWidth);
-      const x = usesHeroColumnWidth(card.type)
+      const fullBleed = isCardFullBleed(card);
+      const stageW = contentWidth + CANVAS_PADDING_X * 2;
+      const w = fullBleed
+        ? stageW
+        : usesHeroColumnWidth(card.type)
+          ? contentWidth
+          : Math.min(rawW, contentWidth);
+      const x = fullBleed
         ? 0
-        : Math.round(pos.x / GRID) * GRID;
+        : usesHeroColumnWidth(card.type)
+          ? CANVAS_PADDING_X
+          : Math.round(pos.x / GRID) * GRID;
       onUpdateCard(id, {
         ...(card.type === "space"
           ? {
@@ -560,8 +588,8 @@ export function FreeformCanvas({
           }
         >
           <div
-            className="relative mx-auto"
-            style={{ width: contentWidth + CANVAS_PADDING_X * 2, minHeight: canvasH }}
+            className="guest-content-gutter relative mx-auto"
+            style={{ width: stageWidth, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
             }}
@@ -569,17 +597,16 @@ export function FreeformCanvas({
           <div
             className="relative"
             style={{
-              marginLeft: CANVAS_PADDING_X,
-              width: contentWidth,
+              width: stageWidth,
               height: canvasH,
               minHeight: canvasH,
             }}
           >
-          {/* Guide lines during drag - コンテンツエリア座標系 */}
+          {/* Guide lines during drag - stage coordinate system */}
           {dragState && (
             <svg
               className="pointer-events-none absolute inset-0 z-20"
-              style={{ overflow: "visible", width: contentWidth, height: canvasH }}
+              style={{ overflow: "visible", width: stageWidth, height: canvasH }}
             >
               {dragState.guides.map((g, i) =>
                 g.axis === "x" ? (
@@ -598,7 +625,7 @@ export function FreeformCanvas({
                     key={`y-${i}`}
                     x1={0}
                     y1={g.value}
-                    x2={contentWidth}
+                    x2={stageWidth}
                     y2={g.value}
                     stroke="#3b82f6"
                     strokeWidth={1}
@@ -621,6 +648,7 @@ export function FreeformCanvas({
               typeof measuredContentHeight === "number" &&
               Number.isFinite(measuredContentHeight) &&
               measuredContentHeight > h + 1;
+            const fullBleed = isCardFullBleed(card);
             const blockStyle = getBlockStyle(card);
             const shellBackgroundColor =
               isMediaCardType(card.type)
@@ -687,8 +715,13 @@ export function FreeformCanvas({
                 >
                   <div
                     className={
-                      "editor-card-selected h-full w-full overflow-hidden rounded-xl transition-shadow " +
-                      (isSelected ? "ring-2 ring-blue-300 ring-offset-2 " : "") +
+                      "editor-card-selected h-full w-full overflow-hidden transition-shadow " +
+                      (fullBleed ? "card-full-bleed rounded-none " : "rounded-xl ") +
+                      (isSelected
+                        ? fullBleed
+                          ? "ring-2 ring-blue-300 "
+                          : "ring-2 ring-blue-300 ring-offset-2 "
+                        : "") +
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       ((card.style as Record<string, unknown> | undefined)?.innerTonePreset ? "editor-inner-surface-overridden " : "")
                     }

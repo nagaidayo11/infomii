@@ -606,7 +606,12 @@ export const PRESET_MENU_BANNER_BEVERAGE = "/preset-menu-hero-beverage.jpg";
 function defaultContent(type: CardType): Record<string, unknown> {
   switch (type) {
     case "hero":
-      return { title: "Infomii Hotel", image: PRESET_HERO_SAMPLE_IMAGE, subtitle: "館内案内をスマートにまとめました" };
+      return {
+        title: "Infomii Hotel",
+        image: PRESET_HERO_SAMPLE_IMAGE,
+        subtitle: "館内案内をスマートにまとめました",
+        widthMode: "full",
+      };
     case "hero_slider":
       return {
         title: "おすすめ案内",
@@ -617,6 +622,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         transitionDurationMs: 500,
         showCaptions: true,
         height: "s",
+        widthMode: "full",
         slides: [
           createDefaultHeroSliderSlide(0),
           createDefaultHeroSliderSlide(1),

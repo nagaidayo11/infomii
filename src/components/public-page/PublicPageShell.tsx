@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useCallback } from "react";
 import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
 import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation";
@@ -105,10 +105,12 @@ function PageContent({
   headerClassName,
   mainClassName,
   contentClassName,
+  guestGutter,
 }: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation" | "contentInset"> & {
   headerClassName?: string;
   mainClassName?: string;
   contentClassName?: string;
+  guestGutter?: string;
 }) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -122,7 +124,15 @@ function PageContent({
       <main
         className={
           "template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain " +
-          (mainClassName ?? "px-4 pb-6 pt-4")
+          (mainClassName ?? "guest-content-gutter px-4 pb-6 pt-4")
+        }
+        data-guest-gutter={guestGutter}
+        style={
+          guestGutter != null
+            ? ({
+                ["--guest-gutter" as string]: guestGutter === "0" ? "0px" : `${guestGutter}rem`,
+              } as CSSProperties)
+            : undefined
         }
       >
         <div
@@ -182,12 +192,13 @@ export function PublicPageShell({
   const flush = contentInset === "flush";
   const deviceEmbed = isEmbed && embedFit === "device";
   const mainClassName = flush
-    ? "px-0 pb-0 pt-0"
+    ? "guest-content-gutter px-0 pb-0 pt-0"
     : isEmbed
       ? deviceEmbed
-        ? "px-3 pb-5 pt-2"
-        : "px-3.5 pb-6 pt-4"
-      : "px-4 pb-6 pt-4";
+        ? "guest-content-gutter px-0 pb-5 pt-2"
+        : "guest-content-gutter px-0 pb-6 pt-4"
+      : "guest-content-gutter px-0 pb-6 pt-4";
+  const guestGutter = flush ? "0" : deviceEmbed ? "0.75" : isEmbed ? "0.875" : undefined;
   const contentClassName = flush ? "space-y-0" : "space-y-3";
   const headerClassName = deviceEmbed
     ? "px-3 pb-2 pt-8"
@@ -216,6 +227,7 @@ export function PublicPageShell({
           headerClassName={headerClassName}
           mainClassName={mainClassName}
           contentClassName={contentClassName}
+          guestGutter={guestGutter}
         >
           {children}
         </PageContent>
@@ -234,6 +246,7 @@ export function PublicPageShell({
       headerClassName={headerClassName}
       mainClassName={mainClassName}
       contentClassName={contentClassName}
+      guestGutter={guestGutter}
     >
       {children}
     </PageContent>

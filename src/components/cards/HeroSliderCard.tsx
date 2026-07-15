@@ -154,6 +154,8 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       : heightPreset === "l"
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
+  const fullBleed = content.widthMode === "full";
+  const frameRadiusClass = fullBleed ? "rounded-none" : editorInnerRadiusClassName;
 
   const currentIndex = normalizedSlides.length === 0 ? 0 : index % normalizedSlides.length;
   const current = normalizedSlides[currentIndex];
@@ -369,7 +371,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       ) : null}
       <div
         data-inner-surface
-        className={`hero-slider-frame relative isolate w-full overflow-hidden ${editorInnerRadiusClassName} bg-slate-900 ${heightClass}`}
+        className={`hero-slider-frame relative isolate w-full overflow-hidden ${frameRadiusClass} bg-slate-900 ${heightClass}`}
         onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (!canMove || touchStartX == null) return;

@@ -1,6 +1,7 @@
 /**
  * Guest / public card page horizontal layout — keep in sync with
- * `PublicPageShell` (main px-4, inner max-w-[420px]) and editor `Canvas` preview.
+ * `PublicPageShell` / editor FreeformCanvas (inset cards use --guest-gutter;
+ * full-bleed heroes span the phone edge).
  */
 export const GUEST_PAGE_MAIN_PADDING_X_PX = 16;
 

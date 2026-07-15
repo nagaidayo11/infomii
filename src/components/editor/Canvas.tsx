@@ -19,6 +19,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { CARD_FULL_BLEED_CLASS, CARD_INSET_GUTTER_CLASS, isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { getBlockStyle, isMediaCardType, type EditorCard } from "./types";
 
@@ -180,16 +181,24 @@ function SortableCardWrapper({
     pointerEvents: isDragging ? ("none" as const) : undefined,
   };
 
+  const fullBleed = isCardFullBleed(card);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative editor-reorder-smooth"
+      className={
+        "group relative editor-reorder-smooth " +
+        (fullBleed ? CARD_FULL_BLEED_CLASS : CARD_INSET_GUTTER_CLASS)
+      }
       data-card-id={card.id}
     >
       {isDragging ? (
         <div
-          className="editor-card-drop-placeholder relative min-h-[72px] w-full overflow-hidden rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          className={
+            "editor-card-drop-placeholder relative min-h-[72px] w-full overflow-hidden border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)] " +
+            (fullBleed ? "rounded-none" : "rounded-2xl")
+          }
           aria-hidden
         >
           <div
@@ -201,7 +210,8 @@ function SortableCardWrapper({
       ) : (
         <div
           className={
-            "editor-card-selected relative overflow-hidden rounded-2xl border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            "editor-card-selected relative overflow-hidden border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            (fullBleed ? "rounded-none " : "rounded-2xl ") +
             (isNewlyAdded ? "editor-card-enter " : "") +
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
@@ -376,13 +386,16 @@ export function Canvas({
                 data-mobile-preview
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="mx-auto box-border min-h-0 w-full min-w-0 px-4 py-4">
+                <div className="guest-content-gutter mx-auto box-border min-h-0 w-full min-w-0 py-4">
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {sortedCards.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-16 text-center">
+                    <div
+                      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-16 text-center"
+                      style={{ marginLeft: "var(--guest-gutter)", marginRight: "var(--guest-gutter)" }}
+                    >
                       <p className="text-sm font-medium text-slate-600">
                         左のカードライブラリから追加、または <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-xs">/</kbd> でクイック挿入
                       </p>

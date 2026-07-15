@@ -994,7 +994,10 @@ export function Editor2({
     if (guardDemoAction("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。")) {
       return;
     }
-    if (!pageMeta.publicUrl || !pageId) return;
+    if (!pageId || !pageMeta.slug) {
+      window.alert("プレビューするページが見つかりません。一度保存してから再度お試しください。");
+      return;
+    }
 
     const useSameTabPreview = useAppEditorChrome;
     let previewWindow: Window | null = null;
@@ -1068,14 +1071,17 @@ export function Editor2({
       } catch {
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
-      const previewUrl = `${pageMeta.publicUrl}${pageMeta.publicUrl.includes("?") ? "&" : "?"}preview=1`;
+      // Always use /v/ for preview so drafts load with ?preview=1 ( /qr rewrite can mask issues ).
+      const previewBasePath = `/v/${encodeURIComponent(pageMeta.slug)}`;
       if (useSameTabPreview) {
-        navigateGuestPageUrl(pageMeta.publicUrl, { preview: true, returnEditorPageId: pageId });
+        navigateGuestPageUrl(previewBasePath, { preview: true, returnEditorPageId: pageId });
       } else {
+        const origin = window.location.origin;
+        const previewUrl = `${origin}${previewBasePath}?preview=1`;
         try {
           previewWindow!.location.href = previewUrl;
         } catch {
-          openGuestPageInNewTab(pageMeta.publicUrl, { preview: true, appClient: false });
+          openGuestPageInNewTab(previewBasePath, { preview: true, appClient: false });
         }
       }
     } finally {
@@ -1083,7 +1089,7 @@ export function Editor2({
     }
   }, [
     guardDemoAction,
-    pageMeta.publicUrl,
+    pageMeta.slug,
     pageId,
     flushAutosaveNow,
     guardPublishedBeforeGuestView,

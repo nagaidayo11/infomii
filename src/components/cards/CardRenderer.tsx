@@ -59,6 +59,7 @@ import { ComboSetMenuCard } from "./ComboSetMenuCard";
 import { MenuGridCard } from "./MenuGridCard";
 import { MenuSheetSyncCard } from "./MenuSheetSyncCard";
 import { MenuTimeBandCard } from "./MenuTimeBandCard";
+import { CARD_FULL_BLEED_CLASS, CARD_INSET_GUTTER_CLASS, isCardFullBleed } from "@/lib/editor/card-width-mode";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -363,10 +364,15 @@ export function CardRenderer(props: CardRendererProps) {
             card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
               ? card.style.textColor
               : undefined;
+          const fullBleed = isCardFullBleed(card);
           return (
             <div
               key={card.id}
-              className={(textColor ? "editor-card-colorized " : "") + "rounded-2xl ui-pop-appear"}
+              className={
+                (textColor ? "editor-card-colorized " : "") +
+                (fullBleed ? CARD_FULL_BLEED_CLASS + " " : CARD_INSET_GUTTER_CLASS + " rounded-2xl ") +
+                "ui-pop-appear"
+              }
               style={{
                 ...blockStyle,
                 ...(textColor
