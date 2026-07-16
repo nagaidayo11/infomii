@@ -183,11 +183,11 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       initialLocale={initialLocale}
       localeLocked={Boolean(forcedFromUrl)}
       pageBackground={pageBackground}
-      unpublishedPreview={!isPublished && isPreviewRequest}
+      unpublishedPreview={false}
       showLocaleToggle={showLocaleToggle}
       businessFeaturesEnabled={canShowLocaleToggle}
       guestNavMaxVisible={guestNavMaxVisible}
-      localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
+      localeToggleHint={null}
       guestShell={guestShell}
       currentSlug={page.slug}
       preview={isPreviewRequest}

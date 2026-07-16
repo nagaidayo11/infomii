@@ -14,23 +14,13 @@ import type { SupportedLocale } from "@/lib/localized-content";
 type GuestBottomTabBarProps = {
   tabs: GuestShellTab[];
   currentSlug: string;
-  /** Active locale for language sheet */
+  /** Active locale for tab labels */
   locale: SupportedLocale;
-  onLocaleChange: (locale: SupportedLocale) => void;
   preview?: boolean;
   clientApp?: boolean;
-  /** When language sheet opens from tab */
-  localeHint?: string | null;
   /** Editor preview: tabs look active but do not navigate */
   previewMode?: boolean;
 };
-
-const LOCALES: Array<{ code: SupportedLocale; label: string }> = [
-  { code: "ja", label: "日本語" },
-  { code: "en", label: "English" },
-  { code: "zh", label: "中文" },
-  { code: "ko", label: "한국어" },
-];
 
 function TabIcon({ name }: { name: GuestShellTabIcon }) {
   const className = "h-5 w-5";
@@ -108,34 +98,28 @@ function isTabActive(tab: GuestShellTab, currentSlug: string): boolean {
 
 /**
  * Facility-wide bottom tab bar for guest pages (Core Guide–style chrome).
+ * Language switching is header-only (not a footer tab).
  */
 export function GuestBottomTabBar({
   tabs,
   currentSlug,
   locale,
-  onLocaleChange,
   preview = false,
   clientApp = false,
-  localeHint = null,
   previewMode = false,
 }: GuestBottomTabBarProps) {
-  const [localeOpen, setLocaleOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [phoneValue, setPhoneValue] = useState<string | null>(null);
-  const [hintVisible, setHintVisible] = useState(false);
   const titleId = useId();
 
   useEffect(() => {
-    if (!localeOpen && !phoneOpen) return;
+    if (!phoneOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setLocaleOpen(false);
-        setPhoneOpen(false);
-      }
+      if (event.key === "Escape") setPhoneOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [localeOpen, phoneOpen]);
+  }, [phoneOpen]);
 
   if (tabs.length === 0) return null;
 
@@ -144,16 +128,12 @@ export function GuestBottomTabBar({
   const disabledTabClass = "cursor-not-allowed text-slate-300";
 
   function handleTab(tab: GuestShellTab) {
+    if (tab.type === "locale") return;
     if (previewMode) {
-      if (tab.type === "locale") setLocaleOpen(true);
       if (tab.type === "phone") {
         setPhoneValue(tab.phone?.trim() || null);
         setPhoneOpen(true);
       }
-      return;
-    }
-    if (tab.type === "locale") {
-      setLocaleOpen(true);
       return;
     }
     if (tab.type === "phone") {
@@ -179,15 +159,6 @@ export function GuestBottomTabBar({
   }
 
   const telHref = phoneValue ? toTelHref(phoneValue) : null;
-
-  const localeSheetCopy =
-    locale === "ko"
-      ? { title: "언어", hint: "표시 언어를 선택하세요", close: "닫기" }
-      : locale === "zh"
-        ? { title: "语言", hint: "请选择显示语言", close: "关闭" }
-        : locale === "en"
-          ? { title: "Language", hint: "Choose a display language", close: "Close" }
-          : { title: "言語", hint: "表示言語を選んでください", close: "閉じる" };
 
   const phoneSheetCopy =
     locale === "ko"
@@ -231,6 +202,7 @@ export function GuestBottomTabBar({
       >
         <div className="mx-auto flex max-w-[420px] items-stretch justify-around gap-0.5 px-1 pt-1">
           {tabs.map((tab) => {
+            if (tab.type === "locale") return null;
             const active = isTabActive(tab, currentSlug);
             const disabled =
               ((tab.type === "home" || tab.type === "page") && !tab.pageSlug?.trim()) ||
@@ -240,12 +212,12 @@ export function GuestBottomTabBar({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTab(tab)}
-                disabled={!previewMode && disabled && tab.type !== "phone" && tab.type !== "locale"}
+                disabled={!previewMode && disabled && tab.type !== "phone"}
                 className={
                   "ui-pop-tap flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] transition-colors " +
                   (active
                     ? activeTabClass
-                    : disabled && !previewMode && tab.type !== "phone" && tab.type !== "locale"
+                    : disabled && !previewMode && tab.type !== "phone"
                       ? disabledTabClass
                       : inactiveTabClass)
                 }
@@ -259,60 +231,6 @@ export function GuestBottomTabBar({
         </div>
       </nav>
 
-      {localeOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/40 p-3 sm:items-center" role="presentation">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            aria-label={localeSheetCopy.close}
-            onClick={() => setLocaleOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
-          >
-            <h2 id={titleId} className="text-base font-semibold text-slate-900">
-              {localeSheetCopy.title}
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">{localeSheetCopy.hint}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {LOCALES.map((item) => {
-                const active = locale === item.code;
-                return (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => {
-                      onLocaleChange(item.code);
-                      if (localeHint?.trim()) setHintVisible(true);
-                      setLocaleOpen(false);
-                    }}
-                    className={
-                      "ui-pop-tap rounded-xl border px-3 py-3 text-sm font-medium transition " +
-                      (active
-                        ? "border-teal-700 bg-[#2D7078] !text-white"
-                        : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50")
-                    }
-                    style={active ? { color: "#ffffff" } : undefined}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => setLocaleOpen(false)}
-              className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              {localeSheetCopy.close}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {phoneOpen ? (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/40 p-3 sm:items-center" role="presentation">
           <button
@@ -325,7 +243,7 @@ export function GuestBottomTabBar({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`${titleId}-phone`}
-            className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+            className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ui-pop-in"
           >
             <h2 id={`${titleId}-phone`} className="text-base font-semibold text-slate-900">
               {phoneSheetCopy.title}
@@ -353,16 +271,6 @@ export function GuestBottomTabBar({
               {phoneSheetCopy.close}
             </button>
           </div>
-        </div>
-      ) : null}
-
-      {hintVisible && localeHint ? (
-        <div
-          onAnimationEnd={() => setHintVisible(false)}
-          className="pointer-events-none fixed bottom-24 left-1/2 z-[90] w-[min(92vw,360px)] -translate-x-1/2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs leading-relaxed text-teal-900 shadow-sm toast-slide-in-out"
-          style={{ animationDuration: "2s" }}
-        >
-          {localeHint}
         </div>
       ) : null}
     </>

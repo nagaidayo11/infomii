@@ -1302,7 +1302,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           showLocaleToggle={showLocaleToggle}
           businessFeaturesEnabled={canShowLocaleToggle}
           guestNavMaxVisible={guestNavMaxVisible}
-          localeToggleHint="表示言語を切り替えました。内容はこの言語で表示されます。"
+          localeToggleHint={null}
           guestShell={guestShell}
           currentSlug={slug}
           backButton={

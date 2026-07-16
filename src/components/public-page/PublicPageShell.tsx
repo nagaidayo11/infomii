@@ -55,7 +55,7 @@ function PageHeader({
 
   return (
     <header
-      className={`app-page-enter relative z-[90] shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm safe-area-inset-top ${className}`}
+      className={`app-page-enter relative z-[90] shrink-0 overflow-visible border-b border-slate-200/80 bg-white/95 backdrop-blur-sm safe-area-inset-top ${className}`}
       data-guest-header
     >
       <div

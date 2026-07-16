@@ -106,7 +106,7 @@ export function PhoneDeviceFrame({
             <>
               {header ? (
                 <div
-                  className="guest-header-chrome relative z-[90] shrink-0 border-b border-slate-100 bg-white/95 px-3 py-2.5"
+                  className="guest-header-chrome relative z-[90] shrink-0 overflow-visible border-b border-slate-100 bg-white/95 px-3 py-2.5"
                   data-guest-header
                 >
                   {header}
@@ -126,7 +126,7 @@ export function PhoneDeviceFrame({
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {header ? (
                 <div
-                  className="guest-header-chrome relative z-[90] shrink-0 border-b border-slate-100 bg-white/95 px-3 py-2.5"
+                  className="guest-header-chrome relative z-[90] shrink-0 overflow-visible border-b border-slate-100 bg-white/95 px-3 py-2.5"
                   data-guest-header
                 >
                   {header}

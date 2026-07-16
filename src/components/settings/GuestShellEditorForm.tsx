@@ -20,11 +20,10 @@ import { PAGE_GUEST_SHELL_MIGRATION_SQL } from "@/lib/page-guest-shell";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
-const TYPE_LABEL: Record<GuestShellTabType, string> = {
+const TYPE_LABEL: Record<Exclude<GuestShellTabType, "locale">, string> = {
   home: "ホーム",
   phone: "電話",
   page: "ページ",
-  locale: "言語",
 };
 
 const NAV_STYLE_OPTIONS: Array<{ value: GuestShellNavStyle; label: string; hint: string }> = [
@@ -35,10 +34,12 @@ const NAV_STYLE_OPTIONS: Array<{ value: GuestShellNavStyle; label: string; hint:
 
 function ensureDefaultTabs(config: GuestShellConfig): GuestShellConfig {
   const navStyle = getGuestShellNavStyle(config);
+  const tabs = config.tabs.filter((tab) => tab.type !== "locale");
   const normalized: GuestShellConfig = {
     ...config,
     navStyle,
     enabled: navStyle !== "off",
+    tabs: tabs.length > 0 ? tabs : createDefaultGuestShellConfig().tabs,
   };
   if (normalized.tabs.length > 0) return normalized;
   return createDefaultGuestShellConfig();
@@ -131,7 +132,8 @@ export function GuestShellEditorForm({
   const resolvedPlan: PlanLimitTier =
     planTier ?? (isBusinessPlan ? "business" : "free");
   const maxEnabledTabs = resolveGuestNavLinkLimit(resolvedPlan);
-  const enabledCount = config.tabs.filter((t) => t.enabled).length;
+  const editableTabs = config.tabs.filter((tab) => tab.type !== "locale");
+  const enabledCount = editableTabs.filter((t) => t.enabled).length;
 
   useEffect(() => {
     listPagesForHotel().then(setPages).catch(() => setPages([]));
@@ -140,8 +142,7 @@ export function GuestShellEditorForm({
   function updateTab(tabId: string, patch: Partial<GuestShellTab>) {
     if (patch.enabled === true) {
       const current = config.tabs.find((t) => t.id === tabId);
-      const isLocale = (patch.type ?? current?.type) === "locale";
-      if (isLocale && !isBusinessPlan) {
+      if (current?.type === "locale" || patch.type === "locale") {
         return;
       }
       if (!current?.enabled && enabledCount >= maxEnabledTabs) {
@@ -150,7 +151,9 @@ export function GuestShellEditorForm({
     }
     onChange({
       ...config,
-      tabs: config.tabs.map((tab) => (tab.id === tabId ? { ...tab, ...patch } : tab)),
+      tabs: config.tabs
+        .filter((tab) => tab.type !== "locale")
+        .map((tab) => (tab.id === tabId ? { ...tab, ...patch } : tab)),
     });
   }
 
@@ -227,8 +230,14 @@ export function GuestShellEditorForm({
       {!isBusinessPlan && navActive ? (
         <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
           {resolvedPlan === "pro"
-            ? `ゲストナビは最大${maxEnabledTabs}件まで表示できます。言語切替はBusinessプランの機能です。`
-            : `Freeではゲストナビの表示リンクは最大${maxEnabledTabs}件です。言語切替・多言語はBusinessプランで利用できます。`}
+            ? `ゲストナビは最大${maxEnabledTabs}件まで表示できます。言語切替はBusinessプランの機能です（ヘッダーの Language）。`
+            : `Freeではゲストナビの表示リンクは最大${maxEnabledTabs}件です。言語切替・多言語はBusinessプランで利用できます（ヘッダーの Language）。`}
+        </p>
+      ) : null}
+
+      {isBusinessPlan ? (
+        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+          言語切替はゲストページ右上の「Language」からシートで行います。ナビ（下タブ / ハンバーガー）には言語項目を置きません。
         </p>
       ) : null}
 
@@ -241,8 +250,9 @@ export function GuestShellEditorForm({
             </span>
           ) : null}
         </p>
-        {config.tabs.map((tab) => {
+        {editableTabs.map((tab) => {
           const enabledHint = tab.enabled ? "表示中" : "非表示";
+          const typeLabel = TYPE_LABEL[tab.type as Exclude<GuestShellTabType, "locale">] ?? tab.type;
           return (
             <details
               key={tab.id}
@@ -251,10 +261,10 @@ export function GuestShellEditorForm({
               <summary className="app-guest-shell-tab-summary flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
                 <span className="min-w-0">
                   <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    {TYPE_LABEL[tab.type]}
+                    {typeLabel}
                   </span>
                   <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">
-                    {getGuestShellLabelJa(tab.label) || TYPE_LABEL[tab.type]}
+                    {getGuestShellLabelJa(tab.label) || typeLabel}
                     <span className="ml-2 text-xs font-normal text-slate-400">{enabledHint}</span>
                   </span>
                 </span>
@@ -277,7 +287,7 @@ export function GuestShellEditorForm({
                         onChange={(e) => handleLabelChange(tab, e.target.value)}
                         className="app-guest-shell-label-input mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
                         maxLength={20}
-                        aria-label={`${TYPE_LABEL[tab.type]}のラベル`}
+                        aria-label={`${typeLabel}のラベル`}
                       />
                     </label>
                     {isBusinessPlan && typeof tab.label === "object" && tab.label ? (
@@ -294,19 +304,11 @@ export function GuestShellEditorForm({
                     <input
                       type="checkbox"
                       checked={tab.enabled}
-                      disabled={
-                        (tab.type === "locale" && !isBusinessPlan) ||
-                        (!tab.enabled && enabledCount >= maxEnabledTabs)
-                      }
+                      disabled={!tab.enabled && enabledCount >= maxEnabledTabs}
                       onChange={(e) => updateTab(tab.id, { enabled: e.target.checked })}
                       className="app-guest-shell-checkbox"
                     />
-                    <span>
-                      表示
-                      {tab.type === "locale" && !isBusinessPlan ? (
-                        <span className="ml-1 font-normal text-slate-400">（Business）</span>
-                      ) : null}
-                    </span>
+                    <span>表示</span>
                   </label>
                 </div>
 
@@ -341,12 +343,6 @@ export function GuestShellEditorForm({
                       className="mt-1 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm text-slate-800"
                     />
                   </label>
-                ) : null}
-
-                {tab.type === "locale" ? (
-                  <p className="text-xs text-slate-500">
-                    オンにするとナビの「言語」から切替できます。このときヘッダーの言語トグルは非表示になります。
-                  </p>
                 ) : null}
               </div>
             </details>

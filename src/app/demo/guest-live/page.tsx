@@ -78,8 +78,7 @@ type VariantPreset = {
   guestShell?: GuestShellConfig;
   brandLogoSrc?: string;
   contentInset?: "default" | "flush";
-  localeToggleVariant?: "pills" | "language";
-  /** When false, hide JA/EN header chrome (LP value demos). */
+  /** When false, hide Language header chrome (LP value demos). */
   showLocaleToggle?: boolean;
   currentSlug?: string;
 };
@@ -791,7 +790,6 @@ export default function DemoGuestLivePage() {
       guestShell={variantPreset?.guestShell ?? null}
       currentSlug={variantPreset?.currentSlug ?? ""}
       contentInset={variantPreset?.contentInset ?? "default"}
-      localeToggleVariant={variantPreset?.localeToggleVariant ?? "pills"}
       guestNavMaxVisible={4}
     />
   );

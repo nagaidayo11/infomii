@@ -30,6 +30,26 @@ export function closeGuestPreviewTab(previewWindow: Window | null | undefined): 
   }
 }
 
+/** Navigate an already-open preview tab (prefer replace so back-stack stays clean). */
+export function navigatePreviewWindow(previewWindow: Window, url: string): boolean {
+  try {
+    if (previewWindow.closed) return false;
+  } catch {
+    return false;
+  }
+  try {
+    previewWindow.location.replace(url);
+    return true;
+  } catch {
+    try {
+      previewWindow.location.href = url;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 function buildGuestPageTarget(
   publicUrl: string,
   opts?: { preview?: boolean; appClient?: boolean; returnEditorPageId?: string },

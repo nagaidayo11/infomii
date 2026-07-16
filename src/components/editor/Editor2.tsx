@@ -53,6 +53,7 @@ import {
 import {
   closeGuestPreviewTab,
   navigateGuestPageUrl,
+  navigatePreviewWindow,
   openGuestPageInNewTab,
   openGuestPreviewPlaceholderTab,
 } from "@/lib/app-href";
@@ -1017,8 +1018,15 @@ export function Editor2({
       return;
     }
 
+    // Always use /v/ for preview so drafts load with ?preview=1 ( /qr rewrite can mask issues ).
+    const previewBasePath = `/v/${encodeURIComponent(pageMeta.slug)}`;
+    const previewUrl = `${window.location.origin}${previewBasePath}?preview=1`;
+
     const useSameTabPreview = useAppEditorChrome;
     let previewWindow: Window | null = null;
+    /** True once the new-tab preview is already on the guest URL (do not close on soft errors). */
+    let previewNavigatedEarly = false;
+
     if (!useSameTabPreview) {
       // Must open the tab synchronously on tap — await before window.open breaks mobile Safari.
       previewWindow = openGuestPreviewPlaceholderTab();
@@ -1028,6 +1036,8 @@ export function Editor2({
         );
         return;
       }
+      // Navigate ASAP so the tab leaves about:blank before long save/translate awaits.
+      previewNavigatedEarly = navigatePreviewWindow(previewWindow, previewUrl);
     }
 
     setPreviewBusy(true);
@@ -1035,7 +1045,9 @@ export function Editor2({
       await flushAutosaveNow();
       const saveErr = useEditor2Store.getState().saveError;
       if (saveErr) {
-        closeGuestPreviewTab(previewWindow);
+        if (!previewNavigatedEarly) {
+          closeGuestPreviewTab(previewWindow);
+        }
         window.alert(
           `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度プレビューを押してください。`,
         );
@@ -1047,13 +1059,17 @@ export function Editor2({
         // Soft: warn but still allow preview so editing flow isn't blocked.
         const continuePreview = window.confirm(`${translationError}\n\nこのままプレビューを開きますか？`);
         if (!continuePreview) {
-          closeGuestPreviewTab(previewWindow);
+          if (!previewNavigatedEarly) {
+            closeGuestPreviewTab(previewWindow);
+          }
           return;
         }
       }
 
       if (!guardPublishedBeforeGuestView()) {
-        closeGuestPreviewTab(previewWindow);
+        if (!previewNavigatedEarly) {
+          closeGuestPreviewTab(previewWindow);
+        }
         return;
       }
 
@@ -1089,16 +1105,12 @@ export function Editor2({
       } catch {
         // Preview tab still opens; user may see slightly stale server content until save succeeds.
       }
-      // Always use /v/ for preview so drafts load with ?preview=1 ( /qr rewrite can mask issues ).
-      const previewBasePath = `/v/${encodeURIComponent(pageMeta.slug)}`;
+
       if (useSameTabPreview) {
         navigateGuestPageUrl(previewBasePath, { preview: true, returnEditorPageId: pageId });
-      } else {
-        const origin = window.location.origin;
-        const previewUrl = `${origin}${previewBasePath}?preview=1`;
-        try {
-          previewWindow!.location.href = previewUrl;
-        } catch {
+      } else if (previewWindow) {
+        // Early nav: replace again to pick up freshly saved content. Else: first navigation off placeholder.
+        if (!navigatePreviewWindow(previewWindow, previewUrl)) {
           openGuestPageInNewTab(previewBasePath, { preview: true, appClient: false });
         }
       }

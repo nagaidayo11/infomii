@@ -14,10 +14,8 @@ type GuestHamburgerMenuProps = {
   tabs: GuestShellTab[];
   currentSlug: string;
   locale: SupportedLocale;
-  onLocaleChange: (locale: SupportedLocale) => void;
   preview?: boolean;
   clientApp?: boolean;
-  localeHint?: string | null;
   /** Editor preview: open panels but do not navigate */
   previewMode?: boolean;
   /**
@@ -26,13 +24,6 @@ type GuestHamburgerMenuProps = {
    */
   contained?: boolean;
 };
-
-const LOCALES: Array<{ code: SupportedLocale; label: string }> = [
-  { code: "ja", label: "日本語" },
-  { code: "en", label: "English" },
-  { code: "zh", label: "中文" },
-  { code: "ko", label: "한국어" },
-];
 
 function MenuIcon({ type }: { type: GuestShellTab["type"] }) {
   const className = "h-5 w-5 shrink-0";
@@ -85,31 +76,29 @@ function isTabActive(tab: GuestShellTab, currentSlug: string): boolean {
 
 /**
  * Header hamburger menu for guest pages (exclusive alternative to bottom tabs).
+ * Language switching is header-only (not a menu item).
  */
 export function GuestHamburgerMenu({
   tabs,
   currentSlug,
   locale,
-  onLocaleChange,
   preview = false,
   clientApp = false,
-  localeHint = null,
   previewMode = false,
   contained,
 }: GuestHamburgerMenuProps) {
   const containOverlays = contained ?? previewMode;
   const [menuMounted, setMenuMounted] = useState(false);
   const [menuEntered, setMenuEntered] = useState(false);
-  const [localeOpen, setLocaleOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [phoneValue, setPhoneValue] = useState<string | null>(null);
-  const [hintVisible, setHintVisible] = useState(false);
   const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
   const [panelTopPx, setPanelTopPx] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleId = useId();
   const menuOpen = menuMounted;
+  const navTabs = tabs.filter((tab) => tab.type !== "locale");
 
   const MENU_ANIM_MS = 240;
   const iconButtonClass =
@@ -171,36 +160,27 @@ export function GuestHamburgerMenu({
   }, [containOverlays]);
 
   useEffect(() => {
-    if (!menuOpen && !localeOpen && !phoneOpen) return;
+    if (!menuOpen && !phoneOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeMenu();
-        setLocaleOpen(false);
         setPhoneOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menuOpen, localeOpen, phoneOpen]);
+  }, [menuOpen, phoneOpen]);
 
-  if (tabs.length === 0) return null;
+  if (navTabs.length === 0) return null;
 
   function handleTab(tab: GuestShellTab) {
+    if (tab.type === "locale") return;
     if (previewMode) {
-      if (tab.type === "locale") {
-        closeMenu();
-        setLocaleOpen(true);
-      }
       if (tab.type === "phone") {
         setPhoneValue(tab.phone?.trim() || null);
         closeMenu();
         setPhoneOpen(true);
       }
-      return;
-    }
-    if (tab.type === "locale") {
-      closeMenu();
-      setLocaleOpen(true);
       return;
     }
     if (tab.type === "phone") {
@@ -233,15 +213,6 @@ export function GuestHamburgerMenu({
         : locale === "en"
           ? { menu: "Menu", open: "Open menu", close: "Close" }
           : { menu: "メニュー", open: "メニューを開く", close: "閉じる" };
-
-  const localeSheetCopy =
-    locale === "ko"
-      ? { title: "언어", hint: "표시 언어를 선택하세요", close: "닫기" }
-      : locale === "zh"
-        ? { title: "语言", hint: "请选择显示语言", close: "关闭" }
-        : locale === "en"
-          ? { title: "Language", hint: "Choose a display language", close: "Close" }
-          : { title: "言語", hint: "表示言語を選んでください", close: "閉じる" };
 
   const phoneSheetCopy =
     locale === "ko"
@@ -339,7 +310,6 @@ export function GuestHamburgerMenu({
                 aria-label={menuCopy.close}
                 onClick={closeMenu}
               />
-              {/* Drops from under the page header; height follows links only. */}
               <div
                 role="dialog"
                 aria-modal="true"
@@ -358,13 +328,12 @@ export function GuestHamburgerMenu({
                 </h2>
                 <nav className="px-2 py-2" aria-label="館内ナビ">
                   <ul className="space-y-0.5">
-                    {tabs.map((tab) => {
+                    {navTabs.map((tab) => {
                       const active = isTabActive(tab, currentSlug);
                       const disabled =
                         ((tab.type === "home" || tab.type === "page") && !tab.pageSlug?.trim()) ||
                         (tab.type === "phone" && !tab.phone?.trim());
-                      const softDisabled =
-                        !previewMode && disabled && tab.type !== "phone" && tab.type !== "locale";
+                      const softDisabled = !previewMode && disabled && tab.type !== "phone";
                       return (
                         <li key={tab.id}>
                           <button
@@ -395,65 +364,6 @@ export function GuestHamburgerMenu({
           )
         : null}
 
-      {localeOpen
-        ? renderOverlay(
-            <div
-              className={`${overlayPositionClass} inset-0 z-[80] flex items-end justify-center bg-slate-900/40 p-3`}
-              role="presentation"
-            >
-              <button
-                type="button"
-                className="absolute inset-0 cursor-default"
-                aria-label={localeSheetCopy.close}
-                onClick={() => setLocaleOpen(false)}
-              />
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={`${titleId}-locale`}
-                className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
-              >
-                <h2 id={`${titleId}-locale`} className="text-base font-semibold text-slate-900">
-                  {localeSheetCopy.title}
-                </h2>
-                <p className="mt-1 text-xs text-slate-500">{localeSheetCopy.hint}</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {LOCALES.map((item) => {
-                    const active = locale === item.code;
-                    return (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          onLocaleChange(item.code);
-                          if (localeHint?.trim()) setHintVisible(true);
-                          setLocaleOpen(false);
-                        }}
-                        className={
-                          "ui-pop-tap rounded-xl border px-3 py-3 text-sm font-medium transition " +
-                          (active
-                            ? "border-emerald-600 bg-emerald-600 !text-white"
-                            : "border-emerald-100 bg-white text-emerald-900 hover:bg-emerald-50")
-                        }
-                        style={active ? { color: "#ffffff" } : undefined}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setLocaleOpen(false)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                >
-                  {localeSheetCopy.close}
-                </button>
-              </div>
-            </div>,
-          )
-        : null}
-
       {phoneOpen
         ? renderOverlay(
             <div
@@ -470,7 +380,7 @@ export function GuestHamburgerMenu({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={`${titleId}-phone`}
-                className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+                className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ui-pop-in"
               >
                 <h2 id={`${titleId}-phone`} className="text-base font-semibold text-slate-900">
                   {phoneSheetCopy.title}
@@ -498,18 +408,6 @@ export function GuestHamburgerMenu({
                   {phoneSheetCopy.close}
                 </button>
               </div>
-            </div>,
-          )
-        : null}
-
-      {hintVisible && localeHint
-        ? renderOverlay(
-            <div
-              onAnimationEnd={() => setHintVisible(false)}
-              className={`pointer-events-none ${overlayPositionClass} bottom-24 left-1/2 z-[90] w-[min(92%,360px)] -translate-x-1/2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 shadow-sm toast-slide-in-out`}
-              style={{ animationDuration: "2s" }}
-            >
-              {localeHint}
             </div>,
           )
         : null}

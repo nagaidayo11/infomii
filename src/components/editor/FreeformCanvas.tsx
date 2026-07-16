@@ -9,12 +9,15 @@ import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
+import { GuestLanguageToggle } from "@/components/guest/GuestLanguageToggle";
+import { LocaleProvider } from "@/components/locale-context";
 import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
 import {
   getGuestShellNavStyle,
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
+import type { SupportedLocale } from "@/lib/localized-content";
 import { getBlockStyle, isMediaCardType, usesHeroColumnWidth, type CardType, type EditorCard } from "./types";
 
 const DEFAULT_W = 280;
@@ -291,7 +294,7 @@ export function FreeformCanvas({
     guides: { axis: "x" | "y"; value: number }[];
   } | null>(null);
   const [autoHeights, setAutoHeights] = useState<Record<string, number>>({});
-  const [previewLocale, setPreviewLocale] = useState<"ja" | "en" | "zh" | "ko">("ja");
+  const [previewLocale, setPreviewLocale] = useState<SupportedLocale>("ja");
   const navStyle = guestShell ? getGuestShellNavStyle(guestShell) : "off";
   const shellTabs = guestShell
     ? resolveVisibleGuestShellTabs(guestShell, {
@@ -543,6 +546,7 @@ export function FreeformCanvas({
 
   return (
     <CardEditProvider inlineEditable>
+    <LocaleProvider value={previewLocale}>
     <div
       ref={canvasRef}
       className="flex h-full min-h-0 flex-1 flex-col overflow-hidden outline-none"
@@ -563,17 +567,23 @@ export function FreeformCanvas({
               <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
                 {pageTitle.trim() || "（無題）"}
               </h1>
-              {navStyle === "hamburger" && shellTabs.length > 0 ? (
-                <div className="shrink-0">
+              <div className="flex shrink-0 items-center gap-1.5">
+                {isBusinessPlan ? (
+                  <GuestLanguageToggle
+                    locale={previewLocale}
+                    onLocaleChange={setPreviewLocale}
+                    contained
+                  />
+                ) : null}
+                {navStyle === "hamburger" && shellTabs.length > 0 ? (
                   <GuestHamburgerMenu
                     tabs={shellTabs}
                     currentSlug={pageSlug}
                     locale={previewLocale}
-                    onLocaleChange={setPreviewLocale}
                     previewMode
                   />
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           }
           footer={
@@ -582,7 +592,6 @@ export function FreeformCanvas({
                 tabs={shellTabs}
                 currentSlug={pageSlug}
                 locale={previewLocale}
-                onLocaleChange={setPreviewLocale}
                 previewMode
               />
             ) : null
@@ -752,6 +761,7 @@ export function FreeformCanvas({
         </PhoneDeviceFrame>
       </div>
     </div>
+    </LocaleProvider>
     </CardEditProvider>
   );
 }

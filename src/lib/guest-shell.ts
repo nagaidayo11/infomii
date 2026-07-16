@@ -10,6 +10,7 @@ import {
   type SupportedLocale,
 } from "@/lib/localized-content";
 
+/** Nav link types. `"locale"` is legacy-only (stripped on parse/resolve; language lives in header). */
 export type GuestShellTabType = "home" | "phone" | "page" | "locale";
 
 /** Optional visual override for bottom-tab icons (defaults follow `type`). */
@@ -61,7 +62,6 @@ export const DEFAULT_GUEST_SHELL_TABS: GuestShellTab[] = [
   { id: "home", type: "home", label: { ...DEFAULT_LABELS.home }, enabled: true, pageSlug: null },
   { id: "front", type: "phone", label: { ...DEFAULT_LABELS.phone }, enabled: true, phone: null },
   { id: "faq", type: "page", label: { ...DEFAULT_LABELS.page }, enabled: true, pageSlug: null },
-  { id: "lang", type: "locale", label: { ...DEFAULT_LABELS.locale }, enabled: true },
 ];
 
 /** Run once in Supabase SQL Editor if guest_shell column is missing. */
@@ -254,6 +254,8 @@ export function parseGuestShellConfig(raw: unknown): GuestShellConfig {
   const tabs = rawTabs
     .map((tab, index) => normalizeTab(tab, index))
     .filter((tab): tab is GuestShellTab => Boolean(tab))
+    // Language switching is header-only; drop legacy footer/hamburger locale tabs.
+    .filter((tab) => tab.type !== "locale")
     .slice(0, 5);
 
   if (tabs.length === 0) {
@@ -274,11 +276,10 @@ export function resolveVisibleGuestShellTabs(
 ): GuestShellTab[] {
   if (getGuestShellNavStyle(config) === "off") return [];
 
-  const multilingual = opts?.businessFeaturesEnabled === true;
-  let tabs = config.tabs.filter((tab) => tab.enabled);
-  if (!multilingual) {
-    tabs = tabs.filter((tab) => tab.type !== "locale");
-  }
+  // Locale tabs are never shown in nav (language is header Language + sheet).
+  let tabs = config.tabs.filter((tab) => tab.enabled && tab.type !== "locale");
+  // businessFeaturesEnabled kept for callers; locale nav no longer depends on it.
+  void opts?.businessFeaturesEnabled;
 
   const cap = opts?.maxVisibleTabs;
   if (typeof cap === "number" && Number.isFinite(cap) && cap >= 0) {
@@ -289,7 +290,7 @@ export function resolveVisibleGuestShellTabs(
 
 /**
  * Clamp config before save so Free cannot store more enabled links than allowed.
- * Locale tabs are forced off when multilingual is unavailable.
+ * Legacy locale tabs are stripped (language lives in the guest header).
  */
 export function clampGuestShellConfigForPlan(
   config: GuestShellConfig,
@@ -300,16 +301,16 @@ export function clampGuestShellConfigForPlan(
     return { ...config, navStyle: "off", enabled: false };
   }
 
+  void opts.businessFeaturesEnabled;
   let remaining = Math.max(0, opts.maxEnabledTabs);
-  const tabs = config.tabs.map((tab) => {
-    if (!opts.businessFeaturesEnabled && tab.type === "locale") {
-      return { ...tab, enabled: false };
-    }
-    if (!tab.enabled) return tab;
-    if (remaining <= 0) return { ...tab, enabled: false };
-    remaining -= 1;
-    return tab;
-  });
+  const tabs = config.tabs
+    .filter((tab) => tab.type !== "locale")
+    .map((tab) => {
+      if (!tab.enabled) return tab;
+      if (remaining <= 0) return { ...tab, enabled: false };
+      remaining -= 1;
+      return tab;
+    });
 
   return {
     ...config,
