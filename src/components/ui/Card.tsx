@@ -9,13 +9,13 @@ type CardProps = {
 };
 
 /** Consistent card padding (symmetric vertical): none | sm | md | lg.
- * Horizontal inset matches 見出し＋本文セット (`px-3`).
+ * Uses guest pad tokens (`.guest-card-pad` / `-sm`) so guest + editor preview align.
  */
 const paddingClass = {
   none: "",
-  sm: "px-3 py-2.5",
-  md: "px-3 py-3",
-  lg: "px-3 py-3",
+  sm: "guest-card-pad-sm",
+  md: "guest-card-pad",
+  lg: "guest-card-pad",
 };
 
 /**

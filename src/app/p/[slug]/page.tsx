@@ -16,8 +16,9 @@ import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { parseGuestShellConfig } from "@/lib/guest-shell";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 import { rowToCard } from "@/lib/storage";
-import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
-import { resolvePageBreakfastCrowdOpsWithClient } from "@/lib/editor/page-ops";
+import { applyLiveOpsByKeyToCards } from "@/lib/editor/live-ops/status";
+import { isLiveOpsCardType } from "@/lib/editor/live-ops/registry";
+import { resolveAllPageLiveOpsWithClient } from "@/lib/editor/live-ops/page-store";
 
 /** Live card fields (e.g. breakfast_crowd level) must stay fresh for guests. */
 export const dynamic = "force-dynamic";
@@ -712,15 +713,15 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       ...(mapped.style ? { style: mapped.style as EditorCard["style"] } : {}),
     };
   });
-  if (cardPageId && cardViewData.some((c) => c.type === "breakfast_crowd")) {
+  if (cardPageId && cardViewData.some((c) => isLiveOpsCardType(c.type))) {
     try {
       const admin = getSupabaseAdminServerClient();
-      const breakfastOps = await resolvePageBreakfastCrowdOpsWithClient(admin, cardPageId, {
-        cardRows: cardRows
-          .filter((r) => r.type === "breakfast_crowd")
-          .map((r) => ({ content: r.content })),
-      });
-      cardViewData = applyBreakfastCrowdOpsStatusToCards(cardViewData, breakfastOps).cards;
+      const liveOps = await resolveAllPageLiveOpsWithClient(
+        admin,
+        cardPageId,
+        cardRows.map((r) => ({ type: (r.type as string) ?? "text", content: r.content })),
+      );
+      cardViewData = applyLiveOpsByKeyToCards(cardViewData, liveOps).cards;
     } catch {
       /* keep denormalized card content */
     }

@@ -19,7 +19,14 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { CardRenderer } from "@/components/cards/CardRenderer";
-import { CARD_FULL_BLEED_CLASS, CARD_INSET_GUTTER_CLASS, isCardFullBleed } from "@/lib/editor/card-width-mode";
+import {
+  CARD_FULL_BLEED_CLASS,
+  CARD_INSET_GUTTER_CLASS,
+  GUEST_CARD_STACK_CLASS,
+  GUEST_CARD_SURFACE_CLASS,
+  GUEST_CARD_SURFACE_MEDIA_CLASS,
+  isCardFullBleed,
+} from "@/lib/editor/card-width-mode";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
 import { getBlockStyle, isMediaCardType, type EditorCard } from "./types";
 
@@ -182,6 +189,19 @@ function SortableCardWrapper({
   };
 
   const fullBleed = isCardFullBleed(card);
+  const mediaOrStatus =
+    isMediaCardType(card.type) ||
+    card.type === "breakfast_crowd" ||
+    card.type === "dinner_crowd" ||
+    card.type === "spa_crowd";
+  const layoutOnly = card.type === "space" || card.type === "divider";
+  const surfaceClass = fullBleed
+    ? "rounded-none"
+    : layoutOnly
+      ? ""
+      : mediaOrStatus
+        ? GUEST_CARD_SURFACE_MEDIA_CLASS
+        : GUEST_CARD_SURFACE_CLASS;
 
   return (
     <div
@@ -197,7 +217,7 @@ function SortableCardWrapper({
         <div
           className={
             "editor-card-drop-placeholder relative min-h-[72px] w-full overflow-hidden border-2 border-dashed border-blue-200 bg-blue-50/40 shadow-[0_0_0_2px_rgba(37,99,235,0.12)] " +
-            (fullBleed ? "rounded-none" : "rounded-2xl")
+            (fullBleed ? "rounded-none" : "rounded-[var(--guest-card-radius,0.75rem)]")
           }
           aria-hidden
         >
@@ -210,13 +230,15 @@ function SortableCardWrapper({
       ) : (
         <div
           className={
-            "editor-card-selected relative overflow-hidden border transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
-            (fullBleed ? "rounded-none " : "rounded-2xl ") +
+            "editor-card-selected relative overflow-hidden transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            (surfaceClass ? surfaceClass + " " : "") +
             (isNewlyAdded ? "editor-card-enter " : "") +
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
-              ? "border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
-              : "border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:hover:border-slate-300 lg:hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] lg:hover:-translate-y-1 lg:hover:scale-[1.005]")
+              ? "border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
+              : mediaOrStatus || layoutOnly
+                ? ""
+                : "lg:hover:border-slate-300 lg:hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] lg:hover:-translate-y-1 lg:hover:scale-[1.005]")
           }
         >
           <button
@@ -386,15 +408,14 @@ export function Canvas({
                 data-mobile-preview
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="guest-content-gutter mx-auto box-border min-h-0 w-full min-w-0 py-4">
+                <div className="guest-page guest-content-gutter mx-auto box-border min-h-0 w-full min-w-0 guest-page-main">
                 <SortableContext
                   items={sortedCards.map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {sortedCards.length === 0 ? (
                     <div
-                      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-16 text-center"
-                      style={{ marginLeft: "var(--guest-gutter)", marginRight: "var(--guest-gutter)" }}
+                      className="card-content-inset flex flex-col items-center justify-center rounded-[var(--guest-card-radius,0.75rem)] border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-16 text-center"
                     >
                       <p className="text-sm font-medium text-slate-600">
                         左のカードライブラリから追加、または <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-xs">/</kbd> でクイック挿入
@@ -405,7 +426,7 @@ export function Canvas({
                     </div>
                   ) : (
                     <div
-                      className="space-y-3"
+                      className={GUEST_CARD_STACK_CLASS}
                       onClick={(e) => {
                         if (e.target === e.currentTarget) onSelectCard(null);
                       }}

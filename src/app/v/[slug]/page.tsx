@@ -8,10 +8,10 @@ import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve
 import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
-import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
-import { resolvePageBreakfastCrowdOpsWithClient } from "@/lib/editor/page-ops";
+import { applyLiveOpsByKeyToCards } from "@/lib/editor/live-ops/status";
+import { resolveAllPageLiveOpsWithClient } from "@/lib/editor/live-ops/page-store";
 
-/** Breakfast crowd ops (and other live card fields) must not be served from a stale RSC cache. */
+/** Live ops (and other live card fields) must not be served from a stale RSC cache. */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -160,12 +160,12 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     order: r.order ?? 0,
   }));
 
-  const breakfastOps = await resolvePageBreakfastCrowdOpsWithClient(supabase, page.id, {
-    cardRows: (rows ?? [])
-      .filter((r) => r.type === "breakfast_crowd")
-      .map((r) => ({ content: r.content })),
-  });
-  const { cards: cardsWithOps } = applyBreakfastCrowdOpsStatusToCards(cards, breakfastOps);
+  const liveOps = await resolveAllPageLiveOpsWithClient(
+    supabase,
+    page.id,
+    (rows ?? []).map((r) => ({ type: (r.type ?? "text") as string, content: r.content })),
+  );
+  const { cards: cardsWithOps } = applyLiveOpsByKeyToCards(cards, liveOps);
   const hasMultilingualContent = cardsWithOps.some((card) => hasLocalizedPayload(card.content));
   const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
   const backLink = buildGuestPreviewBackLink({

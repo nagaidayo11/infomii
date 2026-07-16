@@ -1,7 +1,13 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -64,30 +70,30 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
           />
         </p>
       ) : null}
-      <dl className="mt-3 space-y-3" style={getBodyFontSizeStyle()}>
+      <dl className={`mt-3 space-y-3 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
         {items.length === 0 ? (
-          <p className="text-slate-500">{labels.empty}</p>
+          <p className={CARD_BLOCK_CAPTION_CLASS}>{labels.empty}</p>
         ) : (
           items.map((item, i) => (
             <div key={i} data-inner-surface className={`border border-slate-100 bg-slate-50/60 p-3 ${editorInnerRadiusClassName}`}>
-              <dt className="font-bold text-slate-700">
+              <dt className={`${CARD_BLOCK_TITLE_CLASS} text-slate-700`}>
                 <InlineEditable
                   value={item.q ?? ""}
                   onSave={(v) => updateItem(i, "q", v)}
                   editable={editable}
                   onActivate={onActivate}
-                  className="font-bold text-slate-700"
+                  className={`${CARD_BLOCK_TITLE_CLASS} text-slate-700`}
                   placeholder={labels.q}
                 />
               </dt>
-              <dd className="mt-1 text-slate-600">
+              <dd className={`mt-1 ${CARD_BLOCK_BODY_CLASS}`}>
                 <InlineEditable
                   value={item.a ?? ""}
                   onSave={(v) => updateItem(i, "a", v)}
                   editable={editable}
                   onActivate={onActivate}
                   multiline
-                  className="block w-full min-h-[1lh] text-slate-600"
+                  className={`block w-full min-h-[1lh] ${CARD_BLOCK_BODY_CLASS}`}
                   placeholder={labels.a}
                 />
               </dd>

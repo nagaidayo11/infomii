@@ -1,6 +1,7 @@
 /**
  * Guest / public card page horizontal layout — keep in sync with
- * `PublicPageShell` / editor FreeformCanvas (inset cards use --guest-gutter;
+ * `PublicPageShell` / editor FreeformCanvas / `.guest-content-gutter`
+ * (`--guest-gutter` defaults to 1rem = 16px; inset cards use the token;
  * full-bleed heroes span the phone edge).
  */
 export const GUEST_PAGE_MAIN_PADDING_X_PX = 16;

@@ -1,13 +1,20 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_SM_CLASS } from "@/lib/editor/card-width-mode";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
 
@@ -71,23 +78,48 @@ export function CheckoutCard({ card, locale = "ja" }: CheckoutCardProps) {
           <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} />
         </p>
       ) : null}
-      <div data-inner-surface className={`mt-2 space-y-1 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2`}>
-      <p className="text-slate-600" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={time} onSave={(v) => updateKey("time", v)} editable={editable} onActivate={onActivate} className="text-slate-600" placeholder="11:00" />
+      <div
+        data-inner-surface
+        className={`mt-2 space-y-1 ${GUEST_CARD_PAD_SM_CLASS} ${editorInnerRadiusClassName} bg-slate-50`}
+      >
+      <p className={CARD_BLOCK_BODY_CLASS} style={getBodyFontSizeStyle()}>
+        <InlineEditable
+          value={time}
+          onSave={(v) => updateKey("time", v)}
+          editable={editable}
+          onActivate={onActivate}
+          className={CARD_BLOCK_BODY_CLASS}
+          placeholder="11:00"
+        />
       </p>
-      <p className="text-slate-500" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={note} onSave={(v) => updateKey("note", v)} editable={editable} onActivate={onActivate} multiline className="block w-full min-h-[1lh] text-slate-500" placeholder={labels.notePlaceholder} />
+      <p className={CARD_BLOCK_CAPTION_CLASS}>
+        <InlineEditable
+          value={note}
+          onSave={(v) => updateKey("note", v)}
+          editable={editable}
+          onActivate={onActivate}
+          multiline
+          className={`block w-full min-h-[1lh] ${CARD_BLOCK_CAPTION_CLASS}`}
+          placeholder={labels.notePlaceholder}
+        />
       </p>
       </div>
       {linkUrl && (
         <a
           href={editable ? linkUrl : resolveGuestHref(linkUrl)}
-          className="mt-2 inline-block font-normal text-ds-primary underline"
+          className={`mt-2 inline-block font-normal text-ds-primary underline ${CARD_BLOCK_BODY_CLASS}`}
           style={getBodyFontSizeStyle()}
           onClick={editable ? (e) => e.preventDefault() : undefined}
           aria-disabled={editable ? true : undefined}
         >
-          <InlineEditable value={linkLabel} onSave={(v) => updateKey("linkLabel", v)} editable={editable} onActivate={onActivate} className="font-normal text-ds-primary underline" placeholder={labels.detailPlaceholder} />
+          <InlineEditable
+            value={linkLabel}
+            onSave={(v) => updateKey("linkLabel", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className="font-normal text-ds-primary underline"
+            placeholder={labels.detailPlaceholder}
+          />
         </a>
       )}
     </Card>

@@ -3,7 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { LiveOpsCrowdCard } from "./LiveOpsCrowdCard";
 
-export function BreakfastCrowdCard({
+export function SpaCrowdCard({
   card,
   isSelected,
   locale = "ja",
@@ -12,7 +12,5 @@ export function BreakfastCrowdCard({
   isSelected?: boolean;
   locale?: string;
 }) {
-  return (
-    <LiveOpsCrowdCard card={card} opsKey="breakfastCrowd" isSelected={isSelected} locale={locale} />
-  );
+  return <LiveOpsCrowdCard card={card} opsKey="spaCrowd" isSelected={isSelected} locale={locale} />;
 }

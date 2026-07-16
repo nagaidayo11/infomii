@@ -1,13 +1,20 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getBodyFontSizeStyle,
+  getTitleFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type WifiCardProps = {
@@ -45,51 +52,54 @@ export function WifiCard({ card, isSelected, locale = "ja" }: WifiCardProps) {
 
   return (
     <Card padding="none" className="">
-      <div data-inner-surface className={`flex flex-col gap-1.5 ${editorInnerRadiusClassName} bg-slate-50 px-3 py-2.5`}>
-      {/* Block title: CARD_BLOCK_TITLE_CLASS = color only; weight from getTitleFontSizeStyle + CSS vars */}
+      <div
+        data-inner-surface
+        className={`flex flex-col gap-1.5 ${GUEST_CARD_PAD_CLASS} ${editorInnerRadiusClassName} bg-slate-50`}
+      >
+      {/* Block title: size/weight from getTitleFontSizeStyle + guest / block CSS vars */}
       {(editable || title) ? (
-        <p className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`} style={getTitleFontSizeStyle()}>
+        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
             editable={editable}
             onActivate={onActivate}
-            className={`${CARD_BLOCK_TITLE_CLASS} leading-snug`}
+            className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.title}
           />
         </p>
       ) : null}
-      <p className="text-xs leading-snug text-slate-600">
+      <p className={CARD_BLOCK_BODY_CLASS} style={getBodyFontSizeStyle()}>
         {labels.ssid}:{" "}
         <InlineEditable
           value={ssid}
           onSave={(v) => updateKey("ssid", v)}
           editable={editable}
           onActivate={onActivate}
-          className="text-xs text-slate-600"
+          className={CARD_BLOCK_BODY_CLASS}
           placeholder={labels.ssid}
         />
       </p>
-      <p className="text-xs font-mono leading-snug text-slate-600">
+      <p className={`${CARD_BLOCK_BODY_CLASS} font-mono`} style={getBodyFontSizeStyle()}>
         {labels.password}:{" "}
         <InlineEditable
           value={password}
           onSave={(v) => updateKey("password", v)}
           editable={editable}
           onActivate={onActivate}
-          className="text-xs font-mono text-slate-600"
+          className={`${CARD_BLOCK_BODY_CLASS} font-mono`}
           placeholder={labels.password}
         />
       </p>
       {(isSelected || description.trim().length > 0) && (
-        <p className="text-xs leading-snug text-slate-500">
+        <p className={CARD_BLOCK_CAPTION_CLASS}>
           <InlineEditable
             value={description}
             onSave={(v) => updateKey("description", v)}
             editable={editable}
             onActivate={onActivate}
             multiline
-            className="block w-full min-h-[1lh] text-xs text-slate-500"
+            className={`block w-full min-h-[1lh] ${CARD_BLOCK_CAPTION_CLASS}`}
             placeholder={labels.desc}
           />
         </p>

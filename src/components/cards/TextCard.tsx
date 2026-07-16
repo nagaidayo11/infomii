@@ -1,13 +1,14 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getBodyFontSizeStyle } from "@/components/editor/types";
+import { CARD_BLOCK_BODY_CLASS, getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type TextCardProps = {
@@ -44,7 +45,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
     <Card padding="none" className="">
       <div
         data-inner-surface
-        className={`px-3 py-2.5 font-normal leading-snug text-slate-800 ${editorInnerRadiusClassName} bg-white`}
+        className={`${GUEST_CARD_PAD_CLASS} ${CARD_BLOCK_BODY_CLASS} text-slate-800 ${editorInnerRadiusClassName} bg-white`}
         style={getBodyFontSizeStyle()}
       >
         <InlineEditable
@@ -53,7 +54,7 @@ export function TextCard({ card, isSelected, locale = "ja" }: TextCardProps) {
           editable={editable}
           onActivate={onActivate}
           multiline
-          className="font-normal text-slate-800"
+          className={`${CARD_BLOCK_BODY_CLASS} text-slate-800`}
           placeholder={labels.placeholder}
         />
       </div>

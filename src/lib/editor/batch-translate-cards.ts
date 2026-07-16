@@ -41,6 +41,7 @@ const NON_TRANSLATABLE_KEYS = new Set([
   // Status / crowd enums + timestamps — must stay plain (e.g. level: "open").
   "level",
   "updatedAt",
+  "updatedBy",
 ]);
 
 function collectJaTargets(

@@ -754,6 +754,17 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <circle cx="12" cy="9" r="2.5" strokeWidth={2} />
     </svg>
   ),
+  dinner_crowd: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10h16M6 10v8M18 10v8M9 6v4M15 6v4" />
+    </svg>
+  ),
+  spa_crowd: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16c2-3 4-4.5 8-4.5S18 13 20 16" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10c.8-1.2 1.8-2 4-2s3.2.8 4 2" />
+    </svg>
+  ),
   social_links: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8v8" />

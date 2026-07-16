@@ -100,6 +100,8 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   accordion_info: 140,
   open_status: 104,
   breakfast_crowd: 120,
+  dinner_crowd: 120,
+  spa_crowd: 120,
   social_links: 120,
   contact_hub: 132,
   progress_steps: 124,
@@ -598,7 +600,7 @@ export function FreeformCanvas({
           }
         >
           <div
-            className="guest-content-gutter relative mx-auto"
+            className="guest-page guest-content-gutter relative mx-auto"
             style={{ width: stageWidth, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
@@ -726,7 +728,9 @@ export function FreeformCanvas({
                   <div
                     className={
                       "editor-card-selected h-full w-full overflow-hidden transition-shadow " +
-                      (fullBleed ? "card-full-bleed rounded-none " : "rounded-xl ") +
+                      (fullBleed
+                        ? "card-full-bleed rounded-none "
+                        : "guest-card-surface-media ") +
                       (isSelected
                         ? fullBleed
                           ? "ring-2 ring-blue-300 "

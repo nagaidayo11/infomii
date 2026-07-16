@@ -8,13 +8,20 @@ import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAppToast } from "@/components/app-shell/AppToastProvider";
-import { buildBreakfastCrowdOpsHref, syncBreakfastCrowdOpsIntoEditorStore } from "@/lib/editor/breakfast-crowd-ops";
+import {
+  buildLiveOpsHref,
+  LIVE_OPS_DEFINITIONS,
+  LIVE_OPS_KEYS,
+  liveOpsKeyForCardType,
+  syncLiveOpsIntoEditorStore,
+} from "@/lib/editor/live-ops";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
 import { FreeformCanvas } from "./FreeformCanvas";
 import { CardSettings } from "./SettingsPanel";
 import { PublishModal } from "./PublishModal";
+import { PageQualityChecksPanel } from "./PageQualityChecksPanel";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 import { NewPageOnboarding } from "./NewPageOnboarding";
 import { useEditor2Store } from "./store";
@@ -46,6 +53,7 @@ import {
   getPageGuestShellEditorState,
   getCurrentHotelTranslationUsage,
   trackCurrentHotelTranslationRun,
+  listPagesForHotel,
 } from "@/lib/storage";
 import {
   type LibraryAudience,
@@ -64,6 +72,10 @@ import {
   batchTranslateEditorCards,
   collectMissingTranslationTargets,
 } from "@/lib/editor/batch-translate-cards";
+import {
+  runPageQualityChecks,
+  type PageQualityFinding,
+} from "@/lib/editor/page-quality-checks";
 
 /**
  * Canvas-based card editor — Notion-like experience.
@@ -78,7 +90,7 @@ type Editor2Props = {
 };
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
-const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "notice", "pageLinks", "faq", "emergency"];
+const DEMO_FRONTDESK_PRESET_TYPES: CardType[] = ["hero", "welcome", "wifi", "faq", "emergency"];
 const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / 한국어";
 
 function buildEditorContentSignature(payload: {
@@ -161,6 +173,11 @@ export function Editor2({
     lockedType: CardType | null;
     requiredPlan: "pro" | "business";
   }>({ open: false, lockedType: null, requiredPlan: "business" });
+  const [qualityGate, setQualityGate] = useState<{
+    findings: PageQualityFinding[];
+    mode: "publish" | "preview";
+    resume: "publish_click_strict" | "toggle_publish_on" | "preview";
+  } | null>(null);
   const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>(
     () => (useAppEditorChrome ? "personal" : "hotel"),
   );
@@ -168,6 +185,8 @@ export function Editor2({
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
+  const knownPageSlugsRef = useRef<Set<string> | null>(null);
+  const qualityGateSkipRef = useRef(false);
   const openPlanUpsell = useCallback((type: CardType) => {
     void trackUpgradeClick("editor");
     const requiredPlan = getMinimumPlanForCardType(type);
@@ -497,6 +516,27 @@ export function Editor2({
   }, [isDemoMode, pageId]);
 
   useEffect(() => {
+    if (isDemoMode) {
+      knownPageSlugsRef.current = null;
+      return;
+    }
+    let cancelled = false;
+    listPagesForHotel()
+      .then((pages) => {
+        if (cancelled) return;
+        knownPageSlugsRef.current = new Set(
+          pages.map((p) => p.slug).filter((slug): slug is string => Boolean(slug?.trim())),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) knownPageSlugsRef.current = null;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDemoMode, pageId]);
+
+  useEffect(() => {
     if (isDemoMode || !pageMeta.slug) return;
     getPendingPublishApprovalBySlug(pageMeta.slug)
       .then((row) => setHasPendingApproval(Boolean(row)))
@@ -520,11 +560,11 @@ export function Editor2({
 
   const { retry, flushAutosaveNow } = useAutoSaveCards(pageId ?? null);
 
-  // Another tab / Quick Ops may update breakfast_crowd while this editor stays mounted.
+  // Another tab / Quick Ops may update live ops while this editor stays mounted.
   useEffect(() => {
     if (isDemoMode || !pageId) return;
     const pull = () => {
-      void syncBreakfastCrowdOpsIntoEditorStore(pageId);
+      void syncLiveOpsIntoEditorStore(pageId);
     };
     const onVisibility = () => {
       if (document.visibilityState === "visible") pull();
@@ -793,6 +833,44 @@ export function Editor2({
     [isBusinessPlan, pageId, setCards],
   );
 
+  const collectQualityFindings = useCallback((): PageQualityFinding[] => {
+    return runPageQualityChecks({
+      cards: useEditor2Store.getState().cards,
+      guestShell: previewGuestShell,
+      knownPageSlugs: knownPageSlugsRef.current ?? undefined,
+      includeMissingTranslations: isBusinessPlan,
+      pageTitle: pageMeta.title,
+    });
+  }, [previewGuestShell, isBusinessPlan, pageMeta.title]);
+
+  const openQualityGateIfNeeded = useCallback(
+    (mode: "publish" | "preview", resume: "publish_click_strict" | "toggle_publish_on" | "preview") => {
+      if (qualityGateSkipRef.current) {
+        qualityGateSkipRef.current = false;
+        return false;
+      }
+      const findings = collectQualityFindings();
+      if (findings.length === 0) return false;
+      setQualityGate({ findings, mode, resume });
+      return true;
+    },
+    [collectQualityFindings],
+  );
+
+  const focusFirstQualityFinding = useCallback(
+    (findings: PageQualityFinding[]) => {
+      const cardId = findings.find((f) => f.cardId)?.cardId;
+      setQualityGate(null);
+      if (!cardId) return;
+      selectCard(cardId);
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-card-id="${cardId}"]`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [selectCard],
+  );
+
   const publishNow = useCallback(async (opts?: { silent?: boolean }) => {
     if (isDemoMode) {
       setDemoLockMessage("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。");
@@ -1018,6 +1096,10 @@ export function Editor2({
       return;
     }
 
+    if (openQualityGateIfNeeded("preview", "preview")) {
+      return;
+    }
+
     // Always use /v/ for preview so drafts load with ?preview=1 ( /qr rewrite can mask issues ).
     const previewBasePath = `/v/${encodeURIComponent(pageMeta.slug)}`;
     const previewUrl = `${window.location.origin}${previewBasePath}?preview=1`;
@@ -1125,10 +1207,14 @@ export function Editor2({
     guardPublishedBeforeGuestView,
     useAppEditorChrome,
     ensureTranslationsBeforeGuestAction,
+    openQualityGateIfNeeded,
   ]);
 
   const handlePublishClickStrict = useCallback(async () => {
     if (guardDemoAction("デモモードではプレビュー・公開・QR発行はできません。無料登録で続きから編集できます。")) {
+      return;
+    }
+    if (openQualityGateIfNeeded("publish", "publish_click_strict")) {
       return;
     }
     if (pageId) {
@@ -1166,7 +1252,17 @@ export function Editor2({
     } finally {
       setPublishFlowBusy(false);
     }
-  }, [guardDemoAction, handlePublishClick, hotelRole, pageMeta.slug, hasPendingApproval, flushAutosaveNow, pageId, publishNow]);
+  }, [
+    guardDemoAction,
+    handlePublishClick,
+    hotelRole,
+    pageMeta.slug,
+    hasPendingApproval,
+    flushAutosaveNow,
+    pageId,
+    publishNow,
+    openQualityGateIfNeeded,
+  ]);
 
   const handleTogglePublishedStrict = useCallback(async () => {
     if (isDemoMode) {
@@ -1177,6 +1273,9 @@ export function Editor2({
     try {
       if (publishStatus === "published") {
         await handleTogglePublished();
+        return;
+      }
+      if (openQualityGateIfNeeded("publish", "toggle_publish_on")) {
         return;
       }
       // First publish (draft → ON): save + publish content + open QR modal in one step.
@@ -1203,7 +1302,24 @@ export function Editor2({
     handleTogglePublished,
     flushAutosaveNow,
     publishNow,
+    openQualityGateIfNeeded,
   ]);
+
+  const handleQualityGateContinue = useCallback(() => {
+    if (!qualityGate) return;
+    const { resume } = qualityGate;
+    setQualityGate(null);
+    qualityGateSkipRef.current = true;
+    if (resume === "preview") {
+      void handlePreviewClick();
+      return;
+    }
+    if (resume === "toggle_publish_on") {
+      void handleTogglePublishedStrict();
+      return;
+    }
+    void handlePublishClickStrict();
+  }, [qualityGate, handlePreviewClick, handleTogglePublishedStrict, handlePublishClickStrict]);
 
   const publishActionLabel =
     hotelRole === "editor"
@@ -1250,10 +1366,19 @@ export function Editor2({
           ? ("unpublished_changes" as const)
           : null;
 
-  const breakfastCrowdOpsHref =
-    !isDemoMode && pageId && cards.some((c) => c.type === "breakfast_crowd")
-      ? buildBreakfastCrowdOpsHref(pageId)
-      : null;
+  const liveOpsQuickLinks =
+    !isDemoMode && pageId
+      ? LIVE_OPS_KEYS.filter((key) =>
+          cards.some((c) => liveOpsKeyForCardType(c.type) === key),
+        ).map((key) => {
+          const def = LIVE_OPS_DEFINITIONS[key];
+          return {
+            href: buildLiveOpsHref(key, pageId),
+            label: def.defaultTitle,
+            title: def.quickOpsTitle,
+          };
+        })
+      : [];
 
   const topBar =
     pageId || isDemoMode ? (
@@ -1285,7 +1410,7 @@ export function Editor2({
           publishToggleChecked={publishStatus === "published"}
           onRenamePageTitle={handleRenamePageTitle}
           publishNotice={publishNotice}
-          breakfastCrowdOpsHref={breakfastCrowdOpsHref}
+          liveOpsQuickLinks={liveOpsQuickLinks}
         />
       ) : (
         <EditorTopBar
@@ -1319,7 +1444,7 @@ export function Editor2({
           scrollPriorityMode={scrollPriorityMode}
           onToggleScrollPriority={() => setScrollPriorityMode((prev) => !prev)}
           publishNotice={publishNotice}
-          breakfastCrowdOpsHref={breakfastCrowdOpsHref}
+          liveOpsQuickLinks={liveOpsQuickLinks}
         />
       )
     ) : null;
@@ -1583,6 +1708,15 @@ export function Editor2({
             slug={publishState.slug}
             onClose={() => setPublishState(null)}
             showBusinessUpsell={planTier !== "business"}
+          />
+        )}
+        {qualityGate && (
+          <PageQualityChecksPanel
+            findings={qualityGate.findings}
+            mode={qualityGate.mode}
+            onClose={() => setQualityGate(null)}
+            onFix={() => focusFirstQualityFinding(qualityGate.findings)}
+            onContinue={handleQualityGateContinue}
           />
         )}
         {showEditorBusyOverlay && (

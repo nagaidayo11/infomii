@@ -1277,9 +1277,33 @@ body.lux-shell:has(.lp-page)::before {
     radial-gradient(ellipse 70% 45% at 90% 8%, rgba(16, 185, 129, 0.06), transparent 50%);
 }
 
-/* Guest / editor content column gutter — inset cards use margin; full-bleed uses none. */
-.guest-content-gutter {
+/* Guest / editor content column — spacing + card surface + type tokens.
+   Prefer these over scattered px-4 / space-y-* / text-sm on guest surfaces. */
+.guest-content-gutter,
+.guest-page {
   --guest-gutter: 1rem;
+  --guest-stack-gap: 1rem;
+  --guest-stack-gap-flush: 0px;
+  --guest-card-radius: 0.75rem; /* matches rounded-xl */
+  --guest-card-border: 1px solid color-mix(in srgb, var(--color-ds-border) 90%, transparent);
+  --guest-card-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+  --guest-card-pad-x: 0.75rem; /* 12px — matches px-3 */
+  --guest-card-pad-y: 0.75rem;
+  --guest-card-pad-y-sm: 0.625rem; /* 10px — matches py-2.5 */
+  --guest-main-pad-y-top: 1rem;
+  --guest-main-pad-y-bottom: 1.5rem;
+
+  /* 3-step guest card typography (title / body / caption) */
+  --guest-title-size: 1rem;
+  --guest-title-leading: 1.35;
+  --guest-title-weight: 600;
+  --guest-title-color: #1e293b; /* slate-800 */
+  --guest-body-size: 0.875rem;
+  --guest-body-leading: 1.5;
+  --guest-body-color: #475569; /* slate-600 */
+  --guest-caption-size: 0.75rem;
+  --guest-caption-leading: 1.4;
+  --guest-caption-color: #64748b; /* slate-500 */
 }
 
 .guest-content-gutter[data-guest-gutter="0.75"] {
@@ -1290,13 +1314,96 @@ body.lux-shell:has(.lp-page)::before {
   --guest-gutter: 0.875rem;
 }
 
+.guest-content-gutter[data-guest-gutter="0"],
+.guest-content-gutter[data-guest-content-inset="flush"] {
+  --guest-gutter: 0px;
+  --guest-stack-gap: var(--guest-stack-gap-flush, 0px);
+  --guest-main-pad-y-top: 0px;
+  --guest-main-pad-y-bottom: 0px;
+}
+
+.guest-page-main {
+  padding-top: var(--guest-main-pad-y-top, 1rem);
+  padding-bottom: var(--guest-main-pad-y-bottom, 1.5rem);
+}
+
+.guest-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--guest-stack-gap, 1rem);
+}
+
+.guest-card-stack-flush {
+  gap: var(--guest-stack-gap-flush, 0px);
+}
+
 .card-content-inset {
   margin-left: var(--guest-gutter, 1rem);
   margin-right: var(--guest-gutter, 1rem);
 }
 
+/* Info / default inset cards — radius + light border/shadow */
+.guest-card-surface {
+  border-radius: var(--guest-card-radius, 0.75rem);
+  border: var(--guest-card-border);
+  box-shadow: var(--guest-card-shadow);
+  overflow: hidden;
+}
+
+/* Media / status-band cards — match outer radius only (keep their own fill/border) */
+.guest-card-surface-media {
+  border-radius: var(--guest-card-radius, 0.75rem);
+  overflow: hidden;
+}
+
+/* Shared inner padding for guest card chrome / inset surfaces */
+.guest-card-pad {
+  padding: var(--guest-card-pad-y, 0.75rem) var(--guest-card-pad-x, 0.75rem);
+}
+
+.guest-card-pad-sm {
+  padding: var(--guest-card-pad-y-sm, 0.625rem) var(--guest-card-pad-x, 0.75rem);
+}
+
+/*
+ * Guest card type utilities (3 steps).
+ * Editor `_style` / block CSS vars (--block-title-font-size etc.) win when set;
+ * otherwise fall through to --guest-*-* tokens on .guest-page / .guest-content-gutter.
+ */
+.guest-card-title {
+  font-size: var(--block-title-font-size, var(--block-font-size, var(--guest-title-size, 1rem)));
+  line-height: var(--guest-title-leading, 1.35);
+  font-weight: var(
+    --block-title-font-weight,
+    var(--block-font-weight, var(--guest-title-weight, 600))
+  );
+  color: var(--guest-title-color, #1e293b);
+}
+
+.guest-card-body {
+  font-size: var(--block-body-font-size, var(--block-font-size, var(--guest-body-size, 0.875rem)));
+  line-height: var(--guest-body-leading, 1.5);
+  font-weight: var(
+    --block-body-font-weight,
+    var(--block-font-weight, 400)
+  );
+  color: var(--guest-body-color, #475569);
+}
+
+.guest-card-caption {
+  font-size: var(--guest-caption-size, 0.75rem);
+  line-height: var(--guest-caption-leading, 1.4);
+  font-weight: 400;
+  color: var(--guest-caption-color, #64748b);
+}
+
+/* Full-bleed heroes / media — edge-to-edge, square corners */
 .card-full-bleed {
   border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .dashboard-tab-fade {

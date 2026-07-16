@@ -15,9 +15,15 @@ import {
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
 import { canResumeEditorPage } from "@/lib/editor-resume";
-import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
-import { resolvePageBreakfastCrowdOps } from "@/lib/editor/page-ops";
-import { syncBreakfastCrowdOpsIntoEditorStore } from "@/lib/editor/breakfast-crowd-ops";
+import {
+  applyLiveOpsByKeyToCards,
+  isLiveOpsCardType,
+  resolvePageLiveOps,
+  syncLiveOpsIntoEditorStore,
+  type LiveOpsKey,
+  type LiveOpsStatus,
+  liveOpsKeyForCardType,
+} from "@/lib/editor/live-ops";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -39,7 +45,7 @@ function EditorWithPageId() {
       setPageFound(true);
       setLoaded(true);
       // SPA return from Quick Ops (or any other route): store is warm but may be stale.
-      void syncBreakfastCrowdOpsIntoEditorStore(pageId);
+      void syncLiveOpsIntoEditorStore(pageId);
       return;
     }
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
@@ -80,13 +86,24 @@ function EditorWithPageId() {
         return { ...card, type: card.type as CardType };
       });
       let cards = migrateCardsForEditor(cardsFromDb);
-      if (cards.some((c) => c.type === "breakfast_crowd")) {
-        const ops = await resolvePageBreakfastCrowdOps(pageId, {
-          cardRows: cards
-            .filter((c) => c.type === "breakfast_crowd")
-            .map((c) => ({ content: c.content })),
-        }).catch(() => null);
-        cards = applyBreakfastCrowdOpsStatusToCards(cards, ops).cards;
+      if (cards.some((c) => isLiveOpsCardType(c.type))) {
+        const keys = new Set<LiveOpsKey>();
+        for (const c of cards) {
+          const key = liveOpsKeyForCardType(c.type);
+          if (key) keys.add(key);
+        }
+        const opsByKey: Partial<Record<LiveOpsKey, LiveOpsStatus>> = {};
+        await Promise.all(
+          [...keys].map(async (key) => {
+            const ops = await resolvePageLiveOps(pageId, key, {
+              cardRows: cards
+                .filter((c) => liveOpsKeyForCardType(c.type) === key)
+                .map((c) => ({ content: c.content })),
+            }).catch(() => null);
+            if (ops) opsByKey[key] = ops;
+          }),
+        );
+        cards = applyLiveOpsByKeyToCards(cards, opsByKey).cards;
       }
 
       if (cards.length > 0) {

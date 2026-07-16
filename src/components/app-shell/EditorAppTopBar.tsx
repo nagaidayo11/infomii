@@ -36,7 +36,7 @@ type EditorAppTopBarProps = Pick<
   | "onRenamePageTitle"
   | "onBulkFont"
   | "publishNotice"
-  | "breakfastCrowdOpsHref"
+  | "liveOpsQuickLinks"
 >;
 
 function PreviewIcon({ className }: { className?: string }) {
@@ -126,7 +126,7 @@ export function EditorAppTopBar({
   onRenamePageTitle,
   onBulkFont,
   publishNotice = null,
-  breakfastCrowdOpsHref = null,
+  liveOpsQuickLinks = null,
 }: EditorAppTopBarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -297,7 +297,7 @@ export function EditorAppTopBar({
           </AppSheetSection>
         ) : null}
 
-        {onRenamePageTitle || onBulkFont || breakfastCrowdOpsHref ? (
+        {onRenamePageTitle || onBulkFont || (liveOpsQuickLinks && liveOpsQuickLinks.length > 0) ? (
           <AppSheetSection label="ページ">
             {onRenamePageTitle ? (
               <button
@@ -326,16 +326,17 @@ export function EditorAppTopBar({
                 一括フォント切替
               </button>
             ) : null}
-            {breakfastCrowdOpsHref ? (
+            {liveOpsQuickLinks?.map((link) => (
               <AppShellLink
-                href={breakfastCrowdOpsHref}
+                key={link.href}
+                href={link.href}
                 role="menuitem"
                 className="app-sheet-action"
                 onClick={() => setMoreOpen(false)}
               >
-                朝食混雑を切替
+                {link.label}を切替
               </AppShellLink>
-            ) : null}
+            ))}
           </AppSheetSection>
         ) : null}
 

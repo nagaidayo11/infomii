@@ -47,6 +47,8 @@ import { CouponCard } from "./CouponCard";
 import { AccordionInfoCard } from "./AccordionInfoCard";
 import { OpenStatusCard } from "./OpenStatusCard";
 import { BreakfastCrowdCard } from "./BreakfastCrowdCard";
+import { DinnerCrowdCard } from "./DinnerCrowdCard";
+import { SpaCrowdCard } from "./SpaCrowdCard";
 import { SocialLinksCard } from "./SocialLinksCard";
 import { ContactHubCard } from "./ContactHubCard";
 import { ProgressStepsCard } from "./ProgressStepsCard";
@@ -60,7 +62,7 @@ import { ComboSetMenuCard } from "./ComboSetMenuCard";
 import { MenuGridCard } from "./MenuGridCard";
 import { MenuSheetSyncCard } from "./MenuSheetSyncCard";
 import { MenuTimeBandCard } from "./MenuTimeBandCard";
-import { CARD_FULL_BLEED_CLASS, CARD_INSET_GUTTER_CLASS, isCardFullBleed } from "@/lib/editor/card-width-mode";
+import { guestCardChromeClass } from "@/lib/editor/card-width-mode";
 
 type SingleCardRendererProps = {
   card: EditorCard;
@@ -300,6 +302,10 @@ function SingleCardRenderer({
       return <OpenStatusCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "breakfast_crowd":
       return <BreakfastCrowdCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "dinner_crowd":
+      return <DinnerCrowdCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "spa_crowd":
+      return <SpaCrowdCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "social_links":
       return <SocialLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "contact_hub":
@@ -367,14 +373,13 @@ export function CardRenderer(props: CardRendererProps) {
             card.style && typeof card.style === "object" && typeof card.style.textColor === "string"
               ? card.style.textColor
               : undefined;
-          const fullBleed = isCardFullBleed(card);
           return (
             <div
               key={card.id}
               className={
                 (textColor ? "editor-card-colorized " : "") +
-                (fullBleed ? CARD_FULL_BLEED_CLASS + " " : CARD_INSET_GUTTER_CLASS + " rounded-2xl ") +
-                "ui-pop-appear"
+                guestCardChromeClass(card) +
+                " ui-pop-appear"
               }
               style={{
                 ...blockStyle,

@@ -5,6 +5,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
@@ -59,13 +60,16 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
   return (
     <div
       data-inner-surface
-      className={`relative ${editorInnerRadiusClassName} py-3 ${textClass}`}
+      className={`relative ${editorInnerRadiusClassName} ${GUEST_CARD_PAD_CLASS} ${textClass}`}
       style={{ backgroundColor: "var(--editor-block-surface, rgba(255,255,255,0.92))" }}
     >
       <span className={`absolute inset-y-0 left-0 w-1 rounded-l-[inherit] ${barClass}`} aria-hidden />
-      <div className="px-3">
+      <div className="pl-1">
         {(editable || title) ? (
-          <h3 className="leading-snug" style={getTitleFontSizeStyle()}>
+          <h3
+            className="leading-[var(--guest-title-leading,1.35)]"
+            style={getTitleFontSizeStyle()}
+          >
             <InlineEditable
               value={title}
               onSave={(v) => update({ title: v })}
@@ -76,7 +80,10 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
             />
           </h3>
         ) : null}
-        <p className="mt-2 whitespace-pre-line leading-relaxed opacity-95" style={getBodyFontSizeStyle()}>
+        <p
+          className="mt-2 whitespace-pre-line opacity-95 leading-[var(--guest-body-leading,1.5)]"
+          style={getBodyFontSizeStyle()}
+        >
           <InlineEditable
             value={body}
             onSave={(v) => update({ body: v })}

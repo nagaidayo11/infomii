@@ -15,6 +15,10 @@ import {
   resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
+import {
+  GUEST_CARD_STACK_CLASS,
+  GUEST_CARD_STACK_FLUSH_CLASS,
+} from "@/lib/editor/card-width-mode";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 type GuestCardPageViewProps = {
@@ -199,7 +203,7 @@ export function GuestCardPageView({
           </div>
         )}
         <div
-          className={contentInset === "flush" ? "space-y-0" : "space-y-4"}
+          className={contentInset === "flush" ? GUEST_CARD_STACK_FLUSH_CLASS : GUEST_CARD_STACK_CLASS}
           onClickCapture={stopInteractiveAction}
           onSubmitCapture={stopInteractiveAction}
           aria-disabled={disableInteractions || undefined}

@@ -283,38 +283,51 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
         bg: baseBg,
         cards: [
           createCard("hero", 0, {
-            title: "Business Inn",
-            subtitle: "チェックイン導線に特化",
+            title: "ご滞在のご案内",
+            subtitle: "Wi-Fi・朝食・チェックアウトまで、出張で迷わない館内案内",
             image: "/templates/previews/business/1270b91a.jpg",
+            widthMode: "full",
           }),
-          createCard("checklist", 1, {
-            title: "チェックイン前確認",
-            items: [
-              { text: "予約名義を確認", checked: true },
-              { text: "身分証をご提示", checked: false },
-              { text: "朝食有無を選択", checked: false },
-              { text: "領収書宛名を確認", checked: false },
-            ],
+          createCard("welcome", 1, {
+            title: "本日はご宿泊ありがとうございます",
+            message: "客室でよくお問い合わせいただく内容を、このページにまとめました。",
           }),
           createCard("wifi", 2, {
-            title: "WiFi",
+            title: "Wi-Fi案内",
             ssid: "Business-Inn",
             password: "stay-smart",
+            description: "客室・ロビーでご利用いただけます。つながらない場合はフロント内線9へ。",
           }),
-          createCard("checkout", 3, {
+          createCard("breakfast", 3, {
+            title: "朝食",
+            time: "6:30-9:30",
+            location: "1F レストラン",
+            menu: "和洋ビュッフェ / 最終入場 9:00",
+          }),
+          createCard("breakfast_crowd", 4, {
+            title: "朝食の混雑いま",
+            level: "open",
+            note: "比較的空いている時間の目安：6:30-7:15 / 8:45以降",
+            updatedAt: new Date().toISOString(),
+          }),
+          createCard("checkout", 5, {
             title: "チェックアウト",
-            time: "10:00",
-            note: "延長希望は7:00までにフロントへ。",
+            time: "11:00",
+            note: "カードキーはフロントへご返却ください。領収書の宛名変更は出発前に。",
           }),
-          createCard("pageLinks", 4, {
-            title: "館内クイック導線",
-            columns: 2,
+          createCard("faq", 6, {
+            title: "よくあるご質問",
             items: [
-              { label: "ランドリー", icon: "laundry", linkType: "page", pageSlug: "", link: "" },
-              { label: "タクシー手配", icon: "taxi", linkType: "page", pageSlug: "", link: "" },
-              { label: "会議室予約", icon: "info", linkType: "page", pageSlug: "", link: "" },
-              { label: "領収書案内", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { q: "タクシーは頼めますか？", a: "フロント内線9で手配できます。" },
+              { q: "荷物を預けられますか？", a: "チェックアウト後も当日中はフロントでお預かりできます。" },
             ],
+          }),
+          createCard("emergency", 7, {
+            title: "緊急連絡先",
+            fire: "119",
+            police: "110",
+            hospital: "○○病院 03-1111-2222",
+            note: "体調不良時はフロント内線9へご連絡ください。",
           }),
         ],
       };

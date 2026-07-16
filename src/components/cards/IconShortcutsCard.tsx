@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
@@ -94,14 +99,14 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
             onSave={(v) => update({ title: v })}
             editable={editable}
             onActivate={onActivate}
-            className="text-slate-800"
+            className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.titlePlaceholder}
           />
         </h3>
       ) : null}
 
       {items.length === 0 ? (
-        <p className="text-sm text-slate-400" style={getBodyFontSizeStyle()}>
+        <p className={CARD_BLOCK_CAPTION_CLASS} style={getBodyFontSizeStyle()}>
           {labels.empty}
         </p>
       ) : (
@@ -129,10 +134,7 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
             const content = (
               <>
                 {iconWrap}
-                <span
-                  className="mt-1.5 w-full truncate text-center text-[11px] font-medium leading-tight text-slate-700"
-                  style={getBodyFontSizeStyle()}
-                >
+                <span className={`mt-1.5 w-full truncate text-center font-medium ${CARD_BLOCK_CAPTION_CLASS} text-slate-700`}>
                   {editable ? (
                     <InlineEditable
                       value={label}
@@ -143,7 +145,7 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
                       }}
                       editable={editable}
                       onActivate={onActivate}
-                      className="text-center text-[11px] font-medium text-slate-700"
+                      className={`text-center font-medium ${CARD_BLOCK_CAPTION_CLASS} text-slate-700`}
                       placeholder={labels.labelPlaceholder}
                     />
                   ) : (

@@ -17,19 +17,18 @@ import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 import {
-  BREAKFAST_CROWD_EDITOR_LABELS,
-  BREAKFAST_CROWD_LEVELS,
-  BREAKFAST_CROWD_LEVEL_TONES,
-  coerceBreakfastCrowdLevel,
-  formatBreakfastCrowdUpdatedAt,
-  nowBreakfastCrowdUpdatedAt,
-  writeBreakfastCrowdNoteJa,
-  type BreakfastCrowdLevel,
-} from "@/lib/editor/breakfast-crowd";
-import {
-  buildBreakfastCrowdOpsHref,
-  saveBreakfastCrowdOpsStatus,
-} from "@/lib/editor/breakfast-crowd-ops";
+  LIVE_OPS_DEFINITIONS,
+  LIVE_OPS_LEVELS,
+  buildLiveOpsHref,
+  coerceLiveOpsLevel,
+  formatLiveOpsUpdatedAt,
+  liveOpsKeyForCardType,
+  nowLiveOpsUpdatedAt,
+  saveLiveOpsStatus,
+  writeLiveOpsNoteJa,
+  type LiveOpsKey,
+  type LiveOpsLevel,
+} from "@/lib/editor/live-ops";
 import { useEditor2Store } from "./store";
 import Link from "next/link";
 
@@ -152,12 +151,12 @@ function isLocalizedObject(v: unknown): v is Record<string, string> {
   );
 }
 
-function BreakfastCrowdOpsLink() {
+function LiveOpsCrowdOpsLink({ opsKey }: { opsKey: LiveOpsKey }) {
   const pageId = useEditor2Store((s) => s.pageMeta.pageId);
   if (!pageId) return null;
   return (
     <Link
-      href={buildBreakfastCrowdOpsHref(pageId)}
+      href={buildLiveOpsHref(opsKey, pageId)}
       className="inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100"
     >
       フロントデスクで切替
@@ -166,31 +165,34 @@ function BreakfastCrowdOpsLink() {
 }
 
 /** Level / note / updatedAt — writes page.ops (source of truth) and mirrors into card content. */
-function BreakfastCrowdOpsFields({
+function LiveOpsCrowdOpsFields({
+  opsKey,
   content,
   onUpdate,
 }: {
+  opsKey: LiveOpsKey;
   content: Record<string, unknown>;
   onUpdate: (next: Record<string, unknown>) => void;
 }) {
+  const def = LIVE_OPS_DEFINITIONS[opsKey];
   const pageId = useEditor2Store((s) => s.pageMeta.pageId);
   const noteJa = getLocalizedContent(content.note as LocalizedString | undefined, "ja");
 
-  async function persistOps(level: BreakfastCrowdLevel, note: string) {
-    const optimisticAt = nowBreakfastCrowdUpdatedAt();
+  async function persistOps(level: LiveOpsLevel, note: string) {
+    const optimisticAt = nowLiveOpsUpdatedAt();
     onUpdate({
       ...content,
       level,
-      note: writeBreakfastCrowdNoteJa(content.note, note),
+      note: writeLiveOpsNoteJa(content.note, note),
       updatedAt: optimisticAt,
     });
     if (!pageId) return;
     try {
-      const status = await saveBreakfastCrowdOpsStatus(pageId, { level, note }, { mirrorToCards: false });
+      const status = await saveLiveOpsStatus(pageId, opsKey, { level, note }, { mirrorToCards: false });
       onUpdate({
         ...content,
         level: status.level,
-        note: writeBreakfastCrowdNoteJa(content.note, status.note),
+        note: writeLiveOpsNoteJa(content.note, status.note),
         updatedAt: status.updatedAt,
       });
     } catch {
@@ -203,9 +205,9 @@ function BreakfastCrowdOpsFields({
       <div className="w-full">
         <label className={labelClass}>混雑レベル</label>
         <div className="grid grid-cols-2 gap-2">
-          {BREAKFAST_CROWD_LEVELS.map((level) => {
-            const selected = coerceBreakfastCrowdLevel(content.level) === level;
-            const tone = BREAKFAST_CROWD_LEVEL_TONES[level];
+          {LIVE_OPS_LEVELS.map((level) => {
+            const selected = coerceLiveOpsLevel(content.level) === level;
+            const tone = def.levelTones[level];
             return (
               <button
                 key={level}
@@ -218,7 +220,7 @@ function BreakfastCrowdOpsFields({
                   (selected ? tone.opsSelected : tone.opsIdle)
                 }
               >
-                {BREAKFAST_CROWD_EDITOR_LABELS[level as BreakfastCrowdLevel]}
+                {def.editorLabels[level]}
               </button>
             );
           })}
@@ -232,11 +234,11 @@ function BreakfastCrowdOpsFields({
             const nextNote = e.target.value;
             onUpdate({
               ...content,
-              note: writeBreakfastCrowdNoteJa(content.note, nextNote),
+              note: writeLiveOpsNoteJa(content.note, nextNote),
             });
           }}
           onBlur={(e) => {
-            void persistOps(coerceBreakfastCrowdLevel(content.level), e.target.value);
+            void persistOps(coerceLiveOpsLevel(content.level), e.target.value);
           }}
           rows={2}
           placeholder="例: 最終入場は9:00です"
@@ -245,12 +247,12 @@ function BreakfastCrowdOpsFields({
       </div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-slate-500">
-          {formatBreakfastCrowdUpdatedAt(content.updatedAt) ?? "最終更新 —"}
+          {formatLiveOpsUpdatedAt(content.updatedAt) ?? "最終更新 —"}
         </p>
         <button
           type="button"
           onClick={() => {
-            void persistOps(coerceBreakfastCrowdLevel(content.level), noteJa);
+            void persistOps(coerceLiveOpsLevel(content.level), noteJa);
           }}
           className={addButtonClass}
         >
@@ -2623,6 +2625,7 @@ export function CardSettings({
   }
 
   const content = card.content as Record<string, unknown>;
+  const liveOpsKey = liveOpsKeyForCardType(card.type);
   const style = (card.style ?? {}) as Record<string, unknown>;
   const position = (style._position ?? {}) as Record<string, unknown>;
   const rawSpaceHeight = Number(position.h ?? content.height ?? 48);
@@ -4229,19 +4232,20 @@ export function CardSettings({
             </SettingsSection>
           )}
 
-          {card.type === "breakfast_crowd" && (
+          {liveOpsKey && (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="朝食混雑"
+                placeholder={LIVE_OPS_DEFINITIONS[liveOpsKey].defaultTitle}
               />
-              <BreakfastCrowdOpsFields
+              <LiveOpsCrowdOpsFields
+                opsKey={liveOpsKey}
                 content={content}
                 onUpdate={(next) => onUpdate(card.id, { content: next })}
               />
-              <BreakfastCrowdOpsLink />
+              <LiveOpsCrowdOpsLink opsKey={liveOpsKey} />
             </SettingsSection>
           )}
 

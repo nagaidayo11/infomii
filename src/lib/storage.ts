@@ -16,10 +16,12 @@ import { AccessRevokedError } from "@/lib/access-revoked";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
 import {
-  coerceBreakfastCrowdLevel,
-  overlayBreakfastCrowdOpsOnContent,
-} from "@/lib/editor/breakfast-crowd";
-import { resolvePageBreakfastCrowdOps } from "@/lib/editor/page-ops";
+  coerceLiveOpsLevel,
+  overlayLiveOpsStatusOnContent,
+} from "@/lib/editor/live-ops/status";
+import { liveOpsKeyForCardType } from "@/lib/editor/live-ops/registry";
+import { resolvePageLiveOps } from "@/lib/editor/live-ops/page-store";
+import type { LiveOpsKey, LiveOpsStatus } from "@/lib/editor/live-ops/types";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -5090,7 +5092,7 @@ export type EditorCardForSave = {
 /**
  * Persist cards to Supabase. Updates existing (by UUID id), inserts new (nanoid), deletes removed.
  * Returns map of client id -> server id for newly inserted cards so the store can be updated.
- * For breakfast_crowd, page.ops is authoritative: autosave stamps ops onto card content and
+ * For live-ops cards, page.ops is authoritative: autosave stamps ops onto card content and
  * never lets a stale in-memory level/note/updatedAt clobber the ops store.
  */
 export async function savePageCards(
@@ -5099,18 +5101,22 @@ export async function savePageCards(
   options?: { pageStyle?: PageStyleForSave | null; allowEmpty?: boolean }
 ): Promise<{
   updatedIds: Record<string, string>;
-  /** cardId → content after breakfast_crowd ops overlay (when ops differed from local). */
+  /** cardId → content after live-ops overlay (when ops differed from local). */
+  liveOpsContentById: Record<string, Record<string, unknown>>;
+  /** @deprecated Alias of liveOpsContentById (breakfast-only naming). */
   breakfastCrowdContentById: Record<string, Record<string, unknown>>;
 }> {
   const supabase = getBrowserSupabaseClient();
   const updatedIds: Record<string, string> = {};
-  const breakfastCrowdContentById: Record<string, Record<string, unknown>> = {};
-  if (!supabase) return { updatedIds, breakfastCrowdContentById };
+  const liveOpsContentById: Record<string, Record<string, unknown>> = {};
+  if (!supabase) {
+    return { updatedIds, liveOpsContentById, breakfastCrowdContentById: liveOpsContentById };
+  }
 
   const existing = await getPageCards(pageId);
   /** Avoid wiping DB when autosave/navigation races deliver an empty in-memory store. */
   if (cards.length === 0 && existing.length > 0 && !options?.allowEmpty) {
-    return { updatedIds, breakfastCrowdContentById };
+    return { updatedIds, liveOpsContentById, breakfastCrowdContentById: liveOpsContentById };
   }
   const storeIds = new Set(cards.map((c) => c.id));
 
@@ -5121,46 +5127,55 @@ export async function savePageCards(
     !Array.isArray(pageStyle) &&
     pageStyle.background != null;
 
-  const hasBreakfastCrowd = cards.some((c) => c.type === "breakfast_crowd");
-  const breakfastOps = hasBreakfastCrowd
-    ? await resolvePageBreakfastCrowdOps(pageId, {
+  const keysNeeded = new Set<LiveOpsKey>();
+  for (const c of cards) {
+    const key = liveOpsKeyForCardType(c.type);
+    if (key) keysNeeded.add(key);
+  }
+  const opsByKey: Partial<Record<LiveOpsKey, LiveOpsStatus | null>> = {};
+  await Promise.all(
+    [...keysNeeded].map(async (key) => {
+      opsByKey[key] = await resolvePageLiveOps(pageId, key, {
         cardRows: [
           ...cards
-            .filter((c) => c.type === "breakfast_crowd")
+            .filter((c) => liveOpsKeyForCardType(c.type) === key)
             .map((c) => ({ content: c.content })),
           ...existing
-            .filter((r) => r.type === "breakfast_crowd")
+            .filter((r) => liveOpsKeyForCardType(r.type) === key)
             .map((r) => ({ content: r.content })),
         ],
         fetchCardRows: async () =>
           existing
-            .filter((r) => r.type === "breakfast_crowd")
+            .filter((r) => liveOpsKeyForCardType(r.type) === key)
             .map((r) => ({ content: r.content })),
-      }).catch(() => null)
-    : null;
+      }).catch(() => null);
+    }),
+  );
 
   for (let index = 0; index < cards.length; index += 1) {
     const card = cards[index];
     let contentBase = normalizeCardWidthModeContent(card.type, { ...card.content });
     delete contentBase[PAGE_STYLE_KEY];
 
-    if (card.type === "breakfast_crowd") {
-      if (breakfastOps) {
+    const opsKey = liveOpsKeyForCardType(card.type);
+    if (opsKey) {
+      const ops = opsByKey[opsKey];
+      if (ops) {
         const before = contentBase;
-        contentBase = overlayBreakfastCrowdOpsOnContent(contentBase, breakfastOps);
+        contentBase = overlayLiveOpsStatusOnContent(contentBase, ops);
         if (
           contentBase.level !== before.level ||
           contentBase.updatedAt !== before.updatedAt ||
           contentBase.note !== before.note
         ) {
-          breakfastCrowdContentById[card.id] = {
+          liveOpsContentById[card.id] = {
             level: contentBase.level,
             note: contentBase.note,
             updatedAt: contentBase.updatedAt,
           };
         }
       } else {
-        contentBase.level = coerceBreakfastCrowdLevel(contentBase.level);
+        contentBase.level = coerceLiveOpsLevel(contentBase.level);
       }
     }
 
@@ -5200,5 +5215,5 @@ export async function savePageCards(
     await supabase.from("cards").delete().eq("id", row.id);
   }
 
-  return { updatedIds, breakfastCrowdContentById };
+  return { updatedIds, liveOpsContentById, breakfastCrowdContentById: liveOpsContentById };
 }

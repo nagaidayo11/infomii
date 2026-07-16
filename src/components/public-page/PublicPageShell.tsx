@@ -2,6 +2,10 @@
 
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useCallback } from "react";
+import {
+  GUEST_CARD_STACK_CLASS,
+  GUEST_CARD_STACK_FLUSH_CLASS,
+} from "@/lib/editor/card-width-mode";
 import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
 import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation";
 import type { PageBackgroundStyle } from "@/lib/storage";
@@ -103,12 +107,11 @@ function PageContent({
   bottomChrome,
   headerActions,
   headerClassName,
-  mainClassName,
   contentClassName,
   guestGutter,
-}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation" | "contentInset"> & {
+  contentInset,
+}: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation"> & {
   headerClassName?: string;
-  mainClassName?: string;
   contentClassName?: string;
   guestGutter?: string;
 }) {
@@ -122,11 +125,9 @@ function PageContent({
         className={headerClassName}
       />
       <main
-        className={
-          "template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain " +
-          (mainClassName ?? "guest-content-gutter px-4 pb-6 pt-4")
-        }
+        className="guest-page guest-content-gutter guest-page-main template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
         data-guest-gutter={guestGutter}
+        data-guest-content-inset={contentInset}
         style={
           guestGutter != null
             ? ({
@@ -136,7 +137,7 @@ function PageContent({
         }
       >
         <div
-          className={"app-stagger mx-auto w-full " + (contentClassName ?? "space-y-3")}
+          className={"app-stagger mx-auto w-full " + (contentClassName ?? GUEST_CARD_STACK_CLASS)}
           style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
         >
           {children}
@@ -191,15 +192,16 @@ export function PublicPageShell({
 
   const flush = contentInset === "flush";
   const deviceEmbed = isEmbed && embedFit === "device";
-  const mainClassName = flush
-    ? "guest-content-gutter px-0 pb-0 pt-0"
-    : isEmbed
-      ? deviceEmbed
-        ? "guest-content-gutter px-0 pb-5 pt-2"
-        : "guest-content-gutter px-0 pb-6 pt-4"
-      : "guest-content-gutter px-0 pb-6 pt-4";
+  const mainPadStyle: CSSProperties | undefined = flush
+    ? undefined
+    : deviceEmbed
+      ? ({
+          ["--guest-main-pad-y-top" as string]: "0.5rem",
+          ["--guest-main-pad-y-bottom" as string]: "1.25rem",
+        } as CSSProperties)
+      : undefined;
   const guestGutter = flush ? "0" : deviceEmbed ? "0.75" : isEmbed ? "0.875" : undefined;
-  const contentClassName = flush ? "space-y-0" : "space-y-3";
+  const contentClassName = flush ? GUEST_CARD_STACK_FLUSH_CLASS : GUEST_CARD_STACK_CLASS;
   const headerClassName = deviceEmbed
     ? "px-3 pb-2 pt-8"
     : isEmbed
@@ -211,10 +213,10 @@ export function PublicPageShell({
       <div
         className={
           deviceEmbed
-            ? "flex h-full min-h-0 flex-col overflow-hidden bg-white"
-            : "h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
+            ? "guest-page flex h-full min-h-0 flex-col overflow-hidden bg-white"
+            : "guest-page h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
         }
-        style={{ background: pageBackgroundStyle }}
+        style={{ background: pageBackgroundStyle, ...mainPadStyle }}
         onClickCapture={onGuestLinkCapture}
       >
         <PageContent
@@ -225,9 +227,9 @@ export function PublicPageShell({
           bottomChrome={bottomChrome}
           headerActions={headerActions}
           headerClassName={headerClassName}
-          mainClassName={mainClassName}
           contentClassName={contentClassName}
           guestGutter={guestGutter}
+          contentInset={contentInset}
         >
           {children}
         </PageContent>
@@ -244,9 +246,9 @@ export function PublicPageShell({
       bottomChrome={bottomChrome}
       headerActions={headerActions}
       headerClassName={headerClassName}
-      mainClassName={mainClassName}
       contentClassName={contentClassName}
       guestGutter={guestGutter}
+      contentInset={contentInset}
     >
       {children}
     </PageContent>
@@ -254,7 +256,7 @@ export function PublicPageShell({
 
   return (
     <div
-      className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#e8eef4] md:bg-slate-300"
+      className="guest-page flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#e8eef4] md:bg-slate-300"
       data-guest-page-root
     >
       {/* Mobile: full-bleed, no chassis */}

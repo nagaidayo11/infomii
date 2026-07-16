@@ -34,12 +34,12 @@ async function saveAndMerge(
   } as const;
   store.setAutosaveStatus({ isSaving: true });
   try {
-    const { updatedIds, breakfastCrowdContentById } = await savePageCards(pageId, cards, { pageStyle });
+    const { updatedIds, liveOpsContentById } = await savePageCards(pageId, cards, { pageStyle });
     if (!isMounted.current) return;
     const current = useEditor2Store.getState().cards;
     const merged = current.map((c) => {
       const nextId = updatedIds[c.id] ?? c.id;
-      const opsPatch = breakfastCrowdContentById[c.id] ?? breakfastCrowdContentById[nextId];
+      const opsPatch = liveOpsContentById[c.id] ?? liveOpsContentById[nextId];
       if (!opsPatch && nextId === c.id) return c;
       return {
         ...c,
@@ -73,13 +73,13 @@ async function flushSave(pageId: string) {
   } as const;
   store.setAutosaveStatus({ isSaving: true, saveError: null });
   try {
-    const { updatedIds, breakfastCrowdContentById } = await savePageCards(pageId, cards, { pageStyle });
+    const { updatedIds, liveOpsContentById } = await savePageCards(pageId, cards, { pageStyle });
     const current = useEditor2Store.getState().cards;
-    if (Object.keys(updatedIds).length > 0 || Object.keys(breakfastCrowdContentById).length > 0) {
+    if (Object.keys(updatedIds).length > 0 || Object.keys(liveOpsContentById).length > 0) {
       useEditor2Store.getState().setCards(
         current.map((c) => {
           const nextId = updatedIds[c.id] ?? c.id;
-          const opsPatch = breakfastCrowdContentById[c.id] ?? breakfastCrowdContentById[nextId];
+          const opsPatch = liveOpsContentById[c.id] ?? liveOpsContentById[nextId];
           if (!opsPatch && nextId === c.id) return c;
           return {
             ...c,

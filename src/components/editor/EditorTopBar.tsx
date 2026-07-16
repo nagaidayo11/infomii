@@ -41,8 +41,8 @@ export type EditorTopBarProps = {
    * (never as a strip under the toolbar — that would shrink the canvas).
    */
   publishNotice?: "draft_off" | "unpublished_changes" | null;
-  /** When set, show front-desk quick ops entry for breakfast crowd. */
-  breakfastCrowdOpsHref?: string | null;
+  /** When set, show front-desk quick ops entries for live crowd blocks on this page. */
+  liveOpsQuickLinks?: Array<{ href: string; label: string; title?: string }> | null;
 };
 
 function formatSavedAt(ms: number): string {
@@ -152,7 +152,7 @@ export function EditorTopBar({
   scrollPriorityMode = true,
   onToggleScrollPriority,
   publishNotice = null,
-  breakfastCrowdOpsHref = null,
+  liveOpsQuickLinks = null,
 }: EditorTopBarProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(pageTitle ?? "");
@@ -427,15 +427,18 @@ export function EditorTopBar({
             一括フォント切替
           </button>
         ) : null}
-        {breakfastCrowdOpsHref ? (
-          <Link
-            href={breakfastCrowdOpsHref}
-            className="ui-pop-tap rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-100"
-            title="フロントデスク用の朝食混雑クイック切替"
-          >
-            朝食混雑
-          </Link>
-        ) : null}
+        {liveOpsQuickLinks && liveOpsQuickLinks.length > 0
+          ? liveOpsQuickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="ui-pop-tap rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-900 transition-colors hover:bg-emerald-100"
+                title={link.title ?? `${link.label}クイック切替`}
+              >
+                {link.label}
+              </Link>
+            ))
+          : null}
         <button
           type="button"
           onClick={onPreview}
@@ -780,17 +783,20 @@ export function EditorTopBar({
                     </button>
                   </>
                 )}
-                {breakfastCrowdOpsHref ? (
+                {liveOpsQuickLinks && liveOpsQuickLinks.length > 0 ? (
                   <>
                     <div className="border-t border-slate-100" />
-                    <Link
-                      href={breakfastCrowdOpsHref}
-                      role="menuitem"
-                      className="flex w-full px-4 py-3 text-left text-sm font-medium text-emerald-900 hover:bg-emerald-50"
-                      onClick={() => setMoreOpen(false)}
-                    >
-                      朝食混雑を切替
-                    </Link>
+                    {liveOpsQuickLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        role="menuitem"
+                        className="flex w-full px-4 py-3 text-left text-sm font-medium text-emerald-900 hover:bg-emerald-50"
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        {link.label}を切替
+                      </Link>
+                    ))}
                   </>
                 ) : null}
                 </div>

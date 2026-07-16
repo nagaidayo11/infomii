@@ -285,18 +285,63 @@ const HOTEL_SEED_DRAFTS = [
   },
   {
     name: "ビジネスホテル・即運用セット",
-    description: "出張客向けに、Wi-Fi・朝食・ランドリー・チェックアウト導線を最適化した構成です。",
+    description: "客室で開いてすぐ使える出張向け構成。Wi-Fi・朝食（静的＋混雑いま）・精算・FAQ・緊急連絡を1ページに整理しています。",
     preview_image: PREVIEW_IMAGE,
     category: "business",
     cards: ordered([
-      block("hero", hero("出張ステイ即運用ガイド", "Wi-Fi・朝食・精算まで迷わないビジネスホテル案内")),
-      block("kpi", kpi("本日のクイック情報", [{ label: "チェックイン", value: "15:00" }, { label: "チェックアウト", value: "11:00" }, { label: "内線", value: "9" }])),
-      block("wifi", wifi("Infomii-Biz", "biz2026stay", "Web会議利用時は客室デスク側の電波が安定しています。")),
-      block("schedule", schedule("出張利用の営業時間", [{ day: "朝食", time: "6:30-9:30", label: "1F レストラン" }, { day: "ランドリー", time: "6:00-24:00", label: "2F" }, { day: "宅配受付", time: "7:00-22:00", label: "フロント" }])),
-      block("laundry", laundry("6:00-24:00", "洗濯 300円 / 乾燥 100円(30分)", "内線 9")),
-      block("pageLinks", pageLinks("出張クイック導線", [{ label: "Wi-Fi接続", icon: "wifi" }, { label: "朝食時間", icon: "utensils" }, { label: "領収書対応", icon: "credit-card" }])),
-      block("checkout", checkout("11:00", "領収書の宛名変更はチェックアウト前にフロントへお申し付けください。", "領収書案内")),
-      block("faq_search", faqSearch("ビジネス利用FAQ", [{ q: "宅配便は送れますか？", a: "1Fフロントで発送伝票をご用意しています。" }, { q: "延泊は可能ですか？", a: "空室状況により前日20:00まで承ります。" }])),
+      block("hero", hero("ご滞在のご案内", "Wi-Fi・朝食・チェックアウトまで、出張で迷わない館内案内")),
+      block(
+        "welcome",
+        welcome(
+          "本日はご宿泊ありがとうございます",
+          "客室でよくお問い合わせいただく内容を、このページにまとめました。必要な項目だけさっとご確認ください。",
+        ),
+      ),
+      block(
+        "wifi",
+        wifi(
+          "Infomii-Biz",
+          "biz2026stay",
+          "客室・ロビーでご利用いただけます。Web会議は客室デスク側が安定しやすいです。つながらない場合はフロント内線9へ。",
+        ),
+      ),
+      block(
+        "breakfast",
+        breakfast("朝食", "6:30-9:30", "1F レストラン", "和洋ビュッフェ / 最終入場 9:00 / テイクアウトBOXは8:30まで"),
+      ),
+      block(
+        "breakfast_crowd",
+        breakfastCrowd("朝食の混雑いま", "open", "比較的空いている時間の目安：6:30-7:15 / 8:45以降"),
+      ),
+      block(
+        "info",
+        infoRows("フロント・館内", "info", [
+          { label: "フロント", value: "24時間 / 内線9" },
+          { label: "チェックイン", value: "15:00〜" },
+          { label: "製氷機", value: "各フロア廊下" },
+          { label: "ランドリー", value: "2F / 6:00-24:00" },
+        ]),
+      ),
+      block(
+        "checkout",
+        checkout(
+          "11:00",
+          "カードキーはフロントへご返却ください。領収書の宛名変更は出発前にお申し付けください。早朝は自動精算機もご利用いただけます。",
+          "精算・領収書",
+        ),
+      ),
+      block(
+        "faq",
+        faq("よくあるご質問", [
+          { q: "宅配便は送れますか？", a: "1Fフロントで発送伝票をご用意しています。受付はおおむね7:00-22:00です。" },
+          { q: "延泊はできますか？", a: "空室状況により前日20:00まで承ります。フロントへご相談ください。" },
+          { q: "荷物を預けられますか？", a: "チェックアウト後も当日中はフロントでお預かりできます。" },
+        ]),
+      ),
+      block(
+        "emergency",
+        emergency("緊急連絡先", "○○病院 03-1111-2222", "体調不良時はまずフロント内線9へご連絡ください。火災119 / 警察110。"),
+      ),
     ]),
   },
   {
@@ -391,18 +436,47 @@ const HOTEL_SEED_DRAFTS = [
   },
   {
     name: "ベーシック・ビジネスホテル案内",
-    description: "出張利用で最低限必要な情報を1ページにまとめた基本構成です。",
+    description: "ヒーローから緊急連絡まで、出張ゲストが客室で迷わない基本の1ページ構成です。",
     preview_image: PREVIEW_IMAGE,
     category: "business",
     cards: ordered([
-      block("heading_body", headingBody("ビジネスホテル基本案内", "Wi-Fi、朝食、チェックアウト、緊急連絡先を出張利用向けに整理しました。")),
-      block("wifi", wifi("Hotel-WiFi", "welcome1234", "客室・ロビーで利用できます。")),
-      block("breakfast", breakfast("朝食", "7:00-9:30", "1F レストラン", "和洋ビュッフェ / 最終入場9:00")),
-      block("breakfast_crowd", breakfastCrowd("朝食混雑", "open", "最終入場は9:00です")),
-      block("info", infoRows("館内基本情報", "info", [{ label: "フロント", value: "24時間" }, { label: "製氷機", value: "3F" }, { label: "電子レンジ", value: "2F" }])),
-      block("map", map("所在地", "東京都○○区○○ 1-2-3")),
-      block("checkout", checkout("11:00", "カードキーはフロントへご返却ください。", "出発手順")),
-      block("emergency", emergency("緊急連絡先", "○○病院 03-1111-2222", "体調不良時はフロント内線9へご連絡ください。")),
+      block("hero", hero("ビジネスホテル案内", "Wi-Fi・朝食・チェックアウト・緊急連絡を1ページにまとめました")),
+      block(
+        "welcome",
+        welcome(
+          "ご宿泊ありがとうございます",
+          "滞在中によく使う情報だけを、読みやすい順に並べています。施設名・時間は公開前に差し替えてください。",
+        ),
+      ),
+      block("wifi", wifi("Hotel-WiFi", "welcome1234", "客室・ロビーでご利用いただけます。つながらない場合はフロント内線9へ。")),
+      block("breakfast", breakfast("朝食", "6:30-9:30", "1F レストラン", "和洋ビュッフェ / 最終入場 9:00")),
+      block(
+        "breakfast_crowd",
+        breakfastCrowd("朝食の混雑いま", "open", "最終入場は9:00です。混雑時は少々お待ちいただく場合があります。"),
+      ),
+      block(
+        "info",
+        infoRows("フロント・館内", "info", [
+          { label: "フロント", value: "24時間 / 内線9" },
+          { label: "製氷機", value: "各フロア廊下" },
+          { label: "電子レンジ", value: "2F" },
+        ]),
+      ),
+      block(
+        "checkout",
+        checkout("11:00", "カードキーはフロントへご返却ください。領収書が必要な方は出発前にお申し付けください。", "出発手順"),
+      ),
+      block(
+        "faq",
+        faq("よくあるご質問", [
+          { q: "タクシーは頼めますか？", a: "フロント内線9で手配できます。早朝は前夜予約がおすすめです。" },
+          { q: "延泊はできますか？", a: "空室状況により前日20:00まで承ります。" },
+        ]),
+      ),
+      block(
+        "emergency",
+        emergency("緊急連絡先", "○○病院 03-1111-2222", "体調不良時はフロント内線9へご連絡ください。火災119 / 警察110。"),
+      ),
     ]),
   },
   {

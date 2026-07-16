@@ -20,6 +20,8 @@ export type CardType =
   | "wifi"
   | "breakfast"
   | "breakfast_crowd"
+  | "dinner_crowd"
+  | "spa_crowd"
   | "checkout"
   | "nearby"
   | "notice"
@@ -116,36 +118,45 @@ export function resolveFontWeight(key: string | undefined): string | undefined {
   return key && FONT_WEIGHT_MAP[key] ? FONT_WEIGHT_MAP[key] : undefined;
 }
 
-/** Style for title elements — font size + optional weight from block style CSS vars. */
+/** Style for title elements — block style CSS vars, then guest type tokens. */
 export function getTitleFontSizeStyle(): import("react").CSSProperties {
   return {
-    fontSize: "var(--block-title-font-size, var(--block-font-size, 1rem))",
-    fontWeight: `var(${BLOCK_TITLE_FONT_WEIGHT_VAR}, var(${BLOCK_FONT_WEIGHT_VAR}, ${DEFAULT_BLOCK_TITLE_FONT_WEIGHT}))`,
+    fontSize:
+      "var(--block-title-font-size, var(--block-font-size, var(--guest-title-size, 1rem)))",
+    fontWeight: `var(${BLOCK_TITLE_FONT_WEIGHT_VAR}, var(${BLOCK_FONT_WEIGHT_VAR}, var(--guest-title-weight, ${DEFAULT_BLOCK_TITLE_FONT_WEIGHT})))`,
   };
 }
 
-/** Style for body elements — font size + optional weight from block style CSS vars. */
+/** Style for body elements — block style CSS vars, then guest type tokens. */
 export function getBodyFontSizeStyle(): import("react").CSSProperties {
   return {
-    fontSize: "var(--block-body-font-size, var(--block-font-size, 0.875rem))",
+    fontSize:
+      "var(--block-body-font-size, var(--block-font-size, var(--guest-body-size, 0.875rem)))",
     fontWeight: `var(${BLOCK_BODY_FONT_WEIGHT_VAR}, var(${BLOCK_FONT_WEIGHT_VAR}, ${DEFAULT_BLOCK_BODY_FONT_WEIGHT}))`,
   };
 }
 
 /**
- * Default guest card block title **color** (slate). Font weight must come from
+ * Guest card title utility (`.guest-card-title`). Size/weight come from
  * {@link getTitleFontSizeStyle} / CSS vars — do not add `font-bold` here or nested
  * `InlineEditable` will override block style font-weight.
  */
-export const CARD_BLOCK_TITLE_CLASS = "text-slate-800" as const;
+export const CARD_BLOCK_TITLE_CLASS = "guest-card-title" as const;
+
+/** Guest card body utility (`.guest-card-body`). Prefer with {@link getBodyFontSizeStyle}. */
+export const CARD_BLOCK_BODY_CLASS = "guest-card-body" as const;
+
+/** Guest card caption / muted meta utility (`.guest-card-caption`). */
+export const CARD_BLOCK_CAPTION_CLASS = "guest-card-caption" as const;
 
 /**
  * Horizontal/vertical content inset for text blocks.
  * Matches 見出し＋本文セット (`HeadingBodyCard`) — keep titles on one vertical line.
+ * Prefer `.guest-card-pad` when the block is a full guest surface.
  */
 export const CARD_CONTENT_INSET_X = "px-3" as const;
 export const CARD_CONTENT_INSET_Y = "py-3" as const;
-export const CARD_CONTENT_INSET = "px-3 py-3" as const;
+export const CARD_CONTENT_INSET = "guest-card-pad" as const;
 
 const DEFAULT_TRANSPARENT_MEDIA_TYPES: readonly CardType[] = ["hero", "hero_slider", "image", "gallery"] as const;
 export const TRANSPARENT_MEDIA_CARD_TYPES = new Set<CardType>(DEFAULT_TRANSPARENT_MEDIA_TYPES);
@@ -324,6 +335,8 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   wifi: "WiFi",
   breakfast: "施設案内",
   breakfast_crowd: "朝食混雑",
+  dinner_crowd: "夕食混雑",
+  spa_crowd: "大浴場混雑",
   checkout: "チェックアウト",
   nearby: "周辺案内",
   notice: "お知らせ",
@@ -481,6 +494,8 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "wifi", label: "WiFi", description: "SSID・パスワード" },
   { type: "breakfast", label: "朝食", description: "時間・会場・メニュー" },
   { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま" },
+  { type: "dinner_crowd", label: "夕食混雑", description: "レストラン空席・混雑のいま" },
+  { type: "spa_crowd", label: "大浴場混雑", description: "大浴場の混雑のいま" },
   { type: "checkout", label: "チェックアウト", description: "時刻・補足・リンク" },
   { type: "nearby", label: "周辺案内", description: "近隣スポット・アクセス" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
@@ -517,6 +532,8 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
   { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
   { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま" },
+  { type: "dinner_crowd", label: "夕食混雑", description: "レストラン空席・混雑のいま" },
+  { type: "spa_crowd", label: "大浴場混雑", description: "大浴場の混雑のいま" },
   { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
@@ -644,11 +661,12 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "info":
       return {
-        title: "Wi-Fi",
-        icon: "wifi",
+        title: "フロント・館内",
+        icon: "info",
         rows: [
-          { label: "ネットワーク名", value: "Infomii-Guest" },
-          { label: "パスワード", value: "welcome2026" },
+          { label: "フロント", value: "24時間 / 内線9" },
+          { label: "製氷機", value: "各フロア廊下" },
+          { label: "電子レンジ", value: "2F" },
         ],
       };
     case "highlight":
@@ -656,16 +674,38 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "action":
       return { label: "詳細を見る", href: "#" };
     case "welcome":
-      return { title: "ようこそ", message: "ご宿泊ありがとうございます。ごゆっくりお過ごしください。" };
+      return {
+        title: "ご宿泊ありがとうございます",
+        message: "滞在中によく使う情報だけを、読みやすい順に並べています。施設名・時間は公開前に差し替えてください。",
+      };
     case "wifi":
-      return { title: "WiFi案内", ssid: "Infomii-Guest", password: "welcome2026" };
+      return {
+        title: "Wi-Fi案内",
+        ssid: "Hotel-WiFi",
+        password: "welcome1234",
+        description: "客室・ロビーでご利用いただけます。つながらない場合はフロント内線9へ。",
+      };
     case "breakfast":
-      return { title: "施設案内", time: "7:00-9:30", location: "1F ダイニング", menu: "和洋ビュッフェ / 最終入場 9:00" };
+      return { title: "朝食", time: "6:30-9:30", location: "1F レストラン", menu: "和洋ビュッフェ / 最終入場 9:00" };
     case "breakfast_crowd":
       return {
-        title: "朝食混雑",
+        title: "朝食の混雑いま",
+        level: "open",
+        note: "最終入場は9:00です。混雑時は少々お待ちいただく場合があります。",
+        updatedAt: new Date().toISOString(),
+      };
+    case "dinner_crowd":
+      return {
+        title: "夕食混雑",
         level: "open",
         note: "",
+        updatedAt: new Date().toISOString(),
+      };
+    case "spa_crowd":
+      return {
+        title: "大浴場の混雑いま",
+        level: "open",
+        note: "タオルは客室からご持参ください。混雑時は入場をお待ちいただく場合があります。",
         updatedAt: new Date().toISOString(),
       };
     case "checkout":
@@ -697,7 +737,13 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "button":
       return { label: "予約サイトへ", href: "#" };
     case "faq":
-      return { title: "よくある質問", items: [{ q: "", a: "" }] };
+      return {
+        title: "よくある質問",
+        items: [
+          { q: "タクシーは頼めますか？", a: "フロント内線9で手配できます。早朝は前夜予約がおすすめです。" },
+          { q: "延泊はできますか？", a: "空室状況により前日20:00まで承ります。" },
+        ],
+      };
     case "schedule":
       return {
         title: "営業時間",

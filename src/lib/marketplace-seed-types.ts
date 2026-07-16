@@ -25,6 +25,8 @@ export type MarketplaceSeedCardType =
   | "wifi"
   | "breakfast"
   | "breakfast_crowd"
+  | "dinner_crowd"
+  | "spa_crowd"
   | "checkout"
   | "nearby"
   | "notice"

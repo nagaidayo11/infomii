@@ -1,13 +1,19 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type NoticeCardProps = {
@@ -47,27 +53,27 @@ export function NoticeCard({ card, isSelected, locale = "ja" }: NoticeCardProps)
     <Card padding="none">
       <div
         data-inner-surface
-        className={`${editorInnerRadiusClassName} flex flex-col gap-2 px-3 py-3 ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
+        className={`${editorInnerRadiusClassName} flex flex-col gap-2 ${GUEST_CARD_PAD_CLASS} ${isWarning ? "bg-amber-50" : "bg-sky-50/80"}`}
       >
         {(editable || title) ? (
-          <div className={`min-w-0 leading-tight ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
+          <div className={`min-w-0 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
             <InlineEditable
               value={title}
               onSave={(v) => updateKey("title", v)}
               editable={editable}
               onActivate={onActivate}
-              className={`leading-tight ${CARD_BLOCK_TITLE_CLASS}`}
+              className={CARD_BLOCK_TITLE_CLASS}
             />
           </div>
         ) : null}
-        <div className="min-w-0 leading-normal text-slate-600" style={getBodyFontSizeStyle()}>
+        <div className={`min-w-0 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
           <InlineEditable
             value={body}
             onSave={(v) => updateKey("body", v)}
             editable={editable}
             onActivate={onActivate}
             multiline
-            className="text-slate-600 leading-normal"
+            className={CARD_BLOCK_BODY_CLASS}
             placeholder={labels.bodyPlaceholder}
           />
         </div>

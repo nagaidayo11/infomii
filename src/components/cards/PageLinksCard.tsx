@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -94,7 +100,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
             onSave={(v) => update({ title: v })}
             editable={editable}
             onActivate={onActivate}
-            className="text-slate-800"
+            className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.titlePlaceholder}
           />
         </h3>
@@ -104,7 +110,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
       <div className="overflow-hidden bg-white">
         {listTitle}
         {items.length === 0 ? (
-          <p className="px-4 py-4 text-slate-500" style={getBodyFontSizeStyle()}>
+          <p className={`px-4 py-4 ${CARD_BLOCK_CAPTION_CLASS}`} style={getBodyFontSizeStyle()}>
             {labels.empty}
           </p>
         ) : (
@@ -117,7 +123,10 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                   <span className={`flex shrink-0 items-center justify-center text-teal-800 ${iconWrapClass}`}>
                     <LineIcon name={iconDisplay} className={iconClass} />
                   </span>
-                  <span className="min-w-0 flex-1 font-medium leading-snug text-slate-800" style={getBodyFontSizeStyle()}>
+                  <span
+                    className={`min-w-0 flex-1 font-medium ${CARD_BLOCK_BODY_CLASS} text-slate-800`}
+                    style={getBodyFontSizeStyle()}
+                  >
                     <InlineEditable
                       value={item.label ?? ""}
                       onSave={(v) => {
@@ -187,7 +196,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
             onSave={(v) => update({ title: v })}
             editable={editable}
             onActivate={onActivate}
-            className="text-slate-800"
+            className={CARD_BLOCK_TITLE_CLASS}
             placeholder={labels.titlePlaceholder}
           />
         </h3>
@@ -197,7 +206,9 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.length === 0 ? (
-          <p className="col-span-full text-slate-500" style={getBodyFontSizeStyle()}>{labels.empty}</p>
+          <p className={`col-span-full ${CARD_BLOCK_CAPTION_CLASS}`} style={getBodyFontSizeStyle()}>
+            {labels.empty}
+          </p>
         ) : (
           items.map((item, i) => {
             const href = getHref(item);
@@ -231,8 +242,8 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                 <span
                   className={
                     styleVariant === "circle"
-                      ? "w-full text-center text-[12px] font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
-                      : "w-full text-center font-normal leading-tight text-slate-700 break-words [word-break:keep-all]"
+                      ? `w-full text-center ${CARD_BLOCK_CAPTION_CLASS} text-slate-700 break-words [word-break:keep-all]`
+                      : `w-full text-center ${CARD_BLOCK_BODY_CLASS} text-slate-700 break-words [word-break:keep-all]`
                   }
                   style={getBodyFontSizeStyle()}
                 >

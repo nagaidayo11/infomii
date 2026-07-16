@@ -2,7 +2,13 @@
 
 import type { CSSProperties } from "react";
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, CARD_CONTENT_INSET, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  CARD_CONTENT_INSET,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
@@ -36,7 +42,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
   return (
     <Card padding="none" hover>
       <section data-inner-surface className={`${editorInnerRadiusClassName} bg-white ${CARD_CONTENT_INSET}`}>
-        <h3 className={`${CARD_BLOCK_TITLE_CLASS} leading-tight`} style={getTitleFontSizeStyle()}>
+        <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => update("title", v)}
@@ -47,7 +53,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
           />
         </h3>
         {dividerEnabled ? <div className={`my-2.5 border-t ${dividerClass}`} style={dividerStyleObj} /> : null}
-        <div className="text-slate-700" style={getBodyFontSizeStyle()}>
+        <div className={`${CARD_BLOCK_BODY_CLASS} text-slate-700`} style={getBodyFontSizeStyle()}>
           <InlineEditable
             value={body}
             onSave={(v) => update("body", v)}
@@ -55,7 +61,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
             onActivate={onActivate}
             multiline
             placeholder="本文テキスト"
-            className="leading-relaxed text-slate-700"
+            className={`${CARD_BLOCK_BODY_CLASS} text-slate-700`}
           />
         </div>
       </section>

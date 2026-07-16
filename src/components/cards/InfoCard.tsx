@@ -1,7 +1,13 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_CAPTION_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -46,13 +52,20 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
         </span>
         {(editable || title) ? (
           <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            <InlineEditable value={title} onSave={(v) => update({ title: v })} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={localeLabels.title} />
+            <InlineEditable
+              value={title}
+              onSave={(v) => update({ title: v })}
+              editable={editable}
+              onActivate={onActivate}
+              className={CARD_BLOCK_TITLE_CLASS}
+              placeholder={localeLabels.title}
+            />
           </h3>
         ) : null}
       </div>
-      <div className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
+      <div className={`mt-3 space-y-2 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
         {rows.length === 0 ? (
-          <p className="text-slate-500">{localeLabels.empty}</p>
+          <p className={CARD_BLOCK_CAPTION_CLASS}>{localeLabels.empty}</p>
         ) : (
           rows.map((row, i) => (
             <div
@@ -60,7 +73,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
               data-inner-surface
               className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
             >
-              <span className="break-words font-normal text-slate-500">
+              <span className={`break-words ${CARD_BLOCK_CAPTION_CLASS}`}>
                 <InlineEditable
                   value={row.label ?? ""}
                   onSave={(v) => {
@@ -70,11 +83,11 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
                   }}
                   editable={editable}
                   onActivate={onActivate}
-                  className="text-slate-500"
+                  className={CARD_BLOCK_CAPTION_CLASS}
                   placeholder="ラベル"
                 />
               </span>
-              <span className="text-right break-all leading-snug">
+              <span className={`text-right break-all ${CARD_BLOCK_BODY_CLASS} text-slate-800`}>
                 <InlineEditable
                   value={row.value ?? ""}
                   onSave={(v) => {
@@ -84,7 +97,7 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
                   }}
                   editable={editable}
                   onActivate={onActivate}
-                  className="text-right font-normal text-slate-800"
+                  className={`text-right ${CARD_BLOCK_BODY_CLASS} text-slate-800`}
                   placeholder={localeLabels.value}
                 />
               </span>

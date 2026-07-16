@@ -1,13 +1,19 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import {
+  CARD_BLOCK_BODY_CLASS,
+  CARD_BLOCK_TITLE_CLASS,
+  getTitleFontSizeStyle,
+  getBodyFontSizeStyle,
+} from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { GUEST_CARD_PAD_SM_CLASS } from "@/lib/editor/card-width-mode";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type WelcomeCardProps = {
@@ -42,10 +48,7 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
   };
 
   return (
-    <Card
-      padding="lg"
-      className=""
-    >
+    <Card padding="md" className="">
       {(editable || title) ? (
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
@@ -57,14 +60,18 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
           />
         </p>
       ) : null}
-      <div data-inner-surface className={`mt-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-3 py-2 leading-relaxed text-slate-600`} style={getBodyFontSizeStyle()}>
+      <div
+        data-inner-surface
+        className={`mt-2 ${GUEST_CARD_PAD_SM_CLASS} ${editorInnerRadiusClassName} bg-slate-50/80 ${CARD_BLOCK_BODY_CLASS}`}
+        style={getBodyFontSizeStyle()}
+      >
         <InlineEditable
           value={message}
           onSave={(v) => updateKey("message", v)}
           editable={editable}
           onActivate={onActivate}
           multiline
-          className="block w-full min-h-[1lh] leading-relaxed text-slate-600"
+          className={`block w-full min-h-[1lh] ${CARD_BLOCK_BODY_CLASS}`}
           placeholder={labels.messagePlaceholder}
         />
       </div>

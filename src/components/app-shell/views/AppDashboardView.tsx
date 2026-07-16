@@ -180,11 +180,23 @@ export function AppDashboardView() {
                 subtitle="閲覧数とQRの状況を確認"
               />
               {canEdit ? (
-                <AppListRow
-                  href="/dashboard/ops/breakfast-crowd"
-                  title="朝食混雑を切替"
-                  subtitle="フロントデスク用のクイック更新"
-                />
+                <>
+                  <AppListRow
+                    href="/dashboard/ops/breakfast-crowd"
+                    title="朝食混雑を切替"
+                    subtitle="フロントデスク用のクイック更新"
+                  />
+                  <AppListRow
+                    href="/dashboard/ops/dinner-crowd"
+                    title="夕食混雑を切替"
+                    subtitle="レストラン混雑のクイック更新"
+                  />
+                  <AppListRow
+                    href="/dashboard/ops/spa-crowd"
+                    title="大浴場混雑を切替"
+                    subtitle="大浴場混雑のクイック更新"
+                  />
+                </>
               ) : null}
             </section>
           </AppSection>
