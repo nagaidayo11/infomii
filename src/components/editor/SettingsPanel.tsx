@@ -16,6 +16,22 @@ import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
+import {
+  BREAKFAST_CROWD_EDITOR_LABELS,
+  BREAKFAST_CROWD_LEVELS,
+  BREAKFAST_CROWD_LEVEL_TONES,
+  coerceBreakfastCrowdLevel,
+  formatBreakfastCrowdUpdatedAt,
+  nowBreakfastCrowdUpdatedAt,
+  writeBreakfastCrowdNoteJa,
+  type BreakfastCrowdLevel,
+} from "@/lib/editor/breakfast-crowd";
+import {
+  buildBreakfastCrowdOpsHref,
+  saveBreakfastCrowdOpsStatus,
+} from "@/lib/editor/breakfast-crowd-ops";
+import { useEditor2Store } from "./store";
+import Link from "next/link";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
@@ -133,6 +149,115 @@ function isLocalizedObject(v: unknown): v is Record<string, string> {
     v !== null &&
     !Array.isArray(v) &&
     ("ja" in v || "en" in v || "zh" in v || "ko" in v)
+  );
+}
+
+function BreakfastCrowdOpsLink() {
+  const pageId = useEditor2Store((s) => s.pageMeta.pageId);
+  if (!pageId) return null;
+  return (
+    <Link
+      href={buildBreakfastCrowdOpsHref(pageId)}
+      className="inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100"
+    >
+      フロントデスクで切替
+    </Link>
+  );
+}
+
+/** Level / note / updatedAt — writes page.ops (source of truth) and mirrors into card content. */
+function BreakfastCrowdOpsFields({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (next: Record<string, unknown>) => void;
+}) {
+  const pageId = useEditor2Store((s) => s.pageMeta.pageId);
+  const noteJa = getLocalizedContent(content.note as LocalizedString | undefined, "ja");
+
+  async function persistOps(level: BreakfastCrowdLevel, note: string) {
+    const optimisticAt = nowBreakfastCrowdUpdatedAt();
+    onUpdate({
+      ...content,
+      level,
+      note: writeBreakfastCrowdNoteJa(content.note, note),
+      updatedAt: optimisticAt,
+    });
+    if (!pageId) return;
+    try {
+      const status = await saveBreakfastCrowdOpsStatus(pageId, { level, note }, { mirrorToCards: false });
+      onUpdate({
+        ...content,
+        level: status.level,
+        note: writeBreakfastCrowdNoteJa(content.note, status.note),
+        updatedAt: status.updatedAt,
+      });
+    } catch {
+      /* Local preview already updated; ops write may fail until migration is applied. */
+    }
+  }
+
+  return (
+    <>
+      <div className="w-full">
+        <label className={labelClass}>混雑レベル</label>
+        <div className="grid grid-cols-2 gap-2">
+          {BREAKFAST_CROWD_LEVELS.map((level) => {
+            const selected = coerceBreakfastCrowdLevel(content.level) === level;
+            const tone = BREAKFAST_CROWD_LEVEL_TONES[level];
+            return (
+              <button
+                key={level}
+                type="button"
+                onClick={() => {
+                  void persistOps(level, noteJa);
+                }}
+                className={
+                  "min-h-[44px] rounded-xl border px-2.5 py-2 text-sm font-medium transition-colors " +
+                  (selected ? tone.opsSelected : tone.opsIdle)
+                }
+              >
+                {BREAKFAST_CROWD_EDITOR_LABELS[level as BreakfastCrowdLevel]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="w-full">
+        <label className={labelClass}>メモ（任意）</label>
+        <textarea
+          value={noteJa}
+          onChange={(e) => {
+            const nextNote = e.target.value;
+            onUpdate({
+              ...content,
+              note: writeBreakfastCrowdNoteJa(content.note, nextNote),
+            });
+          }}
+          onBlur={(e) => {
+            void persistOps(coerceBreakfastCrowdLevel(content.level), e.target.value);
+          }}
+          rows={2}
+          placeholder="例: 最終入場は9:00です"
+          className={inputClass}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-slate-500">
+          {formatBreakfastCrowdUpdatedAt(content.updatedAt) ?? "最終更新 —"}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void persistOps(coerceBreakfastCrowdLevel(content.level), noteJa);
+          }}
+          className={addButtonClass}
+        >
+          いま更新
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -4101,6 +4226,22 @@ export function CardSettings({
               <Input label="営業時間テキスト" value={display("hoursText")} onChange={(e) => updateLocalized("hoursText", e.target.value)} placeholder="7:00-23:00" />
               <Input label="営業中ラベル" value={display("openLabel")} onChange={(e) => updateLocalized("openLabel", e.target.value)} placeholder="営業中" />
               <Input label="営業時間外ラベル" value={display("closedLabel")} onChange={(e) => updateLocalized("closedLabel", e.target.value)} placeholder="営業時間外" />
+            </SettingsSection>
+          )}
+
+          {card.type === "breakfast_crowd" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="朝食混雑"
+              />
+              <BreakfastCrowdOpsFields
+                content={content}
+                onUpdate={(next) => onUpdate(card.id, { content: next })}
+              />
+              <BreakfastCrowdOpsLink />
             </SettingsSection>
           )}
 

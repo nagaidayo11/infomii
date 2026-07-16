@@ -183,6 +183,16 @@ const breakfast = (title: string, time: string, location: string, menuText: stri
   location,
   menu: menuText,
 });
+const breakfastCrowd = (
+  title: string,
+  level: "open" | "moderate" | "busy" | "closed" = "open",
+  note = "",
+) => ({
+  title,
+  level,
+  note,
+  updatedAt: new Date().toISOString(),
+});
 const checkout = (time: string, note: string, linkLabel = "詳細を見る", title = "チェックアウト") => ({
   title,
   time,
@@ -388,6 +398,7 @@ const HOTEL_SEED_DRAFTS = [
       block("heading_body", headingBody("ビジネスホテル基本案内", "Wi-Fi、朝食、チェックアウト、緊急連絡先を出張利用向けに整理しました。")),
       block("wifi", wifi("Hotel-WiFi", "welcome1234", "客室・ロビーで利用できます。")),
       block("breakfast", breakfast("朝食", "7:00-9:30", "1F レストラン", "和洋ビュッフェ / 最終入場9:00")),
+      block("breakfast_crowd", breakfastCrowd("朝食混雑", "open", "最終入場は9:00です")),
       block("info", infoRows("館内基本情報", "info", [{ label: "フロント", value: "24時間" }, { label: "製氷機", value: "3F" }, { label: "電子レンジ", value: "2F" }])),
       block("map", map("所在地", "東京都○○区○○ 1-2-3")),
       block("checkout", checkout("11:00", "カードキーはフロントへご返却ください。", "出発手順")),

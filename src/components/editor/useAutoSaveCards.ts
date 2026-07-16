@@ -34,13 +34,19 @@ async function saveAndMerge(
   } as const;
   store.setAutosaveStatus({ isSaving: true });
   try {
-    const { updatedIds } = await savePageCards(pageId, cards, { pageStyle });
+    const { updatedIds, breakfastCrowdContentById } = await savePageCards(pageId, cards, { pageStyle });
     if (!isMounted.current) return;
     const current = useEditor2Store.getState().cards;
-    const merged = current.map((c) => ({
-      ...c,
-      id: updatedIds[c.id] ?? c.id,
-    }));
+    const merged = current.map((c) => {
+      const nextId = updatedIds[c.id] ?? c.id;
+      const opsPatch = breakfastCrowdContentById[c.id] ?? breakfastCrowdContentById[nextId];
+      if (!opsPatch && nextId === c.id) return c;
+      return {
+        ...c,
+        id: nextId,
+        content: opsPatch ? { ...c.content, ...opsPatch } : c.content,
+      };
+    });
     useEditor2Store.getState().setCards(merged);
     if (isMounted.current) {
       useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
@@ -67,7 +73,22 @@ async function flushSave(pageId: string) {
   } as const;
   store.setAutosaveStatus({ isSaving: true, saveError: null });
   try {
-    await savePageCards(pageId, cards, { pageStyle });
+    const { updatedIds, breakfastCrowdContentById } = await savePageCards(pageId, cards, { pageStyle });
+    const current = useEditor2Store.getState().cards;
+    if (Object.keys(updatedIds).length > 0 || Object.keys(breakfastCrowdContentById).length > 0) {
+      useEditor2Store.getState().setCards(
+        current.map((c) => {
+          const nextId = updatedIds[c.id] ?? c.id;
+          const opsPatch = breakfastCrowdContentById[c.id] ?? breakfastCrowdContentById[nextId];
+          if (!opsPatch && nextId === c.id) return c;
+          return {
+            ...c,
+            id: nextId,
+            content: opsPatch ? { ...c.content, ...opsPatch } : c.content,
+          };
+        }),
+      );
+    }
     useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "保存に失敗しました";

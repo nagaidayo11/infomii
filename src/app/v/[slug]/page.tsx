@@ -8,6 +8,12 @@ import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve
 import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
+import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
+import { resolvePageBreakfastCrowdOpsWithClient } from "@/lib/editor/page-ops";
+
+/** Breakfast crowd ops (and other live card fields) must not be served from a stale RSC cache. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const STYLE_KEY = "_style";
 const PAGE_STYLE_KEY = "_pageStyle";
@@ -153,7 +159,14 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
         : {},
     order: r.order ?? 0,
   }));
-  const hasMultilingualContent = cards.some((card) => hasLocalizedPayload(card.content));
+
+  const breakfastOps = await resolvePageBreakfastCrowdOpsWithClient(supabase, page.id, {
+    cardRows: (rows ?? [])
+      .filter((r) => r.type === "breakfast_crowd")
+      .map((r) => ({ content: r.content })),
+  });
+  const { cards: cardsWithOps } = applyBreakfastCrowdOpsStatusToCards(cards, breakfastOps);
+  const hasMultilingualContent = cardsWithOps.some((card) => hasLocalizedPayload(card.content));
   const showLocaleToggle = canShowLocaleToggle || hasMultilingualContent;
   const backLink = buildGuestPreviewBackLink({
     fromSlug: fromSlug || undefined,
@@ -166,7 +179,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   return (
     <GuestCardPageView
       title={page.title}
-      cards={cards}
+      cards={cardsWithOps}
       initialLocale={initialLocale}
       localeLocked={Boolean(forcedFromUrl)}
       pageBackground={pageBackground}

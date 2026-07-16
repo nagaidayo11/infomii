@@ -38,6 +38,9 @@ const NON_TRANSLATABLE_KEYS = new Set([
   "objectPosition",
   "ssid",
   "password",
+  // Status / crowd enums + timestamps — must stay plain (e.g. level: "open").
+  "level",
+  "updatedAt",
 ]);
 
 function collectJaTargets(

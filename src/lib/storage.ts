@@ -15,6 +15,11 @@ import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import { AccessRevokedError } from "@/lib/access-revoked";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
+import {
+  coerceBreakfastCrowdLevel,
+  overlayBreakfastCrowdOpsOnContent,
+} from "@/lib/editor/breakfast-crowd";
+import { resolvePageBreakfastCrowdOps } from "@/lib/editor/page-ops";
 import type {
   MultiPageTemplateId,
   MultiPageTemplate,
@@ -5085,22 +5090,28 @@ export type EditorCardForSave = {
 /**
  * Persist cards to Supabase. Updates existing (by UUID id), inserts new (nanoid), deletes removed.
  * Returns map of client id -> server id for newly inserted cards so the store can be updated.
+ * For breakfast_crowd, page.ops is authoritative: autosave stamps ops onto card content and
+ * never lets a stale in-memory level/note/updatedAt clobber the ops store.
  */
 export async function savePageCards(
   pageId: string,
   cards: EditorCardForSave[],
   options?: { pageStyle?: PageStyleForSave | null; allowEmpty?: boolean }
-): Promise<{ updatedIds: Record<string, string> }> {
+): Promise<{
+  updatedIds: Record<string, string>;
+  /** cardId → content after breakfast_crowd ops overlay (when ops differed from local). */
+  breakfastCrowdContentById: Record<string, Record<string, unknown>>;
+}> {
   const supabase = getBrowserSupabaseClient();
   const updatedIds: Record<string, string> = {};
-  if (!supabase) return { updatedIds };
+  const breakfastCrowdContentById: Record<string, Record<string, unknown>> = {};
+  if (!supabase) return { updatedIds, breakfastCrowdContentById };
 
   const existing = await getPageCards(pageId);
   /** Avoid wiping DB when autosave/navigation races deliver an empty in-memory store. */
   if (cards.length === 0 && existing.length > 0 && !options?.allowEmpty) {
-    return { updatedIds };
+    return { updatedIds, breakfastCrowdContentById };
   }
-  const existingIds = new Set(existing.map((r) => r.id));
   const storeIds = new Set(cards.map((c) => c.id));
 
   const pageStyle = options?.pageStyle;
@@ -5110,10 +5121,49 @@ export async function savePageCards(
     !Array.isArray(pageStyle) &&
     pageStyle.background != null;
 
+  const hasBreakfastCrowd = cards.some((c) => c.type === "breakfast_crowd");
+  const breakfastOps = hasBreakfastCrowd
+    ? await resolvePageBreakfastCrowdOps(pageId, {
+        cardRows: [
+          ...cards
+            .filter((c) => c.type === "breakfast_crowd")
+            .map((c) => ({ content: c.content })),
+          ...existing
+            .filter((r) => r.type === "breakfast_crowd")
+            .map((r) => ({ content: r.content })),
+        ],
+        fetchCardRows: async () =>
+          existing
+            .filter((r) => r.type === "breakfast_crowd")
+            .map((r) => ({ content: r.content })),
+      }).catch(() => null)
+    : null;
+
   for (let index = 0; index < cards.length; index += 1) {
     const card = cards[index];
-    const contentBase = normalizeCardWidthModeContent(card.type, { ...card.content });
+    let contentBase = normalizeCardWidthModeContent(card.type, { ...card.content });
     delete contentBase[PAGE_STYLE_KEY];
+
+    if (card.type === "breakfast_crowd") {
+      if (breakfastOps) {
+        const before = contentBase;
+        contentBase = overlayBreakfastCrowdOpsOnContent(contentBase, breakfastOps);
+        if (
+          contentBase.level !== before.level ||
+          contentBase.updatedAt !== before.updatedAt ||
+          contentBase.note !== before.note
+        ) {
+          breakfastCrowdContentById[card.id] = {
+            level: contentBase.level,
+            note: contentBase.note,
+            updatedAt: contentBase.updatedAt,
+          };
+        }
+      } else {
+        contentBase.level = coerceBreakfastCrowdLevel(contentBase.level);
+      }
+    }
+
     const contentWithPageStyle =
       hasPageStyle && index === 0
         ? { ...contentBase, [PAGE_STYLE_KEY]: pageStyle }
@@ -5150,5 +5200,5 @@ export async function savePageCards(
     await supabase.from("cards").delete().eq("id", row.id);
   }
 
-  return { updatedIds };
+  return { updatedIds, breakfastCrowdContentById };
 }

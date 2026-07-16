@@ -295,6 +295,7 @@ export type Database = {
           slug: string;
           created_at: string;
           guest_shell: Record<string, unknown> | null;
+          ops: Record<string, unknown> | null;
         };
         Insert: {
           id?: string;
@@ -303,6 +304,7 @@ export type Database = {
           slug: string;
           created_at?: string;
           guest_shell?: Record<string, unknown> | null;
+          ops?: Record<string, unknown> | null;
         };
         Update: {
           hotel_id?: string;
@@ -310,6 +312,7 @@ export type Database = {
           slug?: string;
           created_at?: string;
           guest_shell?: Record<string, unknown> | null;
+          ops?: Record<string, unknown> | null;
         };
         Relationships: [];
       };

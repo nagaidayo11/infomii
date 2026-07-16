@@ -58,6 +58,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   coupon: 128,
   accordion_info: 140,
   open_status: 104,
+  breakfast_crowd: 120,
   social_links: 120,
   contact_hub: 132,
   progress_steps: 124,

@@ -16,6 +16,12 @@ import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { parseGuestShellConfig } from "@/lib/guest-shell";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 import { rowToCard } from "@/lib/storage";
+import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
+import { resolvePageBreakfastCrowdOpsWithClient } from "@/lib/editor/page-ops";
+
+/** Live card fields (e.g. breakfast_crowd level) must stay fresh for guests. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -666,6 +672,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
 
   let cardRows: Array<{ id: string; type: string; content: unknown; order: number | null }> = [];
   let pageHotelId: string | null = null;
+  let cardPageId: string | null = null;
   try {
     const admin = getSupabaseAdminServerClient();
     const { data: pageRow } = await admin
@@ -674,6 +681,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       .eq("slug", slug)
       .maybeSingle();
     pageHotelId = pageRow?.hotel_id ?? null;
+    cardPageId = pageRow?.id ?? null;
     if (pageRow?.id) {
       const { data: cards } = await admin
         .from("cards")
@@ -686,7 +694,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
     cardRows = [];
   }
   const cardBasedView = cardRows.length > 0;
-  const cardViewData: EditorCard[] = cardRows.map((c, idx) => {
+  let cardViewData: EditorCard[] = cardRows.map((c, idx) => {
     const mapped = rowToCard({
       id: c.id,
       type: (c.type as string) ?? "text",
@@ -704,6 +712,19 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
       ...(mapped.style ? { style: mapped.style as EditorCard["style"] } : {}),
     };
   });
+  if (cardPageId && cardViewData.some((c) => c.type === "breakfast_crowd")) {
+    try {
+      const admin = getSupabaseAdminServerClient();
+      const breakfastOps = await resolvePageBreakfastCrowdOpsWithClient(admin, cardPageId, {
+        cardRows: cardRows
+          .filter((r) => r.type === "breakfast_crowd")
+          .map((r) => ({ content: r.content })),
+      });
+      cardViewData = applyBreakfastCrowdOpsStatusToCards(cardViewData, breakfastOps).cards;
+    } catch {
+      /* keep denormalized card content */
+    }
+  }
   const hasMultilingualContent = cardViewData.some((card) => hasLocalizedPayload(card.content));
   let hotelPlan: "free" | "pro" | "business" = "free";
   let canShowLocaleToggle = false;

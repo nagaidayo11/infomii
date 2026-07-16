@@ -179,6 +179,13 @@ export function AppDashboardView() {
                 title="ページの反応を見る"
                 subtitle="閲覧数とQRの状況を確認"
               />
+              {canEdit ? (
+                <AppListRow
+                  href="/dashboard/ops/breakfast-crowd"
+                  title="朝食混雑を切替"
+                  subtitle="フロントデスク用のクイック更新"
+                />
+              ) : null}
             </section>
           </AppSection>
 

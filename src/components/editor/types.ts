@@ -19,6 +19,7 @@ export type CardType =
   | "welcome"
   | "wifi"
   | "breakfast"
+  | "breakfast_crowd"
   | "checkout"
   | "nearby"
   | "notice"
@@ -322,6 +323,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   welcome: "ウェルカム",
   wifi: "WiFi",
   breakfast: "施設案内",
+  breakfast_crowd: "朝食混雑",
   checkout: "チェックアウト",
   nearby: "周辺案内",
   notice: "お知らせ",
@@ -478,6 +480,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "welcome", label: "ウェルカム", description: "おもてなしメッセージ" },
   { type: "wifi", label: "WiFi", description: "SSID・パスワード" },
   { type: "breakfast", label: "朝食", description: "時間・会場・メニュー" },
+  { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま" },
   { type: "checkout", label: "チェックアウト", description: "時刻・補足・リンク" },
   { type: "nearby", label: "周辺案内", description: "近隣スポット・アクセス" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
@@ -513,6 +516,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
   { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
+  { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま" },
   { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
   { type: "progress_steps", label: "進捗ステップ", description: "手続き進捗を段階表示" },
@@ -657,6 +661,13 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "WiFi案内", ssid: "Infomii-Guest", password: "welcome2026" };
     case "breakfast":
       return { title: "施設案内", time: "7:00-9:30", location: "1F ダイニング", menu: "和洋ビュッフェ / 最終入場 9:00" };
+    case "breakfast_crowd":
+      return {
+        title: "朝食混雑",
+        level: "open",
+        note: "",
+        updatedAt: new Date().toISOString(),
+      };
     case "checkout":
       return { title: "チェックアウト", time: "11:00", note: "延長希望はフロントへご相談ください。", linkUrl: "", linkLabel: "チェックアウト手順" };
     case "nearby":

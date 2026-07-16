@@ -8,6 +8,7 @@ import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAppToast } from "@/components/app-shell/AppToastProvider";
+import { buildBreakfastCrowdOpsHref, syncBreakfastCrowdOpsIntoEditorStore } from "@/lib/editor/breakfast-crowd-ops";
 import { EditorLayout } from "./EditorLayout";
 import { EditorTopBar } from "./EditorTopBar";
 import { CardLibrary } from "./CardLibrary";
@@ -517,6 +518,23 @@ export function Editor2({
   }, [isDemoMode, pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]);
 
   const { retry, flushAutosaveNow } = useAutoSaveCards(pageId ?? null);
+
+  // Another tab / Quick Ops may update breakfast_crowd while this editor stays mounted.
+  useEffect(() => {
+    if (isDemoMode || !pageId) return;
+    const pull = () => {
+      void syncBreakfastCrowdOpsIntoEditorStore(pageId);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") pull();
+    };
+    window.addEventListener("focus", pull);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", pull);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [isDemoMode, pageId]);
 
   const selectedCard = useMemo(
     () => cards.find((c) => c.id === selectedCardId) ?? null,
@@ -1220,6 +1238,11 @@ export function Editor2({
           ? ("unpublished_changes" as const)
           : null;
 
+  const breakfastCrowdOpsHref =
+    !isDemoMode && pageId && cards.some((c) => c.type === "breakfast_crowd")
+      ? buildBreakfastCrowdOpsHref(pageId)
+      : null;
+
   const topBar =
     pageId || isDemoMode ? (
       useAppEditorChrome ? (
@@ -1250,6 +1273,7 @@ export function Editor2({
           publishToggleChecked={publishStatus === "published"}
           onRenamePageTitle={handleRenamePageTitle}
           publishNotice={publishNotice}
+          breakfastCrowdOpsHref={breakfastCrowdOpsHref}
         />
       ) : (
         <EditorTopBar
@@ -1283,6 +1307,7 @@ export function Editor2({
           scrollPriorityMode={scrollPriorityMode}
           onToggleScrollPriority={() => setScrollPriorityMode((prev) => !prev)}
           publishNotice={publishNotice}
+          breakfastCrowdOpsHref={breakfastCrowdOpsHref}
         />
       )
     ) : null;

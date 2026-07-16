@@ -15,6 +15,9 @@ import {
 } from "@/lib/storage";
 import { migrateCardsForEditor } from "@/lib/migrate-cards";
 import { canResumeEditorPage } from "@/lib/editor-resume";
+import { applyBreakfastCrowdOpsStatusToCards } from "@/lib/editor/breakfast-crowd";
+import { resolvePageBreakfastCrowdOps } from "@/lib/editor/page-ops";
+import { syncBreakfastCrowdOpsIntoEditorStore } from "@/lib/editor/breakfast-crowd-ops";
 
 function EditorWithPageId() {
   const params = useParams();
@@ -35,6 +38,8 @@ function EditorWithPageId() {
     if (canResumeEditorPage(pageId)) {
       setPageFound(true);
       setLoaded(true);
+      // SPA return from Quick Ops (or any other route): store is warm but may be stale.
+      void syncBreakfastCrowdOpsIntoEditorStore(pageId);
       return;
     }
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
@@ -74,7 +79,15 @@ function EditorWithPageId() {
         const card = rowToCard(r);
         return { ...card, type: card.type as CardType };
       });
-      const cards = migrateCardsForEditor(cardsFromDb);
+      let cards = migrateCardsForEditor(cardsFromDb);
+      if (cards.some((c) => c.type === "breakfast_crowd")) {
+        const ops = await resolvePageBreakfastCrowdOps(pageId, {
+          cardRows: cards
+            .filter((c) => c.type === "breakfast_crowd")
+            .map((c) => ({ content: c.content })),
+        }).catch(() => null);
+        cards = applyBreakfastCrowdOpsStatusToCards(cards, ops).cards;
+      }
 
       if (cards.length > 0) {
         setCards(cards);

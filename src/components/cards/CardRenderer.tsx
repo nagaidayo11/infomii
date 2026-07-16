@@ -46,6 +46,7 @@ import { NoticeTickerCard } from "./NoticeTickerCard";
 import { CouponCard } from "./CouponCard";
 import { AccordionInfoCard } from "./AccordionInfoCard";
 import { OpenStatusCard } from "./OpenStatusCard";
+import { BreakfastCrowdCard } from "./BreakfastCrowdCard";
 import { SocialLinksCard } from "./SocialLinksCard";
 import { ContactHubCard } from "./ContactHubCard";
 import { ProgressStepsCard } from "./ProgressStepsCard";
@@ -297,6 +298,8 @@ function SingleCardRenderer({
       return <AccordionInfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "open_status":
       return <OpenStatusCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "breakfast_crowd":
+      return <BreakfastCrowdCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "social_links":
       return <SocialLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "contact_hub":
