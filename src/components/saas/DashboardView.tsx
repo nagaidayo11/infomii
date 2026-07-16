@@ -31,6 +31,8 @@ import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { formatDisplayNameWithSan } from "@/lib/user-label";
+import { listLiveOpsKeysByPageIds, type LiveOpsKey } from "@/lib/editor/live-ops";
+import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
 
 export function DashboardView() {
   const { isAppShell } = useClientShell();
@@ -53,6 +55,7 @@ function DashboardViewWeb() {
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
+  const [liveOpsByPageId, setLiveOpsByPageId] = useState<Record<string, LiveOpsKey[]>>({});
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
   const [inviteNotice, setInviteNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -89,6 +92,12 @@ function DashboardViewWeb() {
       setRole(r);
       if (pagesResult.ok) {
         setCardPages(pagesResult.pages);
+        const ops = await listLiveOpsKeysByPageIds(pagesResult.pages.map((p) => p.id)).catch(
+          () => ({}) as Record<string, LiveOpsKey[]>,
+        );
+        setLiveOpsByPageId(ops);
+      } else {
+        setLiveOpsByPageId({});
       }
     } finally {
       setLoading(false);
@@ -227,24 +236,7 @@ function DashboardViewWeb() {
             >
               テンプレート
             </Link>
-            <Link
-              href="/dashboard/ops/breakfast-crowd"
-              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100"
-            >
-              朝食混雑
-            </Link>
-            <Link
-              href="/dashboard/ops/dinner-crowd"
-              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100"
-            >
-              夕食混雑
-            </Link>
-            <Link
-              href="/dashboard/ops/spa-crowd"
-              className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900 transition hover:bg-emerald-100"
-            >
-              大浴場混雑
-            </Link>
+            <LiveOpsDashboardHelp />
           </div>
         ) : null}
       </header>
@@ -381,6 +373,7 @@ function DashboardViewWeb() {
                   onTogglePublish={canEdit ? handleTogglePublish : undefined}
                   publishToggling={togglingPublishId === item.id}
                   canEdit={canEdit}
+                  liveOpsKeys={liveOpsByPageId[item.id] ?? []}
                 />
               );
             })}

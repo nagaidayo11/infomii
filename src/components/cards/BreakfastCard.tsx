@@ -14,6 +14,8 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { InfoDetailList, InfoDetailRow } from "./facility-info-rows";
+import { DESK_TONE } from "./desk-tone";
 
 type BreakfastCardProps = {
   card: EditorCard;
@@ -25,9 +27,11 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
-export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCardProps) {
+/** Desk-card breakfast with soft amber tint. */
+export function BreakfastCard({ card, locale = "ja" }: BreakfastCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
+  const tone = DESK_TONE.amber;
   const c = card.content as Record<string, unknown> | undefined;
   const time = getLocalizedContent(c?.time as LocalizedString | undefined, locale);
   const location = getLocalizedContent(c?.location as LocalizedString | undefined, locale);
@@ -38,7 +42,7 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
       : locale === "zh"
         ? { time: "时间", location: "地点", titlePlaceholder: "早餐", menuPlaceholder: "菜单", locationPlaceholder: "1层餐厅" }
         : locale === "en"
-          ? { time: "Time", location: "Venue", titlePlaceholder: "Breakfast", menuPlaceholder: "Menu", locationPlaceholder: "1F Dining" }
+          ? { time: "Hours", location: "Venue", titlePlaceholder: "Breakfast", menuPlaceholder: "Menu", locationPlaceholder: "1F Dining" }
           : { time: "時間", location: "会場", titlePlaceholder: "朝食", menuPlaceholder: "メニュー", locationPlaceholder: "1F ダイニング" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
 
@@ -49,52 +53,64 @@ export function BreakfastCard({ card, isSelected, locale = "ja" }: BreakfastCard
   };
 
   return (
-    <Card padding="md" className="">
+    <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>
       {(editable || title) ? (
-        <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
+        <p className={`${CARD_BLOCK_TITLE_CLASS} ${tone.title}`} style={getTitleFontSizeStyle()}>
           <InlineEditable
             value={title}
             onSave={(v) => updateKey("title", v)}
             editable={editable}
             onActivate={onActivate}
-            className={CARD_BLOCK_TITLE_CLASS}
+            className={`${CARD_BLOCK_TITLE_CLASS} ${tone.title}`}
             placeholder={labels.titlePlaceholder}
           />
         </p>
       ) : null}
-      <p className={`mt-1 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
-        {labels.time}:{" "}
-        <InlineEditable
-          value={time}
-          onSave={(v) => updateKey("time", v)}
-          editable={editable}
-          onActivate={onActivate}
-          className={CARD_BLOCK_BODY_CLASS}
-          placeholder="7:00–9:30"
-        />
-      </p>
-      <p className={`mt-0.5 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
-        {labels.location}:{" "}
-        <InlineEditable
-          value={location}
-          onSave={(v) => updateKey("location", v)}
-          editable={editable}
-          onActivate={onActivate}
-          className={CARD_BLOCK_BODY_CLASS}
-          placeholder={labels.locationPlaceholder}
-        />
-      </p>
-      <p className={`mt-2 ${CARD_BLOCK_CAPTION_CLASS}`}>
-        <InlineEditable
-          value={menu}
-          onSave={(v) => updateKey("menu", v)}
-          editable={editable}
-          onActivate={onActivate}
-          multiline
-          className={`block w-full min-h-[1lh] ${CARD_BLOCK_CAPTION_CLASS}`}
-          placeholder={labels.menuPlaceholder}
-        />
-      </p>
+
+      <InfoDetailList divideClassName={tone.divide}>
+        <InfoDetailRow
+          label={labels.time}
+          labelClassName={tone.label}
+          valueClassName={`${CARD_BLOCK_BODY_CLASS} font-medium text-slate-900`}
+        >
+          <InlineEditable
+            value={time}
+            onSave={(v) => updateKey("time", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className={`${CARD_BLOCK_BODY_CLASS} font-medium text-slate-900`}
+            placeholder="7:00–9:30"
+          />
+        </InfoDetailRow>
+        <InfoDetailRow
+          label={labels.location}
+          labelClassName={tone.label}
+          valueClassName={`${CARD_BLOCK_BODY_CLASS} font-medium text-slate-900`}
+        >
+          <InlineEditable
+            value={location}
+            onSave={(v) => updateKey("location", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className={`${CARD_BLOCK_BODY_CLASS} font-medium text-slate-900`}
+            placeholder={labels.locationPlaceholder}
+          />
+        </InfoDetailRow>
+      </InfoDetailList>
+
+      {(editable || menu) ? (
+        <p className={`mt-3 ${CARD_BLOCK_CAPTION_CLASS}`} style={getBodyFontSizeStyle()}>
+          <InlineEditable
+            value={menu}
+            onSave={(v) => updateKey("menu", v)}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            className={`block w-full min-h-[1lh] ${CARD_BLOCK_CAPTION_CLASS}`}
+            placeholder={labels.menuPlaceholder}
+          />
+        </p>
+      ) : null}
     </Card>
   );
 }

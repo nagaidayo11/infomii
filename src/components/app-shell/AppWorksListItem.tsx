@@ -7,6 +7,8 @@ import { buildPublicUrl } from "@/lib/storage";
 import { useAppToast } from "./AppToastProvider";
 import { AppShellLink } from "./AppShellLink";
 import { AppSwitch } from "./primitives/AppSwitch";
+import type { LiveOpsKey } from "@/lib/editor/live-ops";
+import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
 
 export type AppWorksListItemProps = {
   id: string;
@@ -20,6 +22,7 @@ export type AppWorksListItemProps = {
   showPublishSwitch?: boolean;
   onTogglePublish?: (id: string, nextStatus: "draft" | "published") => Promise<void> | void;
   onDelete?: (id: string) => void;
+  liveOpsKeys?: LiveOpsKey[];
 };
 
 function TrashIcon() {
@@ -73,6 +76,7 @@ export function AppWorksListItem({
   showPublishSwitch = true,
   onTogglePublish,
   onDelete,
+  liveOpsKeys = [],
 }: AppWorksListItemProps) {
   const { showToast } = useAppToast();
   const [shareOpen, setShareOpen] = useState(false);
@@ -158,6 +162,11 @@ export function AppWorksListItem({
             <span>QR / リンク</span>
           </button>
         </div>
+        {liveOpsKeys.length > 0 ? (
+          <div className="border-t border-[var(--app-border)] px-4 py-2">
+            <LiveOpsPageRowActions pageId={id} keys={liveOpsKeys} />
+          </div>
+        ) : null}
       </article>
 
       {shareOpen && slug ? (

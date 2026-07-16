@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 type CardProps = {
   children: ReactNode;
@@ -6,6 +6,8 @@ type CardProps = {
   padding?: "none" | "sm" | "md" | "lg";
   /** Add hover border/shadow (e.g. for feature cards) */
   hover?: boolean;
+  /** Merged after the default surface; use to tint desk cards. */
+  style?: CSSProperties;
 };
 
 /** Consistent card padding (symmetric vertical): none | sm | md | lg.
@@ -26,13 +28,17 @@ export function Card({
   className = "",
   padding = "md",
   hover = false,
+  style,
 }: CardProps) {
   const interactiveClass = hover
     ? "app-interactive ui-pop-card transition-[transform] duration-200 ease-out hover:-translate-y-0.5"
     : "";
   return (
     <div
-      style={{ backgroundColor: "var(--editor-card-surface, var(--editor-block-surface, var(--color-ds-card)))" }}
+      style={{
+        backgroundColor: "var(--editor-card-surface, var(--editor-block-surface, var(--color-ds-card)))",
+        ...style,
+      }}
       className={
         "rounded-[inherit] " +
         paddingClass[padding] +

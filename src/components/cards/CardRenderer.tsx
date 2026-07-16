@@ -3,7 +3,7 @@
 import type { EditorCard } from "@/components/editor/types";
 import { getBlockStyle } from "@/components/editor/types";
 import { useLocale } from "@/components/locale-context";
-import { getLocalizedContent, localizedFieldToPlain } from "@/lib/localized-content";
+import { getLocalizedContent } from "@/lib/localized-content";
 import { HeroCard } from "./HeroCard";
 import { HeroSliderCard } from "./HeroSliderCard";
 import { HeadingBodyCard } from "./HeadingBodyCard";
@@ -14,6 +14,8 @@ import { WelcomeCard } from "./WelcomeCard";
 import { CheckoutCard } from "./CheckoutCard";
 import { NearbyCard } from "./NearbyCard";
 import { NoticeCard } from "./NoticeCard";
+import { SpaCard } from "./SpaCard";
+import { BreakfastCard } from "./BreakfastCard";
 import { MapCard } from "./MapCard";
 import { RestaurantCard } from "./RestaurantCard";
 import { TaxiCard } from "./TaxiCard";
@@ -171,58 +173,10 @@ function SingleCardRenderer({
       };
       return <InfoCard card={infoCard} isSelected={isSelected} locale={locale} />;
     }
-    case "breakfast": {
-      const c = resolvedCard.content as Record<string, unknown> | undefined;
-      const time = localizedFieldToPlain(c?.time, locale);
-      const location = localizedFieldToPlain(c?.location, locale);
-      const menu = localizedFieldToPlain(c?.menu, locale);
-      const breakfastLabels =
-        locale === "ko"
-          ? { title: "조식", body: "시간\n장소\n상세" }
-          : locale === "zh"
-            ? { title: "早餐", body: "时间\n地点\n详情" }
-            : locale === "en"
-              ? { title: "Breakfast", body: "Time\nVenue\nDetails" }
-              : { title: "朝食", body: "時間\n場所\n詳細" };
-      const detailLines = [time, location, menu].filter(Boolean);
-      const highlightCard: EditorCard = {
-        ...resolvedCard,
-        type: "highlight",
-        content: {
-          title: localizedFieldToPlain(c?.title, locale) || breakfastLabels.title,
-          body: detailLines.join("\n") || breakfastLabels.body,
-          accent: "amber",
-        },
-      };
-      return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
-    }
-    case "spa": {
-      const c = resolvedCard.content as Record<string, unknown> | undefined;
-      const time = localizedFieldToPlain(c?.time, locale) || localizedFieldToPlain(c?.hours, locale);
-      const location = localizedFieldToPlain(c?.location, locale);
-      const menu =
-        localizedFieldToPlain(c?.menu, locale) ||
-        localizedFieldToPlain(c?.description, locale) ||
-        localizedFieldToPlain(c?.note, locale);
-      const spaLabels =
-        locale === "ko"
-          ? { title: "스파 · 온천", body: "시간 · 장소 · 안내" }
-          : locale === "zh"
-            ? { title: "SPA / 温泉", body: "时间 · 地点 · 指南" }
-            : locale === "en"
-              ? { title: "Spa / Onsen", body: "Time · Location · Info" }
-              : { title: "スパ・温泉", body: "時間・場所・ご案内" };
-      const highlightCard: EditorCard = {
-        ...resolvedCard,
-        type: "highlight",
-        content: {
-          title: localizedFieldToPlain(c?.title, locale) || spaLabels.title,
-          body: [time, location, menu].filter(Boolean).join(" · ") || spaLabels.body,
-          accent: "blue",
-        },
-      };
-      return <HighlightCard card={highlightCard} isSelected={isSelected} locale={locale} />;
-    }
+    case "breakfast":
+      return <BreakfastCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "spa":
+      return <SpaCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "checkout":
       return <CheckoutCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "notice":

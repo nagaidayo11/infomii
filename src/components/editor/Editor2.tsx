@@ -838,10 +838,9 @@ export function Editor2({
       cards: useEditor2Store.getState().cards,
       guestShell: previewGuestShell,
       knownPageSlugs: knownPageSlugsRef.current ?? undefined,
-      includeMissingTranslations: isBusinessPlan,
       pageTitle: pageMeta.title,
     });
-  }, [previewGuestShell, isBusinessPlan, pageMeta.title]);
+  }, [previewGuestShell, pageMeta.title]);
 
   const openQualityGateIfNeeded = useCallback(
     (mode: "publish" | "preview", resume: "publish_click_strict" | "toggle_publish_on" | "preview") => {

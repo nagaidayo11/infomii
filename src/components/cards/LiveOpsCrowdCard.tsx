@@ -18,10 +18,10 @@ import {
   writeLiveOpsNoteJa,
   type LiveOpsKey,
 } from "@/lib/editor/live-ops";
-import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
+import { DESK_TONE, type DeskTone } from "./desk-tone";
 
 function statusLabelForLocale(
   opsKey: LiveOpsKey,
@@ -35,7 +35,21 @@ function statusLabelForLocale(
   return labels.ja;
 }
 
-/** Shared guest/editor card for registered live-ops crowd blocks. */
+const LEVEL_TONE: Record<string, DeskTone> = {
+  open: "emerald",
+  moderate: "amber",
+  busy: "rose",
+  closed: "slate",
+};
+
+const STATUS_PILL: Record<string, string> = {
+  open: "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80",
+  moderate: "bg-amber-100 text-amber-950 ring-1 ring-amber-200/80",
+  busy: "bg-red-100 text-red-900 ring-1 ring-red-200/80",
+  closed: "bg-slate-100 text-slate-700 ring-1 ring-slate-200/80",
+};
+
+/** Desk status board — surface tint follows live level. */
 export function LiveOpsCrowdCard({
   card,
   opsKey,
@@ -56,9 +70,12 @@ export function LiveOpsCrowdCard({
     getLocalizedContent(c.title as LocalizedString | undefined, locale).trim() || def.defaultTitle;
   const note = getLocalizedContent(c.note as LocalizedString | undefined, locale);
   const level = coerceLiveOpsLevel(c.level);
-  const tone = def.levelTones[level];
   const statusText = statusLabelForLocale(opsKey, level, locale);
   const updatedLabel = formatLiveOpsUpdatedAt(c.updatedAt, locale);
+  const pillClass = STATUS_PILL[level] ?? STATUS_PILL.open;
+  const tone = DESK_TONE[LEVEL_TONE[level] ?? "emerald"];
+  const nowLabel =
+    locale === "en" ? "Now" : locale === "zh" ? "现在" : locale === "ko" ? "지금" : "いま";
 
   async function saveNote(nextNote: string) {
     const nextContent = {
@@ -83,50 +100,63 @@ export function LiveOpsCrowdCard({
         },
       });
     } catch {
-      /* local note already set; ops may be unavailable until migration */
+      /* local note already set */
     }
   }
 
+  const statusTone =
+    level === "busy"
+      ? "text-red-700"
+      : level === "moderate"
+        ? "text-amber-800"
+        : level === "closed"
+          ? "text-slate-600"
+          : "text-emerald-800";
+
   return (
-    <Card padding="none">
-      <section
-        data-inner-surface
-        className={`relative overflow-hidden rounded-[inherit] border ${tone.surface}`}
+    <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>
+      <div className="flex items-start justify-between gap-3">
+        <p className={`min-w-0 flex-1 ${CARD_BLOCK_TITLE_CLASS} ${tone.title}`} style={getTitleFontSizeStyle()}>
+          <PlainInline
+            value={title}
+            onSave={(v) => editor.setPlainField("title", v)}
+            bind={bind}
+            className={`${CARD_BLOCK_TITLE_CLASS} ${tone.title}`}
+            placeholder={def.defaultTitle}
+          />
+        </p>
+        <span
+          className={
+            "shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide " + pillClass
+          }
+        >
+          {nowLabel}
+        </span>
+      </div>
+
+      <p
+        className={`mt-3 text-[1.35rem] font-semibold leading-snug tracking-tight ${statusTone}`}
+        style={getTitleFontSizeStyle()}
       >
-        <span className={`absolute inset-y-0 left-0 w-1 ${tone.band}`} aria-hidden />
-        <div className={`${GUEST_CARD_PAD_CLASS} pl-4`}>
-          <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            <PlainInline
-              value={title}
-              onSave={(v) => editor.setPlainField("title", v)}
-              bind={bind}
-              className={CARD_BLOCK_TITLE_CLASS}
-              placeholder={def.defaultTitle}
-            />
-          </p>
-          <div className="mt-2.5 flex items-center gap-2.5">
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden />
-            <p className={`text-lg font-semibold leading-snug ${tone.text}`} style={getTitleFontSizeStyle()}>
-              {statusText}
-            </p>
-          </div>
-          {(editor.editable || note) && (
-            <p className={`mt-2 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
-              <PlainInline
-                value={note}
-                onSave={(v) => void saveNote(v)}
-                bind={bind}
-                multiline
-                className={`block w-full min-h-[1lh] ${CARD_BLOCK_BODY_CLASS}`}
-                placeholder="短いメモ（任意）"
-              />
-            </p>
-          )}
-          {updatedLabel ? (
-            <p className={`mt-2 ${CARD_BLOCK_CAPTION_CLASS}`}>{updatedLabel}</p>
-          ) : null}
-        </div>
-      </section>
+        {statusText}
+      </p>
+
+      {(editor.editable || note) && (
+        <p className={`mt-2 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
+          <PlainInline
+            value={note}
+            onSave={(v) => void saveNote(v)}
+            bind={bind}
+            multiline
+            className={`block w-full min-h-[1lh] ${CARD_BLOCK_BODY_CLASS}`}
+            placeholder="短いメモ（任意）"
+          />
+        </p>
+      )}
+
+      {updatedLabel ? (
+        <p className={`mt-2.5 ${CARD_BLOCK_CAPTION_CLASS} ${tone.label}`}>{updatedLabel}</p>
+      ) : null}
     </Card>
   );
 }

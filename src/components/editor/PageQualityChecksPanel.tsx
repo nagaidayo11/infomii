@@ -1,7 +1,7 @@
 "use client";
 
 import type { PageQualityFinding } from "@/lib/editor/page-quality-checks";
-import { pageQualityHasErrors, pageQualitySummaryTitle } from "@/lib/editor/page-quality-checks";
+import { pageQualitySummaryTitle } from "@/lib/editor/page-quality-checks";
 
 type PageQualityChecksPanelProps = {
   findings: PageQualityFinding[];
@@ -9,7 +9,7 @@ type PageQualityChecksPanelProps = {
   onClose: () => void;
   /** Focus first fixable finding (card select + scroll). */
   onFix: () => void;
-  /** Warnings-only publish continue, or soft continue for preview. */
+  /** Soft continue for publish or preview. */
   onContinue?: () => void;
 };
 
@@ -20,10 +20,9 @@ export function PageQualityChecksPanel({
   onFix,
   onContinue,
 }: PageQualityChecksPanelProps) {
-  const hasErrors = pageQualityHasErrors(findings);
   const title = pageQualitySummaryTitle(findings, mode);
   const continueLabel = mode === "preview" ? "このままプレビュー" : "このまま公開";
-  const showContinue = Boolean(onContinue) && (mode === "preview" || !hasErrors);
+  const showContinue = Boolean(onContinue);
   const fixable = findings.some((f) => Boolean(f.cardId));
 
   return (

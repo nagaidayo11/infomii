@@ -13,7 +13,6 @@ import {
 } from "@/lib/editor/live-ops";
 import { getGuestShellNavStyle, type GuestShellConfig } from "@/lib/guest-shell";
 import type { EditorCard } from "@/components/editor/types";
-import { collectMissingTranslationTargets } from "@/lib/editor/batch-translate-cards";
 
 export type PageQualitySeverity = "error" | "warning";
 
@@ -30,8 +29,6 @@ export type PageQualityCheckOptions = {
   guestShell?: GuestShellConfig | null;
   /** Known hotel page slugs — used when present to flag dead page links. */
   knownPageSlugs?: ReadonlySet<string> | readonly string[];
-  /** Business plan: include missing translation count. */
-  includeMissingTranslations?: boolean;
   /** Stale threshold for live-ops crowd cards (default 12h). */
   liveOpsStaleHours?: number;
   /** Page title (blank / junk detection). */
@@ -486,7 +483,6 @@ export function runPageQualityChecks(opts: PageQualityCheckOptions): PageQuality
     cards,
     guestShell = null,
     knownPageSlugs,
-    includeMissingTranslations = false,
     liveOpsStaleHours = DEFAULT_LIVE_OPS_STALE_HOURS,
     pageTitle,
     nowMs = Date.now(),
@@ -517,16 +513,7 @@ export function runPageQualityChecks(opts: PageQualityCheckOptions): PageQuality
   checkDuplicateLiveOps(cards, out);
   checkLiveOpsWithoutStatic(cards, out);
 
-  if (includeMissingTranslations) {
-    const missing = collectMissingTranslationTargets(cards);
-    if (missing.length > 0) {
-      out.push({
-        severity: "warning",
-        code: "missing_translations",
-        message: `未翻訳が${missing.length}件あります`,
-      });
-    }
-  }
+  // Business auto-translates on publish/preview — don't surface "未翻訳" as a quality finding.
 
   const seen = new Set<string>();
   const deduped: PageQualityFinding[] = [];

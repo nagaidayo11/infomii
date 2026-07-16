@@ -26,6 +26,9 @@ import { AppListRow } from "../primitives/AppListRow";
 import { AppSection } from "../primitives/AppSection";
 import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
+import { listLiveOpsKeysByPageIds, type LiveOpsKey } from "@/lib/editor/live-ops";
+import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
+import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
 
 export function AppDashboardView() {
   const initialCache = getDashboardViewCache();
@@ -34,6 +37,7 @@ export function AppDashboardView() {
   );
   const { displayName: profileDisplayName, loaded: profileLoaded } = useProfileDisplayName();
   const [pages, setPages] = useState<PageRow[]>(initialCache?.pages ?? []);
+  const [liveOpsByPageId, setLiveOpsByPageId] = useState<Record<string, LiveOpsKey[]>>({});
   const [loading, setLoading] = useState(!initialCache);
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(
     initialCache?.role ?? null,
@@ -65,7 +69,15 @@ export function AppDashboardView() {
       const nextViews = metrics?.totalViews7d ?? 0;
       setBootstrap(b);
       setRole(r);
-      if (pageResult.ok) setPages(nextPages);
+      if (pageResult.ok) {
+        setPages(nextPages);
+        const ops = await listLiveOpsKeysByPageIds(nextPages.map((p) => p.id)).catch(
+          () => ({}) as Record<string, LiveOpsKey[]>,
+        );
+        setLiveOpsByPageId(ops);
+      } else {
+        setLiveOpsByPageId({});
+      }
       setTotalViews7d(nextViews);
       setDashboardViewCache({
         bootstrap: b,
@@ -179,25 +191,6 @@ export function AppDashboardView() {
                 title="ページの反応を見る"
                 subtitle="閲覧数とQRの状況を確認"
               />
-              {canEdit ? (
-                <>
-                  <AppListRow
-                    href="/dashboard/ops/breakfast-crowd"
-                    title="朝食混雑を切替"
-                    subtitle="フロントデスク用のクイック更新"
-                  />
-                  <AppListRow
-                    href="/dashboard/ops/dinner-crowd"
-                    title="夕食混雑を切替"
-                    subtitle="レストラン混雑のクイック更新"
-                  />
-                  <AppListRow
-                    href="/dashboard/ops/spa-crowd"
-                    title="大浴場混雑を切替"
-                    subtitle="大浴場混雑のクイック更新"
-                  />
-                </>
-              ) : null}
             </section>
           </AppSection>
 
@@ -205,12 +198,15 @@ export function AppDashboardView() {
             <div>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-base font-bold text-[var(--app-text)]">最近のページ</h2>
-                <AppShellLink
-                  href="/dashboard/pages"
-                  className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
-                >
-                  すべて
-                </AppShellLink>
+                <div className="flex items-center gap-1.5">
+                  {canEdit ? <LiveOpsDashboardHelp /> : null}
+                  <AppShellLink
+                    href="/dashboard/pages"
+                    className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"
+                  >
+                    すべて
+                  </AppShellLink>
+                </div>
               </div>
 
               {recent.length === 0 ? (
@@ -243,6 +239,7 @@ export function AppDashboardView() {
                           showPublishSwitch={false}
                           deleting={deletingId === item.id}
                           onDelete={canEdit ? () => void handleDelete(item) : undefined}
+                          liveOpsKeys={canEdit ? liveOpsByPageId[item.id] ?? [] : []}
                         />
                       </AppWorksListItemMotion>
                     );

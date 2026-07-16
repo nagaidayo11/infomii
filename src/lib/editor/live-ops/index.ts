@@ -65,6 +65,7 @@ export {
   readLastLiveOpsPageId,
   rememberLiveOpsPageId,
   canEditLiveOps,
+  listLiveOpsKeysByPageIds,
   listHotelLiveOpsTargets,
   loadLiveOpsTargetsForPage,
   saveLiveOpsStatus,

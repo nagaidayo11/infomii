@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { buildPublicUrlV } from "@/lib/storage";
+import type { LiveOpsKey } from "@/lib/editor/live-ops";
+import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
 
 export type PageCardProps = {
   id: string;
@@ -19,6 +21,8 @@ export type PageCardProps = {
   publishToggling?: boolean;
   /** false のとき編集・削除を非表示（閲覧権限） */
   canEdit?: boolean;
+  /** Live-ops keys present on this page (show Quick Ops links when non-empty). */
+  liveOpsKeys?: LiveOpsKey[];
 };
 
 function formatLastUpdated(dateStr: string): string {
@@ -54,6 +58,7 @@ export function PageCard({
   onTogglePublish,
   publishToggling = false,
   canEdit = true,
+  liveOpsKeys = [],
 }: PageCardProps) {
   const publicUrl = buildPublicUrlV(slug);
   const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
@@ -146,6 +151,7 @@ export function PageCard({
           </dl>
         </div>
         <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          {canEdit ? <LiveOpsPageRowActions pageId={id} keys={liveOpsKeys} /> : null}
           <Link
             href={publicUrl}
             target="_blank"

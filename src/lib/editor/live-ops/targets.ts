@@ -8,6 +8,7 @@ import { useEditor2Store } from "@/components/editor/store";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import {
   LIVE_OPS_DEFINITIONS,
+  LIVE_OPS_KEYS,
   buildLiveOpsHref,
   liveOpsKeyForCardType,
 } from "./registry";
@@ -68,6 +69,48 @@ function readTitleJa(content: Record<string, unknown>, fallback: string): string
 export async function canEditLiveOps(): Promise<boolean> {
   const role = await getCurrentUserHotelRole().catch(() => null);
   return role === "owner" || role === "admin" || role === "editor";
+}
+
+/**
+ * Which live-ops keys each page has (by card type presence).
+ * Used to show per-page Quick Ops links on the dashboard.
+ */
+export async function listLiveOpsKeysByPageIds(
+  pageIds: string[],
+): Promise<Record<string, LiveOpsKey[]>> {
+  const unique = [...new Set(pageIds.map((id) => id.trim()).filter(Boolean))];
+  const empty: Record<string, LiveOpsKey[]> = {};
+  for (const id of unique) empty[id] = [];
+  if (unique.length === 0) return empty;
+
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return empty;
+
+  const cardTypes = Object.values(LIVE_OPS_DEFINITIONS).flatMap((d) => d.cardTypes);
+  const { data, error } = await supabase
+    .from("cards")
+    .select("page_id,type")
+    .in("page_id", unique)
+    .in("type", cardTypes);
+  if (error || !data) return empty;
+
+  const sets = new Map<string, Set<LiveOpsKey>>();
+  for (const id of unique) sets.set(id, new Set());
+  for (const row of data) {
+    const pageId = typeof row.page_id === "string" ? row.page_id : "";
+    const type = typeof row.type === "string" ? row.type : "";
+    const key = liveOpsKeyForCardType(type);
+    if (!pageId || !key) continue;
+    sets.get(pageId)?.add(key);
+  }
+
+  const out: Record<string, LiveOpsKey[]> = {};
+  for (const id of unique) {
+    const keys = [...(sets.get(id) ?? [])];
+    keys.sort((a, b) => LIVE_OPS_KEYS.indexOf(a) - LIVE_OPS_KEYS.indexOf(b));
+    out[id] = keys;
+  }
+  return out;
 }
 
 async function statusForPage(
