@@ -1,5 +1,5 @@
 import type { CardType, EditorPlanTier } from "@/components/editor/types";
-import { getMinimumPlanForCardType } from "@/components/editor/types";
+import { CARD_TYPE_LABELS, getMinimumPlanForCardType } from "@/components/editor/types";
 import type { LineIconName } from "@/components/cards/LineIcon";
 
 export type LibraryAudience = "hotel" | "personal";
@@ -275,6 +275,14 @@ export const PERSONAL_QUICK_PRESETS: QuickPreset[] = [
 function applyPersonalLabels(item: LibraryItem): LibraryItem {
   const override = PERSONAL_LABEL_OVERRIDES[item.type];
   return override ? { ...item, ...override } : item;
+}
+
+/** Display label for settings / chrome (audience-aware). */
+export function getCardTypeLabel(type: CardType, audience: LibraryAudience = "hotel"): string {
+  if (audience === "personal") {
+    return PERSONAL_LABEL_OVERRIDES[type]?.label ?? CARD_TYPE_LABELS[type] ?? type;
+  }
+  return CARD_TYPE_LABELS[type] ?? type;
 }
 
 /** 個人向け案内セクションの並び（旅のしおり用途を優先） */

@@ -92,9 +92,9 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
         timezone: "Asia/Tokyo",
         rules: [],
         items: [
-          { day: "1日目", time: "10:00", label: "集合（駅改札前）" },
-          { day: "1日目", time: "12:00", label: "ランチ" },
-          { day: "1日目", time: "15:00", label: "散歩・お土産" },
+          { day: "1日目", time: "10:00", label: "集合（駅改札前）", icon: "📍" },
+          { day: "1日目", time: "12:00", label: "ランチ", icon: "🍽" },
+          { day: "1日目", time: "15:00", label: "散歩・お土産", icon: "☀" },
         ],
       };
     case "faq":

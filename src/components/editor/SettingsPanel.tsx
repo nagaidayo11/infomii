@@ -11,9 +11,10 @@ import { ImageFramingControl } from "./ImageFramingControl";
 import { VideoUpload } from "./VideoUpload";
 import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
-import { BUSINESS_ONLY_CARD_TYPES, CARD_TYPE_LABELS, PRO_AND_ABOVE_CARD_TYPES } from "./types";
+import { BUSINESS_ONLY_CARD_TYPES, PRO_AND_ABOVE_CARD_TYPES } from "./types";
+import { getCardTypeLabel, type LibraryAudience } from "@/lib/editor/card-library-config";
+import { SCHEDULE_ICON_CHOICES, scheduleGlyphForItem } from "@/components/cards/native-guest-icons";
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
-import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 import { isFacilityInfoType } from "@/lib/editor/facility-info-presets";
@@ -331,7 +332,7 @@ type PageLinksItem = { label?: string; icon?: string; linkType?: "page" | "url";
 type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
-type ScheduleItem = { day?: string; time?: string; label?: string };
+type ScheduleItem = { day?: string; time?: string; label?: string; icon?: string };
 type ScheduleRule = {
   itemIndex?: number;
   days?: number[];
@@ -2086,7 +2087,16 @@ function ScheduleItemsEditor({
     next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setItems(next);
   };
-  const addItem = () => setItems([...items, { day: "", time: "", label: "" }]);
+  const addItem = () =>
+    setItems([
+      ...items,
+      {
+        day: "",
+        time: "",
+        label: "",
+        icon: SCHEDULE_ICON_CHOICES[items.length % SCHEDULE_ICON_CHOICES.length],
+      },
+    ]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const moveItem = (index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -2135,7 +2145,7 @@ function ScheduleItemsEditor({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">営業時間項目</span>
+        <span className="text-xs font-medium text-slate-500">日程項目</span>
         <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
@@ -2162,6 +2172,30 @@ function ScheduleItemsEditor({
             <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
+          </div>
+          <div>
+            <label className={labelClass}>アイコン</label>
+            <div className="flex flex-wrap gap-1.5">
+              {SCHEDULE_ICON_CHOICES.map((choice) => {
+                const selected = scheduleGlyphForItem(item.icon, i) === choice;
+                return (
+                  <button
+                    key={choice}
+                    type="button"
+                    onClick={() => updateItem(i, "icon", choice)}
+                    className={
+                      "inline-flex h-9 w-9 items-center justify-center rounded-lg border text-base " +
+                      (selected
+                        ? "border-teal-400 bg-teal-50 ring-2 ring-teal-200"
+                        : "border-slate-200 bg-white hover:bg-slate-50")
+                    }
+                    aria-pressed={selected}
+                  >
+                    {choice}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <Input
             label="曜日・区分"
@@ -2957,54 +2991,54 @@ export function CardSettings({
             </div>
             <div className="flex items-center justify-between gap-2">
               <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
-                {CARD_TYPE_LABELS[card.type]}
-              </p>
-              {canEditCard || canReorderCard ? (
-                <div className="flex items-center gap-1.5">
-                  {canReorderCard ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={onMoveCardUp}
-                        disabled={!canMoveCardUp}
-                        aria-label="ブロックを上へ移動"
-                        className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onMoveCardDown}
-                        disabled={!canMoveCardDown}
-                        aria-label="ブロックを下へ移動"
-                        className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
-                      >
-                        ↓
-                      </button>
-                    </>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleDuplicateCard}
-                    disabled={!onDuplicateCard}
-                    className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                  >
-                    コピー
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRemoveCard}
-                    disabled={!onRemoveCard}
-                    className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                  >
-                    削除
-                  </button>
-                </div>
-              ) : null}
-            </div>
-            <p className="text-xs text-slate-500">
-              {businessLocked ? "Businessプラン限定ブロック" : "Proプラン以上のブロック"}
+              {getCardTypeLabel(card.type, libraryAudience)}
             </p>
+            {canEditCard || canReorderCard ? (
+              <div className="flex items-center gap-1.5">
+                {canReorderCard ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onMoveCardUp}
+                      disabled={!canMoveCardUp}
+                      aria-label="ブロックを上へ移動"
+                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onMoveCardDown}
+                      disabled={!canMoveCardDown}
+                      aria-label="ブロックを下へ移動"
+                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      ↓
+                    </button>
+                  </>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleDuplicateCard}
+                  disabled={!onDuplicateCard}
+                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                >
+                  コピー
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveCard}
+                  disabled={!onRemoveCard}
+                  className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                >
+                  削除
+                </button>
+              </div>
+            ) : null}
+          </div>
+          <p className="text-xs text-slate-500">
+            {businessLocked ? "Businessプラン限定ブロック" : "Proプラン以上のブロック"}
+          </p>
           </div>
         </div>
         <div
@@ -3023,10 +3057,23 @@ export function CardSettings({
 
   return (
     <div className={"flex min-h-0 flex-1 flex-col overflow-hidden" + (isNativeUi ? " app-native-settings-root" : "")}>
-      <div className={"shrink-0 border-b bg-white px-4 py-2 " + (isNativeUi ? "border-[var(--app-border)]" : "border-slate-200")}>
-        <div className="flex flex-col gap-1.5">
+      <div
+        className={
+          "shrink-0 border-b bg-white px-4 " +
+          (isNativeUi
+            ? "app-native-settings-chrome flex flex-col border-[var(--app-border)]"
+            : "border-slate-200 py-2")
+        }
+      >
+        <div className={"flex flex-col " + (isNativeUi ? "gap-1" : "gap-1.5")}>
           <div className="flex items-center justify-between gap-2">
-            <h2 className={"text-sm font-semibold " + (isNativeUi ? "text-[var(--app-text)]" : "text-slate-700")}>
+            <h2
+              className={
+                isNativeUi
+                  ? "app-native-settings-chrome__title text-[var(--app-text)]"
+                  : "text-sm font-semibold text-slate-700"
+              }
+            >
               ブロック設定
             </h2>
             <button
@@ -3058,15 +3105,15 @@ export function CardSettings({
           <div className="flex items-center justify-between gap-2">
             <p
               className={
-                "min-w-0 font-extrabold tracking-tight " +
+                "min-w-0 tracking-tight " +
                 (isNativeUi
-                  ? "flex items-center gap-1.5 text-base text-[var(--app-text)]"
-                  : "text-lg text-slate-950")
+                  ? "app-native-settings-chrome__type flex items-center gap-1.5 text-[var(--app-text)]"
+                  : "text-lg font-extrabold text-slate-950")
               }
             >
               {isNativeUi ? (
                 <svg
-                  className="h-4 w-4 shrink-0 text-[var(--app-accent)]"
+                  className="h-3.5 w-3.5 shrink-0 text-[var(--app-accent)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -3080,7 +3127,7 @@ export function CardSettings({
                   />
                 </svg>
               ) : null}
-              {CARD_TYPE_LABELS[card.type]}
+              {getCardTypeLabel(card.type, libraryAudience)}
             </p>
             {canEditCard || canReorderCard ? (
               <div className="flex items-center gap-1.5">
@@ -3133,16 +3180,26 @@ export function CardSettings({
               </div>
             ) : null}
           </div>
-          <p className={"text-xs " + (isNativeUi ? "text-[var(--app-text-muted)]" : "text-slate-500")}>
-            {canReorderCard
-              ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます"
-              : "変更はリアルタイムで反映されます"}
-          </p>
-          {isBusinessPlan ? (
-            <p className="text-[11px] leading-relaxed text-emerald-800/80">
-              多言語（EN / 中文 / 한국어）は、ゲスト公開オン・公開更新・プレビュー時にまとめて自動翻訳されます。
-            </p>
-          ) : null}
+          {isNativeUi ? (
+            isBusinessPlan ? (
+              <p className="app-native-settings-chrome__hint text-[var(--app-text-muted)]">
+                多言語は公開・プレビュー時に自動翻訳されます
+              </p>
+            ) : null
+          ) : (
+            <>
+              <p className="text-xs text-slate-500">
+                {canReorderCard
+                  ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます"
+                  : "変更はリアルタイムで反映されます"}
+              </p>
+              {isBusinessPlan ? (
+                <p className="text-[11px] leading-relaxed text-emerald-800/80">
+                  多言語（EN / 中文 / 한국어）は、ゲスト公開オン・公開更新・プレビュー時にまとめて自動翻訳されます。
+                </p>
+              ) : null}
+            </>
+          )}
           {isNativeUi ? (
             <AppSegmentedControl
               variant="filled"
@@ -4674,7 +4731,7 @@ export function CardSettings({
                   label="タイトル"
                   value={display("title")}
                   onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="営業時間"
+                  placeholder="予定・日程"
                 />
                 <ScheduleItemsEditor content={content} onUpdate={update} isBusinessEnabled={isBusinessEnabled} />
               </SettingsSection>

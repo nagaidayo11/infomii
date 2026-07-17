@@ -338,10 +338,23 @@
 [data-client-shell="app"] .app-segmented--filled .app-segmented-item {
   flex: 1;
   min-width: 0;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
   border-radius: calc(var(--app-radius-md) - 0.125rem);
   background: transparent;
   border-color: transparent;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+[data-client-shell="app"] .app-segmented--filled .app-segmented-item:hover,
+[data-client-shell="app"] .app-segmented--filled .app-segmented-item:active {
+  transform: none;
+  filter: none;
 }
 
 [data-client-shell="app"] .app-segmented--filled .app-segmented-item--active {
@@ -514,6 +527,96 @@
 
 [data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-list-row {
   background: transparent;
+  min-height: 2.75rem;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-native-settings {
+  gap: 0.875rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-section-header {
+  margin-bottom: 0.35rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-section-header__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-field-label {
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-field-input,
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-field-textarea {
+  min-height: 2.375rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8125rem;
+  border-width: 1px;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-field-textarea {
+  min-height: 4.25rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-list-row p:first-of-type {
+  font-size: 0.8125rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-root .app-list-row p:nth-of-type(2) {
+  font-size: 0.6875rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-chrome {
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-chrome__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-chrome__type {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-settings-chrome__hint {
+  font-size: 0.625rem;
+  line-height: 1.35;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-icon-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-icon-pick__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--app-radius-md);
+  border: 1.5px solid var(--app-border);
+  background: var(--app-surface);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+[data-client-shell="app"][data-app-ui="native"] .app-native-icon-pick__btn--active {
+  border-color: color-mix(in srgb, var(--app-accent) 55%, var(--app-border));
+  background: color-mix(in srgb, var(--app-accent) 12%, var(--app-surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-accent) 18%, transparent);
 }
 
 [data-client-shell="app"][data-app-ui="native"] .app-native-check-row {
@@ -1568,6 +1671,9 @@
 }
 
 [data-client-shell="app"] .app-segmented-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 0.875rem;
   border: 1px solid transparent;
@@ -1575,6 +1681,7 @@
   background: var(--app-surface-muted);
   font-size: 0.875rem;
   font-weight: 500;
+  line-height: 1.2;
   color: var(--app-text-muted);
   transition:
     background-color 180ms ease,

@@ -27,7 +27,7 @@ export function AppTabPage({
       className={`app-tab-page app-shell-page-enter mx-auto w-full max-w-lg ${className}`.trim()}
       style={style}
     >
-      <header className="app-screen-header app-reveal app-reveal--visible">
+      <header className="app-screen-header app-reveal app-reveal--visible relative z-30">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-[1.75rem] font-bold tracking-tight text-[var(--app-text)]">{title}</h1>
@@ -37,11 +37,11 @@ export function AppTabPage({
               </p>
             ) : null}
           </div>
-          {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+          {headerAction ? <div className="relative z-40 shrink-0">{headerAction}</div> : null}
         </div>
       </header>
 
-      <div className={`app-tab-page-content ${contentClassName}`.trim()}>{children}</div>
+      <div className={`app-tab-page-content relative z-0 ${contentClassName}`.trim()}>{children}</div>
     </div>
   );
 }

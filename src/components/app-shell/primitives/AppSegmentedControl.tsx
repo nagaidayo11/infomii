@@ -57,8 +57,8 @@ export function AppSegmentedControl({
               aria-selected={active}
               onClick={() => onChange(opt.id)}
               className={
-                "app-segmented-item ui-pop-tap " +
-                (filled ? "inline-flex shrink " : "shrink-0 ") +
+                "app-segmented-item ui-pop-tap inline-flex items-center justify-center " +
+                (filled ? "shrink " : "shrink-0 ") +
                 (active ? "app-segmented-item--active" : "")
               }
             >

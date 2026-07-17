@@ -11,7 +11,7 @@ import { useEditor2Store } from "@/components/editor/store";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { NativeCalendarIcon, scheduleGlyphForIndex } from "./native-guest-icons";
+import { NativeCalendarIcon, scheduleGlyphForItem } from "./native-guest-icons";
 
 type ScheduleCardProps = {
   card: EditorCard;
@@ -121,7 +121,7 @@ export function ScheduleCard({
         ? { title: "营业时间", day: "分类", time: "时间", label: "备注", titlePh: "标题" }
         : locale === "en"
           ? { title: "Opening Hours", day: "Category", time: "Time", label: "Note", titlePh: "Title" }
-          : { title: "営業時間", day: "区分", time: "時間", label: "補足", titlePh: "見出し" };
+          : { title: "予定・日程", day: "区分", time: "時間", label: "補足", titlePh: "見出し" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = Array.isArray(c?.items) ? (c?.items as Array<Record<string, unknown>>) : [];
   const dynamicEnabled = c?.dynamicEnabled === true && businessFeaturesEnabled;
@@ -186,7 +186,7 @@ export function ScheduleCard({
               <div key={index} className="app-native-schedule-row">
                 <div className="app-native-schedule-rail">
                   <span className="app-native-schedule-dot" aria-hidden>
-                    {scheduleGlyphForIndex(index)}
+                    {scheduleGlyphForItem(item.icon, index)}
                   </span>
                 </div>
                 <div

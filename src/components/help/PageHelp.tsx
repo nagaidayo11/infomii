@@ -58,7 +58,7 @@ export function PageHelp({
   }, [open]);
 
   return (
-    <div ref={rootRef} className={"relative inline-flex " + className}>
+    <div ref={rootRef} className={"relative z-40 inline-flex " + className}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -76,7 +76,7 @@ export function PageHelp({
           role="dialog"
           aria-label={a11yLabel}
           className={
-            "absolute top-full z-30 mt-2 rounded-lg border border-[#e6e8eb] bg-white p-3.5 text-left shadow-lg " +
+            "absolute top-full z-[80] mt-2 rounded-lg border border-[#e6e8eb] bg-white p-3.5 text-left shadow-lg " +
             (wide ? "w-[min(100vw-2rem,22rem)]" : "w-[min(100vw-2rem,20rem)]") +
             (align === "left" ? " left-0" : " right-0")
           }

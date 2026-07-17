@@ -194,8 +194,16 @@ export function NativeEmergencyIcon() {
   );
 }
 
-const SCHEDULE_GLYPHS = ["☀", "🍽", "📍", "🚗", "🌙"] as const;
+const SCHEDULE_GLYPHS = ["☀", "🍽", "📍", "🚗", "🌙", "✈", "🏠", "📷", "☕", "🎉"] as const;
 
 export function scheduleGlyphForIndex(index: number): string {
   return SCHEDULE_GLYPHS[index % SCHEDULE_GLYPHS.length] ?? "•";
 }
+
+/** Prefer per-item icon when set; otherwise cycle default glyphs. */
+export function scheduleGlyphForItem(icon: unknown, index: number): string {
+  if (typeof icon === "string" && icon.trim()) return icon.trim();
+  return scheduleGlyphForIndex(index);
+}
+
+export const SCHEDULE_ICON_CHOICES: readonly string[] = SCHEDULE_GLYPHS;

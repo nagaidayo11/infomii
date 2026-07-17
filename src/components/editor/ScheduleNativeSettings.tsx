@@ -8,8 +8,9 @@ import {
   AppListRow,
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
+import { SCHEDULE_ICON_CHOICES, scheduleGlyphForItem } from "@/components/cards/native-guest-icons";
 
-type ScheduleItem = { day?: string; time?: string; label?: string };
+type ScheduleItem = { day?: string; time?: string; label?: string; icon?: string };
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
@@ -41,7 +42,10 @@ export function ScheduleNativeSettings({
     setItems(next);
   };
   const addItem = () => {
-    const next = [...items, { day: "", time: "", label: "" }];
+    const next = [
+      ...items,
+      { day: "", time: "", label: "", icon: SCHEDULE_ICON_CHOICES[items.length % SCHEDULE_ICON_CHOICES.length] },
+    ];
     setItems(next);
     setExpandedIndex(next.length - 1);
   };
@@ -73,7 +77,7 @@ export function ScheduleNativeSettings({
           id="native-schedule-title"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="ざっくり日程"
+          placeholder="今日の予定"
         />
       </div>
 
@@ -94,11 +98,12 @@ export function ScheduleNativeSettings({
               const day = readJaText(item.day) || "区分";
               const time = readJaText(item.time);
               const label = readJaText(item.label);
+              const glyph = scheduleGlyphForItem(item.icon, i);
               const expanded = expandedIndex === i;
               return (
                 <div key={i} className="border-b border-[var(--app-border)] last:border-b-0">
                   <AppListRow
-                    title={time ? `${day} ${time}` : day}
+                    title={`${glyph} ${time ? `${day} ${time}` : day}`}
                     subtitle={label || "補足未設定"}
                     onClick={() => setExpandedIndex(expanded ? null : i)}
                     trailing={
@@ -143,6 +148,29 @@ export function ScheduleNativeSettings({
                         >
                           削除
                         </button>
+                      </div>
+                      <div>
+                        <AppFieldLabel>アイコン</AppFieldLabel>
+                        <div className="app-native-icon-pick" role="listbox" aria-label="項目アイコン">
+                          {SCHEDULE_ICON_CHOICES.map((choice) => {
+                            const selected = glyph === choice;
+                            return (
+                              <button
+                                key={choice}
+                                type="button"
+                                role="option"
+                                aria-selected={selected}
+                                className={
+                                  "app-native-icon-pick__btn ui-pop-tap" +
+                                  (selected ? " app-native-icon-pick__btn--active" : "")
+                                }
+                                onClick={() => updateItem(i, "icon", choice)}
+                              >
+                                {choice}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                       <div>
                         <AppFieldLabel>曜日・区分</AppFieldLabel>
