@@ -48,13 +48,14 @@ function hotelTemplate(
   description: string,
   category: MarketplaceSeedTemplate["category"],
   cards: ReturnType<typeof ordered>,
+  previewImage?: string,
 ): MarketplaceSeedTemplate {
   return {
     slug,
     name,
     description,
     category,
-    preview_image: marketplaceTemplatePreviewPath(category, slug),
+    preview_image: previewImage ?? marketplaceTemplatePreviewPath(category, slug),
     cards,
   };
 }
@@ -555,6 +556,7 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
       block("checkout", checkout("10:00", "チェックアウトはフロントへお返しください。", "精算・領収書")),
     ]),
+    "/templates/previews/ryokan/f270da26.jpg",
   ),
   hotelTemplate(
     "hotel-airbnb-house-guide",
@@ -585,6 +587,7 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
       block("contact_hub", contactHub("困ったときは", "鍵・設備の不具合や迷ったときはご連絡ください。", "03-1234-5678")),
     ]),
+    "/templates/previews/airbnb/87410d61.jpg",
   ),
   hotelTemplate(
     "hotel-inbound-arrival-support",
@@ -619,6 +622,7 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       block("contact_hub", contactHub("Need help?", "Call front desk for check-in, directions, or emergencies.", "+81-3-1111-2222")),
       block("checkout", checkout("11:00", "Please return your room key to the front desk.", "Check-out")),
     ]),
+    "/templates/previews/inbound/c3b36a18.jpg",
   ),
 ];
 
