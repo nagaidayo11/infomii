@@ -14,7 +14,9 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { GUEST_CARD_PAD_SM_CLASS } from "@/lib/editor/card-width-mode";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeHotelSection } from "./native-hotel-ui";
 
 type WelcomeCardProps = {
   card: EditorCard;
@@ -28,6 +30,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
@@ -46,6 +49,36 @@ export function WelcomeCard({ card, isSelected, locale = "ja" }: WelcomeCardProp
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+    />
+  ) : (
+    title
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} onActivate={onActivate}>
+        <div className="app-native-text-block">
+          <InlineEditable
+            value={message}
+            onSave={(v) => updateKey("message", v)}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            className="block w-full min-h-[1lh]"
+            placeholder={labels.messagePlaceholder}
+          />
+        </div>
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md" className="">

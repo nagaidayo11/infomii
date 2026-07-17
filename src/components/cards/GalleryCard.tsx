@@ -13,7 +13,10 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeTilesIcon } from "./native-guest-icons";
 
 type GalleryItem = { src?: string; alt?: string };
 
@@ -29,6 +32,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const content = card.content as Record<string, unknown>;
   const title = getLocalizedContent(content?.title as LocalizedString | undefined, locale);
@@ -49,6 +53,57 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...content, [key]: next } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
+        {(editable || title) ? (
+          <AppSectionHeader
+            title={
+              editable ? (
+                <InlineEditable
+                  value={title}
+                  onSave={(v) => updateKey("title", v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="app-section-header__title"
+                  placeholder={labels.titlePlaceholder}
+                />
+              ) : (
+                title
+              )
+            }
+            icon={<NativeTilesIcon />}
+            as="div"
+          />
+        ) : null}
+        <div
+          className="app-native-tile-grid"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
+          {items.slice(0, 12).map((item, i) => (
+            <div key={i} className="app-native-tile-media !aspect-square">
+              {item?.src ? (
+                <EditorCoverImage
+                  src={item.src}
+                  alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
+                  sizes="160px"
+                  className="object-cover object-center"
+                />
+              ) : (
+                <div
+                  className="flex h-full items-center justify-center text-[var(--app-text-muted)]"
+                  style={getBodyFontSizeStyle()}
+                >
+                  {labels.emptyImage}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

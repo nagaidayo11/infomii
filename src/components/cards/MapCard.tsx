@@ -8,8 +8,11 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon } from "./LineIcon";
+import { NativeMapIcon } from "./native-guest-icons";
 
 type MapCardProps = {
   card: EditorCard;
@@ -73,6 +76,7 @@ function normalizeMapEmbedUrl(raw: string): string | null {
 
 export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
@@ -93,6 +97,56 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        {(editable || title) ? (
+          <AppSectionHeader
+            title={
+              <InlineEditable
+                value={title}
+                onSave={(v) => updateKey("title", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className="app-section-header__title"
+                placeholder={labels.titlePlaceholder}
+              />
+            }
+            icon={<NativeMapIcon />}
+            as="div"
+          />
+        ) : (
+          <AppSectionHeader title={labels.titlePlaceholder} icon={<NativeMapIcon />} />
+        )}
+        {mapEmbedUrl ? (
+          <div className="app-native-media">
+            <iframe
+              title={title || labels.titlePlaceholder}
+              src={mapEmbedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-52 w-full border-0"
+            />
+          </div>
+        ) : (
+          <div className="app-native-media flex items-center justify-center py-10 text-[var(--app-accent)]">
+            <LineIcon name="map" className="h-8 w-8" />
+          </div>
+        )}
+        <p className="app-native-media-caption" style={getBodyFontSizeStyle()}>
+          <InlineEditable
+            value={address}
+            onSave={(v) => updateKey("address", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className="text-[var(--app-text-muted)]"
+            placeholder={labels.addressPlaceholder}
+          />
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

@@ -13,8 +13,11 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LabelItemStack, LabelItemSurface } from "./label-item-surface";
+import { NativeClockIcon } from "./native-guest-icons";
+import { NativeHotelSection, NativeKvList, NativeKvRow } from "./native-hotel-ui";
 
 type CheckoutCardProps = {
   card: EditorCard;
@@ -28,6 +31,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function CheckoutCard({ card, locale = "ja" }: CheckoutCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -54,6 +58,70 @@ export function CheckoutCard({ card, locale = "ja" }: CheckoutCardProps) {
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={labels.titlePlaceholder}
+    />
+  ) : (
+    title || labels.titlePlaceholder
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativeClockIcon />} onActivate={onActivate}>
+        <NativeKvList>
+          {showTime ? (
+            <NativeKvRow label={labels.time}>
+              <InlineEditable
+                value={time}
+                onSave={(v) => updateKey("time", v)}
+                editable={editable}
+                onActivate={onActivate}
+                placeholder="11:00"
+              />
+            </NativeKvRow>
+          ) : null}
+          {showNote ? (
+            <NativeKvRow label={labels.note}>
+              <InlineEditable
+                value={note}
+                onSave={(v) => updateKey("note", v)}
+                editable={editable}
+                onActivate={onActivate}
+                multiline
+                className="block w-full min-h-[1lh]"
+                placeholder={labels.notePlaceholder}
+              />
+            </NativeKvRow>
+          ) : null}
+        </NativeKvList>
+        {(editable || linkUrl) ? (
+          <a
+            href={editable ? linkUrl || "#" : resolveGuestHref(linkUrl)}
+            className="mt-3 inline-block font-semibold text-[var(--app-accent)]"
+            style={getBodyFontSizeStyle()}
+            onClick={editable ? (e) => e.preventDefault() : undefined}
+            aria-disabled={editable ? true : undefined}
+          >
+            <InlineEditable
+              value={linkLabel}
+              onSave={(v) => updateKey("linkLabel", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="font-semibold text-[var(--app-accent)]"
+              placeholder={labels.detailPlaceholder}
+            />
+          </a>
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md">

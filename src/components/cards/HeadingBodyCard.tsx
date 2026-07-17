@@ -13,6 +13,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type HeadingBodyCardProps = {
@@ -22,6 +23,7 @@ type HeadingBodyCardProps = {
 
 export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = (card.content ?? {}) as Record<string, unknown>;
 
@@ -38,6 +40,35 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
     borderTopWidth: 1,
     borderTopColor: "rgb(203 213 225 / 0.9)",
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <h3 className="app-native-heading-title" style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update("title", v)}
+            editable={editable}
+            onActivate={onActivate}
+            placeholder="見出しテキスト"
+            className="app-native-heading-title"
+          />
+        </h3>
+        {dividerEnabled ? <div className="app-native-heading-divider" /> : null}
+        <div className="app-native-heading-body" style={getBodyFontSizeStyle()}>
+          <InlineEditable
+            value={body}
+            onSave={(v) => update("body", v)}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            placeholder="本文テキスト"
+            className="app-native-heading-body"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="none" hover>

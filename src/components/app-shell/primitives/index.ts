@@ -1,7 +1,15 @@
 export { AppSwitch } from "./AppSwitch";
 export { AppPressable } from "./AppPressable";
 export { AppListRow } from "./AppListRow";
+export type { AppListRowProps } from "./AppListRow";
 export { AppBottomSheet } from "./AppBottomSheet";
 export { AppSection } from "./AppSection";
 export { AppSegmentedControl } from "./AppSegmentedControl";
 export type { AppSegmentOption } from "./AppSegmentedControl";
+export { AppSectionHeader } from "./AppSectionHeader";
+export { AppChip } from "./AppChip";
+export { AppLinkTile, AppLinkTileGrid } from "./AppLinkTile";
+export type { AppLinkTileProps } from "./AppLinkTile";
+export { AppOptionCard, AppOptionCardRow } from "./AppOptionCard";
+export { AppFieldLabel, AppFieldInput, AppFieldTextarea } from "./AppField";
+export { AppTabPage } from "./AppTabPage";

@@ -14,5 +14,16 @@ export {
   AppBottomSheet,
   AppSection,
   AppSegmentedControl,
+  AppSectionHeader,
+  AppChip,
+  AppLinkTile,
+  AppLinkTileGrid,
+  AppOptionCard,
+  AppOptionCardRow,
+  AppFieldLabel,
+  AppFieldInput,
+  AppFieldTextarea,
+  AppTabPage,
 } from "./primitives";
+export type { AppSegmentOption, AppListRowProps, AppLinkTileProps } from "./primitives";
 export { AppWorksListItem } from "./AppWorksListItem";

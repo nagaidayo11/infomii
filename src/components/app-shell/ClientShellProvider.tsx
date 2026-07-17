@@ -14,11 +14,18 @@ import { AppToastProvider } from "./AppToastProvider";
 type ClientShellContextValue = {
   client: ClientShell;
   isAppShell: boolean;
+  /**
+   * App deformed / native-feel UI (Phase 0+).
+   * Currently equals isAppShell; keep as a separate flag so Phase 1–2 can gate
+   * guest/editor redesigns without forking every isAppShell check.
+   */
+  isNativeUi: boolean;
 };
 
 export const ClientShellContext = createContext<ClientShellContextValue>({
   client: "web",
   isAppShell: false,
+  isNativeUi: false,
 });
 
 function detectClientShellFromSearch(search: string): ClientShell {
@@ -47,13 +54,14 @@ export function ClientShellProvider({ children }: { children: ReactNode }) {
     persistClientShellCookie(client, { nativeApp: isNativeInfomiiAppClient(ua) });
   }, [client]);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const isAppShell = client === "app";
+    return {
       client,
-      isAppShell: client === "app",
-    }),
-    [client],
-  );
+      isAppShell,
+      isNativeUi: isAppShell,
+    };
+  }, [client]);
 
   const inner = (
     <>

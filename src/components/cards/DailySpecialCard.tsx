@@ -1,16 +1,21 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { MenuCardHeroImage } from "@/components/cards/menu-card-visual";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, MenuItemInlineRow, PlainInline } from "./card-inline-fields";
+import { NativeDiningIcon } from "./native-guest-icons";
+import { NativeMenuShell, NATIVE_MENU_ITEM_ROW_SPECIAL } from "./native-menu-ui";
 
 export function DailySpecialCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -29,6 +34,63 @@ export function DailySpecialCard({ card, locale = "ja" }: { card: EditorCard; is
             day: "numeric",
           }).format(new Date())
         : "";
+
+  if (isNativeUi) {
+    const titleNode =
+      bind.editable || title.trim() ? (
+        <InlineEditable
+          value={title}
+          onSave={(v) => editor.setField("title", v)}
+          editable={bind.editable}
+          onActivate={bind.onActivate}
+          className="app-section-header__title"
+          placeholder="本日のおすすめ"
+        />
+      ) : (
+        title
+      );
+
+    return (
+      <NativeMenuShell
+        title={titleNode}
+        icon={<NativeDiningIcon />}
+        heroSrc={heroSrc}
+        heroAlt={heroAlt}
+        locale={locale}
+        onActivate={bind.onActivate}
+      >
+        {showDate ? (
+          <p className="mb-2 text-xs font-medium text-[var(--app-text-muted)]">
+            <PlainInline
+              value={typeof c?.dateOverride === "string" ? c.dateOverride : dateStr}
+              onSave={(v) => editor.setPlainField("dateOverride", v)}
+              bind={bind}
+              className="text-xs font-medium text-[var(--app-text-muted)]"
+              placeholder={dateStr || "日付"}
+            />
+          </p>
+        ) : null}
+        <div className="space-y-2.5">
+          {items.map((item, index) => (
+            <MenuItemInlineRow
+              key={index}
+              locale={locale}
+              bind={bind}
+              name={getLocalizedContent(item.name as LocalizedString | undefined, locale)}
+              price={getLocalizedContent(item.price as LocalizedString | undefined, locale)}
+              description={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+              imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
+              imageAlt={item.imageAlt as LocalizedString | undefined}
+              rowClassName={NATIVE_MENU_ITEM_ROW_SPECIAL}
+              onSaveName={(v) => editor.setArrayItemField("items", index, "name", v)}
+              onSavePrice={(v) => editor.setArrayItemField("items", index, "price", v)}
+              onSaveDescription={(v) => editor.setArrayItemField("items", index, "description", v)}
+            />
+          ))}
+        </div>
+      </NativeMenuShell>
+    );
+  }
 
   const body = (
     <>

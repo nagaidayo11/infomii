@@ -8,5 +8,7 @@ export function useClientShell() {
   return {
     client: ctx.client,
     isAppShell: ctx.isAppShell,
+    /** Prefer this for guest/editor native UI forks (Phase 1+). */
+    isNativeUi: ctx.isNativeUi,
   };
 }

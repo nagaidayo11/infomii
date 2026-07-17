@@ -1,14 +1,18 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, PlainInline } from "./card-inline-fields";
+import { NativePhoneIcon } from "./native-guest-icons";
 
 export function ContactHubCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof c.title === "string" ? c.title : "お問い合わせ";
@@ -19,6 +23,49 @@ export function ContactHubCard({ card }: { card: EditorCard; isSelected?: boolea
   const note = typeof c.note === "string" ? c.note : "";
 
   const rowClass = `${editorInnerRadiusClassName} block border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700`;
+
+  if (isNativeUi) {
+    const rows: { key: string; label: string; value: string; field: "phone" | "email" | "lineUrl" | "mapUrl" }[] = [
+      { key: "phone", label: "電話", value: phone, field: "phone" },
+      { key: "email", label: "メール", value: email, field: "email" },
+      { key: "line", label: "LINE", value: lineUrl, field: "lineUrl" },
+      { key: "map", label: "地図", value: mapUrl, field: "mapUrl" },
+    ];
+
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <AppSectionHeader title={title || "お問い合わせ"} icon={<NativePhoneIcon />} />
+        <div className="space-y-2" style={getBodyFontSizeStyle()}>
+          {rows.map((row) => (
+            <div key={row.key} className="app-native-contact-row">
+              <span className="shrink-0 text-xs font-bold opacity-70">{row.label}</span>
+              <span className="min-w-0 flex-1 truncate">
+                <PlainInline
+                  value={row.value}
+                  onSave={(v) => editor.setPlainField(row.field, v)}
+                  bind={bind}
+                  placeholder={row.label}
+                  className="text-[var(--app-tile-text)]"
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+        {(bind.editable || note) ? (
+          <p className="text-xs text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+            <PlainInline
+              value={note}
+              onSave={(v) => editor.setPlainField("note", v)}
+              bind={bind}
+              multiline
+              className="block w-full min-h-[1lh] text-xs text-[var(--app-text-muted)]"
+              placeholder="補足"
+            />
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

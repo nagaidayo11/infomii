@@ -12,12 +12,14 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { BlockTitleWithIcon } from "./block-title-with-icon";
+import { LineIcon, normalizeIconToken, type LineIconName } from "./LineIcon";
 import { DESK_TONE, type DeskTone } from "./desk-tone";
 import { LabelItemStack, LabelItemSurface } from "./label-item-surface";
 import { facilityDefaultIcon } from "@/lib/editor/facility-info-presets";
-import type { LineIconName } from "./LineIcon";
+import { NativeHotelSection, NativeKvList } from "./native-hotel-ui";
 
 type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
@@ -50,6 +52,7 @@ function coerceTone(value: unknown): DeskTone {
  */
 export function InfoCard({ card, locale = "ja" }: InfoCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const toneKey = coerceTone(c?.tone);
@@ -76,6 +79,100 @@ export function InfoCard({ card, locale = "ja" }: InfoCardProps) {
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
   };
+
+  const rawIcon = typeof c?.icon === "string" ? c.icon.trim() : "";
+  const showIcon = Boolean(rawIcon) || Boolean(iconFallback);
+  const iconName = showIcon ? normalizeIconToken(rawIcon || iconFallback, iconFallback ?? "info") : null;
+  const iconNode = iconName ? <LineIcon name={iconName} className="h-[1.15em] w-[1.15em]" /> : undefined;
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => update({ title: v })}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={localeLabels.title}
+    />
+  ) : (
+    title
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection
+        title={(editable || title || showIcon) ? titleNode : null}
+        icon={showIcon ? iconNode : undefined}
+        onActivate={onActivate}
+      >
+        {visibleRows.length === 0 ? (
+          <p className="text-sm text-[var(--app-text-muted)]">{localeLabels.empty}</p>
+        ) : (
+          <NativeKvList>
+            {visibleRows.map(({ row, index }) => {
+              const value = row.value ?? "";
+              const telHref = !editable && row.tel ? toTelHref(value) : null;
+              return (
+                <div key={row.key ?? index} className="app-native-kv-row">
+                  <span className="app-native-kv-label">
+                    {editable ? (
+                      <InlineEditable
+                        value={row.label ?? ""}
+                        onSave={(v) => {
+                          const next = [...rows];
+                          next[index] = { ...next[index], label: v };
+                          update({ rows: next });
+                        }}
+                        editable
+                        onActivate={onActivate}
+                        placeholder={localeLabels.label}
+                      />
+                    ) : (
+                      row.label ?? ""
+                    )}
+                  </span>
+                  {telHref ? (
+                    <a href={telHref} className="app-native-kv-value guest-page-link">
+                      {value.trim() || "—"}
+                    </a>
+                  ) : (
+                    <div className="app-native-kv-value">
+                      {editable ? (
+                        <InlineEditable
+                          value={value}
+                          onSave={(v) => {
+                            const next = [...rows];
+                            next[index] = { ...next[index], value: v };
+                            update({ rows: next });
+                          }}
+                          editable
+                          onActivate={onActivate}
+                          multiline
+                          className="block w-full min-h-[1lh]"
+                          placeholder={localeLabels.value}
+                        />
+                      ) : (
+                        value.trim() || "—"
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </NativeKvList>
+        )}
+        {editable ? (
+          <button
+            type="button"
+            className="app-native-add-btn mt-2"
+            onClick={() => update({ rows: [...rows, { label: "", value: "", show: true }] })}
+          >
+            {localeLabels.add}
+          </button>
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md">

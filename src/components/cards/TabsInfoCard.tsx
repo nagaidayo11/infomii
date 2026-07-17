@@ -5,8 +5,11 @@ import type { EditorCard } from "@/components/editor/types";
 import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppChip, AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, PlainInline } from "./card-inline-fields";
+import { NativeUsersIcon } from "./native-guest-icons";
 
 type TabsInfoCardProps = {
   card: EditorCard;
@@ -18,6 +21,7 @@ type TabItem = { label?: string; body?: string };
 
 export function TabsInfoCard({ card }: TabsInfoCardProps) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const content = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof content.title === "string" ? content.title : "案内";
@@ -38,6 +42,39 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
       : 0;
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
   const active = tabs[activeIndex] ?? tabs[0] ?? { label: "タブ", body: "" };
+
+  /* Native UI first so editor preview matches guest */
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <AppSectionHeader title={title || "案内"} icon={<NativeUsersIcon />} />
+        {tabs.length > 0 ? (
+          <>
+            <div className="app-native-chip-row" role="tablist" aria-label={title || "案内"}>
+              {tabs.map((tab, idx) => (
+                <AppChip
+                  key={`${tab.label}-${idx}`}
+                  active={idx === activeIndex}
+                  onClick={() => setActiveIndex(idx)}
+                  role="tab"
+                  aria-selected={idx === activeIndex}
+                >
+                  {tab.label}
+                </AppChip>
+              ))}
+            </div>
+            <div className="app-native-tabs-body" role="tabpanel">
+              {active.body || "説明文を設定してください。"}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--app-text-muted)]">
+            タブが未設定です。右パネルの設定から追加してください。
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (bind.editable) {
     return (

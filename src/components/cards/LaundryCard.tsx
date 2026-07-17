@@ -8,7 +8,10 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeClockIcon } from "./native-guest-icons";
+import { NativeHotelSection, NativeKvList, NativeKvRow } from "./native-hotel-ui";
 
 type LaundryCardProps = {
   card: EditorCard;
@@ -22,6 +25,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const hours = getLocalizedContent(c?.hours as LocalizedString | undefined, locale);
@@ -42,6 +46,58 @@ export function LaundryCard({ card, isSelected, locale = "ja" }: LaundryCardProp
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={labels.titlePlaceholder}
+    />
+  ) : (
+    title || labels.titlePlaceholder
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativeClockIcon />} onActivate={onActivate}>
+        <NativeKvList>
+          <NativeKvRow label={labels.hours}>
+            <InlineEditable
+              value={hours}
+              onSave={(v) => updateKey("hours", v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder="9:00–18:00"
+            />
+          </NativeKvRow>
+          <NativeKvRow label={labels.contact}>
+            <InlineEditable
+              value={contact}
+              onSave={(v) => updateKey("contact", v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder={labels.contactPlaceholder}
+            />
+          </NativeKvRow>
+        </NativeKvList>
+        {(isSelected || priceNote.trim().length > 0 || editable) ? (
+          <p className="mt-2 text-sm text-[var(--app-text-muted)]">
+            <InlineEditable
+              value={priceNote}
+              onSave={(v) => updateKey("priceNote", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="text-sm text-[var(--app-text-muted)]"
+              placeholder={labels.priceNotePlaceholder}
+            />
+          </p>
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md" className="">

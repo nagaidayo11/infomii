@@ -8,6 +8,7 @@ import { ImageUpload } from "@/components/editor/ImageUpload";
 import { imageFramingClassName, imageFramingStyle, readImageFraming } from "@/lib/image-framing";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
@@ -16,6 +17,7 @@ type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string }
 
 export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -39,6 +41,80 @@ export function HeroCard({ card, isSelected = false, locale = "ja" }: HeroCardPr
   const update = (key: string, value: string) => {
     updateCard(card.id, { content: { ...c, [key]: value } });
   };
+
+  if (isNativeUi) {
+    const radiusClass = squareCorners ? "rounded-none" : "";
+    return (
+      <div
+        className={
+          "app-native-hero app-interactive relative w-full overflow-hidden " +
+          (fullBleed ? "app-native-hero--bleed " : "") +
+          radiusClass
+        }
+      >
+        <div
+          className={
+            "relative w-full overflow-hidden bg-[var(--app-surface-muted)] " +
+            (overlayAlign === "center" ? "aspect-[16/10] min-h-[168px]" : "aspect-[2/1] min-h-[140px]")
+          }
+        >
+          {image ? (
+            <EditorCoverImage
+              src={image}
+              alt={title || "ヒーロー"}
+              priority
+              sizes="420px"
+              className={framingClass}
+              style={framingStyle}
+            />
+          ) : (
+            <ImageUpload onUploaded={(url) => update("image", url)} className="relative z-0 h-full min-h-[140px] w-full" />
+          )}
+          <div
+            className={
+              "pointer-events-none absolute inset-0 z-10 " +
+              (overlayAlign === "center"
+                ? "bg-gradient-to-b from-black/40 via-black/28 to-black/50"
+                : "bg-gradient-to-t from-black/65 via-black/25 to-transparent")
+            }
+          />
+        </div>
+        <div
+          className={
+            "absolute z-20 text-white " +
+            (overlayAlign === "center"
+              ? "inset-0 flex flex-col items-center justify-center px-5 text-center"
+              : "bottom-0 left-0 right-0 p-4")
+          }
+        >
+          {(editable || title) ? (
+            <h2 className="app-native-hero-title leading-snug">
+              <InlineEditable
+                value={title}
+                onSave={(v) => update("title", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className="text-white"
+                placeholder={labels.titlePlaceholder}
+              />
+            </h2>
+          ) : null}
+          {(editable || subtitle) ? (
+            <p className="app-native-hero-subtitle mt-1 opacity-95">
+              <InlineEditable
+                value={subtitle}
+                onSave={(v) => update("subtitle", v)}
+                editable={editable}
+                onActivate={onActivate}
+                className="text-white/95"
+                placeholder={labels.subtitlePlaceholder}
+              />
+            </p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

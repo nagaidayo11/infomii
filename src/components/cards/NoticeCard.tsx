@@ -13,6 +13,7 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { DESK_TONE } from "./desk-tone";
 
@@ -29,6 +30,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 /** Desk-board notice with soft amber/rose tint. */
 export function NoticeCard({ card, locale = "ja" }: NoticeCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const body = getLocalizedContent(c?.body as LocalizedString | undefined, locale);
@@ -50,6 +52,51 @@ export function NoticeCard({ card, locale = "ja" }: NoticeCardProps) {
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div
+        className={`app-native-notice app-native-guest-card${isWarning ? " app-native-notice--warn" : ""}`}
+        onClick={onActivate}
+      >
+        <p className="app-native-notice-eyebrow">{labels.eyebrow}</p>
+        {(editable || title) ? (
+          <p className="app-native-notice-title">
+            <InlineEditable
+              value={title}
+              onSave={(v) => updateKey("title", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="app-native-notice-title"
+              placeholder={labels.titlePlaceholder}
+            />
+          </p>
+        ) : null}
+        <div className="app-native-notice-body">
+          <InlineEditable
+            value={body}
+            onSave={(v) => updateKey("body", v)}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            className="block w-full min-h-[1lh] app-native-notice-body"
+            placeholder={labels.bodyPlaceholder}
+          />
+        </div>
+        {isWarning ? (
+          <p className="mt-2 text-xs text-[var(--app-text-muted)]">
+            {locale === "en"
+              ? "Please follow hotel guidelines."
+              : locale === "zh"
+                ? "请遵守馆内规定。"
+                : locale === "ko"
+                  ? "호텔 안내를 확인해 주세요."
+                  : "館内ルールにご協力ください。"}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>

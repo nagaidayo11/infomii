@@ -8,7 +8,10 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeCalendarIcon, scheduleGlyphForIndex } from "./native-guest-icons";
 
 type ScheduleCardProps = {
   card: EditorCard;
@@ -109,6 +112,7 @@ export function ScheduleCard({
 }: ScheduleCardProps) {
   const updateCard = useEditor2Store((s) => s.updateCard);
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
@@ -149,6 +153,64 @@ export function ScheduleCard({
     next[index] = row;
     updateCard(card.id, { content: { ...c, items: next } });
   };
+
+  /* Phase 1+: native UI (guest + editor preview) */
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <AppSectionHeader title={title || labels.title} icon={<NativeCalendarIcon />} />
+          </div>
+          {dynamicEnabled ? (
+            <span
+              className={
+                "ui-pop-badge mt-0.5 inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold " +
+                (hasActiveRows ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700")
+              }
+              aria-live="polite"
+            >
+              {hasActiveRows ? "Now" : "Closed"}
+            </span>
+          ) : null}
+        </div>
+        <div className="app-native-schedule-list">
+          {items.slice(0, 5).map((item, index) => {
+            const day =
+              getLocalizedContent(item.day as LocalizedString | undefined, locale) || labels.day;
+            const time =
+              getLocalizedContent(item.time as LocalizedString | undefined, locale) || "-";
+            const label = getLocalizedContent(item.label as LocalizedString | undefined, locale);
+            const active = activeIndices.has(index);
+            return (
+              <div key={index} className="app-native-schedule-row">
+                <div className="app-native-schedule-rail">
+                  <span className="app-native-schedule-dot" aria-hidden>
+                    {scheduleGlyphForIndex(index)}
+                  </span>
+                </div>
+                <div
+                  className={
+                    "app-native-schedule-body " + (dynamicEnabled && active ? "app-native-schedule-body--active" : "")
+                  }
+                >
+                  <p className="font-semibold text-[var(--app-text)]" style={getBodyFontSizeStyle()}>
+                    {day}
+                    {time && time !== "-" ? ` ${time}` : ""}
+                  </p>
+                  {label ? (
+                    <p className="mt-0.5 text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+                      {label}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

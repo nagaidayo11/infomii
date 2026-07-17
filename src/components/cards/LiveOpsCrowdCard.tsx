@@ -9,6 +9,8 @@ import {
   getBodyFontSizeStyle,
 } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useEditor2Store } from "@/components/editor/store";
 import {
   LIVE_OPS_DEFINITIONS,
@@ -60,6 +62,7 @@ export function LiveOpsCrowdCard({
   isSelected?: boolean;
   locale?: string;
 }) {
+  const { isNativeUi } = useClientShell();
   const def = LIVE_OPS_DEFINITIONS[opsKey];
   const editor = useCardContentEditor(card);
   const pageId = useEditor2Store((s) => s.pageMeta.pageId);
@@ -112,6 +115,75 @@ export function LiveOpsCrowdCard({
         : level === "closed"
           ? "text-slate-600"
           : "text-emerald-800";
+
+  const statusPillClass =
+    level === "closed"
+      ? "app-native-status-pill app-native-status-pill--closed"
+      : level === "busy"
+        ? "app-native-status-pill"
+        : "app-native-status-pill app-native-status-pill--open";
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={editor.onActivate}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <AppSectionHeader
+              title={
+                <PlainInline
+                  value={title}
+                  onSave={(v) => editor.setPlainField("title", v)}
+                  bind={bind}
+                  className="app-section-header__title"
+                  placeholder={def.defaultTitle}
+                />
+              }
+            />
+          </div>
+          <span className="ui-pop-badge mt-0.5 inline-flex shrink-0 rounded-full bg-[var(--app-surface-muted)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--app-text-muted)]">
+            {nowLabel}
+          </span>
+        </div>
+        <div className="app-native-live-card">
+          <span
+            className={statusPillClass}
+            style={
+              level === "busy"
+                ? {
+                    background: "color-mix(in srgb, #e11d48 14%, var(--app-surface))",
+                    color: "#be123c",
+                    border: "1.5px solid color-mix(in srgb, #e11d48 28%, transparent)",
+                  }
+                : level === "moderate"
+                  ? {
+                      background: "color-mix(in srgb, #d97706 14%, var(--app-surface))",
+                      color: "#b45309",
+                      border: "1.5px solid color-mix(in srgb, #d97706 28%, transparent)",
+                    }
+                  : undefined
+            }
+          >
+            {statusText}
+          </span>
+          {(editor.editable || note) && (
+            <p className={`mt-2 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
+              <PlainInline
+                value={note}
+                onSave={(v) => void saveNote(v)}
+                bind={bind}
+                multiline
+                className={`block w-full min-h-[1lh] ${CARD_BLOCK_BODY_CLASS}`}
+                placeholder="短いメモ（任意）"
+              />
+            </p>
+          )}
+          {updatedLabel ? (
+            <p className="app-native-live-meta">{updatedLabel}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>

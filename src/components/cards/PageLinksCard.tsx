@@ -14,8 +14,15 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import {
+  AppLinkTile,
+  AppLinkTileGrid,
+  AppSectionHeader,
+} from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
+import { NativeLinkIcon } from "./native-guest-icons";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import {
   PAGE_LINK_ICON_SIZES,
@@ -49,6 +56,7 @@ function ChevronRight({ className }: { className?: string }) {
 
 export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -90,6 +98,119 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const iconSizes = PAGE_LINK_ICON_SIZES[styleVariant][iconSize];
   const iconWrapClass = iconSizes.wrap;
   const iconClass = iconSizes.icon;
+
+  /* Phase 1+: native UI (guest + editor preview) */
+  if (isNativeUi && !editable) {
+    const showTitle = Boolean(title);
+    const oddLastSpans = columns === 2 && items.length % 2 === 1;
+
+    return (
+      <div className="app-native-section app-native-guest-card">
+        {showTitle ? <AppSectionHeader title={title} icon={<NativeLinkIcon />} /> : null}
+        {items.length === 0 ? (
+          <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
+        ) : (
+          <AppLinkTileGrid
+            className={columns === 1 ? "!grid-cols-1" : columns >= 3 ? "!grid-cols-3" : undefined}
+          >
+            {items.map((item, i) => {
+              const href = getHref(item);
+              const iconDisplay = getIconDisplay(item.icon);
+              const span = oddLastSpans && i === items.length - 1;
+              const icon = <LineIcon name={iconDisplay} className="h-[1.125rem] w-[1.125rem]" />;
+              const label = item.label?.trim() || labels.item;
+
+              if (href && href !== "#") {
+                return (
+                  <AppLinkTile
+                    key={i}
+                    as="a"
+                    href={href}
+                    label={label}
+                    icon={icon}
+                    span={span}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="guest-page-link"
+                  />
+                );
+              }
+              return (
+                <AppLinkTile key={i} label={label} icon={icon} span={span} onClick={onActivate} />
+              );
+            })}
+          </AppLinkTileGrid>
+        )}
+      </div>
+    );
+  }
+
+  /* Editor canvas: same native chrome, inline-editable labels (no navigation) */
+  if (isNativeUi && editable) {
+    const showTitle = Boolean(title) || editable;
+    const oddLastSpans = columns === 2 && items.length % 2 === 1;
+
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
+        {showTitle ? (
+          <AppSectionHeader
+            title={
+              <InlineEditable
+                value={title}
+                onSave={(v) => update({ title: v })}
+                editable={editable}
+                onActivate={onActivate}
+                className="app-section-header__title"
+                placeholder={labels.titlePlaceholder}
+              />
+            }
+            icon={<NativeLinkIcon />}
+            as="div"
+          />
+        ) : null}
+        {items.length === 0 ? (
+          <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
+        ) : (
+          <AppLinkTileGrid
+            className={columns === 1 ? "!grid-cols-1" : columns >= 3 ? "!grid-cols-3" : undefined}
+          >
+            {items.map((item, i) => {
+              const iconDisplay = getIconDisplay(item.icon);
+              const span = oddLastSpans && i === items.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={"app-link-tile " + (span ? "app-link-tile--span " : "")}
+                  role="button"
+                  tabIndex={0}
+                  onClick={onActivate}
+                  onKeyDown={(e) => e.key === "Enter" && onActivate?.()}
+                >
+                  <span className="app-link-tile__icon">
+                    <LineIcon name={iconDisplay} className="h-[1.125rem] w-[1.125rem]" />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">
+                    <InlineEditable
+                      value={item.label ?? ""}
+                      onSave={(v) => {
+                        const next = [...items];
+                        next[i] = { ...next[i], label: v };
+                        update({ items: next });
+                      }}
+                      editable={editable}
+                      onActivate={onActivate}
+                      className="text-[var(--app-tile-text)]"
+                      placeholder={labels.labelPlaceholder}
+                    />
+                  </span>
+                </div>
+              );
+            })}
+          </AppLinkTileGrid>
+        )}
+      </div>
+    );
+  }
 
   if (styleVariant === "list") {
     const listTitle =

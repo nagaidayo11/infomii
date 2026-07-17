@@ -10,6 +10,7 @@ import { GUEST_PAGE_MAX_CONTENT_WIDTH_PX } from "@/lib/guest-page-layout";
 import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation";
 import type { PageBackgroundStyle } from "@/lib/storage";
 import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 
 type PublicPageShellProps = {
   /** Page or facility name — shown in header so guests quickly understand where they are */
@@ -48,18 +49,24 @@ function PageHeader({
   backButton,
   headerActions,
   className = "px-4 py-3",
+  isNativeUi = false,
 }: {
   title: string;
   brandLogoSrc?: string | null;
   backButton?: ReactNode;
   headerActions?: ReactNode;
   className?: string;
+  isNativeUi?: boolean;
 }) {
   if (!backButton && !title.trim() && !headerActions) return null;
 
+  const headerChromeClass = isNativeUi
+    ? "border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_92%,transparent)] backdrop-blur-sm"
+    : "border-b border-slate-200/80 bg-white/95 backdrop-blur-sm";
+
   return (
     <header
-      className={`app-page-enter relative z-[90] shrink-0 overflow-visible border-b border-slate-200/80 bg-white/95 backdrop-blur-sm safe-area-inset-top ${className}`}
+      className={`app-page-enter relative z-[90] shrink-0 overflow-visible safe-area-inset-top ${headerChromeClass} ${className}`}
       data-guest-header
     >
       <div
@@ -78,12 +85,12 @@ function PageHeader({
                     alt=""
                     className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-slate-200/80"
                   />
-                  <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight tracking-tight text-slate-900 sm:text-base">
+                  <h1 className={"min-w-0 flex-1 truncate text-[15px] leading-tight sm:text-base " + (isNativeUi ? "font-extrabold tracking-tight text-[var(--app-text)]" : "font-semibold tracking-tight text-slate-900")}>
                     {title}
                   </h1>
                 </div>
               ) : (
-                <h1 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">
+                <h1 className={"min-w-0 flex-1 break-words text-lg leading-tight sm:text-2xl " + (isNativeUi ? "font-extrabold tracking-tight text-[var(--app-text)]" : "font-bold tracking-tight text-slate-900")}>
                   {title}
                 </h1>
               )
@@ -110,10 +117,12 @@ function PageContent({
   contentClassName,
   guestGutter,
   contentInset,
+  isNativeUi = false,
 }: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation"> & {
   headerClassName?: string;
   contentClassName?: string;
   guestGutter?: string;
+  isNativeUi?: boolean;
 }) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -123,6 +132,7 @@ function PageContent({
         backButton={backButton}
         headerActions={headerActions}
         className={headerClassName}
+        isNativeUi={isNativeUi}
       />
       <main
         className="guest-page guest-content-gutter guest-page-main template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
@@ -177,6 +187,7 @@ export function PublicPageShell({
   hardNavigation = true,
   contentInset = "default",
 }: PublicPageShellProps) {
+  const { isNativeUi } = useClientShell();
   const onGuestLinkCapture = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       if (!hardNavigation) return;
@@ -230,6 +241,7 @@ export function PublicPageShell({
           contentClassName={contentClassName}
           guestGutter={guestGutter}
           contentInset={contentInset}
+          isNativeUi={isNativeUi}
         >
           {children}
         </PageContent>
@@ -249,6 +261,7 @@ export function PublicPageShell({
       contentClassName={contentClassName}
       guestGutter={guestGutter}
       contentInset={contentInset}
+      isNativeUi={isNativeUi}
     >
       {children}
     </PageContent>

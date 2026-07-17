@@ -1,15 +1,20 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { MenuCardHeroImage } from "@/components/cards/menu-card-visual";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, MenuItemInlineRow } from "./card-inline-fields";
+import { NativeDiningIcon } from "./native-guest-icons";
+import { NativeMenuShell, NATIVE_MENU_ITEM_ROW } from "./native-menu-ui";
 
 export function DrinkMenuCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -17,6 +22,52 @@ export function DrinkMenuCard({ card, locale = "ja" }: { card: EditorCard; isSel
   const heroSrc = typeof c?.heroSrc === "string" ? c.heroSrc : "";
   const heroAlt = c?.heroAlt as LocalizedString | undefined;
   const hasHero = heroSrc.trim().length > 0;
+
+  if (isNativeUi) {
+    const titleNode =
+      bind.editable || title.trim() ? (
+        <InlineEditable
+          value={title}
+          onSave={(v) => editor.setField("title", v)}
+          editable={bind.editable}
+          onActivate={bind.onActivate}
+          className="app-section-header__title"
+          placeholder="ドリンク"
+        />
+      ) : (
+        title
+      );
+
+    return (
+      <NativeMenuShell
+        title={titleNode}
+        icon={<NativeDiningIcon />}
+        heroSrc={heroSrc}
+        heroAlt={heroAlt}
+        locale={locale}
+        onActivate={bind.onActivate}
+      >
+        <div className="space-y-2.5">
+          {items.map((item, index) => (
+            <MenuItemInlineRow
+              key={index}
+              locale={locale}
+              bind={bind}
+              name={getLocalizedContent(item.name as LocalizedString | undefined, locale)}
+              sizes={getLocalizedContent(item.sizes as LocalizedString | undefined, locale)}
+              note={getLocalizedContent(item.note as LocalizedString | undefined, locale)}
+              imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
+              imageAlt={item.imageAlt as LocalizedString | undefined}
+              rowClassName={NATIVE_MENU_ITEM_ROW}
+              onSaveName={(v) => editor.setArrayItemField("items", index, "name", v)}
+              onSaveSizes={(v) => editor.setArrayItemField("items", index, "sizes", v)}
+              onSaveNote={(v) => editor.setArrayItemField("items", index, "note", v)}
+            />
+          ))}
+        </div>
+      </NativeMenuShell>
+    );
+  }
 
   const body = (
     <>

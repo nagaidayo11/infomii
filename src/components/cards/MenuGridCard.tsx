@@ -1,12 +1,16 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, PlainInline } from "./card-inline-fields";
+import { NativeDiningIcon } from "./native-guest-icons";
+import { NativeMenuShell } from "./native-menu-ui";
 
 type MenuGridCardProps = {
   card: EditorCard;
@@ -43,6 +47,7 @@ function getCellPaddingClass(value: unknown): string {
 
 export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -52,6 +57,75 @@ export function MenuGridCard({ card, locale = "ja" }: MenuGridCardProps) {
   const showBorder = c?.showBorder !== false;
   const cellPaddingClass = getCellPaddingClass(c?.cellPadding);
   const borderClass = showBorder ? "border border-slate-200" : "";
+
+  if (isNativeUi) {
+    const titleNode =
+      bind.editable || title.trim() ? (
+        <InlineEditable
+          value={title}
+          onSave={(v) => editor.setField("title", v)}
+          editable={bind.editable}
+          onActivate={bind.onActivate}
+          className="app-section-header__title"
+          placeholder="メニュー表"
+        />
+      ) : (
+        title
+      );
+
+    if (!rows.length) {
+      return (
+        <NativeMenuShell title={titleNode} icon={<NativeDiningIcon />} onActivate={bind.onActivate}>
+          <p className="text-sm text-[var(--app-text-muted)]">メニュー表の行データがありません。</p>
+        </NativeMenuShell>
+      );
+    }
+
+    const headerRow = hasHeader ? rows[0] : null;
+    const bodyRows = hasHeader ? rows.slice(1) : rows;
+
+    return (
+      <NativeMenuShell title={titleNode} icon={<NativeDiningIcon />} onActivate={bind.onActivate}>
+        <div className="app-native-menu-grid overflow-x-auto">
+          <table>
+            {headerRow ? (
+              <thead>
+                <tr>
+                  {headerRow.map((cell, idx) => (
+                    <th key={`head-${idx}`}>
+                      <PlainInline
+                        value={cell}
+                        onSave={(v) => editor.setGridHeaderCell(idx, v)}
+                        bind={bind}
+                        className="text-xs font-semibold"
+                        placeholder="—"
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            ) : null}
+            <tbody>
+              {bodyRows.map((row, rowIdx) => (
+                <tr key={`row-${rowIdx}`}>
+                  {row.map((cell, colIdx) => (
+                    <td key={`cell-${rowIdx}-${colIdx}`}>
+                      <PlainInline
+                        value={cell}
+                        onSave={(v) => editor.setGridCell(rowIdx, colIdx, v)}
+                        bind={bind}
+                        placeholder=" "
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </NativeMenuShell>
+    );
+  }
 
   if (!rows.length) {
     return (

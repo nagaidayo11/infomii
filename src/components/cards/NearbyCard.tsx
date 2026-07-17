@@ -8,8 +8,11 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LabelItemStack, LabelItemSurface } from "./label-item-surface";
+import { NativePinIcon } from "./native-guest-icons";
+import { NativeHotelSection } from "./native-hotel-ui";
 
 type NearbyItem = { name?: string; description?: string; link?: string };
 
@@ -25,6 +28,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -78,6 +82,83 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
     next[index] = { ...(next[index] ?? {}), [field]: value };
     updateCard(card.id, { content: { ...c, items: next } });
   };
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={labels.title}
+    />
+  ) : (
+    title || labels.title
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativePinIcon />} onActivate={onActivate}>
+        {items.length > 0 ? (
+          <div className="space-y-2">
+            {items.map((item, i) => (
+              <div key={i} className="app-native-schedule-body">
+                {(editable || item.name) ? (
+                  <p className="font-semibold text-[var(--app-text)]" style={getBodyFontSizeStyle()}>
+                    <InlineEditable
+                      value={item.name ?? ""}
+                      onSave={(v) => updateItem(i, "name", v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      className="font-semibold text-[var(--app-text)]"
+                      placeholder={labels.namePlaceholder}
+                    />
+                  </p>
+                ) : null}
+                {(editable || item.description) ? (
+                  <p className="mt-0.5 text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+                    <InlineEditable
+                      value={item.description ?? ""}
+                      onSave={(v) => updateItem(i, "description", v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      multiline
+                      className="block w-full min-h-[1lh] text-[var(--app-text-muted)]"
+                      placeholder={labels.descriptionPlaceholder}
+                    />
+                  </p>
+                ) : null}
+                {editable ? (
+                  <p className="mt-1 text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+                    <InlineEditable
+                      value={item.link ?? ""}
+                      onSave={(v) => updateItem(i, "link", v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      className="text-[var(--app-text-muted)]"
+                      placeholder={labels.linkPlaceholder}
+                    />
+                  </p>
+                ) : item.link ? (
+                  <a
+                    href={resolveGuestHref(item.link)}
+                    className="mt-1 inline-block font-medium text-[var(--app-accent)] guest-page-link"
+                    style={getBodyFontSizeStyle()}
+                  >
+                    {labels.detail}
+                  </a>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+            {labels.empty}
+          </p>
+        )}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md" className="">

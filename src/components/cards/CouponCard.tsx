@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
+import { NativeDiningIcon } from "./native-guest-icons";
+import { NativeHotelSection } from "./native-hotel-ui";
 
 type CouponCardProps = {
   card: EditorCard;
@@ -17,6 +21,7 @@ type CouponCardProps = {
 
 export function CouponCard({ card }: CouponCardProps) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const content = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
@@ -46,6 +51,109 @@ export function CouponCard({ card }: CouponCardProps) {
       setCopied(false);
     }
   };
+
+  if (isNativeUi) {
+    const titleNode =
+      bind.editable || title.trim() ? (
+        <InlineEditable
+          value={title}
+          onSave={(v) => editor.setPlainField("title", v)}
+          editable={bind.editable}
+          onActivate={bind.onActivate}
+          className="app-section-header__title"
+          placeholder="クーポン"
+        />
+      ) : (
+        title
+      );
+
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativeDiningIcon />} onActivate={bind.onActivate}>
+        <div className="app-native-coupon">
+          <p className="text-xs font-normal uppercase tracking-wide text-[var(--app-text-muted)]">クーポンコード</p>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <p className="app-native-coupon-code">
+              <PlainInline
+                value={code || "CODE"}
+                onSave={(v) => editor.setPlainField("code", v)}
+                bind={bind}
+                className="app-native-coupon-code"
+                placeholder="CODE"
+              />
+            </p>
+            {!bind.editable ? (
+              <button type="button" onClick={handleCopy} className="app-native-coupon-copy">
+                {copied ? "コピー済み" : "コピー"}
+              </button>
+            ) : null}
+          </div>
+          <p className="mt-2 text-xs text-[var(--app-text-muted)]">
+            <PlainInline
+              value={expiryText}
+              onSave={(v) => editor.setPlainField("expiryText", v)}
+              bind={bind}
+              className="text-xs text-[var(--app-text-muted)]"
+              placeholder="有効期限"
+            />
+          </p>
+        </div>
+        <p className="mt-2 whitespace-pre-line text-sm text-[var(--app-text-muted)]">
+          <PlainInline
+            value={notes}
+            onSave={(v) => editor.setPlainField("notes", v)}
+            bind={bind}
+            multiline
+            className="block w-full min-h-[1lh] whitespace-pre-line text-sm text-[var(--app-text-muted)]"
+            placeholder="利用条件など"
+          />
+        </p>
+        {ctaLabel.trim() || bind.editable ? (
+          bind.editable ? (
+            <div className="mt-3 space-y-1">
+              <PlainInline
+                value={ctaLabel}
+                onSave={(v) => editor.setPlainField("ctaLabel", v)}
+                bind={bind}
+                className="text-sm font-semibold text-[var(--app-text)]"
+                placeholder="ボタン文言"
+              />
+              <PlainInline
+                value={ctaUrl}
+                onSave={(v) => editor.setPlainField("ctaUrl", v)}
+                bind={bind}
+                className="text-xs text-[var(--app-text-muted)]"
+                placeholder="リンクURL"
+              />
+            </div>
+          ) : ctaUrl.trim() ? (
+            <a
+              href={resolveGuestHref(ctaUrl)}
+              target={ctaUrl.startsWith("/") ? undefined : "_blank"}
+              rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
+              className="app-native-cta mt-3"
+              style={{
+                backgroundColor: ctaBgColor,
+                color: ctaTextColor,
+              }}
+            >
+              {ctaLabel}
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="app-native-cta mt-3"
+              style={{
+                backgroundColor: ctaBgColor,
+                color: ctaTextColor,
+              }}
+            >
+              {ctaLabel}
+            </button>
+          )
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md">

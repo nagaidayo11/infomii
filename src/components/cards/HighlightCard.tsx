@@ -6,6 +6,7 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { useEditor2Store } from "@/components/editor/store";
 import { GUEST_CARD_PAD_CLASS } from "@/lib/editor/card-width-mode";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
@@ -25,6 +26,7 @@ const ACCENT_BAR: Record<string, string> = {
 
 export function HighlightCard({ card, isSelected = false, locale = "ja" }: HighlightCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
@@ -56,6 +58,36 @@ export function HighlightCard({ card, isSelected = false, locale = "ja" }: Highl
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-highlight app-native-guest-card" onClick={onActivate}>
+        {(editable || title) ? (
+          <p className="app-native-highlight-title">
+            <InlineEditable
+              value={title}
+              onSave={(v) => update({ title: v })}
+              editable={editable}
+              onActivate={onActivate}
+              className="app-native-highlight-title"
+              placeholder={labels.titlePlaceholder}
+            />
+          </p>
+        ) : null}
+        <p className="app-native-highlight-body">
+          <InlineEditable
+            value={body}
+            onSave={(v) => update({ body: v })}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            className="block w-full min-h-[1lh] app-native-highlight-body"
+            placeholder={labels.bodyPlaceholder}
+          />
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

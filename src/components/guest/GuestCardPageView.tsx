@@ -9,6 +9,8 @@ import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { GuestLanguageToggle } from "@/components/guest/GuestLanguageToggle";
+import { GuestShareButton } from "@/components/guest/GuestShareButton";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import {
   getGuestShellNavStyle,
@@ -92,6 +94,7 @@ export function GuestCardPageView({
   clientApp = false,
   contentInset = "default",
 }: GuestCardPageViewProps) {
+  const { isNativeUi } = useClientShell();
   const [locale, setLocale] = useState<SupportedLocale>(() => {
     if (localeLocked || typeof navigator === "undefined") return initialLocale;
     const normalized = normalizeLocale(navigator.language);
@@ -143,9 +146,14 @@ export function GuestCardPageView({
       />
     ) : null;
 
+  const shareAction = isNativeUi ? (
+    <GuestShareButton title={title} disabled={disableInteractions} />
+  ) : null;
+
   const headerActions =
-    localeToggleActions || hamburgerMenu ? (
+    localeToggleActions || hamburgerMenu || shareAction ? (
       <div className="flex flex-nowrap items-center justify-end gap-2">
+        {shareAction}
         {localeToggleActions}
         {hamburgerMenu}
       </div>

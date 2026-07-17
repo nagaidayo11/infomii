@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 
 /**
  * Dedicated editor layout. Does not use DashboardLayout.
@@ -210,7 +211,7 @@ export function EditorLayout({
       ) : null}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        {sheetOpen ? (
+        {sheetOpen && !isAppFooter ? (
           <button
             type="button"
             className="absolute inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden"
@@ -223,18 +224,29 @@ export function EditorLayout({
           <aside
             data-editor-column="library"
             className={
-              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
-              "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
-              (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
+              isAppFooter
+                ? "app-page-enter hidden min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white lg:flex lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r"
+                : "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
+                  "lg:static lg:z-auto lg:h-full lg:w-[300px] lg:border-r " +
+                  (sheet === "library" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[300px] lg:border-r")
             }
-            style={{
-              animationDelay: "40ms",
-              bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
-              top: sheet === "library" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`) : undefined,
-            }}
+            style={
+              isAppFooter
+                ? { animationDelay: "40ms" }
+                : {
+                    animationDelay: "40ms",
+                    bottom: sheet === "library" ? MOBILE_NAV_HEIGHT : undefined,
+                    top:
+                      sheet === "library"
+                        ? dragTopPx != null
+                          ? `${dragTopPx}px`
+                          : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`
+                        : undefined,
+                  }
+            }
             aria-label="ブロックライブラリ"
           >
-            {sheet === "library" ? (
+            {!isAppFooter && sheet === "library" ? (
               <div
                 className="shrink-0 border-b border-slate-100 bg-white px-3 py-1.5 lg:hidden touch-none"
                 onPointerDown={startHandleDrag}
@@ -259,18 +271,29 @@ export function EditorLayout({
           <aside
             data-editor-column="settings"
             className={
-              "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
-              "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
-              (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
+              isAppFooter
+                ? "app-page-enter hidden min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white lg:flex lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]"
+                : "app-page-enter flex min-h-0 shrink-0 flex-col overflow-hidden overscroll-contain border-[#e6e8eb] bg-white " +
+                  "lg:static lg:z-auto lg:h-full lg:w-[360px] lg:border-l xl:w-[380px] " +
+                  (sheet === "settings" ? mobileSheetAsideClass : "hidden lg:flex lg:h-full lg:w-[360px] lg:border-l xl:w-[380px]")
             }
-            style={{
-              animationDelay: "140ms",
-              bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
-              top: sheet === "settings" ? (dragTopPx != null ? `${dragTopPx}px` : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`) : undefined,
-            }}
+            style={
+              isAppFooter
+                ? { animationDelay: "140ms" }
+                : {
+                    animationDelay: "140ms",
+                    bottom: sheet === "settings" ? MOBILE_NAV_HEIGHT : undefined,
+                    top:
+                      sheet === "settings"
+                        ? dragTopPx != null
+                          ? `${dragTopPx}px`
+                          : `max(3.5rem, ${mobileSheetTopMap[mobileSheetSize]})`
+                        : undefined,
+                  }
+            }
             aria-label="ブロック設定"
           >
-            {sheet === "settings" ? (
+            {!isAppFooter && sheet === "settings" ? (
               <div
                 className="shrink-0 border-b border-slate-100 bg-white px-3 py-1.5 lg:hidden touch-none"
                 onPointerDown={startHandleDrag}
@@ -363,6 +386,65 @@ export function EditorLayout({
           </button>
         </nav>
       </div>
+
+      {isAppFooter ? (
+        <>
+          <AppBottomSheet
+            open={sheet === "library"}
+            title="ブロック"
+            onClose={() => applySheet("none")}
+            size={mobileSheetSize}
+            panelClassName="app-bottom-sheet-panel--editor"
+            headerTrailing={
+              <div className="flex items-center gap-1" role="group" aria-label="シートの高さ">
+                {(["compact", "comfortable", "full"] as MobileSheetSize[]).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={
+                      "app-bottom-sheet-size-chip ui-pop-tap" +
+                      (mobileSheetSize === size ? " app-bottom-sheet-size-chip--active" : "")
+                    }
+                    aria-pressed={mobileSheetSize === size}
+                    onClick={() => setMobileSheetSize(size)}
+                  >
+                    {MOBILE_SHEET_LABEL[size]}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            {library}
+          </AppBottomSheet>
+          <AppBottomSheet
+            open={sheet === "settings"}
+            title="設定"
+            onClose={() => applySheet("none")}
+            size={mobileSheetSize}
+            panelClassName="app-bottom-sheet-panel--editor"
+            headerTrailing={
+              <div className="flex items-center gap-1" role="group" aria-label="シートの高さ">
+                {(["compact", "comfortable", "full"] as MobileSheetSize[]).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={
+                      "app-bottom-sheet-size-chip ui-pop-tap" +
+                      (mobileSheetSize === size ? " app-bottom-sheet-size-chip--active" : "")
+                    }
+                    aria-pressed={mobileSheetSize === size}
+                    onClick={() => setMobileSheetSize(size)}
+                  >
+                    {MOBILE_SHEET_LABEL[size]}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            {settings}
+          </AppBottomSheet>
+        </>
+      ) : null}
     </div>
   );
 }

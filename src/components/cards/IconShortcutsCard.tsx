@@ -12,8 +12,15 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import {
+  AppLinkTile,
+  AppLinkTileGrid,
+  AppSectionHeader,
+} from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
+import { NativeLinkIcon } from "./native-guest-icons";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import {
   PAGE_LINK_ICON_SIZES,
@@ -51,6 +58,7 @@ function readColumns(raw: unknown, itemCount: number): number {
  */
 export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -89,6 +97,84 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
     const href = getHref(item);
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
+
+  if (isNativeUi) {
+    const oddLastSpans = columns === 2 && items.length % 2 === 1;
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
+        {(editable || title) ? (
+          <AppSectionHeader
+            title={
+              editable ? (
+                <InlineEditable
+                  value={title}
+                  onSave={(v) => update({ title: v })}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="app-section-header__title"
+                  placeholder={labels.titlePlaceholder}
+                />
+              ) : (
+                title
+              )
+            }
+            icon={<NativeLinkIcon />}
+            as="div"
+          />
+        ) : null}
+        {items.length === 0 ? (
+          <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
+        ) : (
+          <AppLinkTileGrid
+            className={columns === 1 ? "!grid-cols-1" : columns >= 3 ? "!grid-cols-3" : undefined}
+          >
+            {items.map((item, index) => {
+              const href = getHref(item);
+              const label =
+                getLocalizedContent(item.label as LocalizedString | undefined, locale) ||
+                labels.labelPlaceholder;
+              const iconName = normalizeIconToken(item.icon, "link");
+              const icon = <LineIcon name={iconName} className="h-[1.125rem] w-[1.125rem]" />;
+              const span = oddLastSpans && index === items.length - 1;
+
+              if (editable) {
+                return (
+                  <AppLinkTile
+                    key={index}
+                    label={label}
+                    icon={icon}
+                    span={span}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onActivate?.();
+                    }}
+                  />
+                );
+              }
+
+              if (href && href !== "#") {
+                return (
+                  <AppLinkTile
+                    key={index}
+                    as="a"
+                    href={href}
+                    label={label}
+                    icon={icon}
+                    span={span}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="guest-page-link"
+                  />
+                );
+              }
+
+              return <AppLinkTile key={index} label={label} icon={icon} span={span} onClick={onActivate} />;
+            })}
+          </AppLinkTileGrid>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

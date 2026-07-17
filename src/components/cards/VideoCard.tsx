@@ -6,10 +6,13 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { VideoUpload } from "@/components/editor/VideoUpload";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { parseVideoEmbed } from "@/lib/video-embed";
+import { NativeTilesIcon } from "./native-guest-icons";
 
 type VideoCardProps = {
   card: EditorCard;
@@ -23,6 +26,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const videoUrl = typeof c?.videoUrl === "string" ? c.videoUrl.trim() : "";
@@ -69,6 +73,80 @@ export function VideoCard({ card, isSelected = false, locale = "ja" }: VideoCard
   const setVideoUrl = (url: string) => updateCard(card.id, { content: { ...c, videoUrl: url } });
 
   const iframePointerClass = isSelected ? "pointer-events-none" : "pointer-events-auto";
+
+  const mediaBody = (
+    <>
+      {parsed?.kind === "youtube" || parsed?.kind === "vimeo" ? (
+        <iframe
+          title={title || labels.titlePh}
+          src={parsed.embedUrl}
+          className={`absolute inset-0 h-full w-full border-0 ${iframePointerClass}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      ) : parsed?.kind === "file" ? (
+        <video
+          className={`absolute inset-0 h-full w-full object-cover ${iframePointerClass}`}
+          controls
+          playsInline
+          preload="metadata"
+          src={parsed.src}
+        />
+      ) : videoUrl ? (
+        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-[var(--app-text-muted)]">
+          {labels.badUrl}
+        </div>
+      ) : isSelected ? (
+        <VideoUpload onUploaded={setVideoUrl} className="h-full min-h-[140px] rounded-none border-0 bg-transparent" />
+      ) : (
+        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-[var(--app-text-muted)]">
+          {labels.empty}
+        </div>
+      )}
+    </>
+  );
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
+        {(title || isSelected) ? (
+          <AppSectionHeader
+            title={
+              editable ? (
+                <InlineEditable
+                  value={title}
+                  onSave={(v) => updateKey("title", v)}
+                  editable={editable}
+                  onActivate={onActivate}
+                  className="app-section-header__title"
+                  placeholder={labels.titlePh}
+                />
+              ) : (
+                title
+              )
+            }
+            icon={<NativeTilesIcon />}
+            as="div"
+          />
+        ) : null}
+        <div className="app-native-media relative aspect-video w-full">{mediaBody}</div>
+        {(caption || isSelected) ? (
+          <p className="app-native-media-caption">
+            <InlineEditable
+              value={caption}
+              onSave={(v) => updateKey("caption", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="text-[var(--app-text-muted)]"
+              placeholder={labels.capPh}
+            />
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

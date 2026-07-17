@@ -6,6 +6,7 @@ import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
 
@@ -21,6 +22,7 @@ function toDate(value: unknown): Date | null {
 
 export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const content = editor.content;
@@ -75,6 +77,84 @@ export function CampaignTimerCard({ card }: { card: EditorCard; isSelected?: boo
           : state === "invalid"
             ? "期間設定を確認してください"
             : "期間設定が未完了です";
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-campaign app-native-guest-card" onClick={bind.onActivate}>
+        <div className="flex flex-col gap-1">
+          <p className="text-base leading-snug font-semibold text-[var(--app-text)]">
+            <PlainInline
+              value={title}
+              onSave={(v) => editor.setPlainField("title", v)}
+              bind={bind}
+              className="text-base leading-snug font-semibold text-[var(--app-text)]"
+              placeholder="キャンペーン"
+            />
+          </p>
+          <p className="text-sm leading-snug text-[var(--app-text-muted)]">
+            <PlainInline
+              value={description}
+              onSave={(v) => editor.setPlainField("description", v)}
+              bind={bind}
+              multiline
+              className="block w-full min-h-[1lh] text-sm text-[var(--app-text-muted)]"
+              placeholder="説明"
+            />
+          </p>
+        </div>
+        <p className="text-xs font-normal tracking-wide text-[var(--app-text-muted)]">{statusLabel}</p>
+        {(state === "before" || state === "during") && (
+          <div className="app-native-campaign-timer">
+            <div className="app-native-campaign-unit">
+              <strong>{days}</strong>
+              <span>d</span>
+            </div>
+            <div className="app-native-campaign-unit">
+              <strong>{formatPart(hours)}</strong>
+              <span>h</span>
+            </div>
+            <div className="app-native-campaign-unit">
+              <strong>{formatPart(minutes)}</strong>
+              <span>m</span>
+            </div>
+            {showSeconds ? (
+              <div className="app-native-campaign-unit">
+                <strong>{formatPart(seconds)}</strong>
+                <span>s</span>
+              </div>
+            ) : null}
+          </div>
+        )}
+        {bind.editable ? (
+          <div className="space-y-1">
+            <PlainInline
+              value={ctaLabel}
+              onSave={(v) => editor.setPlainField("ctaLabel", v)}
+              bind={bind}
+              className="text-sm font-semibold text-[var(--app-text)]"
+              placeholder="ボタン文言"
+            />
+            <PlainInline
+              value={ctaUrl}
+              onSave={(v) => editor.setPlainField("ctaUrl", v)}
+              bind={bind}
+              className="text-xs text-[var(--app-text-muted)]"
+              placeholder="リンクURL"
+            />
+          </div>
+        ) : ctaLabel && ctaUrl ? (
+          <a
+            href={resolveGuestHref(ctaUrl)}
+            target={ctaUrl.startsWith("/") ? undefined : "_blank"}
+            rel={ctaUrl.startsWith("/") ? undefined : "noreferrer"}
+            className="app-native-cta"
+          >
+            {ctaLabel}
+          </a>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Card padding="none">

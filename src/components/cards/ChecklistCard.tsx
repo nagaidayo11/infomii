@@ -6,7 +6,10 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeCheckIcon } from "./native-guest-icons";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 
 type ChecklistItem = { text?: string; checked?: boolean };
@@ -19,6 +22,7 @@ type ChecklistCardProps = {
 
 export function ChecklistCard({ card, isSelected = false, locale = "ja" }: ChecklistCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const items = (Array.isArray(c?.items) ? c.items : []) as ChecklistItem[];
@@ -41,6 +45,45 @@ export function ChecklistCard({ card, isSelected = false, locale = "ja" }: Check
     next[index] = { ...(next[index] ?? {}), text };
     update({ items: next });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <AppSectionHeader
+          title={title || labels.titlePlaceholder}
+          icon={<NativeCheckIcon />}
+        />
+        <ul className="space-y-2" style={getBodyFontSizeStyle()}>
+          {items.length === 0 ? (
+            <li className="text-sm text-[var(--app-text-muted)]">{labels.empty}</li>
+          ) : (
+            items.map((item, i) => (
+              <li key={i} className="app-native-check-row">
+                <span
+                  className={"app-native-check-box " + (item.checked ? "app-native-check-box--on" : "")}
+                  aria-hidden
+                >
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4">
+                    <path d="m5 12 4 4 10-10" />
+                  </svg>
+                </span>
+                <span className="min-w-0 flex-1 text-[var(--app-text)]">
+                  <InlineEditable
+                    value={item.text ?? ""}
+                    onSave={(v) => updateItemText(i, v)}
+                    editable={editable}
+                    onActivate={onActivate}
+                    className="block w-full text-[var(--app-text)]"
+                    placeholder="項目"
+                  />
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

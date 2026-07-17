@@ -4,6 +4,8 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+export type AppBottomSheetSize = "compact" | "comfortable" | "full";
+
 type AppBottomSheetProps = {
   open: boolean;
   onClose: () => void;
@@ -13,6 +15,10 @@ type AppBottomSheetProps = {
   ariaLabel?: string;
   /** Extra class on the sliding panel (e.g. taller sheets). */
   panelClassName?: string;
+  /** Height snap: compact / comfortable (default) / full */
+  size?: AppBottomSheetSize;
+  /** Optional controls beside the title (e.g. size chips) */
+  headerTrailing?: ReactNode;
 };
 
 export function AppBottomSheet({
@@ -22,9 +28,12 @@ export function AppBottomSheet({
   children,
   ariaLabel = "操作メニュー",
   panelClassName = "",
+  size = "comfortable",
+  headerTrailing,
 }: AppBottomSheetProps) {
   const reduceMotion = useReducedMotion();
   const duration = reduceMotion ? 0.12 : 0.28;
+  const sizeClass = `app-bottom-sheet-panel--size-${size}`;
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +66,7 @@ export function AppBottomSheet({
             onClick={onClose}
           />
           <motion.div
-            className={["app-bottom-sheet-panel", panelClassName].filter(Boolean).join(" ")}
+            className={["app-bottom-sheet-panel", sizeClass, panelClassName].filter(Boolean).join(" ")}
             role="dialog"
             aria-modal="true"
             aria-label={title ?? ariaLabel}
@@ -67,7 +76,14 @@ export function AppBottomSheet({
             transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="app-bottom-sheet-handle" aria-hidden />
-            {title ? <p className="app-bottom-sheet-title">{title}</p> : null}
+            {title || headerTrailing ? (
+              <div className="app-bottom-sheet-header">
+                {title ? <p className="app-bottom-sheet-title">{title}</p> : <span />}
+                {headerTrailing ? (
+                  <div className="app-bottom-sheet-header-trailing">{headerTrailing}</div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="app-bottom-sheet-body">{children}</div>
           </motion.div>
         </div>

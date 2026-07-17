@@ -39,6 +39,51 @@ import {
 } from "@/lib/editor/live-ops";
 import { useEditor2Store } from "./store";
 import Link from "next/link";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSegmentedControl } from "@/components/app-shell/primitives";
+import { PageLinksNativeSettings } from "./PageLinksNativeSettings";
+import { TabsInfoNativeSettings } from "./TabsInfoNativeSettings";
+import { ScheduleNativeSettings } from "./ScheduleNativeSettings";
+import {
+  ChecklistNativeSettings,
+  FaqNativeSettings,
+  StepsNativeSettings,
+} from "./ListBlockNativeSettings";
+import {
+  NearbyNativeSettings,
+  SocialLinksNativeSettings,
+  InfoNativeSettings,
+} from "./ListLinkNativeSettings";
+import {
+  TextNativeSettings,
+  HeadingBodyNativeSettings,
+  ButtonNativeSettings,
+  QuoteNativeSettings,
+  MapNativeSettings,
+  WelcomeNativeSettings,
+  CheckoutNativeSettings,
+  NoticeNativeSettings,
+  HighlightNativeSettings,
+  ContactHubNativeSettings,
+  ImageNativeSettings,
+  HeroNativeSettings,
+  EmergencyNativeSettings,
+  OpenStatusNativeSettings,
+  CouponNativeSettings,
+  CampaignTimerNativeSettings,
+  MenuShellNativeSettings,
+} from "./SimpleBlockNativeSettings";
+import {
+  MenuItemsNativeSettings,
+  MenuTagItemsNativeSettings,
+  DrinkItemsNativeSettings,
+  ComboItemsNativeSettings,
+} from "./MenuItemsNativeSettings";
+import {
+  MenuCategoriesNativeSettings,
+  MenuTimeBandNativeSettings,
+  MenuGridNativeSettings,
+} from "./MenuComplexNativeSettings";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
@@ -2732,6 +2777,7 @@ export function CardSettings({
 }: CardSettingsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activePalette, setActivePalette] = useState<SettingsPalette>("content");
+  const { isNativeUi } = useClientShell();
 
   useEffect(() => {
     if (card?.id) {
@@ -2976,11 +3022,13 @@ export function CardSettings({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 ">
+    <div className={"flex min-h-0 flex-1 flex-col overflow-hidden" + (isNativeUi ? " app-native-settings-root" : "")}>
+      <div className={"shrink-0 border-b bg-white px-4 py-2 " + (isNativeUi ? "border-[var(--app-border)]" : "border-slate-200")}>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+            <h2 className={"text-sm font-semibold " + (isNativeUi ? "text-[var(--app-text)]" : "text-slate-700")}>
+              ブロック設定
+            </h2>
             <button
               type="button"
               onClick={toggleDeleteProtection}
@@ -3008,7 +3056,30 @@ export function CardSettings({
             </button>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
+            <p
+              className={
+                "min-w-0 font-extrabold tracking-tight " +
+                (isNativeUi
+                  ? "flex items-center gap-1.5 text-base text-[var(--app-text)]"
+                  : "text-lg text-slate-950")
+              }
+            >
+              {isNativeUi ? (
+                <svg
+                  className="h-4 w-4 shrink-0 text-[var(--app-accent)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
+                </svg>
+              ) : null}
               {CARD_TYPE_LABELS[card.type]}
             </p>
             {canEditCard || canReorderCard ? (
@@ -3039,7 +3110,11 @@ export function CardSettings({
                   type="button"
                   onClick={handleDuplicateCard}
                   disabled={!onDuplicateCard}
-                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                  className={
+                    isNativeUi
+                      ? "app-native-settings-action"
+                      : "rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                  }
                 >
                   コピー
                 </button>
@@ -3047,56 +3122,80 @@ export function CardSettings({
                   type="button"
                   onClick={handleRemoveCard}
                   disabled={!onRemoveCard}
-                  className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                  className={
+                    isNativeUi
+                      ? "app-native-settings-action app-native-settings-action--danger"
+                      : "rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
+                  }
                 >
                   削除
                 </button>
               </div>
             ) : null}
           </div>
-          <p className="text-xs text-slate-500">
-            {canReorderCard ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます" : "変更はリアルタイムで反映されます"}
+          <p className={"text-xs " + (isNativeUi ? "text-[var(--app-text-muted)]" : "text-slate-500")}>
+            {canReorderCard
+              ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます"
+              : "変更はリアルタイムで反映されます"}
           </p>
           {isBusinessPlan ? (
             <p className="text-[11px] leading-relaxed text-emerald-800/80">
               多言語（EN / 中文 / 한국어）は、ゲスト公開オン・公開更新・プレビュー時にまとめて自動翻訳されます。
             </p>
           ) : null}
-          <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-            <button
-              type="button"
-              onClick={() => activatePalette("content", contentSectionId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                activePalette === "content"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              コンテンツ
-            </button>
-            <button
-              type="button"
-              onClick={() => activatePalette("appearance", appearanceSectionId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                activePalette === "appearance"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              見た目
-            </button>
-            <button
-              type="button"
-              onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-              className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                activePalette === "appearance-spacing"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              サイズ・影
-            </button>
-          </div>
+          {isNativeUi ? (
+            <AppSegmentedControl
+              variant="filled"
+              ariaLabel="設定タブ"
+              value={activePalette}
+              onChange={(id) => {
+                if (id === "content") activatePalette("content", contentSectionId);
+                else if (id === "appearance") activatePalette("appearance", appearanceSectionId);
+                else activatePalette("appearance-spacing", appearanceSpacingId);
+              }}
+              options={[
+                { id: "content", label: "コンテンツ" },
+                { id: "appearance", label: "見た目" },
+                { id: "appearance-spacing", label: "サイズ・影" },
+              ]}
+            />
+          ) : (
+            <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+              <button
+                type="button"
+                onClick={() => activatePalette("content", contentSectionId)}
+                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
+                  activePalette === "content"
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                コンテンツ
+              </button>
+              <button
+                type="button"
+                onClick={() => activatePalette("appearance", appearanceSectionId)}
+                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
+                  activePalette === "appearance"
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                見た目
+              </button>
+              <button
+                type="button"
+                onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
+                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
+                  activePalette === "appearance-spacing"
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                サイズ・影
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div
@@ -3105,6 +3204,9 @@ export function CardSettings({
       >
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
+            isNativeUi ? (
+              <WelcomeNativeSettings display={display} updateLocalized={updateLocalized} />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3123,9 +3225,43 @@ export function CardSettings({
                 />
               </div>
             </SettingsSection>
+            )
           )}
 
           {card.type === "hero" && (
+            isNativeUi ? (
+              <HeroNativeSettings display={display} updateLocalized={updateLocalized}>
+                <div className="w-full">
+                  <label className={labelClass}>幅</label>
+                  <select
+                    value={readCardWidthMode(content)}
+                    onChange={(e) => update("widthMode", e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="inset">余白あり</option>
+                    <option value="full">画面いっぱい</option>
+                  </select>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    画面いっぱいだと、ページ左右の余白を超えて写真が端まで広がります。
+                  </p>
+                </div>
+                <div className="w-full">
+                  <label className={labelClass}>画像</label>
+                  <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
+                </div>
+                {typeof content.image === "string" && content.image.trim() ? (
+                  <div className="w-full">
+                    <label className={labelClass}>表示位置・ズーム</label>
+                    <ImageFramingControl
+                      imageUrl={content.image}
+                      content={content}
+                      onUpdate={update}
+                      previewAspectClass="aspect-[2/1]"
+                    />
+                  </div>
+                ) : null}
+              </HeroNativeSettings>
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3169,6 +3305,7 @@ export function CardSettings({
                 </div>
               ) : null}
             </SettingsSection>
+            )
           )}
 
           {card.type === "hero_slider" && (
@@ -3279,26 +3416,53 @@ export function CardSettings({
           )}
 
           {card.type === "info" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="Wi-Fi"
+            isNativeUi ? (
+              <InfoNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                iconSelect={
+                  <IconTokenSelect
+                    label="アイコン"
+                    value={(content.icon as string) ?? ""}
+                    onChange={(next) => update("icon", next)}
+                    allowEmpty
+                    className="app-field-input"
+                    labelClassName="app-field-label"
+                  />
+                }
               />
-              <IconTokenSelect
-                label="アイコン"
-                value={(content.icon as string) ?? ""}
-                onChange={(next) => update("icon", next)}
-                allowEmpty
-                className={inputClass}
-                labelClassName={labelClass}
-              />
-              <InfoRowsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="Wi-Fi"
+                />
+                <IconTokenSelect
+                  label="アイコン"
+                  value={(content.icon as string) ?? ""}
+                  onChange={(next) => update("icon", next)}
+                  allowEmpty
+                  className={inputClass}
+                  labelClassName={labelClass}
+                />
+                <InfoRowsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "highlight" && (
+            isNativeUi ? (
+              <HighlightNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3329,6 +3493,7 @@ export function CardSettings({
                 </select>
               </div>
             </SettingsSection>
+            )
           )}
 
           {card.type === "action" && (
@@ -3349,6 +3514,9 @@ export function CardSettings({
           )}
 
           {card.type === "text" && (
+            isNativeUi ? (
+              <TextNativeSettings display={display} updateLocalized={updateLocalized} />
+            ) : (
             <SettingsSection title="コンテンツ">
                 <div className="w-full">
                   <label className={labelClass}>テキスト</label>
@@ -3361,9 +3529,18 @@ export function CardSettings({
                   />
                 </div>
             </SettingsSection>
+            )
           )}
 
           {card.type === "heading_body" && (
+            isNativeUi ? (
+              <HeadingBodyNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3404,9 +3581,31 @@ export function CardSettings({
                 </div>
               ) : null}
             </SettingsSection>
+            )
           )}
 
           {card.type === "image" && (
+            isNativeUi ? (
+              <ImageNativeSettings display={display} updateLocalized={updateLocalized}>
+                <div className="w-full">
+                  <label className={labelClass}>画像</label>
+                  <ImageUpload
+                    onUploaded={(url) => update("src", url)}
+                    className="mt-1.5"
+                  />
+                </div>
+                {typeof content.src === "string" && content.src.trim() ? (
+                  <div className="w-full">
+                    <label className={labelClass}>表示位置・ズーム</label>
+                    <ImageFramingControl
+                      imageUrl={content.src}
+                      content={content}
+                      onUpdate={update}
+                    />
+                  </div>
+                ) : null}
+              </ImageNativeSettings>
+            ) : (
             <SettingsSection title="コンテンツ">
                 <div className="w-full">
                   <label className={labelClass}>画像</label>
@@ -3432,6 +3631,7 @@ export function CardSettings({
                   placeholder="画像の説明"
                 />
             </SettingsSection>
+            )
           )}
 
           {card.type === "video" && (
@@ -3520,6 +3720,15 @@ export function CardSettings({
           )}
 
           {card.type === "checkout" && (
+            isNativeUi ? (
+              <CheckoutNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+                patchContent={patchContent}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3578,18 +3787,28 @@ export function CardSettings({
                 placeholder="詳細"
               />
             </SettingsSection>
+            )
           )}
 
           {card.type === "pageLinks" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="メニュー"
+            isNativeUi ? (
+              <PageLinksNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <PageLinksItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="メニュー"
+                />
+                <PageLinksItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "icon_shortcuts" && (
@@ -3620,6 +3839,13 @@ export function CardSettings({
           )}
 
           {card.type === "emergency" && (
+            isNativeUi ? (
+              <EmergencyNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                onUpdate={update}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3652,9 +3878,17 @@ export function CardSettings({
                 placeholder="任意"
               />
             </SettingsSection>
+            )
           )}
 
           {card.type === "map" && (
+            isNativeUi ? (
+              <MapNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                onUpdate={update}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
                 <Input
                   label="タイトル"
@@ -3686,22 +3920,40 @@ export function CardSettings({
                   </p>
                 </div>
             </SettingsSection>
+            )
           )}
 
           {card.type === "nearby" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="周辺案内"
+            isNativeUi ? (
+              <NearbyNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <NearbyItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="周辺案内"
+                />
+                <NearbyItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
 
           {card.type === "notice" && (
+            isNativeUi ? (
+              <NoticeNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+              />
+            ) : (
             <>
               <SettingsSection title="コンテンツ">
                 <Input
@@ -3746,9 +3998,17 @@ export function CardSettings({
                 </div>
               </SettingsSection>
             </>
+            )
           )}
 
           {card.type === "button" && (
+            isNativeUi ? (
+              <ButtonNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                onUpdate={update}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="ラベル"
@@ -3763,9 +4023,20 @@ export function CardSettings({
                 placeholder="https://..."
               />
             </SettingsSection>
+            )
           )}
 
           {card.type === "campaign_timer" && (
+            isNativeUi ? (
+              <CampaignTimerNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+                isoToLocalInput={isoToLocalInput}
+                localInputToIso={localInputToIso}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -3818,6 +4089,7 @@ export function CardSettings({
               <Input label="CTAラベル" value={display("ctaLabel")} onChange={(e) => update("ctaLabel", e.target.value)} placeholder="詳細を見る" />
               <Input label="CTA URL" value={display("ctaUrl")} onChange={(e) => update("ctaUrl", e.target.value)} placeholder="https://..." />
             </SettingsSection>
+            )
           )}
 
           {card.type === "gallery" && (
@@ -3866,30 +4138,51 @@ export function CardSettings({
           )}
 
           {card.type === "faq" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="よくある質問"
+            isNativeUi ? (
+              <FaqNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <FaqItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="よくある質問"
+                />
+                <FaqItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "faq_search" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="よくあるご質問"
+            isNativeUi ? (
+              <FaqNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <FaqItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="よくあるご質問"
+                />
+                <FaqItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "quote" && (
+            isNativeUi ? (
+              <QuoteNativeSettings display={display} updateLocalized={updateLocalized} />
+            ) : (
             <SettingsSection title="コンテンツ">
               <div className="w-full">
                 <label className={labelClass}>引用文</label>
@@ -3908,53 +4201,81 @@ export function CardSettings({
                 placeholder="フロント / レビュー投稿者"
               />
             </SettingsSection>
+            )
           )}
 
           {card.type === "checklist" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="チェックリスト"
+            isNativeUi ? (
+              <ChecklistNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <ChecklistItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="チェックリスト"
+                />
+                <ChecklistItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "steps" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="ご利用ステップ"
+            isNativeUi ? (
+              <StepsNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <StepsItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="ご利用ステップ"
+                />
+                <StepsItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "tabs_info" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="館内案内タブ"
+            isNativeUi ? (
+              <TabsInfoNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
               />
-              <div className="w-full">
-                <label className={labelClass}>初期表示タブ</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={10}
-                  value={(content.defaultIndex as number | string | undefined) ?? 0}
-                  onChange={(e) => update("defaultIndex", Number(e.target.value) || 0)}
-                  className={inputClass}
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="館内案内タブ"
                 />
-              </div>
-              <TabsInfoItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+                <div className="w-full">
+                  <label className={labelClass}>初期表示タブ</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={(content.defaultIndex as number | string | undefined) ?? 0}
+                    onChange={(e) => update("defaultIndex", Number(e.target.value) || 0)}
+                    className={inputClass}
+                  />
+                </div>
+                <TabsInfoItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "compare" && (
@@ -4082,6 +4403,13 @@ export function CardSettings({
           )}
 
           {card.type === "coupon" && (
+            isNativeUi ? (
+              <CouponNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                onUpdate={update}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -4168,6 +4496,7 @@ export function CardSettings({
                 </div>
               </div>
             </SettingsSection>
+          )
           )}
 
           {card.type === "accordion_info" && (
@@ -4178,6 +4507,14 @@ export function CardSettings({
           )}
 
           {card.type === "open_status" && (
+            isNativeUi ? (
+              <OpenStatusNativeSettings
+                content={content}
+                onUpdate={update}
+                display={display}
+                updateLocalized={updateLocalized}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="営業時間" />
               <div className="w-full">
@@ -4202,6 +4539,7 @@ export function CardSettings({
               <Input label="営業中ラベル" value={display("openLabel")} onChange={(e) => updateLocalized("openLabel", e.target.value)} placeholder="営業中" />
               <Input label="営業時間外ラベル" value={display("closedLabel")} onChange={(e) => updateLocalized("closedLabel", e.target.value)} placeholder="営業時間外" />
             </SettingsSection>
+            )
           )}
 
           {liveOpsKey && (
@@ -4222,13 +4560,29 @@ export function CardSettings({
           )}
 
           {card.type === "social_links" && (
-            <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="公式SNS" />
-              <SocialLinksItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            isNativeUi ? (
+              <SocialLinksNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+              />
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="公式SNS" />
+                <SocialLinksItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "contact_hub" && (
+            isNativeUi ? (
+              <ContactHubNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                onUpdate={update}
+              />
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="お問い合わせ" />
               <div className={compactGridClass}>
@@ -4242,6 +4596,7 @@ export function CardSettings({
                 <textarea value={display("note")} onChange={(e) => updateLocalized("note", e.target.value)} rows={2} className={inputClass} />
               </div>
             </SettingsSection>
+            )
           )}
 
           {card.type === "progress_steps" && (
@@ -4305,85 +4660,157 @@ export function CardSettings({
           )}
 
           {card.type === "schedule" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="営業時間"
+            isNativeUi ? (
+              <ScheduleNativeSettings
+                content={content}
+                onUpdate={update}
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                isBusinessEnabled={isBusinessEnabled}
               />
-              <ScheduleItemsEditor content={content} onUpdate={update} isBusinessEnabled={isBusinessEnabled} />
-            </SettingsSection>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="営業時間"
+                />
+                <ScheduleItemsEditor content={content} onUpdate={update} isBusinessEnabled={isBusinessEnabled} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "menu" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="メニュー"
-              />
-              <MenuHeroFields content={content} onUpdate={update} />
-              <MenuItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="メニュー"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <MenuItemsNativeSettings content={content} onUpdate={update} />
+              </MenuShellNativeSettings>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="メニュー"
+                />
+                <MenuHeroFields content={content} onUpdate={update} />
+                <MenuItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "menu_categories" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="メニュー"
-              />
-              <MenuHeroFields content={content} onUpdate={update} />
-              <MenuCategoriesGroupsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="メニュー"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <MenuCategoriesNativeSettings content={content} onUpdate={update} />
+              </MenuShellNativeSettings>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="メニュー"
+                />
+                <MenuHeroFields content={content} onUpdate={update} />
+                <MenuCategoriesGroupsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "daily_special" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="本日のおすすめ"
-              />
-              <MenuHeroFields content={content} onUpdate={update} />
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={content.showDate === true}
-                  onChange={(e) => update("showDate", e.target.checked)}
-                  className="rounded border-slate-300"
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="本日のおすすめ"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <label className="flex min-h-[var(--app-tap-min)] cursor-pointer items-center gap-3 rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-[var(--app-surface)] px-3 text-sm font-medium text-[var(--app-text)]">
+                  <input
+                    type="checkbox"
+                    checked={content.showDate === true}
+                    onChange={(e) => update("showDate", e.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--app-border)] text-[var(--app-accent)]"
+                  />
+                  日付を表示（自動：今日の日付。下記で上書き可）
+                </label>
+                <Input
+                  label="日付の上書き（任意）"
+                  value={typeof content.dateOverride === "string" ? content.dateOverride : ""}
+                  onChange={(e) => update("dateOverride", e.target.value)}
+                  placeholder="例: 2026年4月12日（空なら自動）"
                 />
-                日付を表示（自動：今日の日付。下記で上書き可）
-              </label>
-              <Input
-                label="日付の上書き（任意）"
-                value={typeof content.dateOverride === "string" ? content.dateOverride : ""}
-                onChange={(e) => update("dateOverride", e.target.value)}
-                placeholder="例: 2026年4月12日（空なら自動）"
-              />
-              <MenuTagItemsEditor
-                items={(Array.isArray(content.items) ? content.items : []) as MenuTagItem[]}
-                onChange={(items) => update("items", items)}
-              />
-            </SettingsSection>
+                <MenuTagItemsNativeSettings
+                  items={(Array.isArray(content.items) ? content.items : []) as MenuTagItem[]}
+                  onChange={(items) => update("items", items)}
+                />
+              </MenuShellNativeSettings>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="本日のおすすめ"
+                />
+                <MenuHeroFields content={content} onUpdate={update} />
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={content.showDate === true}
+                    onChange={(e) => update("showDate", e.target.checked)}
+                    className="rounded border-slate-300"
+                  />
+                  日付を表示（自動：今日の日付。下記で上書き可）
+                </label>
+                <Input
+                  label="日付の上書き（任意）"
+                  value={typeof content.dateOverride === "string" ? content.dateOverride : ""}
+                  onChange={(e) => update("dateOverride", e.target.value)}
+                  placeholder="例: 2026年4月12日（空なら自動）"
+                />
+                <MenuTagItemsEditor
+                  items={(Array.isArray(content.items) ? content.items : []) as MenuTagItem[]}
+                  onChange={(items) => update("items", items)}
+                />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "drink_menu" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="ドリンク"
-              />
-              <MenuHeroFields content={content} onUpdate={update} />
-              <DrinkItemsEditor content={content} onUpdate={update} />
-            </SettingsSection>
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="ドリンク"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <DrinkItemsNativeSettings content={content} onUpdate={update} />
+              </MenuShellNativeSettings>
+            ) : (
+              <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="ドリンク"
+                />
+                <MenuHeroFields content={content} onUpdate={update} />
+                <DrinkItemsEditor content={content} onUpdate={update} />
+              </SettingsSection>
+            )
           )}
 
           {card.type === "salon_service_menu" && (
@@ -4403,7 +4830,17 @@ export function CardSettings({
           )}
 
           {card.type === "combo_set_menu" && (
-            <SettingsSection title="コンテンツ">
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="セット・コース"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <ComboItemsNativeSettings content={content} onUpdate={update} />
+              </MenuShellNativeSettings>
+            ) : (
+<SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
                 value={display("title")}
@@ -4413,9 +4850,25 @@ export function CardSettings({
               <MenuHeroFields content={content} onUpdate={update} />
               <ComboItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
+            )
           )}
 
           {card.type === "menu_grid" && (
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="メニュー表"
+              >
+                <MenuGridNativeSettings
+                  content={content}
+                  onUpdate={update}
+                  onPatchContent={(patch) =>
+                    onUpdate(card.id, { content: { ...content, ...patch } })
+                  }
+                />
+              </MenuShellNativeSettings>
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -4574,6 +5027,7 @@ export function CardSettings({
                 );
               })()}
             </SettingsSection>
+            )
           )}
 
           {card.type === "menu_sheet_sync" && (
@@ -4644,6 +5098,21 @@ export function CardSettings({
           )}
 
           {card.type === "menu_time_band" && (
+            isNativeUi ? (
+              <MenuShellNativeSettings
+                title={display("title")}
+                onTitleChange={(v) => updateLocalized("title", v)}
+                titlePlaceholder="時間帯別メニュー"
+              >
+                <MenuHeroFields content={content} onUpdate={update} />
+                <MenuTimeBandNativeSettings
+                  content={content}
+                  onUpdate={update}
+                  display={display}
+                  updateLocalized={updateLocalized}
+                />
+              </MenuShellNativeSettings>
+            ) : (
             <SettingsSection title="コンテンツ">
               <Input
                 label="タイトル"
@@ -4671,6 +5140,7 @@ export function CardSettings({
               />
               <MenuTimeBandSlotsEditor content={content} onUpdate={update} />
             </SettingsSection>
+            )
           )}
 
           <SettingsSection title="見た目の調整" sectionId={appearanceSectionId}>

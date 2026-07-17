@@ -12,7 +12,10 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeEmergencyIcon } from "./native-guest-icons";
+import { NativeHotelSection, NativeKvList, NativeKvRow } from "./native-hotel-ui";
 
 type EmergencyCardProps = {
   card: EditorCard;
@@ -86,6 +89,7 @@ function ContactRow({
  */
 export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
@@ -121,6 +125,70 @@ export function EmergencyCard({ card, isSelected, locale = "ja" }: EmergencyCard
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={labels.title}
+    />
+  ) : (
+    title || labels.title
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativeEmergencyIcon />} onActivate={onActivate}>
+        <NativeKvList>
+          <NativeKvRow label={labels.fire} href={!editable ? toTelHref(fire) : undefined}>
+            <InlineEditable
+              value={fire}
+              onSave={(v) => updateCard(card.id, { content: { ...c, fire: v } })}
+              editable={editable}
+              onActivate={onActivate}
+              className="font-semibold tabular-nums text-red-700"
+              placeholder="119"
+            />
+          </NativeKvRow>
+          <NativeKvRow label={labels.police} href={!editable ? toTelHref(police) : undefined}>
+            <InlineEditable
+              value={police}
+              onSave={(v) => updateCard(card.id, { content: { ...c, police: v } })}
+              editable={editable}
+              onActivate={onActivate}
+              className="font-semibold tabular-nums"
+              placeholder="110"
+            />
+          </NativeKvRow>
+          <NativeKvRow label={labels.hospital} href={!editable ? toTelHref(hospital) : undefined}>
+            <InlineEditable
+              value={hospital}
+              onSave={(v) => updateKey("hospital", v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder={labels.hospitalPlaceholder}
+            />
+          </NativeKvRow>
+        </NativeKvList>
+        {(editable || note.trim()) ? (
+          <p className="mt-2 text-sm text-[var(--app-text-muted)]">
+            <InlineEditable
+              value={note}
+              onSave={(v) => updateKey("note", v)}
+              editable={editable}
+              onActivate={onActivate}
+              multiline
+              className="block w-full min-h-[1lh] text-sm text-[var(--app-text-muted)]"
+              placeholder={labels.note}
+            />
+          </p>
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md" className="">

@@ -4,10 +4,14 @@ import type { EditorCard } from "@/components/editor/types";
 import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
 import { Card } from "@/components/ui/Card";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { PlainInline } from "./card-inline-fields";
+import { NativeStatusIcon } from "./native-guest-icons";
 
 export function OpenStatusCard({ card }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
+  const { isNativeUi } = useClientShell();
   const editor = useCardContentEditor(card);
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
@@ -22,6 +26,49 @@ export function OpenStatusCard({ card }: { card: EditorCard; isSelected?: boolea
   const openLabel = typeof c.openLabel === "string" ? c.openLabel : "営業中";
   const closedLabel = typeof c.closedLabel === "string" ? c.closedLabel : "営業時間外";
   const hoursText = typeof c.hoursText === "string" ? c.hoursText : `${startHour}:00-${endHour}:00`;
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card" onClick={editor.onActivate}>
+        <AppSectionHeader
+          title={
+            <PlainInline
+              value={title}
+              onSave={(v) => editor.setPlainField("title", v)}
+              bind={bind}
+              className="app-section-header__title"
+              placeholder="営業時間"
+            />
+          }
+          icon={<NativeStatusIcon />}
+        />
+        <div className="app-native-status-card">
+          <span
+            className={
+              "app-native-status-pill " +
+              (isOpen ? "app-native-status-pill--open" : "app-native-status-pill--closed")
+            }
+          >
+            <PlainInline
+              value={isOpen ? openLabel : closedLabel}
+              onSave={(v) => editor.setPlainField(isOpen ? "openLabel" : "closedLabel", v)}
+              bind={bind}
+              placeholder={isOpen ? "営業中" : "営業時間外"}
+            />
+          </span>
+          <p className="mt-2 text-sm text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
+            <PlainInline
+              value={hoursText}
+              onSave={(v) => editor.setPlainField("hoursText", v)}
+              bind={bind}
+              className="text-sm text-[var(--app-text-muted)]"
+              placeholder="7:00-23:00"
+            />
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

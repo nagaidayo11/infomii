@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { EditorCard } from "@/components/editor/types";
+import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
@@ -9,8 +10,11 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { MenuCardHeroImage } from "@/components/cards/menu-card-visual";
 import { getNowMinutesInTimezone, isMinutesInSlot, parseHHmmToMinutes } from "@/lib/menu-time-utils";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardContentEditor } from "./card-content-edit";
 import { CardTitleInline, MenuItemInlineRow, PlainInline } from "./card-inline-fields";
+import { NativeDiningIcon } from "./native-guest-icons";
+import { NativeMenuShell, NATIVE_MENU_ITEM_ROW_BAND } from "./native-menu-ui";
 
 type Slot = {
   label?: string;
@@ -23,6 +27,7 @@ const EMPTY_SLOTS: Slot[] = [];
 
 export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; isSelected?: boolean; locale?: string }) {
   const editor = useCardContentEditor(card);
+  const { isNativeUi } = useClientShell();
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
@@ -52,7 +57,7 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
     return null;
   }, [slots, tz]);
 
-  const renderSlotItems = (slot: Slot, slotIndex: number) => {
+  const renderSlotItems = (slot: Slot, slotIndex: number, rowClassName: string) => {
     const items = slot?.items && Array.isArray(slot.items) ? slot.items : [];
     return (
       <div className="mt-2 space-y-2.5">
@@ -67,7 +72,7 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
             tag={getLocalizedContent(item.tag as LocalizedString | undefined, locale)}
             imageSrc={typeof item.imageSrc === "string" ? item.imageSrc : ""}
             imageAlt={item.imageAlt as LocalizedString | undefined}
-            rowClassName={`flex gap-3 ${editorInnerRadiusClassName} border border-emerald-100 bg-emerald-50/40 p-2.5 shadow-sm`}
+            rowClassName={rowClassName}
             onSaveName={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "name", v)}
             onSavePrice={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "price", v)}
             onSaveDescription={(v) => editor.setTimeBandSlotItemField(slotIndex, itemIndex, "description", v)}
@@ -77,6 +82,109 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
       </div>
     );
   };
+
+  if (isNativeUi) {
+    const titleNode =
+      bind.editable || title.trim() ? (
+        <InlineEditable
+          value={title}
+          onSave={(v) => editor.setField("title", v)}
+          editable={bind.editable}
+          onActivate={bind.onActivate}
+          className="app-section-header__title"
+          placeholder="メニュー"
+        />
+      ) : (
+        title
+      );
+
+    const nativeInner = bind.editable ? (
+      <>
+        <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">
+          <PlainInline
+            value={bandLabel}
+            onSave={(v) => editor.setField("currentBandLabel", v)}
+            bind={bind}
+            className="text-xs font-medium text-emerald-700"
+            placeholder="帯ラベル"
+          />
+        </p>
+        <div className="mt-3 space-y-3">
+          {slots.map((slot, slotIndex) => (
+            <div
+              key={slotIndex}
+              className="rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-3"
+            >
+              <p className="text-xs font-semibold text-[var(--app-text-muted)]">
+                <PlainInline
+                  value={getLocalizedContent(slot.label as LocalizedString | undefined, locale)}
+                  onSave={(v) => editor.setTimeBandSlotField(slotIndex, "label", v)}
+                  bind={bind}
+                  className="text-xs font-semibold text-[var(--app-text)]"
+                  placeholder="時間帯名"
+                />
+                <span className="ml-2 font-normal text-[var(--app-text-muted)]">
+                  {String(slot.start ?? "")} – {String(slot.end ?? "")}
+                </span>
+              </p>
+              {renderSlotItems(slot, slotIndex, NATIVE_MENU_ITEM_ROW_BAND)}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-[var(--app-text-muted)]">
+          <span className="text-xs">時間外メッセージ: </span>
+          <PlainInline
+            value={outsideMessage}
+            onSave={(v) => editor.setField("outsideMessage", v)}
+            bind={bind}
+            multiline
+            className="block w-full min-h-[1lh] text-sm text-[var(--app-text-muted)]"
+            placeholder="時間外メッセージ"
+          />
+        </p>
+      </>
+    ) : (
+      <>
+        {active ? (
+          <>
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">
+              {bandLabel}
+              {active.label ? ` · ${active.label}` : ""}
+            </p>
+            {renderSlotItems(
+              active,
+              slots.findIndex(
+                (s) => s.start === active.start && s.end === active.end && s.label === active.label,
+              ),
+              NATIVE_MENU_ITEM_ROW_BAND,
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-[var(--app-text-muted)]">{outsideMessage}</p>
+        )}
+      </>
+    );
+
+    return (
+      <NativeMenuShell
+        title={titleNode}
+        icon={<NativeDiningIcon />}
+        heroSrc={heroSrc}
+        heroAlt={heroAlt}
+        locale={locale}
+        onActivate={bind.onActivate}
+      >
+        {nativeInner}
+      </NativeMenuShell>
+    );
+  }
+
+  const renderWebSlotItems = (slot: Slot, slotIndex: number) =>
+    renderSlotItems(
+      slot,
+      slotIndex,
+      `flex gap-3 ${editorInnerRadiusClassName} border border-emerald-100 bg-emerald-50/40 p-2.5 shadow-sm`,
+    );
 
   const inner = bind.editable ? (
     <>
@@ -109,7 +217,7 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
                 {String(slot.start ?? "")} – {String(slot.end ?? "")}
               </span>
             </p>
-            {renderSlotItems(slot, slotIndex)}
+            {renderWebSlotItems(slot, slotIndex)}
           </div>
         ))}
       </div>
@@ -141,7 +249,7 @@ export function MenuTimeBandCard({ card, locale = "ja" }: { card: EditorCard; is
             {bandLabel}
             {active.label ? ` · ${active.label}` : ""}
           </p>
-          {renderSlotItems(
+          {renderWebSlotItems(
             active,
             slots.findIndex(
               (s) => s.start === active.start && s.end === active.end && s.label === active.label,

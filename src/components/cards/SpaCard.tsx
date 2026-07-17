@@ -13,9 +13,12 @@ import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { InfoDetailList, InfoDetailRow } from "./facility-info-rows";
 import { DESK_TONE } from "./desk-tone";
+import { NativeClockIcon } from "./native-guest-icons";
+import { NativeHotelSection, NativeKvList, NativeKvRow } from "./native-hotel-ui";
 
 type SpaCardProps = {
   card: EditorCard;
@@ -40,6 +43,7 @@ function readField(c: Record<string, unknown> | undefined, keys: string[], local
 /** Desk-card spa/onsen with soft sky tint. */
 export function SpaCard({ card, locale = "ja" }: SpaCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const tone = DESK_TONE.sky;
   const c = card.content as Record<string, unknown> | undefined;
@@ -90,6 +94,71 @@ export function SpaCard({ card, locale = "ja" }: SpaCardProps) {
   const hoursKey = c && "time" in c && !("hours" in c) ? "time" : "hours";
   const locationKey = c && "place" in c && !("location" in c) ? "place" : "location";
   const guidanceKey = c && "menu" in c && !("description" in c) ? "menu" : "description";
+
+  const titleNode = (editable || title) ? (
+    <InlineEditable
+      value={title}
+      onSave={(v) => updateKey("title", v)}
+      editable={editable}
+      onActivate={onActivate}
+      className="app-section-header__title"
+      placeholder={labels.titlePlaceholder}
+    />
+  ) : (
+    title || labels.titlePlaceholder
+  );
+
+  if (isNativeUi) {
+    return (
+      <NativeHotelSection title={titleNode} icon={<NativeClockIcon />} onActivate={onActivate}>
+        <NativeKvList>
+          <NativeKvRow label={labels.time}>
+            <InlineEditable
+              value={hours}
+              onSave={(v) => updateKey(hoursKey, v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder="15:00–24:00 / 6:00–10:00"
+            />
+          </NativeKvRow>
+          <NativeKvRow label={labels.location}>
+            <InlineEditable
+              value={location}
+              onSave={(v) => updateKey(locationKey, v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder="2F"
+            />
+          </NativeKvRow>
+        </NativeKvList>
+        {(editable || guidance) ? (
+          <p className="mt-2 text-sm text-[var(--app-text)]">
+            <InlineEditable
+              value={guidance}
+              onSave={(v) => updateKey(guidanceKey, v)}
+              editable={editable}
+              onActivate={onActivate}
+              multiline
+              className="block w-full min-h-[1lh] text-sm"
+              placeholder={labels.descPlaceholder}
+            />
+          </p>
+        ) : null}
+        {(editable || note) ? (
+          <p className="mt-2 text-sm text-[var(--app-text-muted)]">
+            <InlineEditable
+              value={note}
+              onSave={(v) => updateKey("note", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="text-sm text-[var(--app-text-muted)]"
+              placeholder={labels.notePlaceholder}
+            />
+          </p>
+        ) : null}
+      </NativeHotelSection>
+    );
+  }
 
   return (
     <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>

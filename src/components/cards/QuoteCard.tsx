@@ -6,6 +6,8 @@ import { InlineEditable } from "@/components/editor/InlineEditable";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon } from "./LineIcon";
 
@@ -17,6 +19,7 @@ type QuoteCardProps = {
 
 export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const quote = (c?.quote as string) ?? "";
@@ -33,6 +36,35 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <AppSectionHeader title={labels.quote} icon={<LineIcon name="quote" className="h-4 w-4" />} />
+        <blockquote className="app-native-quote" style={getBodyFontSizeStyle()}>
+          <InlineEditable
+            value={quote}
+            onSave={(v) => update({ quote: v })}
+            editable={editable}
+            onActivate={onActivate}
+            multiline
+            className="block min-h-[2em] leading-relaxed"
+            placeholder={labels.quotePlaceholder}
+          />
+        </blockquote>
+        <p className="app-native-quote-author" style={getTitleFontSizeStyle()}>
+          <InlineEditable
+            value={author}
+            onSave={(v) => update({ author: v })}
+            editable={editable}
+            onActivate={onActivate}
+            className="inline-block"
+            placeholder={labels.authorPlaceholder}
+          />
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md">

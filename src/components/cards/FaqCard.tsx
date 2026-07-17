@@ -14,7 +14,10 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeFaqIcon } from "./native-guest-icons";
 
 type FaqItem = { q?: string; a?: string };
 
@@ -30,6 +33,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
@@ -56,6 +60,45 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
     next[index] = { ...next[index], [field]: value };
     updateCard(card.id, { content: { ...c, items: next } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <AppSectionHeader title={title || labels.title} icon={<NativeFaqIcon />} />
+        <div className="space-y-2" style={getBodyFontSizeStyle()}>
+          {items.length === 0 ? (
+            <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
+          ) : (
+            items.map((item, i) => (
+              <div key={i} className="app-native-faq-item">
+                <div className="app-native-faq-q">
+                  <InlineEditable
+                    value={item.q ?? ""}
+                    onSave={(v) => updateItem(i, "q", v)}
+                    editable={editable}
+                    onActivate={onActivate}
+                    className="app-native-faq-q"
+                    placeholder={labels.q}
+                  />
+                </div>
+                <div className="app-native-faq-a">
+                  <InlineEditable
+                    value={item.a ?? ""}
+                    onSave={(v) => updateItem(i, "a", v)}
+                    editable={editable}
+                    onActivate={onActivate}
+                    multiline
+                    className="block w-full min-h-[1lh] app-native-faq-a"
+                    placeholder={labels.a}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

@@ -9,6 +9,7 @@ import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type ButtonCardProps = {
@@ -23,6 +24,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function ButtonCard({ card, locale = "ja" }: ButtonCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const resolveGuestHref = useGuestPageHref();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
@@ -41,6 +43,29 @@ export function ButtonCard({ card, locale = "ja" }: ButtonCardProps) {
     const next = isLocalizedObj(cur) ? { ...cur, ja: nextValue } : nextValue;
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        <a
+          href={href}
+          className="app-native-cta guest-page-link ui-pop-tap"
+          style={getTitleFontSizeStyle()}
+          onClick={editable ? (e) => e.preventDefault() : undefined}
+          aria-disabled={editable ? true : undefined}
+        >
+          <InlineEditable
+            value={label}
+            onSave={(v) => updateKey("label", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className="text-white"
+            placeholder={labels.buttonPlaceholder}
+          />
+        </a>
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

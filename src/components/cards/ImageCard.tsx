@@ -10,6 +10,7 @@ import type { LocalizedString } from "@/lib/localized-content";
 import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 
 type ImageCardProps = {
@@ -24,6 +25,7 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
 
 export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
+  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const src = (c?.src as string | undefined) ?? "";
@@ -46,6 +48,34 @@ export function ImageCard({ card, isSelected, locale = "ja" }: ImageCardProps) {
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
   const updateSrc = (v: string) => updateCard(card.id, { content: { ...c, src: v } });
+
+  if (isNativeUi) {
+    return (
+      <div className="app-native-section app-native-guest-card">
+        {src ? (
+          <div className="app-native-media relative aspect-video w-full">
+            <EditorCoverImage src={src} alt={alt} sizes="420px" className={framingClass} style={framingStyle} />
+          </div>
+        ) : (
+          <div className="app-native-media aspect-video w-full">
+            <ImageUpload onUploaded={updateSrc} className="h-full min-h-[120px]" />
+          </div>
+        )}
+        {(src || isSelected) && (isSelected || alt.trim().length > 0) ? (
+          <p className="app-native-media-caption">
+            <InlineEditable
+              value={alt}
+              onSave={(v) => updateKey("alt", v)}
+              editable={editable}
+              onActivate={onActivate}
+              className="text-[var(--app-text-muted)]"
+              placeholder={labels.altPlaceholder}
+            />
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <Card padding="md" className="">

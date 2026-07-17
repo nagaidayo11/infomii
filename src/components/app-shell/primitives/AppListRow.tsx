@@ -1,15 +1,29 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { AppShellLink } from "../AppShellLink";
 
-type AppListRowProps = {
+type Shared = {
   title: string;
   subtitle?: string;
-  href: string;
+  leading?: ReactNode;
   trailing?: ReactNode;
   className?: string;
 };
+
+type AsLink = Shared & {
+  href: string;
+};
+
+type AsButton = Shared & {
+  href?: undefined;
+  onClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  disabled?: boolean;
+  type?: ButtonHTMLAttributes<HTMLButtonElement>["type"];
+  "aria-label"?: string;
+};
+
+export type AppListRowProps = AsLink | AsButton;
 
 function Chevron() {
   return (
@@ -26,15 +40,15 @@ function Chevron() {
   );
 }
 
-export function AppListRow({ title, subtitle, href, trailing, className = "" }: AppListRowProps) {
+function RowBody({
+  title,
+  subtitle,
+  leading,
+  trailing,
+}: Pick<Shared, "title" | "subtitle" | "leading" | "trailing">) {
   return (
-    <AppShellLink
-      href={href}
-      className={
-        "app-list-row app-pressable flex min-h-[var(--app-tap-min)] w-full items-center gap-3 px-4 py-3 " +
-        className
-      }
-    >
+    <>
+      {leading ? <div className="shrink-0 text-[var(--app-accent)]">{leading}</div> : null}
       <div className="min-w-0 flex-1 text-left">
         <p className="truncate text-base font-medium text-[var(--app-text)]">{title}</p>
         {subtitle ? (
@@ -42,6 +56,35 @@ export function AppListRow({ title, subtitle, href, trailing, className = "" }: 
         ) : null}
       </div>
       {trailing ?? <Chevron />}
-    </AppShellLink>
+    </>
+  );
+}
+
+/** List row for settings / link items. Link (`href`) or button (`onClick`). */
+export function AppListRow(props: AppListRowProps) {
+  const { title, subtitle, leading, trailing, className = "" } = props;
+  const rowClass =
+    "app-list-row app-pressable flex min-h-[var(--app-tap-min)] w-full items-center gap-3 px-4 py-3 " +
+    className;
+
+  if ("href" in props && props.href) {
+    return (
+      <AppShellLink href={props.href} className={rowClass}>
+        <RowBody title={title} subtitle={subtitle} leading={leading} trailing={trailing} />
+      </AppShellLink>
+    );
+  }
+
+  const buttonProps = props as AsButton;
+  return (
+    <button
+      type={buttonProps.type ?? "button"}
+      className={rowClass}
+      onClick={buttonProps.onClick}
+      disabled={buttonProps.disabled}
+      aria-label={buttonProps["aria-label"]}
+    >
+      <RowBody title={title} subtitle={subtitle} leading={leading} trailing={trailing} />
+    </button>
   );
 }
