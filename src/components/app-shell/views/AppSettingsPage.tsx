@@ -12,6 +12,8 @@ import { AppSettingsPushSection } from "../AppSettingsPushSection";
 import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 
 export function AppSettingsPage() {
   const { isAppShell } = useClientShell();
@@ -69,9 +71,17 @@ export function AppSettingsPage() {
 
   return (
     <div className="app-main-container space-y-6 pb-10">
-      <header className="app-page-header">
-        <h1 className="app-page-title">設定</h1>
-        <p className="app-page-subtitle">プランの案内と、Business向けの設定項目です。</p>
+      <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="app-page-title">設定</h1>
+          <p className="app-page-subtitle">プランの案内と、Business向けの設定項目です。</p>
+        </div>
+        <PageHelp
+          className="shrink-0 self-start sm:self-auto"
+          title={PAGE_HELP.settings.title}
+          description={PAGE_HELP.settings.description}
+          items={[...PAGE_HELP.settings.items]}
+        />
       </header>
       {settingsSections}
       <AppSettingsLegalSection />

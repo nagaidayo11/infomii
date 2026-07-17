@@ -21,6 +21,8 @@ import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppPagesListView } from "@/components/app-shell/views/AppPagesListView";
 import { PageConnectionSetCard } from "@/components/saas/PageConnectionSetCard";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 
 export function PagesListView() {
   const { isAppShell } = useClientShell();
@@ -176,6 +178,12 @@ function PagesListViewWeb() {
             <span className="text-base leading-none">+</span>
             ページを作成
           </button>
+          <PageHelp
+            className="shrink-0 self-center"
+            title={PAGE_HELP.pages.title}
+            description={PAGE_HELP.pages.description}
+            items={[...PAGE_HELP.pages.items]}
+          />
         </div>
       </header>
 

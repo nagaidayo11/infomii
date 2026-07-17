@@ -11,6 +11,8 @@ import {
   type TemplateRow,
 } from "@/lib/storage";
 import { TemplateCard } from "@/components/saas/TemplateCard";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
@@ -499,11 +501,19 @@ export default function TemplatesPage() {
 
   return (
     <div className="app-main-container space-y-4">
-      <header className="app-page-header">
-        <h1 className="app-page-title">テンプレート</h1>
-        <p className="app-page-subtitle">
-          ゲスト案内・館内ハブ・混雑ボードなど、Infomiiで作れる宿泊ページの型から選べます。
-        </p>
+      <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="app-page-title">テンプレート</h1>
+          <p className="app-page-subtitle">
+            ゲスト案内・館内ハブ・混雑ボードなど、Infomiiで作れる宿泊ページの型から選べます。
+          </p>
+        </div>
+        <PageHelp
+          className="shrink-0 self-start sm:self-auto"
+          title={PAGE_HELP.templates.title}
+          description={PAGE_HELP.templates.description}
+          items={[...PAGE_HELP.templates.items]}
+        />
       </header>
 
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">

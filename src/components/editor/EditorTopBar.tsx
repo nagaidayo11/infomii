@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 
 export type EditorTopBarProps = {
   backHref?: string;
@@ -379,6 +381,13 @@ export function EditorTopBar({
               デモ
             </span>
           )}
+          <PageHelp
+            className="shrink-0"
+            title={PAGE_HELP.editor.title}
+            description={PAGE_HELP.editor.description}
+            items={[...PAGE_HELP.editor.items]}
+            align="left"
+          />
         </div>
       </div>
 

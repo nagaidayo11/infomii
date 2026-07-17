@@ -17,6 +17,8 @@ import type { Information } from "@/types/information";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { QrCharts } from "./QrCharts";
 import { QrPageRow } from "./QrPageRow";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 
 export function QrManagementPanel() {
   const [informations, setInformations] = useState<Information[]>([]);
@@ -69,11 +71,19 @@ export function QrManagementPanel() {
   return (
     <AuthGate>
       <div className="app-main-container space-y-6 sm:space-y-8">
-        <header className="app-page-header">
-          <h1 className="app-page-title">QR管理</h1>
-          <p className="app-page-subtitle">
-            ゲストページ用QRの発行・印刷とスキャン分析
-          </p>
+        <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="app-page-title">QR管理</h1>
+            <p className="app-page-subtitle">
+              ゲストページ用QRの発行・印刷とスキャン分析
+            </p>
+          </div>
+          <PageHelp
+            className="shrink-0 self-start sm:self-auto"
+            title={PAGE_HELP.qr.title}
+            description={PAGE_HELP.qr.description}
+            items={[...PAGE_HELP.qr.items]}
+          />
         </header>
 
         <div className="flex flex-wrap items-center gap-3">

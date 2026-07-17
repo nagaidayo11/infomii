@@ -212,7 +212,7 @@ export function AppDashboardView() {
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-base font-bold text-[var(--app-text)]">最近のページ</h2>
                 <div className="flex items-center gap-1.5">
-                  {canEdit ? <LiveOpsDashboardHelp /> : null}
+                  <LiveOpsDashboardHelp />
                   <AppShellLink
                     href="/dashboard/pages"
                     className="app-pressable min-h-0 rounded-lg px-2 py-1 text-sm font-semibold text-[var(--app-accent)]"

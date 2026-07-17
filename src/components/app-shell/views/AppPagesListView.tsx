@@ -22,6 +22,8 @@ import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 import {
   getPagesListViewCache,
   setPagesListViewCache,
@@ -182,16 +184,23 @@ export function AppPagesListView() {
       contentClassName="app-reveal"
       style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}
       headerAction={
-        !loading && pageCount > 0 ? (
-          <button
-            type="button"
-            onClick={() => void load({ silent: true })}
-            className="app-pressable ui-pop-tap rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
-            aria-label="一覧を更新"
-          >
-            更新
-          </button>
-        ) : undefined
+        <div className="flex items-center gap-2">
+          {!loading && pageCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => void load({ silent: true })}
+              className="app-pressable ui-pop-tap rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 text-sm font-medium text-[var(--app-text)]"
+              aria-label="一覧を更新"
+            >
+              更新
+            </button>
+          ) : null}
+          <PageHelp
+            title={PAGE_HELP.pages.title}
+            description={PAGE_HELP.pages.description}
+            items={[...PAGE_HELP.pages.items]}
+          />
+        </div>
       }
     >
       {loading ? (

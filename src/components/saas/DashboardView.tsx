@@ -240,7 +240,9 @@ function DashboardViewWeb() {
             </Link>
             <LiveOpsDashboardHelp />
           </div>
-        ) : null}
+        ) : (
+          <LiveOpsDashboardHelp className="shrink-0 self-start sm:self-auto" />
+        )}
       </header>
 
       {role === "viewer" && (

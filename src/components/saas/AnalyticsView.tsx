@@ -13,6 +13,8 @@ import {
 import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
+import { PageHelp } from "@/components/help/PageHelp";
+import { PAGE_HELP } from "@/lib/page-help-content";
 
 const DAY_RANGE_OPTIONS = [7, 30, 60, 90] as const;
 type DayRange = (typeof DAY_RANGE_OPTIONS)[number];
@@ -174,15 +176,22 @@ export function AnalyticsView() {
             お客様の閲覧状況を確認し、ゲストエンゲージメントを把握できます
           </p>
         </div>
-        {plan === "business" && !loading && (
-          <button
-            type="button"
-            onClick={() => triggerAnalyticsCsvDownload(metrics, pageViews)}
-            className="app-button-native inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0"
-          >
-            CSVをダウンロード（Business）
-          </button>
-        )}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {plan === "business" && !loading ? (
+            <button
+              type="button"
+              onClick={() => triggerAnalyticsCsvDownload(metrics, pageViews)}
+              className="app-button-native inline-flex min-h-[44px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0"
+            >
+              CSVをダウンロード（Business）
+            </button>
+          ) : null}
+          <PageHelp
+            title={PAGE_HELP.analytics.title}
+            description={PAGE_HELP.analytics.description}
+            items={[...PAGE_HELP.analytics.items]}
+          />
+        </div>
       </header>
 
       {error && (
