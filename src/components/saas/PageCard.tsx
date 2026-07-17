@@ -75,7 +75,7 @@ export function PageCard({
   }
 
   return (
-    <article className="rounded-lg border border-[#e6e8eb] bg-white p-4 transition hover:border-slate-300 sm:p-4">
+    <article className="app-panel app-panel-pad transition hover:border-slate-300">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

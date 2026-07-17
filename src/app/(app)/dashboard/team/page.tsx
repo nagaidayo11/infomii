@@ -17,10 +17,12 @@ import { useHotelPlanAccess } from "@/lib/hooks/use-hotel-plan-tier";
 import { FadeIn } from "@/components/motion";
 import { AnalyticsSummaryCard } from "@/components/saas/AnalyticsSummaryCard";
 import { TeamRolePermissionsHelp } from "@/components/team/TeamRolePermissionsHelp";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
 import { TEAM_PENDING_RED_DOT_PREVIEW } from "@/components/app/usePendingPublishApprovalCount";
+import { useHotelName } from "@/lib/use-hotel-name";
 
 type PublishApprovalRow = {
   id: string;
@@ -155,6 +157,7 @@ function groupAuditLogsByDay(logs: TeamAuditLogRow[], todayJst: string): AuditLo
 export default function TeamPage() {
   const { isAppShell } = useClientShell();
   const { isBusiness, resolved: planResolved } = useHotelPlanAccess();
+  const { hotelName } = useHotelName();
   const businessUpgradeHref = isAppShell ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
   const [members, setMembers] = useState<HotelMember[]>([]);
   const [invites, setInvites] = useState<HotelInvite[]>([]);
@@ -513,13 +516,15 @@ export default function TeamPage() {
 
   return (
     <AuthGate>
-      <div className="app-main-container space-y-6 sm:space-y-8">
+      <div className="app-main-container space-y-6">
         <FadeIn>
           <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h1 className="app-page-title">チーム・招待</h1>
               <p className="app-page-subtitle">
-                施設のメンバーを招待し、編集権限または閲覧権限を付与できます。
+                {hotelName
+                  ? `${hotelName} のメンバーを招待し、編集権限または閲覧権限を付与できます。`
+                  : "施設のメンバーを招待し、編集権限または閲覧権限を付与できます。"}
               </p>
             </div>
             {isBusiness ? <TeamRolePermissionsHelp className="shrink-0 self-start sm:self-auto" /> : null}
@@ -565,216 +570,50 @@ export default function TeamPage() {
                     label="メンバー"
                     value={`${members.length}/${HOTEL_TEAM_MAX_MEMBERS}`}
                     sub="オーナー含む"
+                    href="#team-members"
                   />
                   <AnalyticsSummaryCard
                     label="承認待ち"
                     value={pendingApprovalCount}
                     sub={pendingApprovalCount > 0 ? "要対応" : "なし"}
+                    href="#team-approvals"
                   />
                   <AnalyticsSummaryCard
                     label="有効な招待"
                     value={activePendingInvites.length}
                     sub="未使用コード"
+                    href="#team-invite-issue"
                   />
                 </section>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+                    <span>メンバー枠</span>
+                    <span className="tabular-nums">
+                      {members.length}/{HOTEL_TEAM_MAX_MEMBERS}
+                    </span>
+                  </div>
+                  <div
+                    className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"
+                    role="progressbar"
+                    aria-valuenow={members.length}
+                    aria-valuemin={0}
+                    aria-valuemax={HOTEL_TEAM_MAX_MEMBERS}
+                    aria-label="メンバー枠の使用状況"
+                  >
+                    <div
+                      className="h-full rounded-full bg-slate-800 transition-[width] duration-300"
+                      style={{
+                        width: `${Math.min(100, (members.length / HOTEL_TEAM_MAX_MEMBERS) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </FadeIn>
-            ) : null}
-
-            {/* メンバー */}
-            <FadeIn>
-              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
-                <div className="flex flex-wrap items-end justify-between gap-2">
-                  <h2 className="app-section-title">メンバー</h2>
-                  {!loading ? (
-                    <p className="text-xs font-medium text-slate-500">
-                      {members.length}/{HOTEL_TEAM_MAX_MEMBERS}名
-                    </p>
-                  ) : null}
-                </div>
-                {loading ? (
-                  <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
-                ) : (
-                  <ul className="mt-4 space-y-2">
-                    {members.map((m) => (
-                      <li
-                        key={m.userId}
-                        className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <span
-                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white"
-                            aria-hidden
-                          >
-                            {memberInitials(m)}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="break-all font-medium text-slate-800">
-                                {resolveUserLabel({
-                                  displayName: m.displayName,
-                                  email: m.email,
-                                  userId: m.userId,
-                                })}
-                              </p>
-                              {m.userId === currentUserId ? (
-                                <span className="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                                  あなた
-                                </span>
-                              ) : null}
-                            </div>
-                            {m.displayName?.trim() && m.email ? (
-                              <p className="text-xs text-slate-500">{m.email}</p>
-                            ) : null}
-                            <span
-                              className={
-                                "mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium " +
-                                roleBadgeClass(m.role)
-                              }
-                            >
-                              {roleLabelJa(m.role)}
-                            </span>
-                          </div>
-                        </div>
-                        {m.role !== "owner" && canManageMembers ? (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(m.userId)}
-                            disabled={removingId === m.userId}
-                            className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1.5 sm:text-xs"
-                          >
-                            {removingId === m.userId ? "削除中…" : "削除"}
-                          </button>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </FadeIn>
-
-            {/* 招待コードで参加 */}
-            <FadeIn>
-              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
-                <h2 className="app-section-title">招待コードで参加</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  招待コードを受け取った場合、ここで入力して施設に参加できます。
-                </p>
-                <form onSubmit={handleRedeem} className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-2">
-                  <input
-                    type="text"
-                    value={redeemCode}
-                    onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
-                    placeholder="例: ABCD1234"
-                    className="min-h-[44px] w-full flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
-                    maxLength={12}
-                  />
-                  <button
-                    type="submit"
-                    disabled={redeeming || !redeemCode.trim()}
-                    className="app-button-native min-h-[44px] w-full shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
-                  >
-                    {redeeming ? "適用中…" : "参加する"}
-                  </button>
-                </form>
-              </section>
-            </FadeIn>
-
-            {/* 招待コードを発行 */}
-            {canManageMembers ? (
-            <FadeIn>
-              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
-                <h2 className="app-section-title">招待コードを発行</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  コードを共有すると、相手がログイン後に施設に参加できます。1施設のメンバーは最大{HOTEL_TEAM_MAX_MEMBERS}名までです（オーナー含む）。
-                </p>
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
-                  >
-                    <option value="admin">管理者（承認・メンバー管理）</option>
-                    <option value="editor">編集担当（編集・公開申請）</option>
-                    <option value="viewer">閲覧担当（閲覧のみ）</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleCreateInvite}
-                    disabled={creating}
-                    className="app-button-native min-h-[44px] w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
-                  >
-                    {creating ? "発行中…" : "招待コードを発行"}
-                  </button>
-                </div>
-              </section>
-            </FadeIn>
-            ) : null}
-
-            {/* 発行済み招待コード */}
-            {canManageMembers ? (
-            <FadeIn>
-              <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
-                <h2 className="app-section-title">発行済み招待コード</h2>
-                {loading ? (
-                  <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
-                ) : activePendingInvites.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-500">
-                    {invites.length === 0
-                      ? "まだ招待コードは発行されていません"
-                      : "有効な招待コードはありません。新しいコードを発行できます。"}
-                  </p>
-                ) : (
-                  <ul className="mt-4 space-y-2">
-                    {activePendingInvites.map((inv) => (
-                      <li
-                        key={inv.id}
-                        className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
-                      >
-                        <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                          <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
-                            {inv.code}
-                          </code>
-                          <span
-                            className={
-                              "inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium " +
-                              roleBadgeClass(
-                                inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
-                              )
-                            }
-                          >
-                            {roleLabelJa(
-                              inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleCopyInviteLink(inv)}
-                            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-0 sm:py-1.5 sm:text-xs"
-                          >
-                            {copiedInviteId === inv.id ? "コピーしました" : "招待リンクをコピー"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRevoke(inv.id)}
-                            disabled={!isBusiness}
-                            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:py-1.5 sm:text-xs"
-                          >
-                            無効化
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </FadeIn>
             ) : null}
 
             {/* 公開申請 */}
             <FadeIn>
-              <section className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+              <section id="team-approvals" className="app-panel overflow-hidden">
                 <details
                   className="group"
                   open={approvalsExpanded}
@@ -907,9 +746,244 @@ export default function TeamPage() {
               </section>
             </FadeIn>
 
+
+            {/* メンバー */}
+            <FadeIn>
+              <section id="team-members" className="app-panel app-panel-pad">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <h2 className="app-section-title">メンバー</h2>
+                  {!loading ? (
+                    <p className="text-xs font-medium text-slate-500">
+                      {members.length}/{HOTEL_TEAM_MAX_MEMBERS}名
+                    </p>
+                  ) : null}
+                </div>
+                {loading ? (
+                  <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
+                ) : (
+                  <ul className="mt-4 space-y-2">
+                    {members.map((m) => (
+                      <li
+                        key={m.userId}
+                        className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white"
+                            aria-hidden
+                          >
+                            {memberInitials(m)}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="break-all font-medium text-slate-800">
+                                {resolveUserLabel({
+                                  displayName: m.displayName,
+                                  email: m.email,
+                                  userId: m.userId,
+                                })}
+                              </p>
+                              {m.userId === currentUserId ? (
+                                <span className="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                  あなた
+                                </span>
+                              ) : null}
+                            </div>
+                            {m.displayName?.trim() && m.email ? (
+                              <p className="text-xs text-slate-500">{m.email}</p>
+                            ) : null}
+                            <span
+                              className={
+                                "mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                                roleBadgeClass(m.role)
+                              }
+                            >
+                              {roleLabelJa(m.role)}
+                            </span>
+                          </div>
+                        </div>
+                        {m.role !== "owner" && canManageMembers ? (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(m.userId)}
+                            disabled={removingId === m.userId}
+                            className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1.5 sm:text-xs"
+                          >
+                            {removingId === m.userId ? "削除中…" : "削除"}
+                          </button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!loading && members.length === 1 && canManageMembers ? (
+                  <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50/70 px-3.5 py-3 text-sm text-emerald-950">
+                    <p className="font-semibold">次の一歩：編集担当を招待</p>
+                    <p className="mt-1 text-xs leading-relaxed text-emerald-900/80">
+                      フロントやマネージャーを編集担当にすると、ページ更新は申請、公開はオーナー／管理者が承認する運用ができます。
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInviteRole("editor");
+                        document.getElementById("team-invite-issue")?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }}
+                      className="mt-2.5 text-xs font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+                    >
+                      招待コードの発行へ
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+            </FadeIn>
+
+
+
+            {/* 招待（発行・共有） */}
+            {canManageMembers ? (
+            <FadeIn>
+              <section id="team-invite-issue" className="app-panel app-panel-pad">
+                <h2 className="app-section-title">招待</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  コードまたはリンクを共有すると、相手がログイン後に施設に参加できます。1施設のメンバーは最大{HOTEL_TEAM_MAX_MEMBERS}名までです（オーナー含む）。
+                </p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
+                    className="min-h-[44px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 sm:w-auto"
+                  >
+                    <option value="admin">管理者（承認・メンバー管理）</option>
+                    <option value="editor">編集担当（編集・公開申請）</option>
+                    <option value="viewer">閲覧担当（閲覧のみ）</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleCreateInvite}
+                    disabled={creating}
+                    className="app-button-native min-h-[44px] w-full rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
+                  >
+                    {creating ? "発行中…" : "招待コードを発行"}
+                  </button>
+                </div>
+
+                <div className="mt-5 border-t border-slate-100 pt-4">
+                  <h3 className="text-sm font-semibold text-slate-800">有効な招待コード</h3>
+                  {loading ? (
+                    <div className="mt-3 h-24 animate-pulse rounded-xl bg-slate-100" />
+                  ) : activePendingInvites.length === 0 ? (
+                    <EmptyState
+                      className="mt-3"
+                      compact
+                      title={
+                        invites.length === 0
+                          ? "まだ招待コードがありません"
+                          : "有効な招待コードはありません"
+                      }
+                      description={
+                        invites.length === 0
+                          ? "上から編集担当や管理者を招待できます。"
+                          : "使いきったか無効化したコードは表示しません。新しいコードを発行してください。"
+                      }
+                    />
+                  ) : (
+                    <ul className="mt-3 space-y-2">
+                      {activePendingInvites.map((inv) => (
+                        <li
+                          key={inv.id}
+                          className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+                        >
+                          <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                            <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
+                              {inv.code}
+                            </code>
+                            <span
+                              className={
+                                "inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                                roleBadgeClass(
+                                  inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                                )
+                              }
+                            >
+                              {roleLabelJa(
+                                inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void handleCopyInviteLink(inv)}
+                              className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-0 sm:py-1.5 sm:text-xs"
+                            >
+                              {copiedInviteId === inv.id ? "コピーしました" : "招待リンクをコピー"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRevoke(inv.id)}
+                              disabled={!isBusiness}
+                              className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:py-1.5 sm:text-xs"
+                            >
+                              無効化
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
+            </FadeIn>
+            ) : null}
+
+
+            {/* 招待コードで参加（受け取った場合） */}
+            <FadeIn>
+              <section className="app-panel overflow-hidden">
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-5 sm:py-3.5 [&::-webkit-details-marker]:hidden">
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-slate-900">招待コードで参加</span>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        ほかの施設から招待された場合のみ使います。
+                      </p>
+                    </div>
+                    <span
+                      className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden
+                    >
+                      ▼
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                    <form onSubmit={handleRedeem} className="flex flex-col gap-2 sm:flex-row sm:gap-2">
+                      <input
+                        type="text"
+                        value={redeemCode}
+                        onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                        placeholder="例: ABCD1234"
+                        className="min-h-[44px] w-full flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono uppercase placeholder:normal-case placeholder:text-slate-400"
+                        maxLength={12}
+                      />
+                      <button
+                        type="submit"
+                        disabled={redeeming || !redeemCode.trim()}
+                        className="app-button-native min-h-[44px] w-full shrink-0 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
+                      >
+                        {redeeming ? "適用中…" : "参加する"}
+                      </button>
+                    </form>
+                  </div>
+                </details>
+              </section>
+            </FadeIn>
+
             {canViewAuditLogs ? (
               <FadeIn>
-                <section className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+                <section className="app-panel overflow-hidden">
                   <details className="group">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                       <div className="min-w-0">

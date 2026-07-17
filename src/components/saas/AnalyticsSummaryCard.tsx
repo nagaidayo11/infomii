@@ -20,7 +20,7 @@ export function AnalyticsSummaryCard({
   href,
 }: AnalyticsSummaryCardProps) {
   const shell =
-    "rounded-lg border border-[#e6e8eb] bg-white px-4 py-3.5 transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 " +
+    "app-panel app-panel-pad transition hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 " +
     className;
 
   const inner = (

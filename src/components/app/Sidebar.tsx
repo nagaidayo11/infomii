@@ -7,6 +7,7 @@ import {
   TEAM_PENDING_RED_DOT_PREVIEW,
   usePendingPublishApprovalCount,
 } from "./usePendingPublishApprovalCount";
+import { useHotelName } from "@/lib/use-hotel-name";
 
 /**
  * Desktop sidebar (`lg+`). Mobile uses {@link MobileNavDrawer}.
@@ -15,6 +16,7 @@ import {
 export function Sidebar() {
   const pathname = usePathname();
   const teamPendingApprovals = usePendingPublishApprovalCount();
+  const { hotelName, loaded: hotelNameLoaded } = useHotelName();
 
   return (
     <aside
@@ -25,7 +27,13 @@ export function Sidebar() {
       <div className="border-b border-[#e6e8eb] px-4 py-4">
         <Link href="/dashboard" className="block py-0.5">
           <span className="text-xl font-semibold tracking-tight text-slate-900">Infomii</span>
-          <p className="mt-1 text-sm leading-snug text-slate-500">{PRODUCT_TAGLINE}</p>
+          {hotelNameLoaded && hotelName ? (
+            <p className="mt-1 truncate text-sm font-medium leading-snug text-slate-700" title={hotelName}>
+              {hotelName}
+            </p>
+          ) : (
+            <p className="mt-1 text-sm leading-snug text-slate-500">{PRODUCT_TAGLINE}</p>
+          )}
         </Link>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-2.5">

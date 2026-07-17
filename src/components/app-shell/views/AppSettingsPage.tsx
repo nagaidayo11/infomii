@@ -3,6 +3,7 @@
 import { AccountAuthLinkSection } from "@/components/settings/AccountAuthLinkSection";
 import { BusinessAuditLogExport } from "@/components/settings/BusinessAuditLogExport";
 import { BusinessPlanSection } from "@/components/settings/BusinessPlanSection";
+import { HotelNameSection } from "@/components/settings/HotelNameSection";
 import { ProfileDisplayNameSection } from "@/components/settings/ProfileDisplayNameSection";
 import { useClientShell } from "../useClientShell";
 import { AppSettingsAccountDeleteSection } from "../AppSettingsAccountDeleteSection";
@@ -20,6 +21,7 @@ export function AppSettingsPage() {
 
   const settingsSections = (
     <>
+      <HotelNameSection />
       <ProfileDisplayNameSection />
       {!isAppShell ? <BusinessPlanSection /> : null}
       <AccountAuthLinkSection />
@@ -30,6 +32,10 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
+        <AppSettingsGroup title="施設">
+          <HotelNameSection />
+        </AppSettingsGroup>
+
         <AppSettingsGroup title="プロフィール">
           <ProfileDisplayNameSection />
         </AppSettingsGroup>
@@ -71,7 +77,7 @@ export function AppSettingsPage() {
 
   return (
     <div className="app-main-container space-y-6 pb-10">
-      <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="app-page-title">設定</h1>
           <p className="app-page-subtitle">プランの案内と、Business向けの設定項目です。</p>

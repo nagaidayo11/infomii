@@ -70,8 +70,8 @@ export function QrManagementPanel() {
 
   return (
     <AuthGate>
-      <div className="app-main-container space-y-6 sm:space-y-8">
-        <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="app-main-container space-y-6">
+        <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="app-page-title">QR管理</h1>
             <p className="app-page-subtitle">

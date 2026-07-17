@@ -13,6 +13,7 @@ import {
   createBlankPage,
   deletePage,
   listPagesForHotel,
+  listCurrentHotelAuditLogs,
   setInformationStatusBySlug,
   updatePageTitle,
   PAGE_LIMIT_REACHED,
@@ -29,11 +30,18 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppDashboardView } from "@/components/app-shell/views/AppDashboardView";
 import { PageCard } from "./PageCard";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
+import {
+  buildPageUpdateActivity,
+  RecentFacilityActivity,
+  type FacilityActivityItem,
+} from "./RecentFacilityActivity";
 import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { formatDisplayNameWithSan } from "@/lib/user-label";
 import { listLiveOpsKeysByPageIds, type LiveOpsKey } from "@/lib/editor/live-ops";
 import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
 import { usePendingPublishApprovalCount } from "@/components/app/usePendingPublishApprovalCount";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { dispatchHotelNameUpdated } from "@/lib/use-hotel-name";
 
 export function DashboardView() {
   const { isAppShell } = useClientShell();
@@ -57,6 +65,7 @@ function DashboardViewWeb() {
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [cardPages, setCardPages] = useState<PageRow[]>([]);
   const [liveOpsByPageId, setLiveOpsByPageId] = useState<Record<string, LiveOpsKey[]>>({});
+  const [activityItems, setActivityItems] = useState<FacilityActivityItem[]>([]);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
   const [inviteNotice, setInviteNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -92,6 +101,33 @@ function DashboardViewWeb() {
       setViewMetrics(v);
       setPageViewAnalytics(p);
       setRole(r);
+      if (b?.hotelName) {
+        dispatchHotelNameUpdated(b.hotelName);
+      }
+      const pageActivity = buildPageUpdateActivity(
+        (b?.informations ?? []).map((info) => ({
+          id: info.id,
+          title: info.title,
+          updatedAt: info.updatedAt,
+        })),
+        5,
+      );
+      if (b?.subscription?.plan === "business") {
+        const logs = await listCurrentHotelAuditLogs(8).catch(() => []);
+        if (logs.length > 0) {
+          setActivityItems(
+            logs.map((log) => ({
+              id: log.id,
+              message: log.message,
+              createdAt: log.createdAt,
+            })),
+          );
+        } else {
+          setActivityItems(pageActivity);
+        }
+      } else {
+        setActivityItems(pageActivity);
+      }
       if (pagesResult.ok) {
         setCardPages(pagesResult.pages);
         const ops = await listLiveOpsKeysByPageIds(pagesResult.pages.map((p) => p.id)).catch(
@@ -214,13 +250,27 @@ function DashboardViewWeb() {
 
       <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          {profileLoaded && greetingName ? (
+          {!loading && bootstrap?.hotelName ? (
+            <p className="truncate text-sm font-medium text-slate-600" title={bootstrap.hotelName}>
+              {bootstrap.hotelName}
+            </p>
+          ) : profileLoaded && greetingName ? (
             <p className="text-sm text-slate-500">{greetingName}</p>
           ) : null}
-          <h1 className={profileLoaded && greetingName ? "mt-1 app-page-title" : "app-page-title"}>
+          <h1
+            className={
+              (!loading && bootstrap?.hotelName) || (profileLoaded && greetingName)
+                ? "mt-1 app-page-title"
+                : "app-page-title"
+            }
+          >
             ダッシュボード
           </h1>
-          <p className="app-page-subtitle">案内ページの作成・公開・QR運用をここから進めます</p>
+          <p className="app-page-subtitle">
+            {greetingName && bootstrap?.hotelName
+              ? `${greetingName} — 案内ページの作成・公開・QR運用をここから進めます`
+              : "案内ページの作成・公開・QR運用をここから進めます"}
+          </p>
         </div>
         {!loading && canEdit ? (
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -310,7 +360,7 @@ function DashboardViewWeb() {
           </div>
         )}
         {!loading && topPages.length > 0 ? (
-          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white">
+          <div className="app-panel mt-3">
             <div className="flex items-center justify-between border-b border-[#e6e8eb] px-4 py-2.5">
               <h3 className="text-xs font-medium text-slate-500">人気ページ（7日）</h3>
               <Link href="/dashboard/analytics" className="text-xs font-medium text-slate-500 hover:text-slate-800">
@@ -321,13 +371,24 @@ function DashboardViewWeb() {
               {topPages.map((p) => (
                 <li key={p.informationId} className="flex items-center justify-between px-4 py-2.5 text-sm">
                   <span className="truncate text-slate-700">{p.title}</span>
-                  <span className="ml-3 shrink-0 tabular-nums text-slate-500">{p.views}</span>
+                  <span className="ml-3 shrink-0 tabular-nums text-slate-500">
+                    {p.views}
+                    <span className="ml-1 text-xs font-normal">閲覧</span>
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
         ) : null}
       </section>
+
+      <RecentFacilityActivity
+        items={activityItems}
+        loading={loading}
+        moreHref={bootstrap?.subscription?.plan === "business" ? "/dashboard/team" : "/settings"}
+        moreLabel={bootstrap?.subscription?.plan === "business" ? "チーム・履歴へ" : "設定へ"}
+        emptyHint="ページを編集すると、ここに最近の活動が表示されます"
+      />
 
       <section>
         <div className="flex items-center justify-between gap-2">
@@ -343,30 +404,32 @@ function DashboardViewWeb() {
             ))}
           </div>
         ) : recent.length === 0 ? (
-          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white px-5 py-8 text-center">
-            <p className="text-sm font-medium text-slate-800">まだ案内ページがありません</p>
-            <p className="mt-1 text-sm text-slate-500">
-              テンプレートから始めるか、空白ページを作成してください。
-            </p>
-            {canEdit ? (
-              <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                <Link
-                  href="/templates"
-                  className="inline-flex min-h-[40px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                >
-                  テンプレートを選ぶ
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleCreatePage}
-                  disabled={creating}
-                  className="inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                >
-                  空白から作成
-                </button>
-              </div>
-            ) : null}
-          </div>
+          <EmptyState
+            className="mt-3"
+            compact
+            title="まだ案内ページがありません"
+            description="テンプレートから始めるか、空白ページを作成すると、ここに最近のページが表示されます。"
+            action={
+              canEdit ? (
+                <>
+                  <Link
+                    href="/templates"
+                    className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white hover:bg-slate-800"
+                  >
+                    テンプレートを選ぶ
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleCreatePage}
+                    disabled={creating}
+                    className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  >
+                    空白から作成
+                  </button>
+                </>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="mt-3 space-y-2">
             {recent.map((item) => {

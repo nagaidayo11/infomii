@@ -500,8 +500,8 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="app-main-container space-y-4">
-      <header className="app-page-header flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="app-main-container space-y-6">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="app-page-title">テンプレート</h1>
           <p className="app-page-subtitle">

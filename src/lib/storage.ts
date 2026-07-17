@@ -1601,6 +1601,12 @@ export async function updateCurrentHotelName(name: string): Promise<void> {
     throw toError(error, "施設名の更新に失敗しました");
   }
 
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent<string | null>("infomii:hotel-name-updated", { detail: next }),
+    );
+  }
+
   await appendAuditLog({
     hotelId,
     action: "hotel.updated",

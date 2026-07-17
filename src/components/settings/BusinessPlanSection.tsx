@@ -692,7 +692,7 @@ export function BusinessPlanSection({
         className={
           isAppLayout
             ? "app-plan-table mt-5"
-            : "app-settings-plan-panel mt-0 rounded-lg border border-[#e6e8eb] bg-white p-5 sm:p-6"
+            : "app-settings-plan-panel mt-0 app-panel p-5 sm:p-6"
         }
       >
         <div

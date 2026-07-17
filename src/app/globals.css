@@ -930,7 +930,24 @@ body.lux-shell:has(.lp-page)::before {
 
 .app-page-header {
   border-bottom: 1px solid var(--color-ds-border);
-  padding-bottom: 1rem;
+  padding-bottom: 1.25rem;
+}
+
+/* Shared panel shell — keep card density consistent across dashboard pages */
+.app-panel {
+  border-radius: 0.5rem;
+  border: 1px solid #e6e8eb;
+  background-color: #fff;
+}
+
+.app-panel-pad {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .app-panel-pad {
+    padding: 1.25rem;
+  }
 }
 
 .app-page-title {

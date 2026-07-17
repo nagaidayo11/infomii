@@ -8,6 +8,7 @@ import {
   TEAM_PENDING_RED_DOT_PREVIEW,
   usePendingPublishApprovalCount,
 } from "./usePendingPublishApprovalCount";
+import { useHotelName } from "@/lib/use-hotel-name";
 
 type MobileNavDrawerProps = {
   open: boolean;
@@ -21,6 +22,7 @@ type MobileNavDrawerProps = {
 export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   const pathname = usePathname();
   const teamPendingApprovals = usePendingPublishApprovalCount();
+  const { hotelName, loaded: hotelNameLoaded } = useHotelName();
 
   useEffect(() => {
     if (!open) return;
@@ -48,7 +50,13 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
         <div className="border-b border-[#e6e8eb] px-4 pb-3">
           <Link href="/dashboard" className="block py-0.5" onClick={onClose}>
             <span className="text-xl font-semibold tracking-tight text-slate-900">Infomii</span>
-            <p className="mt-1 text-sm leading-snug text-slate-500">{PRODUCT_TAGLINE}</p>
+            {hotelNameLoaded && hotelName ? (
+              <p className="mt-1 truncate text-sm font-medium leading-snug text-slate-700" title={hotelName}>
+                {hotelName}
+              </p>
+            ) : (
+              <p className="mt-1 text-sm leading-snug text-slate-500">{PRODUCT_TAGLINE}</p>
+            )}
           </Link>
         </div>
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-2.5">

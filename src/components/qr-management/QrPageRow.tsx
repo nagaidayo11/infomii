@@ -66,7 +66,7 @@ export function QrPageRow({ title, slug, qrScans7d, plan }: QrPageRowProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-[#e6e8eb] bg-white p-4 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-4 app-panel app-panel-pad sm:flex-row sm:items-center">
       <div className="flex shrink-0 items-center gap-4">
         <div className="overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
           <Image

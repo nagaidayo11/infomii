@@ -27,7 +27,7 @@ export function QrCharts({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-lg border border-[#e6e8eb] bg-white p-5">
+      <div className="app-panel app-panel-pad">
         <h3 className="text-sm font-semibold text-slate-900">
           過去7日のQRスキャン
         </h3>
@@ -62,7 +62,7 @@ export function QrCharts({
         </div>
       </div>
 
-      <div className="rounded-lg border border-[#e6e8eb] bg-white p-5">
+      <div className="app-panel app-panel-pad">
         <h3 className="text-sm font-semibold text-slate-900">QRスキャン合計</h3>
         <p className="mt-1 text-xs text-slate-500">直近7日</p>
         <p className="mt-4 text-4xl font-bold tabular-nums tracking-tight text-slate-900">

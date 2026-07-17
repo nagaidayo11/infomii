@@ -129,7 +129,7 @@ export function AnalyticsView() {
 
   if (!loading && error) {
     return (
-      <div className="app-main-container space-y-4">
+      <div className="app-main-container space-y-6">
         <header className="app-page-header">
           <h1 className="app-page-title">分析ダッシュボード</h1>
         </header>
@@ -168,8 +168,8 @@ export function AnalyticsView() {
 
   return (
     <AnalyticsProGate plan={plan ?? "free"}>
-    <div className="app-main-container space-y-8">
-      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="app-main-container space-y-6">
+      <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="app-page-title">分析ダッシュボード</h1>
           <p className="app-page-subtitle">
@@ -255,7 +255,7 @@ export function AnalyticsView() {
         {loading ? (
           <div className="mt-3 h-40 animate-pulse rounded-lg bg-slate-100" />
         ) : hasDayData ? (
-          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-3 sm:p-4">
+          <div className="app-panel app-panel-pad mt-3">
             <div className="-mx-1 overflow-x-auto px-1 pb-1">
               <div className={`flex h-40 items-end ${dayRange <= 14 ? "justify-between gap-1" : "gap-1.5"}`}>
               {byDay.map(({ date, count }) => {
@@ -306,7 +306,7 @@ export function AnalyticsView() {
           {loading ? (
             <div className="mt-3 h-48 animate-pulse rounded-lg bg-slate-100" />
           ) : byCountry.length > 0 ? (
-            <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-4">
+            <div className="app-panel app-panel-pad mt-3">
               {byCountry.slice(0, 10).map(({ country, count }) => (
                 <SimpleBarRow
                   key={country}
@@ -329,7 +329,7 @@ export function AnalyticsView() {
           {loading ? (
             <div className="mt-3 h-48 animate-pulse rounded-lg bg-slate-100" />
           ) : byLanguage.length > 0 ? (
-            <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white p-4">
+            <div className="app-panel app-panel-pad mt-3">
               {byLanguage.slice(0, 10).map(({ language, count }) => (
                 <SimpleBarRow
                   key={language}
@@ -358,7 +358,7 @@ export function AnalyticsView() {
             ))}
           </div>
         ) : topPages.length > 0 ? (
-          <div className="mt-3 rounded-lg border border-[#e6e8eb] bg-white">
+          <div className="app-panel mt-3">
             <ul className="divide-y divide-slate-100">
               {topPages.map((page, index) => (
                 <li

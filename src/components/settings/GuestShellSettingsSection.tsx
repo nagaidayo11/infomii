@@ -140,6 +140,6 @@ export function GuestShellSettingsSection() {
   }
 
   return (
-    <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">{body}</section>
+    <section className="app-panel app-panel-pad">{body}</section>
   );
 }
