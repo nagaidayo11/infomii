@@ -44,6 +44,7 @@ import {
   normalizeMaxPublishedPages,
   resolveEffectivePageLimit,
   resolveMaxPublishedPagesByPlan,
+  resolvePlanTierFromSubscription,
 } from "@/lib/plan-limits";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
@@ -1201,7 +1202,8 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
     return null;
   }
 
-  const normalizedLimit = normalizeMaxPublishedPages(data.plan, data.max_published_pages);
+  const normalizedPlan = resolvePlanTierFromSubscription(data.plan);
+  const normalizedLimit = normalizeMaxPublishedPages(normalizedPlan, data.max_published_pages);
 
   if (data.max_published_pages !== normalizedLimit) {
     void supabase
@@ -1220,7 +1222,7 @@ export async function getCurrentHotelSubscription(): Promise<HotelSubscription |
 
   const subscription: HotelSubscription = {
     id: data.id,
-    plan: data.plan,
+    plan: normalizedPlan,
     status: data.status,
     maxPublishedPages: normalizedLimit,
     cancelAtPeriodEnd: Boolean((data as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
@@ -1718,9 +1720,12 @@ export async function getDashboardBootstrapData(): Promise<DashboardBootstrapDat
   const subscription = latestSub
     ? {
       id: latestSub.id,
-      plan: latestSub.plan,
+      plan: resolvePlanTierFromSubscription(latestSub.plan),
       status: latestSub.status,
-      maxPublishedPages: normalizeMaxPublishedPages(latestSub.plan, latestSub.max_published_pages),
+      maxPublishedPages: normalizeMaxPublishedPages(
+        resolvePlanTierFromSubscription(latestSub.plan),
+        latestSub.max_published_pages,
+      ),
       cancelAtPeriodEnd: Boolean((latestSub as { cancel_at_period_end?: boolean | null }).cancel_at_period_end),
       cancelAt: (latestSub as { cancel_at?: string | null }).cancel_at ?? null,
       currentPeriodEnd: latestSub.current_period_end,
@@ -4488,12 +4493,14 @@ export async function createBlankPage(title = ""): Promise<string> {
       .eq("hotel_id", hotelId);
     const pageCount = count ?? 0;
     const createLimit = resolveEffectivePageLimit({
-      plan: sub.plan,
+      plan: resolvePlanTierFromSubscription(sub.plan),
       storedMax: sub.maxPublishedPages,
       existingCount: pageCount,
     });
     if (!error && pageCount >= createLimit) {
-      const e = new Error(formatCreatePageLimitError(sub.plan, createLimit)) as Error & {
+      const e = new Error(
+        formatCreatePageLimitError(resolvePlanTierFromSubscription(sub.plan), createLimit),
+      ) as Error & {
         code?: string;
       };
       e.code = PAGE_LIMIT_REACHED;
@@ -4620,12 +4627,19 @@ const STYLE_KEY = "_style";
 /** Key used inside first card content JSON to persist page-level style (background etc.). */
 const PAGE_STYLE_KEY = "_pageStyle";
 
+import {
+  normalizePageAtmosphere,
+  type PageAtmosphereId,
+} from "@/lib/page-atmosphere";
+
 export type PageBackgroundStyle = {
   mode: "solid" | "gradient";
   color: string;
   from: string;
   to: string;
   angle: number;
+  /** Soft decorative motif (diary / ocean / travel / outing). */
+  atmosphere?: PageAtmosphereId;
 };
 
 export type PageStyleForSave = {
@@ -4645,6 +4659,7 @@ export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | nu
   if (!bg || typeof bg !== "object" || Array.isArray(bg)) return null;
   const background = bg as Record<string, unknown>;
   const mode = background.mode === "gradient" ? "gradient" : "solid";
+  const atmosphere = normalizePageAtmosphere(background.atmosphere);
   return {
     background: {
       mode,
@@ -4652,6 +4667,7 @@ export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | nu
       from: typeof background.from === "string" ? background.from : "#f8fafc",
       to: typeof background.to === "string" ? background.to : "#e2e8f0",
       angle: typeof background.angle === "number" ? background.angle : 180,
+      ...(atmosphere !== "none" ? { atmosphere } : {}),
     },
   };
 }

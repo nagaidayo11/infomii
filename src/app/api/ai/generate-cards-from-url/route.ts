@@ -3,7 +3,10 @@ import { finalizeAiPageCards } from "@/lib/ai-page-content-enrichment";
 import { AI_GENERATED_PAGE_TITLE, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
-import { formatCreatePageLimitError, PLAN_PAGE_LIMITS, resolveEffectivePageLimit } from "@/lib/plan-limits";
+import {
+  pageQuotaForbiddenPayload,
+  resolveHotelPageQuota,
+} from "@/lib/server/resolve-hotel-page-quota";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -285,33 +288,13 @@ export async function POST(request: Request) {
       if (memberError || !membership?.hotel_id) {
         return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
       }
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("max_published_pages,plan")
-        .eq("hotel_id", membership.hotel_id)
-        .maybeSingle();
-      const { count } = await supabase
-        .from("pages")
-        .select("id", { count: "exact", head: true })
-        .eq("hotel_id", membership.hotel_id);
-      const pageCount = count ?? 0;
-      const maxPages = sub
-        ? resolveEffectivePageLimit({
-            plan: sub.plan as "free" | "pro" | "business",
-            storedMax: sub.max_published_pages,
-            existingCount: pageCount,
-          })
-        : PLAN_PAGE_LIMITS.free;
-      if (pageCount >= maxPages) {
-        return NextResponse.json(
-          {
-            error: formatCreatePageLimitError(
-              (sub?.plan as "free" | "pro" | "business") ?? "free",
-              maxPages,
-            ),
-          },
-          { status: 403 }
-        );
+      const quota = await resolveHotelPageQuota({
+        admin: supabase,
+        hotelId: membership.hotel_id,
+        user,
+      });
+      if (!quota.allowed) {
+        return NextResponse.json(pageQuotaForbiddenPayload(quota), { status: 403 });
       }
       const title = AI_GENERATED_PAGE_TITLE;
       const slug = `${createSlug(extracted.hotelName || "info")}-${Date.now().toString(36)}`;

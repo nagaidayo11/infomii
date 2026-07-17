@@ -21,6 +21,9 @@ import {
   ensureGuestShellLabelsTranslated,
   GuestShellEditorForm,
 } from "./GuestShellEditorForm";
+import { PageAtmospherePicker } from "@/components/atmosphere/PageAtmospherePicker";
+import { useEditor2Store } from "@/components/editor/store";
+import type { PageAtmosphereId } from "@/lib/page-atmosphere";
 
 type GuestShellPagePanelProps = {
   pageId: string;
@@ -43,6 +46,8 @@ export function GuestShellPagePanel({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
+  const pageAtmosphere = useEditor2Store((s) => s.pageAtmosphere);
+  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -117,6 +122,10 @@ export function GuestShellPagePanel({
     setMessage("");
   }
 
+  function handleAtmosphereChange(id: PageAtmosphereId) {
+    setPageBackground({ atmosphere: id });
+  }
+
   const inheritBanner = state ? (
     <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 text-sm text-emerald-950">
       {state.isRootPage ? (
@@ -156,7 +165,7 @@ export function GuestShellPagePanel({
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-700">ゲストナビ</h2>
+          <h2 className="text-sm font-semibold text-slate-700">ページ設定</h2>
           <div className="mt-3 h-24 animate-pulse rounded-lg bg-slate-100" aria-label="読み込み中" />
         </div>
       </div>
@@ -171,12 +180,16 @@ export function GuestShellPagePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-sm font-semibold text-slate-700">ゲストナビ</h2>
+        <h2 className="text-sm font-semibold text-slate-700">ページ設定</h2>
         <p className="mt-1 text-xs text-slate-500">
-          ブロック未選択時に編集できます。プレビューに反映されます。
+          ブロック未選択時に編集できます。雰囲気はプレビューにすぐ反映されます。
         </p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="mb-5 border-b border-slate-100 pb-5">
+          <PageAtmospherePicker value={pageAtmosphere} onChange={handleAtmosphereChange} />
+        </div>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">ゲストナビ</h3>
         <GuestShellEditorForm
           config={config}
           onChange={setConfig}

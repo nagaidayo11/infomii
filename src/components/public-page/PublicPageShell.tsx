@@ -11,6 +11,8 @@ import { interceptGuestAnchorHardNavigation } from "@/lib/guest-hard-navigation"
 import type { PageBackgroundStyle } from "@/lib/storage";
 import { PhoneDeviceFrame } from "@/components/ui/PhoneDeviceFrame";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
+import { normalizePageAtmosphere } from "@/lib/page-atmosphere";
 
 type PublicPageShellProps = {
   /** Page or facility name — shown in header so guests quickly understand where they are */
@@ -200,6 +202,7 @@ export function PublicPageShell({
     pageBackground?.mode === "gradient"
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
       : pageBackground?.color ?? "#ffffff";
+  const atmosphere = normalizePageAtmosphere(pageBackground?.atmosphere);
 
   const flush = contentInset === "flush";
   const deviceEmbed = isEmbed && embedFit === "device";
@@ -224,47 +227,52 @@ export function PublicPageShell({
       <div
         className={
           deviceEmbed
-            ? "guest-page flex h-full min-h-0 flex-col overflow-hidden bg-white"
-            : "guest-page h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
+            ? "guest-page relative flex h-full min-h-0 flex-col overflow-hidden bg-white"
+            : "guest-page relative h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
         }
         style={{ background: pageBackgroundStyle, ...mainPadStyle }}
         onClickCapture={onGuestLinkCapture}
       >
-        <PageContent
-          title={title}
-          brandLogoSrc={brandLogoSrc}
-          backButton={backButton}
-          contactActions={contactActions}
-          bottomChrome={bottomChrome}
-          headerActions={headerActions}
-          headerClassName={headerClassName}
-          contentClassName={contentClassName}
-          guestGutter={guestGutter}
-          contentInset={contentInset}
-          isNativeUi={isNativeUi}
-        >
-          {children}
-        </PageContent>
+        <PageAtmosphereDecor atmosphere={atmosphere} />
+        <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <PageContent
+            title={title}
+            brandLogoSrc={brandLogoSrc}
+            backButton={backButton}
+            contactActions={contactActions}
+            bottomChrome={bottomChrome}
+            headerActions={headerActions}
+            headerClassName={headerClassName}
+            contentClassName={contentClassName}
+            guestGutter={guestGutter}
+            contentInset={contentInset}
+            isNativeUi={isNativeUi}
+          >
+            {children}
+          </PageContent>
+        </div>
       </div>
     );
   }
 
   const inner = (
-    <PageContent
-      title={title}
-      brandLogoSrc={brandLogoSrc}
-      backButton={backButton}
-      contactActions={contactActions}
-      bottomChrome={bottomChrome}
-      headerActions={headerActions}
-      headerClassName={headerClassName}
-      contentClassName={contentClassName}
-      guestGutter={guestGutter}
-      contentInset={contentInset}
-      isNativeUi={isNativeUi}
-    >
-      {children}
-    </PageContent>
+    <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <PageContent
+        title={title}
+        brandLogoSrc={brandLogoSrc}
+        backButton={backButton}
+        contactActions={contactActions}
+        bottomChrome={bottomChrome}
+        headerActions={headerActions}
+        headerClassName={headerClassName}
+        contentClassName={contentClassName}
+        guestGutter={guestGutter}
+        contentInset={contentInset}
+        isNativeUi={isNativeUi}
+      >
+        {children}
+      </PageContent>
+    </div>
   );
 
   return (
@@ -279,6 +287,7 @@ export function PublicPageShell({
         style={{ background: pageBackgroundStyle }}
         onClickCapture={onGuestLinkCapture}
       >
+        <PageAtmosphereDecor atmosphere={atmosphere} />
         {inner}
       </div>
 
@@ -297,6 +306,7 @@ export function PublicPageShell({
             data-guest-page-shell
             onClickCapture={onGuestLinkCapture}
           >
+            <PageAtmosphereDecor atmosphere={atmosphere} />
             {inner}
           </div>
         </PhoneDeviceFrame>

@@ -29,7 +29,7 @@ export function AppFabPortal({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="app-fab app-fab-portal ui-pop-tap fixed flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg disabled:opacity-60"
+      className="app-fab app-fab-portal app-circle ui-pop-tap fixed flex items-center justify-center bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg disabled:opacity-60"
       style={{
         right: "1rem",
         bottom: APP_FAB_BOTTOM_OFFSET,

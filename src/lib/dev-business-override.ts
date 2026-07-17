@@ -48,6 +48,16 @@ function resolveAllowEmails(): string[] {
   ];
 }
 
+/**
+ * Dev / review Business entitlement used by Plan UI and server quotas.
+ *
+ * Rules (strictest first):
+ * 1. Explicit email allowlist always wins (works in prod when listed).
+ * 2. Otherwise feature flag must be on, and production must opt in via
+ *    ALLOW_DEV_BUSINESS_OVERRIDE_IN_PROD=true.
+ * 3. Then either a known developer role, or (non-production only) any
+ *    signed-in user when no allowlist is configured.
+ */
 export function canUseDevBusinessOverride(user: AuthLikeUser | null | undefined): boolean {
   if (!user) return false;
 
@@ -65,9 +75,11 @@ export function canUseDevBusinessOverride(user: AuthLikeUser | null | undefined)
     return true;
   }
 
-  if (allowEmails.length === 0) {
-    // Fallback for client-side checks where non-public env vars are not readable.
-    // If override feature is explicitly enabled, allow the signed-in user.
+  // Local / preview only: empty allowlist + flag ⇒ current signed-in user.
+  // Never widen to "everyone" in production — that made Plan UI show Business
+  // while APIs still enforced Free page caps.
+  const vercelEnv = (process.env.VERCEL_ENV ?? "").toLowerCase();
+  if (allowEmails.length === 0 && vercelEnv !== "production") {
     return true;
   }
 

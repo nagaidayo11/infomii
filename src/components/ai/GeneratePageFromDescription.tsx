@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
@@ -25,7 +25,12 @@ type ApiResponse = {
   };
 };
 
-type PromptTemplate = { id: string; label: string; text: string };
+type PromptTemplate = {
+  id: string;
+  label: string;
+  text: string;
+  icon?: ReactNode;
+};
 
 const PROMPT_TEMPLATES_PERSONAL: PromptTemplate[] = [
   {
@@ -78,6 +83,87 @@ const PROMPT_TEMPLATES_HOSPITALITY: PromptTemplate[] = [
   },
 ];
 
+/** Soft deformed pictograms for AI prompt chips. */
+function IconTravel() {
+  return (
+    <svg viewBox="0 0 32 32" className="app-ai-chip-icon" aria-hidden>
+      <rect x="7" y="11" width="18" height="13" rx="3.5" fill="#7dd3c7" />
+      <path
+        d="M12 11V9.5a4 4 0 0 1 8 0V11"
+        fill="none"
+        stroke="#0f766e"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12.5" cy="17.5" r="1.4" fill="#0f766e" />
+      <circle cx="19.5" cy="17.5" r="1.4" fill="#0f766e" />
+      <path d="M7 18h18" stroke="#fff" strokeWidth="1.5" opacity="0.7" />
+    </svg>
+  );
+}
+
+function IconOuting() {
+  return (
+    <svg viewBox="0 0 32 32" className="app-ai-chip-icon" aria-hidden>
+      <circle cx="22" cy="10" r="5" fill="#fbbf24" />
+      <path
+        d="M4 24c4-5 8-7 12-5s7 1 12 4"
+        fill="none"
+        stroke="#94a3b8"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 20c2-3 4-3 6 0"
+        fill="none"
+        stroke="#0d9488"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="13" cy="16" r="1.5" fill="#0d9488" />
+    </svg>
+  );
+}
+
+function IconLive() {
+  return (
+    <svg viewBox="0 0 32 32" className="app-ai-chip-icon" aria-hidden>
+      <path
+        d="M16 6l2.2 6.2H25l-5.1 3.8 2 6.2L16 18.8 10.1 22l2-6.2L7 12.2h6.8z"
+        fill="#f472b6"
+      />
+      <circle cx="16" cy="14.5" r="2.2" fill="#fff" opacity="0.85" />
+    </svg>
+  );
+}
+
+function IconDate() {
+  return (
+    <svg viewBox="0 0 32 32" className="app-ai-chip-icon" aria-hidden>
+      <path
+        d="M16 26s-8.5-5.2-8.5-11.2A4.6 4.6 0 0 1 16 12.2a4.6 4.6 0 0 1 8.5 2.6C24.5 20.8 16 26 16 26z"
+        fill="#fb7185"
+      />
+      <circle cx="13.2" cy="15.2" r="1.2" fill="#fff" opacity="0.9" />
+      <circle cx="18.8" cy="15.2" r="1.2" fill="#fff" opacity="0.9" />
+    </svg>
+  );
+}
+
+function IconSpark() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden>
+      <circle cx="16" cy="16" r="10" fill="rgba(255,255,255,0.22)" />
+      <path
+        d="M16 7.5c.5 3.2 2.3 5 5.5 5.5-3.2.5-5 2.3-5.5 5.5-.5-3.2-2.3-5-5.5-5.5 3.2-.5 5-2.3 5.5-5.5z"
+        fill="#fff"
+      />
+      <circle cx="23.5" cy="10" r="1.4" fill="#fff" opacity="0.85" />
+      <circle cx="9.5" cy="21.5" r="1.1" fill="#fff" opacity="0.7" />
+    </svg>
+  );
+}
+
 function PromptChipRow({
   templates,
   loading,
@@ -99,7 +185,8 @@ function PromptChipRow({
           disabled={loading}
           className={chipClassName}
         >
-          {tpl.label}
+          {tpl.icon ? <span className="inline-flex shrink-0">{tpl.icon}</span> : null}
+          <span>{tpl.label}</span>
         </button>
       ))}
     </div>
@@ -109,10 +196,28 @@ function PromptChipRow({
 const APP_HOME_PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     id: "travel",
-    label: "旅のしおり",
+    label: "旅",
+    icon: <IconTravel />,
     text: "友達3人で京都2泊3日の旅行。1日目の新幹線と宿、2日目は嵐山、3日目はお土産と帰り。持ち物リスト、集合場所のMAP、割り勘はLINEで話す旨も入れて。",
   },
-  ...PROMPT_TEMPLATES_PERSONAL.slice(1, 4),
+  {
+    id: "weekend",
+    label: "日帰り",
+    icon: <IconOuting />,
+    text: PROMPT_TEMPLATES_PERSONAL[1]!.text,
+  },
+  {
+    id: "oshi-live",
+    label: "ライブ",
+    icon: <IconLive />,
+    text: PROMPT_TEMPLATES_PERSONAL[2]!.text,
+  },
+  {
+    id: "date",
+    label: "デート",
+    icon: <IconDate />,
+    text: PROMPT_TEMPLATES_PERSONAL[3]!.text,
+  },
 ];
 
 export function GeneratePageFromDescription({
@@ -150,7 +255,9 @@ export function GeneratePageFromDescription({
         setError("ログインが必要です");
         return;
       }
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
         setError("ログインが必要です");
@@ -191,9 +298,7 @@ export function GeneratePageFromDescription({
     }
   }
 
-  const chipClassName = isApp
-    ? "app-ai-chip app-pressable"
-    : undefined;
+  const chipClassName = isApp ? "app-ai-chip app-pressable" : undefined;
 
   return (
     <section className={className}>
@@ -201,32 +306,20 @@ export function GeneratePageFromDescription({
         onSubmit={handleSubmit}
         className={
           isApp
-            ? "app-ai-compose-card space-y-4"
+            ? "app-ai-compose-card space-y-3"
             : "rounded-lg border border-[#e6e8eb] bg-white p-4"
         }
       >
         {isApp ? (
-          <div className="flex items-start gap-3">
+          <div className="flex items-center gap-2.5">
             <div className="app-ai-compose-orb" aria-hidden>
-              ✦
+              <IconSpark />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--app-accent)]">
-                AI Create
-              </p>
-              <h2 className="mt-1 text-xl font-bold leading-tight text-[var(--app-text)]">
-                AIにページをつくってもらう
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--app-text-muted)]">
-                旅行、推し活、デート、イベント。まとめたい内容を一言で始められます。
-              </p>
-            </div>
+            <h2 className="text-lg font-bold leading-tight text-[var(--app-text)]">AIでつくる</h2>
           </div>
         ) : (
           <div className="mb-3">
-            <h2 className="text-base font-semibold text-slate-900">
-              説明を書くだけでページができる
-            </h2>
+            <h2 className="text-base font-semibold text-slate-900">説明を書くだけでページができる</h2>
             <p className="mt-1 text-sm text-slate-500">
               ホテル・旅館の館内案内を、短い説明から作成できます。
             </p>
@@ -243,73 +336,58 @@ export function GeneratePageFromDescription({
             {error}
           </div>
         )}
-        <div className="space-y-3">
-          <div className={isApp ? "space-y-2" : "space-y-3"}>
-            {!isApp && (
-              <div>
-                <p className="mb-2 text-xs font-semibold text-slate-700">宿泊施設向け（例文）</p>
-                <PromptChipRow
-                  templates={PROMPT_TEMPLATES_HOSPITALITY}
-                  loading={loading}
-                  onSelect={setDescription}
-                  chipClassName="rounded-md border border-[#e6e8eb] bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
-                />
-              </div>
-            )}
-            {isApp ? (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-[var(--app-text-muted)]">
-                  例から始める
-                </p>
-                <PromptChipRow
-                  templates={APP_HOME_PROMPT_TEMPLATES}
-                  loading={loading}
-                  onSelect={setDescription}
-                  chipClassName={chipClassName}
-                />
-              </div>
-            ) : null}
-          </div>
+        <div className={isApp ? "space-y-2.5" : "space-y-3"}>
+          {isApp ? (
+            <PromptChipRow
+              templates={APP_HOME_PROMPT_TEMPLATES}
+              loading={loading}
+              onSelect={setDescription}
+              chipClassName={chipClassName}
+            />
+          ) : (
+            <div>
+              <p className="mb-2 text-xs font-semibold text-slate-700">宿泊施設向け（例文）</p>
+              <PromptChipRow
+                templates={PROMPT_TEMPLATES_HOSPITALITY}
+                loading={loading}
+                onSelect={setDescription}
+                chipClassName="rounded-md border border-[#e6e8eb] bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+              />
+            </div>
+          )}
           <div>
-            <label
-              htmlFor={textareaId}
-              className={
-                isApp
-                  ? "mb-1 block text-sm font-semibold text-[var(--app-text)]"
-                  : "mb-1 block text-sm font-medium text-slate-700"
-              }
-            >
-              {isApp ? "作りたいページ" : "どんなページにする？"}
-            </label>
+            {!isApp ? (
+              <label htmlFor={textareaId} className="mb-1 block text-sm font-medium text-slate-700">
+                どんなページにする？
+              </label>
+            ) : (
+              <label htmlFor={textareaId} className="sr-only">
+                作りたいページ
+              </label>
+            )}
             <textarea
               id={textareaId}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={
                 isApp
-                  ? "例: 友達と京都2泊3日の旅行。集合場所・持ち物・日程も入れて"
+                  ? "例: 京都2泊3日。集合・持ち物・日程"
                   : "例: ビジネスホテルの館内案内。Wi-Fi・朝食・チェックアウト・周辺の駅を載せたい"
               }
-              rows={isApp ? 4 : 3}
+              rows={3}
               className={
                 isApp
-                  ? "app-ai-textarea w-full resize-none px-4 py-3 text-base text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:outline-none"
+                  ? "app-ai-textarea w-full resize-none px-3.5 py-2.5 text-[15px] text-[var(--app-text)] placeholder:text-[var(--app-text-muted)] focus:outline-none"
                   : "w-full resize-none rounded-md border border-[#e6e8eb] px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/20"
               }
               disabled={loading}
             />
-            <p
-              className={
-                isApp
-                  ? "mt-1 text-right text-xs text-[var(--app-text-muted)]"
-                  : "mt-1 flex items-center justify-between text-xs text-slate-500"
-              }
-            >
-              {!isApp && (
+            {!isApp ? (
+              <p className="mt-1 flex items-center justify-between text-xs text-slate-500">
                 <span>コツ: Wi-Fi・食事・チェックアウト・連絡先・周辺案内を入れると作りやすいです。</span>
-              )}
-              <span>{description.trim().length} 文字</span>
-            </p>
+                <span>{description.trim().length} 文字</span>
+              </p>
+            ) : null}
           </div>
           <button
             type="submit"
@@ -320,8 +398,7 @@ export function GeneratePageFromDescription({
                 : "app-button-native rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60"
             }
           >
-            <span>{loading ? "つくってる…" : "AIでページ作成"}</span>
-            {!loading && isApp ? <span aria-hidden>→</span> : null}
+            <span>{loading ? "つくってる…" : isApp ? "つくる" : "AIでページ作成"}</span>
           </button>
         </div>
       </form>

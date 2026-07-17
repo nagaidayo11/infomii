@@ -62,7 +62,7 @@ export function PageHelp({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="app-button-native inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        className="app-button-native app-squircle border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={a11yLabel}

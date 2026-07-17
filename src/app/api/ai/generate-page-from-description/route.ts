@@ -12,7 +12,10 @@ import {
   type AiPageImageDefaults,
 } from "@/lib/ai-page-theme-images";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
-import { formatCreatePageLimitError, PLAN_PAGE_LIMITS, resolveEffectivePageLimit } from "@/lib/plan-limits";
+import {
+  pageQuotaForbiddenPayload,
+  resolveHotelPageQuota,
+} from "@/lib/server/resolve-hotel-page-quota";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const PRIMARY_AI_MODEL = process.env.OPENAI_QUALITY_MODEL ?? "gpt-4.1";
@@ -508,31 +511,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
   }
 
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("max_published_pages,plan")
-    .eq("hotel_id", membership.hotel_id)
-    .maybeSingle();
-  const { count } = await supabase
-    .from("pages")
-    .select("id", { count: "exact", head: true })
-    .eq("hotel_id", membership.hotel_id);
-  const pageCount = count ?? 0;
-  const maxPages = sub
-    ? resolveEffectivePageLimit({
-        plan: sub.plan as "free" | "pro" | "business",
-        storedMax: sub.max_published_pages,
-        existingCount: pageCount,
-      })
-    : PLAN_PAGE_LIMITS.free;
-  if (pageCount >= maxPages) {
-    return NextResponse.json(
-      { error: formatCreatePageLimitError(
-        (sub?.plan as "free" | "pro" | "business") ?? "free",
-        maxPages,
-      ) },
-      { status: 403 }
-    );
+  const quota = await resolveHotelPageQuota({
+    admin: supabase,
+    hotelId: membership.hotel_id,
+    user,
+  });
+  if (!quota.allowed) {
+    return NextResponse.json(pageQuotaForbiddenPayload(quota), { status: 403 });
   }
 
   try {

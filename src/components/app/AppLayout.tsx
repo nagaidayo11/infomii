@@ -6,6 +6,7 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { RouteProgressProvider } from "./RouteProgressContext";
+import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -32,17 +33,18 @@ export function AppLayout({
   const pathname = usePathname();
 
   return (
-    <div className="app-ambient-bg flex h-[100dvh] w-full overflow-hidden bg-[#f6f8fa]">
+    <div className="app-ambient-bg relative flex h-[100dvh] w-full overflow-hidden bg-[#f6f8fa]">
+      <PageAtmosphereDecor atmosphere="travel" density="chrome" />
       <RouteProgressProvider>
         <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f8fa]">
+        <div className="relative z-[1] flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f6f8fa]/70">
           <Topbar actions={topbarActions} onOpenMobileNav={() => setMobileNavOpen(true)} />
           <main
             className="app-page-atmosphere relative z-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 text-[0.9375rem] leading-relaxed sm:px-6 sm:py-7 lg:px-8"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
           >
-            <div key={pathname} className="app-content-enter">
+            <div key={pathname} className="app-content-enter relative z-[1]">
               {children}
             </div>
           </main>

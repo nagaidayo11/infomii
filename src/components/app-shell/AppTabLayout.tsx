@@ -2,10 +2,12 @@
 
 import type { ReactNode } from "react";
 import { RouteProgressProvider } from "@/components/app/RouteProgressContext";
+import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
 import { AppScrollReveal } from "./AppScrollReveal";
 import { AppTabBar, APP_TAB_BAR_OFFSET } from "./AppTabBar";
 import { AppTabTransition } from "./AppTabTransition";
 import { AppTapFeedback } from "./AppTapFeedback";
+
 type AppTabLayoutProps = {
   children: ReactNode;
 };
@@ -18,14 +20,17 @@ export function AppTabLayout({ children }: AppTabLayoutProps) {
     <RouteProgressProvider>
       <AppScrollReveal />
       <AppTapFeedback />
-      <div className="app-ambient-bg flex h-[100dvh] w-full flex-col overflow-hidden">
+      <div className="app-ambient-bg relative flex h-[100dvh] w-full flex-col overflow-hidden">
+        <PageAtmosphereDecor atmosphere="outing" density="chrome" />
         <main
-          className="app-shell-main min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4"
+          className="app-shell-main relative z-[1] min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4"
           style={{ paddingBottom: APP_TAB_BAR_OFFSET }}
         >
           <AppTabTransition>{children}</AppTabTransition>
         </main>
-        <AppTabBar />
+        <div className="relative z-[1]">
+          <AppTabBar />
+        </div>
       </div>
     </RouteProgressProvider>
   );

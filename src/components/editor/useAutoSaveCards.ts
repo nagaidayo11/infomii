@@ -9,7 +9,14 @@ const DEBOUNCE_MS = 800;
 /** カード＋ページ背景変更検知用。 */
 function cardsSignature(
   cards: { id: string; order: number; content?: unknown; style?: unknown }[],
-  pageBackground: { mode: "solid" | "gradient"; color: string; from: string; to: string; angle: number }
+  pageBackground: {
+    mode: "solid" | "gradient";
+    color: string;
+    from: string;
+    to: string;
+    angle: number;
+    atmosphere?: string;
+  }
 ): string {
   return [
     cards.map((c) => `${c.id}:${c.order}:${JSON.stringify(c.content)}:${JSON.stringify(c.style ?? {})}`).join("|"),
@@ -30,6 +37,7 @@ async function saveAndMerge(
       from: store.pageGradientFrom,
       to: store.pageGradientTo,
       angle: store.pageGradientAngle,
+      atmosphere: store.pageAtmosphere,
     },
   } as const;
   store.setAutosaveStatus({ isSaving: true });
@@ -69,6 +77,7 @@ async function flushSave(pageId: string) {
       from: store.pageGradientFrom,
       to: store.pageGradientTo,
       angle: store.pageGradientAngle,
+      atmosphere: store.pageAtmosphere,
     },
   } as const;
   store.setAutosaveStatus({ isSaving: true, saveError: null });
@@ -124,6 +133,7 @@ export function useAutoSaveCards(pageId: string | null) {
       from: s.pageGradientFrom,
       to: s.pageGradientTo,
       angle: s.pageGradientAngle,
+      atmosphere: s.pageAtmosphere,
     });
   }, [pageId]);
 
@@ -152,6 +162,7 @@ export function useAutoSaveCards(pageId: string | null) {
       from: s.pageGradientFrom,
       to: s.pageGradientTo,
       angle: s.pageGradientAngle,
+      atmosphere: s.pageAtmosphere,
     });
 
     const unsubscribe = useEditor2Store.subscribe(() => {
@@ -162,6 +173,7 @@ export function useAutoSaveCards(pageId: string | null) {
         from: state.pageGradientFrom,
         to: state.pageGradientTo,
         angle: state.pageGradientAngle,
+        atmosphere: state.pageAtmosphere,
       });
       if (sig === lastSignatureRef.current) return;
       lastSignatureRef.current = sig;
@@ -179,6 +191,7 @@ export function useAutoSaveCards(pageId: string | null) {
               from: s.pageGradientFrom,
               to: s.pageGradientTo,
               angle: s.pageGradientAngle,
+              atmosphere: s.pageAtmosphere,
             });
           }
         } catch {

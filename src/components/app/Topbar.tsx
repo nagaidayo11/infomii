@@ -191,7 +191,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
               return next;
             });
           }}
-          className="app-button-native flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="app-button-native app-squircle bg-slate-100 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
           aria-expanded={menuOpen}
           aria-haspopup="true"
           aria-label={displayName ? `${displayName}のメニュー` : "ユーザーメニュー"}

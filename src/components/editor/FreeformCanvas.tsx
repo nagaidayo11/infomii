@@ -19,6 +19,8 @@ import {
 } from "@/lib/guest-shell";
 import type { SupportedLocale } from "@/lib/localized-content";
 import { getBlockStyle, isMediaCardType, usesHeroColumnWidth, type CardType, type EditorCard } from "./types";
+import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
+import { normalizePageAtmosphere, type PageAtmosphereId } from "@/lib/page-atmosphere";
 
 const DEFAULT_W = 280;
 const DEFAULT_H = 96;
@@ -255,6 +257,7 @@ type FreeformCanvasProps = {
     from: string;
     to: string;
     angle: number;
+    atmosphere?: PageAtmosphereId;
   };
   guestShell?: GuestShellConfig | null;
   pageSlug?: string;
@@ -536,6 +539,7 @@ export function FreeformCanvas({
     pageBackground?.mode === "gradient"
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
       : pageBackground?.color ?? "#ffffff";
+  const atmosphere = normalizePageAtmosphere(pageBackground?.atmosphere);
 
   const canvasH = Math.max(
     800,
@@ -599,8 +603,10 @@ export function FreeformCanvas({
             ) : null
           }
         >
+          <div className="relative h-full min-h-0 flex-1 overflow-hidden">
+          <PageAtmosphereDecor atmosphere={atmosphere} />
           <div
-            className="guest-page guest-content-gutter relative mx-auto"
+            className="guest-page guest-content-gutter relative z-[1] mx-auto"
             style={{ width: stageWidth, minHeight: canvasH }}
             onClick={(e) => {
               if (e.target === e.currentTarget) onSelectCard(null);
@@ -765,6 +771,7 @@ export function FreeformCanvas({
               </Rnd>
             );
           })}
+          </div>
           </div>
           </div>
         </PhoneDeviceFrame>

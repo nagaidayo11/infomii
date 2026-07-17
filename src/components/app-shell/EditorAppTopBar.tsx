@@ -151,7 +151,7 @@ export function EditorAppTopBar({
     >
       <AppShellLink
         href={backHref}
-        className="editor-topbar-btn editor-topbar-btn--round h-11 w-11 shrink-0"
+        className="editor-topbar-btn editor-topbar-btn--round shrink-0"
         aria-label="ホームに戻る"
       >
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
