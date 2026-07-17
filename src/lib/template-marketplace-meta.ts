@@ -35,7 +35,7 @@ export function isBtocMarketplaceCategory(
 export const LP_STARTER_TEMPLATE_SLUGS = {
   travel: "travel-itinerary",
   oshi: "oshi-live-set",
-  hotel: "business-city-guide",
+  hotel: "hotel-guest-guide",
 } as const;
 
 export function buildTemplatesPath(category: string, starter?: string): string {
@@ -52,7 +52,7 @@ export function buildLpTemplatesLoginHref(category: string, starter: string): st
 export const TEMPLATE_MARKETPLACE_SECTIONS = [
   {
     id: "hospitality",
-    label: "宿泊施設",
+    label: "宿泊施設 — ページの型",
     categories: [...HOTEL_MARKETPLACE_CATEGORIES],
   },
   {
@@ -90,10 +90,10 @@ export const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   personal: "おでかけ・リンク",
   food: "キッチンカー・飲食",
   lightbiz: "小規模店舗・教室",
-  business: "ビジネスホテル",
-  resort: "リゾートホテル",
-  ryokan: "旅館",
-  airbnb: "Airbnb",
-  guide: "観光ガイド",
-  inbound: "インバウンド",
+  business: "ゲスト案内・運用",
+  resort: "体験・ライブ・メニュー",
+  ryokan: "旅館・おもてなし",
+  airbnb: "民泊・セルフチェックイン",
+  guide: "館内ハブ・周辺回遊",
+  inbound: "インバウンド・多言語",
 };

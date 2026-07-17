@@ -47,7 +47,7 @@ const CITY_HOTEL_QUICK_START_META: TemplateMeta = {
 };
 
 export const TEMPLATE_META_OVERRIDES: Record<string, TemplateMeta> = {
-  "ビジネスホテル・即運用セット": CITY_HOTEL_QUICK_START_META,
+  "1枚完結・ゲスト案内": CITY_HOTEL_QUICK_START_META,
 };
 
 function deriveTemplateMeta(template: TemplateRow): TemplateMeta {

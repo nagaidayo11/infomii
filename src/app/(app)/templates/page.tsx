@@ -17,6 +17,7 @@ import { LocaleProvider } from "@/components/locale-context";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import {
+  normalizeMarketplaceTemplateCardContent,
   resolveTemplateMediaSrc,
   TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
 } from "@/lib/template-preview";
@@ -49,12 +50,7 @@ const TEMPLATE_AUDIENCE_OPTIONS: { id: TemplateMarketplaceAudience; label: strin
 
 const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
 
-const HIDDEN_TEMPLATE_NAMES = new Set<string>([
-  "リゾートホテル・館内案内",
-  "旅館・ご案内",
-  "Airbnb・ゲスト向け案内",
-  "観光ガイド・スポット案内",
-]);
+const HIDDEN_TEMPLATE_NAMES = new Set<string>([]);
 
 function templateSeedSyncStorageKey(version: number): string {
   return `infomii-template-seed-v${version}`;
@@ -297,51 +293,20 @@ export default function TemplatesPage() {
     content: Record<string, unknown> | undefined,
     template: TemplateRow,
   ): Record<string, unknown> {
-    const base = { ...(content ?? {}) };
-    if (type === "hero") {
-      base.image = resolvePreviewMediaSrc(
-        typeof base.image === "string" ? base.image : undefined,
-        template,
-      );
-    }
-    if (type === "image") {
-      base.src = resolvePreviewMediaSrc(
-        typeof base.src === "string" ? base.src : undefined,
-        template,
-      );
-    }
-    if (type === "gallery" && Array.isArray(base.items)) {
-      base.items = base.items.map((item, i) => {
-        const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
-        row.src = resolvePreviewMediaSrc(
-          typeof row.src === "string" ? row.src : undefined,
-          template,
-        );
-        if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `gallery-${i + 1}`;
-        return row;
-      });
-    }
-    if (type === "hero_slider" && Array.isArray(base.items)) {
-      base.items = base.items.map((item, i) => {
-        const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
-        row.src = resolvePreviewMediaSrc(
-          typeof row.src === "string" ? row.src : undefined,
-          template,
-        );
-        if (typeof row.alt !== "string" || !row.alt.trim()) row.alt = `slide-${i + 1}`;
-        return row;
-      });
-    }
-    const rawStyle = base._style;
-    if (rawStyle && typeof rawStyle === "object" && !Array.isArray(rawStyle)) {
-      const style = { ...(rawStyle as Record<string, unknown>) };
-      delete style.fontSize;
-      delete style.backgroundColor;
-      delete style.padding;
-      if (Object.keys(style).length === 0) delete base._style;
-      else base._style = style;
-    }
-    return base;
+    const categoryFallback =
+      TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[template.category ?? ""] ??
+      PRESET_HERO_SAMPLE_IMAGE;
+    return normalizeMarketplaceTemplateCardContent(
+      type,
+      content,
+      {
+        name: template.name,
+        slug: template.slug,
+        preview_image: template.preview_image,
+        category: template.category,
+      },
+      categoryFallback,
+    );
   }
 
   function buildPreviewCards(template: TemplateRow): EditorCard[] {
@@ -416,7 +381,7 @@ export default function TemplatesPage() {
       <>
         <AppTabPage
           title="テンプレート"
-          description="旅行、推し活、イベント、リンクまとめ。近い型からすぐ作れます。"
+          description="宿泊施設向け — ゲスト案内・館内ハブ・混雑ボードなど、ページの型から選べます。"
           className="pb-4"
           contentClassName="space-y-4"
         >
@@ -505,6 +470,7 @@ export default function TemplatesPage() {
                               >
                                 <TemplateCard
                                   id={template.id}
+                                  slug={template.slug}
                                   name={template.name}
                                   description={template.description}
                                   preview_image={template.preview_image}
@@ -536,7 +502,7 @@ export default function TemplatesPage() {
       <header className="app-page-header">
         <h1 className="app-page-title">テンプレート</h1>
         <p className="app-page-subtitle">
-          ホテル・旅館・民泊向けの館内案内テンプレートから、ページを作成できます。
+          ゲスト案内・館内ハブ・混雑ボードなど、Infomiiで作れる宿泊ページの型から選べます。
         </p>
       </header>
 
@@ -626,6 +592,7 @@ export default function TemplatesPage() {
                           >
                             <TemplateCard
                               id={template.id}
+                              slug={template.slug}
                               name={template.name}
                               description={template.description}
                               preview_image={template.preview_image}

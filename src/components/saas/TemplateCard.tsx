@@ -11,6 +11,7 @@ const DEFAULT_FALLBACK = "/preset-hero-sample.png";
 
 export type TemplateCardProps = {
   id: string;
+  slug?: string | null;
   name: string;
   description: string;
   preview_image: string;
@@ -22,6 +23,7 @@ export type TemplateCardProps = {
 };
 
 export function TemplateCard({
+  slug,
   name,
   description,
   preview_image,
@@ -39,6 +41,7 @@ export function TemplateCard({
     category ?? null,
     name,
     categoryFallback,
+    slug,
   );
   const [displaySrc, setDisplaySrc] = useState(primarySrc);
   const [imageReady, setImageReady] = useState(false);

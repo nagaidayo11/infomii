@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import fs from "node:fs";
+import path from "node:path";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
-import { btocTemplatePreviewPath, templatePreviewPublicPath } from "@/lib/template-preview";
+import { btocTemplatePreviewPath, isSeedPlaceholderImagePath, marketplaceTemplatePreviewPath } from "@/lib/template-preview";
 import { MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-templates";
 import {
   ensurePageLinksAfterOpening,
@@ -21,6 +23,8 @@ type SeedTemplate = {
 
 const DEFAULT_HERO_IMAGE = "/preset-hero-sample.png";
 const DEFAULT_PREVIEW_IMAGE = "/preset-hero-sample.png";
+/** Hand-authored seeds with 6+ blocks skip pool/required auto-fill to preserve curated stories. */
+const CURATED_MIN_CARD_COUNT = 6;
 
 const THEME_IMAGE_SETS: Record<string, { hero: string; details: string[] }> = {
   business: {
@@ -62,54 +66,110 @@ function galleryItemsForCategory(
   return rotate(base, categoryIndex);
 }
 
+function publicAssetExists(publicPath: string): boolean {
+  const rel = publicPath.startsWith("/") ? publicPath.slice(1) : publicPath;
+  const abs = path.join(process.cwd(), "public", rel);
+  try {
+    return fs.existsSync(abs);
+  } catch {
+    return false;
+  }
+}
+
+function resolveSeedListingPreviewPath(template: SeedTemplate): string {
+  const raw = template.preview_image?.trim() ?? "";
+  if (raw && !isSeedPlaceholderImagePath(raw)) {
+    // If author provided an image path but it doesn't exist, fall back to theme hero.
+    if (publicAssetExists(raw)) return raw;
+  }
+
+  const category = template.category ?? "";
+  const key = category && THEME_IMAGE_SETS[category] ? category : "default";
+
+  if (isBtocMarketplaceCategory(category)) {
+    const computed = btocTemplatePreviewPath(category, template.slug);
+    return publicAssetExists(computed) ? computed : THEME_IMAGE_SETS.default.hero;
+  }
+
+  const computed = marketplaceTemplatePreviewPath(category || "default", template.slug);
+  return publicAssetExists(computed) ? computed : THEME_IMAGE_SETS[key].hero;
+}
+
+function patchCardMediaSources(
+  card: { type: string; content: Record<string, unknown> },
+  listingPreview: string,
+  sampleImages: Array<{ src: string; alt: string }>,
+) {
+  const patchSrc = (raw: string, index: number) => {
+    if (!isSeedPlaceholderImagePath(raw)) return raw;
+    return sampleImages[index % sampleImages.length]?.src || listingPreview;
+  };
+
+  if (card.type === "hero") {
+    const image = typeof card.content.image === "string" ? card.content.image.trim() : "";
+    if (!image || isSeedPlaceholderImagePath(image)) {
+      card.content.image = listingPreview;
+    }
+  }
+  if (card.type === "image") {
+    const src = typeof card.content.src === "string" ? card.content.src.trim() : "";
+    if (!src || isSeedPlaceholderImagePath(src)) {
+      card.content.src = listingPreview;
+    }
+  }
+  if (card.type === "gallery" && Array.isArray(card.content.items)) {
+    card.content.items = card.content.items.map((item, idx) => {
+      const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+      const src = typeof row.src === "string" ? row.src.trim() : "";
+      row.src = patchSrc(src, idx);
+      return row;
+    });
+  }
+  if (card.type === "hero_slider" && Array.isArray(card.content.slides)) {
+    card.content.slides = card.content.slides.map((item, idx) => {
+      const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+      const src = typeof row.src === "string" ? row.src.trim() : "";
+      row.src = patchSrc(src, idx);
+      return row;
+    });
+  }
+  if (card.type === "image_tiles" && Array.isArray(card.content.items)) {
+    card.content.items = card.content.items.map((item, idx) => {
+      const row = item && typeof item === "object" ? { ...(item as Record<string, unknown>) } : {};
+      const src = typeof row.src === "string" ? row.src.trim() : "";
+      row.src = patchSrc(src, idx);
+      return row;
+    });
+  }
+}
+
 function applyTemplateMediaDefaults(template: SeedTemplate, categoryIndex: number): SeedTemplate {
   const isBtoc = isBtocMarketplaceCategory(template.category);
-  const previewPath = isBtoc
-    ? btocTemplatePreviewPath(template.category ?? "", template.slug)
-    : templatePreviewPublicPath(template.category, template.name);
+  const previewPath = resolveSeedListingPreviewPath(template);
   const cards = template.cards.map((card) => ({
     ...card,
     content: { ...(card.content ?? {}) },
   }));
 
+  const sampleImages = galleryItemsForCategory(template.category, categoryIndex);
+
   for (const card of cards) {
-    if (card.type !== "hero") continue;
-    const image = typeof card.content.image === "string" ? card.content.image.trim() : "";
-    if (!isBtoc || !image) {
-      card.content.image = previewPath;
-    }
+    patchCardMediaSources(card, previewPath, sampleImages);
   }
 
-  // Fill gallery image sources with category-aware samples.
-  for (const card of cards) {
-    if (card.type !== "gallery") continue;
-    const items = Array.isArray(card.content.items) ? card.content.items : [];
-    const sampleItems = galleryItemsForCategory(template.category, categoryIndex);
-    const nextItems =
-      items.length > 0
-        ? items.map((item, idx) => {
-            const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
-            const src = typeof row.src === "string" ? row.src.trim() : "";
-            return {
-              ...row,
-              src: src || sampleItems[idx % sampleItems.length]?.src || "",
-              alt:
-                (typeof row.alt === "string" && row.alt.trim()) ||
-                sampleItems[idx % sampleItems.length]?.alt ||
-                `gallery-${idx + 1}`,
-            };
-          })
-        : sampleItems;
-    card.content.items = nextItems;
-    if (!("title" in card.content)) card.content.title = "ギャラリー";
-  }
-
-  const hasHero = cards.some((c) => c.type === "hero");
+  const hasHero = cards.some((c) => c.type === "hero" || c.type === "hero_slider");
   const hasGallery = cards.some((c) => c.type === "gallery");
+  const isCuratedHotel = !isBtoc && template.cards.length >= CURATED_MIN_CARD_COUNT;
   const shouldAddHero =
-    !isBtoc && !hasHero && ["resort", "guide", "inbound"].includes(template.category ?? "");
+    !isBtoc &&
+    !isCuratedHotel &&
+    !hasHero &&
+    ["resort", "guide", "inbound"].includes(template.category ?? "");
   const shouldAddGallery =
-    !isBtoc && !hasGallery && ["resort", "guide", "ryokan"].includes(template.category ?? "");
+    !isBtoc &&
+    !isCuratedHotel &&
+    !hasGallery &&
+    ["resort", "guide", "ryokan"].includes(template.category ?? "");
 
   if (shouldAddHero) {
     cards.unshift({
@@ -301,9 +361,6 @@ function buildCardContentByType(type: string): Record<string, unknown> {
   }
 }
 
-/** Hand-authored seeds with 6+ blocks skip pool/required auto-fill to preserve curated stories. */
-const CURATED_MIN_CARD_COUNT = 6;
-
 function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory: number): SeedTemplate {
   if (isBtocMarketplaceCategory(template.category)) {
     const cards = template.cards
@@ -419,6 +476,7 @@ function diversifyTemplateBlocks(template: SeedTemplate, templateIndexInCategory
 function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
   const importantTypes = new Set(["hero", "summary", "wifi", "breakfast", "checkout", "faq", "cta"]);
   const isBtoc = isBtocMarketplaceCategory(template.category);
+  const isCuratedHotel = !isBtoc && template.cards.length >= CURATED_MIN_CARD_COUNT;
   const maxCards = isBtoc ? 12 : 10;
   const cards = template.cards
     .filter((card) => card && typeof card.type === "string" && card.type !== "icon")
@@ -429,7 +487,7 @@ function normalizeTemplateComposition(template: SeedTemplate): SeedTemplate {
       content: { ...(card.content ?? {}) },
     }));
 
-  const reordered = (isBtoc ? cards : reorderCardsByCategory(template.category, cards)).map((card, index) => ({
+  const reordered = (isBtoc || isCuratedHotel ? cards : reorderCardsByCategory(template.category, cards)).map((card, index) => ({
     ...card,
     order: index,
   }));
