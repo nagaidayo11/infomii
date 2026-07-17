@@ -251,12 +251,9 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
       return { height: 48 };
     case "info":
       return {
-        title: "連絡メモ",
-        icon: "info",
-        rows: [
-          { label: "チャット", value: "LINEグループ名をここに" },
-          { label: "当日担当", value: "名前（例: りん）" },
-        ],
+        title: "",
+        icon: "",
+        rows: [{ label: "", value: "", show: true }],
       };
     case "action":
       return { label: "詳細を見る", href: "#" };

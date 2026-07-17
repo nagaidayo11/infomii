@@ -75,6 +75,12 @@ export type Editor2State = {
   /** Load cards from API (e.g. AI generate). Adds id, normalizes order. */
   loadGeneratedCards: (cards: GeneratedCardInput[]) => void;
   addCard: (type: CardType, index?: number, audience?: "hotel" | "personal") => void;
+  /** Insert a card with explicit content (label-row presets → `info`). */
+  addCardWithContent: (
+    type: CardType,
+    content: Record<string, unknown>,
+    index?: number,
+  ) => void;
   updateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   reorderCards: (cards: EditorCard[]) => void;
   moveCard: (id: string, direction: "up" | "down") => void;
@@ -225,6 +231,31 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
     const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;
     const id = nanoid(10);
     const card = createEmptyCard(type, id, insertAt, audience);
+    const next = [...cards];
+    next.splice(insertAt, 0, card);
+    const withOrder = next.map((c, i) => ({ ...c, order: i }));
+    set({
+      cards: withOrder,
+      selectedCardId: id,
+      lastAddedCardId: id,
+      historyPast: pushHistory(historyPast, cards),
+      historyFuture: [],
+    });
+    setTimeout(() => set({ lastAddedCardId: null }), INSERT_ANIMATION_MS);
+  },
+
+  addCardWithContent: (type, content, index?: number) => {
+    if (!ALLOWED_CARD_TYPES.includes(type)) return;
+    const { cards, historyPast } = get();
+    const insertAt = index != null ? Math.min(Math.max(0, index), cards.length) : cards.length;
+    const id = nanoid(10);
+    const card: EditorCard = {
+      id,
+      type,
+      content: { ...content },
+      style: type === "space" ? { padding: 0 } : { innerBorderRadius: 8 },
+      order: insertAt,
+    };
     const next = [...cards];
     next.splice(insertAt, 0, card);
     const withOrder = next.map((c, i) => ({ ...c, order: i }));

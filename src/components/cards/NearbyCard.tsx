@@ -5,11 +5,11 @@ import { CARD_BLOCK_TITLE_CLASS, getTitleFontSizeStyle, getBodyFontSizeStyle } f
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { LabelItemStack, LabelItemSurface } from "./label-item-surface";
 
 type NearbyItem = { name?: string; description?: string; link?: string };
 
@@ -94,27 +94,23 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
         </p>
       ) : null}
       {items.length > 0 ? (
-        <ul className="mt-3 space-y-2" style={getBodyFontSizeStyle()}>
+        <LabelItemStack>
           {items.map((item, i) => (
-            <li
-              key={i}
-              data-inner-surface
-              className={`pt-2 ${editorInnerRadiusClassName} border border-slate-100 bg-slate-50/70 px-3 py-2`}
-            >
+            <LabelItemSurface key={i}>
               {(editable || item.name) ? (
-                <p className="font-bold text-slate-700">
+                <p className="font-semibold leading-snug text-slate-800" style={getBodyFontSizeStyle()}>
                   <InlineEditable
                     value={item.name ?? ""}
                     onSave={(v) => updateItem(i, "name", v)}
                     editable={editable}
                     onActivate={onActivate}
-                    className="font-bold text-slate-700"
+                    className="font-semibold text-slate-800"
                     placeholder={labels.namePlaceholder}
                   />
                 </p>
               ) : null}
               {(editable || item.description) ? (
-                <p className="mt-0.5 text-slate-500">
+                <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
                   <InlineEditable
                     value={item.description ?? ""}
                     onSave={(v) => updateItem(i, "description", v)}
@@ -127,7 +123,7 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
                 </p>
               ) : null}
               {editable ? (
-                <p className="mt-1 text-slate-600">
+                <p className="mt-1 text-slate-600" style={getBodyFontSizeStyle()}>
                   <InlineEditable
                     value={item.link ?? ""}
                     onSave={(v) => updateItem(i, "link", v)}
@@ -141,13 +137,14 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
                 <a
                   href={resolveGuestHref(item.link)}
                   className="mt-1 inline-block font-normal text-slate-600 underline"
+                  style={getBodyFontSizeStyle()}
                 >
                   {labels.detail}
                 </a>
               ) : null}
-            </li>
+            </LabelItemSurface>
           ))}
-        </ul>
+        </LabelItemStack>
       ) : (
         <p className="mt-2 text-slate-500" style={getBodyFontSizeStyle()}>
           {labels.empty}

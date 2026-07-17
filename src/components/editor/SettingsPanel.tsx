@@ -16,6 +16,8 @@ import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import type { LibraryAudience } from "@/lib/editor/card-library-config";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
+import { isFacilityInfoType } from "@/lib/editor/facility-info-presets";
+import { FacilityInfoSettingsFields } from "./FacilityInfoSettingsFields";
 import {
   LIVE_OPS_DEFINITIONS,
   LIVE_OPS_LEVELS,
@@ -306,7 +308,7 @@ type TimeSlotRow = {
   end?: string;
   items?: MenuTagItem[];
 };
-type InfoRowItem = { label?: string; value?: string };
+type InfoRowItem = { label?: string; value?: string; show?: boolean; tel?: boolean; key?: string };
 type TabsInfoItem = { label?: string; body?: string };
 type HeroSliderItem = {
   src?: string;
@@ -347,11 +349,30 @@ function InfoRowsEditor({
     next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
     setRows(next);
   };
-  const addRow = () => setRows([...rows, { label: "", value: "" }]);
+  const addRow = () => setRows([...rows, { label: "", value: "", show: true }]);
   const removeRow = (index: number) => setRows(rows.filter((_, i) => i !== index));
+  const toggleShow = (index: number, show: boolean) => {
+    const next = [...rows];
+    next[index] = { ...(next[index] ?? {}), show };
+    setRows(next);
+  };
 
   return (
     <div className="space-y-3">
+      <div className="w-full">
+        <label className={labelClass}>色味</label>
+        <select
+          value={String(content.tone ?? "slate")}
+          onChange={(e) => onUpdate("tone", e.target.value)}
+          className={inputClass}
+        >
+          <option value="slate">標準（透明）</option>
+          <option value="amber">アンバー（朝食など）</option>
+          <option value="sky">スカイ（スパなど）</option>
+          <option value="emerald">エメラルド</option>
+          <option value="rose">ローズ</option>
+        </select>
+      </div>
       <div className="flex items-center justify-between gap-2">
         <span className={labelClass}>行（ラベル・値）</span>
         <button
@@ -367,18 +388,31 @@ function InfoRowsEditor({
       ) : null}
       {rows.map((row, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/90 p-3">
-          <Input
-            label="ラベル"
-            value={readJaText(row.label)}
-            onChange={(e) => updateRow(i, "label", e.target.value)}
-            placeholder="例: ネットワーク名"
-          />
-          <Input
-            label="値"
-            value={readJaText(row.value)}
-            onChange={(e) => updateRow(i, "value", e.target.value)}
-            placeholder="表示する値"
-          />
+          <label className={checkboxInlineRowClass + " min-h-0 px-0"}>
+            <input
+              type="checkbox"
+              checked={row.show !== false}
+              onChange={(e) => toggleShow(i, e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+            />
+            <span>この行を表示</span>
+          </label>
+          {row.show !== false ? (
+            <>
+              <Input
+                label="見出し"
+                value={readJaText(row.label)}
+                onChange={(e) => updateRow(i, "label", e.target.value)}
+                placeholder="例: ネットワーク名"
+              />
+              <Input
+                label="本文"
+                value={readJaText(row.value)}
+                onChange={(e) => updateRow(i, "value", e.target.value)}
+                placeholder="表示する内容"
+              />
+            </>
+          ) : null}
           <button
             type="button"
             onClick={() => removeRow(i)}
@@ -2633,6 +2667,9 @@ export function CardSettings({
   const update = (key: string, value: unknown) => {
     onUpdate(card.id, { content: { ...content, [key]: value } });
   };
+  const patchContent = (patch: Record<string, unknown>) => {
+    onUpdate(card.id, { content: { ...content, ...patch } });
+  };
   const updateStyle = (key: string, value: unknown) => {
     const next = value === undefined || value === "" ? undefined : value;
     const nextStyle = next != null ? { ...style, [key]: next } : { ...style };
@@ -2652,7 +2689,6 @@ export function CardSettings({
   const display = (key: string) =>
     getLocalizedContent(content[key] as LocalizedString | undefined, "ja");
 
-  const isFacilityGuideBlock = card.type === "breakfast" || card.type === "spa";
   const isProOnlyCard = PRO_AND_ABOVE_CARD_TYPES.includes(card.type);
   const isBusinessOnlyCard = BUSINESS_ONLY_CARD_TYPES.includes(card.type);
   const supportsBusinessTonePreset =
@@ -2734,35 +2770,12 @@ export function CardSettings({
   const toggleDeleteProtection = () => {
     updateStyle("deleteProtected", !isDeleteProtected);
   };
-  const facilityTime = card.type === "spa" ? display("time") || display("hours") : display("time");
-  const facilityDetail =
-    card.type === "spa"
-      ? display("menu") || display("description") || display("note")
-      : display("menu");
 
   /** 多言語フィールドの更新（既存の他言語を保持し ja を更新）。翻訳は公開・プレビュー時に一括実行。 */
   const updateLocalized = (key: string, value: string) => {
     const cur = content[key];
     const next = isLocalizedObject(cur) ? { ...cur, ja: value } : value;
     update(key, next);
-  };
-
-  const updateFacilityLocalized = (key: "title" | "time" | "location" | "menu", value: string) => {
-    if (card.type !== "spa") {
-      updateLocalized(key, value);
-      return;
-    }
-    if (key === "time") {
-      updateLocalized("time", value);
-      updateLocalized("hours", value);
-      return;
-    }
-    if (key === "menu") {
-      updateLocalized("menu", value);
-      updateLocalized("description", value);
-      return;
-    }
-    updateLocalized(key, value);
   };
 
   if (planLocked) {
@@ -3180,6 +3193,7 @@ export function CardSettings({
                 label="アイコン"
                 value={(content.icon as string) ?? ""}
                 onChange={(next) => update("icon", next)}
+                allowEmpty
                 className={inputClass}
                 labelClassName={labelClass}
               />
@@ -3391,59 +3405,20 @@ export function CardSettings({
             </SettingsSection>
           )}
 
-          {card.type === "wifi" && (
+          {isFacilityInfoType(card.type) && (
             <SettingsSection title="コンテンツ">
-                <Input
-                  label="タイトル"
-                  value={display("title")}
-                  onChange={(e) => updateLocalized("title", e.target.value)}
-                  placeholder="例: ゲストWi-Fi"
-                />
-                <Input
-                  label="Wi-Fi名（SSID）"
-                  value={display("ssid")}
-                  onChange={(e) => updateLocalized("ssid", e.target.value)}
-                  placeholder="ネットワーク名"
-                />
-                <Input
-                  label="パスワード"
-                  value={display("password")}
-                  onChange={(e) => updateLocalized("password", e.target.value)}
-                  placeholder="パスワード"
-                />
-            </SettingsSection>
-          )}
-
-          {isFacilityGuideBlock && (
-            <SettingsSection title="コンテンツ">
-                <Input
-                  label="タイトル"
-                  value={display("title")}
-                  onChange={(e) => updateFacilityLocalized("title", e.target.value)}
-                  placeholder="施設案内"
-                />
-                <Input
-                  label="時間"
-                  value={facilityTime}
-                  onChange={(e) => updateFacilityLocalized("time", e.target.value)}
-                  placeholder="7:00–9:30"
-                />
-                <Input
-                  label="場所"
-                  value={display("location")}
-                  onChange={(e) => updateFacilityLocalized("location", e.target.value)}
-                  placeholder="1F ダイニング"
-                />
-                <div className="w-full">
-                  <label className={labelClass}>詳細</label>
-                  <textarea
-                    value={facilityDetail}
-                    onChange={(e) => updateFacilityLocalized("menu", e.target.value)}
-                    placeholder="メニュー・補足など"
-                    rows={2}
-                    className={inputClass}
-                  />
-                </div>
+              <FacilityInfoSettingsFields
+                type={card.type}
+                content={content}
+                display={display}
+                updateLocalized={updateLocalized}
+                update={update}
+                patchContent={patchContent}
+                inputClass={inputClass}
+                labelClass={labelClass}
+                checkboxRowClass={checkboxRowClass}
+                Input={Input}
+              />
             </SettingsSection>
           )}
 
@@ -3455,18 +3430,44 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="チェックアウト"
               />
-              <Input
-                label="時間"
-                value={display("time")}
-                onChange={(e) => updateLocalized("time", e.target.value)}
-                placeholder="11:00"
-              />
-              <Input
-                label="補足"
-                value={display("note")}
-                onChange={(e) => updateLocalized("note", e.target.value)}
-                placeholder="任意"
-              />
+              <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50/40 px-2.5 py-2">
+                <label className={checkboxRowClass + " min-h-0 px-0"}>
+                  <input
+                    type="checkbox"
+                    checked={content.show_time !== false}
+                    onChange={(e) => patchContent({ show_time: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+                  />
+                  <span>時刻を表示</span>
+                </label>
+                {content.show_time !== false ? (
+                  <Input
+                    label="時間"
+                    value={display("time")}
+                    onChange={(e) => updateLocalized("time", e.target.value)}
+                    placeholder="11:00"
+                  />
+                ) : null}
+              </div>
+              <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50/40 px-2.5 py-2">
+                <label className={checkboxRowClass + " min-h-0 px-0"}>
+                  <input
+                    type="checkbox"
+                    checked={content.show_note === true || (content.show_note !== false && Boolean(display("note")))}
+                    onChange={(e) => patchContent({ show_note: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-ds-primary focus:ring-ds-primary"
+                  />
+                  <span>補足を表示</span>
+                </label>
+                {(content.show_note === true || (content.show_note !== false && Boolean(display("note")))) && (
+                  <Input
+                    label="補足"
+                    value={display("note")}
+                    onChange={(e) => updateLocalized("note", e.target.value)}
+                    placeholder="任意"
+                  />
+                )}
+              </div>
               <Input
                 label="リンクURL"
                 value={display("linkUrl")}
@@ -3479,132 +3480,6 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("linkLabel", e.target.value)}
                 placeholder="詳細"
               />
-            </SettingsSection>
-          )}
-
-          {card.type === "taxi" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="タクシー"
-              />
-              <Input
-                label="電話番号"
-                value={display("phone")}
-                onChange={(e) => update("phone", e.target.value)}
-                placeholder="03-1234-5678"
-              />
-              <Input
-                label="会社名"
-                value={display("companyName")}
-                onChange={(e) => updateLocalized("companyName", e.target.value)}
-                placeholder="〇〇タクシー"
-              />
-              <Input
-                label="補足"
-                value={display("note")}
-                onChange={(e) => updateLocalized("note", e.target.value)}
-                placeholder="任意"
-              />
-            </SettingsSection>
-          )}
-
-          {card.type === "restaurant" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="レストラン"
-              />
-              <Input
-                label="営業時間"
-                value={display("time")}
-                onChange={(e) => updateLocalized("time", e.target.value)}
-                placeholder="7:00–22:00"
-              />
-              <Input
-                label="場所"
-                value={display("location")}
-                onChange={(e) => updateLocalized("location", e.target.value)}
-                placeholder="1F"
-              />
-              <Input
-                label="メニュー・備考"
-                value={display("menu")}
-                onChange={(e) => updateLocalized("menu", e.target.value)}
-                placeholder="メニュー・備考"
-              />
-            </SettingsSection>
-          )}
-
-          {card.type === "laundry" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="ランドリー"
-              />
-              <Input
-                label="営業時間"
-                value={display("hours")}
-                onChange={(e) => updateLocalized("hours", e.target.value)}
-                placeholder="9:00–18:00"
-              />
-              <Input
-                label="料金・備考"
-                value={display("priceNote")}
-                onChange={(e) => updateLocalized("priceNote", e.target.value)}
-                placeholder="料金表・注意事項"
-              />
-              <Input
-                label="連絡先"
-                value={display("contact")}
-                onChange={(e) => updateLocalized("contact", e.target.value)}
-                placeholder="内線1234"
-              />
-            </SettingsSection>
-          )}
-
-          {card.type === "parking" && (
-            <SettingsSection title="コンテンツ">
-              <Input
-                label="タイトル"
-                value={display("title")}
-                onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="駐車場"
-              />
-              <Input
-                label="台数"
-                value={display("capacity")}
-                onChange={(e) => updateLocalized("capacity", e.target.value)}
-                placeholder="50台"
-              />
-              <Input
-                label="料金"
-                value={display("fee")}
-                onChange={(e) => updateLocalized("fee", e.target.value)}
-                placeholder="無料"
-              />
-              <Input
-                label="場所"
-                value={display("address")}
-                onChange={(e) => updateLocalized("address", e.target.value)}
-                placeholder="敷地内"
-              />
-              <div className="w-full">
-                <label className={labelClass}>備考</label>
-                <textarea
-                  value={display("note")}
-                  onChange={(e) => updateLocalized("note", e.target.value)}
-                  placeholder="注意事項・利用時間"
-                  rows={2}
-                  className={inputClass}
-                />
-              </div>
             </SettingsSection>
           )}
 

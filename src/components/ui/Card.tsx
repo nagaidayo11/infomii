@@ -22,6 +22,8 @@ const paddingClass = {
 
 /**
  * Card container: 余白のみで区切り。外枠・影はなし。
+ * Radius must be explicit — `rounded-[inherit]` fails when parents are
+ * intermediate wrappers without border-radius (FreeformCanvas shells).
  */
 export function Card({
   children,
@@ -40,7 +42,7 @@ export function Card({
         ...style,
       }}
       className={
-        "rounded-[inherit] " +
+        "rounded-[var(--guest-card-radius,0.75rem)] " +
         paddingClass[padding] +
         (interactiveClass ? ` ${interactiveClass}` : "") +
         " " +

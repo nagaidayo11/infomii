@@ -1,4 +1,5 @@
 import { personalDefaultContent } from "@/lib/editor/card-defaults-personal";
+import { defaultFacilityContent } from "@/lib/editor/facility-info-presets";
 
 /**
  * Infomii Editor 2.0 — Card-based page system.
@@ -652,41 +653,39 @@ function defaultContent(type: CardType): Record<string, unknown> {
           createDefaultHeroSliderSlide(4),
         ],
       };
-    case "heading_body":
-      return {
-        title: "見出しテキスト",
-        body: "本文テキストを入力してください。",
-        dividerEnabled: false,
-        dividerStyle: "solid",
-      };
+    case "wifi":
+    case "taxi":
+    case "laundry":
+    case "parking":
+    case "breakfast":
+    case "spa":
+    case "restaurant":
+      return defaultFacilityContent(type) ?? { title: "" };
     case "info":
       return {
-        title: "フロント・館内",
-        icon: "info",
-        rows: [
-          { label: "フロント", value: "24時間 / 内線9" },
-          { label: "製氷機", value: "各フロア廊下" },
-          { label: "電子レンジ", value: "2F" },
-        ],
+        title: "",
+        icon: "",
+        tone: "slate",
+        rows: [{ label: "", value: "", show: true }],
       };
-    case "highlight":
-      return { title: "重要なお知らせ", body: "22:00以降は客室フロアでお静かにお過ごしください。", accent: "amber" };
+    case "checkout":
+      return {
+        title: "チェックアウト",
+        time: "11:00",
+        note: "延長をご希望の方はフロントまでご相談ください。",
+        show_time: true,
+        show_note: true,
+        linkUrl: "",
+        linkLabel: "チェックアウト手順",
+      };
     case "action":
       return { label: "詳細を見る", href: "#" };
     case "welcome":
       return {
         title: "ご宿泊ありがとうございます",
-        message: "滞在中によく使う情報だけを、読みやすい順に並べています。施設名・時間は公開前に差し替えてください。",
+        message:
+          "滞在中によく使うご案内をまとめています。ご不明な点はフロント内線9までお気軽にお問い合わせください。",
       };
-    case "wifi":
-      return {
-        title: "Wi-Fi案内",
-        ssid: "Hotel-WiFi",
-        password: "welcome1234",
-        description: "客室・ロビーでご利用いただけます。つながらない場合はフロント内線9へ。",
-      };
-    case "breakfast":
-      return { title: "朝食", time: "6:30-9:30", location: "1F レストラン", menu: "和洋ビュッフェ / 最終入場 9:00" };
     case "breakfast_crowd":
       return {
         title: "朝食の混雑いま",
@@ -696,9 +695,9 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "dinner_crowd":
       return {
-        title: "夕食混雑",
+        title: "夕食の混雑いま",
         level: "open",
-        note: "",
+        note: "混雑状況は随時更新しています。",
         updatedAt: new Date().toISOString(),
       };
     case "spa_crowd":
@@ -708,34 +707,61 @@ function defaultContent(type: CardType): Record<string, unknown> {
         note: "タオルは客室からご持参ください。混雑時は入場をお待ちいただく場合があります。",
         updatedAt: new Date().toISOString(),
       };
-    case "checkout":
-      return { title: "チェックアウト", time: "11:00", note: "延長希望はフロントへご相談ください。", linkUrl: "", linkLabel: "チェックアウト手順" };
     case "nearby":
-      return { title: "周辺案内", items: [{ name: "コンビニ", description: "徒歩2分 / 24時間営業", link: "" }] };
+      return {
+        title: "周辺案内",
+        items: [
+          { name: "コンビニ", description: "徒歩2分 / 24時間営業", link: "" },
+          { name: "駅", description: "徒歩8分", link: "" },
+        ],
+      };
     case "notice":
-      return { title: "お知らせ", body: "客室清掃は10:00-14:00に実施します。", variant: "info" };
+      return {
+        title: "客室清掃について",
+        body: "客室清掃は10:00–14:00に実施します。在室のまま清掃をご希望の場合はフロントまでお知らせください。",
+        variant: "info",
+      };
     case "map":
-      return { title: "地図", address: "東京都港区○○ 1-2-3", mapEmbedUrl: "" };
-    case "restaurant":
-      return { title: "レストラン", time: "7:00-22:00", location: "1F", menu: "朝食ビュッフェ / ディナーコース" };
-    case "taxi":
-      return { title: "タクシー", phone: "03-1234-5678", companyName: "○○タクシー", note: "フロントで手配可能です。" };
+      return {
+        title: "アクセス",
+        address: "東京都港区芝公園1-2-3",
+        mapEmbedUrl: "",
+      };
     case "emergency":
-      return { title: "緊急連絡先", fire: "119", police: "110", hospital: "○○総合病院 03-1111-2222", note: "体調不良時はフロントへご連絡ください。" };
-    case "laundry":
-      return { title: "ランドリー", hours: "6:00-24:00", priceNote: "洗濯 300円 / 乾燥 100円(30分)", contact: "内線 9" };
-    case "spa":
-      return { title: "スパ・温泉", hours: "15:00-24:00 / 6:00-10:00", location: "2F", description: "タオルは客室からご持参ください。", note: "" };
+      return {
+        title: "緊急連絡先",
+        fire: "119",
+        police: "110",
+        hospital: "最寄り救急病院はフロントにお尋ねください",
+        note: "体調不良の際は、まずフロント内線9へご連絡ください。",
+        show_note: true,
+      };
     case "text":
-      return { title: "ご案内", content: "こちらに自由にテキストを入力できます。" };
+      return {
+        title: "ご案内",
+        content: "チェックイン後は、Wi-Fi・朝食・大浴場のご案内をご確認ください。",
+      };
+    case "heading_body":
+      return {
+        title: "館内のご案内",
+        body: "よく使う情報をわかりやすくまとめています。施設の最新情報はフロントでもご確認いただけます。",
+        dividerEnabled: false,
+        dividerStyle: "solid",
+      };
+    case "highlight":
+      return {
+        title: "ご静かにご協力ください",
+        body: "22:00以降は客室フロアでお静かにお過ごしください。",
+        accent: "amber",
+      };
     case "icon":
-      return { icon: "info", label: "ラベル", description: "" };
+      return { icon: "info", label: "ご案内", description: "詳細はフロントまで" };
     case "image":
       return { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" };
     case "video":
-      return { title: "館内のご案内", videoUrl: "", caption: "" };
+      return { title: "館内のご紹介", videoUrl: "", caption: "" };
     case "button":
-      return { label: "予約サイトへ", href: "#" };
+      return { label: "公式サイトを見る", href: "https://example.com" };
     case "faq":
       return {
         title: "よくある質問",

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { LineIcon } from "@/components/cards/LineIcon";
 import {
   getLibrarySections,
   getQuickPresets,
@@ -12,12 +13,19 @@ import {
   type QuickPreset,
 } from "@/lib/editor/card-library-config";
 import {
+  LABEL_ROW_LIBRARY_PRESETS,
+  infoContentFromFacilityPreset,
+  isFacilityInfoType,
+  type LabelRowLibraryPreset,
+} from "@/lib/editor/facility-info-presets";
+import {
   BUSINESS_ONLY_CARD_TYPES,
   CARD_TYPE_LABELS,
   createEmptyCard,
   getMinimumPlanForCardType,
   type CardType,
   type EditorCard,
+  type EditorPlanTier,
 } from "./types";
 import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
 import { useClientShell } from "@/components/app-shell/useClientShell";
@@ -26,7 +34,9 @@ export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-li
 
 type CardLibraryProps = {
   onAddCard: (type: CardType) => void;
-  onAddPreset?: (types: CardType[]) => void;
+  onAddPreset?: (preset: QuickPreset) => void;
+  /** Insert unified label-row (`info`) seeded from a facility preset. */
+  onAddLabelRowPreset?: (preset: LabelRowLibraryPreset) => void;
   canUseProBlocks?: boolean;
   canUseBusinessBlocks?: boolean;
   onLockedAddCard?: (type: CardType) => void;
@@ -848,7 +858,11 @@ function LibraryItemButton({
   isGatedType,
   disabled,
   onAdd,
+  onActivate,
+  onOpenPicker,
+  onScheduleClosePicker,
   libraryAudience,
+  pickerOpen = false,
 }: {
   sectionId: string;
   item: LibraryItem;
@@ -856,7 +870,13 @@ function LibraryItemButton({
   isGatedType: boolean;
   disabled: boolean;
   onAdd: (type: CardType) => void;
+  /** Return true to handle activation (e.g. toggle a popover) instead of adding. */
+  onActivate?: (anchor: HTMLElement) => boolean;
+  /** Open picker on hover (no generic hover preview). */
+  onOpenPicker?: (anchor: HTMLElement) => void;
+  onScheduleClosePicker?: () => void;
   libraryAudience: LibraryAudience;
+  pickerOpen?: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -866,6 +886,7 @@ function LibraryItemButton({
   const [focusOpen, setFocusOpen] = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const hoverPreviewEnabled = useEditorHoverPreviewEnabled();
+  const usesPurposePicker = Boolean(onOpenPicker);
 
   const closeMobilePreview = useCallback(() => {
     blockAddClickRef.current = true;
@@ -889,12 +910,26 @@ function LibraryItemButton({
   useEffect(() => () => clearTimers(), []);
 
   const handlePointerEnter = () => {
-    if (!hoverPreviewEnabled) return;
+    if (usesPurposePicker) {
+      clearTimers();
+      if (rowRef.current && !disabled) {
+        openTimerRef.current = window.setTimeout(() => {
+          if (rowRef.current) onOpenPicker?.(rowRef.current);
+        }, HOVER_OPEN_DELAY_MS);
+      }
+      return;
+    }
+    if (!hoverPreviewEnabled || pickerOpen) return;
     clearTimers();
     openTimerRef.current = window.setTimeout(() => setHoverOpen(true), HOVER_OPEN_DELAY_MS);
   };
 
   const handlePointerLeave = () => {
+    if (usesPurposePicker) {
+      clearTimers();
+      onScheduleClosePicker?.();
+      return;
+    }
     if (!hoverPreviewEnabled) return;
     clearTimers();
     closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
@@ -908,6 +943,7 @@ function LibraryItemButton({
     clearTimers();
     setHoverOpen(false);
     setFocusOpen(false);
+    if (onActivate && rowRef.current && onActivate(rowRef.current)) return;
     onAdd(item.type);
   };
 
@@ -936,22 +972,30 @@ function LibraryItemButton({
       }}
       onKeyDown={handleRowKeyDown}
       onPointerDown={handleRowPointerDown}
-      onPointerEnter={hoverPreviewEnabled ? handlePointerEnter : undefined}
-      onPointerLeave={hoverPreviewEnabled ? handlePointerLeave : undefined}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
       onFocus={() => {
-        if (hoverPreviewEnabled) setFocusOpen(true);
+        if (usesPurposePicker) {
+          if (rowRef.current && !disabled) onOpenPicker?.(rowRef.current);
+          return;
+        }
+        if (hoverPreviewEnabled && !pickerOpen) setFocusOpen(true);
       }}
       onBlur={(e) => {
         if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
         setFocusOpen(false);
+        if (usesPurposePicker) onScheduleClosePicker?.();
       }}
       className={
         "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 " +
         (!disabled
           ? "lg:hover:bg-slate-50 lg:hover:shadow-sm"
-          : "cursor-not-allowed opacity-55")
+          : "cursor-not-allowed opacity-55") +
+        (pickerOpen ? " bg-slate-50 ring-1 ring-slate-200" : "")
       }
-      aria-label={`${item.label}を追加`}
+      aria-label={onActivate ? `${item.label}の用途を選ぶ` : `${item.label}を追加`}
+      aria-expanded={onActivate ? pickerOpen : undefined}
+      aria-haspopup={onActivate ? "menu" : undefined}
       aria-disabled={disabled || undefined}
       title={disabled ? "Businessプラン限定ブロックです" : undefined}
     >
@@ -965,7 +1009,7 @@ function LibraryItemButton({
       >
         {CARD_ICONS[item.type] ?? CARD_ICONS.text}
       </span>
-      <div className="relative min-w-0 flex-1 pr-9">
+      <div className={`relative min-w-0 flex-1 ${usesPurposePicker ? "" : "pr-9"}`}>
         <span
           className={
             "flex h-9 items-center gap-1 truncate text-[13px] font-medium leading-none " +
@@ -975,29 +1019,541 @@ function LibraryItemButton({
           <span className="truncate">{item.label}</span>
           {isGatedType ? <PlanGateBadge plan={planGate === "business" ? "business" : "pro"} /> : null}
         </span>
-        <span className="absolute inset-y-0 right-0 flex items-center">
-          <DescriptionWithTooltip
-            item={item}
-            parentOpen={hoverPreviewEnabled && (hoverOpen || focusOpen)}
-            anchorRef={rowRef}
-            libraryAudience={libraryAudience}
-            mobilePreviewOpen={mobilePreviewOpen}
-            onMobilePreviewOpenChange={setMobilePreviewOpen}
-            onCloseMobilePreview={closeMobilePreview}
-          />
-        </span>
+        {!usesPurposePicker ? (
+          <span className="absolute inset-y-0 right-0 flex items-center">
+            <DescriptionWithTooltip
+              item={item}
+              parentOpen={hoverPreviewEnabled && !pickerOpen && (hoverOpen || focusOpen)}
+              anchorRef={rowRef}
+              libraryAudience={libraryAudience}
+              mobilePreviewOpen={mobilePreviewOpen}
+              onMobilePreviewOpenChange={setMobilePreviewOpen}
+              onCloseMobilePreview={closeMobilePreview}
+            />
+          </span>
+        ) : null}
       </div>
     </div>
   );
 }
 
 /**
- * Left panel: Card Library — grouped by purpose (main view, guides, safety, access, trust, layout).
- * Click inserts a card into the canvas.
+ * Right-side popover: pick a label-row genre (titles only).
+ * Hovering a genre shows a live card preview beside the menu.
+ */
+function LabelRowPresetPopover({
+  open,
+  anchor,
+  onClose,
+  onKeepOpen,
+  onScheduleClose,
+  onPickPreset,
+  onPickBlank,
+}: {
+  open: boolean;
+  anchor: HTMLElement | null;
+  onClose: () => void;
+  onKeepOpen?: () => void;
+  onScheduleClose?: () => void;
+  onPickPreset: (preset: LabelRowLibraryPreset) => void;
+  onPickBlank: () => void;
+}) {
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const openTimerRef = useRef<number | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const [position, setPosition] = useState({ left: 0, top: 0 });
+  const [placed, setPlaced] = useState(false);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const expandInner = useLibraryPreviewExpandInner();
+
+  const clearHoverTimers = () => {
+    if (openTimerRef.current) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleHover = (key: string | null) => {
+    clearHoverTimers();
+    if (key == null) {
+      closeTimerRef.current = window.setTimeout(() => setHoverKey(null), HOVER_CLOSE_DELAY_MS);
+      return;
+    }
+    openTimerRef.current = window.setTimeout(() => setHoverKey(key), HOVER_OPEN_DELAY_MS);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      clearHoverTimers();
+      setHoverKey(null);
+    }
+    return () => clearHoverTimers();
+  }, [open]);
+
+  const previewCard = useMemo(() => {
+    if (!hoverKey) return null;
+    if (hoverKey === "blank") {
+      return createEmptyCard("info", "preview-label-blank", 0);
+    }
+    const preset = LABEL_ROW_LIBRARY_PRESETS.find((p) => p.id === hoverKey);
+    if (!preset) return null;
+    const base = createEmptyCard("info", `preview-${preset.id}`, 0);
+    const content = infoContentFromFacilityPreset(preset.seedFrom);
+    return content ? { ...base, content } : base;
+  }, [hoverKey]);
+
+  useLayoutEffect(() => {
+    if (!open || !anchor) {
+      setPlaced(false);
+      return;
+    }
+    let raf = 0;
+    let attachRaf = 0;
+    let ro: ResizeObserver | null = null;
+
+    const update = () => {
+      cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const rect = anchor.getBoundingClientRect();
+        const tipEl = popoverRef.current;
+        const tipW = tipEl?.offsetWidth || 176;
+        const tipH = tipEl?.offsetHeight || 280;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const preferRight = rect.right + TOOLTIP_GAP + tipW <= vw - TOOLTIP_VIEWPORT_MARGIN;
+        let left = preferRight
+          ? rect.right + TOOLTIP_GAP
+          : rect.left - tipW - TOOLTIP_GAP;
+        left = Math.max(
+          TOOLTIP_VIEWPORT_MARGIN,
+          Math.min(left, vw - tipW - TOOLTIP_VIEWPORT_MARGIN),
+        );
+        const top = Math.max(
+          TOOLTIP_VIEWPORT_MARGIN,
+          Math.min(rect.top, vh - tipH - TOOLTIP_VIEWPORT_MARGIN),
+        );
+        setPosition({ left, top });
+        setPlaced(true);
+      });
+    };
+
+    const attachRo = () => {
+      ro?.disconnect();
+      const el = popoverRef.current;
+      if (!el || typeof ResizeObserver === "undefined") return false;
+      ro = new ResizeObserver(update);
+      ro.observe(el);
+      return true;
+    };
+
+    update();
+    if (!attachRo()) {
+      attachRaf = window.requestAnimationFrame(() => {
+        attachRo();
+        update();
+      });
+    }
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(attachRaf);
+      ro?.disconnect();
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, anchor, hoverKey, previewCard]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (popoverRef.current?.contains(target)) return;
+      if (anchor?.contains(target)) return;
+      onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer, true);
+    };
+  }, [open, anchor, onClose]);
+
+  if (!open || !anchor || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      ref={popoverRef}
+      className={
+        "fixed z-[9999] flex items-start gap-2 transition-opacity duration-150 " +
+        (placed ? "opacity-100" : "opacity-0")
+      }
+      style={{ left: position.left, top: position.top }}
+      onPointerEnter={() => {
+        onKeepOpen?.();
+      }}
+      onPointerLeave={() => {
+        scheduleHover(null);
+        onScheduleClose?.();
+      }}
+    >
+      <div
+        role="menu"
+        aria-label="ラベル行リストの用途"
+        className="w-[176px] shrink-0 rounded-xl border border-slate-200 bg-white py-1.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
+      >
+        {LABEL_ROW_LIBRARY_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            role="menuitem"
+            onClick={() => onPickPreset(preset)}
+            onPointerEnter={() => scheduleHover(preset.id)}
+            className={
+              "ui-pop-tap flex w-full px-3 py-2 text-left text-[13px] font-medium transition " +
+              (hoverKey === preset.id
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-800 hover:bg-slate-50")
+            }
+          >
+            {preset.label}
+          </button>
+        ))}
+        <div className="my-1 border-t border-slate-100" />
+        <button
+          type="button"
+          role="menuitem"
+          onClick={onPickBlank}
+          onPointerEnter={() => scheduleHover("blank")}
+          className={
+            "ui-pop-tap flex w-full px-3 py-2 text-left text-[13px] font-medium transition " +
+            (hoverKey === "blank" ? "bg-slate-100 text-slate-800" : "text-slate-600 hover:bg-slate-50")
+          }
+        >
+          空のラベル行リスト
+        </button>
+      </div>
+      {previewCard ? (
+        <div
+          className="max-h-[min(70vh,520px)] max-w-[min(calc(100vw-24px),340px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
+          onPointerEnter={clearHoverTimers}
+        >
+          <LiveCardPreview card={previewCard} expandInner={expandInner} />
+          <p className="mt-1.5 text-xs font-semibold text-slate-900">
+            {hoverKey === "blank"
+              ? "空のラベル行リスト"
+              : LABEL_ROW_LIBRARY_PRESETS.find((p) => p.id === hoverKey)?.label ?? "プレビュー"}
+          </p>
+        </div>
+      ) : null}
+    </div>,
+    document.body,
+  );
+}
+
+/**
+ * Recommended set row — icon + title + purpose, hover shows stacked live previews.
+ */
+function QuickPresetRow({
+  preset,
+  locked,
+  planGate,
+  tabIndex,
+  libraryAudience,
+  onAdd,
+}: {
+  preset: QuickPreset;
+  locked: boolean;
+  planGate: EditorPlanTier;
+  tabIndex?: number;
+  libraryAudience: LibraryAudience;
+  onAdd: () => void;
+}) {
+  const rowRef = useRef<HTMLButtonElement | null>(null);
+  const openTimerRef = useRef<number | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const hoverPreviewEnabled = useEditorHoverPreviewEnabled();
+  const expandInner = useLibraryPreviewExpandInner();
+
+  const previewCards = useMemo(() => {
+    return preset.types.map((type, index) => {
+      if (isFacilityInfoType(type)) {
+        const base = createEmptyCard("info", `preset-${preset.id}-${type}-${index}`, index, libraryAudience);
+        const content = infoContentFromFacilityPreset(type);
+        return content ? { ...base, content } : base;
+      }
+      if (type === "info" && preset.infoContent) {
+        const base = createEmptyCard("info", `preset-${preset.id}-info-${index}`, index, libraryAudience);
+        return { ...base, content: preset.infoContent };
+      }
+      return createEmptyCard(type, `preset-${preset.id}-${type}-${index}`, index, libraryAudience);
+    });
+  }, [preset, libraryAudience]);
+
+  const typeChips = useMemo(
+    () =>
+      preset.types.map((type, index) => ({
+        key: `${preset.id}-${type}-${index}`,
+        label: CARD_TYPE_LABELS[type] ?? type,
+      })),
+    [preset.id, preset.types],
+  );
+
+  const clearTimers = () => {
+    if (openTimerRef.current) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearTimers(), []);
+
+  const handlePointerEnter = () => {
+    if (!hoverPreviewEnabled || locked) return;
+    clearTimers();
+    openTimerRef.current = window.setTimeout(() => setHoverOpen(true), HOVER_OPEN_DELAY_MS);
+  };
+
+  const handlePointerLeave = () => {
+    if (!hoverPreviewEnabled) return;
+    clearTimers();
+    closeTimerRef.current = window.setTimeout(() => setHoverOpen(false), HOVER_CLOSE_DELAY_MS);
+  };
+
+  return (
+    <>
+      <button
+        ref={rowRef}
+        type="button"
+        tabIndex={tabIndex}
+        onClick={onAdd}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onFocus={() => {
+          if (hoverPreviewEnabled && !locked) setHoverOpen(true);
+        }}
+        onBlur={() => setHoverOpen(false)}
+        className={
+          "ui-pop-tap ui-pop-card group/preset flex w-full items-start gap-2.5 rounded-xl border bg-white px-2.5 py-2 text-left transition-all " +
+          (!locked
+            ? "border-slate-200 lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
+            : planGate === "business"
+              ? "border-violet-300 bg-violet-50/70"
+              : "border-sky-300 bg-sky-50/70")
+        }
+        aria-label={`${preset.label}を追加`}
+        title={
+          locked ? `${planGate === "business" ? "Business" : "Pro"}プランで利用できます` : undefined
+        }
+      >
+        <span
+          className={
+            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " +
+            (locked
+              ? planGate === "business"
+                ? "bg-violet-100 text-violet-700"
+                : "bg-sky-100 text-sky-700"
+              : "bg-slate-100 text-slate-700")
+          }
+          aria-hidden
+        >
+          <LineIcon name={preset.icon} className="h-4 w-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
+            <span className="truncate">{preset.label}</span>
+            {planGate !== "free" ? <PlanGateBadge plan={planGate === "business" ? "business" : "pro"} /> : null}
+          </span>
+          <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{preset.purpose}</span>
+          <span className="mt-1.5 flex flex-wrap gap-1">
+            {typeChips.map((chip) => (
+              <span
+                key={chip.key}
+                className="rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 ring-1 ring-slate-200/80"
+              >
+                {chip.label}
+              </span>
+            ))}
+          </span>
+        </span>
+      </button>
+      <QuickPresetPreviewPortal
+        open={hoverPreviewEnabled && hoverOpen && !locked}
+        anchorRef={rowRef}
+        title={preset.label}
+        cards={previewCards}
+        expandInner={expandInner}
+      />
+    </>
+  );
+}
+
+function QuickPresetPreviewPortal({
+  open,
+  anchorRef,
+  title,
+  cards,
+  expandInner,
+}: {
+  open: boolean;
+  anchorRef: React.RefObject<HTMLElement | null>;
+  title: string;
+  cards: EditorCard[];
+  expandInner: boolean;
+}) {
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [placed, setPlaced] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const [position, setPosition] = useState({ left: 0, top: 0 });
+  const tooltipId = useId();
+  const exitTimerRef = useRef<number | null>(null);
+  const wasPlacedRef = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+      setMounted(true);
+      return;
+    }
+    const delay = wasPlacedRef.current ? TOOLTIP_FADE_MS : 0;
+    exitTimerRef.current = window.setTimeout(() => {
+      setMounted(false);
+      wasPlacedRef.current = false;
+      exitTimerRef.current = null;
+    }, delay);
+    return () => {
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!mounted || !placed || !open) {
+      setEntered(false);
+      return;
+    }
+    let rafIn = 0;
+    rafIn = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(rafIn);
+  }, [mounted, placed, open]);
+
+  useLayoutEffect(() => {
+    if (!mounted) {
+      setPlaced(false);
+      return;
+    }
+    let raf = 0;
+    let attachRaf = 0;
+    let roTip: ResizeObserver | null = null;
+
+    const updatePosition = () => {
+      const anchorEl = anchorRef.current;
+      if (!anchorEl) return;
+      cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const rect = anchorEl.getBoundingClientRect();
+        const tipEl = tooltipRef.current;
+        const tipRect = tipEl?.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        let tw = tipRect && tipRect.width > 48 ? tipRect.width : TOOLTIP_PLACEHOLDER_WIDTH;
+        let th = tipRect && tipRect.height > 48 ? tipRect.height : 280;
+        tw = Math.min(tw, vw - TOOLTIP_VIEWPORT_MARGIN * 2);
+        const preferRight = rect.right + TOOLTIP_GAP + tw <= vw - TOOLTIP_VIEWPORT_MARGIN;
+        let left = preferRight ? rect.right + TOOLTIP_GAP : rect.left - tw - TOOLTIP_GAP;
+        left = Math.max(TOOLTIP_VIEWPORT_MARGIN, Math.min(left, vw - tw - TOOLTIP_VIEWPORT_MARGIN));
+        const maxTop = vh - th - TOOLTIP_VIEWPORT_MARGIN;
+        const top = Math.max(
+          TOOLTIP_VIEWPORT_MARGIN,
+          Number.isFinite(maxTop) ? Math.min(rect.top, maxTop) : rect.top,
+        );
+        setPosition({ left, top });
+        wasPlacedRef.current = true;
+        setPlaced(true);
+      });
+    };
+
+    updatePosition();
+    const attachRo = () => {
+      roTip?.disconnect();
+      const el = tooltipRef.current;
+      if (!el) return false;
+      roTip = new ResizeObserver(updatePosition);
+      roTip.observe(el);
+      return true;
+    };
+    if (!attachRo()) {
+      attachRaf = window.requestAnimationFrame(() => {
+        attachRo();
+        updatePosition();
+      });
+    }
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(attachRaf);
+      roTip?.disconnect();
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [mounted, anchorRef, cards.length]);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      ref={tooltipRef}
+      id={tooltipId}
+      role="tooltip"
+      className={
+        "pointer-events-none fixed z-[9999] box-border w-max max-w-[min(calc(100vw-20px),360px)] min-w-[min(240px,calc(100vw-28px))] rounded-xl border border-slate-200 bg-white p-2.5 text-[11px] leading-snug text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.2)] transition-opacity duration-200 ease-out will-change-[opacity] motion-reduce:transition-none " +
+        (entered ? "opacity-100" : "opacity-0")
+      }
+      style={{ left: position.left, top: position.top }}
+    >
+      <div className="max-h-[min(70vh,560px)] space-y-2 overflow-y-auto overflow-x-hidden">
+        {cards.map((card) => (
+          <div key={card.id} className={expandInner ? "w-full overflow-hidden" : "flex justify-center overflow-hidden"}>
+            <LiveCardPreview card={card} expandInner={expandInner} />
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 text-xs font-semibold text-slate-900">{title}</p>
+      <p className="mt-0.5 text-[11px] text-slate-500">{cards.length}ブロックのセット</p>
+    </div>,
+    document.body,
+  );
+}
+
+/**
+ * Left panel: Card Library — layouts and sections.
+ * Hotel label-row presets open in a right-side popover from 「ラベル行リスト」.
  */
 export function CardLibrary({
   onAddCard,
   onAddPreset,
+  onAddLabelRowPreset,
   canUseProBlocks = false,
   canUseBusinessBlocks = false,
   onLockedAddCard,
@@ -1008,6 +1564,9 @@ export function CardLibrary({
   const librarySections = getLibrarySections(libraryAudience);
   const quickPresets = getQuickPresets(libraryAudience);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [labelRowAnchor, setLabelRowAnchor] = useState<HTMLElement | null>(null);
+  const labelRowPickerOpen = Boolean(labelRowAnchor);
+  const labelRowCloseTimerRef = useRef<number | null>(null);
   const canAdd = (type: CardType) => {
     const minimum = getMinimumPlanForCardType(type);
     if (minimum === "free") return true;
@@ -1015,6 +1574,50 @@ export function CardLibrary({
     return canUseBusinessBlocks;
   };
   const canAddPreset = (types: CardType[]) => types.every((type) => canAdd(type));
+  const clearLabelRowCloseTimer = useCallback(() => {
+    if (labelRowCloseTimerRef.current) {
+      window.clearTimeout(labelRowCloseTimerRef.current);
+      labelRowCloseTimerRef.current = null;
+    }
+  }, []);
+  const closeLabelRowPicker = useCallback(() => {
+    clearLabelRowCloseTimer();
+    setLabelRowAnchor(null);
+  }, [clearLabelRowCloseTimer]);
+  const keepLabelRowPickerOpen = useCallback(() => {
+    clearLabelRowCloseTimer();
+  }, [clearLabelRowCloseTimer]);
+  const scheduleCloseLabelRowPicker = useCallback(() => {
+    clearLabelRowCloseTimer();
+    labelRowCloseTimerRef.current = window.setTimeout(() => {
+      setLabelRowAnchor(null);
+      labelRowCloseTimerRef.current = null;
+    }, HOVER_CLOSE_DELAY_MS + 40);
+  }, [clearLabelRowCloseTimer]);
+  const openLabelRowPicker = useCallback(
+    (anchor: HTMLElement) => {
+      if (!(libraryAudience === "hotel" && onAddLabelRowPreset)) return;
+      const minimum = getMinimumPlanForCardType("info");
+      const allowed =
+        minimum === "free" ||
+        (minimum === "pro" && canUseProBlocks) ||
+        (minimum === "business" && canUseBusinessBlocks);
+      if (!allowed) {
+        onLockedAddCard?.("info");
+        return;
+      }
+      clearLabelRowCloseTimer();
+      setLabelRowAnchor(anchor);
+    },
+    [
+      libraryAudience,
+      onAddLabelRowPreset,
+      canUseProBlocks,
+      canUseBusinessBlocks,
+      onLockedAddCard,
+      clearLabelRowCloseTimer,
+    ],
+  );
   const handleAdd = (type: CardType) => {
     if (!canAdd(type)) {
       onLockedAddCard?.(type);
@@ -1028,8 +1631,61 @@ export function CardLibrary({
       if (locked) onLockedAddCard?.(locked);
       return;
     }
-    onAddPreset?.(preset.types);
+    onAddPreset?.(preset);
   };
+  const handleAddLabelRowPreset = (preset: LabelRowLibraryPreset) => {
+    if (!canAdd("info")) {
+      onLockedAddCard?.("info");
+      return;
+    }
+    onAddLabelRowPreset?.(preset);
+    closeLabelRowPicker();
+  };
+  const handleAddBlankLabelRow = () => {
+    if (!canAdd("info")) {
+      onLockedAddCard?.("info");
+      return;
+    }
+    onAddCard("info");
+    closeLabelRowPicker();
+  };
+  const handleInfoActivate = useCallback(
+    (anchor: HTMLElement) => {
+      if (!(libraryAudience === "hotel" && onAddLabelRowPreset)) return false;
+      const minimum = getMinimumPlanForCardType("info");
+      const allowed =
+        minimum === "free" ||
+        (minimum === "pro" && canUseProBlocks) ||
+        (minimum === "business" && canUseBusinessBlocks);
+      if (!allowed) {
+        onLockedAddCard?.("info");
+        return true;
+      }
+      clearLabelRowCloseTimer();
+      setLabelRowAnchor((prev) => (prev === anchor ? null : anchor));
+      return true;
+    },
+    [
+      libraryAudience,
+      onAddLabelRowPreset,
+      canUseProBlocks,
+      canUseBusinessBlocks,
+      onLockedAddCard,
+      clearLabelRowCloseTimer,
+    ],
+  );
+
+  useEffect(() => {
+    if (libraryAudience !== "hotel") closeLabelRowPicker();
+  }, [libraryAudience, closeLabelRowPicker]);
+
+  useEffect(
+    () => () => {
+      clearLabelRowCloseTimer();
+    },
+    [clearLabelRowCloseTimer],
+  );
+
   return (
     <div className="flex h-full flex-col overflow-visible ">
       <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
@@ -1105,37 +1761,19 @@ export function CardLibrary({
                   </button>
                 ) : null}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {quickPresets.slice(0, 2).map((preset) => {
                   const presetPlan = getPresetMinimumPlan(preset.types);
                   const presetLocked = !canAddPreset(preset.types);
                   return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleAddPreset(preset)}
-                    className={
-                      "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
-                      (!presetLocked
-                        ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
-                        : presetPlan === "business"
-                          ? "border-violet-300 bg-violet-50/70"
-                          : "border-sky-300 bg-sky-50/70")
-                    }
-                    aria-label={`${preset.label}を追加`}
-                    title={
-                      presetLocked
-                        ? `${presetPlan === "business" ? "Business" : "Pro"}プランで利用できます`
-                        : undefined
-                    }
-                  >
-                    <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
-                      {preset.label}
-                      {presetPlan !== "free" ? <PlanGateBadge plan={presetPlan} /> : null}
-                    </span>
-                    <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
-                    <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
-                  </button>
+                    <QuickPresetRow
+                      key={preset.id}
+                      preset={preset}
+                      locked={presetLocked}
+                      planGate={presetPlan}
+                      libraryAudience={libraryAudience}
+                      onAdd={() => handleAddPreset(preset)}
+                    />
                   );
                 })}
               </div>
@@ -1149,7 +1787,7 @@ export function CardLibrary({
                   <div className="min-h-0 overflow-hidden">
                     <div
                       className={
-                        "space-y-1 pt-1 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none " +
+                        "space-y-1.5 pt-1.5 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none " +
                         (presetsOpen
                           ? "translate-y-0 opacity-100"
                           : "-translate-y-1 opacity-0")
@@ -1159,33 +1797,15 @@ export function CardLibrary({
                         const presetPlan = getPresetMinimumPlan(preset.types);
                         const presetLocked = !canAddPreset(preset.types);
                         return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => handleAddPreset(preset)}
-                          tabIndex={presetsOpen ? 0 : -1}
-                          className={
-                            "ui-pop-tap ui-pop-card w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-all " +
-                            (!presetLocked
-                              ? "lg:hover:border-slate-300 lg:hover:bg-slate-50 lg:hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)] active:bg-slate-50"
-                              : presetPlan === "business"
-                                ? "border-violet-300 bg-violet-50/70"
-                                : "border-sky-300 bg-sky-50/70")
-                          }
-                          aria-label={`${preset.label}を追加`}
-                          title={
-                            presetLocked
-                              ? `${presetPlan === "business" ? "Business" : "Pro"}プランで利用できます`
-                              : undefined
-                          }
-                        >
-                          <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
-                            {preset.label}
-                            {presetPlan !== "free" ? <PlanGateBadge plan={presetPlan} /> : null}
-                          </span>
-                          <span className="mt-1 block text-xs font-medium text-slate-600">{preset.purpose}</span>
-                          <span className="mt-1 block text-[11px] font-normal leading-[1.45] text-slate-500">{preset.description}</span>
-                        </button>
+                          <QuickPresetRow
+                            key={preset.id}
+                            preset={preset}
+                            locked={presetLocked}
+                            planGate={presetPlan}
+                            tabIndex={presetsOpen ? 0 : -1}
+                            libraryAudience={libraryAudience}
+                            onAdd={() => handleAddPreset(preset)}
+                          />
                         );
                       })}
                     </div>
@@ -1207,6 +1827,10 @@ export function CardLibrary({
                 {section.items.map((item) => {
                   const planGate = getMinimumPlanForCardType(item.type);
                   const isGatedType = planGate !== "free";
+                  const isInfoPicker =
+                    item.type === "info" &&
+                    libraryAudience === "hotel" &&
+                    Boolean(onAddLabelRowPreset);
                   return (
                     <LibraryItemButton
                       key={`${section.id}-${item.type}`}
@@ -1216,6 +1840,10 @@ export function CardLibrary({
                       isGatedType={isGatedType}
                       disabled={!canAdd(item.type)}
                       onAdd={handleAdd}
+                      onActivate={isInfoPicker ? handleInfoActivate : undefined}
+                      onOpenPicker={isInfoPicker ? openLabelRowPicker : undefined}
+                      onScheduleClosePicker={isInfoPicker ? scheduleCloseLabelRowPicker : undefined}
+                      pickerOpen={isInfoPicker && labelRowPickerOpen}
                       libraryAudience={libraryAudience}
                     />
                   );
@@ -1225,6 +1853,15 @@ export function CardLibrary({
           ))}
         </div>
       </div>
+      <LabelRowPresetPopover
+        open={labelRowPickerOpen}
+        anchor={labelRowAnchor}
+        onClose={closeLabelRowPicker}
+        onKeepOpen={keepLabelRowPickerOpen}
+        onScheduleClose={scheduleCloseLabelRowPicker}
+        onPickPreset={handleAddLabelRowPreset}
+        onPickBlank={handleAddBlankLabelRow}
+      />
     </div>
   );
 }

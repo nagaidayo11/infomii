@@ -1,5 +1,6 @@
 import type { CardType, EditorPlanTier } from "@/components/editor/types";
 import { getMinimumPlanForCardType } from "@/components/editor/types";
+import type { LineIconName } from "@/components/cards/LineIcon";
 
 export type LibraryAudience = "hotel" | "personal";
 
@@ -18,11 +19,14 @@ export type LibrarySection = {
 export type QuickPreset = {
   id: string;
   label: string;
-  description: string;
+  /** One-line intent shown under the title. */
   purpose: string;
   types: CardType[];
+  icon: LineIconName;
   audience: LibraryAudience;
   businessOnly?: boolean;
+  /** When the set includes `info`, use this content instead of the empty default. */
+  infoContent?: Record<string, unknown>;
 };
 
 export const LIBRARY_AUDIENCE_STORAGE_KEY = "infomii-editor-library-audience";
@@ -75,26 +79,25 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
 const MAIN_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示" },
-  { type: "heading_body", label: "見出し＋本文セット", description: "見出しと本文を上下で表示" },
-  { type: "highlight", label: "強調ブロック", description: "注意事項や告知を目立たせる" },
-  { type: "notice", label: "重要なお知らせ", description: "必ず読んでほしい連絡事項" },
+];
+
+/** Layout primitives — freeform after picking structure. */
+const LAYOUT_ITEMS: LibraryItem[] = [
+  { type: "info", label: "ラベル行リスト", description: "用途を選んで項目名と値を並べる" },
+  { type: "heading_body", label: "見出し＋本文", description: "タイトルと本文を自由に書く" },
+  { type: "notice", label: "お知らせ", description: "連絡事項を目立たせる" },
+  { type: "highlight", label: "強調ブロック", description: "注意・告知を強調する" },
+  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
+  { type: "checkout", label: "チェックアウト", description: "退室時刻・補足・詳細リンク" },
 ];
 
 const GUIDE_ITEMS: LibraryItem[] = [
   { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
-  { type: "wifi", label: "WiFi案内", description: "SSID・パスワードを掲載" },
-  { type: "checkout", label: "チェックアウト", description: "退室時刻や手順を案内" },
-  { type: "breakfast", label: "朝食案内", description: "時間・会場・メニューをまとめる" },
   { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま（ライブ）" },
   { type: "dinner_crowd", label: "夕食混雑", description: "レストラン空席・混雑のいま（ライブ）" },
   { type: "spa_crowd", label: "大浴場混雑", description: "大浴場の混雑のいま（ライブ）" },
   { type: "map", label: "地図", description: "アクセス・所在地を表示" },
   { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
-  { type: "parking", label: "駐車場案内", description: "台数・料金・場所を案内" },
-  { type: "taxi", label: "タクシー案内", description: "連絡先と備考を掲載" },
-  { type: "restaurant", label: "レストラン案内", description: "営業時間・場所・内容を表示" },
-  { type: "laundry", label: "ランドリー案内", description: "営業時間・料金・連絡先" },
-  { type: "spa", label: "スパ・温泉案内", description: "時間・場所・案内を表示" },
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusinessプラン）" },
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
@@ -137,12 +140,12 @@ const MEDIA_ITEMS: LibraryItem[] = [
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
   { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
   { type: "image_tiles", label: "画像タイル", description: "写真＋ラベルの2列グリッド導線" },
-  { type: "text", label: "自由テキスト", description: "見出し・本文を自由入力" },
   { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
   { type: "space", label: "スペース", description: "上下の余白を調整" },
 ];
 
 const BASE_LIBRARY_SECTIONS: LibrarySection[] = [
+  { id: "layouts", title: "レイアウト", items: LAYOUT_ITEMS },
   { id: "main", title: "メイン表示", items: MAIN_ITEMS },
   { id: "guide", title: "案内・情報", items: GUIDE_ITEMS },
   { id: "operation", title: "運用・導線", items: OPERATION_ITEMS },
@@ -151,6 +154,7 @@ const BASE_LIBRARY_SECTIONS: LibrarySection[] = [
 ];
 
 const PERSONAL_SECTION_TITLES: Partial<Record<string, string>> = {
+  layouts: "レイアウト",
   guide: "共有・案内",
   operation: "リンク・連絡",
 };
@@ -159,48 +163,58 @@ export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
   {
     id: "arrival-basic",
     label: "到着セット",
-    purpose: "チェックイン直後に必要な案内を最短で",
-    description: "フル幅ヒーロー / ウェルカム / Wi-Fi / チェックアウト",
+    purpose: "チェックイン直後に必要な案内",
+    icon: "key",
     types: ["hero", "welcome", "wifi", "checkout"],
     audience: "hotel",
   },
   {
     id: "breakfast-ops",
     label: "朝食セット",
-    purpose: "朝食の時間・会場と混雑のいまをセットで",
-    description: "朝食案内 / 朝食混雑（ライブ）",
+    purpose: "時間・会場と混雑のいま",
+    icon: "breakfast",
     types: ["breakfast", "breakfast_crowd"],
     audience: "hotel",
   },
   {
     id: "inhouse-support",
     label: "館内セット",
-    purpose: "フロント情報・FAQ・緊急連絡を1ページに",
-    description: "フロント・館内 / よくある質問 / 緊急連絡先",
+    purpose: "フロント・FAQ・緊急連絡",
+    icon: "bell",
     types: ["info", "faq", "emergency"],
     audience: "hotel",
+    infoContent: {
+      title: "フロント・館内",
+      icon: "info",
+      tone: "slate",
+      rows: [
+        { label: "フロント", value: "24時間 / 内線9", show: true },
+        { label: "製氷機", value: "各フロア廊下", show: true },
+        { label: "電子レンジ", value: "2F サービスコーナー", show: true },
+      ],
+    },
   },
   {
     id: "spa-onsen",
     label: "大浴場セット",
-    purpose: "大浴場の利用案内と混雑ステータス",
-    description: "スパ・温泉案内 / 大浴場混雑（ライブ）",
+    purpose: "利用案内と混雑ステータス",
+    icon: "spa",
     types: ["spa", "spa_crowd"],
     audience: "hotel",
   },
   {
     id: "sightseeing-nearby",
-    label: "観光・周辺案内セット",
-    purpose: "周辺スポットと移動の導線を明確に",
-    description: "フル幅ヒーロー / 周辺案内 / タクシー / 地図",
+    label: "周辺案内セット",
+    purpose: "スポットと移動の導線",
+    icon: "nearby",
     types: ["hero", "nearby", "taxi", "map"],
     audience: "hotel",
   },
   {
     id: "core-guide-hub",
     label: "トップハブセット",
-    purpose: "子ページへの入口を最短でつくる",
-    description: "フル幅スライド / ページリンク / 画像タイル",
+    purpose: "子ページへの入口",
+    icon: "link",
     types: ["hero_slider", "pageLinks", "image_tiles"],
     audience: "hotel",
   },
@@ -209,41 +223,41 @@ export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
 export const PERSONAL_QUICK_PRESETS: QuickPreset[] = [
   {
     id: "btoc-travel-basic",
-    label: "旅行しおり・基本セット",
-    purpose: "友達に送る旅のしおりを最短で",
-    description: "タイトル / 今日の予定 / 持ち物 / 集合場所 / 予約リンク",
+    label: "旅行しおり",
+    purpose: "予定・持ち物・集合をまとめて",
+    icon: "ticket",
     types: ["hero", "schedule", "checklist", "map", "button"],
     audience: "personal",
   },
   {
     id: "btoc-photo-itinerary",
-    label: "思い出フォト・旅行セット",
-    purpose: "写真スライドと予定を1ページに",
-    description: "写真スライド / 今日の予定 / 持ち物 / 大事な連絡 / 集合場所",
+    label: "フォト旅行セット",
+    purpose: "写真スライドと当日の流れ",
+    icon: "camera",
     types: ["hero_slider", "schedule", "checklist", "highlight", "map"],
     audience: "personal",
   },
   {
     id: "btoc-oshi-live",
-    label: "推し活・ライブ当日セット",
-    purpose: "ライブ当日の集合・持ち物を共有",
-    description: "タイトル / タイムライン / 持ち物 / 大事な連絡 / SNS",
+    label: "ライブ当日セット",
+    purpose: "集合・持ち物・連絡を共有",
+    icon: "gift",
     types: ["hero", "schedule", "checklist", "highlight", "social_links"],
     audience: "personal",
   },
   {
     id: "btoc-outing-date",
-    label: "おでかけ・デートプラン",
-    purpose: "今日の予定を相手に共有",
-    description: "タイトル / タイムライン / 待ち合わせ / 行きたい場所 / リンク",
+    label: "おでかけプラン",
+    purpose: "予定と待ち合わせを共有",
+    icon: "map-pin",
     types: ["hero", "schedule", "map", "nearby", "button"],
     audience: "personal",
   },
   {
     id: "btoc-link-hub",
-    label: "リンク集・プロフィール",
-    purpose: "URLを1ページにまとめる",
-    description: "タイトル / リンクまとめ / SNS / 自由メモ",
+    label: "リンク集",
+    purpose: "URLとSNSを1ページに",
+    icon: "link",
     types: ["hero", "pageLinks", "social_links", "text"],
     audience: "personal",
   },

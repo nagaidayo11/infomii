@@ -14,13 +14,9 @@ import { WelcomeCard } from "./WelcomeCard";
 import { CheckoutCard } from "./CheckoutCard";
 import { NearbyCard } from "./NearbyCard";
 import { NoticeCard } from "./NoticeCard";
-import { SpaCard } from "./SpaCard";
-import { BreakfastCard } from "./BreakfastCard";
+import { FacilityInfoRowsCard } from "./FacilityInfoRowsCard";
 import { MapCard } from "./MapCard";
-import { RestaurantCard } from "./RestaurantCard";
-import { TaxiCard } from "./TaxiCard";
 import { EmergencyCard } from "./EmergencyCard";
-import { LaundryCard } from "./LaundryCard";
 import { TextCard } from "./TextCard";
 import { IconCard } from "./IconCard";
 import { ImageCard } from "./ImageCard";
@@ -31,7 +27,6 @@ import { ScheduleCard } from "./ScheduleCard";
 import { MenuCard } from "./MenuCard";
 import { GalleryCard } from "./GalleryCard";
 import { DividerCard } from "./DividerCard";
-import { ParkingCard } from "./ParkingCard";
 import { PageLinksCard } from "./PageLinksCard";
 import { IconShortcutsCard } from "./IconShortcutsCard";
 import { ImageTilesCard } from "./ImageTilesCard";
@@ -149,34 +144,14 @@ function SingleCardRenderer({
       return <ActionCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "welcome":
       return <WelcomeCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "wifi": {
-      const c = resolvedCard.content as Record<string, unknown> | undefined;
-      const wifiLabels =
-        locale === "ko"
-          ? { network: "네트워크", password: "비밀번호" }
-          : locale === "zh"
-            ? { network: "网络名称", password: "密码" }
-            : locale === "en"
-              ? { network: "Network", password: "Password" }
-              : { network: "ネットワーク名", password: "パスワード" };
-      const infoCard: EditorCard = {
-        ...resolvedCard,
-        type: "info",
-        content: {
-          title: (c?.title as string) || "",
-          icon: "wifi",
-          rows: [
-            { label: wifiLabels.network, value: (c?.ssid as string) ?? "" },
-            { label: wifiLabels.password, value: (c?.password as string) ?? "" },
-          ],
-        },
-      };
-      return <InfoCard card={infoCard} isSelected={isSelected} locale={locale} />;
-    }
+    case "wifi":
     case "breakfast":
-      return <BreakfastCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "spa":
-      return <SpaCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "parking":
+    case "laundry":
+    case "taxi":
+    case "restaurant":
+      return <FacilityInfoRowsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "checkout":
       return <CheckoutCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "notice":
@@ -185,8 +160,6 @@ function SingleCardRenderer({
       return <NearbyCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "map":
       return <MapCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "parking":
-      return <ParkingCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "pageLinks":
       return <PageLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "icon_shortcuts":
@@ -205,12 +178,6 @@ function SingleCardRenderer({
       return <FaqCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "emergency":
       return <EmergencyCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "laundry":
-      return <LaundryCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "taxi":
-      return <TaxiCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "restaurant":
-      return <RestaurantCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "text":
       return <TextCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "icon":

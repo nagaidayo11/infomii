@@ -11,8 +11,16 @@ import {
   liveOpsUpdatedAtMs,
   type LiveOpsKey,
 } from "@/lib/editor/live-ops";
+import {
+  facilityFieldLabel,
+  getFacilityInfoPreset,
+  isFacilityFieldVisible,
+  isFacilityInfoType,
+  readFacilityFieldValue,
+} from "@/lib/editor/facility-info-presets";
 import { getGuestShellNavStyle, type GuestShellConfig } from "@/lib/guest-shell";
 import type { EditorCard } from "@/components/editor/types";
+import { CARD_TYPE_LABELS } from "@/components/editor/types";
 
 export type PageQualitySeverity = "error" | "warning";
 
@@ -38,8 +46,25 @@ export type PageQualityCheckOptions = {
 };
 
 const DEFAULT_LIVE_OPS_STALE_HOURS = 12;
-const MAX_FINDINGS = 8;
+const MAX_FINDINGS = 12;
 const LAYOUT_ONLY = new Set(["space", "divider"]);
+
+/** Required plain-text fields by card type (blank → preflight error). */
+const REQUIRED_TEXT_FIELDS: ReadonlyArray<{
+  type: string;
+  keys: string[];
+  label: string;
+}> = [
+  { type: "welcome", keys: ["title", "message"], label: "ウェルカム" },
+  { type: "notice", keys: ["title", "body"], label: "お知らせ" },
+  { type: "highlight", keys: ["title", "body"], label: "強調ブロック" },
+  { type: "heading_body", keys: ["title", "body"], label: "見出し＋本文" },
+  { type: "text", keys: ["content"], label: "自由テキスト" },
+  { type: "button", keys: ["label", "href"], label: "リンクボタン" },
+  { type: "action", keys: ["label", "href"], label: "アクション" },
+  { type: "checkout", keys: ["title", "time"], label: "チェックアウト" },
+];
+
 
 /** Live-ops type → matching static facility card (soft pairing hint). */
 const LIVE_OPS_STATIC_PAIR: ReadonlyArray<{
@@ -99,25 +124,100 @@ function isCardVisuallyEmpty(card: EditorCard): boolean {
 }
 
 function checkWifi(card: EditorCard, out: PageQualityFinding[]): void {
-  if (card.type !== "wifi") return;
-  const c = card.content ?? {};
-  if (!readJa(c.ssid)) {
+  // Covered by checkFacilityInfoRows
+  void card;
+  void out;
+}
+
+function checkFacilityInfoRows(card: EditorCard, out: PageQualityFinding[]): void {
+  if (!isFacilityInfoType(card.type)) return;
+  const preset = getFacilityInfoPreset(card.type);
+  if (!preset) return;
+  const c = (card.content ?? {}) as Record<string, unknown>;
+  const typeLabel = CARD_TYPE_LABELS[card.type] ?? card.type;
+
+  if (!readJa(c.title)) {
     out.push({
       severity: "error",
-      code: "wifi_ssid_empty",
-      message: "Wi‑FiのSSIDが空です",
+      code: `${card.type}_title_empty`,
+      message: `${typeLabel}のタイトルが空です`,
       cardId: card.id,
     });
   }
-  if (!readJa(c.password)) {
+
+  for (const field of preset.fields) {
+    if (!isFacilityFieldVisible(c, field, "ja")) continue;
+    const value = readFacilityFieldValue(c, field.key, "ja");
+    if (value) continue;
+    const fieldLabel = facilityFieldLabel(field, "ja");
     out.push({
       severity: "error",
-      code: "wifi_password_empty",
-      message: "Wi‑Fiのパスワードが空です",
+      code: `${card.type}_${field.key}_empty`,
+      message: `${typeLabel}の「${fieldLabel}」が空です`,
       cardId: card.id,
     });
   }
 }
+
+function checkRequiredTextFields(card: EditorCard, out: PageQualityFinding[]): void {
+  for (const rule of REQUIRED_TEXT_FIELDS) {
+    if (card.type !== rule.type) continue;
+    const c = card.content ?? {};
+    for (const key of rule.keys) {
+      const value =
+        key === "href" || key === "linkUrl" || key === "fire" || key === "police"
+          ? String(c[key] ?? "").trim()
+          : readJa(c[key]);
+      if (value) continue;
+      out.push({
+        severity: "error",
+        code: `${rule.type}_${key}_empty`,
+        message: `${rule.label}の入力が空です`,
+        cardId: card.id,
+      });
+    }
+  }
+
+  if (card.type === "info") {
+    const rows = Array.isArray(card.content?.rows) ? card.content.rows : [];
+    const usable = rows.filter(
+      (row) => isRecord(row) && row.show !== false && (readJa(row.label) || readJa(row.value)),
+    );
+    if (usable.length === 0) {
+      out.push({
+        severity: "error",
+        code: "info_rows_empty",
+        message: "ラベル行リストに項目がありません",
+        cardId: card.id,
+      });
+    } else {
+      rows.forEach((row, i) => {
+        if (!isRecord(row) || row.show === false) return;
+        if (!readJa(row.label) || !readJa(row.value)) {
+          out.push({
+            severity: "error",
+            code: "info_row_incomplete",
+            message: `ラベル行リストの${i + 1}行目が未入力です`,
+            cardId: card.id,
+          });
+        }
+      });
+    }
+  }
+
+  if (card.type === "checkout") {
+    const c = (card.content ?? {}) as Record<string, unknown>;
+    if (c.show_note === true && !readJa(c.note)) {
+      out.push({
+        severity: "error",
+        code: "checkout_note_empty",
+        message: "チェックアウトの補足が空です",
+        cardId: card.id,
+      });
+    }
+  }
+}
+
 
 function checkHero(card: EditorCard, out: PageQualityFinding[]): void {
   const c = card.content ?? {};
@@ -224,37 +324,15 @@ function checkContactHub(card: EditorCard, out: PageQualityFinding[]): void {
 }
 
 function checkCheckout(card: EditorCard, out: PageQualityFinding[]): void {
-  if (card.type !== "checkout") return;
-  const c = card.content ?? {};
-  if (!readJa(c.time)) {
-    out.push({
-      severity: "error",
-      code: "checkout_time_empty",
-      message: "チェックアウト時刻が空です",
-      cardId: card.id,
-    });
-  }
+  // Covered by checkRequiredTextFields
+  void card;
+  void out;
 }
 
 function checkBreakfast(card: EditorCard, out: PageQualityFinding[]): void {
-  if (card.type !== "breakfast") return;
-  const c = card.content ?? {};
-  if (!readJa(c.time)) {
-    out.push({
-      severity: "error",
-      code: "breakfast_time_empty",
-      message: "朝食の時間が空です",
-      cardId: card.id,
-    });
-  }
-  if (!readJa(c.location)) {
-    out.push({
-      severity: "error",
-      code: "breakfast_location_empty",
-      message: "朝食の会場が空です",
-      cardId: card.id,
-    });
-  }
+  // Covered by checkFacilityInfoRows
+  void card;
+  void out;
 }
 
 function checkFaq(card: EditorCard, out: PageQualityFinding[]): void {
@@ -493,6 +571,8 @@ export function runPageQualityChecks(opts: PageQualityCheckOptions): PageQuality
   const staleMs = Math.max(1, liveOpsStaleHours) * 60 * 60 * 1000;
 
   for (const card of cards) {
+    checkFacilityInfoRows(card, out);
+    checkRequiredTextFields(card, out);
     checkWifi(card, out);
     checkHero(card, out);
     checkMap(card, out);

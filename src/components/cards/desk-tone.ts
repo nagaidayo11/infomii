@@ -47,10 +47,11 @@ export const DESK_TONE: Record<DeskTone, DeskToneTokens> = {
     divide: "divide-rose-200/70 border-rose-200/70",
   },
   slate: {
-    surface: "color-mix(in srgb, #f8fafc 92%, white)",
-    frame: "border border-slate-200/90",
+    /** Neutral label-row cards: no gray wash — inherit page/card surface. */
+    surface: "transparent",
+    frame: "",
     title: "text-slate-900",
-    rule: "border-slate-300",
+    rule: "border-slate-200",
     label: "text-slate-500",
     divide: "divide-slate-200/90 border-slate-200/90",
   },

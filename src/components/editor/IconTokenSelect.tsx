@@ -11,9 +11,11 @@ type IconTokenSelectProps = {
   hideLabel?: boolean;
   /** 保存値（svg:wifi や旧エイリアスも可 — 表示は正規化） */
   value: string | undefined;
-  onChange: (next: LineIconName) => void;
+  onChange: (next: LineIconName | "") => void;
   className: string;
   labelClassName: string;
+  /** Allow clearing the icon (shows 「なし」). */
+  allowEmpty?: boolean;
 };
 
 /**
@@ -27,8 +29,10 @@ export function IconTokenSelect({
   onChange,
   className,
   labelClassName,
+  allowEmpty = false,
 }: IconTokenSelectProps) {
-  const normalized = normalizeIconToken(value, "info");
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  const normalized = allowEmpty && !trimmed ? "" : normalizeIconToken(value, "info");
   return (
     <div className="w-full">
       {!hideLabel &&
@@ -42,10 +46,11 @@ export function IconTokenSelect({
       <select
         id={id}
         value={normalized}
-        onChange={(e) => onChange(e.target.value as LineIconName)}
+        onChange={(e) => onChange(e.target.value as LineIconName | "")}
         className={className}
         aria-label={hideLabel ? label : undefined}
       >
+        {allowEmpty ? <option value="">なし</option> : null}
         {LINE_ICON_EDITOR_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}

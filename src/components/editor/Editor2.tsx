@@ -38,6 +38,11 @@ import {
 } from "./types";
 import { type SupportedLocale } from "@/lib/localized-content";
 import {
+  infoContentFromFacilityPreset,
+  isFacilityInfoType,
+  type LabelRowLibraryPreset,
+} from "@/lib/editor/facility-info-presets";
+import {
   getInformationBySlug,
   getPage,
   buildPublicUrlV,
@@ -227,6 +232,7 @@ export function Editor2({
   const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
   const addCardRaw = useEditor2Store((s) => s.addCard);
+  const addCardWithContent = useEditor2Store((s) => s.addCardWithContent);
   const notifyBlockPlaced = useCallback(
     (type: CardType) => {
       if (!useAppEditorChrome) return;
@@ -928,9 +934,9 @@ export function Editor2({
   }, [isDemoMode, publishNow]);
 
   const handleAddPreset = useCallback(
-    (types: CardType[]) => {
+    (preset: { types: CardType[]; infoContent?: Record<string, unknown> }) => {
       let placed = 0;
-      for (const type of types) {
+      for (const type of preset.types) {
         if (!canUseCardType(type, planTier)) {
           if (isDemoMode) {
             const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
@@ -940,6 +946,19 @@ export function Editor2({
           }
           continue;
         }
+        if (isFacilityInfoType(type)) {
+          const content = infoContentFromFacilityPreset(type);
+          if (content) {
+            addCardWithContent("info", content);
+            placed += 1;
+            continue;
+          }
+        }
+        if (type === "info" && preset.infoContent) {
+          addCardWithContent("info", preset.infoContent);
+          placed += 1;
+          continue;
+        }
         addCardRaw(type, undefined, libraryAudience);
         placed += 1;
       }
@@ -947,7 +966,28 @@ export function Editor2({
         showToast(`${placed}件のブロックを配置しました`, "success");
       }
     },
-    [addCardRaw, libraryAudience, planTier, isDemoMode, openPlanUpsell, useAppEditorChrome, showToast]
+    [
+      addCardRaw,
+      addCardWithContent,
+      libraryAudience,
+      planTier,
+      isDemoMode,
+      openPlanUpsell,
+      useAppEditorChrome,
+      showToast,
+    ]
+  );
+
+  const handleAddLabelRowPreset = useCallback(
+    (preset: LabelRowLibraryPreset) => {
+      const content = infoContentFromFacilityPreset(preset.seedFrom);
+      if (!content) return;
+      addCardWithContent("info", content);
+      if (useAppEditorChrome) {
+        showToast(`${preset.label}を配置しました`, "success");
+      }
+    },
+    [addCardWithContent, useAppEditorChrome, showToast]
   );
 
   const handleClearAll = useCallback(async () => {
@@ -1516,6 +1556,7 @@ export function Editor2({
                 addCard(type);
               }}
               onAddPreset={handleAddPreset}
+              onAddLabelRowPreset={handleAddLabelRowPreset}
               canUseProBlocks={canUseProBlocks}
               canUseBusinessBlocks={canUseBusinessBlocks}
               onLockedAddCard={(type) => {

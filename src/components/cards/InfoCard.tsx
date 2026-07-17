@@ -2,7 +2,6 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import {
-  CARD_BLOCK_BODY_CLASS,
   CARD_BLOCK_CAPTION_CLASS,
   CARD_BLOCK_TITLE_CLASS,
   getTitleFontSizeStyle,
@@ -11,31 +10,68 @@ import {
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
 import { InlineEditable } from "@/components/editor/InlineEditable";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
 import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { LineIcon, normalizeIconToken } from "./LineIcon";
+import { BlockTitleWithIcon } from "./block-title-with-icon";
+import { DESK_TONE, type DeskTone } from "./desk-tone";
+import { LabelItemStack, LabelItemSurface } from "./label-item-surface";
+import { facilityDefaultIcon } from "@/lib/editor/facility-info-presets";
+import type { LineIconName } from "./LineIcon";
 
 type InfoCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
-type InfoRow = { label?: string; value?: string };
+type InfoRow = {
+  label?: string;
+  value?: string;
+  show?: boolean;
+  tel?: boolean;
+  key?: string;
+};
 
-export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardProps) {
+function toTelHref(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const digits = trimmed.replace(/[^\d+]/g, "");
+  if (digits.replace(/\D/g, "").length < 3) return null;
+  return `tel:${digits}`;
+}
+
+function coerceTone(value: unknown): DeskTone {
+  if (value === "amber" || value === "sky" || value === "emerald" || value === "rose" || value === "slate") {
+    return value;
+  }
+  return "slate";
+}
+
+/**
+ * Unified label-row layout — nearby-style soft tiles:
+ * section title + stacked cards (label as heading, value as body).
+ */
+export function InfoCard({ card, locale = "ja" }: InfoCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
+  const toneKey = coerceTone(c?.tone);
+  const tone = DESK_TONE[toneKey];
   const localeLabels =
     locale === "ko"
-      ? { empty: "라벨과 값을 추가", title: "제목", value: "값" }
+      ? { empty: "라벨과 값을 추가", title: "제목", value: "값", label: "라벨", add: "+ 행 추가" }
       : locale === "zh"
-        ? { empty: "请添加标签和值", title: "标题", value: "值" }
+        ? { empty: "请添加标签和值", title: "标题", value: "值", label: "标签", add: "+ 添加一行" }
         : locale === "en"
-          ? { empty: "Add label and value", title: "Title", value: "Value" }
-          : { empty: "ラベルと値を追加", title: "タイトル", value: "値" };
+          ? { empty: "Add label and value", title: "Title", value: "Value", label: "Label", add: "+ Add row" }
+          : { empty: "ラベルと値を追加", title: "タイトル", value: "値", label: "ラベル", add: "+ 行を追加" };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
-  const icon = normalizeIconToken(c?.icon, "info");
   const rows = (c?.rows as InfoRow[]) ?? [];
+  const visibleRows = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.show !== false);
+  const sourcePreset = typeof c?.sourcePreset === "string" ? c.sourcePreset : "";
+  const hasExplicitIcon = typeof c?.icon === "string" && c.icon.trim().length > 0;
+  const iconHidden = c?.icon === "";
+  const iconFallback =
+    !iconHidden && sourcePreset ? (facilityDefaultIcon(sourcePreset) as LineIconName) : undefined;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -43,68 +79,89 @@ export function InfoCard({ card, isSelected = false, locale = "ja" }: InfoCardPr
 
   return (
     <Card padding="md">
-      <div className="flex items-center gap-3 pb-3">
-        <span
-          data-inner-surface
-          className={`flex h-10 w-10 shrink-0 items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 text-slate-700`}
+      {(editable || title || hasExplicitIcon || iconFallback) ? (
+        <BlockTitleWithIcon
+          icon={hasExplicitIcon ? c?.icon : undefined}
+          fallbackIcon={iconFallback}
+          titleClassName={CARD_BLOCK_TITLE_CLASS}
+          titleStyle={getTitleFontSizeStyle()}
         >
-          <LineIcon name={icon} className="h-5 w-5" />
-        </span>
-        {(editable || title) ? (
-          <h3 className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
-            <InlineEditable
-              value={title}
-              onSave={(v) => update({ title: v })}
-              editable={editable}
-              onActivate={onActivate}
-              className={CARD_BLOCK_TITLE_CLASS}
-              placeholder={localeLabels.title}
-            />
-          </h3>
-        ) : null}
-      </div>
-      <div className={`mt-3 space-y-2 ${CARD_BLOCK_BODY_CLASS}`} style={getBodyFontSizeStyle()}>
-        {rows.length === 0 ? (
-          <p className={CARD_BLOCK_CAPTION_CLASS}>{localeLabels.empty}</p>
-        ) : (
-          rows.map((row, i) => (
-            <div
-              key={i}
-              data-inner-surface
-              className={`grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-2 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-1.5`}
-            >
-              <span className={`break-words ${CARD_BLOCK_CAPTION_CLASS}`}>
-                <InlineEditable
-                  value={row.label ?? ""}
-                  onSave={(v) => {
-                    const next = [...rows];
-                    next[i] = { ...next[i], label: v };
-                    update({ rows: next });
-                  }}
-                  editable={editable}
-                  onActivate={onActivate}
-                  className={CARD_BLOCK_CAPTION_CLASS}
-                  placeholder="ラベル"
-                />
-              </span>
-              <span className={`text-right break-all ${CARD_BLOCK_BODY_CLASS} text-slate-800`}>
-                <InlineEditable
-                  value={row.value ?? ""}
-                  onSave={(v) => {
-                    const next = [...rows];
-                    next[i] = { ...next[i], value: v };
-                    update({ rows: next });
-                  }}
-                  editable={editable}
-                  onActivate={onActivate}
-                  className={`text-right ${CARD_BLOCK_BODY_CLASS} text-slate-800`}
-                  placeholder={localeLabels.value}
-                />
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+          <InlineEditable
+            value={title}
+            onSave={(v) => update({ title: v })}
+            editable={editable}
+            onActivate={onActivate}
+            className={CARD_BLOCK_TITLE_CLASS}
+            placeholder={localeLabels.title}
+          />
+        </BlockTitleWithIcon>
+      ) : null}
+
+      {visibleRows.length === 0 ? (
+        <p className={`mt-2 ${CARD_BLOCK_CAPTION_CLASS}`}>{localeLabels.empty}</p>
+      ) : (
+        <LabelItemStack>
+          {visibleRows.map(({ row, index }) => {
+            const value = row.value ?? "";
+            const telHref = !editable && row.tel ? toTelHref(value) : null;
+            return (
+              <LabelItemSurface key={row.key ?? index} tone={toneKey}>
+                <p className={`font-semibold leading-snug ${tone.title}`} style={getBodyFontSizeStyle()}>
+                  {editable ? (
+                    <InlineEditable
+                      value={row.label ?? ""}
+                      onSave={(v) => {
+                        const next = [...rows];
+                        next[index] = { ...next[index], label: v };
+                        update({ rows: next });
+                      }}
+                      editable
+                      onActivate={onActivate}
+                      className={`font-semibold ${tone.title}`}
+                      placeholder={localeLabels.label}
+                    />
+                  ) : (
+                    row.label ?? ""
+                  )}
+                </p>
+                <div className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
+                  {editable ? (
+                    <InlineEditable
+                      value={value}
+                      onSave={(v) => {
+                        const next = [...rows];
+                        next[index] = { ...next[index], value: v };
+                        update({ rows: next });
+                      }}
+                      editable
+                      onActivate={onActivate}
+                      multiline
+                      className="block w-full min-h-[1lh] text-slate-500"
+                      placeholder={localeLabels.value}
+                    />
+                  ) : telHref ? (
+                    <a href={telHref} className="text-slate-600 underline-offset-2 hover:underline">
+                      {value.trim() || "—"}
+                    </a>
+                  ) : (
+                    <span className="whitespace-pre-line">{value.trim() || "—"}</span>
+                  )}
+                </div>
+              </LabelItemSurface>
+            );
+          })}
+        </LabelItemStack>
+      )}
+
+      {editable ? (
+        <button
+          type="button"
+          className="mt-2.5 text-left text-[12px] font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+          onClick={() => update({ rows: [...rows, { label: "", value: "", show: true }] })}
+        >
+          {localeLabels.add}
+        </button>
+      ) : null}
     </Card>
   );
 }
