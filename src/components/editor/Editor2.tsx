@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
+import { useHotelPlanTier } from "@/lib/hooks/use-hotel-plan-tier";
 import { LocaleProvider } from "@/components/locale-context";
 import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
@@ -52,7 +53,6 @@ import {
   getPendingPublishApprovalBySlug,
   approvePublishApprovalBySlug,
   updatePageTitle,
-  getCurrentHotelSubscription,
   getCurrentUserHotelRole,
   trackUpgradeClick,
   getPageGuestShellEditorState,
@@ -156,7 +156,7 @@ export function Editor2({
   const [bulkFontAnchor, setBulkFontAnchor] = useState<{ top: number; left: number } | null>(null);
   const editorLocale: SupportedLocale = "ja";
   const [localeTranslating, setLocaleTranslating] = useState(false);
-  const [planTier, setPlanTier] = useState<EditorPlanTier>("free");
+  const planTier = useHotelPlanTier(isDemoMode) as EditorPlanTier;
   const isBusinessPlan = planTier === "business";
   const canUseProBlocks = planTier === "pro" || planTier === "business";
   const canUseBusinessBlocks = planTier === "business";
@@ -497,14 +497,6 @@ export function Editor2({
         }
       }
     })();
-    getCurrentHotelSubscription()
-      .then((sub) => {
-        const plan = sub?.plan;
-        setPlanTier(plan === "business" || plan === "pro" ? plan : "free");
-      })
-      .catch(() => {
-        setPlanTier("free");
-      });
     getCurrentUserHotelRole().then(setHotelRole).catch(() => setHotelRole(null));
     return () => {
       cancelled = true;

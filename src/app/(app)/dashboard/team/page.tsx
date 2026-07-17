@@ -13,7 +13,10 @@ import {
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { resolveUserLabel } from "@/lib/user-label";
 import { HOTEL_TEAM_MAX_MEMBERS } from "@/lib/team-constants";
+import { useHotelPlanAccess } from "@/lib/hooks/use-hotel-plan-tier";
 import { FadeIn } from "@/components/motion";
+import { AnalyticsSummaryCard } from "@/components/saas/AnalyticsSummaryCard";
+import { TeamRolePermissionsHelp } from "@/components/team/TeamRolePermissionsHelp";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
@@ -60,6 +63,28 @@ function roleLabelJa(role: "owner" | "admin" | "editor" | "viewer"): string {
     default:
       return "編集担当";
   }
+}
+
+function roleBadgeClass(role: "owner" | "admin" | "editor" | "viewer"): string {
+  switch (role) {
+    case "owner":
+      return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+    case "admin":
+      return "bg-blue-50 text-blue-800 ring-1 ring-blue-200";
+    case "viewer":
+      return "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
+    default:
+      return "bg-violet-50 text-violet-800 ring-1 ring-violet-200";
+  }
+}
+
+function memberInitials(member: Pick<HotelMember, "displayName" | "email">): string {
+  const label = member.displayName?.trim() || member.email?.trim() || "";
+  if (!label) return "?";
+  if (label.includes("@")) return label.slice(0, 2).toUpperCase();
+  const parts = label.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+  return label.slice(0, 2).toUpperCase();
 }
 
 async function readJsonSafe<T>(res: Response): Promise<T | null> {
@@ -129,6 +154,7 @@ function groupAuditLogsByDay(logs: TeamAuditLogRow[], todayJst: string): AuditLo
 
 export default function TeamPage() {
   const { isAppShell } = useClientShell();
+  const { isBusiness, resolved: planResolved } = useHotelPlanAccess();
   const businessUpgradeHref = isAppShell ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
   const [members, setMembers] = useState<HotelMember[]>([]);
   const [invites, setInvites] = useState<HotelInvite[]>([]);
@@ -140,18 +166,18 @@ export default function TeamPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
-  const [isBusiness, setIsBusiness] = useState(false);
   const [approvals, setApprovals] = useState<PublishApprovalRow[]>([]);
   const [approvalFilter, setApprovalFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [approvalActingId, setApprovalActingId] = useState<string | null>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState("");
-  const [businessChecked, setBusinessChecked] = useState(false);
   const [auditLogs, setAuditLogs] = useState<TeamAuditLogRow[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   /** 日付キー(YYYY-MM-DD)を開いているか。直近3日は初期展開。 */
   const [auditDayOpen, setAuditDayOpen] = useState<Set<string>>(() => new Set());
+  const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
+  const [approvalsExpanded, setApprovalsExpanded] = useState(false);
 
   const currentRole = members.find((m) => m.userId === currentUserId)?.role ?? null;
   const canManageMembers = currentRole === "owner" || currentRole === "admin";
@@ -164,6 +190,12 @@ export default function TeamPage() {
     () => approvals.filter((a) => a.status === "pending").length,
     [approvals],
   );
+
+  useEffect(() => {
+    if (pendingApprovalCount > 0) {
+      setApprovalsExpanded(true);
+    }
+  }, [pendingApprovalCount]);
 
   /** 一覧は「使える」コードのみ。無効化・使用済みは出さない */
   const activePendingInvites = useMemo(
@@ -212,10 +244,6 @@ export default function TeamPage() {
         // owner/admin以外は403になるため、画面では黙って空表示にする
         if (res.status !== 403) {
           setError(data.error ?? "公開申請一覧の取得に失敗しました");
-        } else if ((data.error ?? "").includes("Businessプラン")) {
-          // API側の判定を優先し、プラン表示と実機能の不整合を解消する
-          setIsBusiness(false);
-          setBusinessChecked(true);
         }
         setApprovals([]);
         return;
@@ -260,58 +288,79 @@ export default function TeamPage() {
       const token = session?.access_token ?? null;
       setCurrentUserId(session?.user?.id ?? null);
 
-      const membersApi = token
-        ? await fetch("/api/team/members", {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then(async (r) => ({
-            ok: r.ok,
-            status: r.status,
-            body: (await readJsonSafe<{ members?: HotelMember[]; error?: string }>(r)) ?? {},
-          }))
-        : { ok: false, status: 401, body: { members: [] as HotelMember[] } };
-      const membersRes = membersApi.body ?? { members: [] };
-      setMembers(Array.isArray(membersRes.members) ? membersRes.members : []);
-      const isBiz = membersApi.ok;
-      setIsBusiness(isBiz);
-      setBusinessChecked(true);
-
-      if (isBiz) {
-        const invitesData = await listCurrentHotelInvites();
-        setInvites(invitesData);
-      } else {
+      if (!isBusiness) {
+        setMembers([]);
         setInvites([]);
         setApprovals([]);
         setAuditLogs([]);
+        return;
+      }
+
+      if (token) {
+        const membersApi = await fetch("/api/team/members", {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(async (r) => ({
+          ok: r.ok,
+          status: r.status,
+          body: (await readJsonSafe<{ members?: HotelMember[]; error?: string }>(r)) ?? {},
+        }));
+
+        if (membersApi.ok) {
+          const membersRes = membersApi.body ?? { members: [] };
+          setMembers(Array.isArray(membersRes.members) ? membersRes.members : []);
+        } else {
+          setMembers([]);
+          if (membersApi.status === 503) {
+            setError(
+              "チーム API のサーバー設定が不足しています。ローカルでは .env.local に SUPABASE_SERVICE_ROLE_KEY を設定してください。",
+            );
+          } else if (membersApi.status !== 403) {
+            setError(membersApi.body.error ?? "メンバー一覧の取得に失敗しました");
+          }
+        }
+      } else {
+        setMembers([]);
+      }
+
+      try {
+        const invitesData = await listCurrentHotelInvites();
+        setInvites(invitesData);
+      } catch (e) {
+        setInvites([]);
+        if (e instanceof Error && !e.message.includes("Businessプラン")) {
+          setError(e.message);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "読み込みに失敗しました");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isBusiness]);
 
   useEffect(() => {
+    if (!planResolved) return;
     void load();
-  }, [load]);
+  }, [load, planResolved]);
 
   useEffect(() => {
-    if (loading || !businessChecked || !isBusiness) return;
+    if (loading || !planResolved || !isBusiness) return;
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       await fetchApprovals(session?.access_token ?? null, approvalFilter, true);
     })();
-  }, [approvalFilter, businessChecked, fetchApprovals, isBusiness, loading]);
+  }, [approvalFilter, fetchApprovals, isBusiness, loading, planResolved]);
 
   useEffect(() => {
-    if (loading || !businessChecked || !isBusiness) return;
+    if (loading || !planResolved || !isBusiness) return;
     if (currentRole !== "owner" && currentRole !== "admin") return;
     const supabase = getBrowserSupabaseClient();
     void (async () => {
       const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
       await fetchAuditLogs(session?.access_token ?? null, true);
     })();
-  }, [businessChecked, currentRole, fetchAuditLogs, isBusiness, loading]);
+  }, [currentRole, fetchAuditLogs, isBusiness, loading, planResolved]);
 
   async function handleCreateInvite() {
     if (!isBusiness) {
@@ -450,19 +499,40 @@ export default function TeamPage() {
     }
   }
 
+  async function handleCopyInviteLink(inv: HotelInvite) {
+    const href =
+      typeof window !== "undefined" ? `${window.location.origin}/invite/${inv.code}` : `/invite/${inv.code}`;
+    try {
+      await navigator.clipboard.writeText(href);
+      setCopiedInviteId(inv.id);
+      window.setTimeout(() => setCopiedInviteId((cur) => (cur === inv.id ? null : cur)), 2000);
+    } catch {
+      setError("リンクのコピーに失敗しました");
+    }
+  }
+
   return (
     <AuthGate>
       <div className="app-main-container space-y-6 sm:space-y-8">
         <FadeIn>
-          <header className="app-page-header">
-            <h1 className="app-page-title">チーム・招待</h1>
-            <p className="app-page-subtitle">
-              施設のメンバーを招待し、編集権限または閲覧権限を付与できます。
-            </p>
+          <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="app-page-title">チーム・招待</h1>
+              <p className="app-page-subtitle">
+                施設のメンバーを招待し、編集権限または閲覧権限を付与できます。
+              </p>
+            </div>
+            {isBusiness ? <TeamRolePermissionsHelp className="shrink-0 self-start sm:self-auto" /> : null}
           </header>
         </FadeIn>
 
-        {businessChecked && !isBusiness ? (
+        {!planResolved ? (
+          <FadeIn>
+            <div className="h-40 animate-pulse rounded-lg bg-slate-100" aria-label="プラン情報を読み込み中" />
+          </FadeIn>
+        ) : null}
+
+        {planResolved && !isBusiness ? (
           <FadeIn>
             <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <h2 className="text-base font-semibold">Businessプラン限定機能です</h2>
@@ -488,10 +558,39 @@ export default function TeamPage() {
 
         {isBusiness ? (
           <>
+            {!loading ? (
+              <FadeIn>
+                <section className="grid gap-3 sm:grid-cols-3">
+                  <AnalyticsSummaryCard
+                    label="メンバー"
+                    value={`${members.length}/${HOTEL_TEAM_MAX_MEMBERS}`}
+                    sub="オーナー含む"
+                  />
+                  <AnalyticsSummaryCard
+                    label="承認待ち"
+                    value={pendingApprovalCount}
+                    sub={pendingApprovalCount > 0 ? "要対応" : "なし"}
+                  />
+                  <AnalyticsSummaryCard
+                    label="有効な招待"
+                    value={activePendingInvites.length}
+                    sub="未使用コード"
+                  />
+                </section>
+              </FadeIn>
+            ) : null}
+
             {/* メンバー */}
             <FadeIn>
               <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
-                <h2 className="app-section-title">メンバー</h2>
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <h2 className="app-section-title">メンバー</h2>
+                  {!loading ? (
+                    <p className="text-xs font-medium text-slate-500">
+                      {members.length}/{HOTEL_TEAM_MAX_MEMBERS}名
+                    </p>
+                  ) : null}
+                </div>
                 {loading ? (
                   <div className="mt-4 h-32 animate-pulse rounded-xl bg-slate-100" />
                 ) : (
@@ -499,22 +598,44 @@ export default function TeamPage() {
                     {members.map((m) => (
                       <li
                         key={m.userId}
-                        className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                        className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div className="min-w-0">
-                          <p className="break-all font-medium text-slate-800">
-                            {resolveUserLabel({
-                              displayName: m.displayName,
-                              email: m.email,
-                              userId: m.userId,
-                            })}
-                          </p>
-                          {m.displayName?.trim() && m.email ? (
-                            <p className="text-xs text-slate-500">{m.email}</p>
-                          ) : null}
-                          <p className="text-xs text-slate-500">{roleLabelJa(m.role)}</p>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white"
+                            aria-hidden
+                          >
+                            {memberInitials(m)}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="break-all font-medium text-slate-800">
+                                {resolveUserLabel({
+                                  displayName: m.displayName,
+                                  email: m.email,
+                                  userId: m.userId,
+                                })}
+                              </p>
+                              {m.userId === currentUserId ? (
+                                <span className="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                  あなた
+                                </span>
+                              ) : null}
+                            </div>
+                            {m.displayName?.trim() && m.email ? (
+                              <p className="text-xs text-slate-500">{m.email}</p>
+                            ) : null}
+                            <span
+                              className={
+                                "mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                                roleBadgeClass(m.role)
+                              }
+                            >
+                              {roleLabelJa(m.role)}
+                            </span>
+                          </div>
                         </div>
-                        {m.role !== "owner" && canManageMembers && (
+                        {m.role !== "owner" && canManageMembers ? (
                           <button
                             type="button"
                             onClick={() => handleRemoveMember(m.userId)}
@@ -523,49 +644,11 @@ export default function TeamPage() {
                           >
                             {removingId === m.userId ? "削除中…" : "削除"}
                           </button>
-                        )}
+                        ) : null}
                       </li>
                     ))}
                   </ul>
                 )}
-                <details className="group mt-5 rounded-xl border border-slate-100 bg-slate-50/40 open:bg-slate-50/60">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left outline-none transition hover:bg-slate-100/70 sm:px-4 [&::-webkit-details-marker]:hidden">
-                    <div className="min-w-0">
-                      <span className="text-sm font-semibold text-slate-800">ロールの権限（参考）</span>
-                      <p className="text-xs text-slate-500">オーナー／管理者／編集／閲覧でできること</p>
-                    </div>
-                    <span
-                      className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180"
-                      aria-hidden
-                    >
-                      ▼
-                    </span>
-                  </summary>
-                  <div className="border-t border-slate-100/90 px-3 pb-3 pt-3 sm:px-4">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">オーナー</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
-                          メンバー管理 / 承認 / 招待管理 / 履歴確認
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">管理者</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">
-                          承認 / 招待管理 / メンバー管理（オーナー除く）
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">編集担当</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">編集 / 公開申請</p>
-                      </div>
-                      <div className="rounded-lg border border-slate-100 bg-white px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">閲覧担当</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-slate-600">閲覧のみ</p>
-                      </div>
-                    </div>
-                  </div>
-                </details>
               </section>
             </FadeIn>
 
@@ -597,6 +680,7 @@ export default function TeamPage() {
             </FadeIn>
 
             {/* 招待コードを発行 */}
+            {canManageMembers ? (
             <FadeIn>
               <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">招待コードを発行</h2>
@@ -624,8 +708,10 @@ export default function TeamPage() {
                 </div>
               </section>
             </FadeIn>
+            ) : null}
 
             {/* 発行済み招待コード */}
+            {canManageMembers ? (
             <FadeIn>
               <section className="rounded-lg border border-[#e6e8eb] bg-white p-4 sm:p-5">
                 <h2 className="app-section-title">発行済み招待コード</h2>
@@ -644,39 +730,56 @@ export default function TeamPage() {
                         key={inv.id}
                         className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                       >
-                        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                           <code className="w-fit rounded-lg bg-white px-3 py-1.5 font-mono text-sm font-semibold text-slate-800">
                             {inv.code}
                           </code>
-                          <span className="text-xs text-slate-500">
-                            {roleLabelJa(inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor")} · 有効
-                            <span className="ml-2 text-[11px] text-slate-400">
-                              / 招待リンク:{" "}
-                              {typeof window !== "undefined"
-                                ? `${window.location.origin}/invite/${inv.code}`
-                                : `/invite/${inv.code}`}
-                            </span>
+                          <span
+                            className={
+                              "inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                              roleBadgeClass(
+                                inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                              )
+                            }
+                          >
+                            {roleLabelJa(
+                              inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                            )}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRevoke(inv.id)}
-                          disabled={!isBusiness}
-                          className="min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:w-auto sm:border-0 sm:bg-transparent sm:py-1 sm:text-xs"
-                        >
-                          無効化
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleCopyInviteLink(inv)}
+                            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-0 sm:py-1.5 sm:text-xs"
+                          >
+                            {copiedInviteId === inv.id ? "コピーしました" : "招待リンクをコピー"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevoke(inv.id)}
+                            disabled={!isBusiness}
+                            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:min-h-0 sm:py-1.5 sm:text-xs"
+                          >
+                            無効化
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 )}
               </section>
             </FadeIn>
+            ) : null}
 
             {/* 公開申請 */}
             <FadeIn>
               <section className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
-                <details className="group">
+                <details
+                  className="group"
+                  open={approvalsExpanded}
+                  onToggle={(e) => setApprovalsExpanded(e.currentTarget.open)}
+                >
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">

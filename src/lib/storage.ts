@@ -1015,9 +1015,13 @@ export async function ensureUserHotelScope(): Promise<string | null> {
         .eq("id", membership.hotel_id)
         .is("owner_user_id", null);
     }
-    await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
-      hotel_id: membership.hotel_id,
-    });
+    try {
+      await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
+        hotel_id: membership.hotel_id,
+      });
+    } catch {
+      // Best-effort: local dev without service role must not block subscription reads.
+    }
     return membership.hotel_id;
   }
 
@@ -1054,9 +1058,13 @@ export async function ensureUserHotelScopeForOnboarding(): Promise<string | null
     throw toError(membershipError, "施設所属の確認に失敗しました");
   }
   if (membership?.hotel_id) {
-    await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
-      hotel_id: membership.hotel_id,
-    });
+    try {
+      await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
+        hotel_id: membership.hotel_id,
+      });
+    } catch {
+      // Best-effort: local dev without service role must not block hotel scope reads.
+    }
     return membership.hotel_id;
   }
 
@@ -2645,6 +2653,10 @@ export async function createHotelInvite(role: "admin" | "editor" | "viewer" = "e
   const sub = await getCurrentHotelSubscription();
   if (sub?.plan !== "business") {
     throw new Error("チーム招待はBusinessプランでご利用いただけます");
+  }
+  const hotelRole = await getCurrentUserHotelRole();
+  if (hotelRole !== "owner" && hotelRole !== "admin") {
+    throw new Error("招待コードの発行はオーナーまたは管理者のみ可能です");
   }
   const hotelId = await ensureUserHotelScope();
   if (!hotelId) {

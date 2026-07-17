@@ -753,7 +753,12 @@ export function FreeformCanvas({
                         (isOverflowing ? "justify-start" : "justify-center")
                       }
                     >
-                      <CardRenderer card={card} isSelected={isSelected} showSpaceLabel />
+                      <CardRenderer
+                        card={card}
+                        isSelected={isSelected}
+                        showSpaceLabel
+                        businessFeaturesEnabled={isBusinessPlan}
+                      />
                     </div>
                   </div>
                 </div>

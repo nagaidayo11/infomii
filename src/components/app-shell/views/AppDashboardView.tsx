@@ -28,6 +28,7 @@ import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
 import { listLiveOpsKeysByPageIds, type LiveOpsKey } from "@/lib/editor/live-ops";
 import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
+import { usePendingPublishApprovalCount } from "@/components/app/usePendingPublishApprovalCount";
 import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
 
 export function AppDashboardView() {
@@ -48,6 +49,7 @@ export function AppDashboardView() {
   const { showToast } = useAppToast();
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const teamPendingApprovals = usePendingPublishApprovalCount();
 
   useNotifyNativeAppShellWhenReady(!loading && profileLoaded);
 
@@ -162,6 +164,17 @@ export function AppDashboardView() {
         )
       ) : (
         <>
+          {teamPendingApprovals > 0 ? (
+            <AppSection revealDelay={0}>
+              <AppShellLink
+                href="/dashboard/team"
+                className="block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+              >
+                <span className="font-semibold">公開の承認待ちが {teamPendingApprovals} 件</span>
+                <span className="mt-0.5 block text-xs text-amber-800/90">チーム画面で確認できます</span>
+              </AppShellLink>
+            </AppSection>
+          ) : null}
           {canEdit ? (
             <AppSection revealDelay={0}>
               <div id="app-ai-create" className="app-home-compose">

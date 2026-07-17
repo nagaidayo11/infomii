@@ -8,10 +8,10 @@ import {
   createDefaultGuestShellConfig,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
-import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
+import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
+import { useHotelPlanTier } from "@/lib/hooks/use-hotel-plan-tier";
 import {
   getCurrentHotelGuestShell,
-  getCurrentHotelSubscription,
   isGuestShellColumnAvailable,
   updateCurrentHotelGuestShell,
 } from "@/lib/storage";
@@ -30,22 +30,19 @@ export function GuestShellSettingsSection() {
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const [columnReady, setColumnReady] = useState(true);
   const [open, setOpen] = useState(false);
-  const [planTier, setPlanTier] = useState<PlanLimitTier>("free");
+  const planTier = useHotelPlanTier();
   const isBusinessPlan = planTier === "business";
 
   const load = useCallback(async () => {
     setLoading(true);
     setMessage("");
     try {
-      const [shell, ready, sub] = await Promise.all([
+      const [shell, ready] = await Promise.all([
         getCurrentHotelGuestShell().catch(() => createDefaultGuestShellConfig()),
         isGuestShellColumnAvailable().catch(() => true),
-        getCurrentHotelSubscription().catch(() => null),
       ]);
       setConfig(ensureDefaultTabs(shell));
       setColumnReady(ready);
-      const plan = sub?.plan;
-      setPlanTier(plan === "pro" || plan === "business" ? plan : "free");
     } finally {
       setLoading(false);
     }

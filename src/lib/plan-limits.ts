@@ -2,6 +2,14 @@
 
 export type PlanLimitTier = "free" | "pro" | "business";
 
+/** Normalize subscription.plan (or similar) into a plan tier for UI gating. */
+export function resolvePlanTierFromSubscription(
+  plan: string | null | undefined,
+): PlanLimitTier {
+  if (plan === "business" || plan === "pro") return plan;
+  return "free";
+}
+
 /** Published + created page ceiling by tier (new accounts). */
 export const PLAN_PAGE_LIMITS = {
   free: 2,

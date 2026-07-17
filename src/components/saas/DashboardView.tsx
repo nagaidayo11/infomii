@@ -33,6 +33,7 @@ import { useProfileDisplayName } from "@/lib/use-profile-display-name";
 import { formatDisplayNameWithSan } from "@/lib/user-label";
 import { listLiveOpsKeysByPageIds, type LiveOpsKey } from "@/lib/editor/live-ops";
 import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
+import { usePendingPublishApprovalCount } from "@/components/app/usePendingPublishApprovalCount";
 
 export function DashboardView() {
   const { isAppShell } = useClientShell();
@@ -60,6 +61,7 @@ function DashboardViewWeb() {
   const deleteBusyRef = useRef(false);
   const [inviteNotice, setInviteNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const teamPendingApprovals = usePendingPublishApprovalCount();
 
   useRouteProgressLoading(loading);
 
@@ -246,6 +248,16 @@ function DashboardViewWeb() {
           閲覧権限のため、ページの作成・編集はできません。オーナーに編集権限の付与を依頼してください。
         </p>
       )}
+
+      {teamPendingApprovals > 0 ? (
+        <Link
+          href="/dashboard/team"
+          className="block rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 transition hover:bg-amber-100/80"
+        >
+          <span className="font-semibold">公開の承認待ちが {teamPendingApprovals} 件あります</span>
+          <span className="mt-0.5 block text-xs text-amber-800/90">チーム画面で内容を確認し、承認または却下できます。</span>
+        </Link>
+      ) : null}
 
       {createError && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
