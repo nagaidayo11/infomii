@@ -6,7 +6,11 @@ import { nanoid } from "nanoid";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
 import { useEditor2Store } from "./store";
-import { createEmptyCard, STARTER_CARD_TYPES } from "./types";
+import { createEmptyCard } from "./types";
+import {
+  getStarterCardTypes,
+  resolveAppLibraryAudience,
+} from "@/lib/editor/card-library-config";
 import { savePageCards } from "@/lib/storage";
 
 type NewPageOnboardingProps = {
@@ -29,12 +33,21 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
     return isAppShell ? withAppClientQuery(path) : path;
   }
 
+  function starterAudienceLabel() {
+    if (!isAppShell) return null;
+    return resolveAppLibraryAudience([]) === "personal" ? "個人向け" : "宿泊施設向け";
+  }
+
   async function handleUseStarterCards() {
     setLoading(true);
     setError(null);
     try {
-      const cards = STARTER_CARD_TYPES.map((type, i) =>
-        createEmptyCard(type, nanoid(10), i),
+      const audience = isAppShell
+        ? resolveAppLibraryAudience([])
+        : "hotel";
+      const starterTypes = getStarterCardTypes(audience);
+      const cards = starterTypes.map((type, i) =>
+        createEmptyCard(type, nanoid(10), i, audience),
       );
       const { updatedIds } = await savePageCards(pageId, cards);
       const merged = cards.map((c) => ({
@@ -57,7 +70,9 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
         <h2 className="text-lg font-semibold text-slate-900">空のページです</h2>
         <p className="mt-1 truncate text-sm text-slate-500">{pageTitle || "無題のページ"}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          左のライブラリからブロックを追加するか、下のショートカットを使って始めてください。
+          {isAppShell
+            ? "ブロックタブから追加するか、旅のしおり向けの基本ブロックを一括で入れて始められます。"
+            : "左のライブラリからブロックを追加するか、下のショートカットを使って始めてください。"}
         </p>
 
         <div className="mt-5 space-y-2">
@@ -67,7 +82,11 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
             disabled={loading}
             className="flex w-full min-h-[48px] items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
           >
-            {loading ? "追加中…" : "基本ブロックを入れる"}
+            {loading
+              ? "追加中…"
+              : isAppShell
+                ? `基本ブロックを入れる（${starterAudienceLabel()}）`
+                : "基本ブロックを入れる"}
           </button>
           <Link
             href={toShellHref("/templates")}

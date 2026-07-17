@@ -61,6 +61,10 @@ import {
   listPagesForHotel,
 } from "@/lib/storage";
 import {
+  getStarterCardTypes,
+  persistLibraryAudience,
+  readStoredLibraryAudience,
+  resolveAppLibraryAudience,
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
 import {
@@ -186,7 +190,7 @@ export function Editor2({
   const [libraryAudience, setLibraryAudience] = useState<LibraryAudience>(
     () => (useAppEditorChrome ? "personal" : "hotel"),
   );
-  const didApplyAppDefaultAudienceRef = useRef(useAppEditorChrome);
+  const libraryAudiencePageRef = useRef<string | null>(null);
   const bulkFontPanelRef = useRef<HTMLDivElement | null>(null);
   const bulkFontSnapshotRef = useRef<EditorCard[] | null>(null);
   const copiedCardRef = useRef<EditorCard | null>(null);
@@ -207,18 +211,8 @@ export function Editor2({
   const handleLibraryAudienceChange = useCallback((audience: LibraryAudience) => {
     if (!useAppEditorChrome) return;
     setLibraryAudience(audience);
+    persistLibraryAudience(audience);
   }, [useAppEditorChrome]);
-
-  useEffect(() => {
-    if (useAppEditorChrome && !didApplyAppDefaultAudienceRef.current) {
-      didApplyAppDefaultAudienceRef.current = true;
-      setLibraryAudience("personal");
-      return;
-    }
-    if (!useAppEditorChrome && libraryAudience !== "hotel") {
-      setLibraryAudience("hotel");
-    }
-  }, [useAppEditorChrome, libraryAudience]);
 
   const selectedCardId = useEditor2Store((s) => s.selectedCardId);
   const lastAddedCardId = useEditor2Store((s) => s.lastAddedCardId);
@@ -232,6 +226,21 @@ export function Editor2({
   const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
   const addCardRaw = useEditor2Store((s) => s.addCard);
+
+  useEffect(() => {
+    if (!useAppEditorChrome) {
+      libraryAudiencePageRef.current = null;
+      setLibraryAudience("hotel");
+      return;
+    }
+    const scope = pageId ?? (isDemoMode ? "__demo__" : "__none__");
+    if (libraryAudiencePageRef.current === scope) return;
+    if (pageId != null && pageMeta.pageId !== pageId) return;
+
+    libraryAudiencePageRef.current = scope;
+    setLibraryAudience(resolveAppLibraryAudience(cards));
+  }, [useAppEditorChrome, pageId, isDemoMode, pageMeta.pageId, cards]);
+
   const addCardWithContent = useEditor2Store((s) => s.addCardWithContent);
   const notifyBlockPlaced = useCallback(
     (type: CardType) => {

@@ -220,7 +220,7 @@ export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
     audience: "hotel",
   },
   {
-    id: "core-guide-hub",
+    id: "hotel-core-hub",
     label: "トップハブセット",
     purpose: "子ページへの入口",
     icon: "link",
@@ -362,8 +362,36 @@ export function inferLibraryAudience(cards: { type: string }[]): LibraryAudience
     if (PERSONAL_SIGNAL_TYPES.includes(type)) personal += 2;
     if (type === "schedule") personal += 1;
   }
-  if (hotel === 0 && personal === 0) return "hotel";
+  if (hotel === 0 && personal === 0) {
+    return readStoredLibraryAudience() ?? "personal";
+  }
   return personal >= hotel ? "personal" : "hotel";
+}
+
+/** App shell: infer from page content, else last stored choice, else personal. */
+export function resolveAppLibraryAudience(cards: { type: string }[]): LibraryAudience {
+  if (cards.length > 0) return inferLibraryAudience(cards);
+  return readStoredLibraryAudience() ?? "personal";
+}
+
+export const HOTEL_STARTER_CARD_TYPES: CardType[] = [
+  "hero",
+  "info",
+  "highlight",
+  "checkout",
+  "nearby",
+];
+
+export const PERSONAL_STARTER_CARD_TYPES: CardType[] = [
+  "hero",
+  "welcome",
+  "schedule",
+  "highlight",
+  "checklist",
+];
+
+export function getStarterCardTypes(audience: LibraryAudience): CardType[] {
+  return audience === "personal" ? PERSONAL_STARTER_CARD_TYPES : HOTEL_STARTER_CARD_TYPES;
 }
 
 export function readStoredLibraryAudience(): LibraryAudience | null {

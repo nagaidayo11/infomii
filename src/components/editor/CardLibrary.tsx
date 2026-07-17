@@ -839,6 +839,23 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2" />
     </svg>
   ),
+  // Legacy / existing pages only — hidden from new insertion in library.
+  // Keep icon mapping so Record<CardType, ReactNode> stays exhaustive.
+  salon_service_menu: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 17h10" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 16l3 3" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13l-3 3" />
+    </svg>
+  ),
+  menu_sheet_sync: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h10M4 17h14" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 12l3 3m0 0l3-3m-3 3V4" />
+    </svg>
+  ),
 };
 
 function LibraryItemButton({

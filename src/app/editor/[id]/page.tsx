@@ -48,6 +48,9 @@ function EditorWithPageId() {
       void syncLiveOpsIntoEditorStore(pageId);
       return;
     }
+    setLoaded(false);
+    setCards([]);
+    selectCard(null);
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
       if (!page) {
         const legacy = await getInformation(pageId).catch(() => null);
