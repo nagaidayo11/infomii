@@ -62,9 +62,10 @@ const contactHub = (title: string, note: string, email = "") => ({
 });
 const socialLinks = (title: string, handle: string) => ({
   title,
+  labelStyle: "icon",
   items: [
-    { label: "Instagram", href: "", handle },
-    { label: "X", href: "", handle },
+    { platform: "instagram", label: "Instagram", href: "", handle },
+    { platform: "x", label: "X", href: "", handle },
   ],
 });
 const highlight = (title: string, body: string) => ({ title, body, accent: "amber" });

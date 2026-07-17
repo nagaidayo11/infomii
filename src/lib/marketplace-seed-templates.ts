@@ -238,9 +238,10 @@ const contactHub = (title: string, note: string, phone = "03-1234-5678") => ({
 });
 const socialLinks = (title: string, handle: string) => ({
   title,
+  labelStyle: "icon",
   items: [
-    { label: "Instagram", href: "", handle },
-    { label: "X", href: "", handle: handle.replace("@", "@info_") },
+    { platform: "instagram", label: "Instagram", href: "", handle },
+    { platform: "x", label: "X", href: "", handle: handle.replace("@", "@info_") },
   ],
 });
 

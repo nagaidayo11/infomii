@@ -49,11 +49,9 @@ export const HOTEL_ONLY_BLOCK_TYPES: CardType[] = [
   "menu_categories",
   "daily_special",
   "drink_menu",
-  "salon_service_menu",
   "combo_set_menu",
   "menu_grid",
   "menu_time_band",
-  "menu_sheet_sync",
   "campaign_timer",
   "coupon",
 ];
@@ -73,12 +71,12 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   notice_ticker: { label: "お知らせスクロール", description: "当日の連絡を横に流して表示（Pro）" },
   emergency_banner: { label: "緊急連絡バナー", description: "集合変更など最優先の連絡" },
   scheduled_banner: { label: "期間限定のお知らせ", description: "イベント期間だけ表示する告知（Business）" },
-  menu_sheet_sync: { label: "メニュー（表連携）", description: "スプレッドシートからメニュー更新（Business）" },
 };
 
 const MAIN_ITEMS: LibraryItem[] = [
   { type: "hero", label: "ヒーロー", description: "ページ冒頭のタイトルとメイン写真" },
   { type: "hero_slider", label: "ヒーロースライド", description: "複数写真を切替表示" },
+  { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
 ];
 
 /** Layout primitives — freeform after picking structure. */
@@ -92,13 +90,26 @@ const LAYOUT_ITEMS: LibraryItem[] = [
 ];
 
 const GUIDE_ITEMS: LibraryItem[] = [
-  { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
-  { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま（ライブ）" },
-  { type: "dinner_crowd", label: "夕食混雑", description: "レストラン空席・混雑のいま（ライブ）" },
-  { type: "spa_crowd", label: "大浴場混雑", description: "大浴場の混雑のいま（ライブ）" },
   { type: "map", label: "地図", description: "アクセス・所在地を表示" },
   { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusinessプラン）" },
+  { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
+  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
+  { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
+  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
+  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Pro）" },
+  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示" },
+  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Business）" },
+];
+
+/** Live / now status — hotel ops. */
+const LIVE_ITEMS: LibraryItem[] = [
+  { type: "breakfast_crowd", label: "朝食混雑", description: "空席・混雑のいま（ライブ）" },
+  { type: "dinner_crowd", label: "夕食混雑", description: "レストラン空席・混雑のいま（ライブ）" },
+  { type: "spa_crowd", label: "大浴場混雑", description: "大浴場の混雑のいま（ライブ）" },
+];
+
+const MENU_ITEMS: LibraryItem[] = [
   { type: "menu", label: "メニュー一覧", description: "一覧（飲食テーマの静的サンプル画像）" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリ帯もテーマ別の静的サンプル" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめ強調（飲食テーマの静的サンプル）" },
@@ -106,13 +117,6 @@ const GUIDE_ITEMS: LibraryItem[] = [
   { type: "combo_set_menu", label: "セット・コース", description: "内容・価格（コース向け静的サンプル）" },
   { type: "menu_grid", label: "メニュー表（グリッド）", description: "行・列を自由に編集できるメニュー表" },
   { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Businessプラン）" },
-  { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
-  { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Pro）" },
-  { type: "emergency_banner", label: "緊急告知バナー", description: "最優先の注意喚起を表示" },
-  { type: "scheduled_banner", label: "期間限定バナー", description: "期間内だけ表示する告知（Business）" },
-  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
-  { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
-  { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
 ];
 
 const OPERATION_ITEMS: LibraryItem[] = [
@@ -145,18 +149,23 @@ const MEDIA_ITEMS: LibraryItem[] = [
 ];
 
 const BASE_LIBRARY_SECTIONS: LibrarySection[] = [
-  { id: "layouts", title: "レイアウト", items: LAYOUT_ITEMS },
   { id: "main", title: "メイン表示", items: MAIN_ITEMS },
+  { id: "layouts", title: "レイアウト", items: LAYOUT_ITEMS },
   { id: "guide", title: "案内・情報", items: GUIDE_ITEMS },
+  { id: "live", title: "ライブ状況", items: LIVE_ITEMS },
+  { id: "menu", title: "メニュー", items: MENU_ITEMS },
   { id: "operation", title: "運用・導線", items: OPERATION_ITEMS },
   { id: "comparison", title: "比較・訴求", items: COMPARISON_ITEMS },
   { id: "media", title: "メディア・装飾", items: MEDIA_ITEMS },
 ];
 
 const PERSONAL_SECTION_TITLES: Partial<Record<string, string>> = {
+  main: "メイン表示",
   layouts: "レイアウト",
   guide: "共有・案内",
   operation: "リンク・連絡",
+  comparison: "比較・訴求",
+  media: "メディア・装飾",
 };
 
 export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
@@ -268,19 +277,17 @@ function applyPersonalLabels(item: LibraryItem): LibraryItem {
   return override ? { ...item, ...override } : item;
 }
 
-/** 個人向けでは宿泊専用ブロックを上に並べる */
+/** 個人向け案内セクションの並び（旅のしおり用途を優先） */
 const PERSONAL_GUIDE_PRIORITY: CardType[] = [
-  "welcome",
   "schedule",
-  "steps",
-  "checklist",
   "nearby",
   "map",
-  "highlight",
-  "notice",
   "faq",
   "accordion_info",
   "emergency",
+  "notice_ticker",
+  "emergency_banner",
+  "scheduled_banner",
 ];
 
 function sortGuideForPersonal(items: LibraryItem[]): LibraryItem[] {

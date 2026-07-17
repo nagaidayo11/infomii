@@ -68,11 +68,11 @@ export type CardType =
   | "menu_categories"
   | "daily_special"
   | "drink_menu"
-  /** @deprecated Existing pages only — hidden from library. */
+  /** @deprecated Abolished — existing pages only. Not in library; do not insert new. */
   | "salon_service_menu"
   | "combo_set_menu"
   | "menu_grid"
-  /** @deprecated Existing pages only. New insertion is hidden from library. */
+  /** @deprecated Abolished — existing pages only. Not in library; do not insert new. */
   | "menu_sheet_sync"
   | "menu_time_band";
 
@@ -424,7 +424,6 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "menu_categories",
   "daily_special",
   "drink_menu",
-  "salon_service_menu",
   "combo_set_menu",
   "menu_grid",
   "menu_time_band",
@@ -553,7 +552,6 @@ export const PRO_AND_ABOVE_CARD_TYPES: CardType[] = [
 /** Business プラン限定ブロック（自動化・動的運用） */
 export const BUSINESS_ONLY_CARD_TYPES: CardType[] = [
   "scheduled_banner",
-  "menu_sheet_sync",
   "menu_time_band",
 ];
 
@@ -750,7 +748,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "highlight":
       return {
-        title: "ご静かにご協力ください",
+        title: "お静かにご協力ください",
         body: "22:00以降は客室フロアでお静かにお過ごしください。",
         accent: "amber",
       };
@@ -878,9 +876,10 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "social_links":
       return {
         title: "公式SNS",
+        labelStyle: "icon",
         items: [
-          { label: "Instagram", href: "", handle: "@infomii_hotel" },
-          { label: "X", href: "", handle: "@infomii" },
+          { platform: "instagram", label: "Instagram", href: "", handle: "@infomii_hotel" },
+          { platform: "x", label: "X", href: "", handle: "@infomii" },
         ],
       };
     case "contact_hub":

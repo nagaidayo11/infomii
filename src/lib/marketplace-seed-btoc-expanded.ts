@@ -54,9 +54,10 @@ const gallery = (title: string, alts: string[]) => ({
 });
 const socialLinks = (title: string, handle: string) => ({
   title,
+  labelStyle: "icon",
   items: [
-    { label: "Instagram", href: "", handle },
-    { label: "X", href: "", handle },
+    { platform: "instagram", label: "Instagram", href: "", handle },
+    { platform: "x", label: "X", href: "", handle },
   ],
 });
 const openStatus = (title: string, hoursText: string) => ({

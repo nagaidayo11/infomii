@@ -140,9 +140,10 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
     case "social_links":
       return {
         title: "SNS・連絡",
+        labelStyle: "icon",
         items: [
-          { label: "Instagram", href: "", handle: "@your_account" },
-          { label: "X", href: "", handle: "@your_account" },
+          { platform: "instagram", label: "Instagram", href: "", handle: "@your_account" },
+          { platform: "x", label: "X", href: "", handle: "@your_account" },
         ],
       };
     case "contact_hub":

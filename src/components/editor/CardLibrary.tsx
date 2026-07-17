@@ -822,11 +822,6 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6v3l-1 9H10L9 6V3zM7 21h10" />
     </svg>
   ),
-  salon_service_menu: (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-2-11a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  ),
   combo_set_menu: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -836,11 +831,6 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5h16v14H4z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10h16M10 5v14M16 5v14" />
-    </svg>
-  ),
-  menu_sheet_sync: (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h10M4 17h14M17 12l3 3m0 0l3-3m-3 3V4" />
     </svg>
   ),
   menu_time_band: (

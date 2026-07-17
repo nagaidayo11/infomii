@@ -19,6 +19,12 @@ import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 import { isFacilityInfoType } from "@/lib/editor/facility-info-presets";
 import { FacilityInfoSettingsFields } from "./FacilityInfoSettingsFields";
 import {
+  SOCIAL_PLATFORM_OPTIONS,
+  defaultLabelForPlatform,
+  isSocialPlatform,
+  resolveSocialPlatform,
+} from "@/components/cards/social-platform-icon";
+import {
   LIVE_OPS_DEFINITIONS,
   LIVE_OPS_LEVELS,
   buildLiveOpsHref,
@@ -1225,29 +1231,120 @@ function SocialLinksItemsEditor({
   content: Record<string, unknown>;
   onUpdate: (key: string, value: unknown) => void;
 }) {
-  const items = (Array.isArray(content.items) ? content.items : []) as Array<{ label?: string; href?: string; handle?: string }>;
-  const setItems = (next: Array<{ label?: string; href?: string; handle?: string }>) => onUpdate("items", next);
-  const updateItem = (index: number, field: "label" | "href" | "handle", value: string) => {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{
+    platform?: string;
+    label?: string;
+    href?: string;
+    handle?: string;
+  }>;
+  const labelStyle = content.labelStyle === "icon" ? "icon" : "text";
+  const setItems = (
+    next: Array<{ platform?: string; label?: string; href?: string; handle?: string }>,
+  ) => onUpdate("items", next);
+  const updateItem = (
+    index: number,
+    field: "platform" | "label" | "href" | "handle",
+    value: string,
+  ) => {
     const next = [...items];
-    next[index] = { ...(next[index] ?? {}), [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value) };
+    const prev = { ...(next[index] ?? {}) };
+    if (field === "platform") {
+      prev.platform = value;
+      const platformLabel = defaultLabelForPlatform(
+        isSocialPlatform(value) ? value : "other",
+      );
+      // Keep custom labels; only sync when empty or still a known platform name.
+      const currentLabel = (prev.label ?? "").trim();
+      if (
+        !currentLabel ||
+        SOCIAL_PLATFORM_OPTIONS.some((o) => o.label === currentLabel)
+      ) {
+        prev.label = platformLabel;
+      }
+    } else {
+      prev[field] = writeJaTextPreserving((prev as Record<string, unknown>)[field], value);
+    }
+    next[index] = prev;
     setItems(next);
   };
   return (
     <div className="space-y-3">
+      <div className="w-full">
+        <label className={labelClass}>項目の表示</label>
+        <select
+          aria-label="SNS項目の表示"
+          value={labelStyle}
+          onChange={(e) => onUpdate("labelStyle", e.target.value === "icon" ? "icon" : "text")}
+          className={inputClass}
+        >
+          <option value="text">タイトルテキスト</option>
+          <option value="icon">アイコン</option>
+        </select>
+        <p className="mt-1 text-[11px] text-slate-500">
+          アイコンは公式ロゴではなく、各SNSを示すオリジナルアイコンです。
+        </p>
+      </div>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500">SNS項目</span>
-        <button type="button" onClick={() => setItems([...items, { label: "", href: "", handle: "" }])} className={addButtonClass}>+ 追加</button>
+        <button
+          type="button"
+          onClick={() => setItems([...items, { platform: "other", label: "", href: "", handle: "" }])}
+          className={addButtonClass}
+        >
+          + 追加
+        </button>
       </div>
-      {items.map((item, i) => (
-        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
+      {items.map((item, i) => {
+        const platform = resolveSocialPlatform(item);
+        return (
+          <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setItems(items.filter((_, idx) => idx !== i))}
+                className={removeButtonClass}
+              >
+                削除
+              </button>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>SNS</label>
+              <select
+                aria-label={`SNS ${i + 1}`}
+                value={platform}
+                onChange={(e) => updateItem(i, "platform", e.target.value)}
+                className={inputClass}
+              >
+                {SOCIAL_PLATFORM_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {labelStyle === "text" ? (
+              <Input
+                label="名称"
+                value={item.label ?? ""}
+                onChange={(e) => updateItem(i, "label", e.target.value)}
+                placeholder="Instagram"
+              />
+            ) : null}
+            <Input
+              label="ハンドル"
+              value={item.handle ?? ""}
+              onChange={(e) => updateItem(i, "handle", e.target.value)}
+              placeholder="@example"
+            />
+            <Input
+              label="URL"
+              value={item.href ?? ""}
+              onChange={(e) => updateItem(i, "href", e.target.value)}
+              placeholder="https://..."
+            />
           </div>
-          <Input label="名称" value={item.label ?? ""} onChange={(e) => updateItem(i, "label", e.target.value)} placeholder="Instagram" />
-          <Input label="ハンドル" value={item.handle ?? ""} onChange={(e) => updateItem(i, "handle", e.target.value)} placeholder="@example" />
-          <Input label="URL" value={item.href ?? ""} onChange={(e) => updateItem(i, "href", e.target.value)} placeholder="https://..." />
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
