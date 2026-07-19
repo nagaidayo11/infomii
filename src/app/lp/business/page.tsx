@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import LpHotelSaaSPage from "@/components/lp/LpHotelSaaSPage";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { HOTEL_LP_FAQ } from "@/lib/lp/hotel-data";
+import {
+  breadcrumbJsonLd,
+  faqJsonLd,
+  organizationJsonLd,
+  softwareApplicationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -22,4 +31,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default LpHotelSaaSPage;
+export default function LpBusinessPage() {
+  return (
+    <>
+      <JsonLd
+        data={[
+          organizationJsonLd(),
+          websiteJsonLd(),
+          softwareApplicationJsonLd(),
+          breadcrumbJsonLd([
+            { name: "ホーム", path: "/" },
+            { name: "ホテル向け", path: "/lp/business" },
+          ]),
+          faqJsonLd(HOTEL_LP_FAQ),
+        ]}
+      />
+      <LpHotelSaaSPage />
+    </>
+  );
+}

@@ -50,6 +50,19 @@ export const metadata: Metadata = {
     description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
     images: ["/twitter-image"],
   },
+  // Search Console 等の所有権確認。トークンは env で差し替え（未設定なら出力しない）。
+  ...((process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION)
+    ? {
+        verification: {
+          ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+            ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+            : {}),
+          ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+            ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
+            : {}),
+        },
+      }
+    : {}),
 };
 
 export const viewport: Viewport = {
@@ -58,14 +71,16 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/** エディタのフォント選択で使う日本語 Web フォント（公開ページプレビューでも利用） */
+/**
+ * エディタのフォント選択で使う日本語 Web フォント（公開ページプレビューでも利用）。
+ * ここに載せるファミリーは EDITOR_FONT_OPTIONS / LP typography で実際に使うものだけに絞る
+ * （未使用ファミリーはレンダーブロッキングなCSSを増やしLCPを悪化させるため）。
+ */
 const editorGoogleFontsHref =
   "https://fonts.googleapis.com/css2?" +
   [
     "family=Inter:wght@400;500;600;700",
-    "family=Zen+Kaku+Gothic+New:wght@400;700",
     "family=M+PLUS+Rounded+1c:wght@400;700",
-    "family=Kosugi+Maru",
     "family=Shippori+Mincho:wght@400;600",
     "family=Noto+Sans+JP:wght@400;700",
     "family=Noto+Serif+JP:wght@400;600",

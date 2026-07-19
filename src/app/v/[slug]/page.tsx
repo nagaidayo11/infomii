@@ -1,6 +1,10 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, SEO_APP_URL } from "@/lib/seo/structured-data";
 import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import { buildGuestPreviewBackLink } from "@/lib/app-href";
@@ -61,6 +65,64 @@ function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): 
   };
 }
 
+/**
+ * Per-request cached core lookup shared by generateMetadata and the page body
+ * (React cache dedupes so we don't run the same queries twice on a dynamic route).
+ */
+const loadGuestPageCore = cache(async (slug: string) => {
+  const supabase = getSupabaseAdminServerClient();
+  const [{ data: page, error: pageError }, { data: infoRow }] = await Promise.all([
+    supabase.from("pages").select("id,title,slug,hotel_id").eq("slug", slug).maybeSingle(),
+    supabase.from("informations").select("status,hotel_id").eq("slug", slug).maybeSingle(),
+  ]);
+  if (pageError || !page) return null;
+  const hotelId =
+    page.hotel_id ??
+    (infoRow && typeof infoRow === "object" && "hotel_id" in infoRow
+      ? ((infoRow as { hotel_id?: string | null }).hotel_id ?? null)
+      : null);
+  let hotelName: string | null = null;
+  if (hotelId) {
+    const { data: hotelRow } = await supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle();
+    hotelName = (hotelRow as { name?: string | null } | null)?.name?.trim() || null;
+  }
+  return { page, infoRow, hotelId, hotelName };
+});
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const query = await searchParams;
+  const isPreview = query.preview === "1" || query.client === "app";
+  const core = await loadGuestPageCore(slug);
+  if (!core) {
+    return { title: "ページが見つかりません", robots: { index: false, follow: false } };
+  }
+  const published = core.infoRow?.status === "published";
+  const pageTitle = core.page.title?.trim() || "案内ページ";
+  const title = core.hotelName ? `${pageTitle}｜${core.hotelName}` : pageTitle;
+  const description = core.hotelName
+    ? `${core.hotelName}の館内案内。「${pageTitle}」をスマホでご確認いただけます。`
+    : `「${pageTitle}」の案内ページ。`;
+  const canonical = `${SEO_APP_URL}/v/${slug}`;
+  // 下書き・プレビュー・アプリ内表示は検索インデックスさせない。
+  const noindex = isPreview || !published;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      siteName: core.hotelName ?? "Infomii",
+      locale: "ja_JP",
+    },
+    twitter: { card: "summary", title, description },
+  };
+}
+
 export default async function PublicCardPageBySlug({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const query = await searchParams;
@@ -79,37 +141,11 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     forcedFromUrl ?? getVisitorLocaleFromHeader(acceptLanguage);
 
   const supabase = getSupabaseAdminServerClient();
-  const { data: page, error: pageError } = await supabase
-    .from("pages")
-    .select("id,title,slug,hotel_id")
-    .eq("slug", slug)
-    .maybeSingle();
+  // generateMetadata と同一リクエスト内で共有される（React cache による重複クエリ回避）。
+  const core = await loadGuestPageCore(slug);
+  if (!core) notFound();
+  const { page, infoRow, hotelId: hotelIdForLocaleToggle, hotelName } = core;
 
-  if (pageError || !page) notFound();
-
-  const { data: infoRow } = await supabase
-    .from("informations")
-    .select("status,hotel_id")
-    .eq("slug", slug)
-    .maybeSingle();
-  const hotelIdForLocaleToggle =
-    page.hotel_id ??
-    (infoRow && typeof infoRow === "object" && "hotel_id" in infoRow
-      ? ((infoRow as { hotel_id?: string | null }).hotel_id ?? null)
-      : null);
-  const { data: subRows } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("hotel_id", hotelIdForLocaleToggle)
-    .order("updated_at", { ascending: false })
-    .limit(1);
-  const plan = (subRows?.[0]?.plan ?? "free") as "free" | "pro" | "business";
-  const canShowLocaleToggle = plan === "business";
-  const guestNavMaxVisible = resolveGuestNavLinkLimit(plan);
-  const guestShell = await fetchResolvedGuestShellForPage(supabase, {
-    id: page.id,
-    hotel_id: hotelIdForLocaleToggle,
-  });
   const isPublished = infoRow?.status === "published";
   if (!isPublished && !isPreviewRequest) {
     return (
@@ -122,11 +158,27 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     );
   }
 
-  const { data: rows, error: cardsError } = await supabase
-    .from("cards")
-    .select("id,type,content,order")
-    .eq("page_id", page.id)
-    .order("order", { ascending: true });
+  // 公開ページの残りの読み取りは互いに独立なので並列化（逐次だとTTFBが積み上がる）。
+  const [{ data: subRows }, guestShell, { data: rows, error: cardsError }] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("hotel_id", hotelIdForLocaleToggle)
+      .order("updated_at", { ascending: false })
+      .limit(1),
+    fetchResolvedGuestShellForPage(supabase, {
+      id: page.id,
+      hotel_id: hotelIdForLocaleToggle,
+    }),
+    supabase
+      .from("cards")
+      .select("id,type,content,order")
+      .eq("page_id", page.id)
+      .order("order", { ascending: true }),
+  ]);
+  const plan = (subRows?.[0]?.plan ?? "free") as "free" | "pro" | "business";
+  const canShowLocaleToggle = plan === "business";
+  const guestNavMaxVisible = resolveGuestNavLinkLimit(plan);
 
   if (cardsError) notFound();
   const pageBackground = readPageBackground((rows ?? []) as Array<{ content: Record<string, unknown> }>);
@@ -174,8 +226,19 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
     isAppClient,
   });
 
+  const showStructuredData = isPublished && !isPreviewRequest;
+
   return (
-    <GuestCardPageView
+    <>
+      {showStructuredData ? (
+        <JsonLd
+          data={breadcrumbJsonLd([
+            ...(hotelName ? [{ name: hotelName, path: `/v/${page.slug}` }] : []),
+            { name: page.title?.trim() || "案内ページ", path: `/v/${page.slug}` },
+          ])}
+        />
+      ) : null}
+      <GuestCardPageView
       title={page.title}
       cards={cardsWithOps}
       initialLocale={initialLocale}
@@ -200,6 +263,7 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
           </a>
         ) : null
       }
-    />
+      />
+    </>
   );
 }

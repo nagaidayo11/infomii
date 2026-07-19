@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -55,6 +57,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
+      <JsonLd
+        data={[
+          articleJsonLd({
+            title: post.title,
+            description: post.description,
+            slug: post.slug,
+            datePublished: `${post.date}T00:00:00.000Z`,
+          }),
+          breadcrumbJsonLd([
+            { name: "ホーム", path: "/" },
+            { name: "ブログ", path: "/blog" },
+            { name: post.title, path: `/blog/${post.slug}` },
+          ]),
+        ]}
+      />
       <article className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <Link href="/blog" className="text-sm font-medium text-slate-500 hover:text-emerald-700">
           ← ブログ一覧へ戻る

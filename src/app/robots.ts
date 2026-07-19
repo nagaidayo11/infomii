@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/editor", "/login", "/api"],
+        // 公開ゲストページ(/p,/v)はインデックス許可。運用画面・デモ・rewrite重複元は除外。
+        disallow: ["/dashboard", "/editor", "/login", "/api", "/demo", "/qr", "/go"],
       },
     ],
     sitemap: `${appUrl}/sitemap.xml`,

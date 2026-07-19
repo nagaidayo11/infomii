@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import Image from "next/image";
@@ -19,10 +21,71 @@ import { rowToCard } from "@/lib/storage";
 import { applyLiveOpsByKeyToCards } from "@/lib/editor/live-ops/status";
 import { isLiveOpsCardType } from "@/lib/editor/live-ops/registry";
 import { resolveAllPageLiveOpsWithClient } from "@/lib/editor/live-ops/page-store";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, SEO_APP_URL } from "@/lib/seo/structured-data";
 
 /** Live card fields (e.g. breakfast_crowd level) must stay fresh for guests. */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+/** Lightweight per-request cached lookup for legacy `/p` metadata. */
+const loadLegacyPageMeta = cache(async (slug: string) => {
+  try {
+    const admin = getSupabaseAdminServerClient();
+    const { data } = await admin
+      .from("informations")
+      .select("title,status,hotel_id")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!data) return null;
+    const row = data as { title?: string | null; status?: string | null; hotel_id?: string | null };
+    let hotelName: string | null = null;
+    if (row.hotel_id) {
+      const { data: hotelRow } = await admin.from("hotels").select("name").eq("id", row.hotel_id).maybeSingle();
+      hotelName = (hotelRow as { name?: string | null } | null)?.name?.trim() || null;
+    }
+    return {
+      title: row.title?.trim() || "案内ページ",
+      status: row.status ?? null,
+      hotelName,
+    };
+  } catch {
+    return null;
+  }
+});
+
+export async function generateMetadata({ params, searchParams }: PublicPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const query = await searchParams;
+  const isEmbed = query.embed === "1";
+  const meta = await loadLegacyPageMeta(slug);
+  if (!meta) {
+    return { title: "ご案内", robots: { index: false, follow: false } };
+  }
+  const published = meta.status === "published";
+  const title = meta.hotelName ? `${meta.title}｜${meta.hotelName}` : meta.title;
+  const description = meta.hotelName
+    ? `${meta.hotelName}の館内案内。「${meta.title}」をスマホでご確認いただけます。`
+    : `「${meta.title}」の案内ページ。`;
+  const canonical = `${SEO_APP_URL}/p/${slug}`;
+  // 埋め込み・下書きは検索インデックスさせない。
+  const noindex = isEmbed || !published;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      siteName: meta.hotelName ?? "Infomii",
+      locale: "ja_JP",
+    },
+    twitter: { card: "summary", title, description },
+  };
+}
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
@@ -1290,9 +1353,19 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           </div>
   );
 
+  const legacyHotelName = (await loadLegacyPageMeta(slug))?.hotelName ?? null;
+
   return (
     <>
       <PublicPerformanceTracker hotelId={row.hotel_id} slug={slug} />
+      {!isEmbed ? (
+        <JsonLd
+          data={breadcrumbJsonLd([
+            ...(legacyHotelName ? [{ name: legacyHotelName, path: `/p/${slug}` }] : []),
+            { name: row.title?.trim() || "案内ページ", path: `/p/${slug}` },
+          ])}
+        />
+      ) : null}
       {/** /p でも card-based 表示時は GuestCardPageView を使って /v と同じ多言語トグル挙動に合わせる */}
       {cardBasedView ? (
         <GuestCardPageView

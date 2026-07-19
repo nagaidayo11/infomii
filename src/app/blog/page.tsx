@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllPosts } from "@/lib/blog";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -21,6 +23,16 @@ export default function BlogIndexPage() {
 
   return (
     <main className="min-h-screen bg-[#F2FBF7] px-4 py-10 text-slate-900 antialiased sm:px-6">
+      <JsonLd
+        data={[
+          organizationJsonLd(),
+          websiteJsonLd(),
+          breadcrumbJsonLd([
+            { name: "ホーム", path: "/" },
+            { name: "ブログ", path: "/blog" },
+          ]),
+        ]}
+      />
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-8">
           <div className="mb-4">
