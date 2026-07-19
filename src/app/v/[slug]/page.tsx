@@ -107,7 +107,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   // 下書き・プレビュー・アプリ内表示は検索インデックスさせない。
   const noindex = isPreview || !published;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),

@@ -13,7 +13,9 @@ import {
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
 export const metadata: Metadata = {
-  title: "Infomii | ホテルのインフォメーションをスマホで — 無料ではじめる",
+  title: {
+    absolute: "Infomii | ホテルのインフォメーションをスマホで — 無料ではじめる",
+  },
   description:
     "紙の館内案内から、スマホのインフォメーションへ。Wi-Fi・朝食・館内案内をQRで公開。クレジットカード不要で2ページまで無料。",
   alternates: { canonical: `${appUrl}/lp/business` },
@@ -40,7 +42,7 @@ export default function LpBusinessPage() {
           websiteJsonLd(),
           softwareApplicationJsonLd(),
           breadcrumbJsonLd([
-            { name: "ホーム", path: "/" },
+            { name: "ホーム", path: "/lp/business" },
             { name: "ホテル向け", path: "/lp/business" },
           ]),
           faqJsonLd(HOTEL_LP_FAQ),

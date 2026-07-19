@@ -8,8 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // 公開ゲストページ(/p,/v)はインデックス許可。運用画面・デモ・rewrite重複元は除外。
-        disallow: ["/dashboard", "/editor", "/login", "/api", "/demo", "/qr", "/go"],
+        // 公開ゲストページとrewrite入口(/p,/v,/qr,/go)はクロールを許可し、
+        // canonicalを読ませる。運用画面とデモだけを除外する。
+        disallow: ["/dashboard", "/editor", "/login", "/api", "/demo"],
       },
     ],
     sitemap: `${appUrl}/sitemap.xml`,

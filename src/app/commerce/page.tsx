@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CommerceDisclosureTable, type LegalVariant } from "@/lib/legal-content";
+
+export const metadata: Metadata = {
+  title: "特定商取引法に基づく表記",
+  description: "Infomiiの特定商取引法に基づく表記。販売事業者、料金、支払方法、返品・キャンセル条件を記載します。",
+  alternates: { canonical: "/commerce" },
+  robots: { index: true, follow: true },
+};
 
 type CommercePageProps = {
   searchParams: Promise<{ client?: string }>;

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { canUseDevBusinessOverride } from "@/lib/dev-business-override";
 import {
   getSupabaseAdminServerClient,
@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/supabase-server";
 import { getDisplayNameMapByUserIds } from "@/lib/team-profiles";
 import { resolveUserLabel } from "@/lib/user-label";
+import { submitIndexNowUrls } from "@/lib/server/indexnow";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 
@@ -316,7 +317,7 @@ export async function PATCH(request: Request) {
   if (action === "approve") {
     const { data: info } = await admin
       .from("informations")
-      .select("id,title")
+      .select("id,title,slug")
       .eq("id", target.information_id)
       .eq("hotel_id", ctx.hotelId)
       .maybeSingle();
@@ -360,6 +361,15 @@ export async function PATCH(request: Request) {
       "information",
       info.id,
     );
+    after(async () => {
+      try {
+        const { data: cardPage } = await admin.from("pages").select("id").eq("slug", info.slug).maybeSingle();
+        const path = cardPage ? `/v/${encodeURIComponent(info.slug)}` : `/p/${encodeURIComponent(info.slug)}`;
+        await submitIndexNowUrls([path]);
+      } catch (error) {
+        console.error("IndexNow approval notification failed", error);
+      }
+    });
 
     return NextResponse.json({ ok: true });
   }

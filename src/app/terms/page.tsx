@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { TermsOfServiceSections } from "@/lib/legal-content";
+
+export const metadata: Metadata = {
+  title: "利用規約",
+  description: "Infomiiの利用規約。サービス利用条件、禁止事項、免責事項を定めます。",
+  alternates: { canonical: "/terms" },
+  robots: { index: true, follow: true },
+};
 
 export default function TermsPage() {
   return (

@@ -5,6 +5,7 @@ export type BlogPostMeta = {
   slug: string;
   title: string;
   date: string;
+  updated?: string;
   description: string;
 };
 
@@ -187,12 +188,14 @@ function readMarkdownFile(filePath: string): BlogPost {
 
   const title = frontmatter.title ?? slug;
   const date = frontmatter.date ?? "1970-01-01";
+  const updated = frontmatter.updated || undefined;
   const description = frontmatter.description ?? "";
 
   return {
     slug,
     title,
     date,
+    ...(updated ? { updated } : {}),
     description,
     content: body,
     contentHtml: renderMarkdownToHtml(body),
@@ -205,12 +208,223 @@ export function getAllPosts(): BlogPostMeta[] {
   return files
     .map((file) => readMarkdownFile(path.join(BLOG_DIR, file)))
     .sort((a, b) => (a.date < b.date ? 1 : -1))
-    .map(({ slug, title, date, description }) => ({ slug, title, date, description }));
+    .map(({ slug, title, date, updated, description }) => ({
+      slug,
+      title,
+      date,
+      ...(updated ? { updated } : {}),
+      description,
+    }));
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
   const filePath = path.join(BLOG_DIR, `${slug}.md`);
   if (!fs.existsSync(filePath)) return null;
   return readMarkdownFile(filePath);
+}
+
+export type BlogCategory = {
+  id: string;
+  label: string;
+  description: string;
+  /**
+   * Hyphen-bounded slug tokens/phrases. Matching uses token boundaries, not
+   * raw substring includes (so `event` does not match `prevention`).
+   */
+  match: string[];
+};
+
+/**
+ * ブログのトピッククラスター。フロントマターを触らず slug から自動分類し、
+ * ハブページ・関連記事・内部リンクの土台にする。
+ */
+export const BLOG_CATEGORIES: BlogCategory[] = [
+  {
+    id: "getting-started",
+    label: "はじめかた・作り方",
+    description: "案内ページの作成手順やテンプレ活用の基本。",
+    match: [
+      "how-to",
+      "creation",
+      "setup",
+      "template",
+      "block-editor",
+      "guide-page-build",
+      "first-guide",
+      "features-overview",
+      "pricing",
+      "canva",
+      "writing",
+      "clear-writing",
+      "content-items",
+      "mobile-ux",
+    ],
+  },
+  {
+    id: "qr",
+    label: "QR・ペーパーレス",
+    description: "紙からの移行、QR設置、ペーパーレス運用のノウハウ。",
+    match: [
+      "qr",
+      "paper",
+      "paperless",
+      "pdf",
+      "signage",
+      "migration",
+      "landing",
+      "smartphone",
+      "information-smartphone",
+    ],
+  },
+  {
+    id: "checkin",
+    label: "チェックイン/アウト",
+    description: "チェックイン・チェックアウト前後の案内改善。",
+    match: ["checkin", "checkout", "congestion"],
+  },
+  {
+    id: "inbound",
+    label: "インバウンド・多言語",
+    description: "訪日客対応と多言語案内のノウハウ。",
+    match: ["inbound", "multilingual", "bilingual", "multi-property"],
+  },
+  {
+    id: "operations",
+    label: "運用・チーム",
+    description: "更新統制・引き継ぎ・シフト運用など現場オペレーション。",
+    match: [
+      "ops",
+      "operation",
+      "governance",
+      "staff",
+      "team",
+      "handoff",
+      "night",
+      "understaffed",
+      "overnight",
+      "rollforward",
+      "month-end",
+      "weekly-review",
+      "kpi",
+      "audit",
+      "drift",
+      "safe-live",
+      "collaboration",
+      "housekeeping",
+      "adoption",
+      "training",
+      "efficiency",
+      "ongoing",
+      "seasonal",
+      "emergency",
+    ],
+  },
+  {
+    id: "cx",
+    label: "満足度・リピート",
+    description: "ゲスト満足度・口コミ・問い合わせ削減・リピート施策。",
+    match: [
+      "satisfaction",
+      "review-score",
+      "repeat",
+      "loyalty",
+      "complaint",
+      "inquiry",
+      "guardrail",
+      "messaging",
+    ],
+  },
+  {
+    id: "by-facility",
+    label: "施設タイプ別",
+    description: "ホテル・旅館・民泊など施設タイプ別の設計と季節運用。",
+    match: [
+      "ryokan",
+      "onsen",
+      "minpaku",
+      "boutique",
+      "business-hotel",
+      "city-hotel",
+      "resort",
+      "unmanned",
+      "large-bath",
+      "restaurant",
+      "floor-map",
+      "family",
+      "fireworks",
+      "fireworks-event",
+      "typhoon",
+      "obon",
+      "summer",
+      "happy-hour",
+      "ancillary",
+      "scenario",
+      "property",
+      "breakfast",
+      "chatbot",
+      "outsourcing",
+      "tools",
+    ],
+  },
+];
+
+/** Match a category keyword against hyphen-bounded slug tokens. */
+function slugMatchesKeyword(slug: string, keyword: string): boolean {
+  const needle = keyword.toLowerCase();
+  const hay = slug.toLowerCase();
+  if (needle.includes("-")) {
+    return (
+      hay === needle ||
+      hay.startsWith(`${needle}-`) ||
+      hay.endsWith(`-${needle}`) ||
+      hay.includes(`-${needle}-`)
+    );
+  }
+  return hay.split("-").includes(needle);
+}
+
+/** slug から該当カテゴリ ID を返す（無ければ空配列）。 */
+export function getPostCategoryIds(slug: string): string[] {
+  return BLOG_CATEGORIES.filter((c) => c.match.some((m) => slugMatchesKeyword(slug, m))).map(
+    (c) => c.id,
+  );
+}
+
+export function getCategory(id: string): BlogCategory | null {
+  return BLOG_CATEGORIES.find((c) => c.id === id) ?? null;
+}
+
+export function getPostCategories(slug: string): BlogCategory[] {
+  return getPostCategoryIds(slug)
+    .map((id) => getCategory(id))
+    .filter((c): c is BlogCategory => Boolean(c));
+}
+
+export function getPostsByCategory(categoryId: string): BlogPostMeta[] {
+  return getAllPosts().filter((post) => getPostCategoryIds(post.slug).includes(categoryId));
+}
+
+function slugTokens(slug: string): string[] {
+  return slug.split("-").filter((token) => token.length > 2);
+}
+
+/** カテゴリ一致 + slug トークン重複でスコア付けした関連記事。弱関連は出さない。 */
+export function getRelatedPosts(slug: string, limit = 4): BlogPostMeta[] {
+  const all = getAllPosts();
+  const currentCategories = new Set(getPostCategoryIds(slug));
+  const currentTokens = new Set(slugTokens(slug));
+
+  return all
+    .filter((post) => post.slug !== slug)
+    .map((post) => {
+      const categoryScore =
+        getPostCategoryIds(post.slug).filter((id) => currentCategories.has(id)).length * 3;
+      const tokenScore = slugTokens(post.slug).filter((token) => currentTokens.has(token)).length;
+      return { post, score: categoryScore + tokenScore };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || (a.post.date < b.post.date ? 1 : -1))
+    .slice(0, limit)
+    .map((entry) => entry.post);
 }
 

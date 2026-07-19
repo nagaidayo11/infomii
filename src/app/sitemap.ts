@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllPosts } from "@/lib/blog";
+import { BLOG_CATEGORIES, getAllPosts, getPostCategoryIds } from "@/lib/blog";
 import {
   getSupabaseAdminServerClient,
   isSupabaseServiceRoleConfigured,
@@ -58,18 +58,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const posts = getAllPosts();
   const guestPages = await getPublishedGuestPages();
+  const latestBlogDate = posts.reduce(
+    (latest, post) => (post.updated ?? post.date) > latest ? (post.updated ?? post.date) : latest,
+    "1970-01-01",
+  );
 
   return [
-    // `/` 308 → /lp/business; keep both so bookmarks and old links resolve in Search Console
-    { url: `${appUrl}/`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${appUrl}/lp/business`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${appUrl}/lp/saas`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
     { url: `${appUrl}/lp/resort`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${appUrl}/lp/spa`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${appUrl}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    {
+      url: `${appUrl}/blog`,
+      lastModified: new Date(`${latestBlogDate}T00:00:00.000Z`),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...BLOG_CATEGORIES.flatMap((category) => {
+      const categoryPosts = posts.filter((post) => getPostCategoryIds(post.slug).includes(category.id));
+      if (categoryPosts.length === 0) return [];
+      const latestCategoryDate = categoryPosts.reduce(
+        (latest, post) => (post.updated ?? post.date) > latest ? (post.updated ?? post.date) : latest,
+        "1970-01-01",
+      );
+      return [
+        {
+          url: `${appUrl}/blog/category/${category.id}`,
+          lastModified: new Date(`${latestCategoryDate}T00:00:00.000Z`),
+          changeFrequency: "weekly" as const,
+          priority: 0.5,
+        },
+      ];
+    }),
     ...posts.map((post) => ({
       url: `${appUrl}/blog/${post.slug}`,
-      lastModified: new Date(`${post.date}T00:00:00.000Z`),
+      lastModified: new Date(`${post.updated ?? post.date}T00:00:00.000Z`),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),

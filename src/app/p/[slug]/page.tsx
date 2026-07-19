@@ -32,11 +32,14 @@ export const revalidate = 0;
 const loadLegacyPageMeta = cache(async (slug: string) => {
   try {
     const admin = getSupabaseAdminServerClient();
-    const { data } = await admin
-      .from("informations")
-      .select("title,status,hotel_id")
-      .eq("slug", slug)
-      .maybeSingle();
+    const [{ data }, { data: cardPage }] = await Promise.all([
+      admin
+        .from("informations")
+        .select("title,status,hotel_id")
+        .eq("slug", slug)
+        .maybeSingle(),
+      admin.from("pages").select("id").eq("slug", slug).maybeSingle(),
+    ]);
     if (!data) return null;
     const row = data as { title?: string | null; status?: string | null; hotel_id?: string | null };
     let hotelName: string | null = null;
@@ -48,6 +51,7 @@ const loadLegacyPageMeta = cache(async (slug: string) => {
       title: row.title?.trim() || "案内ページ",
       status: row.status ?? null,
       hotelName,
+      hasCardPage: Boolean(cardPage),
     };
   } catch {
     return null;
@@ -67,11 +71,13 @@ export async function generateMetadata({ params, searchParams }: PublicPageProps
   const description = meta.hotelName
     ? `${meta.hotelName}の館内案内。「${meta.title}」をスマホでご確認いただけます。`
     : `「${meta.title}」の案内ページ。`;
-  const canonical = `${SEO_APP_URL}/p/${slug}`;
+  // Card-based pages are also served at /v; prefer /v as the sole indexable URL.
+  const canonicalPath = meta.hasCardPage ? `/v/${slug}` : `/p/${slug}`;
+  const canonical = `${SEO_APP_URL}${canonicalPath}`;
   // 埋め込み・下書きは検索インデックスさせない。
   const noindex = isEmbed || !published;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),

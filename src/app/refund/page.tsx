@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SUPPORT_EMAIL } from "@/lib/app-store-compliance";
+
+export const metadata: Metadata = {
+  title: "返金・キャンセルポリシー",
+  description: "Infomiiの返金・キャンセルポリシー。サブスクリプション解約と返金条件を説明します。",
+  alternates: { canonical: "/refund" },
+  robots: { index: true, follow: true },
+};
 
 export default function RefundPage() {
   return (

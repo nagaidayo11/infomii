@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PrivacyPolicySections, type LegalVariant } from "@/lib/legal-content";
+
+export const metadata: Metadata = {
+  title: "プライバシーポリシー",
+  description: "Infomiiのプライバシーポリシー。取得する情報、利用目的、保管・開示の方針を説明します。",
+  alternates: { canonical: "/privacy" },
+  robots: { index: true, follow: true },
+};
 
 type PrivacyPageProps = {
   searchParams: Promise<{ client?: string }>;

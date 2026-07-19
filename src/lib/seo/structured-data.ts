@@ -85,6 +85,24 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): Record<string, unknow
   };
 }
 
+export function itemListJsonLd(
+  name: string,
+  items: Array<{ name: string; path: string }>,
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: `${SEO_APP_URL}${item.path.startsWith("/") ? item.path : `/${item.path}`}`,
+    })),
+  };
+}
+
 export type FaqItem = { q: string; a: string };
 
 export function faqJsonLd(items: readonly FaqItem[]): Record<string, unknown> {
@@ -107,6 +125,7 @@ export type ArticleJsonLdInput = {
   description: string;
   slug: string;
   datePublished: string;
+  dateModified?: string;
   image?: string;
 };
 
@@ -118,11 +137,11 @@ export function articleJsonLd(input: ArticleJsonLdInput): Record<string, unknown
     headline: input.title,
     description: input.description,
     datePublished: input.datePublished,
-    dateModified: input.datePublished,
+    dateModified: input.dateModified ?? input.datePublished,
     inLanguage: "ja",
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
-    image: input.image ?? `${SEO_APP_URL}/opengraph-image`,
+    image: input.image ?? `${url}/opengraph-image`,
     author: { "@id": ORG_ID },
     publisher: { "@id": ORG_ID },
   };

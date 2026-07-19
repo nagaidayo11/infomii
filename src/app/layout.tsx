@@ -24,15 +24,13 @@ export const metadata: Metadata = {
     template: "%s | Infomii",
   },
   description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
-  alternates: {
-    canonical: "/lp/business",
-  },
+  // Do not set a sitewide canonical/OG url here — child routes without an override
+  // would inherit /lp/business and mis-canonicalize legal/login/app pages.
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Infomii",
     locale: "ja_JP",
-    url: `${appUrl}/lp/business`,
     title: "Infomii | ホテル案内ページ作成SaaS",
     description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
     images: [

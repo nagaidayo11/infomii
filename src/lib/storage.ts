@@ -1951,6 +1951,15 @@ export async function setInformationStatusBySlug(
     publishAt: status === "published" ? now : null,
     unpublishAt: status === "draft" ? now : null,
   });
+  if (status === "published" && typeof window !== "undefined") {
+    // Search notification is best-effort and must not delay or fail publishing.
+    void fetch("/api/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+      keepalive: true,
+    }).catch(() => undefined);
+  }
   return status;
 }
 

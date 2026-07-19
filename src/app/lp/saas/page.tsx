@@ -13,7 +13,9 @@ import {
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
 export const metadata: Metadata = {
-  title: "Infomii | 情報を1ページに。旅行・推し活・案内を無料ではじめる",
+  title: {
+    absolute: "Infomii | 情報を1ページに。旅行・推し活・案内を無料ではじめる",
+  },
   description:
     "旅行しおり、推し活、イベントまで。伝えたい情報をスマホでまとめてURL共有。クレジットカード不要で2ページまで無料公開。",
   alternates: { canonical: `${appUrl}/lp/saas` },
@@ -48,7 +50,7 @@ export default function LpSaasPage() {
           websiteJsonLd(),
           softwareApplicationJsonLd(),
           breadcrumbJsonLd([
-            { name: "ホーム", path: "/" },
+            { name: "ホーム", path: "/lp/business" },
             { name: "サービス紹介", path: "/lp/saas" },
           ]),
           faqJsonLd(PERSONAL_LP_FAQ),

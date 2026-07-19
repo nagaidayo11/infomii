@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllPosts } from "@/lib/blog";
+import { BLOG_CATEGORIES, getAllPosts } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data";
+import {
+  breadcrumbJsonLd,
+  itemListJsonLd,
+  organizationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -31,6 +36,10 @@ export default function BlogIndexPage() {
             { name: "ホーム", path: "/" },
             { name: "ブログ", path: "/blog" },
           ]),
+          itemListJsonLd(
+            "Infomiiブログの記事一覧",
+            posts.map((post) => ({ name: post.title, path: `/blog/${post.slug}` })),
+          ),
         ]}
       />
       <div className="mx-auto w-full max-w-6xl">
@@ -50,6 +59,18 @@ export default function BlogIndexPage() {
           <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
             記事で課題を整理し、LPで機能を確認して、無料登録へ進める導線を用意しています。
           </p>
+
+          <nav aria-label="カテゴリ" className="mt-5 flex flex-wrap gap-2">
+            {BLOG_CATEGORIES.map((category) => (
+              <Link
+                key={category.id}
+                href={`/blog/category/${category.id}`}
+                className="inline-flex items-center rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50/60"
+              >
+                {category.label}
+              </Link>
+            ))}
+          </nav>
         </header>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
