@@ -62,11 +62,11 @@ function GuestPhoneMock({ src }: { src: string }) {
 export function LpHeroHotel({
   ctaHref,
   demoEditorHref = "/demo/editor",
-  eyebrow = "ホテルのインフォメーションを、スマートに。",
-  headlineLine1 = "紙の館内案内から、",
-  headlineLine2 = "スマホのインフォメーションへ。",
-  h1 = "紙の館内案内から、スマホのインフォメーションへ。",
-  subline = "差し替え不要。その場で更新。",
+  eyebrow = "ホテル向け 案内運用OS",
+  headlineLine1 = "ホテル案内を、",
+  headlineLine2 = "現場が自分で回す。",
+  h1 = "ホテル案内を、現場が自分で回す。",
+  subline = "テンプレから数分で公開。QR・多言語・チーム更新まで。",
   previewSrc = GUEST_PREVIEW_SRC,
 }: LpHeroHotelProps) {
   const popHeadingClass = LP_POP_HEADING_CLASS;

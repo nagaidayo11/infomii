@@ -13,6 +13,7 @@ import { LpDemoSection } from "@/components/lp/shared/LpDemoSection";
 import { LpFaqSection } from "@/components/lp/shared/LpFaqSection";
 import { LpFinalCtaSection } from "@/components/lp/shared/LpFinalCtaSection";
 import { LpPricing } from "@/components/lp/shared/LpPricing";
+import { LpInstallChecklistSection } from "@/components/lp/shared/LpInstallChecklistSection";
 import { BUSINESS_LP_CONTENT, type HotelLpContent } from "@/lib/lp/vertical-data";
 import { LP_PAGE_TYPOGRAPHY_CLASS } from "@/lib/lp/typography";
 
@@ -65,6 +66,8 @@ export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHot
         title={content.sections.workflow.title}
         description={content.sections.workflow.description}
       />
+
+      <LpInstallChecklistSection />
 
       <LpDemoSection
         ctaHref={ctaHref}

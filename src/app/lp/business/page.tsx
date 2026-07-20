@@ -14,22 +14,22 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Infomii | ホテルのインフォメーションをスマホで — 無料ではじめる",
+    absolute: "Infomii | ホテル案内を、現場が自分で回す — 無料ではじめる",
   },
   description:
-    "紙の館内案内から、スマホのインフォメーションへ。Wi-Fi・朝食・館内案内をQRで公開。クレジットカード不要で2ページまで無料。",
+    "ホテル向け案内運用OS。テンプレから数分で公開し、QR・多言語・チーム更新まで1つの流れで。クレジットカード不要で2ページまで無料。",
   alternates: { canonical: `${appUrl}/lp/business` },
   openGraph: {
     url: `${appUrl}/lp/business`,
-    title: "Infomii | ホテルのインフォメーションをスマホで",
+    title: "Infomii | ホテル案内を、現場が自分で回す",
     description:
-      "ホテル・旅館・民泊向け。差し替え不要、その場で更新。まず無料登録から。",
+      "作成から公開・現場更新・多言語まで。ホテル向けテンプレで、ITなしでも案内運用を回せます。",
     images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Infomii" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Infomii | ホテルのインフォメーションをスマホで",
-    description: "紙の館内案内をスマホへ。無料2ページ・クレカ不要・数分で公開。",
+    title: "Infomii | ホテル案内を、現場が自分で回す",
+    description: "ホテル向け案内運用OS。テンプレから数分で公開。無料2ページ・クレカ不要。",
   },
 };
 
