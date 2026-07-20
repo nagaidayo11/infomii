@@ -4,6 +4,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const SCHEDULED_DIR = path.join(ROOT, "content", "blog", "scheduled");
 const PUBLISH_DIR = path.join(ROOT, "content", "blog");
+const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 
 function getTodayJst() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -41,6 +42,57 @@ function normalizeTargetName(name) {
   return name.replace(/^[0-9]{2}-/, "");
 }
 
+function slugFromMarkdownFilename(name) {
+  return name.replace(/\.md$/i, "");
+}
+
+function getIndexNowKey() {
+  const key = process.env.INDEXNOW_KEY?.trim() ?? "";
+  return /^[A-Za-z0-9-]{8,128}$/.test(key) ? key : null;
+}
+
+function normalizeSiteUrl() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://infomii.com";
+  return new URL(raw);
+}
+
+/** Best-effort IndexNow ping so new posts are discovered quickly. */
+async function submitBlogIndexNow(slugs) {
+  const key = getIndexNowKey();
+  if (!key || slugs.length === 0) {
+    console.log("indexnow_submitted=false");
+    return false;
+  }
+
+  const site = normalizeSiteUrl();
+  const urlList = slugs.map((slug) => new URL(`/blog/${slug}`, site).toString());
+  urlList.push(new URL("/blog", site).toString());
+  urlList.push(new URL("/blog/rss.xml", site).toString());
+  urlList.push(new URL("/sitemap.xml", site).toString());
+
+  try {
+    const response = await fetch(INDEXNOW_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: site.host,
+        key,
+        keyLocation: new URL("/indexnow-key.txt", site).toString(),
+        urlList,
+      }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    const ok = response.ok || response.status === 202;
+    console.log(`indexnow_submitted=${ok}`);
+    console.log(`indexnow_status=${response.status}`);
+    return ok;
+  } catch (error) {
+    console.error("indexnow_error", error);
+    console.log("indexnow_submitted=false");
+    return false;
+  }
+}
+
 async function main() {
   const today = getTodayJst();
   let entries = [];
@@ -74,6 +126,7 @@ async function main() {
   });
 
   const published = [];
+  const publishedSlugs = [];
   for (const chosen of candidates) {
     const targetName = normalizeTargetName(chosen.name);
     const targetPath = path.join(PUBLISH_DIR, targetName);
@@ -90,15 +143,16 @@ async function main() {
     await fs.rename(chosen.full, targetPath);
     const rel = path.relative(ROOT, targetPath).replaceAll(path.sep, "/");
     published.push(rel);
+    publishedSlugs.push(slugFromMarkdownFilename(targetName));
   }
 
   console.log("published=true");
   console.log(`published_count=${published.length}`);
   console.log(`target_paths=${published.join(",")}`);
+  await submitBlogIndexNow(publishedSlugs);
 }
 
 main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

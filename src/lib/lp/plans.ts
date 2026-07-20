@@ -1,4 +1,4 @@
-/** LP 料金プラン（/lp/saas・/lp/business 共通） */
+/** LP 料金プラン（/lp/business） */
 
 import { PLAN_FEATURE_BULLETS, PLAN_PAGE_LIMITS } from "@/lib/plan-limits";
 import { PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";

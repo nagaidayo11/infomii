@@ -1,14 +1,22 @@
-"use client";
+import type { Metadata } from "next";
+import { EditorWebFonts } from "@/components/seo/EditorWebFonts";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 /**
- * Editor segment layout. No DashboardLayout — editor pages render
- * the dedicated EditorLayout (EditorTopBar + CardLibrary | Canvas | CardSettings) only.
+ * App-group editor segment. Extra typefaces for canvas preview.
  */
 export default function EditorGroupLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <EditorWebFonts />
+      {children}
+    </>
+  );
 }
-

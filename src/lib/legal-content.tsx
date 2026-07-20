@@ -202,7 +202,7 @@ export function CommerceDisclosureTable({ variant = "web" }: { variant?: LegalVa
               ) : (
                 <>
                   最新の価格は{" "}
-                  <Link href="/lp/saas#pricing-plans" className="text-emerald-700 underline">
+                  <Link href="/lp/business#pricing-plans" className="text-emerald-700 underline">
                     料金ページ
                   </Link>
                   に表示します。

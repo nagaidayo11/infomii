@@ -147,15 +147,9 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const { page, infoRow, hotelId: hotelIdForLocaleToggle, hotelName } = core;
 
   const isPublished = infoRow?.status === "published";
+  // Soft-200 for unpublished URLs confuses crawlers; preview=1 still works for operators.
   if (!isPublished && !isPreviewRequest) {
-    return (
-      <main className="mx-auto min-h-screen w-full max-w-[420px] overflow-x-hidden bg-[#fafafa] px-3 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-4 text-xl font-semibold text-slate-900">公開OFFエラー</h1>
-        <p className="text-sm leading-relaxed text-slate-600">
-          現在公開OFFになっています。公開ONにしてから、QRコードまたは公開URLをご利用ください。
-        </p>
-      </main>
-    );
+    notFound();
   }
 
   // 公開ページの残りの読み取りは互いに独立なので並列化（逐次だとTTFBが積み上がる）。

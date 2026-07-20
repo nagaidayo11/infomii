@@ -33,7 +33,7 @@ export default function BlogIndexPage() {
           organizationJsonLd(),
           websiteJsonLd(),
           breadcrumbJsonLd([
-            { name: "ホーム", path: "/" },
+            { name: "ホーム", path: "/lp/business" },
             { name: "ブログ", path: "/blog" },
           ]),
           itemListJsonLd(
@@ -46,7 +46,7 @@ export default function BlogIndexPage() {
         <header className="mb-8">
           <div className="mb-4">
             <Link
-              href="/lp/saas"
+              href="/lp/business"
               className="inline-flex min-h-[40px] items-center rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50"
             >
               ← 戻る

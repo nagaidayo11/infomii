@@ -38,15 +38,21 @@ export function LpHotelTrustMarquee({ points }: { points: readonly string[] }) {
 
 export function LpHotelValueMotion({
   items,
+  kicker = "現場のあるあるを、そのまま軽くする",
+  title = "ホテルのインフォメーションを、スマホで回す",
+  description = "上の画面のような案内ページを作ると、フロントの繰り返し説明と紙の差し替えが減ります。",
 }: {
   items: readonly Item[];
+  kicker?: string;
+  title?: string;
+  description?: string;
 }) {
   return (
     <Section
       id="operations"
-      kicker="現場のあるあるを、そのまま軽くする"
-      title="ホテルのインフォメーションを、スマホで回す"
-      description="上の画面のような案内ページを作ると、フロントの繰り返し説明と紙の差し替えが減ります。"
+      kicker={kicker}
+      title={title}
+      description={description}
       variant="white"
       popTitle
     >
@@ -71,15 +77,21 @@ export function LpHotelValueMotion({
 
 export function LpHotelWorkflowMotion({
   steps,
+  kicker = "はじめかた",
+  title = "3ステップで、客室に置ける案内になる",
+  description = "専門知識は不要です。テンプレから始めて、今日聞かれやすい項目だけ整えれば公開できます。",
 }: {
   steps: readonly Step[];
+  kicker?: string;
+  title?: string;
+  description?: string;
 }) {
   return (
     <Section
       id="how-it-works"
-      kicker="はじめかた"
-      title="3ステップで、客室に置ける案内になる"
-      description="専門知識は不要です。テンプレから始めて、今日聞かれやすい項目だけ整えれば公開できます。"
+      kicker={kicker}
+      title={title}
+      description={description}
       variant="muted"
       popTitle
     >
@@ -108,15 +120,21 @@ export function LpHotelWorkflowMotion({
 
 export function LpHotelBeforeAfterMotion({
   rows,
+  kicker = "Before / After",
+  title = "紙の館内案内から、スマホの運用へ",
+  description = "機能の多さより、毎日の案内がどう変わるかを重視しています。",
 }: {
   rows: readonly Row[];
+  kicker?: string;
+  title?: string;
+  description?: string;
 }) {
   return (
     <Section
       id="before-after"
-      kicker="Before / After"
-      title="紙の館内案内から、スマホの運用へ"
-      description="機能の多さより、毎日の案内がどう変わるかを重視しています。"
+      kicker={kicker}
+      title={title}
+      description={description}
       variant="muted"
       popTitle
     >
@@ -128,16 +146,22 @@ export function LpHotelBeforeAfterMotion({
 export function LpHotelScenesMarquee({
   scenes,
   bullets,
+  kicker = "こんな施設で",
+  title = "シティホテルから、小規模宿まで",
+  description = "大規模システム入れ替えではなく、まず1ページのインフォメーションから始められます。",
 }: {
   scenes: readonly string[];
   bullets: readonly string[];
+  kicker?: string;
+  title?: string;
+  description?: string;
 }) {
   return (
     <Section
       id="properties"
-      kicker="こんな施設で"
-      title="シティホテルから、小規模宿まで"
-      description="大規模システム入れ替えではなく、まず1ページのインフォメーションから始められます。"
+      kicker={kicker}
+      title={title}
+      description={description}
       variant="white"
       popTitle
     >

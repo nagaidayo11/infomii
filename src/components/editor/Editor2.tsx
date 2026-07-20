@@ -1468,7 +1468,7 @@ export function Editor2({
         />
       ) : (
         <EditorTopBar
-          backHref={isDemoMode ? "/lp/saas" : "/dashboard"}
+          backHref={isDemoMode ? "/lp/business" : "/dashboard"}
           demoMode={isDemoMode}
           pageTitle={isDemoMode ? "デモ編集画面" : pageMeta.title}
           saving={isSaving}
@@ -1741,7 +1741,7 @@ export function Editor2({
                   閉じる
                 </button>
                 <a
-                  href={isAppShell ? "/settings/billing" : "/lp/saas#pricing-plans"}
+                  href={isAppShell ? "/settings/billing" : "/lp/business#pricing-plans"}
                   onClick={() => {
                     void trackUpgradeClick("editor");
                   }}

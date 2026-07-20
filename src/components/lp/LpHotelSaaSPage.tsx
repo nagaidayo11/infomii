@@ -13,34 +13,21 @@ import { LpDemoSection } from "@/components/lp/shared/LpDemoSection";
 import { LpFaqSection } from "@/components/lp/shared/LpFaqSection";
 import { LpFinalCtaSection } from "@/components/lp/shared/LpFinalCtaSection";
 import { LpPricing } from "@/components/lp/shared/LpPricing";
-import {
-  HOTEL_LP_BEFORE_AFTER,
-  HOTEL_LP_FAQ,
-  HOTEL_LP_PROPERTY_TYPES,
-  HOTEL_LP_TRUST_POINTS,
-  HOTEL_LP_VALUE_POINTS,
-  HOTEL_LP_WORKFLOW_STEPS,
-  HOTEL_PLANS,
-} from "@/lib/lp/hotel-data";
+import { BUSINESS_LP_CONTENT, type HotelLpContent } from "@/lib/lp/vertical-data";
 import { LP_PAGE_TYPOGRAPHY_CLASS } from "@/lib/lp/typography";
 
-const SAMPLE_PAGE_HREF = "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel";
-const SAMPLE_PAGE_FULL_HREF = "/demo/guest-live?variant=infomii-hotel";
 const DEMO_EDITOR_HREF = "/demo/editor";
-const HUB_BLOG_HREF = "/blog/hotel-information-smartphone";
 
-const HOTEL_SCENE_BULLETS = [
-  "客室のQRから、滞在中の案内をまとめて見せられる",
-  "Wi-Fi・食事時間・館内・周辺を1ページでそろえられる",
-  "変更はその場で更新。紙の差し替えが不要になる",
-  "Freeでまず1ページ公開してから広げられる",
-] as const;
+type LpHotelSaaSPageProps = {
+  content?: HotelLpContent;
+};
 
-export default function LpHotelSaaSPage() {
-  const loginHref = "/login?ref=lp-business";
-  const ctaHref = "/login?ref=lp-business&next=%2Fdashboard%3Ftab%3Dcreate";
+export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHotelSaaSPageProps) {
+  const loginHref = `/login?ref=${content.loginRef}`;
+  const ctaHref = `/login?ref=${content.loginRef}&next=%2Fdashboard%3Ftab%3Dcreate`;
   const hasProAnnual = !!process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
   const hasBusinessAnnual = !!process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
+  const samplePageFullHref = content.hero.previewSrc.replace("embed=1&fit=device&", "");
 
   return (
     <main
@@ -50,63 +37,91 @@ export default function LpHotelSaaSPage() {
         LP_PAGE_TYPOGRAPHY_CLASS
       }
     >
-      <LpSaasHeader loginHref={loginHref} ctaHref={ctaHref} variant="business" />
+      <LpSaasHeader loginHref={loginHref} ctaHref={ctaHref} />
 
-      <LpHeroHotel ctaHref={ctaHref} samplePageHref={SAMPLE_PAGE_HREF} demoEditorHref={DEMO_EDITOR_HREF} />
+      <LpHeroHotel
+        ctaHref={ctaHref}
+        demoEditorHref={DEMO_EDITOR_HREF}
+        eyebrow={content.hero.eyebrow}
+        headlineLine1={content.hero.headlineLine1}
+        headlineLine2={content.hero.headlineLine2}
+        h1={content.hero.h1}
+        subline={content.hero.subline}
+        previewSrc={content.hero.previewSrc}
+      />
 
-      <LpHotelTrustMarquee points={HOTEL_LP_TRUST_POINTS} />
+      <LpHotelTrustMarquee points={content.trustPoints} />
 
-      <LpHotelValueMotion items={HOTEL_LP_VALUE_POINTS} />
+      <LpHotelValueMotion
+        items={content.valuePoints}
+        kicker={content.sections.value.kicker}
+        title={content.sections.value.title}
+        description={content.sections.value.description}
+      />
 
-      <LpHotelWorkflowMotion steps={HOTEL_LP_WORKFLOW_STEPS} />
+      <LpHotelWorkflowMotion
+        steps={content.workflowSteps}
+        kicker={content.sections.workflow.kicker}
+        title={content.sections.workflow.title}
+        description={content.sections.workflow.description}
+      />
 
       <LpDemoSection
         ctaHref={ctaHref}
         demoEditorHref={DEMO_EDITOR_HREF}
-        samplePageHref={SAMPLE_PAGE_FULL_HREF}
-        title="登録前に、作り心地だけ確かめる"
-        description="30秒デモか、上の枠のようなサンプル案内を開いて、軽さを先に体感できます。"
+        samplePageHref={samplePageFullHref}
+        title={content.sections.demo.title}
+        description={content.sections.demo.description}
       />
 
-      <LpHotelScenesMarquee scenes={HOTEL_LP_PROPERTY_TYPES} bullets={HOTEL_SCENE_BULLETS} />
+      <LpHotelScenesMarquee
+        scenes={content.propertyTypes}
+        bullets={content.sceneBullets}
+        kicker={content.sections.scenes.kicker}
+        title={content.sections.scenes.title}
+        description={content.sections.scenes.description}
+      />
 
-      <LpHotelBeforeAfterMotion rows={HOTEL_LP_BEFORE_AFTER} />
+      <LpHotelBeforeAfterMotion
+        rows={content.beforeAfter}
+        kicker={content.sections.beforeAfter.kicker}
+        title={content.sections.beforeAfter.title}
+        description={content.sections.beforeAfter.description}
+      />
 
       <div className="bg-slate-50/90 py-6 text-center text-sm text-slate-600">
         <Container>
           置き換えの手順や想定導入事例は
           <Link
-            href={HUB_BLOG_HREF}
+            href={content.hubBlogHref}
             className="mx-1 font-semibold text-emerald-800 underline decoration-emerald-300/80 underline-offset-2 hover:text-emerald-950"
           >
-            ホテルのインフォメーションをスマホで見せる方法
+            {content.hubBlogAnchorLabel}
           </Link>
           にもまとめています。
         </Container>
       </div>
 
       <LpPricing
-        plans={HOTEL_PLANS}
+        plans={content.plans}
         freeSignupHref={ctaHref}
         hasProAnnual={hasProAnnual}
         hasBusinessAnnual={hasBusinessAnnual}
       />
 
-      <LpFaqSection items={HOTEL_LP_FAQ} variant="white" />
+      <LpFaqSection items={content.faq} variant="white" />
 
       <LpFinalCtaSection
         ctaHref={ctaHref}
         loginHref={loginHref}
         demoEditorHref={DEMO_EDITOR_HREF}
-        title="まずは無料で、1ページ作ってみる"
+        title={content.sections.finalCta.title}
         description={
           <>
-            上のスマホ枠のようなホテル案内を、テンプレから始められます。
-            <br className="hidden sm:inline" />
-            クレジットカード不要。公開まで数分です。
+            {content.sections.finalCta.description}
           </>
         }
-        trustPoints={HOTEL_LP_TRUST_POINTS}
+        trustPoints={content.trustPoints}
         revealIntensity="strong"
       />
 

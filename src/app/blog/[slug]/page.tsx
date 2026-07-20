@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug, getPostCategories, getRelatedPosts } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/structured-data";
+import { articleJsonLd, breadcrumbJsonLd, organizationJsonLd } from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -55,6 +55,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <JsonLd
         data={[
+          organizationJsonLd(),
           articleJsonLd({
             title: post.title,
             description: post.description,
@@ -63,7 +64,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             ...(post.updated ? { dateModified: `${post.updated}T00:00:00.000Z` } : {}),
           }),
           breadcrumbJsonLd([
-            { name: "ホーム", path: "/" },
+            { name: "ホーム", path: "/lp/business" },
             { name: "ブログ", path: "/blog" },
             ...(primaryCategory
               ? [{ name: primaryCategory.label, path: `/blog/category/${primaryCategory.id}` }]
@@ -119,7 +120,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             現場の案内をそのままQR化したい場合は、InfomiiのLPからすぐに無料で始められます。
           </p>
           <Link
-            href="/lp/saas"
+            href="/lp/business"
             className="mt-4 inline-flex min-h-[44px] items-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white hover:bg-emerald-700"
           >
             無料で館内案内を作る

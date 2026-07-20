@@ -34,7 +34,7 @@ export function shouldBlockInAppSubscriptionCheckout(_userAgent?: string): boole
 }
 
 /** Web marketing LP path (not used for in-app billing). */
-export const WEB_PRICING_LP_PATH = "/lp/saas#pricing";
+export const WEB_PRICING_LP_PATH = "/lp/business#pricing";
 
 /** Public pricing LP — web only. */
 export function getWebPricingLpUrl(): string {

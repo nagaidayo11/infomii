@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Personal LP removed; send bookmarks and external links to hotel LP.
+      {
+        source: "/lp/saas",
+        destination: "/lp/business",
+        permanent: true,
+      },
       // Three fictional "case study" articles were consolidated into one transparent
       // property-type guide. Preserve any existing authority with permanent redirects.
       {

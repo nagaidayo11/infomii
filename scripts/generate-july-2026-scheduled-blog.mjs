@@ -952,7 +952,7 @@ function buildPost(p) {
     `現場では完璧な整備より、スタッフ全員が同じ案内URLを開ける状態を先に作ると、本稿の施策は小さく始めても前に進みやすくなります。導入初期は「全ページ完成」より「よく聞かれる3項目だけ正確」を優先すると、ゲストの信頼も得やすくなります。`,
   );
 
-  const body = `${p.lead || p.conclusion}\n\n${sections.filter(Boolean).join("\n\n")}\n\n## CTA\n\nまずは無料で試し、自施設に合わせて広げていくのが安全です。\n\n[無料で館内案内を作る](/lp/saas)\n\n## 内部リンク候補\n\n- [${p.links[0].title}](/blog/${p.links[0].slug})\n- [${p.links[1].title}](/blog/${p.links[1].slug})\n`;
+  const body = `${p.lead || p.conclusion}\n\n${sections.filter(Boolean).join("\n\n")}\n\n## CTA\n\nまずは無料で試し、自施設に合わせて広げていくのが安全です。\n\n[無料で館内案内を作る](/lp/business)\n\n## 内部リンク候補\n\n- [${p.links[0].title}](/blog/${p.links[0].slug})\n- [${p.links[1].title}](/blog/${p.links[1].slug})\n`;
 
   return `---
 title: ${p.title}

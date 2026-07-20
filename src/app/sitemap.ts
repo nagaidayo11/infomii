@@ -65,7 +65,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: `${appUrl}/lp/business`, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${appUrl}/lp/saas`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
     { url: `${appUrl}/lp/resort`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${appUrl}/lp/spa`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     {
@@ -73,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(`${latestBlogDate}T00:00:00.000Z`),
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: `${appUrl}/blog/rss.xml`,
+      lastModified: new Date(`${latestBlogDate}T00:00:00.000Z`),
+      changeFrequency: "weekly",
+      priority: 0.3,
     },
     ...BLOG_CATEGORIES.flatMap((category) => {
       const categoryPosts = posts.filter((post) => getPostCategoryIds(post.slug).includes(category.id));

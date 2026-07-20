@@ -2,21 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LpHeroAudienceSwitch } from "@/components/lp/LpHeroAudienceSwitch";
 import { Button, Container } from "@/components/ui";
 
 type LpSaasHeaderProps = {
   loginHref: string;
   ctaHref: string;
-  /** business LP には #use-cases / #templates がないため非表示 */
-  variant?: "saas" | "business";
 };
 
-export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHeaderProps) {
-  const showBtocSections = variant === "saas";
-  const audience = variant === "business" ? "hotel" : "personal";
-  const homeHref = variant === "business" ? "/lp/business" : "/lp/saas";
-  const showAudienceSwitch = variant === "saas";
+export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
+  const homeHref = "/lp/business";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const firstMenuLinkRef = useRef<HTMLAnchorElement | null>(null);
   const navLinkClass =
@@ -53,32 +47,12 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
           Infomii
         </Link>
 
-        {showAudienceSwitch ? (
-          <div className="flex min-w-0 flex-1 items-center justify-center md:flex-none md:justify-start">
-            <LpHeroAudienceSwitch active={audience} compact />
-          </div>
-        ) : (
-          <div className="min-w-0 flex-1 md:flex-none" />
-        )}
+        <div className="min-w-0 flex-1 md:flex-none" />
 
         <nav className="ml-auto hidden shrink-0 flex-wrap items-center justify-end gap-0.5 sm:gap-1 md:flex">
-          {showBtocSections ? (
-            <>
-              <a href="#benefits" className={navLinkClass}>
-                特長
-              </a>
-              <a href="#use-cases" className={navLinkClass}>
-                用途
-              </a>
-              <a href="#templates" className={navLinkClass}>
-                テンプレ
-              </a>
-            </>
-          ) : (
-            <a href="#operations" className={navLinkClass}>
-              現場のメリット
-            </a>
-          )}
+          <a href="#operations" className={navLinkClass}>
+            現場のメリット
+          </a>
           <a href="#live-demo" className={navLinkClass}>
             デモ
           </a>
@@ -135,38 +109,14 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
           }`}
         >
           <div className="flex flex-col gap-2">
-            {showAudienceSwitch ? (
-              <div className="pb-1">
-                <LpHeroAudienceSwitch active={audience} compact className="w-full justify-center" />
-              </div>
-            ) : null}
-            {showBtocSections ? (
-              <>
-                <a
-                  ref={firstMenuLinkRef}
-                  href="#benefits"
-                  className={navLinkClass}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  特長
-                </a>
-                <a href="#use-cases" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
-                  用途
-                </a>
-                <a href="#templates" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
-                  テンプレ
-                </a>
-              </>
-            ) : (
-              <a
-                ref={firstMenuLinkRef}
-                href="#operations"
-                className={navLinkClass}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                現場のメリット
-              </a>
-            )}
+            <a
+              ref={firstMenuLinkRef}
+              href="#operations"
+              className={navLinkClass}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              現場のメリット
+            </a>
             <a
               href="#live-demo"
               className={navLinkClass}
@@ -196,4 +146,3 @@ export function LpSaasHeader({ loginHref, ctaHref, variant = "saas" }: LpSaasHea
     </header>
   );
 }
-

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LpHotelSaaSPage from "@/components/lp/LpHotelSaaSPage";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { HOTEL_LP_FAQ } from "@/lib/lp/hotel-data";
+import { SPA_LP_CONTENT } from "@/lib/lp/vertical-data";
 import {
   breadcrumbJsonLd,
   faqJsonLd,
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   },
 };
 
-/** Vertical keyword LP: spa-specific metadata + shared hotel product body. */
+/** Vertical keyword LP: spa-specific copy + shared product/pricing. */
 export default function LpSpaPage() {
   return (
     <>
@@ -48,10 +48,10 @@ export default function LpSpaPage() {
             { name: "ホーム", path: "/lp/business" },
             { name: "温浴・スパ向け", path: "/lp/spa" },
           ]),
-          faqJsonLd(HOTEL_LP_FAQ),
+          faqJsonLd(SPA_LP_CONTENT.faq),
         ]}
       />
-      <LpHotelSaaSPage />
+      <LpHotelSaaSPage content={SPA_LP_CONTENT} />
     </>
   );
 }

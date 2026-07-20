@@ -16,7 +16,7 @@ type LpTemplatesProps = {
   demoHref?: string;
 };
 
-export function LpTemplates({ ctaHref, demoHref = "/lp/saas?focus=templates" }: LpTemplatesProps) {
+export function LpTemplates({ ctaHref, demoHref = "/lp/business?focus=templates" }: LpTemplatesProps) {
   return (
     <section id="templates" className="border-b border-slate-100 bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">

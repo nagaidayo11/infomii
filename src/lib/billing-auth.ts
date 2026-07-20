@@ -14,7 +14,7 @@ export function isLoginRequiredMessage(message: string): boolean {
   );
 }
 
-export function buildBillingLoginHref(fallbackNext = "/lp/saas#pricing"): string {
+export function buildBillingLoginHref(fallbackNext = "/lp/business#pricing"): string {
   if (typeof window === "undefined") {
     return `/login?ref=lp&next=${encodeURIComponent(fallbackNext)}`;
   }

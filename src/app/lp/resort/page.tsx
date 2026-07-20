@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LpHotelSaaSPage from "@/components/lp/LpHotelSaaSPage";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { HOTEL_LP_FAQ } from "@/lib/lp/hotel-data";
+import { RESORT_LP_CONTENT } from "@/lib/lp/vertical-data";
 import {
   breadcrumbJsonLd,
   faqJsonLd,
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-/** Vertical keyword LP: resort-specific metadata + shared hotel product body. */
+/** Vertical keyword LP: resort-specific copy + shared product/pricing. */
 export default function LpResortPage() {
   return (
     <>
@@ -49,10 +49,10 @@ export default function LpResortPage() {
             { name: "ホーム", path: "/lp/business" },
             { name: "リゾート向け", path: "/lp/resort" },
           ]),
-          faqJsonLd(HOTEL_LP_FAQ),
+          faqJsonLd(RESORT_LP_CONTENT.faq),
         ]}
       />
-      <LpHotelSaaSPage />
+      <LpHotelSaaSPage content={RESORT_LP_CONTENT} />
     </>
   );
 }

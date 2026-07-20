@@ -30,7 +30,7 @@ export function LpInstagramBanner() {
       </Link>
       <span className="text-slate-400"> · </span>
       <Link
-        href="/lp/saas?focus=templates"
+        href="/lp/business?focus=templates"
         className="font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-2"
       >
         サンプルを見る

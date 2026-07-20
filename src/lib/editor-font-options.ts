@@ -1,6 +1,6 @@
 /**
  * エディタの「フォント」選択肢（ブロックスタイル・一括フォントで共通利用）
- * layout で Google Fonts を読み込むファミリーは、ここに追加したら併せて読み込みを足すこと。
+ * Google Fonts の読み込みは `src/lib/google-fonts.ts`（EDITOR_GOOGLE_FONTS_HREF）と同期すること。
  */
 export type EditorFontOption = { label: string; value: string };
 

@@ -54,7 +54,7 @@ export default async function BlogCategoryPage({ params }: BlogCategoryPageProps
           organizationJsonLd(),
           websiteJsonLd(),
           breadcrumbJsonLd([
-            { name: "ホーム", path: "/" },
+            { name: "ホーム", path: "/lp/business" },
             { name: "ブログ", path: "/blog" },
             { name: category.label, path: `/blog/category/${category.id}` },
           ]),

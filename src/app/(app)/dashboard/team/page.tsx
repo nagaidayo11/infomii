@@ -158,7 +158,7 @@ export default function TeamPage() {
   const { isAppShell } = useClientShell();
   const { isBusiness, resolved: planResolved } = useHotelPlanAccess();
   const { hotelName } = useHotelName();
-  const businessUpgradeHref = isAppShell ? APP_BILLING_PATH : "/lp/saas#pricing-plans";
+  const businessUpgradeHref = isAppShell ? APP_BILLING_PATH : "/lp/business#pricing-plans";
   const [members, setMembers] = useState<HotelMember[]>([]);
   const [invites, setInvites] = useState<HotelInvite[]>([]);
   const [loading, setLoading] = useState(true);

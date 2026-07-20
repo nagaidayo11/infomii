@@ -123,7 +123,7 @@ export function CheckoutButton({
           plan,
           interval,
           successPath: "/dashboard?billing=success",
-          cancelPath: "/lp/saas#pricing-plans",
+          cancelPath: "/lp/business#pricing-plans",
         });
       window.location.href = url;
     } catch (e) {

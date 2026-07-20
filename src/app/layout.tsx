@@ -4,6 +4,7 @@ import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { ClientShellProvider } from "@/components/app-shell";
 import { AuthProvider } from "@/components/auth-provider";
 import { ButtonLiftProvider } from "@/components/providers/ButtonLiftProvider";
+import { MARKETING_GOOGLE_FONTS_HREF } from "@/lib/google-fonts";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
@@ -69,22 +70,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/**
- * エディタのフォント選択で使う日本語 Web フォント（公開ページプレビューでも利用）。
- * ここに載せるファミリーは EDITOR_FONT_OPTIONS / LP typography で実際に使うものだけに絞る
- * （未使用ファミリーはレンダーブロッキングなCSSを増やしLCPを悪化させるため）。
- */
-const editorGoogleFontsHref =
-  "https://fonts.googleapis.com/css2?" +
-  [
-    "family=Inter:wght@400;500;600;700",
-    "family=M+PLUS+Rounded+1c:wght@400;700",
-    "family=Shippori+Mincho:wght@400;600",
-    "family=Noto+Sans+JP:wght@400;700",
-    "family=Noto+Serif+JP:wght@400;600",
-  ].join("&") +
-  "&display=swap";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -95,7 +80,8 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="stylesheet" href={editorGoogleFontsHref} />
+        {/* LP/blog 向け軽量セット。エディタ用フォントは EditorWebFonts で必要なルートだけ追加。 */}
+        <link rel="stylesheet" href={MARKETING_GOOGLE_FONTS_HREF} />
       </head>
       <body className="font-sans lux-shell ds-app min-h-[100dvh] overflow-x-hidden bg-ds-bg text-ds-foreground antialiased [-webkit-tap-highlight-color:transparent]">
         <GoogleAnalytics />

@@ -15,6 +15,12 @@ type LpHeroHotelProps = {
   ctaHref: string;
   samplePageHref?: string;
   demoEditorHref?: string;
+  eyebrow?: string;
+  headlineLine1?: string;
+  headlineLine2?: string;
+  h1?: string;
+  subline?: string;
+  previewSrc?: string;
 };
 
 function GuestPhoneMock({ src }: { src: string }) {
@@ -56,6 +62,12 @@ function GuestPhoneMock({ src }: { src: string }) {
 export function LpHeroHotel({
   ctaHref,
   demoEditorHref = "/demo/editor",
+  eyebrow = "ホテルのインフォメーションを、スマートに。",
+  headlineLine1 = "紙の館内案内から、",
+  headlineLine2 = "スマホのインフォメーションへ。",
+  h1 = "紙の館内案内から、スマホのインフォメーションへ。",
+  subline = "差し替え不要。その場で更新。",
+  previewSrc = GUEST_PREVIEW_SRC,
 }: LpHeroHotelProps) {
   const popHeadingClass = LP_POP_HEADING_CLASS;
   const reduceMotion = useReducedMotion();
@@ -95,7 +107,7 @@ export function LpHeroHotel({
           <div className="max-w-xl text-white">
             <ClipReveal delay={0.05} duration={0.7}>
               <p className="text-sm font-medium tracking-[0.14em] text-white/75 sm:tracking-[0.18em]">
-                ホテルのインフォメーションを、スマートに。
+                {eyebrow}
               </p>
             </ClipReveal>
 
@@ -110,19 +122,19 @@ export function LpHeroHotel({
 
             <div className={`mt-5 text-[1.65rem] leading-snug text-white sm:text-3xl lg:text-[2.2rem] ${popHeadingClass}`}>
               <ClipReveal delay={0.22}>
-                <span className="block">紙の館内案内から、</span>
+                <span className="block">{headlineLine1}</span>
               </ClipReveal>
               <ClipReveal delay={0.32}>
                 <span className="block whitespace-nowrap bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-                  スマホのインフォメーションへ。
+                  {headlineLine2}
                 </span>
               </ClipReveal>
             </div>
-            <h1 className="sr-only">紙の館内案内から、スマホのインフォメーションへ。</h1>
+            <h1 className="sr-only">{h1}</h1>
 
             <ClipReveal delay={0.42} className="mt-4">
               <p className="max-w-md text-base text-white/80 sm:text-lg">
-                <WordReveal text="差し替え不要。その場で更新。" delay={0.44} />
+                <WordReveal text={subline} delay={0.44} />
               </p>
             </ClipReveal>
 
@@ -154,7 +166,7 @@ export function LpHeroHotel({
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <GuestPhoneMock src={GUEST_PREVIEW_SRC} />
+            <GuestPhoneMock src={previewSrc} />
           </motion.div>
         </div>
       </div>
