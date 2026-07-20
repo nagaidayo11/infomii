@@ -14,7 +14,6 @@ import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 import { normalizeCardWidthModeContent } from "@/lib/editor/card-width-mode";
 import { applyLiveOpsByKeyToCards } from "@/lib/editor/live-ops/status";
 import { resolveAllPageLiveOpsWithClient } from "@/lib/editor/live-ops/page-store";
-import { normalizePageAtmosphere } from "@/lib/page-atmosphere";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 /** Live ops (and other live card fields) must not be served from a stale RSC cache. */
@@ -54,14 +53,12 @@ function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): 
   const bg = obj.background;
   if (!bg || typeof bg !== "object" || Array.isArray(bg)) return null;
   const background = bg as Record<string, unknown>;
-  const atmosphere = normalizePageAtmosphere(background.atmosphere);
   return {
     mode: background.mode === "gradient" ? "gradient" : "solid",
     color: typeof background.color === "string" ? background.color : "#ffffff",
     from: typeof background.from === "string" ? background.from : "#f8fafc",
     to: typeof background.to === "string" ? background.to : "#e2e8f0",
     angle: typeof background.angle === "number" ? background.angle : 180,
-    ...(atmosphere !== "none" ? { atmosphere } : {}),
   };
 }
 

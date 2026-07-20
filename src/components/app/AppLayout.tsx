@@ -6,7 +6,6 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNavDrawer } from "./MobileNavDrawer";
 import { RouteProgressProvider } from "./RouteProgressContext";
-import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -34,7 +33,6 @@ export function AppLayout({
 
   return (
     <div className="app-ambient-bg relative flex h-[100dvh] w-full overflow-hidden bg-[#f6f8fa]">
-      <PageAtmosphereDecor atmosphere="travel" density="chrome" />
       <RouteProgressProvider>
         <MobileNavDrawer open={mobileNavOpen} onClose={closeMobileNav} />
         <Sidebar />

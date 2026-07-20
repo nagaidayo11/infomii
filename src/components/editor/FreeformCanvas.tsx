@@ -19,9 +19,6 @@ import {
 } from "@/lib/guest-shell";
 import type { SupportedLocale } from "@/lib/localized-content";
 import { getBlockStyle, isMediaCardType, usesHeroColumnWidth, type CardType, type EditorCard } from "./types";
-import { PageAtmosphereDecor } from "@/components/atmosphere/PageAtmosphereDecor";
-import { normalizePageAtmosphere, type PageAtmosphereId } from "@/lib/page-atmosphere";
-
 const DEFAULT_W = 280;
 const DEFAULT_H = 96;
 const MIN_W = 120;
@@ -257,7 +254,6 @@ type FreeformCanvasProps = {
     from: string;
     to: string;
     angle: number;
-    atmosphere?: PageAtmosphereId;
   };
   guestShell?: GuestShellConfig | null;
   pageSlug?: string;
@@ -539,8 +535,6 @@ export function FreeformCanvas({
     pageBackground?.mode === "gradient"
       ? `linear-gradient(${pageBackground.angle}deg, ${pageBackground.from}, ${pageBackground.to})`
       : pageBackground?.color ?? "#ffffff";
-  const atmosphere = normalizePageAtmosphere(pageBackground?.atmosphere);
-
   const canvasH = Math.max(
     800,
     cards.reduce((max, card, idx) => {
@@ -603,8 +597,7 @@ export function FreeformCanvas({
             ) : null
           }
         >
-          <div className="relative h-full min-h-0 flex-1 overflow-hidden">
-          <PageAtmosphereDecor atmosphere={atmosphere} />
+          <div className="relative">
           <div
             className="guest-page guest-content-gutter relative z-[1] mx-auto"
             style={{ width: stageWidth, minHeight: canvasH }}

@@ -5,8 +5,6 @@ import { nanoid } from "nanoid";
 import { moveCardInStack } from "@/lib/freeform-stack";
 import type { CardStyle, EditorCard, CardType } from "./types";
 import { CARD_TYPE_LABELS, createEmptyCard } from "./types";
-import type { PageAtmosphereId } from "@/lib/page-atmosphere";
-import { normalizePageAtmosphere } from "@/lib/page-atmosphere";
 
 /** All registered card types may be inserted / loaded. */
 const ALLOWED_CARD_TYPES: CardType[] = Object.keys(CARD_TYPE_LABELS) as CardType[];
@@ -60,8 +58,6 @@ export type Editor2State = {
   pageGradientTo: string;
   /** Gradient angle (deg). */
   pageGradientAngle: number;
-  /** Soft atmosphere motif for guest / preview. */
-  pageAtmosphere: PageAtmosphereId;
   setCards: (cards: EditorCard[]) => void;
   setShowGrid: (show: boolean) => void;
   setPageTheme: (theme: "light" | "dark") => void;
@@ -71,7 +67,6 @@ export type Editor2State = {
     from?: string;
     to?: string;
     angle?: number;
-    atmosphere?: PageAtmosphereId | string;
   }) => void;
   setAutosaveStatus: (payload: { isSaving?: boolean; lastSavedAt?: number | null; saveError?: string | null }) => void;
   setPageMeta: (meta: Partial<EditorPageMeta>) => void;
@@ -186,7 +181,6 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
   pageGradientFrom: "#f8fafc",
   pageGradientTo: "#e2e8f0",
   pageGradientAngle: 180,
-  pageAtmosphere: "none",
 
   setCards: (cards) => set({ cards }),
 
@@ -199,9 +193,6 @@ export const useEditor2Store = create<Editor2State>((set, get) => ({
       ...(patch.from !== undefined ? { pageGradientFrom: patch.from } : {}),
       ...(patch.to !== undefined ? { pageGradientTo: patch.to } : {}),
       ...(patch.angle !== undefined ? { pageGradientAngle: patch.angle } : {}),
-      ...(patch.atmosphere !== undefined
-        ? { pageAtmosphere: normalizePageAtmosphere(patch.atmosphere) }
-        : {}),
     })),
 
   setAutosaveStatus: (payload) =>

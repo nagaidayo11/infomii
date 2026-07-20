@@ -74,7 +74,6 @@ function EditorWithPageId() {
           from: pageStyle.background.from,
           to: pageStyle.background.to,
           angle: pageStyle.background.angle,
-          atmosphere: pageStyle.background.atmosphere ?? "none",
         });
       } else {
         setPageBackground({
@@ -83,7 +82,6 @@ function EditorWithPageId() {
           from: "#f8fafc",
           to: "#e2e8f0",
           angle: 180,
-          atmosphere: "none",
         });
       }
       const cardsFromDb = rows.map((r) => {

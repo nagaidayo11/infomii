@@ -4636,19 +4636,12 @@ const STYLE_KEY = "_style";
 /** Key used inside first card content JSON to persist page-level style (background etc.). */
 const PAGE_STYLE_KEY = "_pageStyle";
 
-import {
-  normalizePageAtmosphere,
-  type PageAtmosphereId,
-} from "@/lib/page-atmosphere";
-
 export type PageBackgroundStyle = {
   mode: "solid" | "gradient";
   color: string;
   from: string;
   to: string;
   angle: number;
-  /** Soft decorative motif (diary / ocean / travel / outing). */
-  atmosphere?: PageAtmosphereId;
 };
 
 export type PageStyleForSave = {
@@ -4668,7 +4661,6 @@ export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | nu
   if (!bg || typeof bg !== "object" || Array.isArray(bg)) return null;
   const background = bg as Record<string, unknown>;
   const mode = background.mode === "gradient" ? "gradient" : "solid";
-  const atmosphere = normalizePageAtmosphere(background.atmosphere);
   return {
     background: {
       mode,
@@ -4676,7 +4668,6 @@ export function getPageStyleFromRows(rows: PageCardRow[]): PageStyleForSave | nu
       from: typeof background.from === "string" ? background.from : "#f8fafc",
       to: typeof background.to === "string" ? background.to : "#e2e8f0",
       angle: typeof background.angle === "number" ? background.angle : 180,
-      ...(atmosphere !== "none" ? { atmosphere } : {}),
     },
   };
 }

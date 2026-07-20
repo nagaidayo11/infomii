@@ -15,7 +15,6 @@ function cardsSignature(
     from: string;
     to: string;
     angle: number;
-    atmosphere?: string;
   }
 ): string {
   return [
@@ -37,7 +36,6 @@ async function saveAndMerge(
       from: store.pageGradientFrom,
       to: store.pageGradientTo,
       angle: store.pageGradientAngle,
-      atmosphere: store.pageAtmosphere,
     },
   } as const;
   store.setAutosaveStatus({ isSaving: true });
@@ -77,7 +75,6 @@ async function flushSave(pageId: string) {
       from: store.pageGradientFrom,
       to: store.pageGradientTo,
       angle: store.pageGradientAngle,
-      atmosphere: store.pageAtmosphere,
     },
   } as const;
   store.setAutosaveStatus({ isSaving: true, saveError: null });
@@ -133,7 +130,6 @@ export function useAutoSaveCards(pageId: string | null) {
       from: s.pageGradientFrom,
       to: s.pageGradientTo,
       angle: s.pageGradientAngle,
-      atmosphere: s.pageAtmosphere,
     });
   }, [pageId]);
 
@@ -162,7 +158,6 @@ export function useAutoSaveCards(pageId: string | null) {
       from: s.pageGradientFrom,
       to: s.pageGradientTo,
       angle: s.pageGradientAngle,
-      atmosphere: s.pageAtmosphere,
     });
 
     const unsubscribe = useEditor2Store.subscribe(() => {
@@ -173,7 +168,6 @@ export function useAutoSaveCards(pageId: string | null) {
         from: state.pageGradientFrom,
         to: state.pageGradientTo,
         angle: state.pageGradientAngle,
-        atmosphere: state.pageAtmosphere,
       });
       if (sig === lastSignatureRef.current) return;
       lastSignatureRef.current = sig;
@@ -191,7 +185,6 @@ export function useAutoSaveCards(pageId: string | null) {
               from: s.pageGradientFrom,
               to: s.pageGradientTo,
               angle: s.pageGradientAngle,
-              atmosphere: s.pageAtmosphere,
             });
           }
         } catch {

@@ -1367,6 +1367,12 @@ body.lux-shell:has(.lp-page)::before {
   overflow: hidden;
 }
 
+/* Guest preview / public pages: no block chrome borders (editor-only). */
+[data-guest-page-shell] .guest-card-surface {
+  border: none;
+  box-shadow: none;
+}
+
 /* Media / status-band cards — match outer radius only (keep their own fill/border) */
 .guest-card-surface-media {
   border-radius: var(--guest-card-radius, 0.75rem);

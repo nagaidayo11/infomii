@@ -104,7 +104,7 @@ const TRANSLATION_OVERLAY_LABELS = "JA / EN / 中文 / 한국어";
 
 function buildEditorContentSignature(payload: {
   cards: { id: string; type: string; order: number; content: unknown; style?: unknown }[];
-  background: { mode: "solid" | "gradient"; color: string; from: string; to: string; angle: number; atmosphere?: string };
+  background: { mode: "solid" | "gradient"; color: string; from: string; to: string; angle: number };
 }): string {
   return JSON.stringify({
     cards: payload.cards.map((card) => ({
@@ -128,7 +128,6 @@ function buildEditorContentSignatureFromStore(
       from: state.pageGradientFrom,
       to: state.pageGradientTo,
       angle: state.pageGradientAngle,
-      atmosphere: state.pageAtmosphere,
     },
   });
 }
@@ -222,7 +221,6 @@ export function Editor2({
   const pageGradientFrom = useEditor2Store((s) => s.pageGradientFrom);
   const pageGradientTo = useEditor2Store((s) => s.pageGradientTo);
   const pageGradientAngle = useEditor2Store((s) => s.pageGradientAngle);
-  const pageAtmosphere = useEditor2Store((s) => s.pageAtmosphere);
   const isSaving = useEditor2Store((s) => s.isSaving);
   const lastSavedAt = useEditor2Store((s) => s.lastSavedAt);
   const saveError = useEditor2Store((s) => s.saveError);
@@ -372,7 +370,6 @@ export function Editor2({
               from?: string;
               to?: string;
               angle?: number;
-              atmosphere?: string;
             };
           };
           if (Array.isArray(parsed.cards) && parsed.cards.length > 0) {
@@ -385,7 +382,6 @@ export function Editor2({
                 from: parsed.background.from,
                 to: parsed.background.to,
                 angle: parsed.background.angle,
-                atmosphere: parsed.background.atmosphere,
               });
             }
             setPageMeta({
@@ -428,7 +424,6 @@ export function Editor2({
             from: pageGradientFrom,
             to: pageGradientTo,
             angle: pageGradientAngle,
-            atmosphere: pageAtmosphere,
           },
         })
       );
@@ -444,7 +439,6 @@ export function Editor2({
     pageGradientFrom,
     pageGradientTo,
     pageGradientAngle,
-    pageAtmosphere,
     setAutosaveStatus,
   ]);
 
@@ -567,10 +561,9 @@ export function Editor2({
         from: pageGradientFrom,
         to: pageGradientTo,
         angle: pageGradientAngle,
-        atmosphere: pageAtmosphere,
       })
     );
-  }, [isDemoMode, pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle, pageAtmosphere]);
+  }, [isDemoMode, pageId, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]);
 
   const { retry, flushAutosaveNow } = useAutoSaveCards(pageId ?? null);
 
@@ -623,10 +616,9 @@ export function Editor2({
           from: pageGradientFrom,
           to: pageGradientTo,
           angle: pageGradientAngle,
-          atmosphere: pageAtmosphere,
         },
       }),
-    [cards, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle, pageAtmosphere]
+    [cards, pageBackgroundMode, pageBackgroundColor, pageGradientFrom, pageGradientTo, pageGradientAngle]
   );
   const hasUnpublishedChanges =
     publishStatus === "published" &&
@@ -826,7 +818,6 @@ export function Editor2({
                   from: state.pageGradientFrom,
                   to: state.pageGradientTo,
                   angle: state.pageGradientAngle,
-                  atmosphere: state.pageAtmosphere,
                 },
               },
             }).catch(() => undefined);
@@ -909,7 +900,6 @@ export function Editor2({
             from: state.pageGradientFrom,
             to: state.pageGradientTo,
             angle: state.pageGradientAngle,
-            atmosphere: state.pageAtmosphere,
           },
         },
       });
@@ -1018,7 +1008,6 @@ export function Editor2({
             from: state.pageGradientFrom,
             to: state.pageGradientTo,
             angle: state.pageGradientAngle,
-            atmosphere: state.pageAtmosphere,
           },
         },
       });
@@ -1113,7 +1102,6 @@ export function Editor2({
             from: state.pageGradientFrom,
             to: state.pageGradientTo,
             angle: state.pageGradientAngle,
-            atmosphere: state.pageAtmosphere,
           },
         },
       });
@@ -1217,7 +1205,6 @@ export function Editor2({
               from: state.pageGradientFrom,
               to: state.pageGradientTo,
               angle: state.pageGradientAngle,
-              atmosphere: state.pageAtmosphere,
             },
           },
         });
@@ -1234,7 +1221,6 @@ export function Editor2({
               from: after.pageGradientFrom,
               to: after.pageGradientTo,
               angle: after.pageGradientAngle,
-              atmosphere: after.pageAtmosphere,
             },
           },
         });
@@ -1607,7 +1593,6 @@ export function Editor2({
                     from: pageGradientFrom,
                     to: pageGradientTo,
                     angle: pageGradientAngle,
-                    atmosphere: pageAtmosphere,
                   }}
                   guestShell={previewGuestShell}
                   pageSlug={pageMeta.slug}
