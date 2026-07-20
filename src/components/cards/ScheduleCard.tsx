@@ -12,6 +12,7 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { NativeCalendarIcon, scheduleGlyphForItem } from "./native-guest-icons";
+import { DESK_TONE } from "./desk-tone";
 
 type ScheduleCardProps = {
   card: EditorCard;
@@ -213,7 +214,7 @@ export function ScheduleCard({
   }
 
   return (
-    <Card padding="md" className="">
+    <Card padding="md" style={{ backgroundColor: DESK_TONE.sky.surface }}>
       <div className="flex items-center justify-between gap-2">
         <p className={CARD_BLOCK_TITLE_CLASS} style={getTitleFontSizeStyle()}>
           <InlineEditable
@@ -237,7 +238,7 @@ export function ScheduleCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-2 space-y-1.5">
+      <div className="mt-2 space-y-1.5 border-t-2 border-sky-400 pt-2.5">
         {items.slice(0, 5).map((item, index) => {
           const day =
             getLocalizedContent(item.day as LocalizedString | undefined, locale) || labels.day;

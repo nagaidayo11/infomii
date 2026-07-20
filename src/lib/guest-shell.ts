@@ -21,7 +21,8 @@ export type GuestShellTabIcon =
   | "menu"
   | "phone"
   | "page"
-  | "locale";
+  | "locale"
+  | "wifi";
 
 /** Exclusive chrome: off | bottom tabs | hamburger menu. */
 export type GuestShellNavStyle = "off" | "tabs" | "hamburger";
@@ -100,7 +101,8 @@ function normalizeTabIcon(value: unknown): GuestShellTabIcon | null {
     value === "menu" ||
     value === "phone" ||
     value === "page" ||
-    value === "locale"
+    value === "locale" ||
+    value === "wifi"
   ) {
     return value;
   }

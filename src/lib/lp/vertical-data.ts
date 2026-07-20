@@ -71,7 +71,7 @@ export const BUSINESS_LP_CONTENT: HotelLpContent = {
     headlineLine1: "ホテル案内を、",
     headlineLine2: "現場が自分で回す。",
     h1: "ホテル案内を、現場が自分で回す。",
-    subline: "テンプレから数分で公開。QR・多言語・チーム更新まで。",
+    subline: "テンプレで数分公開。QR・多言語・チーム更新まで。",
     previewSrc: "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel",
   },
   sections: {

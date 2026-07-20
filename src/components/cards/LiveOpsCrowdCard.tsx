@@ -186,7 +186,7 @@ export function LiveOpsCrowdCard({
   }
 
   return (
-    <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>
+    <Card padding="md" style={{ backgroundColor: tone.surface }}>
       <div className="flex items-start justify-between gap-3">
         <p className={`min-w-0 flex-1 ${CARD_BLOCK_TITLE_CLASS} ${tone.title}`} style={getTitleFontSizeStyle()}>
           <PlainInline

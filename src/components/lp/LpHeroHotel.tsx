@@ -66,7 +66,7 @@ export function LpHeroHotel({
   headlineLine1 = "ホテル案内を、",
   headlineLine2 = "現場が自分で回す。",
   h1 = "ホテル案内を、現場が自分で回す。",
-  subline = "テンプレから数分で公開。QR・多言語・チーム更新まで。",
+  subline = "テンプレで数分公開。QR・多言語・チーム更新まで。",
   previewSrc = GUEST_PREVIEW_SRC,
 }: LpHeroHotelProps) {
   const popHeadingClass = LP_POP_HEADING_CLASS;
@@ -104,7 +104,7 @@ export function LpHeroHotel({
 
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,360px)] lg:gap-10 xl:gap-14">
-          <div className="max-w-xl text-white">
+          <div className="max-w-2xl text-white">
             <ClipReveal delay={0.05} duration={0.7}>
               <p className="text-sm font-medium tracking-[0.14em] text-white/75 sm:tracking-[0.18em]">
                 {eyebrow}
@@ -133,7 +133,7 @@ export function LpHeroHotel({
             <h1 className="sr-only">{h1}</h1>
 
             <ClipReveal delay={0.42} className="mt-4">
-              <p className="max-w-md text-base text-white/80 sm:text-lg">
+              <p className="text-sm leading-snug text-white/80 sm:text-[15px] md:whitespace-nowrap lg:text-base">
                 <WordReveal text={subline} delay={0.44} />
               </p>
             </ClipReveal>

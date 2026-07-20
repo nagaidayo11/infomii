@@ -78,6 +78,16 @@ function TabIcon({ name }: { name: GuestShellTabIcon }) {
       </svg>
     );
   }
+  if (name === "wifi") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 13.5a5 5 0 017 0" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 10.5a9 9 0 0113 0" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 7.5a13 13 0 0119 0" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 17h.01" />
+      </svg>
+    );
+  }
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
       <path

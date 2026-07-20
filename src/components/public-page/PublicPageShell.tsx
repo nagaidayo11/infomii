@@ -50,6 +50,7 @@ function PageHeader({
   headerActions,
   className = "px-4 py-3",
   isNativeUi = false,
+  compactTitle = false,
 }: {
   title: string;
   brandLogoSrc?: string | null;
@@ -57,6 +58,8 @@ function PageHeader({
   headerActions?: ReactNode;
   className?: string;
   isNativeUi?: boolean;
+  /** LP phone iframe: single-line truncated title below host notch overlay */
+  compactTitle?: boolean;
 }) {
   if (!backButton && !title.trim() && !headerActions) return null;
 
@@ -75,7 +78,7 @@ function PageHeader({
       >
         {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
         {(title.trim() || headerActions) && (
-          <div className={"flex justify-between gap-2 " + (brandLogoSrc ? "items-center" : "items-start")}>
+          <div className={"flex justify-between gap-2 " + (brandLogoSrc || compactTitle ? "items-center" : "items-start")}>
             {title.trim() ? (
               brandLogoSrc ? (
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -90,7 +93,15 @@ function PageHeader({
                   </h1>
                 </div>
               ) : (
-                <h1 className={"min-w-0 flex-1 break-words text-lg leading-tight sm:text-2xl " + (isNativeUi ? "font-extrabold tracking-tight text-[var(--app-text)]" : "font-bold tracking-tight text-slate-900")}>
+                <h1
+                  className={
+                    "min-w-0 flex-1 leading-tight text-slate-900 " +
+                    (compactTitle
+                      ? "truncate text-[13px] font-semibold tracking-tight"
+                      : "break-words text-lg font-bold sm:text-2xl " +
+                        (isNativeUi ? "font-extrabold tracking-tight text-[var(--app-text)]" : "tracking-tight"))
+                  }
+                >
                   {title}
                 </h1>
               )
@@ -118,11 +129,13 @@ function PageContent({
   guestGutter,
   contentInset,
   isNativeUi = false,
+  compactTitle = false,
 }: Omit<PublicPageShellProps, "isEmbed" | "pageBackground" | "hardNavigation"> & {
   headerClassName?: string;
   contentClassName?: string;
   guestGutter?: string;
   isNativeUi?: boolean;
+  compactTitle?: boolean;
 }) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -133,6 +146,7 @@ function PageContent({
         headerActions={headerActions}
         className={headerClassName}
         isNativeUi={isNativeUi}
+        compactTitle={compactTitle}
       />
       <main
         className="guest-page guest-content-gutter guest-page-main template-preview-scroll min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
@@ -213,7 +227,7 @@ export function PublicPageShell({
   const guestGutter = flush ? "0" : deviceEmbed ? "0.75" : isEmbed ? "0.875" : undefined;
   const contentClassName = flush ? GUEST_CARD_STACK_FLUSH_CLASS : GUEST_CARD_STACK_CLASS;
   const headerClassName = deviceEmbed
-    ? "px-3 pb-2 pt-8"
+    ? "px-3 pb-2 pt-11"
     : isEmbed
       ? "px-3.5 pb-2.5 pt-3"
       : "px-4 py-3";
@@ -227,6 +241,7 @@ export function PublicPageShell({
             : "guest-page relative h-[100dvh] overflow-hidden rounded-[1.5rem] bg-white pt-3"
         }
         style={{ background: pageBackgroundStyle, ...mainPadStyle }}
+        data-guest-page-shell
         onClickCapture={onGuestLinkCapture}
       >
         <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -242,6 +257,7 @@ export function PublicPageShell({
             guestGutter={guestGutter}
             contentInset={contentInset}
             isNativeUi={isNativeUi}
+            compactTitle={deviceEmbed}
           >
             {children}
           </PageContent>
@@ -264,6 +280,7 @@ export function PublicPageShell({
         guestGutter={guestGutter}
         contentInset={contentInset}
         isNativeUi={isNativeUi}
+        compactTitle={false}
       >
         {children}
       </PageContent>

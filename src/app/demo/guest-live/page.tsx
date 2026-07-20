@@ -102,7 +102,7 @@ const LP_HOTEL_SHELL: GuestShellConfig = {
       label: { ja: "Wi-Fi", en: "Wi-Fi", zh: "Wi-Fi", ko: "Wi-Fi" },
       enabled: true,
       pageSlug: "wifi",
-      icon: "page",
+      icon: "wifi",
     },
     {
       id: "front",
@@ -144,17 +144,16 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
   switch (variant) {
     case "infomii-hotel":
       return {
-        title: "グランドシティホテル東京",
+        title: "ビジネスホテル東京",
         bg: baseBg,
-        brandLogoSrc: "/icon-192.png",
         contentInset: "default",
         showLocaleToggle: false,
         currentSlug: "home",
         guestShell: LP_HOTEL_SHELL,
         cards: [
           createCard("hero", 0, {
-            title: "ようこそ、グランドシティホテル東京へ",
-            subtitle: "本日もごゆっくりお過ごしください",
+            title: "ようこそビジネスホテル東京へ",
+            subtitle: "ごゆっくりお過ごしくださいませ",
             image: LP_DEMO_HERO_IMAGES.hotel,
             widthMode: "full",
           }),
@@ -164,14 +163,20 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
             variant: "info",
           }),
           createCard("schedule", 2, {
-            title: "本日の主な時間",
+            title: "ご案内",
             items: [
               { day: "朝食（1F ダイニング）", time: "6:30–10:00", label: "ラストオーダー 9:45" },
               { day: "大浴場・サウナ", time: "15:00–翌1:00 / 6:00–10:00", label: "B1F" },
               { day: "チェックアウト", time: "11:00", label: "延長はフロントまで" },
             ],
           }),
-          createCard("pageLinks", 3, {
+          createCard("wifi", 3, {
+            title: "Wi-Fi",
+            ssid: "GrandCity-Guest",
+            password: "welcome2024",
+            description: "接続できない場合はフロント（内線9）までお電話ください。",
+          }),
+          createCard("pageLinks", 4, {
             title: "館内のご案内",
             columns: 2,
             items: [
@@ -180,21 +185,6 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
               { label: "コインランドリー", icon: "laundry", linkType: "page", pageSlug: "", link: "" },
               { label: "駐車場・送迎", icon: "parking", linkType: "page", pageSlug: "", link: "" },
             ],
-          }),
-          createCard("pageLinks", 4, {
-            title: "周辺おすすめ",
-            columns: 2,
-            items: [
-              { label: "徒歩圏のカフェ", icon: "coffee", linkType: "page", pageSlug: "", link: "" },
-              { label: "コンビニ・ATM", icon: "nearby", linkType: "page", pageSlug: "", link: "" },
-              { label: "駅・空港アクセス", icon: "train", linkType: "page", pageSlug: "", link: "" },
-              { label: "観光スポット", icon: "map", linkType: "page", pageSlug: "", link: "" },
-            ],
-          }),
-          createCard("notice", 5, {
-            title: "荷物の一時預かり",
-            body: "チェックアウト後も17:00までフロントでお預かりできます。タグをお渡しします。",
-            variant: "info",
           }),
         ],
       };

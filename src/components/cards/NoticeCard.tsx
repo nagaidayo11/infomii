@@ -99,7 +99,7 @@ export function NoticeCard({ card, locale = "ja" }: NoticeCardProps) {
   }
 
   return (
-    <Card padding="md" className={tone.frame} style={{ backgroundColor: tone.surface }}>
+    <Card padding="md" style={{ backgroundColor: tone.surface }}>
       <p className={"text-[11px] font-semibold uppercase tracking-[0.14em] " + tone.label}>{labels.eyebrow}</p>
       <div className={"mt-1.5 border-t-2 pt-2.5 " + tone.rule}>
         {(editable || title) ? (
