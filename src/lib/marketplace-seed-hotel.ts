@@ -66,6 +66,81 @@ function hotelTemplate(
  */
 export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
   hotelTemplate(
+    "case-business-hotel",
+    "【事例】ビジネスホテル案内",
+    "Wi-Fi・朝食・チェックアウトを1ページに。出張客の口頭説明を減らす定番の導入例です。",
+    "business",
+    ordered([
+      block("hero", hero("ご滞在のご案内", "客室QRから、よく聞かれる情報をすぐ確認")),
+      block("wifi", wifi("Infomii-Guest", "stay2026", "客室・ロビーでご利用いただけます。")),
+      block("breakfast", breakfast("朝食", "6:30-9:30", "1F レストラン", "和洋ビュッフェ")),
+      block("checkout", checkout("11:00", "カードキーはフロントへお返しください。", "精算・領収書")),
+      block("faq", faq("よくある質問", [
+        { q: "レイトチェックアウトは？", a: "空室状況により11:30まで延長可能です（有料）。" },
+        { q: "荷物預かりは？", a: "チェックアウト後も当日中はお預かりできます。" },
+      ])),
+      block("emergency", emergency("緊急連絡先", "フロント内線9", "体調不良時はフロントへご連絡ください。")),
+    ]),
+  ),
+  hotelTemplate(
+    "case-onsen-ryokan",
+    "【事例】温泉旅館・温浴案内",
+    "入浴ルール・営業時間・食事時間を1ページに。脱衣所と客室で同じ案内を回す導入例です。",
+    "ryokan",
+    ordered([
+      block("hero", hero("温泉・ご滞在のご案内", "入浴前に一度ご確認ください")),
+      block("spa", spa("温泉・大浴場", "15:00-24:00 / 6:00-9:00", "本館1F", "源泉かけ流し。タオルは客室からお持ちください。")),
+      block(
+        "pageLinks",
+        circlePageLinks([
+          { label: "入浴注意", icon: "spa" },
+          { label: "食事時間", icon: "restaurant" },
+          { label: "Wi-Fi", icon: "wifi" },
+          { label: "FAQ", icon: "info" },
+        ]),
+      ),
+      block("restaurant", restaurant("お食事", "18:00スタート", "会席料理", "アレルギーは前日までにご連絡ください。")),
+      block("notice", notice("入浴のお願い", "刺青・タトゥーのある方のご入浴はお断りしております。")),
+      block("faq", faq("よくある質問", [
+        { q: "浴衣の着方は？", a: "左前に重ねてお召しください。" },
+        { q: "サウナの利用時間は？", a: "大浴場と同じ営業時間です。" },
+      ])),
+    ]),
+  ),
+  hotelTemplate(
+    "case-resort-stay",
+    "【事例】リゾート滞在案内",
+    "送迎・アクティビティ・食事時間を最上段に。当日変わる案内を現場更新する導入例です。",
+    "resort",
+    ordered([
+      block("hero_slider", heroSlider("リゾートステイ")),
+      block("notice", notice("本日のお知らせ", "14:00よりプールメンテナンスのため一時利用停止となります。")),
+      block(
+        "schedule",
+        schedule("本日のスケジュール", [
+          { day: "朝食", time: "8:00", label: "1F ダイニング" },
+          { day: "送迎", time: "10:30", label: "ロビー集合（館内ツアー）" },
+          { day: "体験", time: "15:00", label: "マリンアクティビティ（要予約）" },
+        ]),
+      ),
+      block(
+        "pageLinks",
+        pageLinks(
+          "体験メニュー",
+          [
+            { label: "送迎", icon: "taxi" },
+            { label: "アクティビティ", icon: "map" },
+            { label: "レストラン", icon: "restaurant" },
+            { label: "FAQ", icon: "info" },
+          ],
+          2,
+        ),
+      ),
+      block("map", map("アクセス・集合場所", "ホテル正面ロータリー")),
+      block("social_links", socialLinks("公式SNS", "@infomii_resort")),
+    ]),
+  ),
+  hotelTemplate(
     "hotel-guest-guide",
     "1枚完結・ゲスト案内",
     "出張・宿泊でよく聞かれるWi-Fi・朝食・チェックアウト・FAQを1ページにまとめた定番型です。",
@@ -556,7 +631,6 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
       block("checkout", checkout("10:00", "チェックアウトはフロントへお返しください。", "精算・領収書")),
     ]),
-    "/templates/previews/ryokan/f270da26.jpg",
   ),
   hotelTemplate(
     "hotel-airbnb-house-guide",
@@ -587,7 +661,6 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
       block("contact_hub", contactHub("困ったときは", "鍵・設備の不具合や迷ったときはご連絡ください。", "03-1234-5678")),
     ]),
-    "/templates/previews/airbnb/87410d61.jpg",
   ),
   hotelTemplate(
     "hotel-inbound-arrival-support",
@@ -622,7 +695,6 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       block("contact_hub", contactHub("Need help?", "Call front desk for check-in, directions, or emergencies.", "+81-3-1111-2222")),
       block("checkout", checkout("11:00", "Please return your room key to the front desk.", "Check-out")),
     ]),
-    "/templates/previews/inbound/c3b36a18.jpg",
   ),
 ];
 

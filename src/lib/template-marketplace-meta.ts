@@ -83,6 +83,14 @@ export const TEMPLATE_AUDIENCE_LABELS: Record<TemplateMarketplaceAudience, strin
   all: "すべて",
 };
 
+export const CASE_STUDY_TEMPLATE_SLUGS = [
+  "case-business-hotel",
+  "case-onsen-ryokan",
+  "case-resort-stay",
+] as const;
+
+export type CaseStudyTemplateSlug = (typeof CASE_STUDY_TEMPLATE_SLUGS)[number];
+
 export const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   all: "すべて",
   travel: "旅行しおり",

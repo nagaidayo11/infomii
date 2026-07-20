@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "kind": "hotel",
+  "generated": "2026-07-20T11:06:27.828Z",
+  "note": "Hotel marketplace slug-based previews. Run: npm run templates:previews:hotel:openai",
+  "entries": [
+    {
+      "name": "【事例】ビジネスホテル案内",
+      "slug": "case-business-hotel",
+      "category": "business",
+      "categoryIndex": 0,
+      "previewPath": "/templates/previews/business/case-business-hotel.jpg",
+      "hint": "Business hotel front desk area glimpse through lobby glass, compact urban hotel entrance at night with warm lobby light. Wi-Fi and checkout workflow vibe for business travelers.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: business. Compact city business hotel near a station. Clean lobby threshold, taxi drop-off, or walkway to entrance. Functional, practical, urban — no palm trees or beach resort mood. Template focus (【事例】ビジネスホテル案内): Business hotel front desk area glimpse through lobby glass, compact urban hotel entrance at night with warm lobby light. Wi-Fi and checkout workflow vibe for business travelers. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "【事例】温泉旅館・温浴案内",
+      "slug": "case-onsen-ryokan",
+      "category": "ryokan",
+      "categoryIndex": 1,
+      "previewPath": "/templates/previews/ryokan/case-onsen-ryokan.jpg",
+      "hint": "Ryokan with visible onsen bathing culture: wooden bathhouse entrance, steam, stone rotenburo edge, yukata on hanger nearby. Traditional hot spring inn — absolutely NOT a hair salon or beauty parlor.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: ryokan. Traditional Japanese ryokan inn. Wooden lattice, tile roof, stone path, paper lanterns, garden gate. Calm, refined wa aesthetic — not modern glass tower, not tropical resort. Template focus (【事例】温泉旅館・温浴案内): Ryokan with visible onsen bathing culture: wooden bathhouse entrance, steam, stone rotenburo edge, yukata on hanger nearby. Traditional hot spring inn — absolutely NOT a hair salon or beauty parlor. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "【事例】リゾート滞在案内",
+      "slug": "case-resort-stay",
+      "category": "resort",
+      "categoryIndex": 2,
+      "previewPath": "/templates/previews/resort/case-resort-stay.jpg",
+      "hint": "Resort stay operations: pool deck or marina shuttle pickup point, activity schedule board area without readable text, families heading to experiences. Same-day updates mood.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (【事例】リゾート滞在案内): Resort stay operations: pool deck or marina shuttle pickup point, activity schedule board area without readable text, families heading to experiences. Same-day updates mood. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "1枚完結・ゲスト案内",
+      "slug": "hotel-guest-guide",
+      "category": "business",
+      "categoryIndex": 3,
+      "previewPath": "/templates/previews/business/hotel-guest-guide.jpg",
+      "hint": "Single-page guest guide mood: business hotel room corridor to lobby, practical stay information atmosphere.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: business. Compact city business hotel near a station. Clean lobby threshold, taxi drop-off, or walkway to entrance. Functional, practical, urban — no palm trees or beach resort mood. Template focus (1枚完結・ゲスト案内): Single-page guest guide mood: business hotel room corridor to lobby, practical stay information atmosphere. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "館内ハブ・サークル導線",
+      "slug": "hotel-core-hub",
+      "category": "guide",
+      "categoryIndex": 4,
+      "previewPath": "/templates/previews/guide/hotel-core-hub.jpg",
+      "hint": "Hotel interior hub navigation: bright atrium or lobby junction with multiple circulation paths, circle-icon wayfinding mood without readable signs.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: guide. Hotel as a destination within a walkable town or sightseeing area. Street approach with the property as focal point — urban exploration context. Template focus (館内ハブ・サークル導線): Hotel interior hub navigation: bright atrium or lobby junction with multiple circulation paths, circle-icon wayfinding mood without readable signs. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "ライブ混雑・いま状況ボード",
+      "slug": "hotel-live-crowd",
+      "category": "resort",
+      "categoryIndex": 5,
+      "previewPath": "/templates/previews/resort/hotel-live-crowd.jpg",
+      "hint": "Hotel restaurant or bathhouse busy-but-manageable atmosphere — live crowd status board area, breakfast buffet zone edge, operational realtime mood.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (ライブ混雑・いま状況ボード): Hotel restaurant or bathhouse busy-but-manageable atmosphere — live crowd status board area, breakfast buffet zone edge, operational realtime mood. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "レストラン・メニュー特化",
+      "slug": "hotel-restaurant-menu",
+      "category": "resort",
+      "categoryIndex": 6,
+      "previewPath": "/templates/previews/resort/hotel-restaurant-menu.jpg",
+      "hint": "Hotel restaurant dining room atmosphere — table settings, open kitchen glimpse, menu presentation mood without readable menus.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (レストラン・メニュー特化): Hotel restaurant dining room atmosphere — table settings, open kitchen glimpse, menu presentation mood without readable menus. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "滞在の流れ・ステップ",
+      "slug": "hotel-stay-flow",
+      "category": "business",
+      "categoryIndex": 7,
+      "previewPath": "/templates/previews/business/hotel-stay-flow.jpg",
+      "hint": "Check-in to check-out journey: hotel reception counter, key card handoff moment, step-by-step stay flow.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: business. Compact city business hotel near a station. Clean lobby threshold, taxi drop-off, or walkway to entrance. Functional, practical, urban — no palm trees or beach resort mood. Template focus (滞在の流れ・ステップ): Check-in to check-out journey: hotel reception counter, key card handoff moment, step-by-step stay flow. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "リゾート・体験ギャラリー",
+      "slug": "hotel-resort-gallery",
+      "category": "resort",
+      "categoryIndex": 8,
+      "previewPath": "/templates/previews/resort/hotel-resort-gallery.jpg",
+      "hint": "Resort photo gallery mood: infinity pool overlook, lounge sunset, spa terrace — experiential collage feeling in one frame.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (リゾート・体験ギャラリー): Resort photo gallery mood: infinity pool overlook, lounge sunset, spa terrace — experiential collage feeling in one frame. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "旅館・おもてなし案内",
+      "slug": "hotel-ryokan-omotenashi",
+      "category": "ryokan",
+      "categoryIndex": 9,
+      "previewPath": "/templates/previews/ryokan/hotel-ryokan-omotenashi.jpg",
+      "hint": "Ryokan omotenashi: tatami corridor, kaiseki dining room exterior, lantern-lit entrance, gracious Japanese hospitality.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: ryokan. Traditional Japanese ryokan inn. Wooden lattice, tile roof, stone path, paper lanterns, garden gate. Calm, refined wa aesthetic — not modern glass tower, not tropical resort. Template focus (旅館・おもてなし案内): Ryokan omotenashi: tatami corridor, kaiseki dining room exterior, lantern-lit entrance, gracious Japanese hospitality. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "民泊・セルフチェックイン",
+      "slug": "hotel-airbnb-self-checkin",
+      "category": "airbnb",
+      "categoryIndex": 10,
+      "previewPath": "/templates/previews/airbnb/hotel-airbnb-self-checkin.jpg",
+      "hint": "Vacation rental self check-in: key lockbox on residential door, smartphone in hand silhouette, tidy entryway.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: airbnb. Whole-house vacation rental or small guesthouse in a residential neighborhood. Porch, keybox area, or cozy entrance — homelike, not a large hotel tower. Template focus (民泊・セルフチェックイン): Vacation rental self check-in: key lockbox on residential door, smartphone in hand silhouette, tidy entryway. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "周辺観光・回遊ガイド",
+      "slug": "hotel-area-sightseeing",
+      "category": "guide",
+      "categoryIndex": 11,
+      "previewPath": "/templates/previews/guide/hotel-area-sightseeing.jpg",
+      "hint": "Hotel neighborhood exploration: charming local street leading toward hotel, map kiosk area, sightseeing walk mood.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: guide. Hotel as a destination within a walkable town or sightseeing area. Street approach with the property as focal point — urban exploration context. Template focus (周辺観光・回遊ガイド): Hotel neighborhood exploration: charming local street leading toward hotel, map kiosk area, sightseeing walk mood. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "インバウンド・多言語案内",
+      "slug": "hotel-inbound-multilingual",
+      "category": "inbound",
+      "categoryIndex": 12,
+      "previewPath": "/templates/previews/inbound/hotel-inbound-multilingual.jpg",
+      "hint": "International hotel welcome desk, diverse travelers with luggage, bright multilingual-friendly lobby — no readable language signs.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: inbound. International-friendly hotel arrival: bright entrance, clear circulation, welcoming lobby edge. Universal, approachable — not dark alley mood. Template focus (インバウンド・多言語案内): International hotel welcome desk, diverse travelers with luggage, bright multilingual-friendly lobby — no readable language signs. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "料金・プラン比較",
+      "slug": "hotel-plan-pricing",
+      "category": "business",
+      "categoryIndex": 13,
+      "previewPath": "/templates/previews/business/hotel-plan-pricing.jpg",
+      "hint": "Business hotel comparison mood: clean room types visible through corridor, value-focused urban stay — not luxury resort.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: business. Compact city business hotel near a station. Clean lobby threshold, taxi drop-off, or walkway to entrance. Functional, practical, urban — no palm trees or beach resort mood. Template focus (料金・プラン比較): Business hotel comparison mood: clean room types visible through corridor, value-focused urban stay — not luxury resort. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "長期滞在・生活案内",
+      "slug": "hotel-long-stay",
+      "category": "business",
+      "categoryIndex": 14,
+      "previewPath": "/templates/previews/business/hotel-long-stay.jpg",
+      "hint": "Extended stay hotel: coin laundry corner, kitchenette area, residential-style hotel room wing — long-term living convenience.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: business. Compact city business hotel near a station. Clean lobby threshold, taxi drop-off, or walkway to entrance. Functional, practical, urban — no palm trees or beach resort mood. Template focus (長期滞在・生活案内): Extended stay hotel: coin laundry corner, kitchenette area, residential-style hotel room wing — long-term living convenience. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "スパ・ウェルネス案内",
+      "slug": "hotel-spa-wellness",
+      "category": "resort",
+      "categoryIndex": 15,
+      "previewPath": "/templates/previews/resort/hotel-spa-wellness.jpg",
+      "hint": "Hotel spa and wellness: onsen-style bath, sauna door, treatment room corridor — relaxation and bathing, NOT hair salon.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (スパ・ウェルネス案内): Hotel spa and wellness: onsen-style bath, sauna door, treatment room corridor — relaxation and bathing, NOT hair salon. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "ファミリー滞在",
+      "slug": "hotel-family-stay",
+      "category": "resort",
+      "categoryIndex": 16,
+      "previewPath": "/templates/previews/resort/hotel-family-stay.jpg",
+      "hint": "Family-friendly resort or hotel: kids pool shallow end, stroller near lobby, family wing corridor — safe and welcoming.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: resort. Resort hotel integrated with nature — sea, forest, or lush garden. Arrival deck, open lobby transition, or scenic walkway. Non-everyday vacation atmosphere — not a dense office district. Template focus (ファミリー滞在): Family-friendly resort or hotel: kids pool shallow end, stroller near lobby, family wing corridor — safe and welcoming. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "旅館・温泉マナー",
+      "slug": "hotel-ryokan-onsen-etiquette",
+      "category": "ryokan",
+      "categoryIndex": 17,
+      "previewPath": "/templates/previews/ryokan/hotel-ryokan-onsen-etiquette.jpg",
+      "hint": "CRITICAL: Japanese ryokan public hot spring bathhouse (onsen) etiquette scene. Wooden changing area transition, steam rising from hinoki bath, stone tiles, bamboo ladle, slippers — traditional bathing culture. MUST NOT show hair salon, beauty parlor, styling chairs, salon mirrors, or hairdresser.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: ryokan. Traditional Japanese ryokan inn. Wooden lattice, tile roof, stone path, paper lanterns, garden gate. Calm, refined wa aesthetic — not modern glass tower, not tropical resort. Template focus (旅館・温泉マナー): CRITICAL: Japanese ryokan public hot spring bathhouse (onsen) etiquette scene. Wooden changing area transition, steam rising from hinoki bath, stone tiles, bamboo ladle, slippers — traditional bathing culture. MUST NOT show hair salon, beauty parlor, styling chairs, salon mirrors, or hairdresser. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "民泊・ハウスガイド",
+      "slug": "hotel-airbnb-house-guide",
+      "category": "airbnb",
+      "categoryIndex": 18,
+      "previewPath": "/templates/previews/airbnb/hotel-airbnb-house-guide.jpg",
+      "hint": "Whole-house rental guide: living room with house manual on table, Wi-Fi router shelf, residential comfort.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: airbnb. Whole-house vacation rental or small guesthouse in a residential neighborhood. Porch, keybox area, or cozy entrance — homelike, not a large hotel tower. Template focus (民泊・ハウスガイド): Whole-house rental guide: living room with house manual on table, Wi-Fi router shelf, residential comfort. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    },
+    {
+      "name": "インバウンド・到着サポート",
+      "slug": "hotel-inbound-arrival-support",
+      "category": "inbound",
+      "categoryIndex": 19,
+      "previewPath": "/templates/previews/inbound/hotel-inbound-arrival-support.jpg",
+      "hint": "Airport-hotel arrival support: limousine bus stop at hotel, front desk with luggage carts, first-time visitor welcome.",
+      "styleNotes": "Hotel template card hero. Photorealistic 5:3. No readable text, logos, watermarks. Match template theme — onsen NOT salon.",
+      "generator": "npm run templates:previews:hotel:openai",
+      "prompt": "Hotel guest-guide template listing card hero image. Photorealistic commercial quality, 5:3 horizontal composition (~1920×1152). Experience-forward scene — not a flat centered facade-only shot. No readable text, logos, watermarks, QR codes, or UI overlays. Category: inbound. International-friendly hotel arrival: bright entrance, clear circulation, welcoming lobby edge. Universal, approachable — not dark alley mood. Template focus (インバウンド・到着サポート): Airport-hotel arrival support: limousine bus stop at hotel, front desk with luggage carts, first-time visitor welcome. Avoid: blurry, low quality, readable signage, brand logos, watermark."
+    }
+  ]
+}

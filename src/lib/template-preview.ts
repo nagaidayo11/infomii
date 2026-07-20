@@ -142,7 +142,7 @@ export const TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS: Record<string, string> = {
   lightbiz: "/preset-menu-hero-salon.jpg",
   business: "/template-business-hero-01.jpg",
   resort: "/template-resort-hero-01.jpg",
-  ryokan: "/template-ryokan-hero-01.jpg",
+  ryokan: "/templates/previews/ryokan/hotel-ryokan-omotenashi.jpg",
   airbnb: "/template-airbnb-hero-01.jpg",
   guide: "/template-guide-hero-01.jpg",
   inbound: "/template-inbound-hero-01.jpg",

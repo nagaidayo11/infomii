@@ -34,35 +34,59 @@ export function PageHelp({
 }: PageHelpProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelId = useId();
   const a11yLabel = label ?? `${title}の説明`;
 
+  const clearHoverTimer = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+
+  const openPanel = () => {
+    clearHoverTimer();
+    setOpen(true);
+  };
+
+  const scheduleClose = () => {
+    clearHoverTimer();
+    hoverTimerRef.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  useEffect(() => {
+    return () => clearHoverTimer();
+  }, []);
+
   useEffect(() => {
     if (!open) return;
-    const onPointer = (e: MouseEvent | TouchEvent) => {
-      const el = rootRef.current;
-      if (!el || !(e.target instanceof Node) || el.contains(e.target)) return;
-      setOpen(false);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("touchstart", onPointer);
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("touchstart", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
   return (
-    <div ref={rootRef} className={"relative z-40 inline-flex " + className}>
+    <div
+      ref={rootRef}
+      className={"relative z-40 inline-flex " + className}
+      onMouseEnter={() => {
+        clearHoverTimer();
+        hoverTimerRef.current = setTimeout(openPanel, 160);
+      }}
+      onMouseLeave={scheduleClose}
+      onFocus={() => openPanel()}
+      onBlur={(event) => {
+        if (rootRef.current?.contains(event.relatedTarget as Node)) return;
+        setOpen(false);
+      }}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="app-button-native app-squircle border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        className="app-button-native inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={a11yLabel}

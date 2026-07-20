@@ -30,6 +30,7 @@ import {
   TEMPLATE_AUDIENCE_SECTION_IDS,
   TEMPLATE_CATEGORY_LABELS,
   TEMPLATE_MARKETPLACE_SECTIONS,
+  CASE_STUDY_TEMPLATE_SLUGS,
   type TemplateMarketplaceAudience,
 } from "@/lib/template-marketplace-meta";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
@@ -84,8 +85,72 @@ function filterByCategory(
   return withCat.filter((t) => t.category === category);
 }
 
+function isCaseStudyTemplate(slug: string | null | undefined): boolean {
+  return Boolean(slug && (CASE_STUDY_TEMPLATE_SLUGS as readonly string[]).includes(slug));
+}
+
 function filterHiddenTemplates(templates: TemplateRow[]): TemplateRow[] {
   return templates.filter((t) => !HIDDEN_TEMPLATE_NAMES.has(t.name));
+}
+
+type TemplateRailProps = {
+  items: TemplateRow[];
+  variant: "app" | "default";
+  groupLabel: string;
+  highlightSlug: string | null;
+  usingId: string | null;
+  onUse: (id: string) => void;
+  onPreview: (template: TemplateRow) => void;
+};
+
+function TemplateRail({
+  items,
+  variant,
+  groupLabel,
+  highlightSlug,
+  usingId,
+  onUse,
+  onPreview,
+}: TemplateRailProps) {
+  return (
+    <div
+      className="app-template-rail -mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+      role="region"
+      aria-label={`${groupLabel} テンプレート一覧（横スクロール）`}
+      tabIndex={0}
+    >
+      <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
+        {items.map((template) => {
+          const highlighted = highlightSlug === template.slug;
+          return (
+            <div
+              key={template.id}
+              id={template.slug ? `template-${template.slug}` : undefined}
+              className={
+                "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
+                (highlighted
+                  ? "mt-1 shadow-[0_0_0_2px_rgb(15,23,42)] ring-2 ring-inset ring-slate-900"
+                  : "")
+              }
+            >
+              <TemplateCard
+                id={template.id}
+                slug={template.slug}
+                name={template.name}
+                description={template.description}
+                preview_image={template.preview_image}
+                category={template.category}
+                variant={variant}
+                onUse={() => onUse(template.id)}
+                onPreview={() => onPreview(template)}
+                using={usingId === template.id}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -191,7 +256,15 @@ export default function TemplatesPage() {
     };
   }, []);
 
-  const filtered = filterByCategory(templates, category);
+  const caseStudyTemplates = useMemo(
+    () => templates.filter((t) => isCaseStudyTemplate(t.slug)),
+    [templates],
+  );
+  const catalogTemplates = useMemo(
+    () => templates.filter((t) => !isCaseStudyTemplate(t.slug)),
+    [templates],
+  );
+  const filtered = filterByCategory(catalogTemplates, category);
   const visibleCategories = useMemo(() => {
     if (audience === "all") return TEMPLATE_CATEGORIES;
     const allowed = new Set<string>([
@@ -215,10 +288,10 @@ export default function TemplatesPage() {
           sectionLabel: section.label,
           category: catId,
           label: TEMPLATE_CATEGORY_LABELS[catId] ?? catId,
-          items: filterByCategory(templates, catId),
+          items: filterByCategory(catalogTemplates, catId),
         })),
       ).filter((g) => g.items.length > 0),
-    [templates, audience],
+    [catalogTemplates, audience],
   );
   const selectedCategoryLabel =
     TEMPLATE_CATEGORIES.find((c) => c.id === category)?.label ?? "選択中カテゴリ";
@@ -228,6 +301,8 @@ export default function TemplatesPage() {
       : filtered.length > 0
         ? [{ sectionId: "single", sectionLabel: "", category, label: selectedCategoryLabel, items: filtered }]
         : [];
+  const showCaseStudyFeatured = category === "all" && caseStudyTemplates.length > 0;
+  const hasTemplates = showCaseStudyFeatured || groupsToRender.length > 0;
 
   useEffect(() => {
     if (!starterSlug || loading || templates.length === 0) return;
@@ -429,12 +504,29 @@ export default function TemplatesPage() {
                   </div>
                 ))}
               </div>
-            ) : filtered.length === 0 ? (
+            ) : !hasTemplates ? (
               <div className="app-shell-hero p-8 text-center">
                 <p className="text-[var(--app-text)]">テンプレートがまだありません。</p>
               </div>
             ) : (
               <div className="space-y-6">
+                {showCaseStudyFeatured ? (
+                  <AppSection className="app-template-group space-y-2" revealDelay={0}>
+                    <h2 className="app-template-section-heading">導入事例テンプレ</h2>
+                    <p className="text-sm text-[var(--app-text-muted)]">
+                      ビジネスホテル・温泉旅館・リゾートの導入イメージ。実際の運用に近い構成から始められます。
+                    </p>
+                    <TemplateRail
+                      items={caseStudyTemplates}
+                      variant="app"
+                      groupLabel="導入事例テンプレ"
+                      highlightSlug={highlightSlug}
+                      usingId={usingId}
+                      onUse={handleUseTemplate}
+                      onPreview={handlePreview}
+                    />
+                  </AppSection>
+                ) : null}
                 {groupsToRender.map((group, index) => {
                   const prev = groupsToRender[index - 1];
                   const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
@@ -450,43 +542,15 @@ export default function TemplatesPage() {
                         </h2>
                       ) : null}
                       <h3 className="app-template-category-heading">{group.label}</h3>
-                      <div
-                        className="app-template-rail -mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-                        role="region"
-                        aria-label={`${group.label} テンプレート一覧（横スクロール）`}
-                        tabIndex={0}
-                      >
-                        <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
-                          {group.items.map((template) => {
-                            const highlighted = highlightSlug === template.slug;
-                            return (
-                              <div
-                                key={template.id}
-                                id={template.slug ? `template-${template.slug}` : undefined}
-                                className={
-                                  "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
-                                  (highlighted
-                                    ? "mt-1 shadow-[0_0_0_2px_rgb(15,23,42)] ring-2 ring-inset ring-slate-900"
-                                    : "")
-                                }
-                              >
-                                <TemplateCard
-                                  id={template.id}
-                                  slug={template.slug}
-                                  name={template.name}
-                                  description={template.description}
-                                  preview_image={template.preview_image}
-                                  category={template.category}
-                                  variant="app"
-                                  onUse={() => handleUseTemplate(template.id)}
-                                  onPreview={() => void handlePreview(template)}
-                                  using={usingId === template.id}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      <TemplateRail
+                        items={group.items}
+                        variant="app"
+                        groupLabel={group.label}
+                        highlightSlug={highlightSlug}
+                        usingId={usingId}
+                        onUse={handleUseTemplate}
+                        onPreview={handlePreview}
+                      />
                     </AppSection>
                   );
                 })}
@@ -551,7 +615,7 @@ export default function TemplatesPage() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : !hasTemplates ? (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
             <p className="text-slate-600">テンプレートがまだありません。</p>
             <p className="mt-1 text-sm text-slate-500">
@@ -566,6 +630,23 @@ export default function TemplatesPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {showCaseStudyFeatured ? (
+              <AppSection className="space-y-2">
+                <h2 className="text-base font-bold tracking-tight text-slate-800">導入事例テンプレ</h2>
+                <p className="text-sm text-slate-600">
+                  ビジネスホテル・温泉旅館・リゾートの導入イメージ。実際の運用に近い構成から始められます。
+                </p>
+                <TemplateRail
+                  items={caseStudyTemplates}
+                  variant="default"
+                  groupLabel="導入事例テンプレ"
+                  highlightSlug={highlightSlug}
+                  usingId={usingId}
+                  onUse={handleUseTemplate}
+                  onPreview={handlePreview}
+                />
+              </AppSection>
+            ) : null}
             {groupsToRender.map((group, index) => {
               const prev = groupsToRender[index - 1];
               const showSectionHeading = category === "all" && group.sectionId !== prev?.sectionId;
@@ -580,43 +661,15 @@ export default function TemplatesPage() {
                     </h2>
                   ) : null}
                   <h3 className="text-sm font-semibold text-slate-700">{group.label}</h3>
-                  <div
-                    className="-mx-4 overflow-x-auto px-4 pb-2 pt-3 [-ms-overflow-style:none] [scrollbar-width:thin] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-                    role="region"
-                    aria-label={`${group.label} テンプレート一覧（横スクロール）`}
-                    tabIndex={0}
-                  >
-                    <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
-                      {group.items.map((template) => {
-                        const highlighted = highlightSlug === template.slug;
-                        return (
-                          <div
-                            key={template.id}
-                            id={template.slug ? `template-${template.slug}` : undefined}
-                            className={
-                              "flex h-full min-h-0 flex-col scroll-mt-24 rounded-xl transition-shadow " +
-                              (highlighted
-                                ? "mt-1 shadow-[0_0_0_2px_rgb(15,23,42)] ring-2 ring-inset ring-slate-900"
-                                : "")
-                            }
-                          >
-                            <TemplateCard
-                              id={template.id}
-                              slug={template.slug}
-                              name={template.name}
-                              description={template.description}
-                              preview_image={template.preview_image}
-                              category={template.category}
-                              variant="default"
-                              onUse={() => handleUseTemplate(template.id)}
-                              onPreview={() => void handlePreview(template)}
-                              using={usingId === template.id}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <TemplateRail
+                    items={group.items}
+                    variant="default"
+                    groupLabel={group.label}
+                    highlightSlug={highlightSlug}
+                    usingId={usingId}
+                    onUse={handleUseTemplate}
+                    onPreview={handlePreview}
+                  />
                 </AppSection>
               );
             })}
