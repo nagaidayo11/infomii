@@ -101,33 +101,6 @@ export const pageLinks = (
   })),
 });
 
-/** Full-width button-style page links (presentation pattern: ボタン一覧). */
-export const listPageLinks = (
-  title: string,
-  items: Array<{ label: string; icon: string; description?: string }>,
-) => ({
-  title,
-  columns: 1,
-  iconSize: "md",
-  styleVariant: "list" as const,
-  tileShadowStrength: "none",
-  circleIconShadowStrength: "md",
-  accentColor: "#0f766e",
-  items: items.map((item) => ({
-    label: item.label,
-    icon: item.icon,
-    description: item.description ?? "",
-    linkType: "page" as const,
-    pageSlug: "",
-    link: "",
-  })),
-});
-
-export const ctaButton = (label: string, href = "#") => ({
-  label,
-  href,
-});
-
 export const heroSlider = (title: string) => ({
   title,
   autoplay: true,

@@ -935,13 +935,9 @@ export function Editor2({
   }, [isDemoMode, publishNow]);
 
   const handleAddPreset = useCallback(
-    (preset: {
-      types: CardType[];
-      infoContent?: Record<string, unknown>;
-      contents?: Array<Record<string, unknown> | undefined>;
-    }) => {
+    (preset: { types: CardType[]; infoContent?: Record<string, unknown> }) => {
       let placed = 0;
-      preset.types.forEach((type, index) => {
+      for (const type of preset.types) {
         if (!canUseCardType(type, planTier)) {
           if (isDemoMode) {
             const tierLabel = getMinimumPlanForCardType(type) === "business" ? "Business" : "Pro";
@@ -949,30 +945,24 @@ export function Editor2({
           } else {
             openPlanUpsell(type);
           }
-          return;
-        }
-        const seeded = preset.contents?.[index];
-        if (seeded) {
-          addCardWithContent(type, seeded);
-          placed += 1;
-          return;
+          continue;
         }
         if (isFacilityInfoType(type)) {
           const content = infoContentFromFacilityPreset(type);
           if (content) {
             addCardWithContent("info", content);
             placed += 1;
-            return;
+            continue;
           }
         }
         if (type === "info" && preset.infoContent) {
           addCardWithContent("info", preset.infoContent);
           placed += 1;
-          return;
+          continue;
         }
         addCardRaw(type, undefined, libraryAudience);
         placed += 1;
-      });
+      }
       if (useAppEditorChrome && placed > 0) {
         showToast(`${placed}件のブロックを配置しました`, "success");
       }

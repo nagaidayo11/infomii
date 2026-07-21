@@ -6,7 +6,6 @@ import {
   circlePageLinks,
   comparePricing,
   contactHub,
-  ctaButton,
   dinnerCrowd,
   drinkMenu,
   emergency,
@@ -21,7 +20,6 @@ import {
   infoRows,
   kpi,
   laundry,
-  listPageLinks,
   map,
   menuCategories,
   nearby,
@@ -140,140 +138,6 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       ),
       block("map", map("アクセス・集合場所", "ホテル正面ロータリー")),
       block("social_links", socialLinks("公式SNS", "@infomii_resort")),
-    ]),
-  ),
-  hotelTemplate(
-    "hotel-presentation-arrival",
-    "到着ガイド",
-    "お知らせ・本日の時間・Wi-Fi・カードグリッドで、到着直後に必要な案内を1ページに。",
-    "business",
-    ordered([
-      block("hero", hero("ようこそ、ご滞在へ", "本日もごゆっくりお過ごしください")),
-      block(
-        "notice",
-        notice(
-          "本日のお知らせ",
-          "客室清掃は 10:00–14:00 です。この時間帯は入室をお控えください。",
-        ),
-      ),
-      block(
-        "schedule",
-        schedule("本日の主な時間", [
-          { day: "朝食（1F ダイニング）", time: "6:30–10:00", label: "ラストオーダー 9:45" },
-          { day: "フロント", time: "24時間", label: "内線9" },
-          { day: "チェックアウト", time: "11:00", label: "延長はフロントまで" },
-        ]),
-      ),
-      block("wifi", wifi("Hotel-Guest", "welcome2024", "接続できない場合はフロント（内線9）まで。")),
-      block(
-        "pageLinks",
-        pageLinks(
-          "館内のご案内",
-          [
-            { label: "レストラン", icon: "restaurant", description: "11:30–21:00" },
-            { label: "フィットネス", icon: "spa", description: "B1F / 6:00–22:00" },
-            { label: "ランドリー", icon: "laundry", description: "2F / 6:00–24:00" },
-            { label: "駐車場", icon: "parking", description: "予約制" },
-          ],
-          2,
-        ),
-      ),
-      block(
-        "pageLinks",
-        listPageLinks("すぐに使う", [
-          { label: "タクシーを呼ぶ", icon: "taxi", description: "フロント手配" },
-          { label: "フロントに連絡", icon: "phone", description: "内線9" },
-        ]),
-      ),
-      block("faq", faq("よくある質問", [
-        { q: "荷物を預けられますか？", a: "チェックアウト後も当日中はフロントでお預かりできます。" },
-        { q: "タクシーは頼めますか？", a: "フロント内線9で手配できます。" },
-      ])),
-    ]),
-  ),
-  hotelTemplate(
-    "hotel-presentation-tabs",
-    "タブ切替ガイド",
-    "滞在・食事・設備・アクセスをタブで切り替える館内案内ページ。",
-    "business",
-    ordered([
-      block("hero", hero("館内のご案内", "知りたいカテゴリをタブで切り替え")),
-      block(
-        "tabs_info",
-        tabsInfo("カテゴリ別案内", [
-          {
-            label: "滞在",
-            body: "チェックイン 15:00〜\nチェックアウト 11:00\nフロントは24時間対応（内線9）\n荷物のお預かりは当日中OKです。",
-            imageSrc: SEED_PREVIEW_IMAGE,
-          },
-          {
-            label: "食事",
-            body: "朝食 6:30–10:00 / 1F ダイニング（最終入場 9:45）\nレストラン 11:30–14:00 / 18:00–21:00\nアレルギー対応は前日までにご連絡ください。",
-            imageSrc: SEED_PREVIEW_IMAGE,
-          },
-          {
-            label: "設備",
-            body: "Wi-Fi：Hotel-Guest / welcome2024\nランドリー：2F 6:00–24:00\nフィットネス：B1F 6:00–22:00\n駐車場：予約制（フロントまで）",
-          },
-          {
-            label: "アクセス",
-            body: "最寄り駅から徒歩8分\n空港リムジンはフロントで時刻表をご確認ください\nタクシー手配は内線9へ。",
-          },
-        ]),
-      ),
-      block(
-        "map",
-        map("アクセス・周辺", "東京都港区芝公園1-2-3", [
-          { name: "最寄り駅", walk: "徒歩8分", note: "" },
-          { name: "コンビニ", walk: "徒歩2分", note: "24時間営業" },
-        ]),
-      ),
-      block(
-        "accordion_info",
-        accordionInfo("よくあるご質問", [
-          { title: "タブにない案内は？", body: "フロント内線9、または下のFAQをご確認ください。" },
-          { title: "多言語表示は？", body: "Businessプランで公開時に主要言語へ展開できます。" },
-        ]),
-      ),
-    ]),
-  ),
-  hotelTemplate(
-    "hotel-presentation-hero-lp",
-    "ヒーロー訴求ページ",
-    "大画像ヒーロー＋導線＋ギャラリーのウェルカム／訴求型ページ。",
-    "resort",
-    ordered([
-      block("hero", hero("快適なご滞在を、もっとスマートに", "館内案内・体験・お食事をこのページから")),
-      block(
-        "welcome",
-        welcome(
-          "本日はご宿泊ありがとうございます",
-          "写真とボタンから、よく使う案内へすぐ移動できます。",
-        ),
-      ),
-      block(
-        "pageLinks",
-        pageLinks(
-          "よく使う案内",
-          [
-            { label: "Wi-Fi", icon: "wifi", description: "客室・ロビー" },
-            { label: "食事", icon: "restaurant", description: "朝食・レストラン" },
-            { label: "体験", icon: "map", description: "周辺・アクティビティ" },
-            { label: "FAQ", icon: "info", description: "よくある質問" },
-          ],
-          2,
-        ),
-      ),
-      block("button", ctaButton("体験・レストランを見る", "#")),
-      block("button", ctaButton("フロントに電話する", "tel:0334125678")),
-      block(
-        "gallery",
-        gallery("館内ギャラリー", ["客室", "ダイニング", "ラウンジ", "大浴場"]),
-      ),
-      block(
-        "contact_hub",
-        contactHub("ご用件はこちら", "滞在中のご要望はチャット・電話で受付します。", "03-3412-5678"),
-      ),
     ]),
   ),
   hotelTemplate(

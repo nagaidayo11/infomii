@@ -27,8 +27,6 @@ export type QuickPreset = {
   businessOnly?: boolean;
   /** When the set includes `info`, use this content instead of the empty default. */
   infoContent?: Record<string, unknown>;
-  /** Optional content per card, parallel to `types` indices. */
-  contents?: Array<Record<string, unknown> | undefined>;
 };
 
 export const LIBRARY_AUDIENCE_STORAGE_KEY = "infomii-editor-library-audience";
