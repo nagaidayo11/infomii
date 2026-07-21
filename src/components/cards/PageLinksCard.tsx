@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
 import {
-  CARD_BLOCK_BODY_CLASS,
   CARD_BLOCK_CAPTION_CLASS,
   CARD_BLOCK_TITLE_CLASS,
   getTitleFontSizeStyle,
@@ -15,14 +14,8 @@ import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
 import { useGuestPageHref } from "@/lib/use-guest-page-href";
 import { useClientShell } from "@/components/app-shell/useClientShell";
-import {
-  AppLinkTile,
-  AppLinkTileGrid,
-  AppSectionHeader,
-} from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
-import { NativeLinkIcon } from "./native-guest-icons";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import {
   PAGE_LINK_ICON_SIZES,
@@ -34,6 +27,7 @@ import {
 
 type PageLinksItem = {
   label?: string;
+  description?: string;
   icon?: string;
   linkType?: "page" | "url";
   pageSlug?: string;
@@ -46,14 +40,6 @@ function getIconDisplay(icon: string | undefined) {
 
 type PageLinksCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
 
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-    </svg>
-  );
-}
-
 export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
   const { isNativeUi } = useClientShell();
@@ -62,20 +48,49 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const c = card.content as Record<string, unknown> | undefined;
   const labels =
     locale === "ko"
-      ? { title: "메뉴", empty: "링크를 추가", item: "항목", titlePlaceholder: "제목", labelPlaceholder: "라벨" }
+      ? {
+          title: "메뉴",
+          empty: "링크를 추가",
+          item: "항목",
+          titlePlaceholder: "제목",
+          labelPlaceholder: "라벨",
+          descPlaceholder: "설명",
+        }
       : locale === "zh"
-        ? { title: "菜单", empty: "请添加链接", item: "项目", titlePlaceholder: "标题", labelPlaceholder: "标签" }
+        ? {
+            title: "菜单",
+            empty: "请添加链接",
+            item: "项目",
+            titlePlaceholder: "标题",
+            labelPlaceholder: "标签",
+            descPlaceholder: "说明",
+          }
         : locale === "en"
-          ? { title: "Menu", empty: "Add links", item: "Item", titlePlaceholder: "Title", labelPlaceholder: "Label" }
-          : { title: "メニュー", empty: "リンクを追加", item: "項目", titlePlaceholder: "タイトル", labelPlaceholder: "ラベル" };
+          ? {
+              title: "Menu",
+              empty: "Add links",
+              item: "Item",
+              titlePlaceholder: "Title",
+              labelPlaceholder: "Label",
+              descPlaceholder: "Description",
+            }
+          : {
+              title: "メニュー",
+              empty: "リンクを追加",
+              item: "項目",
+              titlePlaceholder: "タイトル",
+              labelPlaceholder: "ラベル",
+              descPlaceholder: "説明",
+            };
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const rawColumns = typeof c?.columns === "number" ? c.columns : Number(c?.columns);
   const columns = rawColumns === 1 || rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const iconSize = readPageLinkIconSize(c?.iconSize);
   const styleVariant = readPageLinkStyleVariant(c?.styleVariant);
   const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
-  const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "none");
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
+  const accent =
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });
@@ -95,218 +110,122 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
 
-  const iconSizes = PAGE_LINK_ICON_SIZES[styleVariant][iconSize];
-  const iconWrapClass = iconSizes.wrap;
-  const iconClass = iconSizes.icon;
+  const saveLabel = (index: number, value: string) => {
+    const next = [...items];
+    next[index] = { ...next[index], label: value };
+    update({ items: next });
+  };
 
-  /* Phase 1+: native UI (guest + editor preview) */
-  if (isNativeUi && !editable) {
-    const showTitle = Boolean(title);
-    const oddLastSpans = columns === 2 && items.length % 2 === 1;
+  const saveDescription = (index: number, value: string) => {
+    const next = [...items];
+    next[index] = { ...next[index], description: value };
+    update({ items: next });
+  };
 
-    return (
-      <div className="app-native-section app-native-guest-card">
-        {showTitle ? <AppSectionHeader title={title} icon={<NativeLinkIcon />} /> : null}
-        {items.length === 0 ? (
-          <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
-        ) : (
-          <AppLinkTileGrid
-            className={columns === 1 ? "!grid-cols-1" : columns >= 3 ? "!grid-cols-3" : undefined}
-          >
-            {items.map((item, i) => {
-              const href = getHref(item);
-              const iconDisplay = getIconDisplay(item.icon);
-              const span = oddLastSpans && i === items.length - 1;
-              const icon = <LineIcon name={iconDisplay} className="h-[1.125rem] w-[1.125rem]" />;
-              const label = item.label?.trim() || labels.item;
+  const titleNode =
+    editable || title ? (
+      <h3 className="pres-block__title">
+        <InlineEditable
+          value={title}
+          onSave={(v) => update({ title: v })}
+          editable={editable}
+          onActivate={onActivate}
+          className="pres-block__title"
+          placeholder={labels.titlePlaceholder}
+        />
+      </h3>
+    ) : null;
 
-              if (href && href !== "#") {
-                return (
-                  <AppLinkTile
-                    key={i}
-                    as="a"
-                    href={href}
-                    label={label}
-                    icon={icon}
-                    span={span}
-                    target={isExternal(item) ? "_blank" : undefined}
-                    rel={isExternal(item) ? "noreferrer" : undefined}
-                    className="guest-page-link"
-                  />
-                );
-              }
-              return (
-                <AppLinkTile key={i} label={label} icon={icon} span={span} onClick={onActivate} />
-              );
-            })}
-          </AppLinkTileGrid>
-        )}
-      </div>
-    );
-  }
-
-  /* Editor canvas: same native chrome, inline-editable labels (no navigation) */
-  if (isNativeUi && editable) {
-    const showTitle = Boolean(title) || editable;
-    const oddLastSpans = columns === 2 && items.length % 2 === 1;
+  /* tile → presentation card grid */
+  if (styleVariant === "tile") {
+    const gridCols = columns >= 4 ? 4 : columns === 3 ? 3 : 2;
+    const tileIconSizes = PAGE_LINK_ICON_SIZES.tile[iconSize];
 
     return (
-      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
-        {showTitle ? (
-          <AppSectionHeader
-            title={
-              <InlineEditable
-                value={title}
-                onSave={(v) => update({ title: v })}
-                editable={editable}
-                onActivate={onActivate}
-                className="app-section-header__title"
-                placeholder={labels.titlePlaceholder}
-              />
-            }
-            icon={<NativeLinkIcon />}
-            as="div"
-          />
-        ) : null}
+      <section
+        className="pres-block"
+        style={{ ["--pres-accent" as string]: accent }}
+        onClick={editable ? onActivate : undefined}
+      >
+        {titleNode}
         {items.length === 0 ? (
-          <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
-        ) : (
-          <AppLinkTileGrid
-            className={columns === 1 ? "!grid-cols-1" : columns >= 3 ? "!grid-cols-3" : undefined}
-          >
-            {items.map((item, i) => {
-              const iconDisplay = getIconDisplay(item.icon);
-              const span = oddLastSpans && i === items.length - 1;
-              return (
-                <div
-                  key={i}
-                  className={"app-link-tile " + (span ? "app-link-tile--span " : "")}
-                  role="button"
-                  tabIndex={0}
-                  onClick={onActivate}
-                  onKeyDown={(e) => e.key === "Enter" && onActivate?.()}
-                >
-                  <span className="app-link-tile__icon">
-                    <LineIcon name={iconDisplay} className="h-[1.125rem] w-[1.125rem]" />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    <InlineEditable
-                      value={item.label ?? ""}
-                      onSave={(v) => {
-                        const next = [...items];
-                        next[i] = { ...next[i], label: v };
-                        update({ items: next });
-                      }}
-                      editable={editable}
-                      onActivate={onActivate}
-                      className="text-[var(--app-tile-text)]"
-                      placeholder={labels.labelPlaceholder}
-                    />
-                  </span>
-                </div>
-              );
-            })}
-          </AppLinkTileGrid>
-        )}
-      </div>
-    );
-  }
-
-  if (styleVariant === "list") {
-    const listTitle =
-      editable || title ? (
-        <h3 className={`mb-1 px-4 pt-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable
-            value={title}
-            onSave={(v) => update({ title: v })}
-            editable={editable}
-            onActivate={onActivate}
-            className={CARD_BLOCK_TITLE_CLASS}
-            placeholder={labels.titlePlaceholder}
-          />
-        </h3>
-      ) : null;
-
-    return (
-      <div className="overflow-hidden bg-white">
-        {listTitle}
-        {items.length === 0 ? (
-          <p className={`px-4 py-4 ${CARD_BLOCK_CAPTION_CLASS}`} style={getBodyFontSizeStyle()}>
+          <p className={CARD_BLOCK_CAPTION_CLASS} style={getBodyFontSizeStyle()}>
             {labels.empty}
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100 border-y border-slate-100">
+          <div className="pres-card-grid" data-cols={String(gridCols)}>
             {items.map((item, i) => {
               const href = getHref(item);
               const iconDisplay = getIconDisplay(item.icon);
-              const row = (
-                <div className="flex min-h-[56px] items-center gap-3 px-4 py-3.5 active:bg-slate-50">
-                  <span className={`flex shrink-0 items-center justify-center text-teal-800 ${iconWrapClass}`}>
-                    <LineIcon name={iconDisplay} className={iconClass} />
+              const description = getLocalizedContent(
+                item.description as LocalizedString | undefined,
+                locale,
+              );
+              const inner = (
+                <>
+                  <span className="pres-card-grid__icon" aria-hidden>
+                    <LineIcon name={iconDisplay} className={tileIconSizes.icon} />
                   </span>
-                  <span
-                    className={`min-w-0 flex-1 font-medium ${CARD_BLOCK_BODY_CLASS} text-slate-800`}
-                    style={getBodyFontSizeStyle()}
-                  >
+                  <span className="pres-card-grid__label">
                     <InlineEditable
                       value={item.label ?? ""}
-                      onSave={(v) => {
-                        const next = [...items];
-                        next[i] = { ...next[i], label: v };
-                        update({ items: next });
-                      }}
+                      onSave={(v) => saveLabel(i, v)}
                       editable={editable}
                       onActivate={onActivate}
-                      className="text-slate-800"
                       placeholder={labels.labelPlaceholder}
                     />
                   </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-                </div>
+                  {editable || description ? (
+                    <span className="pres-card-grid__desc">
+                      <InlineEditable
+                        value={description}
+                        onSave={(v) => saveDescription(i, v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder={labels.descPlaceholder}
+                      />
+                    </span>
+                  ) : null}
+                </>
               );
 
-              if (href && href !== "#") {
-                if (editable) {
-                  return (
-                    <li key={i}>
-                      <Link href={href} className="block touch-manipulation" onClick={(e) => e.preventDefault()}>
-                        {row}
-                      </Link>
-                    </li>
-                  );
-                }
+              if (href && href !== "#" && !editable) {
                 return (
-                  <li key={i}>
-                    <a
-                      href={href}
-                      target={isExternal(item) ? "_blank" : undefined}
-                      rel={isExternal(item) ? "noreferrer" : undefined}
-                      className="guest-page-link block touch-manipulation"
-                    >
-                      {row}
-                    </a>
-                  </li>
+                  <a
+                    key={i}
+                    href={href}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="pres-card-grid__item guest-page-link"
+                  >
+                    {inner}
+                  </a>
                 );
               }
+
               return (
-                <li key={i}>
-                  <div
-                    className="block"
-                    onClick={onActivate}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && onActivate?.()}
-                  >
-                    {row}
-                  </div>
-                </li>
+                <div
+                  key={i}
+                  className="pres-card-grid__item"
+                  role={editable ? "button" : undefined}
+                  tabIndex={editable ? 0 : undefined}
+                  onClick={editable ? onActivate : undefined}
+                  onKeyDown={editable ? (e) => e.key === "Enter" && onActivate?.() : undefined}
+                >
+                  {inner}
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
-      </div>
+      </section>
     );
   }
+
+  /* circle — keep compact icon-grid look */
+  const iconSizes = PAGE_LINK_ICON_SIZES.circle[iconSize];
+  const iconWrapClass = iconSizes.wrap;
+  const iconClass = iconSizes.icon;
 
   return (
     <Card padding="md">
@@ -337,44 +256,21 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
             const content = (
               <div
                 data-inner-surface
-                className={
-                  styleVariant === "circle"
-                    ? "flex min-h-[90px] flex-col items-center justify-center gap-2 px-1.5 py-1.5"
-                    : [
-                        `flex min-h-[76px] flex-col items-center justify-center gap-1 ${editorInnerRadiusClassName} bg-slate-50/80 px-2 py-2 transition hover:bg-slate-100`,
-                        tileShadowStrength !== "none"
-                          ? `border border-slate-200/80 ${pageLinkShadowClass(tileShadowStrength)}`
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")
-                }
+                className={`flex min-h-[90px] flex-col items-center justify-center gap-2 px-1.5 py-1.5 ${editorInnerRadiusClassName}`}
               >
                 <span
                   data-inner-surface
-                  className={
-                    styleVariant === "circle"
-                      ? `flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 ${pageLinkShadowClass(circleShadowStrength)} ${iconWrapClass}`
-                      : `flex shrink-0 items-center justify-center text-slate-700 ${iconWrapClass}`
-                  }
+                  className={`flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 ${pageLinkShadowClass(circleShadowStrength)} ${iconWrapClass}`}
                 >
                   <LineIcon name={iconDisplay} className={iconClass} />
                 </span>
                 <span
-                  className={
-                    styleVariant === "circle"
-                      ? `w-full text-center ${CARD_BLOCK_CAPTION_CLASS} text-slate-700 break-words [word-break:keep-all]`
-                      : `w-full text-center ${CARD_BLOCK_BODY_CLASS} text-slate-700 break-words [word-break:keep-all]`
-                  }
+                  className={`w-full text-center ${CARD_BLOCK_CAPTION_CLASS} text-slate-700 break-words [word-break:keep-all]`}
                   style={getBodyFontSizeStyle()}
                 >
                   <InlineEditable
                     value={item.label ?? ""}
-                    onSave={(v) => {
-                      const next = [...items];
-                      next[i] = { ...next[i], label: v };
-                      update({ items: next });
-                    }}
+                    onSave={(v) => saveLabel(i, v)}
                     editable={editable}
                     onActivate={onActivate}
                     className="text-slate-700"
@@ -390,8 +286,6 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                   <Link
                     key={i}
                     href={href}
-                    target={isExternal(item) ? "_blank" : undefined}
-                    rel={isExternal(item) ? "noreferrer" : undefined}
                     className="block touch-manipulation"
                     onClick={(e) => e.preventDefault()}
                   >

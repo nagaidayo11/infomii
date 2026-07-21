@@ -52,14 +52,23 @@ export const progressSteps = (
   currentStep = 1,
 ) => ({ title, currentStep, items });
 
-export const tabsInfo = (title: string, tabs: Array<{ label: string; body: string }>) => ({
+export const tabsInfo = (
+  title: string,
+  tabs: Array<{ label: string; body: string; imageSrc?: string }>,
+) => ({
   title,
   defaultIndex: 0,
-  tabs,
+  accentColor: "#0f766e",
+  tabs: tabs.map((t) => ({
+    label: t.label,
+    body: t.body,
+    imageSrc: t.imageSrc ?? "",
+  })),
 });
 
 export const accordionInfo = (title: string, items: Array<{ title: string; body: string }>) => ({
   title,
+  accentColor: "#0f766e",
   items,
 });
 
@@ -72,7 +81,7 @@ export const comparePricing = (
 
 export const pageLinks = (
   title: string,
-  items: Array<{ label: string; icon: string }>,
+  items: Array<{ label: string; icon: string; description?: string }>,
   columns = 2,
 ) => ({
   title,
@@ -81,7 +90,42 @@ export const pageLinks = (
   styleVariant: "tile",
   tileShadowStrength: "md",
   circleIconShadowStrength: "md",
-  items: items.map((item) => ({ ...item, linkType: "page", pageSlug: "", link: "" })),
+  accentColor: "#0f766e",
+  items: items.map((item) => ({
+    label: item.label,
+    icon: item.icon,
+    description: item.description ?? "",
+    linkType: "page" as const,
+    pageSlug: "",
+    link: "",
+  })),
+});
+
+/** Full-width button-style page links (presentation pattern: ボタン一覧). */
+export const listPageLinks = (
+  title: string,
+  items: Array<{ label: string; icon: string; description?: string }>,
+) => ({
+  title,
+  columns: 1,
+  iconSize: "md",
+  styleVariant: "list" as const,
+  tileShadowStrength: "none",
+  circleIconShadowStrength: "md",
+  accentColor: "#0f766e",
+  items: items.map((item) => ({
+    label: item.label,
+    icon: item.icon,
+    description: item.description ?? "",
+    linkType: "page" as const,
+    pageSlug: "",
+    link: "",
+  })),
+});
+
+export const ctaButton = (label: string, href = "#") => ({
+  label,
+  href,
 });
 
 export const heroSlider = (title: string) => ({
@@ -210,7 +254,7 @@ export const menuCategories = (
 export const gallery = (title: string, alts: string[]) => ({
   title,
   columns: 2,
-  items: alts.map((alt) => ({ src: SEED_PREVIEW_IMAGE, alt })),
+  items: alts.map((alt) => ({ src: SEED_PREVIEW_IMAGE, alt, caption: alt })),
 });
 
 export const spa = (
@@ -284,7 +328,17 @@ export const emergency = (title: string, hospital: string, note: string) => ({
   note,
 });
 
-export const map = (title: string, address: string) => ({ title, address, mapEmbedUrl: "" });
+export const map = (
+  title: string,
+  address: string,
+  pins: Array<{ name: string; walk?: string; note?: string }> = [],
+) => ({
+  title,
+  address,
+  mapEmbedUrl: "",
+  accentColor: "#0f766e",
+  pins,
+});
 
 export const nearby = (title: string, items: Array<{ name: string; description: string }>) => ({
   title,

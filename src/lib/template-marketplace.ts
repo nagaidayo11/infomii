@@ -1,5 +1,5 @@
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 24;
+export const MARKETPLACE_SEED_VERSION = 25;
 
 /** Default grid columns for pageLinks blocks in marketplace templates. */
 export const PAGE_LINKS_DEFAULT_COLUMNS = 2;

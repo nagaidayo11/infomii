@@ -179,7 +179,27 @@ export function MapNativeSettings({
   display,
   updateLocalized,
   onUpdate,
-}: Pick<LocalizedFieldProps, "display" | "updateLocalized" | "onUpdate">) {
+  content,
+}: Pick<LocalizedFieldProps, "display" | "updateLocalized" | "onUpdate"> & {
+  content?: Record<string, unknown>;
+}) {
+  const pins = (Array.isArray(content?.pins) ? content.pins : []) as Array<{
+    name?: string;
+    walk?: string;
+    note?: string;
+  }>;
+  const accentColor =
+    typeof content?.accentColor === "string" && content.accentColor.trim()
+      ? content.accentColor.trim()
+      : "#0f766e";
+
+  const setPins = (next: typeof pins) => onUpdate("pins", next);
+  const updatePin = (index: number, field: "name" | "walk" | "note", value: string) => {
+    const next = [...pins];
+    next[index] = { ...(next[index] ?? {}), [field]: value };
+    setPins(next);
+  };
+
   return (
     <div className="app-native-settings space-y-5">
       <NativeField label="タイトル">
@@ -208,6 +228,78 @@ export function MapNativeSettings({
       <p className="text-xs text-[var(--app-text-muted)]">
         共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
       </p>
+      <NativeField label="アクセント色">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={accentColor}
+            onChange={(e) => onUpdate("accentColor", e.target.value)}
+            className="h-10 w-12 cursor-pointer rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white"
+          />
+          <AppFieldInput
+            value={accentColor}
+            onChange={(e) => onUpdate("accentColor", e.target.value)}
+            placeholder="#0f766e"
+          />
+        </div>
+      </NativeField>
+      <div>
+        <AppSectionHeader
+          title="周辺ピン"
+          trailing={
+            <button
+              type="button"
+              onClick={() => setPins([...pins, { name: "新規スポット", walk: "", note: "" }])}
+              className="app-native-add-btn ui-pop-tap"
+            >
+              + 追加
+            </button>
+          }
+        />
+        <div className="mt-2 space-y-3">
+          {pins.length === 0 ? (
+            <p className="text-sm text-[var(--app-text-muted)]">周辺スポットを追加できます</p>
+          ) : (
+            pins.map((pin, i) => (
+              <div
+                key={i}
+                className="space-y-2 rounded-[var(--app-radius-lg)] border border-[var(--app-border)] bg-[var(--app-surface)] p-3"
+              >
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setPins(pins.filter((_, idx) => idx !== i))}
+                    className="app-native-settings-action app-native-settings-action--danger"
+                  >
+                    削除
+                  </button>
+                </div>
+                <NativeField label="スポット名">
+                  <AppFieldInput
+                    value={pin.name ?? ""}
+                    onChange={(e) => updatePin(i, "name", e.target.value)}
+                    placeholder="コンビニ"
+                  />
+                </NativeField>
+                <NativeField label="徒歩目安">
+                  <AppFieldInput
+                    value={pin.walk ?? ""}
+                    onChange={(e) => updatePin(i, "walk", e.target.value)}
+                    placeholder="徒歩2分"
+                  />
+                </NativeField>
+                <NativeField label="補足">
+                  <AppFieldInput
+                    value={pin.note ?? ""}
+                    onChange={(e) => updatePin(i, "note", e.target.value)}
+                    placeholder="24時間営業"
+                  />
+                </NativeField>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

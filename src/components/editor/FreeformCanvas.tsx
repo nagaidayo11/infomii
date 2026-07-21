@@ -23,7 +23,8 @@ const DEFAULT_W = 280;
 const DEFAULT_H = 96;
 const MIN_W = 120;
 const MIN_H = 48;
-const MAP_AUTO_MAX_H = 320;
+/** Map blocks need room for 16:11 frame + address + pin list; legacy cap at 320 caused clipping. */
+const MAP_AUTO_MAX_H = 900;
 /** 観測要素の scrollHeight が親高さと再帰し暴走するのを防ぐ上限（px） */
 const MAX_AUTO_BLOCK_H = 2400;
 const GRID = 8;
@@ -65,7 +66,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   checkout: 72,
   nearby: 104,
   notice: 72,
-  map: 104,
+  map: 480,
   restaurant: 78,
   taxi: 72,
   emergency: 96,
@@ -92,11 +93,11 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   kpi: 96,
   space: 48,
   campaign_timer: 128,
-  tabs_info: 120,
+  tabs_info: 280,
   faq_search: 128,
   notice_ticker: 92,
   coupon: 128,
-  accordion_info: 140,
+  accordion_info: 200,
   open_status: 104,
   breakfast_crowd: 120,
   dinner_crowd: 120,
@@ -117,7 +118,41 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
 };
 
 function getCardDefaultHeight(card: EditorCard): number {
+  if (card.type === "map") {
+    const pins = Array.isArray((card.content as Record<string, unknown> | undefined)?.pins)
+      ? ((card.content as Record<string, unknown>).pins as unknown[])
+      : [];
+    const pinCount = Math.max(0, pins.length);
+    // title + map frame + address + gaps + pin rows
+    return 300 + pinCount * 58;
+  }
   return DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+}
+
+function getMapMinHeight(card: EditorCard): number {
+  return getCardDefaultHeight(card);
+}
+
+/**
+ * Keep legacy short heights from clipping newly introduced presentation layouts.
+ * Existing pages may carry persisted `_position.h` from before these blocks grew.
+ */
+function getResolvedCardHeight(card: EditorCard, savedHeight: number | undefined): number {
+  const initialH = getCardDefaultHeight(card);
+
+  if (card.type === "map") {
+    const needed = getMapMinHeight(card);
+    if (typeof savedHeight !== "number") return needed;
+    if (savedHeight < needed) return needed;
+    return savedHeight;
+  }
+
+  if (typeof savedHeight !== "number") return initialH;
+
+  if (card.type === "tabs_info" && savedHeight < 180) return initialH;
+  if (card.type === "accordion_info" && savedHeight < 170) return initialH;
+
+  return savedHeight;
 }
 
 /** 完全中央配置: ブロック幅いっぱいにし、左右均等の余白で中央に配置 */
@@ -143,7 +178,7 @@ function getPosition(card: EditorCard, index: number, contentWidth: number, card
   const fullBleed = isCardFullBleed(card);
   const forceHeroWidth = usesHeroColumnWidth(card.type);
   const stageWidth = contentWidth + CANVAS_PADDING_X * 2;
-  const h = typeof pos?.h === "number" ? pos.h : initialH;
+  const h = getResolvedCardHeight(card, typeof pos?.h === "number" ? pos.h : undefined);
 
   if (fullBleed) {
     return {
@@ -374,11 +409,12 @@ export function FreeformCanvas({
       }
       const auto = autoHeights[card.id];
       if (card.type === "map") {
+        const floor = getMapMinHeight(card);
         if (typeof auto === "number" && Number.isFinite(auto)) {
-          return Math.max(MIN_H, Math.min(MAP_AUTO_MAX_H, auto));
+          return Math.max(floor, Math.min(MAP_AUTO_MAX_H, auto));
         }
         const fallback = pos.h ?? getCardDefaultHeight(card);
-        return Math.max(MIN_H, Math.min(MAP_AUTO_MAX_H, fallback));
+        return Math.max(floor, Math.min(MAP_AUTO_MAX_H, fallback));
       }
       if (typeof auto === "number" && Number.isFinite(auto)) {
         return Math.max(MIN_H, auto);
@@ -749,7 +785,9 @@ export function FreeformCanvas({
                       data-card-content-id={card.id}
                       className={
                         "flex h-full w-full min-h-0 flex-col items-stretch overflow-x-hidden overflow-y-visible p-0 [&>*]:shrink-0 " +
-                        (isOverflowing ? "justify-start" : "justify-center")
+                        (isOverflowing || card.type === "map" || card.type === "tabs_info" || card.type === "accordion_info"
+                          ? "justify-start"
+                          : "justify-center")
                       }
                     >
                       <CardRenderer

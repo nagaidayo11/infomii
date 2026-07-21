@@ -27,6 +27,8 @@ export type QuickPreset = {
   businessOnly?: boolean;
   /** When the set includes `info`, use this content instead of the empty default. */
   infoContent?: Record<string, unknown>;
+  /** Optional content per card, parallel to `types` indices. */
+  contents?: Array<Record<string, unknown> | undefined>;
 };
 
 export const LIBRARY_AUDIENCE_STORAGE_KEY = "infomii-editor-library-audience";
@@ -62,7 +64,7 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   nearby: { label: "行きたい場所", description: "スポットやおすすめをリスト化" },
   highlight: { label: "大事な連絡", description: "遅刻・雨天など注意を目立たせる" },
   notice: { label: "リマインド", description: "必ず読んでほしい連絡事項" },
-  map: { label: "地図・集合場所", description: "待ち合わせや会場の住所" },
+  map: { label: "地図・集合場所", description: "待ち合わせや会場の住所と周辺ピン" },
   steps: { label: "流れ・ステップ", description: "当日の動きを順番に表示" },
   checklist: { label: "持ち物・TODO", description: "持ち物や確認リスト" },
   contact_hub: { label: "連絡先", description: "電話・メール・LINEなど" },
@@ -79,8 +81,9 @@ const MAIN_ITEMS: LibraryItem[] = [
   { type: "welcome", label: "ウェルカム", description: "あいさつや導入説明" },
 ];
 
-/** Layout primitives — freeform after picking structure. */
+/** Layout primitives — structure that changes how content is presented. */
 const LAYOUT_ITEMS: LibraryItem[] = [
+  { type: "tabs_info", label: "タブ切替", description: "写真＋本文をタブで切り替えるレイアウト" },
   { type: "info", label: "ラベル行リスト", description: "用途を選んで項目名と値を並べる" },
   { type: "heading_body", label: "見出し＋本文", description: "タイトルと本文を自由に書く" },
   { type: "notice", label: "お知らせ", description: "連絡事項を目立たせる" },
@@ -90,11 +93,11 @@ const LAYOUT_ITEMS: LibraryItem[] = [
 ];
 
 const GUIDE_ITEMS: LibraryItem[] = [
-  { type: "map", label: "地図", description: "アクセス・所在地を表示" },
+  { type: "map", label: "地図＋周辺ピン", description: "地図と周辺スポットを一体表示" },
   { type: "nearby", label: "周辺案内", description: "観光スポットや周辺施設" },
   { type: "schedule", label: "営業時間一覧", description: "施設ごとの時間割を一覧表示（動的強調はBusinessプラン）" },
   { type: "faq", label: "よくある質問", description: "問い合わせを先回りで解消" },
-  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式で情報整理" },
+  { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみFAQ風の案内" },
   { type: "open_status", label: "営業時間ステータス", description: "営業中/営業時間外を表示" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "横スクロールで重要案内を表示（Pro）" },
@@ -121,7 +124,7 @@ const MENU_ITEMS: LibraryItem[] = [
 
 const OPERATION_ITEMS: LibraryItem[] = [
   { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
-  { type: "pageLinks", label: "ページリンク", description: "子ページへメニュー遷移" },
+  { type: "pageLinks", label: "ページリンク", description: "カード／リスト／サークルで導線を並べる" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Pro）" },
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Pro）" },
   { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },
@@ -135,14 +138,13 @@ const COMPARISON_ITEMS: LibraryItem[] = [
   { type: "checklist", label: "チェックリスト", description: "持ち物・手続き確認" },
   { type: "steps", label: "ステップ", description: "手順を段階的に表示" },
   { type: "progress_steps", label: "進捗ステップ", description: "現在進捗を視覚化" },
-  { type: "tabs_info", label: "タブ切替案内", description: "複数案内をタブで切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
 ];
 
 const MEDIA_ITEMS: LibraryItem[] = [
   { type: "image", label: "画像", description: "写真を1枚表示" },
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
-  { type: "gallery", label: "ギャラリー", description: "複数画像をグリッド表示" },
+  { type: "gallery", label: "ギャラリー", description: "写真グリッド＋キャプション" },
   { type: "image_tiles", label: "画像タイル", description: "写真＋ラベルの2列グリッド導線" },
   { type: "divider", label: "区切り線", description: "セクションの視覚区切り" },
   { type: "space", label: "スペース", description: "上下の余白を調整" },

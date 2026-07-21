@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
+import { ImageUpload } from "@/components/editor/ImageUpload";
 import {
   AppFieldInput,
   AppFieldLabel,
@@ -9,7 +10,7 @@ import {
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
 
-type TabsInfoItem = { label?: string; body?: string };
+type TabsInfoItem = { label?: string; body?: string; imageSrc?: string };
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
@@ -34,6 +35,10 @@ export function TabsInfoNativeSettings({
     typeof content.defaultIndex === "number"
       ? content.defaultIndex
       : Number(content.defaultIndex) || 0;
+  const accentColor =
+    typeof content.accentColor === "string" && content.accentColor.trim()
+      ? content.accentColor.trim()
+      : "#0f766e";
 
   const setItems = (next: TabsInfoItem[]) => onUpdate("tabs", next);
   const updateItem = (index: number, field: keyof TabsInfoItem, value: string) => {
@@ -42,7 +47,7 @@ export function TabsInfoNativeSettings({
     setItems(next);
   };
   const addItem = () => {
-    const next = [...items, { label: `タブ ${items.length + 1}`, body: "" }];
+    const next = [...items, { label: `タブ ${items.length + 1}`, body: "", imageSrc: "" }];
     setItems(next);
     setExpandedIndex(next.length - 1);
   };
@@ -73,7 +78,7 @@ export function TabsInfoNativeSettings({
           id="native-tabs-title"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="誰が何やるか"
+          placeholder="施設のご案内"
         />
       </div>
 
@@ -87,6 +92,24 @@ export function TabsInfoNativeSettings({
           value={String(defaultIndex)}
           onChange={(e) => onUpdate("defaultIndex", Number(e.target.value) || 0)}
         />
+      </div>
+
+      <div>
+        <AppFieldLabel htmlFor="native-tabs-accent">アクセント色</AppFieldLabel>
+        <div className="flex items-center gap-2">
+          <input
+            id="native-tabs-accent"
+            type="color"
+            value={accentColor}
+            onChange={(e) => onUpdate("accentColor", e.target.value)}
+            className="h-10 w-12 cursor-pointer rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white"
+          />
+          <AppFieldInput
+            value={accentColor}
+            onChange={(e) => onUpdate("accentColor", e.target.value)}
+            placeholder="#0f766e"
+          />
+        </div>
       </div>
 
       <div>
@@ -162,6 +185,22 @@ export function TabsInfoNativeSettings({
                           onChange={(e) => updateItem(i, "label", e.target.value)}
                           placeholder={`タブ ${i + 1}`}
                         />
+                      </div>
+                      <div>
+                        <AppFieldLabel>画像（任意）</AppFieldLabel>
+                        <ImageUpload
+                          onUploaded={(url) => updateItem(i, "imageSrc", url)}
+                          className="!items-start !rounded-lg !border !border-[var(--app-border)] !bg-white !p-3"
+                        />
+                        {item.imageSrc ? (
+                          <button
+                            type="button"
+                            onClick={() => updateItem(i, "imageSrc", "")}
+                            className="mt-2 app-native-settings-action"
+                          >
+                            画像を外す
+                          </button>
+                        ) : null}
                       </div>
                       <div>
                         <AppFieldLabel>本文</AppFieldLabel>

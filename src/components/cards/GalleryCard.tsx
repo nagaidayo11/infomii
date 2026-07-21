@@ -2,23 +2,14 @@
 
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
-import {
-  CARD_BLOCK_TITLE_CLASS,
-  getTitleFontSizeStyle,
-  getBodyFontSizeStyle,
-} from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
-import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
-import { useClientShell } from "@/components/app-shell/useClientShell";
-import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { NativeTilesIcon } from "./native-guest-icons";
 
-type GalleryItem = { src?: string; alt?: string };
+type GalleryItem = { src?: string; alt?: string; caption?: string };
 
 type GalleryCardProps = {
   card: EditorCard;
@@ -30,9 +21,8 @@ function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
 }
 
-export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProps) {
+export function GalleryCard({ card, locale = "ja" }: GalleryCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
-  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const content = card.content as Record<string, unknown>;
   const title = getLocalizedContent(content?.title as LocalizedString | undefined, locale);
@@ -41,12 +31,12 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const labels =
     locale === "ko"
-      ? { emptyImage: "이미지", titlePlaceholder: "갤러리" }
+      ? { emptyImage: "이미지", titlePlaceholder: "갤러리", captionPlaceholder: "캡션" }
       : locale === "zh"
-        ? { emptyImage: "图片", titlePlaceholder: "图库" }
+        ? { emptyImage: "图片", titlePlaceholder: "图库", captionPlaceholder: "说明" }
         : locale === "en"
-          ? { emptyImage: "Image", titlePlaceholder: "Gallery" }
-          : { emptyImage: "画像", titlePlaceholder: "ギャラリー" };
+          ? { emptyImage: "Image", titlePlaceholder: "Gallery", captionPlaceholder: "Caption" }
+          : { emptyImage: "画像", titlePlaceholder: "ギャラリー", captionPlaceholder: "キャプション" };
 
   const updateKey = (key: string, nextValue: string) => {
     const cur = content?.[key];
@@ -54,35 +44,30 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
     updateCard(card.id, { content: { ...content, [key]: next } });
   };
 
-  if (isNativeUi) {
-    return (
-      <div className="app-native-section app-native-guest-card" onClick={onActivate}>
-        {(editable || title) ? (
-          <AppSectionHeader
-            title={
-              editable ? (
-                <InlineEditable
-                  value={title}
-                  onSave={(v) => updateKey("title", v)}
-                  editable={editable}
-                  onActivate={onActivate}
-                  className="app-section-header__title"
-                  placeholder={labels.titlePlaceholder}
-                />
-              ) : (
-                title
-              )
-            }
-            icon={<NativeTilesIcon />}
-            as="div"
+  const updateCaption = (index: number, value: string) => {
+    const next = items.map((item, i) => (i === index ? { ...item, caption: value } : item));
+    updateCard(card.id, { content: { ...content, items: next } });
+  };
+
+  return (
+    <section className="pres-block" onClick={editable ? onActivate : undefined}>
+      {(editable || title) ? (
+        <h3 className="pres-block__title">
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className="pres-block__title"
+            placeholder={labels.titlePlaceholder}
           />
-        ) : null}
-        <div
-          className="app-native-tile-grid"
-          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-        >
-          {items.slice(0, 12).map((item, i) => (
-            <div key={i} className="app-native-tile-media !aspect-square">
+        </h3>
+      ) : null}
+      <div className="pres-gallery" data-cols={String(columns)}>
+        {items.slice(0, 12).map((item, i) => {
+          const caption = getLocalizedContent(item.caption as LocalizedString | undefined, locale);
+          return (
+            <div key={i} className="pres-gallery__cell">
               {item?.src ? (
                 <EditorCoverImage
                   src={item.src}
@@ -92,58 +77,27 @@ export function GalleryCard({ card, isSelected, locale = "ja" }: GalleryCardProp
                 />
               ) : (
                 <div
-                  className="flex h-full items-center justify-center text-[var(--app-text-muted)]"
+                  className="flex h-full items-center justify-center text-slate-400"
                   style={getBodyFontSizeStyle()}
                 >
                   {labels.emptyImage}
                 </div>
               )}
+              {editable || caption ? (
+                <div className="pres-gallery__caption">
+                  <InlineEditable
+                    value={caption}
+                    onSave={(v) => updateCaption(i, v)}
+                    editable={editable}
+                    onActivate={onActivate}
+                    placeholder={labels.captionPlaceholder}
+                  />
+                </div>
+              ) : null}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    );
-  }
-
-  return (
-    <Card padding="md" className="">
-      {(editable || title) ? (
-        <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
-          <InlineEditable
-            value={title}
-            onSave={(v) => updateKey("title", v)}
-            editable={editable}
-            onActivate={onActivate}
-            className={CARD_BLOCK_TITLE_CLASS}
-            placeholder={labels.titlePlaceholder}
-          />
-        </p>
-      ) : null}
-      <div
-        className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
-        {items.slice(0, 12).map((item, i) => (
-          <div
-            key={i}
-            data-inner-surface
-            className={`relative aspect-square overflow-hidden ${editorInnerRadiusClassName} bg-transparent`}
-          >
-            {item?.src ? (
-              <EditorCoverImage
-                src={item.src}
-                alt={getLocalizedContent(item.alt as LocalizedString | undefined, locale) || ""}
-                sizes="160px"
-                className="object-cover object-center"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-slate-400" style={getBodyFontSizeStyle()}>
-                {labels.emptyImage}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </Card>
+    </section>
   );
 }

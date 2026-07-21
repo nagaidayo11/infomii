@@ -16,6 +16,7 @@ import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
 
 type PageLinksItem = {
   label?: string;
+  description?: string;
   icon?: string;
   linkType?: "page" | "url";
   pageSlug?: string;
@@ -67,7 +68,11 @@ export function PageLinksNativeSettings({
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
   const styleVariant =
-    rawStyleVariant === "circle" || rawStyleVariant === "list" ? rawStyleVariant : "tile";
+    rawStyleVariant === "circle" ? "circle" : "tile";
+  const accentColor =
+    typeof content.accentColor === "string" && content.accentColor.trim()
+      ? content.accentColor.trim()
+      : "#0f766e";
   const defaultPageSlug = pages[0]?.slug ?? "";
 
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
@@ -113,29 +118,55 @@ export function PageLinksNativeSettings({
         />
       </div>
 
-      {styleVariant === "list" ? (
-        <p className="rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-3 py-2 text-sm text-[var(--app-text-muted)]">
-          リスト表示中は1列固定です。タイル／サークルにすると列数を選べます。
-        </p>
-      ) : (
+      <div>
+        <AppFieldLabel>表示スタイル</AppFieldLabel>
+        <select
+          value={styleVariant}
+          onChange={(e) => onUpdate("styleVariant", e.target.value)}
+          className="app-field-input"
+        >
+          <option value="tile">カードグリッド</option>
+          <option value="circle">サークル</option>
+        </select>
+      </div>
+
+      {styleVariant !== "circle" ? (
         <div>
-          <AppFieldLabel>列数</AppFieldLabel>
-          <AppOptionCardRow aria-label="列数">
-            <AppOptionCard
-              label="2列"
-              selected={columns === 2}
-              preview={<ColumnsPreview cols={2} />}
-              onClick={() => onUpdate("columns", 2)}
+          <AppFieldLabel htmlFor="native-page-links-accent">アクセント色</AppFieldLabel>
+          <div className="flex items-center gap-2">
+            <input
+              id="native-page-links-accent"
+              type="color"
+              value={accentColor}
+              onChange={(e) => onUpdate("accentColor", e.target.value)}
+              className="h-10 w-12 cursor-pointer rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white"
             />
-            <AppOptionCard
-              label="3列"
-              selected={columns === 3 || columns === 4}
-              preview={<ColumnsPreview cols={3} />}
-              onClick={() => onUpdate("columns", 3)}
+            <AppFieldInput
+              value={accentColor}
+              onChange={(e) => onUpdate("accentColor", e.target.value)}
+              placeholder="#0f766e"
             />
-          </AppOptionCardRow>
+          </div>
         </div>
-      )}
+      ) : null}
+
+      <div>
+        <AppFieldLabel>列数</AppFieldLabel>
+        <AppOptionCardRow aria-label="列数">
+          <AppOptionCard
+            label="2列"
+            selected={columns === 2}
+            preview={<ColumnsPreview cols={2} />}
+            onClick={() => onUpdate("columns", 2)}
+          />
+          <AppOptionCard
+            label="3列"
+            selected={columns === 3 || columns === 4}
+            preview={<ColumnsPreview cols={3} />}
+            onClick={() => onUpdate("columns", 3)}
+          />
+        </AppOptionCardRow>
+      </div>
 
       <div>
         <AppSectionHeader
@@ -206,6 +237,16 @@ export function PageLinksNativeSettings({
                           placeholder="航空券"
                         />
                       </div>
+                      {styleVariant !== "circle" ? (
+                        <div>
+                          <AppFieldLabel>説明（任意）</AppFieldLabel>
+                          <AppFieldInput
+                            value={readJaText(item.description)}
+                            onChange={(e) => updateItem(i, "description", e.target.value)}
+                            placeholder="15:00〜 / 客室・ロビー"
+                          />
+                        </div>
+                      ) : null}
                       <IconTokenSelect
                         label="アイコン"
                         value={item.icon}

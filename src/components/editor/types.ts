@@ -341,7 +341,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   checkout: "チェックアウト",
   nearby: "周辺案内",
   notice: "お知らせ",
-  map: "地図",
+  map: "地図＋周辺ピン",
   restaurant: "レストラン",
   taxi: "タクシー",
   emergency: "緊急連絡先",
@@ -368,7 +368,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   kpi: "KPI",
   space: "スペース",
   campaign_timer: "キャンペーンタイマー",
-  tabs_info: "タブ切替案内",
+  tabs_info: "タブ切替",
   faq_search: "FAQ検索",
   notice_ticker: "お知らせティッカー",
   coupon: "クーポン",
@@ -440,7 +440,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "highlight", label: "ハイライト", description: "強調ブロック" },
   { type: "action", label: "アクション", description: "ボタン・CTA" },
   { type: "notice", label: "お知らせ", description: "告知・注意" },
-  { type: "map", label: "地図", description: "住所・地図" },
+  { type: "map", label: "地図＋周辺ピン", description: "地図と周辺スポットを一体表示" },
   { type: "image", label: "画像", description: "写真" },
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンク" },
   { type: "text", label: "テキスト", description: "見出し・本文" },
@@ -450,7 +450,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "compare", label: "比較・料金表", description: "2列比較または料金・プラン表（最大4列）" },
   { type: "kpi", label: "KPI", description: "数値ハイライト" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Pro）" },
-  { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
+  { type: "tabs_info", label: "タブ切替", description: "写真＋本文をタブで切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Pro）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
@@ -499,7 +499,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "checkout", label: "チェックアウト", description: "時刻・補足・リンク" },
   { type: "nearby", label: "周辺案内", description: "近隣スポット・アクセス" },
   { type: "notice", label: "お知らせ", description: "告知・注意事項" },
-  { type: "map", label: "地図", description: "住所・地図" },
+  { type: "map", label: "地図＋周辺ピン", description: "地図と周辺スポットを一体表示" },
   { type: "restaurant", label: "レストラン", description: "営業時間・場所・メニュー" },
   { type: "taxi", label: "タクシー", description: "電話番号・会社名・備考" },
   { type: "emergency", label: "緊急連絡先", description: "火災・警察・病院など" },
@@ -525,7 +525,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "compare", label: "比較・料金表", description: "2列比較または料金表" },
   { type: "kpi", label: "KPI", description: "指標・実績表示" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "開始/終了カウントダウン（Pro）" },
-  { type: "tabs_info", label: "タブ切替案内", description: "タブで内容を切替表示" },
+  { type: "tabs_info", label: "タブ切替", description: "写真＋本文をタブで切替表示" },
   { type: "faq_search", label: "FAQ検索", description: "よくある質問を一覧表示" },
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Pro）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
@@ -721,9 +721,14 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "map":
       return {
-        title: "アクセス",
+        title: "アクセス・周辺",
         address: "東京都港区芝公園1-2-3",
         mapEmbedUrl: "",
+        pins: [
+          { name: "コンビニ", walk: "徒歩2分", note: "24時間営業" },
+          { name: "最寄り駅", walk: "徒歩8分", note: "" },
+          { name: "薬局", walk: "徒歩5分", note: "" },
+        ],
       };
     case "emergency":
       return {
@@ -797,11 +802,13 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "gallery":
       return {
-        title: "",
+        title: "フォトギャラリー",
         columns: 2,
         items: [
-          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" },
-          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "施設イメージ" },
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "客室", caption: "スタンダードツイン" },
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "レストラン", caption: "朝食会場" },
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "大浴場", caption: "大浴場" },
+          { src: PRESET_HERO_SAMPLE_IMAGE, alt: "ロビー", caption: "ロビー" },
         ],
       };
     case "divider":
@@ -822,12 +829,25 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "tabs_info":
       return {
-        title: "館内案内タブ",
+        title: "施設のご案内",
         defaultIndex: 0,
+        accentColor: "#0f766e",
         tabs: [
-          { label: "朝食", body: "7:00-9:30 / 1F ダイニング" },
-          { label: "大浴場", body: "15:00-24:00 / 6:00-10:00" },
-          { label: "アクセス", body: "最寄り駅から徒歩7分。地図をご確認ください。" },
+          {
+            label: "朝食",
+            body: "ご朝食は 7:00–9:30、1F ダイニングにてご用意しています。",
+            imageSrc: PRESET_HERO_SAMPLE_IMAGE,
+          },
+          {
+            label: "大浴場",
+            body: "15:00–24:00 / 6:00–10:00。タオルは客室にございます。",
+            imageSrc: PRESET_HERO_SAMPLE_IMAGE,
+          },
+          {
+            label: "アクセス",
+            body: "最寄り駅から徒歩7分。タクシーで約15分です。",
+            imageSrc: "",
+          },
         ],
       };
     case "faq_search":
@@ -858,10 +878,21 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "accordion_info":
       return {
-        title: "よくあるご案内",
+        title: "よくあるご質問",
+        accentColor: "#0f766e",
         items: [
-          { title: "チェックイン時間", body: "15:00からです。" },
-          { title: "荷物預かり", body: "当日中はフロントで承ります。" },
+          {
+            title: "チェックイン・チェックアウト",
+            body: "チェックインは15:00から、チェックアウトは11:00までです。",
+          },
+          {
+            title: "荷物のお預かり",
+            body: "ご宿泊当日はフロントにてお預かりいたします。",
+          },
+          {
+            title: "駐車場について",
+            body: "先着順・有料です。満車の場合は近隣をご案内します。",
+          },
         ],
       };
     case "open_status":
@@ -918,16 +949,46 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return { title: "駐車場", capacity: "20台", fee: "1泊 1,200円", note: "先着順 / 満車時は近隣をご案内します", address: "ホテル裏手" };
     case "pageLinks":
       return {
-        title: "メニュー",
+        title: "館内のご案内",
         columns: 2,
         iconSize: "md",
         styleVariant: "tile",
         tileShadowStrength: "md",
         circleIconShadowStrength: "md",
+        accentColor: "#0f766e",
         items: [
-          { label: "WiFi", icon: "wifi", linkType: "page" as const, pageSlug: "", link: "" },
-          { label: "朝食", icon: "breakfast", linkType: "page" as const, pageSlug: "", link: "" },
-          { label: "チェックアウト", icon: "checkout", linkType: "page" as const, pageSlug: "", link: "" },
+          {
+            label: "チェックイン",
+            description: "15:00〜",
+            icon: "key",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            label: "Wi-Fi",
+            description: "客室・ロビー",
+            icon: "wifi",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            label: "朝食",
+            description: "6:30–10:00",
+            icon: "breakfast",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
+          {
+            label: "チェックアウト",
+            description: "11:00まで",
+            icon: "checkout",
+            linkType: "page" as const,
+            pageSlug: "",
+            link: "",
+          },
         ],
       };
     case "icon_shortcuts":

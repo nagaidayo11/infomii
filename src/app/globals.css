@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/app-shell.css";
+@import "../styles/presentation-blocks.css";
 
 /* ─── Design system v1 (Infomii) ───
    Web product (Stripe-calm): slate primary, hairline borders, quiet surfaces.

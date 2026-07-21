@@ -42,7 +42,8 @@ export function readPageLinkIconSize(raw: unknown): PageLinkIconSize {
 }
 
 export function readPageLinkStyleVariant(raw: unknown): PageLinkStyleVariant {
-  if (raw === "circle" || raw === "list") return raw;
+  if (raw === "circle") return "circle";
+  // Legacy "list" style removed from pageLinks UI — render as card grid.
   return "tile";
 }
 

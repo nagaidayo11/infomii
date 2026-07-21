@@ -327,8 +327,15 @@ function writeJaTextPreserving<T extends string | boolean>(_prev: unknown, value
 
 type NearbyItem = { name?: string; description?: string; link?: string };
 type FaqItem = { q?: string; a?: string };
-type GalleryImageItem = { src?: string; alt?: string };
-type PageLinksItem = { label?: string; icon?: string; linkType?: "page" | "url"; pageSlug?: string; link?: string };
+type GalleryImageItem = { src?: string; alt?: string; caption?: string };
+type PageLinksItem = {
+  label?: string;
+  description?: string;
+  icon?: string;
+  linkType?: "page" | "url";
+  pageSlug?: string;
+  link?: string;
+};
 type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
@@ -361,7 +368,7 @@ type TimeSlotRow = {
   items?: MenuTagItem[];
 };
 type InfoRowItem = { label?: string; value?: string; show?: boolean; tel?: boolean; key?: string };
-type TabsInfoItem = { label?: string; body?: string };
+type TabsInfoItem = { label?: string; body?: string; imageSrc?: string };
 type HeroSliderItem = {
   src?: string;
   alt?: string;
@@ -541,6 +548,12 @@ function GalleryItemsEditor({
             value={items[i]?.alt ?? ""}
             onChange={(e) => updateItem(i, "alt", e.target.value)}
             placeholder="任意"
+          />
+          <Input
+            label="キャプション"
+            value={items[i]?.caption ?? ""}
+            onChange={(e) => updateItem(i, "caption", e.target.value)}
+            placeholder="任意（写真下に表示）"
           />
         </div>
       ))}
@@ -1167,6 +1180,19 @@ function TabsInfoItemsEditor({
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder={`タブ ${i + 1}`}
           />
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "imageSrc", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          {item.imageSrc ? (
+            <button
+              type="button"
+              onClick={() => updateItem(i, "imageSrc", "")}
+              className={removeButtonClass}
+            >
+              画像を外す
+            </button>
+          ) : null}
           <div className="w-full">
             <label className={labelClass}>本文</label>
             <textarea
@@ -1264,6 +1290,75 @@ function AccordionItemsEditor({
             <label className={labelClass}>本文</label>
             <textarea value={item.body ?? ""} onChange={(e) => updateItem(i, "body", e.target.value)} rows={2} className={inputClass} />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MapPinsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const pins = (Array.isArray(content.pins) ? content.pins : []) as Array<{
+    name?: string;
+    walk?: string;
+    note?: string;
+  }>;
+  const setPins = (next: typeof pins) => onUpdate("pins", next);
+  const updatePin = (index: number, field: "name" | "walk" | "note", value: string) => {
+    const next = [...pins];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setPins(next);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">周辺ピン</span>
+        <button
+          type="button"
+          onClick={() => setPins([...pins, { name: "", walk: "", note: "" }])}
+          className={addButtonClass}
+        >
+          + 追加
+        </button>
+      </div>
+      {pins.map((pin, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setPins(pins.filter((_, idx) => idx !== i))}
+              className={removeButtonClass}
+            >
+              削除
+            </button>
+          </div>
+          <Input
+            label="スポット名"
+            value={readJaText(pin.name)}
+            onChange={(e) => updatePin(i, "name", e.target.value)}
+            placeholder="コンビニ"
+          />
+          <Input
+            label="徒歩目安"
+            value={readJaText(pin.walk)}
+            onChange={(e) => updatePin(i, "walk", e.target.value)}
+            placeholder="徒歩2分"
+          />
+          <Input
+            label="補足"
+            value={readJaText(pin.note)}
+            onChange={(e) => updatePin(i, "note", e.target.value)}
+            placeholder="24時間営業"
+          />
         </div>
       ))}
     </div>
@@ -1452,8 +1547,7 @@ function PageLinksItemsEditor({
   const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
-  const styleVariant =
-    rawStyleVariant === "circle" || rawStyleVariant === "list" ? rawStyleVariant : "tile";
+  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
   const rawCircleShadow =
     typeof content.circleIconShadowStrength === "string" ? content.circleIconShadowStrength : "";
   const circleShadowStrength =
@@ -1466,6 +1560,10 @@ function PageLinksItemsEditor({
     rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
       ? rawTileShadow
       : "none";
+  const accentColor =
+    typeof content.accentColor === "string" && content.accentColor.trim()
+      ? content.accentColor.trim()
+      : "#0f766e";
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
@@ -1488,12 +1586,10 @@ function PageLinksItemsEditor({
       <div className="w-full">
         <label className={labelClass}>列数</label>
         <select
-          value={String(styleVariant === "list" ? 1 : columns)}
+          value={String(columns)}
           onChange={(e) => onUpdate("columns", Number(e.target.value))}
           className={inputClass}
-          disabled={styleVariant === "list"}
         >
-          {styleVariant === "list" ? <option value="1">1列（リスト）</option> : null}
           <option value="2">2列</option>
           <option value="3">3列</option>
           <option value="4">4列</option>
@@ -1518,18 +1614,33 @@ function PageLinksItemsEditor({
           <select
             aria-label="表示スタイル"
             value={styleVariant}
-            onChange={(e) => {
-              const next = e.target.value;
-              onUpdate("styleVariant", next);
-              if (next === "list") onUpdate("columns", 1);
-            }}
+            onChange={(e) => onUpdate("styleVariant", e.target.value)}
             className={inputClass}
           >
-            <option value="tile">カード</option>
+            <option value="tile">カードグリッド</option>
             <option value="circle">サークル</option>
-            <option value="list">リスト</option>
           </select>
         </div>
+        {styleVariant !== "circle" ? (
+          <div className="w-full">
+            <label className={labelClass}>アクセント色</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={accentColor}
+                onChange={(e) => onUpdate("accentColor", e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+              />
+              <input
+                type="text"
+                value={accentColor}
+                onChange={(e) => onUpdate("accentColor", e.target.value)}
+                placeholder="#0f766e"
+                className={inputClass + " flex-1"}
+              />
+            </div>
+          </div>
+        ) : null}
         {styleVariant === "circle" ? (
           <div className="w-full">
             <label className={labelClass}>丸アイコンの影</label>
@@ -1545,7 +1656,7 @@ function PageLinksItemsEditor({
               <option value="lg">強い</option>
             </select>
           </div>
-        ) : styleVariant === "list" ? null : (
+        ) : (
           <div className="w-full">
             <label className={labelClass}>カードタイルの影</label>
             <select
@@ -1589,6 +1700,14 @@ function PageLinksItemsEditor({
             onChange={(e) => updateItem(i, "label", e.target.value)}
             placeholder="WiFi"
           />
+          {styleVariant !== "circle" ? (
+            <Input
+              label="説明（任意）"
+              value={readJaText(item.description)}
+              onChange={(e) => updateItem(i, "description", e.target.value)}
+              placeholder="15:00〜 / 客室・ロビー"
+            />
+          ) : null}
           <IconTokenSelect
             label="アイコン"
             value={item.icon}
@@ -3941,6 +4060,7 @@ export function CardSettings({
           {card.type === "map" && (
             isNativeUi ? (
               <MapNativeSettings
+                content={content}
                 display={display}
                 updateLocalized={updateLocalized}
                 onUpdate={update}
@@ -3976,6 +4096,29 @@ export function CardSettings({
                     共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
                   </p>
                 </div>
+                <div className="w-full">
+                  <label className={labelClass}>アクセント色</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={
+                        typeof content.accentColor === "string" && content.accentColor.trim()
+                          ? content.accentColor.trim()
+                          : "#0f766e"
+                      }
+                      onChange={(e) => update("accentColor", e.target.value)}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={(content.accentColor as string) ?? ""}
+                      onChange={(e) => update("accentColor", e.target.value || undefined)}
+                      placeholder="#0f766e"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
+                <MapPinsEditor content={content} onUpdate={update} />
             </SettingsSection>
             )
           )}
@@ -4330,6 +4473,28 @@ export function CardSettings({
                     className={inputClass}
                   />
                 </div>
+                <div className="w-full">
+                  <label className={labelClass}>アクセント色</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={
+                        typeof content.accentColor === "string" && content.accentColor.trim()
+                          ? content.accentColor.trim()
+                          : "#0f766e"
+                      }
+                      onChange={(e) => update("accentColor", e.target.value)}
+                      className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                    />
+                    <input
+                      type="text"
+                      value={(content.accentColor as string) ?? ""}
+                      onChange={(e) => update("accentColor", e.target.value || undefined)}
+                      placeholder="#0f766e"
+                      className={inputClass + " flex-1"}
+                    />
+                  </div>
+                </div>
                 <TabsInfoItemsEditor content={content} onUpdate={update} />
               </SettingsSection>
             )
@@ -4559,6 +4724,28 @@ export function CardSettings({
           {card.type === "accordion_info" && (
             <SettingsSection title="コンテンツ">
               <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="よくあるご案内" />
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={
+                      typeof content.accentColor === "string" && content.accentColor.trim()
+                        ? content.accentColor.trim()
+                        : "#0f766e"
+                    }
+                    onChange={(e) => update("accentColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.accentColor as string) ?? ""}
+                    onChange={(e) => update("accentColor", e.target.value || undefined)}
+                    placeholder="#0f766e"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+              </div>
               <AccordionItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}

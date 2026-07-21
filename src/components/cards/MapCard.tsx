@@ -1,24 +1,21 @@
 "use client";
 
 import type { EditorCard } from "@/components/editor/types";
-import { CARD_BLOCK_TITLE_CLASS, getBodyFontSizeStyle, getTitleFontSizeStyle } from "@/components/editor/types";
+import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { getLocalizedContent } from "@/lib/localized-content";
 import type { LocalizedString } from "@/lib/localized-content";
-import { editorInnerRadiusClassName } from "@/components/editor/inner-radius";
-import { Card } from "@/components/ui/Card";
 import { useEditor2Store } from "@/components/editor/store";
-import { useClientShell } from "@/components/app-shell/useClientShell";
-import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon } from "./LineIcon";
-import { NativeMapIcon } from "./native-guest-icons";
 
 type MapCardProps = {
   card: EditorCard;
   isSelected?: boolean;
   locale?: string;
 };
+
+type MapPin = { name?: string; walk?: string; note?: string };
 
 function isLocalizedObj(v: unknown): v is Record<string, string> {
   return typeof v === "object" && v !== null && !Array.isArray(v) && ("ja" in v || "en" in v);
@@ -35,9 +32,7 @@ function normalizeMapEmbedUrl(raw: string): string | null {
     const parsed = new URL(candidate);
     const host = parsed.hostname.toLowerCase();
     const isGoogleMapsHost =
-      host === "www.google.com" ||
-      host === "google.com" ||
-      host === "maps.google.com";
+      host === "www.google.com" || host === "google.com" || host === "maps.google.com";
     if (!isGoogleMapsHost) {
       return null;
     }
@@ -74,13 +69,15 @@ function normalizeMapEmbedUrl(raw: string): string | null {
   return null;
 }
 
-export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
+export function MapCard({ card, locale = "ja" }: MapCardProps) {
   const { editable, onActivate } = useCardInlineEdit(card.id);
-  const { isNativeUi } = useClientShell();
   const updateCard = useEditor2Store((s) => s.updateCard);
   const c = card.content as Record<string, unknown> | undefined;
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
   const mapEmbedUrl = normalizeMapEmbedUrl((c?.mapEmbedUrl as string) ?? "");
+  const accent =
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+  const pins = (Array.isArray(c?.pins) ? c.pins : []) as MapPin[];
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "지도", addressPlaceholder: "주소" }
@@ -98,83 +95,106 @@ export function MapCard({ card, isSelected, locale = "ja" }: MapCardProps) {
     updateCard(card.id, { content: { ...c, [key]: next } });
   };
 
-  if (isNativeUi) {
-    return (
-      <div className="app-native-section app-native-guest-card">
-        {(editable || title) ? (
-          <AppSectionHeader
-            title={
-              <InlineEditable
-                value={title}
-                onSave={(v) => updateKey("title", v)}
-                editable={editable}
-                onActivate={onActivate}
-                className="app-section-header__title"
-                placeholder={labels.titlePlaceholder}
-              />
-            }
-            icon={<NativeMapIcon />}
-            as="div"
+  const updatePin = (index: number, field: keyof MapPin, value: string) => {
+    const next = pins.map((p, i) => (i === index ? { ...p, [field]: value } : p));
+    updateCard(card.id, { content: { ...c, pins: next } });
+  };
+
+  return (
+    <section
+      className="pres-block"
+      style={{ ["--pres-accent" as string]: accent }}
+      onClick={editable ? onActivate : undefined}
+    >
+      {(editable || title) ? (
+        <h3 className="pres-block__title">
+          <InlineEditable
+            value={title}
+            onSave={(v) => updateKey("title", v)}
+            editable={editable}
+            onActivate={onActivate}
+            className="pres-block__title"
+            placeholder={labels.titlePlaceholder}
           />
-        ) : (
-          <AppSectionHeader title={labels.titlePlaceholder} icon={<NativeMapIcon />} />
-        )}
-        {mapEmbedUrl ? (
-          <div className="app-native-media">
+        </h3>
+      ) : null}
+
+      <div className="pres-map">
+        <div className="pres-map__frame">
+          {mapEmbedUrl ? (
             <iframe
               title={title || labels.titlePlaceholder}
               src={mapEmbedUrl}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="h-52 w-full border-0"
             />
-          </div>
-        ) : (
-          <div className="app-native-media flex items-center justify-center py-10 text-[var(--app-accent)]">
-            <LineIcon name="map" className="h-8 w-8" />
-          </div>
-        )}
-        <p className="app-native-media-caption" style={getBodyFontSizeStyle()}>
-          <InlineEditable
-            value={address}
-            onSave={(v) => updateKey("address", v)}
-            editable={editable}
-            onActivate={onActivate}
-            className="text-[var(--app-text-muted)]"
-            placeholder={labels.addressPlaceholder}
-          />
-        </p>
-      </div>
-    );
-  }
+          ) : (
+            <div className="flex h-full items-center justify-center text-[var(--pres-accent,#0f766e)]">
+              <LineIcon name="map" className="h-8 w-8" />
+            </div>
+          )}
+        </div>
 
-  return (
-    <Card padding="md" className="">
-      {(editable || title) ? (
-        <p className="mb-2 text-slate-900" style={getTitleFontSizeStyle()}>
-          <InlineEditable value={title} onSave={(v) => updateKey("title", v)} editable={editable} onActivate={onActivate} className={CARD_BLOCK_TITLE_CLASS} placeholder={labels.titlePlaceholder} />
-        </p>
-      ) : null}
-      {mapEmbedUrl ? (
-        <div data-inner-surface className={`overflow-hidden ${editorInnerRadiusClassName} border border-slate-200 bg-slate-50`}>
-          <iframe
-            title={title}
-            src={mapEmbedUrl}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="h-52 w-full border-0"
-          />
-        </div>
-      ) : (
-        <div data-inner-surface className={`flex items-center justify-center ${editorInnerRadiusClassName} bg-slate-100 py-8`}>
-          <span className="text-slate-700" aria-hidden>
-            <LineIcon name="map" className="h-8 w-8" />
-          </span>
-        </div>
-      )}
-      <p className="mt-2 text-slate-700" style={getBodyFontSizeStyle()}>
-        <InlineEditable value={address} onSave={(v) => updateKey("address", v)} editable={editable} onActivate={onActivate} className="text-slate-700" placeholder={labels.addressPlaceholder} />
-      </p>
-    </Card>
+        {(editable || address) ? (
+          <p className="pres-map__address" style={getBodyFontSizeStyle()}>
+            <InlineEditable
+              value={address}
+              onSave={(v) => updateKey("address", v)}
+              editable={editable}
+              onActivate={onActivate}
+              placeholder={labels.addressPlaceholder}
+            />
+          </p>
+        ) : null}
+
+        {pins.length > 0 ? (
+          <div className="pres-map__pins">
+            {pins.map((pin, i) => {
+              const name = getLocalizedContent(pin.name as LocalizedString | undefined, locale);
+              const walk = getLocalizedContent(pin.walk as LocalizedString | undefined, locale);
+              const note = getLocalizedContent(pin.note as LocalizedString | undefined, locale);
+              return (
+                <div key={i} className="pres-map__pin">
+                  <span className="pres-map__pin-dot" aria-hidden />
+                  <div>
+                    <div className="pres-map__pin-name">
+                      <InlineEditable
+                        value={name}
+                        onSave={(v) => updatePin(i, "name", v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder="スポット名"
+                      />
+                    </div>
+                    {(editable || note) ? (
+                      <div className="pres-map__pin-meta">
+                        <InlineEditable
+                          value={note}
+                          onSave={(v) => updatePin(i, "note", v)}
+                          editable={editable}
+                          onActivate={onActivate}
+                          placeholder="補足"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  {(editable || walk) ? (
+                    <div className="pres-map__pin-walk">
+                      <InlineEditable
+                        value={walk}
+                        onSave={(v) => updatePin(i, "walk", v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder="徒歩○分"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }
