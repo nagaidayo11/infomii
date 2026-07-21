@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { AppIconCompose } from "./icons/AppIconSet";
 import { APP_FAB_BOTTOM_OFFSET } from "./app-tab-metrics";
 
 type AppFabPortalProps = {
@@ -29,14 +30,14 @@ export function AppFabPortal({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="app-fab app-fab-portal app-circle ui-pop-tap fixed flex items-center justify-center bg-[var(--app-accent)] text-2xl font-light text-white shadow-lg disabled:opacity-60"
+      className="app-fab app-fab-portal app-circle ui-pop-tap fixed flex items-center justify-center bg-[var(--app-accent)] text-white shadow-lg disabled:opacity-60"
       style={{
         right: "1rem",
         bottom: APP_FAB_BOTTOM_OFFSET,
       }}
       aria-label={ariaLabel}
     >
-      +
+      <AppIconCompose size={26} />
     </button>,
     document.body,
   );

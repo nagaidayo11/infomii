@@ -31,6 +31,8 @@ import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmen
 import { openAppleSubscriptionManagement, openWebBillingManagement } from "@/lib/app-billing-nav";
 import { AppPlanBillingPanel } from "@/components/app-shell/views/AppPlanBillingPanel";
 import { AppPlanTiers } from "@/components/app-shell/views/AppPlanTiers";
+import { useAppDialog } from "@/components/app-shell/AppDialogProvider";
+import { AppSettingsPlanTierIcon } from "@/components/app-shell/icons/AppSettingsIcons";
 import { billingIntervalLabel } from "@/lib/billing-interval";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
@@ -77,6 +79,7 @@ export function BusinessPlanSection({
   layout = "default",
 }: BusinessPlanSectionProps = {}) {
   const isAppLayout = layout === "app";
+  const { confirm: appConfirm, alert: appAlert } = useAppDialog();
   const [subscription, setSubscription] = useState<HotelSubscription | null | undefined>(undefined);
   const [busyAction, setBusyAction] = useState<"pro" | "business" | "portal" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -206,9 +209,16 @@ export function BusinessPlanSection({
     useIosIap,
   ]);
 
-  const confirmExternalPayment = useCallback((): boolean => {
-    return window.confirm(EXTERNAL_PAYMENT_CONFIRM);
-  }, []);
+  const confirmExternalPayment = useCallback((): Promise<boolean> => {
+    if (isAppLayout) {
+      return appConfirm({
+        title: "決済ページへ移動",
+        message: EXTERNAL_PAYMENT_CONFIRM,
+        confirmLabel: "続行",
+      });
+    }
+    return Promise.resolve(typeof window !== "undefined" ? window.confirm(EXTERNAL_PAYMENT_CONFIRM) : false);
+  }, [isAppLayout, appConfirm]);
 
   const openApplePurchase = useCallback(
     async (targetPlan: "pro" | "business", intervalOverride?: AppleIapInterval) => {
@@ -221,7 +231,11 @@ export function BusinessPlanSection({
           plan === "pro" && targetPlan === "business"
             ? WEB_BILLING_PRO_UPGRADE_ALERT
             : WEB_BILLING_CHANGE_ALERT;
-        window.alert(alertMessage);
+        if (isAppLayout) {
+          void appAlert({ title: "お知らせ", message: alertMessage });
+        } else {
+          window.alert(alertMessage);
+        }
         if (appStoreOnly) {
           openWebBillingManagement();
         }
@@ -277,7 +291,7 @@ export function BusinessPlanSection({
       await openApplePurchase(targetPlan);
       return;
     }
-    if (!confirmExternalPayment()) return;
+    if (!(await confirmExternalPayment())) return;
     setMessage(null);
     setBusyAction(targetPlan);
     try {
@@ -312,7 +326,7 @@ export function BusinessPlanSection({
       openAppleSubscriptionManagement();
       return;
     }
-    if (!confirmExternalPayment()) return;
+    if (!(await confirmExternalPayment())) return;
     setMessage(null);
     setBusyAction("portal");
     try {
@@ -351,7 +365,7 @@ export function BusinessPlanSection({
         openWebBillingManagement();
         return;
       }
-      if (!confirmExternalPayment()) return;
+      if (!(await confirmExternalPayment())) return;
       setMessage(null);
       setBusyAction("portal");
       try {
@@ -485,10 +499,17 @@ export function BusinessPlanSection({
     return (
       <div className="app-plan-native">
         <div className="app-plan-hero">
-          <p className="app-plan-hero-kicker">現在のプラン</p>
-          <div className="app-plan-hero-main">
-            <p className="app-plan-hero-name">{currentPlanLabel}</p>
-            <p className="app-plan-hero-price">{currentPlanPrice}</p>
+          <div className="app-plan-hero-top">
+            <div className="app-plan-hero-copy">
+              <p className="app-plan-hero-kicker">現在のプラン</p>
+              <div className="app-plan-hero-main">
+                <p className="app-plan-hero-name">{currentPlanLabel}</p>
+                <p className="app-plan-hero-price">{currentPlanPrice}</p>
+              </div>
+            </div>
+            <span className="app-plan-hero-icon" aria-hidden>
+              <AppSettingsPlanTierIcon tier={plan} size={48} />
+            </span>
           </div>
           {(statusLabel || showNextRenewal || showValidUntil || activeBillingInterval || planSyncing) && (
             <div className="app-plan-hero-meta">
@@ -521,7 +542,11 @@ export function BusinessPlanSection({
           onSubscribeBusiness={() => void openCheckout("business")}
           onUpgradeBusiness={() => {
             if (hasActiveWebBilling && plan === "pro") {
-              window.alert(WEB_BILLING_PRO_UPGRADE_ALERT);
+              if (isAppLayout) {
+                void appAlert({ title: "お知らせ", message: WEB_BILLING_PRO_UPGRADE_ALERT });
+              } else {
+                window.alert(WEB_BILLING_PRO_UPGRADE_ALERT);
+              }
               openWebBillingManagement();
               return;
             }

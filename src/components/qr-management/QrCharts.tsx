@@ -7,6 +7,8 @@ type QrChartsProps = {
   qrScans7d: number;
   mostViewedTitle: string | null;
   mostViewedQrCount: number;
+  /** App shell: chart only (summary shown elsewhere) */
+  chartOnly?: boolean;
 };
 
 function formatDayLabel(isoDate: string): string {
@@ -22,17 +24,33 @@ export function QrCharts({
   qrScans7d,
   mostViewedTitle,
   mostViewedQrCount,
+  chartOnly = false,
 }: QrChartsProps) {
   const max = Math.max(1, ...daily.map((d) => d.count));
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="app-panel app-panel-pad">
-        <h3 className="text-sm font-semibold text-slate-900">
-          過去7日のQRスキャン
-        </h3>
-        <p className="mt-1 text-xs text-slate-500">日別の推移</p>
-        <div className="mt-4 flex h-40 items-end justify-between gap-1 px-1">
+  const chartPanel = chartOnly ? (
+    <div className="app-analytics-day-chart">
+      {daily.map((bucket) => {
+        const h = Math.round((bucket.count / max) * 100);
+        return (
+          <div key={bucket.date} className="app-analytics-day-col" title={`${bucket.date}: ${bucket.count}`}>
+            <span className="app-analytics-day-count">{bucket.count}</span>
+            <div className="app-analytics-day-bar-wrap">
+              <div
+                className="app-analytics-day-bar"
+                style={{ height: `${Math.max(8, h)}%`, minHeight: bucket.count > 0 ? 12 : 4 }}
+              />
+            </div>
+            <span className="app-analytics-day-label">{formatDayLabel(bucket.date)}</span>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <div className="app-panel app-panel-pad">
+      <h3 className="text-sm font-semibold text-slate-900">過去7日のQRスキャン</h3>
+      <p className="mt-1 text-xs text-slate-500">日別の推移</p>
+      <div className="mt-4 flex h-40 items-end justify-between gap-1 px-1">
           {daily.map((bucket) => {
             const h = Math.round((bucket.count / max) * 100);
             return (
@@ -61,6 +79,13 @@ export function QrCharts({
           })}
         </div>
       </div>
+  );
+
+  if (chartOnly) return chartPanel;
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {chartPanel}
 
       <div className="app-panel app-panel-pad">
         <h3 className="text-sm font-semibold text-slate-900">QRスキャン合計</h3>

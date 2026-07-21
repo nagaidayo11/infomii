@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_FEATURE_BULLETS } from "@/lib/plan-limits";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
+import { AppSettingsPlanTierIcon, type AppPlanTierId } from "../icons/AppSettingsIcons";
 
 type PlanId = "free" | "pro" | "business";
 
@@ -89,6 +90,9 @@ function PlanRow({
         (selectable ? " app-plan-row--selectable ui-pop-tap" : "")
       }
     >
+      <span className="app-plan-row-icon" aria-hidden>
+        <AppSettingsPlanTierIcon tier={plan as AppPlanTierId} size={32} />
+      </span>
       <div className="app-plan-row-main">
         <div className="app-plan-row-head">
           <p className="app-plan-row-name">

@@ -1,44 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { triggerAnalyticsCsvDownload } from "@/lib/analytics-csv-export";
-import {
-  getDashboardBootstrapData,
-  getCurrentHotelViewMetrics,
-  getPageViewAnalytics,
-  type HotelViewMetrics,
-  type PageViewAnalytics,
-} from "@/lib/storage";
 import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AnalyticsSummaryCard } from "./AnalyticsSummaryCard";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
-
-const DAY_RANGE_OPTIONS = [7, 30, 60, 90] as const;
-type DayRange = (typeof DAY_RANGE_OPTIONS)[number];
-
-function formatDayLabel(isoDate: string): string {
-  const d = new Date(isoDate + "T12:00:00");
-  return new Intl.DateTimeFormat("ja-JP", { month: "short", day: "numeric" }).format(d);
-}
-
-function buildDayBuckets(
-  byDay: Array<{ date: string; count: number }>,
-  days: DayRange
-): Array<{ date: string; count: number }> {
-  const countByDate = new Map(byDay.map((row) => [row.date, row.count] as const));
-  const now = new Date();
-  const buckets: Array<{ date: string; count: number }> = [];
-  for (let i = days - 1; i >= 0; i -= 1) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const date = d.toISOString().slice(0, 10);
-    buckets.push({ date, count: countByDate.get(date) ?? 0 });
-  }
-  return buckets;
-}
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppAnalyticsView } from "@/components/app-shell/views/AppAnalyticsView";
+import {
+  formatAnalyticsDayLabel,
+  useAnalyticsDashboard,
+  ANALYTICS_DAY_RANGE_OPTIONS,
+} from "@/lib/hooks/use-analytics-dashboard";
 
 /**
  * Simple horizontal bar for distribution (country / language).
@@ -81,51 +56,35 @@ function SimpleBarRow({
  * Simple charts, clear labels, guest engagement at a glance.
  */
 export function AnalyticsView() {
-  const [bootstrap, setBootstrap] = useState<{ subscription: { plan: string } | null } | null>(null);
-  const [metrics, setMetrics] = useState<HotelViewMetrics | null>(null);
-  const [pageViews, setPageViews] = useState<PageViewAnalytics | null>(null);
-  const [dayRange, setDayRange] = useState<DayRange>(7);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isAppShell } = useClientShell();
+  const dashboard = useAnalyticsDashboard();
 
-  useRouteProgressLoading(loading);
+  useRouteProgressLoading(dashboard.loading);
 
-  useEffect(() => {
-    let mounted = true;
-    Promise.all([
-      getDashboardBootstrapData(),
-      getCurrentHotelViewMetrics().catch(() => null),
-      getPageViewAnalytics().catch(() => null),
-    ])
-      .then(([b, m, p]) => {
-        if (!mounted) return;
-        setBootstrap(b);
-        setMetrics(m ?? null);
-        setPageViews(p ?? null);
-      })
-      .catch((e) => {
-        if (mounted) setError(e instanceof Error ? e.message : "読み込みに失敗しました");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  if (isAppShell) {
+    return <AppAnalyticsView {...dashboard} />;
+  }
 
-  const totalViews = pageViews?.totalViews ?? metrics?.totalViews7d ?? 0;
-  const todayViews = metrics?.totalViewsToday ?? 0;
-  const topPages = [...(metrics?.pageStats ?? [])].sort((a, b) => b.views - a.views).slice(0, 10);
-  const byDay = buildDayBuckets(pageViews?.byDay ?? [], dayRange);
-  const byCountry = pageViews?.byCountry ?? [];
-  const byLanguage = pageViews?.byLanguage ?? [];
-  const maxDay = Math.max(1, ...byDay.map((d) => d.count));
-  const hasDayData = byDay.some((d) => d.count > 0);
-  const maxCountry = Math.max(1, ...byCountry.map((c) => c.count));
-  const maxLanguage = Math.max(1, ...byLanguage.map((l) => l.count));
-
-  const plan = (bootstrap?.subscription?.plan ?? null) as "free" | "pro" | "business" | null;
+  const {
+    bootstrap,
+    metrics,
+    pageViews,
+    dayRange,
+    setDayRange,
+    loading,
+    error,
+    plan,
+    totalViews,
+    todayViews,
+    topPages,
+    byDay,
+    byCountry,
+    byLanguage,
+    maxDay,
+    hasDayData,
+    maxCountry,
+    maxLanguage,
+  } = dashboard;
 
   if (!loading && error) {
     return (
@@ -235,7 +194,7 @@ export function AnalyticsView() {
             <p className="mt-1 text-sm text-slate-500">直近{dayRange}日間の日別閲覧数</p>
           </div>
           <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-            {DAY_RANGE_OPTIONS.map((days) => (
+            {ANALYTICS_DAY_RANGE_OPTIONS.map((days) => (
               <button
                 key={days}
                 type="button"
@@ -283,7 +242,7 @@ export function AnalyticsView() {
                       />
                     </div>
                     <span className="truncate text-[10px] text-slate-400">
-                      {formatDayLabel(date)}
+                      {formatAnalyticsDayLabel(date)}
                     </span>
                   </div>
                 );

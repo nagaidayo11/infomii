@@ -1,28 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
+import {
+  AppIconOnboardingShare,
+  AppIconOnboardingTemplate,
+  AppIconOnboardingWelcome,
+} from "./icons/AppIconSet";
 import { AppShellLink } from "./AppShellLink";
 import { trackOnboardingWizardEvent } from "@/lib/storage";
 
 const STORAGE_KEY = "infomii_app_onboarding_v2_completed";
 
-const STEPS = [
+const STEPS: { title: string; body: string; icon: ReactNode }[] = [
   {
-    title: "あなただけのインフォメーション",
-    body: "旅行やイベントの案内を1ページにまとめて、リンクやQRで届けられます。推し活の予定やおでかけのまとめにも使えます。",
-    emoji: "👋",
+    title: "好きな案内を、1ページに",
+    body: "旅行のしおり、推し活、おでかけのまとめ。写真やリンクを載せて、友だちに届けられます。",
+    icon: <AppIconOnboardingWelcome />,
   },
   {
-    title: "テンプレを選んで、あとは編集だけ",
-    body: "「テンプレート」タブで型を選び、写真や文言を差し替えるだけ。白紙からでも OK です。",
-    emoji: "🎨",
+    title: "型を選んで、あとは編集",
+    body: "「テンプレート」タブで近い型を選び、文言や写真を差し替えるだけ。白紙からでも大丈夫です。",
+    icon: <AppIconOnboardingTemplate />,
   },
   {
-    title: `「${APP_PAGES_TAB_LABEL}」にまとまる`,
-    body: `できあがった案内は「${APP_PAGES_TAB_LABEL}」タブに一覧表示。公開してリンクや QR で友だちに届けましょう。`,
-    emoji: "🚀",
+    title: `「${APP_PAGES_TAB_LABEL}」に並ぶ`,
+    body: `できあがった案内は「${APP_PAGES_TAB_LABEL}」タブに一覧表示。公開してリンクやQRで届けましょう。`,
+    icon: <AppIconOnboardingShare />,
   },
 ];
 
@@ -85,10 +90,10 @@ export function AppOnboardingTour() {
           スキップ
         </button>
 
-        <p className="text-5xl" aria-hidden>
-          {current.emoji}
-        </p>
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-[var(--app-accent)]">
+        <div className="app-onboarding-icon" aria-hidden>
+          {current.icon}
+        </div>
+        <p className="mt-4 text-xs font-bold tracking-wide text-[var(--app-accent)]">
           {step + 1} / {STEPS.length}
         </p>
         <h2 id="app-onboarding-title" className="mt-2 text-xl font-bold text-[var(--app-text)]">

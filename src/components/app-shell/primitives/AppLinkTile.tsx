@@ -30,7 +30,7 @@ export function AppLinkTile(props: AppLinkTileProps) {
   const content = (
     <>
       {icon ? <span className="app-link-tile__icon">{icon}</span> : null}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="app-link-tile__label min-w-0 flex-1">{label}</span>
     </>
   );
 

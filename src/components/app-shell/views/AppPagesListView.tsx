@@ -17,9 +17,11 @@ import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AppPageSetsList } from "../AppPageSetsList";
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 import { AppEmptyState } from "../AppEmptyState";
+import { AppIconEmptyPages } from "../icons/AppIconSet";
 import { AppShellLink } from "../AppShellLink";
 import { AppTabPage } from "../primitives/AppTabPage";
 import { useAppToast } from "../AppToastProvider";
+import { useAppDialog } from "../AppDialogProvider";
 import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 import { PageHelp } from "@/components/help/PageHelp";
@@ -47,6 +49,7 @@ export function AppPagesListView() {
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
   const { showToast } = useAppToast();
+  const { confirm, prompt } = useAppDialog();
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
   const pageCount = sets.reduce((acc, set) => acc + set.pageCount, 0);
@@ -99,7 +102,12 @@ export function AppPagesListView() {
 
   async function handleCreate() {
     if (createBusyRef.current) return;
-    const entered = window.prompt("新しいページ名");
+    const entered = await prompt({
+      title: "新しいページ",
+      message: "ページ名を入力してください",
+      placeholder: "例: 旅のしおり",
+      confirmLabel: "作成",
+    });
     if (entered == null) return;
     const title = entered.trim();
     if (!title) return;
@@ -111,7 +119,7 @@ export function AppPagesListView() {
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
-      else alert(err.message || "作成に失敗しました");
+      else showToast(err.message || "作成に失敗しました", "error");
     } finally {
       createBusyRef.current = false;
       setCreating(false);
@@ -155,13 +163,13 @@ export function AppPagesListView() {
 
   async function handleDelete(page: PageRow) {
     if (!canEdit || deleteBusyRef.current) return;
-    if (
-      !window.confirm(
-        `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n削除すると元に戻せません。`,
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: "ページを削除",
+      message: `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n削除すると元に戻せません。`,
+      confirmLabel: "削除",
+      destructive: true,
+    });
+    if (!ok) return;
     deleteBusyRef.current = true;
     setDeletingId(page.id);
     try {
@@ -211,6 +219,7 @@ export function AppPagesListView() {
         </div>
       ) : pageCount === 0 ? (
         <AppEmptyState
+          icon={<AppIconEmptyPages />}
           title="ページがまだありません"
           description="ホームのAIやテンプレートから案内を作ると、ここに並びます。"
           action={

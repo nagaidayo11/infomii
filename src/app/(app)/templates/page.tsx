@@ -36,6 +36,8 @@ import {
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AppSection } from "@/components/app-shell/primitives/AppSection";
 import { AppTabPage } from "@/components/app-shell/primitives/AppTabPage";
+import { AppEmptyState } from "@/components/app-shell/AppEmptyState";
+import { AppIconEmptyTemplates } from "@/components/app-shell/icons/AppIconSet";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
@@ -458,16 +460,16 @@ export default function TemplatesPage() {
       <>
         <AppTabPage
           title="テンプレート"
-          description="宿泊施設向け — ゲスト案内・館内ハブ・混雑ボードなど、ページの型から選べます。"
+          description="旅行・イベント・おでかけ。用途に近い型から選べます。"
           className="pb-4"
           contentClassName="space-y-4"
         >
           <AppSection revealDelay={0}>
             <section className="app-template-intro">
-              <p className="app-template-intro-kicker">Template Library</p>
-              <h2 className="app-template-intro-title">迷ったら、型から始める</h2>
+              <p className="app-template-intro-kicker">はじめの型</p>
+              <h2 className="app-template-intro-title">迷ったら、ここから</h2>
               <p className="app-template-intro-body">
-                あとで編集できるので、用途に近いテンプレートを選んでください。
+                あとから自由に編集できるので、近いテンプレートを選んで始めてください。
               </p>
             </section>
           </AppSection>
@@ -505,9 +507,11 @@ export default function TemplatesPage() {
                 ))}
               </div>
             ) : !hasTemplates ? (
-              <div className="app-shell-hero p-8 text-center">
-                <p className="text-[var(--app-text)]">テンプレートがまだありません。</p>
-              </div>
+              <AppEmptyState
+                icon={<AppIconEmptyTemplates />}
+                title="テンプレートがまだありません"
+                description="しばらくしてからもう一度お試しください。"
+              />
             ) : (
               <div className="space-y-6">
                 {showCaseStudyFeatured ? (

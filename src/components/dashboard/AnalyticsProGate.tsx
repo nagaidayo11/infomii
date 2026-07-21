@@ -7,6 +7,9 @@ import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
 import { isNativeIapAvailable } from "@/lib/native-iap";
 import { createStripeCheckoutSession, getCurrentUserHotelRole, trackUpgradeClick } from "@/lib/storage";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppFeatureIconAnalytics } from "@/components/app-shell/icons/AppFeatureIcons";
+import { AppShellLink } from "@/components/app-shell/AppShellLink";
+import { AppTabPage } from "@/components/app-shell/primitives/AppTabPage";
 import { Button } from "@/components/ui";
 import { useEffect, useState } from "react";
 
@@ -27,6 +30,60 @@ export function AnalyticsProGate({ plan, children }: AnalyticsProGateProps) {
 
   return (
     <AnalyticsUpgradePrompt />
+  );
+}
+
+function AppAnalyticsUpgradePrompt({
+  useAppStore,
+  loading,
+  canManageBilling,
+  message,
+  onUpgrade,
+}: {
+  useAppStore: boolean;
+  loading: boolean;
+  canManageBilling: boolean;
+  message: string | null;
+  onUpgrade: () => void;
+}) {
+  return (
+    <AppTabPage
+      title="分析"
+      description="閲覧数や人気ページの分析は Pro プラン以上で使えます。"
+      className="pb-8"
+      contentClassName="app-analytics-page-content"
+    >
+      <div className="app-shell-card app-analytics-upgrade-card overflow-hidden">
+        <div className="app-analytics-section-inner text-center">
+          <div className="mx-auto inline-flex rounded-2xl bg-[var(--app-surface-muted)] p-3">
+            <AppFeatureIconAnalytics size={48} />
+          </div>
+          <h2 className="mt-4 text-lg font-bold text-[var(--app-text)]">Pro で分析が使えます</h2>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--app-text-muted)]">
+            総閲覧数・日別推移・国別・言語別・人気ページを確認できます。
+          </p>
+          <div className="mt-5 flex flex-col gap-2.5">
+            <AppShellLink href={APP_BILLING_PATH} className="app-plan-cta-secondary app-pressable ui-pop-tap">
+              プランを見る
+            </AppShellLink>
+            <button
+              type="button"
+              className="app-plan-cta-primary app-pressable ui-pop-tap"
+              onClick={onUpgrade}
+              disabled={loading || !canManageBilling}
+            >
+              {loading ? "処理中…" : useAppStore ? "Pro を申し込む" : "Pro にアップグレード"}
+            </button>
+          </div>
+          {!canManageBilling ? (
+            <p className="mt-3 text-xs text-[var(--app-text-muted)]">
+              課金操作はオーナーのみ可能です。オーナーに依頼してください。
+            </p>
+          ) : null}
+          {message ? <p className="mt-2 text-xs text-rose-600">{message}</p> : null}
+        </div>
+      </div>
+    </AppTabPage>
   );
 }
 
@@ -82,6 +139,18 @@ function AnalyticsUpgradePrompt() {
       setMessage(e instanceof Error ? e.message : "申し込みの開始に失敗しました");
     }
   };
+
+  if (isAppShell) {
+    return (
+      <AppAnalyticsUpgradePrompt
+        useAppStore={useAppStore}
+        loading={loading}
+        canManageBilling={canManageBilling}
+        message={message}
+        onUpgrade={() => void handleUpgrade()}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">

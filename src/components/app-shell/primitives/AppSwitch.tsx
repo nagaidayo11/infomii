@@ -1,5 +1,7 @@
 "use client";
 
+import { appTapHaptic } from "@/lib/native-app-bridge";
+
 type AppSwitchProps = {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
@@ -66,7 +68,7 @@ export function AppSwitch({
         onClick={(e) => {
           e.stopPropagation();
           if (!busy) {
-            // TODO: native haptic light (Expo bridge) on toggle
+            appTapHaptic("light");
             onCheckedChange(!checked);
           }
         }}

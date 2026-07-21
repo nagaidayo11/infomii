@@ -9,10 +9,13 @@ import {
   syncStripeSubscriptionFromServer,
 } from "@/lib/storage";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { useAppToast } from "@/components/app-shell/AppToastProvider";
+import { AppSettingsIconRestore } from "./icons/AppSettingsIcons";
 
 export function AppSettingsRestorePurchasesSection() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const { showToast } = useAppToast();
 
   const handleRestore = useCallback(async () => {
     setBusy(true);
@@ -34,7 +37,7 @@ export function AppSettingsRestorePurchasesSection() {
     } catch (error) {
       const msg = error instanceof Error ? error.message : "購入の復元に失敗しました";
       if (msg.includes("プラン画面から")) {
-        window.alert(msg);
+        showToast(msg, "error");
         openWebBillingManagement();
         return;
       }
@@ -52,9 +55,10 @@ export function AppSettingsRestorePurchasesSection() {
         type="button"
         onClick={() => void handleRestore()}
         disabled={busy}
-        className="app-settings-restore-btn app-pressable w-full px-4 py-3.5 text-center text-base font-semibold text-[var(--app-text)] disabled:opacity-60"
+        className="app-settings-restore-btn app-pressable flex w-full items-center justify-center gap-2.5 px-4 py-3.5 text-center text-base font-semibold text-[var(--app-text)] disabled:opacity-60"
       >
-        {busy ? "同期中…" : "購入を復元"}
+        <AppSettingsIconRestore size={22} />
+        <span>{busy ? "同期中…" : "購入を復元"}</span>
       </button>
       {message ? <p className="px-4 pb-3 text-sm text-[var(--app-text-muted)]">{message}</p> : null}
     </AppSettingsCard>

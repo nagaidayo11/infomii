@@ -5,6 +5,8 @@ import Link from "next/link";
 import { AuthGate } from "@/components/auth-gate";
 import { AnalyticsProGate } from "@/components/dashboard/AnalyticsProGate";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppPageViewAnalyticsView } from "@/components/app-shell/views/AppPageViewAnalyticsView";
 import { getDashboardBootstrapData, getPageViewAnalytics, type PageViewAnalytics } from "@/lib/storage";
 
 function formatDayLabel(isoDate: string): string {
@@ -17,6 +19,7 @@ function formatDayLabel(isoDate: string): string {
  * 総ビュー数、国別・言語別・日別の内訳
  */
 export default function PageViewAnalyticsPage() {
+  const { isAppShell } = useClientShell();
   const [bootstrap, setBootstrap] = useState<{ subscription: { plan: string } | null } | null>(null);
   const [data, setData] = useState<PageViewAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +48,14 @@ export default function PageViewAnalyticsPage() {
 
   const maxDay = Math.max(1, ...(data?.byDay?.map((d) => d.count) ?? [0]));
   const plan = (bootstrap?.subscription?.plan ?? "free") as "free" | "pro" | "business";
+
+  if (isAppShell) {
+    return (
+      <AuthGate>
+        <AppPageViewAnalyticsView plan={plan} data={data} loading={loading} error={error} />
+      </AuthGate>
+    );
+  }
 
   return (
     <AuthGate>

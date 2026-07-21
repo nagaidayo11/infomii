@@ -15,12 +15,15 @@ import {
 import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import type { Information } from "@/types/information";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
+import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppQrManagementView } from "@/components/app-shell/views/AppQrManagementView";
 import { QrCharts } from "./QrCharts";
 import { QrPageRow } from "./QrPageRow";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
 
 export function QrManagementPanel() {
+  const { isAppShell } = useClientShell();
   const [informations, setInformations] = useState<Information[]>([]);
   const [metrics, setMetrics] = useState<HotelViewMetrics | null>(null);
   const [daily, setDaily] = useState<QrScanDayBucket[]>([]);
@@ -67,6 +70,21 @@ export function QrManagementPanel() {
   const topQrPage = (metrics?.pageStats ?? [])
     .filter((p) => p.qrViews > 0)
     .sort((a, b) => b.qrViews - a.qrViews)[0];
+
+  if (isAppShell) {
+    return (
+      <AuthGate>
+        <AppQrManagementView
+          informations={informations}
+          metrics={metrics}
+          daily={daily}
+          plan={plan}
+          loading={loading}
+          error={error}
+        />
+      </AuthGate>
+    );
+  }
 
   return (
     <AuthGate>

@@ -13,6 +13,15 @@ import { AppSettingsPushSection } from "../AppSettingsPushSection";
 import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
 import { AppSettingsShell } from "./AppSettingsShell";
+import {
+  AppSettingsIconAccount,
+  AppSettingsIconDelete,
+  AppSettingsIconFacility,
+  AppSettingsIconNotifications,
+  AppSettingsIconProfile,
+  AppSettingsIconRestore,
+  AppSettingsIconSupport,
+} from "../icons/AppSettingsIcons";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
 
@@ -32,33 +41,35 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
-        <AppSettingsGroup title="施設">
+        <AppSettingsGroup title="施設" icon={<AppSettingsIconFacility size={22} />}>
           <HotelNameSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="プロフィール">
+        <AppSettingsGroup title="プロフィール" icon={<AppSettingsIconProfile size={22} />}>
           <ProfileDisplayNameSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup
           title="アカウント"
+          icon={<AppSettingsIconAccount size={22} />}
           footer="Google を連携すると、次回から Google でもログインできます。"
         >
           <AccountAuthLinkSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="一般">
+        <AppSettingsGroup title="一般" icon={<AppSettingsIconNotifications size={22} />}>
           <AppSettingsPushSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup
           title="App Store"
+          icon={<AppSettingsIconRestore size={22} />}
           footer="同じ Infomii アカウントでログインしていれば、プランは通常自動で共有されます。反映されない場合のみご利用ください。"
         >
           <AppSettingsRestorePurchasesSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="サポート">
+        <AppSettingsGroup title="サポート" icon={<AppSettingsIconSupport size={22} />}>
           <AppSettingsLegalSection />
         </AppSettingsGroup>
 
@@ -67,6 +78,8 @@ export function AppSettingsPage() {
         </AppSettingsGroup>
 
         <AppSettingsGroup
+          title="危険な操作"
+          icon={<AppSettingsIconDelete size={22} />}
           footer="削除するとワークスペースのデータにアクセスできなくなります。有料プランは先に解約してください。"
         >
           <AppSettingsAccountDeleteSection />

@@ -2,6 +2,8 @@ export { AppTabBar, APP_TAB_BAR_OFFSET, APP_FAB_BOTTOM_OFFSET, APP_SCROLL_WITH_F
 export { AppTabLayout } from "./AppTabLayout";
 export { AppTabTransition } from "./AppTabTransition";
 export { AppToastProvider, useAppToast } from "./AppToastProvider";
+export { AppDialogProvider, useAppDialog } from "./AppDialogProvider";
+export type { AppConfirmOptions, AppPromptOptions, AppAlertOptions } from "./AppDialogProvider";
 export { APP_TAB_CONFIGS, resolveAppTabId } from "./app-tab-config";
 export { AppShellLink } from "./AppShellLink";
 export { ClientShellProvider, ClientShellContext } from "./ClientShellProvider";

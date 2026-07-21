@@ -88,3 +88,25 @@ Web settings unchanged. Other card types still use web forms under the native pa
 | Settings | Expandable native editors for `menu_categories` / `menu_time_band` / `menu_grid` (`MenuComplexNativeSettings`) |
 | Guest header | Share action (`GuestShareButton`: Web Share API + clipboard fallback) |
 | Editor sheets | `AppBottomSheet` size snaps: `compact` / `comfortable` / `full` (+ chip controls) |
+
+## Phase 9 (done)
+
+| Area | Change |
+|------|--------|
+| `native-guest-icons` | Stroke SVG → filled deformed pictograms (section headers) |
+| `AppLinkTileIcons` | Themed tile badges (travel / food / map / stay / alert / utility) |
+| `pageLinks` guest | Native UI fork — `AppLinkTileGrid` + circle variant with deformed icons |
+| `icon_shortcuts` | `AppLinkTileIcon` instead of `LineIcon` |
+| Schedule | `NativeScheduleDot` — timeline dots + settings picker use SVG not emoji |
+| Quote | `NativeQuoteIcon` in native section header |
+
+## Phase 10 (done)
+
+| Area | Change |
+|------|--------|
+| Native bridge | `app-haptic` + `app-share` postMessage from WebView |
+| Expo | `expo-haptics` + `haptic-bridge` / `share-bridge` in InfomiiApp |
+| Web | `appTapHaptic()` — native first, `navigator.vibrate` fallback |
+| AppSwitch / taps | Light haptic on toggle and `.app-link-tile` taps |
+| Guest share | Native share sheet when `ReactNativeWebView` is present |
+| Link tiles | Labels wrap (`…` truncation removed) |

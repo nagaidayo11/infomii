@@ -9,6 +9,8 @@ import { EditorAppTopBar } from "@/components/app-shell/EditorAppTopBar";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAppToast } from "@/components/app-shell/AppToastProvider";
+import { useAppDialog, type AppConfirmOptions } from "@/components/app-shell/AppDialogProvider";
+import { appTapHaptic } from "@/lib/native-app-bridge";
 import {
   buildLiveOpsHref,
   LIVE_OPS_DEFINITIONS,
@@ -141,7 +143,30 @@ export function Editor2({
   const isDemoMode = mode === "demo";
   const { isAppShell } = useClientShell();
   const { showToast } = useAppToast();
+  const { confirm: appConfirm } = useAppDialog();
+  const [closeLibraryNonce, setCloseLibraryNonce] = useState(0);
   const useAppEditorChrome = isAppShell && !isDemoMode;
+
+  const notifyUser = useCallback(
+    (message: string, tone: "success" | "error" | "info" = "info") => {
+      if (useAppEditorChrome) showToast(message, tone);
+      else if (typeof window !== "undefined") window.alert(message);
+    },
+    [useAppEditorChrome, showToast],
+  );
+
+  const confirmUser = useCallback(
+    async (options: AppConfirmOptions | string) => {
+      if (typeof options === "string") {
+        if (useAppEditorChrome) return appConfirm({ title: "確認", message: options });
+        return typeof window !== "undefined" ? window.confirm(options) : false;
+      }
+      if (useAppEditorChrome) return appConfirm(options);
+      const msg = [options.title, options.message].filter(Boolean).join("\n\n");
+      return typeof window !== "undefined" ? window.confirm(msg) : false;
+    },
+    [useAppEditorChrome, appConfirm],
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
@@ -246,7 +271,8 @@ export function Editor2({
     (type: CardType) => {
       if (!useAppEditorChrome) return;
       const label = CARD_TYPE_LABELS[type] ?? type;
-      showToast(`「${label}」ブロックを配置しました`, "success");
+      showToast(`「${label}」を貼りました`, "success");
+      setCloseLibraryNonce((n) => n + 1);
     },
     [useAppEditorChrome, showToast],
   );
@@ -885,7 +911,7 @@ export function Editor2({
     if (!pageId) return;
     const translationError = await ensureTranslationsBeforeGuestAction({ translationSource: "pre_publish" });
     if (translationError) {
-      window.alert(translationError);
+      notifyUser(translationError, "error");
       return;
     }
     setPublishing(true);
@@ -964,7 +990,7 @@ export function Editor2({
         placed += 1;
       }
       if (useAppEditorChrome && placed > 0) {
-        showToast(`${placed}件のブロックを配置しました`, "success");
+        showToast(`${placed}件のシールを貼りました`, "success");
       }
     },
     [
@@ -985,7 +1011,7 @@ export function Editor2({
       if (!content) return;
       addCardWithContent("info", content);
       if (useAppEditorChrome) {
-        showToast(`${preset.label}を配置しました`, "success");
+        showToast(`「${preset.label}」を貼りました`, "success");
       }
     },
     [addCardWithContent, useAppEditorChrome, showToast]
@@ -993,7 +1019,7 @@ export function Editor2({
 
   const handleClearAll = useCallback(async () => {
     if (cards.length === 0) return;
-    const ok = window.confirm("このページのブロックをすべて削除します。よろしいですか？");
+    const ok = await confirmUser("このページのブロックをすべて削除します。よろしいですか？");
     if (!ok) return;
     clearCards();
     if (!pageId) return;
@@ -1041,6 +1067,10 @@ export function Editor2({
     try {
       await setInformationStatusBySlug(pageMeta.slug, nextStatus);
       setPublishStatus(nextStatus);
+      if (useAppEditorChrome) {
+        showToast(nextStatus === "published" ? "公開しました" : "非公開にしました", "success");
+        appTapHaptic("success");
+      }
       if (nextStatus === "published") {
         setPublishedBaselineSignature(currentContentSignature);
       } else {
@@ -1051,20 +1081,22 @@ export function Editor2({
     } finally {
       setPublishToggleLoading(false);
     }
-  }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading, currentContentSignature]);
+  }, [isDemoMode, pageMeta.slug, publishStatus, publishToggleLoading, currentContentSignature, useAppEditorChrome, showToast]);
 
   const guardPublishedBeforeGuestView = useCallback((): boolean => {
     if (publishStatus !== "published" || !hasUnpublishedChanges) return true;
 
     if (hotelRole === "editor") {
-      window.alert(
+      notifyUser(
         "未反映の編集があります。プレビュー・QRを表示するには、先にツールバーの「公開申請」を送信するか、承認後に公開ページへ反映してください。",
+        "error",
       );
       return false;
     }
 
-    window.alert(
+    notifyUser(
       "未反映の変更があります。プレビュー・QRを表示するには、先にツールバーの「公開更新」で公開ページへ反映してください。",
+      "error",
     );
     return false;
   }, [publishStatus, hasUnpublishedChanges, hotelRole]);
@@ -1077,16 +1109,18 @@ export function Editor2({
     }
     if (!pageId || !pageMeta.slug) return;
     if (publishStatus !== "published") {
-      window.alert(
+      notifyUser(
         "QRコードを表示するには、先にページを公開してください。\n「公開」ボタンから公開すると、URLとQRを確認できます。",
+        "error",
       );
       return;
     }
     await flushAutosaveNow();
     const saveErr = useEditor2Store.getState().saveError;
     if (saveErr) {
-      window.alert(
+      notifyUser(
         `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度 QR / URL を押してください。`,
+        "error",
       );
       return;
     }
@@ -1112,7 +1146,7 @@ export function Editor2({
         slug: pageMeta.slug,
       });
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "保存に失敗しました。");
+      notifyUser(e instanceof Error ? e.message : "保存に失敗しました。", "error");
     } finally {
       setQrModalPreparing(false);
     }
@@ -1132,7 +1166,7 @@ export function Editor2({
       return;
     }
     if (!pageId || !pageMeta.slug) {
-      window.alert("プレビューするページが見つかりません。一度保存してから再度お試しください。");
+      notifyUser("プレビューするページが見つかりません。一度保存してから再度お試しください。", "error");
       return;
     }
 
@@ -1153,8 +1187,9 @@ export function Editor2({
       // Must open the tab synchronously on tap — await before window.open breaks mobile Safari.
       previewWindow = openGuestPreviewPlaceholderTab();
       if (!previewWindow) {
-        window.alert(
+        notifyUser(
           "プレビューを別タブで開けませんでした。ブラウザのポップアップブロックを解除してから、もう一度お試しください。",
+          "error",
         );
         return;
       }
@@ -1170,8 +1205,9 @@ export function Editor2({
         if (!previewNavigatedEarly) {
           closeGuestPreviewTab(previewWindow);
         }
-        window.alert(
+        notifyUser(
           `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度プレビューを押してください。`,
+          "error",
         );
         return;
       }
@@ -1179,7 +1215,7 @@ export function Editor2({
       const translationError = await ensureTranslationsBeforeGuestAction({ translationSource: "preview" });
       if (translationError) {
         // Soft: warn but still allow preview so editing flow isn't blocked.
-        const continuePreview = window.confirm(`${translationError}\n\nこのままプレビューを開きますか？`);
+        const continuePreview = await confirmUser(`${translationError}\n\nこのままプレビューを開きますか？`);
         if (!continuePreview) {
           if (!previewNavigatedEarly) {
             closeGuestPreviewTab(previewWindow);
@@ -1261,8 +1297,9 @@ export function Editor2({
       await flushAutosaveNow();
       const err = useEditor2Store.getState().saveError;
       if (err) {
-        window.alert(
-          `最新の編集がサーバーに保存できていません。\n${err}\n\nツールバーの保存エラー横「再試行」で保存してから、もう一度お試しください。`
+        notifyUser(
+          `最新の編集がサーバーに保存できていません。\n${err}\n\nツールバーの保存エラー横「再試行」で保存してから、もう一度お試しください。`,
+          "error",
         );
         return;
       }
@@ -1271,12 +1308,12 @@ export function Editor2({
     try {
       if (hotelRole === "editor") {
         if (!pageMeta.slug) {
-          window.alert("公開申請対象ページが見つかりません。");
+          notifyUser("公開申請対象ページが見つかりません。", "error");
           return;
         }
         await requestPublishApprovalBySlug(pageMeta.slug);
         setHasPendingApproval(true);
-        window.alert("公開申請を送信しました。オーナー/管理者の承認後に公開されます。");
+        notifyUser("公開申請を送信しました。オーナー/管理者の承認後に公開されます。", "success");
         return;
       }
       if ((hotelRole === "owner" || hotelRole === "admin") && hasPendingApproval && pageMeta.slug) {
@@ -1285,7 +1322,7 @@ export function Editor2({
         setHasPendingApproval(false);
         setPublishStatus("published");
         setPublishedBaselineSignature(buildEditorContentSignatureFromStore());
-        window.alert("公開申請を承認し、公開しました。");
+        notifyUser("公開申請を承認し、公開しました。", "success");
         return;
       }
       await handlePublishClick();
@@ -1322,8 +1359,9 @@ export function Editor2({
       await flushAutosaveNow();
       const saveErr = useEditor2Store.getState().saveError;
       if (saveErr) {
-        window.alert(
+        notifyUser(
           `最新の編集がサーバーに保存できていません。\n${saveErr}\n\nツールバーの「再試行」で保存してから、もう一度ゲスト公開をオンにしてください。`,
+          "error",
         );
         return;
       }
@@ -1534,6 +1572,7 @@ export function Editor2({
         <EditorLayout
           topBar={topBar}
           footerVariant={useAppEditorChrome ? "app" : "default"}
+          closeLibraryNonce={useAppEditorChrome ? closeLibraryNonce : undefined}
           onMobileSheetChange={(nextSheet) => {
             if (nextSheet !== "settings" || !selectedCardId) return;
             window.requestAnimationFrame(() => {
@@ -1600,6 +1639,7 @@ export function Editor2({
                   isBusinessPlan={isBusinessPlan}
                   guestNavMaxVisible={resolveGuestNavLinkLimit(planTier)}
                   unframed={useAppEditorChrome}
+                  lastAddedCardId={lastAddedCardId}
                 />
                 )}
               </div>

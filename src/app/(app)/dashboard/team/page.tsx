@@ -21,6 +21,21 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { APP_BILLING_PATH } from "@/lib/app-billing-nav";
+import {
+  AppFeatureIconApproval,
+  AppFeatureIconAudit,
+  AppFeatureIconInvite,
+  AppFeatureIconJoin,
+  AppFeatureIconMembers,
+} from "@/components/app-shell/icons/AppFeatureIcons";
+import { AppScreenSection } from "@/components/app-shell/primitives/AppScreenSection";
+import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
+import {
+  AppTeamDetailsSummary,
+  AppTeamPageShell,
+  AppTeamSummaryStrip,
+  AppTeamUpgradeCard,
+} from "@/components/app-shell/views/AppTeamUi";
 import { TEAM_PENDING_RED_DOT_PREVIEW } from "@/components/app/usePendingPublishApprovalCount";
 import { useHotelName } from "@/lib/use-hotel-name";
 
@@ -514,31 +529,23 @@ export default function TeamPage() {
     }
   }
 
-  return (
-    <AuthGate>
-      <div className="app-main-container space-y-6">
-        <FadeIn>
-          <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
-              <h1 className="app-page-title">チーム・招待</h1>
-              <p className="app-page-subtitle">
-                {hotelName
-                  ? `${hotelName} のメンバーを招待し、編集権限または閲覧権限を付与できます。`
-                  : "施設のメンバーを招待し、編集権限または閲覧権限を付与できます。"}
-              </p>
-            </div>
-            {isBusiness ? <TeamRolePermissionsHelp className="shrink-0 self-start sm:self-auto" /> : null}
-          </header>
-        </FadeIn>
+  const teamDescription = hotelName
+    ? `${hotelName} のメンバー招待と公開申請の承認`
+    : "メンバー招待と公開申請の承認";
 
+  const teamBody = (
+    <>
         {!planResolved ? (
           <FadeIn>
-            <div className="h-40 animate-pulse rounded-lg bg-slate-100" aria-label="プラン情報を読み込み中" />
+            <div className={isAppShell ? "app-shell-skeleton h-40 rounded-xl" : "h-40 animate-pulse rounded-lg bg-slate-100"} aria-label="プラン情報を読み込み中" />
           </FadeIn>
         ) : null}
 
         {planResolved && !isBusiness ? (
           <FadeIn>
+            {isAppShell ? (
+              <AppTeamUpgradeCard upgradeHref={businessUpgradeHref} />
+            ) : (
             <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <h2 className="text-base font-semibold">Businessプラン限定機能です</h2>
               <p className="mt-2 text-sm leading-relaxed">
@@ -549,14 +556,15 @@ export default function TeamPage() {
                 href={businessUpgradeHref}
                 className="app-button-native mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold !text-white shadow-sm transition hover:bg-slate-800 hover:!text-white"
               >
-                {isAppShell ? "Businessプランを申し込む" : "Businessプランを見る"}
+                Businessプランを見る
               </a>
             </section>
+            )}
           </FadeIn>
         ) : null}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className={isAppShell ? "app-shell-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" : "rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"}>
             {error}
           </div>
         )}
@@ -565,6 +573,15 @@ export default function TeamPage() {
           <>
             {!loading ? (
               <FadeIn>
+                {isAppShell ? (
+                  <AppTeamSummaryStrip
+                    memberCount={members.length}
+                    memberMax={HOTEL_TEAM_MAX_MEMBERS}
+                    pendingApprovals={pendingApprovalCount}
+                    activeInvites={activePendingInvites.length}
+                  />
+                ) : (
+                <>
                 <section className="grid gap-3 sm:grid-cols-3">
                   <AnalyticsSummaryCard
                     label="メンバー"
@@ -608,17 +625,34 @@ export default function TeamPage() {
                     />
                   </div>
                 </div>
+                </>
+                )}
               </FadeIn>
             ) : null}
 
             {/* 公開申請 */}
             <FadeIn>
-              <section id="team-approvals" className="app-panel overflow-hidden">
+              <section id="team-approvals" className={isAppShell ? "app-shell-card overflow-hidden" : "app-panel overflow-hidden"}>
                 <details
-                  className="group"
+                  className="group app-team-details"
                   open={approvalsExpanded}
                   onToggle={(e) => setApprovalsExpanded(e.currentTarget.open)}
                 >
+                  {isAppShell ? (
+                    <AppTeamDetailsSummary
+                      icon={<AppFeatureIconApproval size={24} />}
+                      title="公開申請"
+                      subtitle="編集担当からの申請を承認/却下（オーナー/管理者）"
+                      alertDot={pendingApprovalCount > 0 || TEAM_PENDING_RED_DOT_PREVIEW}
+                      badge={
+                        pendingApprovalCount > 0 ? (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                            承認待ち {pendingApprovalCount}件
+                          </span>
+                        ) : null
+                      }
+                    />
+                  ) : (
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -653,7 +687,8 @@ export default function TeamPage() {
                       ▼
                     </span>
                   </summary>
-                  <div className="space-y-4 border-t border-slate-100 px-4 py-5 sm:px-6">
+                  )}
+                  <div className={isAppShell ? "app-team-details-body space-y-4" : "space-y-4 border-t border-slate-100 px-4 py-5 sm:px-6"}>
                     <div className="flex flex-wrap items-center justify-end gap-3">
                       <select
                         value={approvalFilter}
@@ -749,6 +784,91 @@ export default function TeamPage() {
 
             {/* メンバー */}
             <FadeIn>
+              {isAppShell ? (
+                <AppScreenSection
+                  id="team-members"
+                  title="メンバー"
+                  icon={<AppFeatureIconMembers size={22} />}
+                  subtitle={!loading ? `${members.length}/${HOTEL_TEAM_MAX_MEMBERS}名` : "読み込み中…"}
+                >
+                  {loading ? (
+                    <div className="app-team-section-inner">
+                      <div className="app-shell-skeleton h-32 rounded-xl" aria-hidden />
+                    </div>
+                  ) : (
+                    <div className="app-team-section-inner space-y-2">
+                      {members.map((m) => (
+                        <div
+                          key={m.userId}
+                          className="app-team-member-row flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="app-team-member-avatar" aria-hidden>
+                              {memberInitials(m)}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="break-all font-medium text-[var(--app-text)]">
+                                  {resolveUserLabel({
+                                    displayName: m.displayName,
+                                    email: m.email,
+                                    userId: m.userId,
+                                  })}
+                                </p>
+                                {m.userId === currentUserId ? (
+                                  <span className="app-settings-status-pill app-settings-status-pill--off">あなた</span>
+                                ) : null}
+                              </div>
+                              {m.displayName?.trim() && m.email ? (
+                                <p className="text-xs text-[var(--app-text-muted)]">{m.email}</p>
+                              ) : null}
+                              <span
+                                className={
+                                  "mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                                  roleBadgeClass(m.role)
+                                }
+                              >
+                                {roleLabelJa(m.role)}
+                              </span>
+                            </div>
+                          </div>
+                          {m.role !== "owner" && canManageMembers ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(m.userId)}
+                              disabled={removingId === m.userId}
+                              className="app-plan-cta-secondary app-pressable min-h-[40px] w-full px-3 py-2 text-sm font-medium sm:w-auto"
+                            >
+                              {removingId === m.userId ? "削除中…" : "削除"}
+                            </button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!loading && members.length === 1 && canManageMembers ? (
+                    <div className="app-team-tip">
+                      <p className="font-semibold text-[var(--app-text)]">次の一歩：編集担当を招待</p>
+                      <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">
+                        フロントやマネージャーを編集担当にすると、ページ更新は申請、公開はオーナー／管理者が承認する運用ができます。
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInviteRole("editor");
+                          document.getElementById("team-invite-issue")?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                        }}
+                        className="app-pressable mt-2.5 text-xs font-semibold text-[var(--app-accent)]"
+                      >
+                        招待コードの発行へ
+                      </button>
+                    </div>
+                  ) : null}
+                </AppScreenSection>
+              ) : (
               <section id="team-members" className="app-panel app-panel-pad">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <h2 className="app-section-title">メンバー</h2>
@@ -838,6 +958,7 @@ export default function TeamPage() {
                   </div>
                 ) : null}
               </section>
+              )}
             </FadeIn>
 
 
@@ -845,6 +966,96 @@ export default function TeamPage() {
             {/* 招待（発行・共有） */}
             {canManageMembers ? (
             <FadeIn>
+              {isAppShell ? (
+                <AppScreenSection
+                  id="team-invite-issue"
+                  title="招待"
+                  icon={<AppFeatureIconInvite size={22} />}
+                  subtitle={`コードまたはリンクで参加 · 最大${HOTEL_TEAM_MAX_MEMBERS}名`}
+                >
+                  <div className="app-team-section-inner">
+                    <div className="flex flex-col gap-3">
+                      <select
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value as "admin" | "editor" | "viewer")}
+                        className="app-settings-profile-input min-h-[44px] w-full"
+                      >
+                        <option value="admin">管理者（承認・メンバー管理）</option>
+                        <option value="editor">編集担当（編集・公開申請）</option>
+                        <option value="viewer">閲覧担当（閲覧のみ）</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={handleCreateInvite}
+                        disabled={creating}
+                        className="app-plan-cta-primary app-pressable ui-pop-tap w-full"
+                      >
+                        {creating ? "発行中…" : "招待コードを発行"}
+                      </button>
+                    </div>
+                    <div className="mt-5 border-t border-[var(--app-border)] pt-4">
+                      <h3 className="text-sm font-bold text-[var(--app-text)]">有効な招待コード</h3>
+                      {loading ? (
+                        <div className="app-shell-skeleton mt-3 h-24 rounded-xl" aria-hidden />
+                      ) : activePendingInvites.length === 0 ? (
+                        <EmptyState
+                          className="mt-3"
+                          compact
+                          title={
+                            invites.length === 0
+                              ? "まだ招待コードがありません"
+                              : "有効な招待コードはありません"
+                          }
+                          description={
+                            invites.length === 0
+                              ? "上から編集担当や管理者を招待できます。"
+                              : "使いきったか無効化したコードは表示しません。新しいコードを発行してください。"
+                          }
+                        />
+                      ) : (
+                        <ul className="mt-3 space-y-2">
+                          {activePendingInvites.map((inv) => (
+                            <li key={inv.id} className="app-team-invite-row">
+                              <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                <code className="app-team-invite-code">{inv.code}</code>
+                                <span
+                                  className={
+                                    "inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium " +
+                                    roleBadgeClass(
+                                      inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                                    )
+                                  }
+                                >
+                                  {roleLabelJa(
+                                    inv.role === "admin" ? "admin" : inv.role === "viewer" ? "viewer" : "editor",
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => void handleCopyInviteLink(inv)}
+                                  className="app-plan-cta-secondary app-pressable min-h-[40px] px-3 py-2 text-sm"
+                                >
+                                  {copiedInviteId === inv.id ? "コピーしました" : "リンクをコピー"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRevoke(inv.id)}
+                                  disabled={!isBusiness}
+                                  className="app-pressable min-h-[40px] px-3 py-2 text-sm text-rose-700"
+                                >
+                                  無効化
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </AppScreenSection>
+              ) : (
               <section id="team-invite-issue" className="app-panel app-panel-pad">
                 <h2 className="app-section-title">招待</h2>
                 <p className="mt-1 text-sm text-slate-500">
@@ -936,14 +1147,22 @@ export default function TeamPage() {
                   )}
                 </div>
               </section>
+              )}
             </FadeIn>
             ) : null}
 
 
             {/* 招待コードで参加（受け取った場合） */}
             <FadeIn>
-              <section className="app-panel overflow-hidden">
-                <details className="group">
+              <section className={isAppShell ? "app-shell-card overflow-hidden" : "app-panel overflow-hidden"}>
+                <details className="group app-team-details">
+                  {isAppShell ? (
+                    <AppTeamDetailsSummary
+                      icon={<AppFeatureIconJoin size={24} />}
+                      title="招待コードで参加"
+                      subtitle="ほかの施設から招待された場合のみ使います"
+                    />
+                  ) : (
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-5 sm:py-3.5 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <span className="text-sm font-semibold text-slate-900">招待コードで参加</span>
@@ -958,7 +1177,8 @@ export default function TeamPage() {
                       ▼
                     </span>
                   </summary>
-                  <div className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                  )}
+                  <div className={isAppShell ? "app-team-details-body" : "border-t border-slate-100 px-4 py-4 sm:px-5"}>
                     <form onSubmit={handleRedeem} className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                       <input
                         type="text"
@@ -983,8 +1203,22 @@ export default function TeamPage() {
 
             {canViewAuditLogs ? (
               <FadeIn>
-                <section className="app-panel overflow-hidden">
-                  <details className="group">
+                <section className={isAppShell ? "app-shell-card overflow-hidden" : "app-panel overflow-hidden"}>
+                  <details className="group app-team-details">
+                    {isAppShell ? (
+                      <AppTeamDetailsSummary
+                        icon={<AppFeatureIconAudit size={24} />}
+                        title="操作履歴"
+                        subtitle="日別一覧 · 直近3日が展開された状態で始まります"
+                        badge={
+                          auditLogs.length > 0 ? (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                              {auditLogs.length}件
+                            </span>
+                          ) : null
+                        }
+                      />
+                    ) : (
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none transition hover:bg-slate-50/80 sm:px-6 sm:py-4 [&::-webkit-details-marker]:hidden">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -1006,7 +1240,8 @@ export default function TeamPage() {
                         ▼
                       </span>
                     </summary>
-                    <div className="border-t border-slate-100 px-4 py-5 sm:px-6">
+                    )}
+                    <div className={isAppShell ? "app-team-details-body" : "border-t border-slate-100 px-4 py-5 sm:px-6"}>
                       {auditLoading ? (
                         <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
                       ) : auditLogs.length === 0 ? (
@@ -1079,8 +1314,100 @@ export default function TeamPage() {
             ) : null}
           </>
         ) : null}
-      </div>
-      {rejectModalOpen && (
+    </>
+  );
+
+  return (
+    <AuthGate>
+      {isAppShell ? (
+        <AppTeamPageShell
+          title="チーム"
+          description={teamDescription}
+          headerAction={isBusiness ? <TeamRolePermissionsHelp className="shrink-0" /> : undefined}
+        >
+          {teamBody}
+        </AppTeamPageShell>
+      ) : (
+        <div className="app-main-container space-y-6">
+          <FadeIn>
+            <header className="app-page-header flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="app-page-title">チーム・招待</h1>
+                <p className="app-page-subtitle">
+                  {hotelName
+                    ? `${hotelName} のメンバーを招待し、編集権限または閲覧権限を付与できます。`
+                    : "施設のメンバーを招待し、編集権限または閲覧権限を付与できます。"}
+                </p>
+              </div>
+              {isBusiness ? <TeamRolePermissionsHelp className="shrink-0 self-start sm:self-auto" /> : null}
+            </header>
+          </FadeIn>
+          {teamBody}
+        </div>
+      )}
+      {isAppShell ? (
+        <AppBottomSheet
+          open={rejectModalOpen}
+          onClose={() => {
+            setRejectModalOpen(false);
+            setRejectTargetId(null);
+            setRejectComment("");
+          }}
+          title="公開申請を却下"
+          size="comfortable"
+        >
+          <div className="app-team-section-inner">
+            <p className="text-sm leading-relaxed text-[var(--app-text-muted)]">
+              却下理由を入力できます（任意）。入力内容は履歴に記録されます。
+            </p>
+            <textarea
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+              rows={4}
+              placeholder="例: 住所表記に誤りがあるため修正後に再申請してください"
+              className="app-settings-profile-input mt-3 w-full resize-none"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[
+                "文言が未確定です。確定後に再申請してください。",
+                "画像が未設定です。画像反映後に再申請してください。",
+                "営業時間情報が不足しています。追記後に再申請してください。",
+                "リンク先URLが未設定です。設定後に再申請してください。",
+              ].map((template) => (
+                <button
+                  key={template}
+                  type="button"
+                  onClick={() => appendRejectTemplate(template)}
+                  className="app-pressable rounded-full border border-[var(--app-border)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-xs text-[var(--app-text-muted)]"
+                >
+                  追記: {template.slice(0, 12)}…
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectModalOpen(false);
+                  setRejectTargetId(null);
+                  setRejectComment("");
+                }}
+                className="app-sheet-action flex-1"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                disabled={!rejectTargetId || approvalActingId === rejectTargetId}
+                onClick={() => void submitRejectModal()}
+                className="app-sheet-action app-sheet-action--danger flex-1"
+              >
+                却下を確定
+              </button>
+            </div>
+          </div>
+        </AppBottomSheet>
+      ) : rejectModalOpen ? (
         <div className="ui-overlay-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="ui-pop-in w-full max-w-md rounded-lg border border-[#e6e8eb] bg-white p-5 shadow-md">
             <h3 className="text-base font-semibold text-slate-900">公開申請を却下</h3>
@@ -1134,7 +1461,7 @@ export default function TeamPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </AuthGate>
   );
 }

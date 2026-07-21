@@ -7,6 +7,12 @@ import type { AppleIapInterval } from "@/lib/apple-iap-products";
 import { PLAN_ANNUAL_SAVINGS_LABEL, PLAN_PRICE_DISPLAY } from "@/lib/plan-pricing";
 import { AppPlanLegalFootnote } from "./AppPlanLegalFootnote";
 import { AppPlanTiers } from "./AppPlanTiers";
+import { AppPlanSectionHead } from "../primitives/AppPlanSectionHead";
+import {
+  AppSettingsIconBillingCycle,
+  AppSettingsIconCompare,
+  AppSettingsIconSubscribe,
+} from "../icons/AppSettingsIcons";
 
 type PlanId = "free" | "pro" | "business";
 
@@ -91,13 +97,17 @@ export function AppPlanBillingPanel({
   return (
     <div className="app-plan-billing-panel">
       <div className="app-plan-section-block">
-        <p className="app-plan-section-label">
-          {plan === "free"
-            ? "1. お支払い周期を選ぶ"
-            : isPaid
-              ? "ご契約中のお支払い周期"
-              : "1. プラン内容を確認"}
-        </p>
+        <AppPlanSectionHead
+          icon={<AppSettingsIconBillingCycle size={22} />}
+          step={plan === "free" ? 1 : undefined}
+          title={
+            plan === "free"
+              ? "お支払い周期を選ぶ"
+              : isPaid
+                ? "ご契約中のお支払い周期"
+                : "プラン内容を確認"
+          }
+        />
         {plan === "free" ? billingIntervalToggle : null}
         {plan === "pro" ? (
           <>
@@ -127,9 +137,11 @@ export function AppPlanBillingPanel({
       </div>
 
       <div className="app-plan-section-block">
-        <p className="app-plan-section-label">
-          {plan === "free" ? "2. プランを比較" : plan === "pro" ? "2. アップグレード先" : "プラン詳細"}
-        </p>
+        <AppPlanSectionHead
+          icon={<AppSettingsIconCompare size={22} />}
+          step={plan === "free" ? 2 : plan === "pro" ? 2 : undefined}
+          title={plan === "free" ? "プランを比較" : plan === "pro" ? "アップグレード先" : "プラン詳細"}
+        />
         <AppPlanTiers
           currentPlan={plan}
           busyAction={busyAction}
@@ -142,9 +154,11 @@ export function AppPlanBillingPanel({
       </div>
 
       <div className="app-plan-section-block">
-        <p className="app-plan-section-label">
-          {plan === "free" ? "3. お申し込み" : isPaid ? "プランの変更・解約" : "お申し込み"}
-        </p>
+        <AppPlanSectionHead
+          icon={<AppSettingsIconSubscribe size={22} />}
+          step={plan === "free" ? 3 : undefined}
+          title={plan === "free" ? "お申し込み" : isPaid ? "プランの変更・解約" : "お申し込み"}
+        />
         <div className="app-plan-action-stack">
           {plan === "free" ? (
             <>
