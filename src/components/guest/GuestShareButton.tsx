@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { appTapHaptic, shareViaNativeApp } from "@/lib/native-app-bridge";
 
 type GuestShareButtonProps = {
   title?: string;
@@ -55,6 +56,13 @@ export function GuestShareButton({
     if (disabled) return;
     const shareUrl = resolveUrl();
     if (!shareUrl) return;
+
+    if (shareViaNativeApp({ title, url: shareUrl })) {
+      appTapHaptic("light");
+      flash("shared");
+      return;
+    }
+
     try {
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         await navigator.share({ title, url: shareUrl });

@@ -20,6 +20,8 @@ import {
 } from "../lib/config";
 import { buildInjectedBootstrap } from "../lib/injected-script";
 import { handleIapBridgeMessage } from "../lib/iap-bridge";
+import { triggerNativeHaptic } from "../lib/haptic-bridge";
+import { shareViaNativeSheet } from "../lib/share-bridge";
 import { isAllowedNavigationUrl } from "../lib/navigation";
 
 const LOAD_TIMEOUT_MS = 20_000;
@@ -139,6 +141,30 @@ export function InfomiiWebView() {
         const data = JSON.parse(event.nativeEvent.data) as { type?: string };
         if (data.type === "app-shell-ready") {
           finishLoading();
+          return;
+        }
+        if (data.type === "app-haptic") {
+          triggerNativeHaptic(
+            (data as { style?: string }).style as
+              | "light"
+              | "medium"
+              | "heavy"
+              | "success"
+              | "warning"
+              | "selection"
+              | undefined,
+          );
+          return;
+        }
+        if (data.type === "app-share") {
+          const shareData = data as { title?: string; url?: string; message?: string };
+          if (shareData.url) {
+            void shareViaNativeSheet({
+              title: shareData.title,
+              url: shareData.url,
+              message: shareData.message,
+            });
+          }
           return;
         }
         if (data.type === "iap-purchase" || data.type === "iap-restore") {
