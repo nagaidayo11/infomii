@@ -126,9 +126,9 @@ export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHot
       />
 
       <footer className="border-t border-slate-200 bg-slate-50/80 py-8">
-        <Container className="flex flex-wrap items-center justify-between gap-4">
+        <Container className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p className="text-sm text-slate-500">© {new Date().getFullYear()} Infomii</p>
-          <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex flex-wrap justify-center gap-6 text-sm sm:justify-end">
             <Link
               href="/terms"
               className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"

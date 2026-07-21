@@ -32,7 +32,7 @@ function GuestPhoneMock({ src }: { src: string }) {
         className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] bg-[radial-gradient(circle_at_50%_40%,rgba(45,212,191,0.28),transparent_62%)] blur-2xl"
         aria-hidden
       />
-      <div className="relative aspect-[9/19.2] max-h-[min(72svh,640px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),0_0_0_1px_rgba(45,212,191,0.12),inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+      <div className="relative aspect-[9/19.2] max-h-[min(46svh,360px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),0_0_0_1px_rgba(45,212,191,0.12),inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:max-h-[min(56svh,480px)] lg:max-h-[min(72svh,640px)]">
         <div
           className="pointer-events-none absolute left-1/2 top-2.5 z-30 h-7 w-[108px] -translate-x-1/2 rounded-full bg-black shadow-inner ring-1 ring-white/5"
           aria-hidden
@@ -73,7 +73,7 @@ export function LpHeroHotel({
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative isolate h-[100svh] max-h-[100svh] overflow-hidden border-b border-slate-900/20">
+    <section className="relative isolate overflow-x-hidden border-b border-slate-900/20 lg:h-[calc(100svh-3.5rem)] lg:max-h-[calc(100svh-3.5rem)] lg:overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element -- static LP hero art */}
       <img
         src={HERO_IMAGE_SRC}
@@ -102,7 +102,7 @@ export function LpHeroHotel({
         aria-hidden
       />
 
-      <div className="relative mx-auto flex h-full min-h-0 w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+      <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center px-4 py-10 sm:px-6 sm:py-12 lg:h-full lg:min-h-0 lg:px-8 lg:py-12">
         <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,360px)] lg:gap-10 xl:gap-14">
           <div className="max-w-2xl text-white">
             <ClipReveal delay={0.05} duration={0.7}>
@@ -120,12 +120,12 @@ export function LpHeroHotel({
               </p>
             </ClipReveal>
 
-            <div className={`mt-5 text-[1.65rem] leading-snug text-white sm:text-3xl lg:text-[2.2rem] ${popHeadingClass}`}>
+            <div className="mt-5 text-[1.65rem] leading-snug sm:text-3xl lg:text-[2.2rem]">
               <ClipReveal delay={0.22}>
-                <span className="block">{headlineLine1}</span>
+                <span className={`block text-white ${popHeadingClass}`}>{headlineLine1}</span>
               </ClipReveal>
               <ClipReveal delay={0.32}>
-                <span className="block whitespace-nowrap bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent lg:whitespace-nowrap">
                   {headlineLine2}
                 </span>
               </ClipReveal>
@@ -133,7 +133,7 @@ export function LpHeroHotel({
             <h1 className="sr-only">{h1}</h1>
 
             <ClipReveal delay={0.42} className="mt-4">
-              <p className="text-sm leading-snug text-white/80 sm:text-[15px] md:whitespace-nowrap lg:text-base">
+              <p className="text-sm leading-snug text-white/80 sm:text-[15px] lg:text-base">
                 <WordReveal text={subline} delay={0.44} />
               </p>
             </ClipReveal>

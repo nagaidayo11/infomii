@@ -257,15 +257,18 @@ function DashboardViewWeb() {
           ) : profileLoaded && greetingName ? (
             <p className="text-sm text-slate-500">{greetingName}</p>
           ) : null}
-          <h1
-            className={
-              (!loading && bootstrap?.hotelName) || (profileLoaded && greetingName)
-                ? "mt-1 app-page-title"
-                : "app-page-title"
-            }
-          >
-            ダッシュボード
-          </h1>
+          <div className="flex items-start gap-2">
+            <h1
+              className={
+                (!loading && bootstrap?.hotelName) || (profileLoaded && greetingName)
+                  ? "mt-1 app-page-title"
+                  : "app-page-title"
+              }
+            >
+              ダッシュボード
+            </h1>
+            <LiveOpsDashboardHelp className="mt-1 shrink-0" />
+          </div>
           <p className="app-page-subtitle">
             {greetingName && bootstrap?.hotelName
               ? `${greetingName} — 案内ページの作成・公開・QR運用をここから進めます`
@@ -288,11 +291,8 @@ function DashboardViewWeb() {
             >
               テンプレート
             </Link>
-            <LiveOpsDashboardHelp />
           </div>
-        ) : (
-          <LiveOpsDashboardHelp className="shrink-0 self-start sm:self-auto" />
-        )}
+        ) : null}
       </header>
 
       {role === "viewer" && (

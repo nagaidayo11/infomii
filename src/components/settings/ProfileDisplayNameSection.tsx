@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { AppSettingsIconProfile } from "@/components/app-shell/icons/AppSettingsIcons";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -80,6 +81,9 @@ export function ProfileDisplayNameSection() {
           <div className="app-shell-skeleton h-11 rounded-xl" aria-label="読み込み中" />
         ) : (
           <form onSubmit={(ev) => void handleSubmit(ev)} className="app-settings-profile-form">
+            <span className="app-settings-row-icon">
+              <AppSettingsIconProfile size={26} />
+            </span>
             <label htmlFor="display-name" className="app-settings-profile-label">
               表示名
             </label>

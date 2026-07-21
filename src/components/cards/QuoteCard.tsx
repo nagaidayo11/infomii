@@ -9,6 +9,7 @@ import { useEditor2Store } from "@/components/editor/store";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
+import { NativeQuoteIcon } from "./native-guest-icons";
 import { LineIcon } from "./LineIcon";
 
 type QuoteCardProps = {
@@ -40,7 +41,7 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
   if (isNativeUi) {
     return (
       <div className="app-native-section app-native-guest-card">
-        <AppSectionHeader title={labels.quote} icon={<LineIcon name="quote" className="h-4 w-4" />} />
+        <AppSectionHeader title={labels.quote} icon={<NativeQuoteIcon />} />
         <blockquote className="app-native-quote" style={getBodyFontSizeStyle()}>
           <InlineEditable
             value={quote}

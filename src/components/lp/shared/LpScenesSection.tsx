@@ -27,7 +27,7 @@ export function LpScenesSection({
   return (
     <Section id={id} kicker={kicker} title={title} description={description} variant={variant} popTitle>
       <ScrollReveal intensity={revealIntensity}>
-        <StaggerReveal className="flex flex-wrap justify-center gap-2.5 sm:gap-3" staggerDelay={0.06}>
+        <div className="flex flex-wrap justify-center gap-x-2.5 gap-y-2 sm:gap-3">
           {scenes.map((scene) => (
             <span
               key={scene}
@@ -36,7 +36,7 @@ export function LpScenesSection({
               {scene}
             </span>
           ))}
-        </StaggerReveal>
+        </div>
         <StaggerReveal className="mx-auto mt-10 grid max-w-3xl gap-3 text-sm text-slate-600 sm:grid-cols-2" staggerDelay={0.07}>
           {bullets.map((line) => (
             <div

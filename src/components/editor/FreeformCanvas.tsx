@@ -298,6 +298,7 @@ type FreeformCanvasProps = {
   /** Guest nav visible-link ceiling (Free = few links). */
   guestNavMaxVisible?: number;
   unframed?: boolean;
+  lastAddedCardId?: string | null;
 };
 
 export function FreeformCanvas({
@@ -314,6 +315,7 @@ export function FreeformCanvas({
   isBusinessPlan = false,
   guestNavMaxVisible,
   unframed = false,
+  lastAddedCardId = null,
 }: FreeformCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
@@ -338,6 +340,27 @@ export function FreeformCanvas({
         maxVisibleTabs: guestNavMaxVisible,
       })
     : [];
+
+  useEffect(() => {
+    if (!lastAddedCardId) return;
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        const scrollRoot =
+          canvasRef.current?.querySelector(".template-preview-scroll") ??
+          canvasRef.current?.querySelector(".editor-canvas-outer");
+        const el = (scrollRoot ?? canvasRef.current)?.querySelector(
+          `[data-card-id="${lastAddedCardId}"]`,
+        ) as HTMLElement | null;
+        el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [lastAddedCardId]);
 
   const setAutoHeightForCard = useCallback((id: string, measuredHeight: number) => {
     if (!Number.isFinite(measuredHeight) || measuredHeight <= 0) return;
@@ -688,6 +711,7 @@ export function FreeformCanvas({
             const h = getRenderHeight(card, idx);
             const isDragging = dragState?.id === card.id;
             const isSelected = selectedCardId === card.id;
+            const isNewlyAdded = card.id === lastAddedCardId;
             const displayX = isDragging ? dragState.x : pos.x;
             const displayY = isDragging ? dragState.y : pos.y;
             const measuredContentHeight = autoHeights[card.id];
@@ -763,6 +787,7 @@ export function FreeformCanvas({
                   <div
                     className={
                       "editor-card-selected h-full w-full overflow-hidden transition-shadow " +
+                      (isNewlyAdded ? "editor-card-enter " : "") +
                       (fullBleed
                         ? "card-full-bleed rounded-none "
                         : "guest-card-surface-media ") +

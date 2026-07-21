@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { AppSettingsIconFacility } from "@/components/app-shell/icons/AppSettingsIcons";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAuth } from "@/components/auth-provider";
 import { getCurrentHotelName, updateCurrentHotelName } from "@/lib/storage";
@@ -67,6 +68,9 @@ export function HotelNameSection() {
           <div className="app-shell-skeleton h-11 rounded-xl" aria-label="読み込み中" />
         ) : (
           <form onSubmit={(ev) => void handleSubmit(ev)} className="app-settings-profile-form">
+            <span className="app-settings-row-icon">
+              <AppSettingsIconFacility size={26} />
+            </span>
             <label htmlFor="hotel-name" className="app-settings-profile-label">
               施設名
             </label>

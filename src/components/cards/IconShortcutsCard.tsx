@@ -20,6 +20,7 @@ import {
 } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { LineIcon, normalizeIconToken } from "./LineIcon";
+import { AppLinkTileIcon } from "./AppLinkTileIcons";
 import { NativeLinkIcon } from "./native-guest-icons";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import {
@@ -134,7 +135,7 @@ export function IconShortcutsCard({ card, locale = "ja" }: IconShortcutsCardProp
                 getLocalizedContent(item.label as LocalizedString | undefined, locale) ||
                 labels.labelPlaceholder;
               const iconName = normalizeIconToken(item.icon, "link");
-              const icon = <LineIcon name={iconName} className="h-[1.125rem] w-[1.125rem]" />;
+              const icon = <AppLinkTileIcon name={iconName} />;
               const span = oddLastSpans && index === items.length - 1;
 
               if (editable) {

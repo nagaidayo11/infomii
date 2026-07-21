@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
+import { AppSettingsIconEmail, AppSettingsIconGoogle } from "@/components/app-shell/icons/AppSettingsIcons";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useAuth } from "@/components/auth-provider";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -267,8 +268,13 @@ export function AccountAuthLinkSection() {
               : "app-settings-link-rows mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/60 divide-y divide-slate-200"
           }
         >
-          <div className="app-settings-row flex items-center justify-between px-3 py-2.5 sm:px-4">
-            <p className="text-sm font-medium text-slate-700">メールログイン</p>
+          <div className="app-settings-row app-settings-row--icon flex items-center justify-between px-3 py-2.5 sm:px-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="app-settings-row-icon">
+                <AppSettingsIconEmail size={22} />
+              </span>
+              <p className="text-sm font-medium text-slate-700">メールログイン</p>
+            </div>
             <span
               className={
                 isAppShell
@@ -280,8 +286,13 @@ export function AccountAuthLinkSection() {
             </span>
           </div>
 
-          <div className="app-settings-row flex items-center justify-between px-3 py-2.5 sm:px-4">
-            <p className="text-sm font-medium text-slate-700">Googleログイン</p>
+          <div className="app-settings-row app-settings-row--icon flex items-center justify-between px-3 py-2.5 sm:px-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="app-settings-row-icon">
+                <AppSettingsIconGoogle size={22} />
+              </span>
+              <p className="text-sm font-medium text-slate-700">Googleログイン</p>
+            </div>
             {checking ? (
               <span className="text-xs text-slate-500">確認中...</span>
             ) : googleLinked ? (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
+import { AppIcon } from "@/components/app-shell/icons/AppIconSet";
 
 /**
  * Dedicated editor layout. Does not use DashboardLayout.
@@ -18,6 +19,8 @@ export type EditorLayoutProps = {
   onMobileSheetChange?: (sheet: MobileSheet) => void;
   /** Native app shell: Canva-style bottom tool labels */
   footerVariant?: "default" | "app";
+  /** Increment to close the library sheet after placing a sticker (App editor). */
+  closeLibraryNonce?: number;
 };
 
 type MobileSheet = "none" | "library" | "settings";
@@ -56,10 +59,11 @@ export function EditorLayout({
   mobileActions,
   onMobileSheetChange,
   footerVariant = "default",
+  closeLibraryNonce = 0,
 }: EditorLayoutProps) {
   const isAppFooter = footerVariant === "app";
   const mobileSheetTopMap = isAppFooter ? MOBILE_SHEET_TOP_MAP_APP : MOBILE_SHEET_TOP_MAP_WEB;
-  const libraryTabLabel = isAppFooter ? "ブロック" : "ブロック追加";
+  const libraryTabLabel = isAppFooter ? "シール" : "ブロック追加";
   const canvasTabLabel = isAppFooter ? "編集" : "キャンバス";
   const settingsTabLabel = isAppFooter ? "設定" : "ブロック設定";
   const [sheet, setSheet] = useState<MobileSheet>("none");
@@ -116,6 +120,11 @@ export function EditorLayout({
   const focusCanvas = () => {
     applySheet("none");
   };
+
+  useEffect(() => {
+    if (!closeLibraryNonce) return;
+    applySheet("none");
+  }, [closeLibraryNonce]);
 
   const sheetOpen = sheet !== "none";
 
@@ -327,7 +336,7 @@ export function EditorLayout({
           <button
             type="button"
             onClick={openLibrary}
-            aria-label="ブロック一覧を開く"
+            aria-label="シール一覧を開く"
             className={
               "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
               (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
@@ -338,9 +347,7 @@ export function EditorLayout({
             }
           >
             {isAppFooter ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4z" />
-              </svg>
+              <AppIcon name="stickers" size={20} />
             ) : (
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -361,9 +368,13 @@ export function EditorLayout({
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
             }
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+            {isAppFooter ? (
+              <AppIcon name="edit-canvas" size={20} />
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            )}
             {canvasTabLabel}
           </button>
           <button
@@ -379,9 +390,13 @@ export function EditorLayout({
                 : "text-slate-500 active:bg-slate-100 lg:hover:bg-slate-50 lg:hover:text-slate-800")
             }
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
-            </svg>
+            {isAppFooter ? (
+              <AppIcon name="settings" size={20} />
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2m4 0V4a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16v-2a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
+              </svg>
+            )}
             {settingsTabLabel}
           </button>
         </nav>
@@ -391,7 +406,7 @@ export function EditorLayout({
         <>
           <AppBottomSheet
             open={sheet === "library"}
-            title="ブロック"
+            title="シールを貼る"
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"
@@ -418,7 +433,7 @@ export function EditorLayout({
           </AppBottomSheet>
           <AppBottomSheet
             open={sheet === "settings"}
-            title="設定"
+            title="ブロック設定"
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"

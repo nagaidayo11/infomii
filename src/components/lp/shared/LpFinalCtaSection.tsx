@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Button, Container } from "@/components/ui";
-import { ScrollReveal, StaggerReveal } from "@/components/motion";
+import { ScrollReveal } from "@/components/motion";
 
 type LpFinalCtaSectionProps = {
   ctaHref: string;
@@ -47,16 +47,16 @@ export function LpFinalCtaSection({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200/90">はじめ方</p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">{title}</h2>
           <p className="mt-4 text-lg leading-relaxed text-emerald-50/85">{description}</p>
-          <StaggerReveal className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm font-medium" staggerDelay={0.06}>
+          <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm font-medium">
             {trustPoints.map((point) => (
-              <span
+              <li
                 key={point}
                 className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-emerald-50 backdrop-blur-sm"
               >
                 {point}
-              </span>
+              </li>
             ))}
-          </StaggerReveal>
+          </ul>
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Button
               href={ctaHref}

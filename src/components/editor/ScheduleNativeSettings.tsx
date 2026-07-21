@@ -8,7 +8,7 @@ import {
   AppListRow,
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
-import { SCHEDULE_ICON_CHOICES, scheduleGlyphForItem } from "@/components/cards/native-guest-icons";
+import { SCHEDULE_ICON_CHOICES, NativeScheduleDot, scheduleGlyphForItem } from "@/components/cards/native-guest-icons";
 
 type ScheduleItem = { day?: string; time?: string; label?: string; icon?: string };
 
@@ -103,7 +103,8 @@ export function ScheduleNativeSettings({
               return (
                 <div key={i} className="border-b border-[var(--app-border)] last:border-b-0">
                   <AppListRow
-                    title={`${glyph} ${time ? `${day} ${time}` : day}`}
+                    leading={<NativeScheduleDot icon={item.icon} index={i} size={16} />}
+                    title={time ? `${day} ${time}` : day}
                     subtitle={label || "補足未設定"}
                     onClick={() => setExpandedIndex(expanded ? null : i)}
                     trailing={
@@ -152,7 +153,7 @@ export function ScheduleNativeSettings({
                       <div>
                         <AppFieldLabel>アイコン</AppFieldLabel>
                         <div className="app-native-icon-pick" role="listbox" aria-label="項目アイコン">
-                          {SCHEDULE_ICON_CHOICES.map((choice) => {
+                          {SCHEDULE_ICON_CHOICES.map((choice, choiceIndex) => {
                             const selected = glyph === choice;
                             return (
                               <button
@@ -166,7 +167,7 @@ export function ScheduleNativeSettings({
                                 }
                                 onClick={() => updateItem(i, "icon", choice)}
                               >
-                                {choice}
+                                <NativeScheduleDot icon={choice} index={choiceIndex} size={18} />
                               </button>
                             );
                           })}

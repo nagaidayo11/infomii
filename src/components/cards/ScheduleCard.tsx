@@ -11,7 +11,7 @@ import { useEditor2Store } from "@/components/editor/store";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppSectionHeader } from "@/components/app-shell/primitives";
 import { useCardInlineEdit } from "./card-inline-edit";
-import { NativeCalendarIcon, scheduleGlyphForItem } from "./native-guest-icons";
+import { NativeCalendarIcon, NativeScheduleDot } from "./native-guest-icons";
 import { DESK_TONE } from "./desk-tone";
 
 type ScheduleCardProps = {
@@ -187,7 +187,7 @@ export function ScheduleCard({
               <div key={index} className="app-native-schedule-row">
                 <div className="app-native-schedule-rail">
                   <span className="app-native-schedule-dot" aria-hidden>
-                    {scheduleGlyphForItem(item.icon, index)}
+                    <NativeScheduleDot icon={item.icon} index={index} size={16} />
                   </span>
                 </div>
                 <div

@@ -29,6 +29,8 @@ import {
 } from "./types";
 import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { AppBlockIcon } from "@/components/app-shell/icons/AppBlockIcons";
+import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 
 export { LIBRARY_SECTIONS_HOTEL as LIBRARY_SECTIONS } from "@/lib/editor/card-library-config";
 
@@ -870,6 +872,7 @@ function LibraryItemButton({
   onScheduleClosePicker,
   libraryAudience,
   pickerOpen = false,
+  appVariant = false,
 }: {
   sectionId: string;
   item: LibraryItem;
@@ -884,6 +887,7 @@ function LibraryItemButton({
   onScheduleClosePicker?: () => void;
   libraryAudience: LibraryAudience;
   pickerOpen?: boolean;
+  appVariant?: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -892,7 +896,7 @@ function LibraryItemButton({
   const [hoverOpen, setHoverOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
-  const hoverPreviewEnabled = useEditorHoverPreviewEnabled();
+  const hoverPreviewEnabled = useEditorHoverPreviewEnabled() && !appVariant;
   const usesPurposePicker = Boolean(onOpenPicker);
 
   const closeMobilePreview = useCallback(() => {
@@ -994,13 +998,17 @@ function LibraryItemButton({
         if (usesPurposePicker) onScheduleClosePicker?.();
       }}
       className={
-        "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 " +
+        (appVariant
+          ? "app-library-sticker-row ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all active:scale-[0.98] "
+          : "ui-focus-ring ui-pop-tap group/item relative z-10 flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all active:bg-slate-100 lg:hover:z-50 lg:focus:z-50 lg:focus-within:z-50 ") +
         (!disabled
-          ? "lg:hover:bg-slate-50 lg:hover:shadow-sm"
+          ? appVariant
+            ? "bg-white shadow-sm ring-1 ring-slate-200/80 active:bg-teal-50/40"
+            : "lg:hover:bg-slate-50 lg:hover:shadow-sm"
           : "cursor-not-allowed opacity-55") +
         (pickerOpen ? " bg-slate-50 ring-1 ring-slate-200" : "")
       }
-      aria-label={onActivate ? `${item.label}の用途を選ぶ` : `${item.label}を追加`}
+      aria-label={onActivate ? `${item.label}の用途を選ぶ` : appVariant ? `${item.label}を貼る` : `${item.label}を追加`}
       aria-expanded={onActivate ? pickerOpen : undefined}
       aria-haspopup={onActivate ? "menu" : undefined}
       aria-disabled={disabled || undefined}
@@ -1008,15 +1016,21 @@ function LibraryItemButton({
     >
       <span
         className={
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round " +
+          (appVariant
+            ? "app-library-sticker-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl "
+            : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[1.8] [&_svg_*]:stroke-linecap-round [&_svg_*]:stroke-linejoin-round ") +
           (disabled
-            ? "border border-violet-300 bg-violet-100 text-violet-700"
-            : "bg-slate-100")
+            ? appVariant
+              ? "bg-violet-50 ring-1 ring-violet-200"
+              : "border border-violet-300 bg-violet-100 text-violet-700"
+            : appVariant
+              ? "bg-teal-50/80 ring-1 ring-teal-100"
+              : "bg-slate-100")
         }
       >
-        {CARD_ICONS[item.type] ?? CARD_ICONS.text}
+        {appVariant ? <AppBlockIcon type={item.type} size={22} /> : CARD_ICONS[item.type] ?? CARD_ICONS.text}
       </span>
-      <div className={`relative min-w-0 flex-1 ${usesPurposePicker ? "" : "pr-9"}`}>
+      <div className={`relative min-w-0 flex-1 ${usesPurposePicker && !appVariant ? "" : appVariant ? "pr-7" : "pr-9"}`}>
         <span
           className={
             "flex h-9 items-center gap-1 truncate text-[13px] font-medium leading-none " +
@@ -1026,7 +1040,7 @@ function LibraryItemButton({
           <span className="truncate">{item.label}</span>
           {isGatedType ? <PlanGateBadge plan={planGate === "business" ? "business" : "pro"} /> : null}
         </span>
-        {!usesPurposePicker ? (
+        {!usesPurposePicker && !appVariant ? (
           <span className="absolute inset-y-0 right-0 flex items-center">
             <DescriptionWithTooltip
               item={item}
@@ -1037,6 +1051,13 @@ function LibraryItemButton({
               onMobilePreviewOpenChange={setMobilePreviewOpen}
               onCloseMobilePreview={closeMobilePreview}
             />
+          </span>
+        ) : null}
+        {appVariant && !usesPurposePicker ? (
+          <span className="absolute inset-y-0 right-0 flex items-center text-teal-600" aria-hidden>
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+              <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+            </svg>
           </span>
         ) : null}
       </div>
@@ -1568,6 +1589,8 @@ export function CardLibrary({
   onLibraryAudienceChange,
   showAudienceSwitch = true,
 }: CardLibraryProps) {
+  const { isAppShell } = useClientShell();
+  const appVariant = isAppShell;
   const librarySections = getLibrarySections(libraryAudience);
   const quickPresets = getQuickPresets(libraryAudience);
   const [presetsOpen, setPresetsOpen] = useState(false);
@@ -1694,13 +1717,29 @@ export function CardLibrary({
   );
 
   return (
-    <div className="flex h-full flex-col overflow-visible ">
-      <div className="shrink-0 border-b border-slate-200/80 px-3 py-3">
-        <h2 className="text-sm font-semibold text-slate-700">
-          ブロックライブラリ
-        </h2>
-        <p className="mt-1 text-xs text-slate-500">クリックでキャンバスに追加</p>
+    <div className={"flex h-full flex-col overflow-visible " + (appVariant ? "app-card-library" : "")}>
+      <div className={"shrink-0 border-b border-slate-200/80 px-3 py-3 " + (appVariant ? "app-card-library-header" : "")}>
+        {!appVariant ? (
+          <h2 className="text-sm font-semibold text-slate-700">ブロックライブラリ</h2>
+        ) : null}
+        <p className={"text-xs text-slate-500 " + (appVariant ? "font-medium text-teal-800/80" : "mt-1")}>
+          {appVariant ? "タップしてキャンバスに貼る" : "クリックでキャンバスに追加"}
+        </p>
         {showAudienceSwitch ? (
+          appVariant ? (
+            <div className="mt-2.5">
+              <AppSegmentedControl
+                variant="filled"
+                ariaLabel="シールの用途"
+                options={[
+                  { id: "hotel", label: "宿泊施設" },
+                  { id: "personal", label: "個人・友達" },
+                ]}
+                value={libraryAudience}
+                onChange={(id) => onLibraryAudienceChange(id as LibraryAudience)}
+              />
+            </div>
+          ) : (
           <div
             className="mt-2.5 inline-flex w-full rounded-lg border border-slate-200 bg-slate-50/80 p-0.5"
             role="tablist"
@@ -1732,6 +1771,7 @@ export function CardLibrary({
               );
             })}
           </div>
+          )
         ) : null}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
@@ -1827,7 +1867,7 @@ export function CardLibrary({
               aria-label={section.title}
               className="relative isolate space-y-1 pt-3 first:pt-0"
             >
-              <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-slate-500">
+              <h3 className={"mb-1.5 font-semibold uppercase tracking-[0.06em] text-slate-500 " + (appVariant ? "text-[10px]" : "text-xs")}>
                 {section.title}
               </h3>
               <div className="relative space-y-1">
@@ -1852,6 +1892,7 @@ export function CardLibrary({
                       onScheduleClosePicker={isInfoPicker ? scheduleCloseLabelRowPicker : undefined}
                       pickerOpen={isInfoPicker && labelRowPickerOpen}
                       libraryAudience={libraryAudience}
+                      appVariant={appVariant}
                     />
                   );
                 })}
