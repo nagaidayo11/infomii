@@ -5,6 +5,8 @@ import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import type { LocalizedString } from "@/lib/localized-content";
+import { PageHelp } from "@/components/help/PageHelp";
+import { FIELD_HELP } from "@/lib/page-help-content";
 import { Input } from "@/components/ui/Input";
 import { ImageUpload } from "./ImageUpload";
 import { ImageFramingControl } from "./ImageFramingControl";
@@ -4463,7 +4465,17 @@ export function CardSettings({
                   placeholder="館内案内タブ"
                 />
                 <div className="w-full">
-                  <label className={labelClass}>初期表示タブ</label>
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-slate-500">初期表示タブ</label>
+                    <PageHelp
+                      size="sm"
+                      align="left"
+                      title={FIELD_HELP.tabsDefaultIndex.title}
+                      description={FIELD_HELP.tabsDefaultIndex.description}
+                      items={[...FIELD_HELP.tabsDefaultIndex.items]}
+                      label="初期表示タブの説明"
+                    />
+                  </div>
                   <input
                     type="number"
                     min={0}

@@ -18,6 +18,8 @@ export type PageHelpProps = {
   wide?: boolean;
   /** Panel horizontal alignment relative to the button */
   align?: "left" | "right";
+  /** Compact ? for form field labels */
+  size?: "sm" | "md";
 };
 
 type PanelCoords = {
@@ -38,6 +40,7 @@ export function PageHelp({
   className = "",
   wide = false,
   align = "right",
+  size = "md",
 }: PageHelpProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -170,7 +173,11 @@ export function PageHelp({
         ref={buttonRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="app-button-native inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        className={
+          size === "sm"
+            ? "app-button-native inline-flex h-5 w-5 min-h-5 min-w-5 items-center justify-center rounded-full border border-[#e6e8eb] bg-white text-[11px] font-semibold leading-none text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+            : "app-button-native inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-[#e6e8eb] bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+        }
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={a11yLabel}

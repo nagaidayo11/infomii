@@ -87,3 +87,18 @@ export const PAGE_HELP = {
     ],
   },
 } as const;
+
+/** Compact field-level help (? next to form labels). */
+export const FIELD_HELP = {
+  tabsDefaultIndex: {
+    title: "初期表示タブ",
+    description: "ページを開いたときに、最初に表示するタブを番号で指定します。",
+    items: [
+      "0 = 1つ目のタブ（先頭）",
+      "1 = 2つ目、2 = 3つ目…と続きます",
+      "タブ数より大きい番号は、最後のタブに丸められます",
+      "迷ったら 0 のままで問題ありません",
+    ],
+  },
+} as const;
+

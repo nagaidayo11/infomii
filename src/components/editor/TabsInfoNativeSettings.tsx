@@ -9,6 +9,8 @@ import {
   AppListRow,
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
+import { PageHelp } from "@/components/help/PageHelp";
+import { FIELD_HELP } from "@/lib/page-help-content";
 
 type TabsInfoItem = { label?: string; body?: string; imageSrc?: string };
 
@@ -83,7 +85,19 @@ export function TabsInfoNativeSettings({
       </div>
 
       <div>
-        <AppFieldLabel htmlFor="native-tabs-default">初期表示タブ（0始まり）</AppFieldLabel>
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <AppFieldLabel htmlFor="native-tabs-default" className="!mb-0">
+            初期表示タブ
+          </AppFieldLabel>
+          <PageHelp
+            size="sm"
+            align="left"
+            title={FIELD_HELP.tabsDefaultIndex.title}
+            description={FIELD_HELP.tabsDefaultIndex.description}
+            items={[...FIELD_HELP.tabsDefaultIndex.items]}
+            label="初期表示タブの説明"
+          />
+        </div>
         <AppFieldInput
           id="native-tabs-default"
           type="number"
