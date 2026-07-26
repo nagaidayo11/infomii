@@ -633,7 +633,8 @@ async function linkCurrentCard(cardId: string, cardToken: string, userId: string
     ok: true as const,
     token: cardToken,
     path: buildStampCardPath(cardToken),
-    alreadyLinked: false,
+    alreadyLinked: false as const,
+    switchedToExisting: false as const,
     view: await loadCardView(cardToken),
   };
 }
@@ -664,7 +665,8 @@ export async function linkCardToUser(args: {
       ok: true as const,
       token: args.cardToken,
       path: buildStampCardPath(args.cardToken),
-      alreadyLinked: true,
+      alreadyLinked: true as const,
+      switchedToExisting: false as const,
       view: await loadCardView(args.cardToken),
     };
   }
@@ -691,7 +693,8 @@ export async function linkCardToUser(args: {
         ok: true as const,
         token: other.token as string,
         path: buildStampCardPath(other.token as string),
-        switchedToExisting: true,
+        alreadyLinked: false as const,
+        switchedToExisting: true as const,
         view: await loadCardView(other.token as string),
       };
     }
@@ -737,7 +740,8 @@ export async function linkCardToUser(args: {
         ok: true as const,
         token: again.token as string,
         path: buildStampCardPath(again.token as string),
-        switchedToExisting: true,
+        alreadyLinked: false as const,
+        switchedToExisting: true as const,
         view: await loadCardView(again.token as string),
       };
     }

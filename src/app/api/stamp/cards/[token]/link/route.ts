@@ -38,11 +38,13 @@ export async function POST(
     });
   }
 
+  // Non-conflict success branches always carry token/path/view (+ link flags).
   return NextResponse.json({
     token: result.token,
     path: result.path,
-    alreadyLinked: result.alreadyLinked ?? false,
-    switchedToExisting: result.switchedToExisting ?? false,
-    view: result.view,
+    alreadyLinked: "alreadyLinked" in result ? Boolean(result.alreadyLinked) : false,
+    switchedToExisting:
+      "switchedToExisting" in result ? Boolean(result.switchedToExisting) : false,
+    view: "view" in result ? result.view : null,
   });
 }
