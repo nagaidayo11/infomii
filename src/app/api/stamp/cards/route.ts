@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { issueCardForProgram, loadProgramByPageSlug, requireStampService } from "@/lib/stamp/server";
 import type { StampProgramRow } from "@/lib/stamp/types";
 import { buildStampCardPath } from "@/lib/stamp/types";
-import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
 
 /** POST: issue a personal stamp card from entry page slug (no guest auth). */
 export async function POST(request: Request) {
@@ -24,20 +23,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "スタンプカードが見つからないか、未公開です" }, { status: 404 });
   }
 
-  // Soft Business check via hotel subscription (no user session for guests)
-  const admin = getSupabaseAdminServerClient();
-  const { data: sub } = await admin
-    .from("subscriptions")
-    .select("plan")
-    .eq("hotel_id", loaded.program.hotel_id)
-    .maybeSingle();
-  if (sub?.plan !== "business") {
-    // Allow if somehow published under override historically — still gate new issues tightly
-    return NextResponse.json(
-      { error: "このスタンプカードは現在ご利用いただけません" },
-      { status: 403 },
-    );
-  }
+  // Guests have no session, so Dev Business override cannot be checked here.
+  // Create / publish is already gated to Business (or override). Re-checking
+  // subscriptions.plan alone incorrectly blocks published override hotels.
 
   try {
     const card = await issueCardForProgram(loaded.program as StampProgramRow);
