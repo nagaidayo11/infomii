@@ -52,6 +52,10 @@ function EditorWithPageId() {
     setCards([]);
     selectCard(null);
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
+      if (page?.kind === "stamp") {
+        router.replace(`/editor/stamp/${pageId}`);
+        return;
+      }
       if (!page) {
         const legacy = await getInformation(pageId).catch(() => null);
         if (legacy) {

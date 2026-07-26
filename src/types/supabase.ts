@@ -293,6 +293,7 @@ export type Database = {
           hotel_id: string;
           title: string;
           slug: string;
+          kind: "guide" | "stamp";
           created_at: string;
           guest_shell: Record<string, unknown> | null;
           ops: Record<string, unknown> | null;
@@ -302,6 +303,7 @@ export type Database = {
           hotel_id: string;
           title: string;
           slug: string;
+          kind?: "guide" | "stamp";
           created_at?: string;
           guest_shell?: Record<string, unknown> | null;
           ops?: Record<string, unknown> | null;
@@ -310,6 +312,7 @@ export type Database = {
           hotel_id?: string;
           title?: string;
           slug?: string;
+          kind?: "guide" | "stamp";
           created_at?: string;
           guest_shell?: Record<string, unknown> | null;
           ops?: Record<string, unknown> | null;
@@ -479,6 +482,179 @@ export type Database = {
         };
         Relationships: [];
       };
+      stamp_programs: {
+        Row: {
+          id: string;
+          hotel_id: string;
+          page_id: string;
+          title: string;
+          description: string;
+          stamps_required: number;
+          reward_title: string;
+          reward_description: string;
+          reward_title_5: string;
+          reward_description_5: string;
+          reward_title_10: string;
+          reward_description_10: string;
+          accent_color: string;
+          stamp_style: string;
+          stamp_code: string;
+          cooldown_hours: number;
+          once_per_day: boolean;
+          timezone: string;
+          rotating_qr: boolean;
+          status: "draft" | "published";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          hotel_id: string;
+          page_id: string;
+          title?: string;
+          description?: string;
+          stamps_required?: number;
+          reward_title?: string;
+          reward_description?: string;
+          reward_title_5?: string;
+          reward_description_5?: string;
+          reward_title_10?: string;
+          reward_description_10?: string;
+          accent_color?: string;
+          stamp_style?: string;
+          stamp_code: string;
+          cooldown_hours?: number;
+          once_per_day?: boolean;
+          timezone?: string;
+          rotating_qr?: boolean;
+          status?: "draft" | "published";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          hotel_id?: string;
+          page_id?: string;
+          title?: string;
+          description?: string;
+          stamps_required?: number;
+          reward_title?: string;
+          reward_description?: string;
+          reward_title_5?: string;
+          reward_description_5?: string;
+          reward_title_10?: string;
+          reward_description_10?: string;
+          accent_color?: string;
+          stamp_style?: string;
+          stamp_code?: string;
+          cooldown_hours?: number;
+          once_per_day?: boolean;
+          timezone?: string;
+          rotating_qr?: boolean;
+          status?: "draft" | "published";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stamp_cards: {
+        Row: {
+          id: string;
+          program_id: string;
+          hotel_id: string;
+          token: string;
+          status: "active" | "revoked";
+          pending_redeem: boolean;
+          pending_redeem_tier: number | null;
+          owner_user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          program_id: string;
+          hotel_id: string;
+          token: string;
+          status?: "active" | "revoked";
+          pending_redeem?: boolean;
+          pending_redeem_tier?: number | null;
+          owner_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          program_id?: string;
+          hotel_id?: string;
+          token?: string;
+          status?: "active" | "revoked";
+          pending_redeem?: boolean;
+          pending_redeem_tier?: number | null;
+          owner_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stamp_events: {
+        Row: {
+          id: string;
+          card_id: string;
+          program_id: string;
+          hotel_id: string;
+          source: "guest_scan" | "staff_manual" | "carryover";
+          stamp_day: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          program_id: string;
+          hotel_id: string;
+          source?: "guest_scan" | "staff_manual" | "carryover";
+          stamp_day?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          card_id?: string;
+          program_id?: string;
+          hotel_id?: string;
+          source?: "guest_scan" | "staff_manual" | "carryover";
+          stamp_day?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      stamp_redemptions: {
+        Row: {
+          id: string;
+          card_id: string;
+          program_id: string;
+          hotel_id: string;
+          stamps_at_redeem: number;
+          confirmed_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          program_id: string;
+          hotel_id: string;
+          stamps_at_redeem: number;
+          confirmed_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          card_id?: string;
+          program_id?: string;
+          hotel_id?: string;
+          stamps_at_redeem?: number;
+          confirmed_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -493,6 +669,10 @@ export type Database = {
       redeem_hotel_invite: {
         Args: { input_code: string };
         Returns: string;
+      };
+      stamp_redeem_atomic: {
+        Args: { p_card_id: string; p_tier: number; p_confirmed_by: string | null };
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

@@ -60,9 +60,15 @@ export function AppSettingsIconAccount(props: IconProps) {
 export function AppSettingsIconEmail(props: IconProps) {
   return (
     <Frame {...props}>
-      <rect x="6" y="9" width="20" height="14" rx="3" fill="#bae6fd" />
-      <path d="M6 12.5 16 19l10-6.5" fill="none" stroke="#0d9488" strokeWidth="1.8" strokeLinecap="round" />
-      <rect x="9" y="14" width="14" height="1.4" rx="0.7" fill="#fff" opacity="0.7" />
+      <rect x="5.5" y="9" width="21" height="14" rx="2.5" fill="#fff" stroke="#64748b" strokeWidth="1.5" />
+      <path
+        d="M7 11.25 16 17.5 25 11.25"
+        fill="none"
+        stroke="#64748b"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Frame>
   );
 }
@@ -70,10 +76,24 @@ export function AppSettingsIconEmail(props: IconProps) {
 export function AppSettingsIconGoogle(props: IconProps) {
   return (
     <Frame {...props}>
-      <circle cx="16" cy="16" r="10" fill="#fff" stroke="#e2e8f0" strokeWidth="1.2" />
-      <path d="M16 10v6h5.5" fill="none" stroke="#4285F4" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M16 22a6 6 0 1 0 0-12" fill="none" stroke="#34A853" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M10 16h12" fill="none" stroke="#FBBC05" strokeWidth="2.2" strokeLinecap="round" opacity="0.85" />
+      <g transform="translate(7 7)">
+        <path
+          fill="#4285F4"
+          d="M17.64 9.2045c0-.6382-.0573-1.2518-.1636-1.8409H9v3.4818h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2582h2.9086c1.7018-1.5668 2.6837-3.8741 2.6837-6.6155z"
+        />
+        <path
+          fill="#34A853"
+          d="M9 18c2.43 0 4.4673-.8068 5.9564-2.1791l-2.9086-2.2582c-.8068.5409-1.8409.8591-3.0478.8591-2.3441 0-4.3282-1.5832-5.0364-3.7105H.9573v2.3318C2.4382 15.9845 5.4818 18 9 18z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M3.9636 10.7113c-.18-.5409-.2836-1.1186-.2836-1.7113s.1036-1.1705.2836-1.7113V4.9568H.9573C.3477 6.1718 0 7.5445 0 9s.3477 2.8282.9573 4.0432l3.0063-2.3319z"
+        />
+        <path
+          fill="#EA4335"
+          d="M9 3.5782c1.3214 0 2.5077.4541 3.4405 1.3459l2.5813-2.5813C13.4632.8918 11.4268 0 9 0 5.4818 0 2.4382 2.0155.9573 4.9568l3.0063 2.3319C4.6718 5.1614 6.6559 3.5782 9 3.5782z"
+        />
+      </g>
     </Frame>
   );
 }

@@ -106,6 +106,11 @@ export function planHasProPromoBlocks(plan: PlanLimitTier): boolean {
   return plan === "pro" || plan === "business";
 }
 
+/** Stamp card programs (loyalty) — Business only. */
+export function planHasStampCards(plan: PlanLimitTier): boolean {
+  return plan === "business";
+}
+
 /** Human-readable page cap for UI (Business → 無制限). */
 export function formatPlanPageLimitLabel(plan: PlanLimitTier): string {
   if (plan === "business") return "無制限";
@@ -151,6 +156,7 @@ export const PLAN_FEATURE_BULLETS: Record<PlanLimitTier, string[]> = {
     "多言語編集・ゲスト言語切替",
     "チーム招待・権限",
     "動的ブロック（期間・時間帯）",
+    "スタンプカード",
     "分析CSV・運用統制",
   ],
 };

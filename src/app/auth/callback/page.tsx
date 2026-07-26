@@ -148,10 +148,16 @@ function AuthCallbackInner() {
           return;
         }
 
-        try {
-          await ensureUserHotelScope();
-        } catch {
-          /* AuthGate / login will retry; still send user toward their destination. */
+        const isStampGuestReturn =
+          Boolean(nextPath) &&
+          (nextPath!.startsWith("/s/") || nextPath!.startsWith("/s?"));
+
+        if (!isStampGuestReturn) {
+          try {
+            await ensureUserHotelScope();
+          } catch {
+            /* AuthGate / login will retry; still send user toward their destination. */
+          }
         }
 
         const preferred = nextPath ?? (isAppClient ? "/dashboard?client=app" : "/dashboard");

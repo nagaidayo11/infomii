@@ -32,6 +32,7 @@ function renderPageItem(
         id={page.id}
         title={`${titlePrefix}${page.title || "(無題)"}${titleSuffix}`}
         slug={page.slug}
+        kind={page.kind === "stamp" ? "stamp" : "guide"}
         status={info?.status === "published" ? "published" : "draft"}
         updatedAt={info?.updatedAt ?? new Date().toISOString()}
         showPublishSwitch={props.showPublishSwitch ?? true}

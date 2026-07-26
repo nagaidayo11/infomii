@@ -42,10 +42,12 @@ import {
   formatCreatePageLimitError,
   formatPublishLimitError,
   normalizeMaxPublishedPages,
+  planHasStampCards,
   resolveEffectivePageLimit,
   resolveMaxPublishedPagesByPlan,
   resolvePlanTierFromSubscription,
 } from "@/lib/plan-limits";
+import { createOpaqueToken } from "@/lib/stamp/types";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
 
@@ -4540,6 +4542,156 @@ export async function createBlankPage(title = ""): Promise<string> {
   }
 }
 
+/** Creates a stamp-card page + program (Business only). */
+export async function createStampPage(title = "スタンプカード"): Promise<string> {
+  const normalizedTitle = (title ?? "").trim() || "スタンプカード";
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const sub = await getCurrentHotelSubscription();
+  const plan = resolvePlanTierFromSubscription(sub?.plan);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!planHasStampCards(plan) && !canUseDevBusinessOverride(user ?? undefined)) {
+    const e = new Error("スタンプカードはBusinessプランでご利用いただけます") as Error & {
+      code?: string;
+    };
+    e.code = "STAMP_BUSINESS_REQUIRED";
+    throw e;
+  }
+
+  if (sub) {
+    const { count, error } = await supabase
+      .from("pages")
+      .select("id", { count: "exact", head: true })
+      .eq("hotel_id", hotelId);
+    const pageCount = count ?? 0;
+    const createLimit = resolveEffectivePageLimit({
+      plan,
+      storedMax: sub.maxPublishedPages,
+      existingCount: pageCount,
+    });
+    if (!error && pageCount >= createLimit) {
+      const e = new Error(formatCreatePageLimitError(plan, createLimit)) as Error & { code?: string };
+      e.code = PAGE_LIMIT_REACHED;
+      throw e;
+    }
+  }
+
+  const baseSlug = createSlug(normalizedTitle);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+  const stampCode = createOpaqueToken(12);
+
+  const { data: newPage, error: pageError } = await supabase
+    .from("pages")
+    .insert({ hotel_id: hotelId, title: normalizedTitle, slug, kind: "stamp" })
+    .select("id")
+    .single();
+  if (pageError || !newPage) {
+    throw toError(pageError ?? new Error("Insert failed"), "スタンプカードの作成に失敗しました");
+  }
+
+  const { error: programError } = await supabase.from("stamp_programs").insert({
+    hotel_id: hotelId,
+    page_id: newPage.id,
+    title: normalizedTitle,
+    description: "会計時にスタンプを貯めて、特典と交換できます。",
+    stamps_required: 10,
+    reward_title: "10個特典",
+    reward_description: "スタッフにこの画面を提示してください。",
+    reward_title_5: "5個特典",
+    reward_description_5: "スタッフにこの画面を提示してください。",
+    reward_title_10: "10個特典",
+    reward_description_10: "スタッフにこの画面を提示してください。",
+    accent_color: "#0f766e",
+    stamp_style: "seal",
+    stamp_code: stampCode,
+    cooldown_hours: 24,
+    once_per_day: true,
+    timezone: "Asia/Tokyo",
+    rotating_qr: false,
+    status: "draft",
+  });
+  if (programError) {
+    await supabase.from("pages").delete().eq("id", newPage.id);
+    throw toError(programError, "スタンププログラムの作成に失敗しました");
+  }
+
+  return newPage.id as string;
+}
+
+export async function getStampProgramByPageId(pageId: string) {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("stamp_programs")
+    .select("*")
+    .eq("page_id", pageId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
+export async function updateStampProgram(
+  pageId: string,
+  patch: {
+    title?: string;
+    description?: string;
+    stamps_required?: number;
+    reward_title?: string;
+    reward_description?: string;
+    reward_title_5?: string;
+    reward_description_5?: string;
+    reward_title_10?: string;
+    reward_description_10?: string;
+    accent_color?: string;
+    stamp_style?: string;
+    cooldown_hours?: number;
+    once_per_day?: boolean;
+    timezone?: string;
+    rotating_qr?: boolean;
+  },
+) {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const { error } = await supabase
+    .from("stamp_programs")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("page_id", pageId);
+  if (error) throw toError(error, "スタンプ設定の保存に失敗しました");
+
+  if (typeof patch.title === "string" && patch.title.trim()) {
+    await supabase.from("pages").update({ title: patch.title.trim() }).eq("id", pageId);
+  }
+}
+
+export async function publishStampProgram(pageId: string, publish: boolean) {
+  const supabase = getBrowserSupabaseClient();
+  if (!supabase) throw new Error("Supabase設定が未完了です");
+  const hotelId = await ensureUserHotelScope();
+  if (!hotelId) throw new Error("施設が選択されていません");
+
+  const { data: page, error: pageError } = await supabase
+    .from("pages")
+    .select("id, slug, title, kind, hotel_id")
+    .eq("id", pageId)
+    .maybeSingle();
+  if (pageError || !page || page.kind !== "stamp") {
+    throw new Error("スタンプカードページが見つかりません");
+  }
+
+  const status = publish ? "published" : "draft";
+  await setInformationStatusBySlug(page.slug, status);
+  const { error } = await supabase
+    .from("stamp_programs")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("page_id", pageId);
+  if (error) throw toError(error, "公開状態の更新に失敗しました");
+}
+
 export async function createPageFromTemplate(templateId: string): Promise<{ pageId: string }> {
   const supabase = getBrowserSupabaseClient();
   if (!supabase) throw new Error("Supabase設定が未完了です");
@@ -4696,6 +4848,7 @@ export type PageRow = {
   id: string;
   title: string;
   slug: string;
+  kind?: "guide" | "stamp";
   /** Mirrors `informations.status` for this slug (default draft if no row). */
   publishStatus?: "published" | "draft";
 };
@@ -4707,11 +4860,16 @@ export async function listPagesForHotel(): Promise<PageRow[]> {
   if (!supabase || !hotelId) return [];
   const { data, error } = await supabase
     .from("pages")
-    .select("id,title,slug")
+    .select("id,title,slug,kind")
     .eq("hotel_id", hotelId)
     .order("title", { ascending: true });
   if (error) return [];
-  return (data ?? []) as PageRow[];
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    kind: row.kind === "stamp" ? "stamp" : "guide",
+  }));
 }
 
 export type PageConnectionTreeNode = {
@@ -4840,11 +4998,16 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
 
   const { data: pagesData, error: pagesError } = await supabase
     .from("pages")
-    .select("id,title,slug")
+    .select("id,title,slug,kind")
     .eq("hotel_id", hotelId)
     .order("title", { ascending: true });
   if (pagesError) return [];
-  const rawPages = (pagesData ?? []) as PageRow[];
+  const rawPages = (pagesData ?? []).map((p) => ({
+    id: p.id,
+    title: p.title,
+    slug: p.slug,
+    kind: (p.kind === "stamp" ? "stamp" : "guide") as "guide" | "stamp",
+  }));
   if (rawPages.length === 0) return [];
 
   const { data: infoRows } = await supabase
@@ -5086,11 +5249,16 @@ export async function getPage(pageId: string): Promise<PageRow | null> {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("pages")
-    .select("id,title,slug")
+    .select("id,title,slug,kind")
     .eq("id", pageId)
     .maybeSingle();
   if (error || !data) return null;
-  return data as PageRow;
+  return {
+    id: data.id,
+    title: data.title,
+    slug: data.slug,
+    kind: data.kind === "stamp" ? "stamp" : "guide",
+  };
 }
 
 export async function getPageCards(pageId: string): Promise<PageCardRow[]> {

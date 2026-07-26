@@ -823,3 +823,133 @@ for update
 to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Stamp cards (loyalty MVP) — kept in sync with stamp_* migrations
+-- ---------------------------------------------------------------------------
+
+alter table public.pages
+  add column if not exists kind text not null default 'guide';
+
+alter table public.pages drop constraint if exists pages_kind_check;
+alter table public.pages
+  add constraint pages_kind_check check (kind in ('guide', 'stamp'));
+
+create table if not exists public.stamp_programs (
+  id uuid primary key default gen_random_uuid(),
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  page_id uuid not null unique references public.pages(id) on delete cascade,
+  title text not null default 'スタンプカード',
+  description text not null default '',
+  stamps_required integer not null default 10
+    check (stamps_required >= 1 and stamps_required <= 50),
+  reward_title text not null default '特典',
+  reward_description text not null default '',
+  reward_title_5 text not null default '5個特典',
+  reward_description_5 text not null default '',
+  reward_title_10 text not null default '10個特典',
+  reward_description_10 text not null default '',
+  accent_color text not null default '#0d9488',
+  stamp_style text not null default 'seal',
+  stamp_code text not null unique,
+  cooldown_hours integer not null default 24
+    check (cooldown_hours >= 0 and cooldown_hours <= 8760),
+  once_per_day boolean not null default true,
+  timezone text not null default 'Asia/Tokyo',
+  rotating_qr boolean not null default false,
+  status text not null default 'draft'
+    check (status in ('draft', 'published')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.stamp_cards (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references public.stamp_programs(id) on delete cascade,
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  token text not null unique,
+  status text not null default 'active'
+    check (status in ('active', 'revoked')),
+  pending_redeem boolean not null default false,
+  pending_redeem_tier integer check (pending_redeem_tier is null or pending_redeem_tier in (5, 10)),
+  owner_user_id uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists stamp_cards_program_owner_active_uidx
+  on public.stamp_cards (program_id, owner_user_id)
+  where owner_user_id is not null and status = 'active';
+
+create table if not exists public.stamp_events (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references public.stamp_cards(id) on delete cascade,
+  program_id uuid not null references public.stamp_programs(id) on delete cascade,
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  source text not null default 'guest_scan'
+    check (source in ('guest_scan', 'staff_manual', 'carryover')),
+  stamp_day date,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists stamp_events_card_guest_day_uidx
+  on public.stamp_events (card_id, stamp_day)
+  where source = 'guest_scan' and stamp_day is not null;
+
+create table if not exists public.stamp_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references public.stamp_cards(id) on delete cascade,
+  program_id uuid not null references public.stamp_programs(id) on delete cascade,
+  hotel_id uuid not null references public.hotels(id) on delete cascade,
+  stamps_at_redeem integer not null,
+  confirmed_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.stamp_redeem_atomic(
+  p_card_id uuid,
+  p_tier integer,
+  p_confirmed_by uuid
+) returns integer
+language plpgsql
+as $$
+declare
+  v_program uuid;
+  v_hotel uuid;
+  v_last_redeem timestamptz;
+  v_count integer;
+  v_remainder integer;
+  v_redeem_at timestamptz;
+begin
+  select program_id, hotel_id into v_program, v_hotel
+  from public.stamp_cards where id = p_card_id and status = 'active' for update;
+  if v_program is null then raise exception 'CARD_NOT_FOUND'; end if;
+
+  select max(created_at) into v_last_redeem
+  from public.stamp_redemptions where card_id = p_card_id;
+
+  select count(*) into v_count from public.stamp_events
+  where card_id = p_card_id and (v_last_redeem is null or created_at > v_last_redeem);
+
+  if v_count < p_tier then raise exception 'INSUFFICIENT'; end if;
+
+  v_redeem_at := clock_timestamp();
+  insert into public.stamp_redemptions
+    (card_id, program_id, hotel_id, stamps_at_redeem, confirmed_by, created_at)
+  values (p_card_id, v_program, v_hotel, p_tier, p_confirmed_by, v_redeem_at);
+
+  v_remainder := v_count - p_tier;
+  if v_remainder > 0 then
+    insert into public.stamp_events (card_id, program_id, hotel_id, source, created_by, created_at)
+    select p_card_id, v_program, v_hotel, 'carryover', null, v_redeem_at + interval '20 milliseconds'
+    from generate_series(1, v_remainder);
+  end if;
+
+  update public.stamp_cards
+  set pending_redeem = false, pending_redeem_tier = null, updated_at = now()
+  where id = p_card_id;
+
+  return v_remainder;
+end;
+$$;

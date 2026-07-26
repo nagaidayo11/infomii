@@ -14,6 +14,7 @@ export type AppWorksListItemProps = {
   id: string;
   title: string;
   slug?: string;
+  kind?: "guide" | "stamp";
   status: "draft" | "published";
   updatedAt: string;
   publishToggling?: boolean;
@@ -69,6 +70,7 @@ export function AppWorksListItem({
   id,
   title,
   slug,
+  kind = "guide",
   status,
   updatedAt,
   publishToggling = false,
@@ -81,7 +83,15 @@ export function AppWorksListItem({
   const { showToast } = useAppToast();
   const [shareOpen, setShareOpen] = useState(false);
   const published = status === "published";
-  const editHref = `/editor/${id}`;
+  const editHref = kind === "stamp" ? `/editor/stamp/${id}` : `/editor/${id}`;
+  const publicUrl =
+    kind === "stamp" && slug
+      ? typeof window !== "undefined"
+        ? `${window.location.origin}/s/p/${encodeURIComponent(slug)}`
+        : `/s/p/${encodeURIComponent(slug)}`
+      : slug
+        ? buildPublicUrl(slug)
+        : "";
 
   const handleShareClick = () => {
     if (!slug) {
@@ -172,7 +182,7 @@ export function AppWorksListItem({
       {shareOpen && slug ? (
         <PublishModal
           variant="share"
-          publicUrl={buildPublicUrl(slug)}
+          publicUrl={publicUrl || buildPublicUrl(slug)}
           pageTitle={title || "無題"}
           slug={slug}
           onClose={() => setShareOpen(false)}

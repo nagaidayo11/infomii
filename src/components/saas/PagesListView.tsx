@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   createBlankPage,
+  createStampPage,
   getDashboardBootstrapData,
   listPageConnectionSetsForHotel,
   PAGE_LIMIT_REACHED,
@@ -13,6 +14,7 @@ import {
   deletePage,
   updatePageTitle,
 } from "@/lib/storage";
+import { planHasStampCards } from "@/lib/plan-limits";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
@@ -102,6 +104,39 @@ function PagesListViewWeb() {
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
+      else alert(err.message || "作成に失敗しました");
+    } finally {
+      createBusyRef.current = false;
+      if (!navigated) setCreating(false);
+    }
+  }
+
+  async function handleCreateStampPage() {
+    if (createBusyRef.current) return;
+    if (subscription && !planHasStampCards(subscription.plan)) {
+      alert("スタンプカードはBusinessプランでご利用いただけます。");
+      return;
+    }
+    const entered = window.prompt("スタンプカード名を入力してください", "スタンプカード");
+    if (entered == null) return;
+    const normalizedTitle = entered.trim() || "スタンプカード";
+    createBusyRef.current = true;
+    setCreating(true);
+    let navigated = false;
+    try {
+      const pageId = await createStampPage(normalizedTitle);
+      if (pageId && typeof pageId === "string") {
+        router.push(`/editor/stamp/${pageId}`);
+        navigated = true;
+      }
+    } catch (e) {
+      const err = e as Error & { code?: string };
+      if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
+      else if (err.code === "STAMP_BUSINESS_REQUIRED") {
+        alert(err.message);
+      } else {
+        alert(err.message || "作成に失敗しました");
+      }
     } finally {
       createBusyRef.current = false;
       if (!navigated) setCreating(false);
@@ -178,7 +213,15 @@ function PagesListViewWeb() {
             className="app-button-native inline-flex min-h-[40px] w-full shrink-0 items-center justify-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
           >
             <span className="text-base leading-none">+</span>
-            ページを作成
+            案内ページを作成
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleCreateStampPage()}
+            disabled={creating}
+            className="app-button-native inline-flex min-h-[40px] w-full shrink-0 items-center justify-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-900 transition hover:bg-teal-100 disabled:opacity-60 sm:w-auto"
+          >
+            スタンプカード
           </button>
           <PageHelp
             className="shrink-0 self-center"
@@ -290,7 +333,9 @@ function PagesListViewWeb() {
               key={set.id}
               set={set}
               deletingPageId={deletingPageId}
-              onEdit={(page) => router.push(`/editor/${page.id}`)}
+              onEdit={(page) =>
+                router.push(page.kind === "stamp" ? `/editor/stamp/${page.id}` : `/editor/${page.id}`)
+              }
               onRename={(page) => void handleRenamePage(page)}
               onDelete={(page) => void handleDeleteCardPage(page)}
             />
