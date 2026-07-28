@@ -49,14 +49,7 @@ export function StampCardFace({
     >
       <header
         className="stamp-card-header"
-        style={{
-          background: `
-            linear-gradient(145deg,
-              color-mix(in srgb, ${accent} 82%, #0b1220) 0%,
-              ${accent} 48%,
-              color-mix(in srgb, ${accent} 70%, #1a1512) 100%)
-          `,
-        }}
+        style={{ backgroundColor: accent }}
       >
         <div className="relative z-[1] flex items-start justify-between gap-3">
           <div className="min-w-0">

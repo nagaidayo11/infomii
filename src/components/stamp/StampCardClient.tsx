@@ -6,12 +6,13 @@ import { StampGuestScreen } from "@/components/stamp/StampGuestScreen";
 import { buildAuthCallbackUrl } from "@/lib/auth-redirect";
 import { normalizeStampStyle, type StampRewardTier } from "@/lib/stamp/styles";
 import type { StampCardView } from "@/lib/stamp/types";
+import { writeStoredCardToken } from "@/lib/stamp/guest-storage";
 import {
-  STAMP_CARD_STORAGE_PREFIX,
   buildStampCardPath,
   buildStampScanPath,
   extractStampCodeFromScanText,
 } from "@/lib/stamp/types";
+import { StampGuestNotice } from "@/components/stamp/StampGuestNotice";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import "@/styles/stamp.css";
 
@@ -86,10 +87,7 @@ export function StampCardClient() {
       setView(data);
       setError(null);
       if (data.program.pageSlug) {
-        window.localStorage.setItem(
-          `${STAMP_CARD_STORAGE_PREFIX}${data.program.pageSlug}`,
-          token,
-        );
+        writeStoredCardToken(data.program.pageSlug, token);
       }
     },
     [token],
@@ -134,10 +132,7 @@ export function StampCardClient() {
 
         if (data.switchedToExisting && data.token && data.token !== token) {
           if (view?.program.pageSlug) {
-            window.localStorage.setItem(
-              `${STAMP_CARD_STORAGE_PREFIX}${view.program.pageSlug}`,
-              data.token,
-            );
+            writeStoredCardToken(view.program.pageSlug, data.token);
           }
           setSaveNote("保存済みのカードを開きます。");
           router.replace(data.path ?? buildStampCardPath(data.token));
@@ -181,6 +176,12 @@ export function StampCardClient() {
     prevCountRef.current = view.stampCount;
     router.replace(buildStampCardPath(token));
   }, [router, searchParams, token, view]);
+
+  useEffect(() => {
+    if (searchParams.get("manual") !== "1") return;
+    setShowManual(true);
+    router.replace(buildStampCardPath(token));
+  }, [router, searchParams, token]);
 
   function openCameraScan() {
     setError(null);
@@ -310,7 +311,7 @@ export function StampCardClient() {
           ) : null
         }
         secondaryActions={
-          <>
+          <div className="stamp-actions-panel space-y-2.5">
             {!view.isFull ? (
               <>
                 <button
@@ -318,16 +319,21 @@ export function StampCardClient() {
                   className="w-full text-center text-[12px] text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
                   onClick={() => setShowManual((v) => !v)}
                 >
-                  {showManual ? "コード入力を閉じる" : "コードで付与する"}
+                  {showManual ? "コード入力を閉じる" : "カメラが使えない場合（コード入力）"}
                 </button>
                 {showManual ? (
-                  <div className="rounded-[1.15rem] border border-slate-200 bg-white p-3.5">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="mb-2 text-[11px] leading-relaxed text-slate-500">
+                      スタッフから伝えられた押印コードを入力してください。
+                    </p>
                     <div className="flex gap-2">
                       <input
                         className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-slate-400"
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value)}
                         placeholder="押印コード"
+                        autoComplete="off"
+                        spellCheck={false}
                       />
                       <button
                         type="button"
@@ -346,6 +352,8 @@ export function StampCardClient() {
                 ) : null}
               </>
             ) : null}
+
+            <StampGuestNotice variant="card" />
 
             {view.linkedToAccount ? (
               <p className="rounded-xl bg-emerald-50 px-3 py-2 text-center text-[12px] font-medium text-emerald-800">
@@ -379,7 +387,7 @@ export function StampCardClient() {
                 ) : null}
               </div>
             )}
-          </>
+          </div>
         }
       />
       {error ? <p className="px-4 pb-6 text-center text-sm text-rose-600">{error}</p> : null}

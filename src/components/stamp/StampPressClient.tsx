@@ -3,33 +3,12 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { listStoredCardTokens } from "@/lib/stamp/guest-storage";
 import {
-  STAMP_CARD_STORAGE_PREFIX,
-  STAMP_SCAN_PENDING_TOKEN_KEY,
   buildStampCardPath,
   extractStampCodeFromScanText,
 } from "@/lib/stamp/types";
 import "@/styles/stamp.css";
-
-function listStoredCardTokens(): string[] {
-  const tokens: string[] = [];
-  try {
-    const pending = window.sessionStorage.getItem(STAMP_SCAN_PENDING_TOKEN_KEY);
-    if (pending) tokens.push(pending);
-  } catch {
-    /* ignore */
-  }
-  try {
-    for (const key of Object.keys(window.localStorage)) {
-      if (!key.startsWith(STAMP_CARD_STORAGE_PREFIX)) continue;
-      const token = window.localStorage.getItem(key);
-      if (token && !tokens.includes(token)) tokens.push(token);
-    }
-  } catch {
-    /* ignore */
-  }
-  return tokens;
-}
 
 /**
  * Landing when guest scans the facility press QR with the system camera.
@@ -76,7 +55,7 @@ export function StampPressClient() {
             continue;
           }
           try {
-            window.sessionStorage.removeItem(STAMP_SCAN_PENDING_TOKEN_KEY);
+            window.sessionStorage.removeItem("infomii_stamp_scan_pending");
           } catch {
             /* ignore */
           }

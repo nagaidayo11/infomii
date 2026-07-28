@@ -64,14 +64,8 @@ export function StampGuestScreen({
 
   return (
     <div
-      className={`stamp-surface relative ${compact ? "px-3 pb-6 pt-3" : "px-4 pb-8 pt-5"}`}
-      style={{
-        ["--stamp-accent" as string]: accent,
-        background: `
-          radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, ${accent} 18%, transparent), transparent 58%),
-          linear-gradient(180deg, #f6f8fa 0%, #ffffff 52%)
-        `,
-      }}
+      className={`stamp-surface relative bg-[#f6f8fa] ${compact ? "px-3 pb-6 pt-3" : "px-4 pb-8 pt-5"}`}
+      style={{ ["--stamp-accent" as string]: accent }}
     >
       <StampEarnPop
         open={earnPopOpen}
@@ -106,7 +100,10 @@ export function StampGuestScreen({
       />
 
       {(primaryAction || secondaryActions) && (
-        <div className="mt-4 space-y-2.5">{primaryAction}{secondaryActions}</div>
+        <div className="mt-4 space-y-2.5">
+          {primaryAction ? <div className="stamp-actions-panel">{primaryAction}</div> : null}
+          {secondaryActions}
+        </div>
       )}
 
       {footerNote ? (

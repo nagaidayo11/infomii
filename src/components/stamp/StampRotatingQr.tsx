@@ -86,7 +86,7 @@ export function StampRotatingQr({ pageId, origin }: { pageId: string; origin: st
             コード: <span className="font-mono tracking-wider">{state.code}</span>
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            約{secondsLeft}秒後に更新
+            約{secondsLeft}秒後に更新 · カメラ不可時は短いコードを口頭で伝えられます
           </p>
         </>
       ) : (

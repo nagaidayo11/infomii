@@ -8,6 +8,7 @@ import { StampBetaNotice } from "@/components/stamp/StampBetaNotice";
 import { StampMark } from "@/components/stamp/StampMark";
 import { StampPhoneFrame } from "@/components/stamp/StampPhoneFrame";
 import { StampRotatingQr } from "@/components/stamp/StampRotatingQr";
+import { StampRotatingQrGuide } from "@/components/stamp/StampRotatingQrGuide";
 import {
   getPage,
   getStampProgramByPageId,
@@ -597,9 +598,12 @@ export function StampProgramEditor() {
               )}
             </div>
             {program.rotating_qr ? (
-              <p className="mt-3 text-[11px] leading-relaxed text-amber-700">
-                回転式のため押印QRは印刷できません。会計時にスタッフ端末でこの画面を開いて提示してください。手入力コードは使えません。
-              </p>
+              <>
+                <StampRotatingQrGuide />
+                <p className="mt-3 text-[11px] leading-relaxed text-amber-700">
+                  回転式のため押印QRは印刷できません。下のQRを会計時にスタッフ端末で表示してください。
+                </p>
+              </>
             ) : null}
           </section>
 

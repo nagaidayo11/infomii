@@ -4,35 +4,48 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { buildAuthCallbackUrl } from "@/lib/auth-redirect";
 import {
-  STAMP_CARD_STORAGE_PREFIX,
+  readStoredCardToken,
+  writeStoredCardToken,
+} from "@/lib/stamp/guest-storage";
+import {
   buildStampCardPath,
   buildStampEntryPath,
 } from "@/lib/stamp/types";
+import { StampGuestNotice } from "@/components/stamp/StampGuestNotice";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import "@/styles/stamp.css";
 
 function EntryCardPreview({ accent }: { accent: string }) {
   return (
     <div
-      className="mx-auto w-full max-w-[11.5rem] rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm"
+      className="mx-auto w-full max-w-[12rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
       aria-hidden
     >
-      <div className="grid grid-cols-5 gap-1.5">
-        {Array.from({ length: 10 }, (_, i) => (
-          <div
-            key={i}
-            className="aspect-square rounded-full border"
-            style={
-              i < 2
-                ? { backgroundColor: accent, borderColor: accent }
-                : { backgroundColor: "#fff", borderColor: "#e2e8f0" }
-            }
-          />
-        ))}
+      <div className="h-1.5" style={{ backgroundColor: accent }} />
+      <div className="p-3.5">
+        <div className="grid grid-cols-5 gap-1.5">
+          {Array.from({ length: 10 }, (_, i) => (
+            <div
+              key={i}
+              className="aspect-square rounded-full border"
+              style={
+                i < 2
+                  ? { backgroundColor: accent, borderColor: accent }
+                  : { backgroundColor: "#fff", borderColor: "#e2e8f0" }
+              }
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+const ENTRY_STEPS = [
+  "カードをはじめる（ログイン不要）",
+  "店内の押印QRをカメラで1日1回スキャン",
+  "特典はスタッフの前で確認して利用",
+] as const;
 
 async function getAccessToken(): Promise<string | null> {
   const client = getBrowserSupabaseClient();
@@ -68,7 +81,7 @@ export function StampEntryClient({
     let active = true;
     void (async () => {
       try {
-        const existing = window.localStorage.getItem(`${STAMP_CARD_STORAGE_PREFIX}${slug}`);
+        const existing = readStoredCardToken(slug);
         if (existing) {
           router.replace(buildStampCardPath(existing));
           return;
@@ -85,7 +98,7 @@ export function StampEntryClient({
             token?: string;
           };
           if (res.ok && data.linked && data.path && data.token) {
-            window.localStorage.setItem(`${STAMP_CARD_STORAGE_PREFIX}${slug}`, data.token);
+            writeStoredCardToken(slug, data.token);
             router.replace(data.path);
             return;
           }
@@ -117,7 +130,7 @@ export function StampEntryClient({
       if (!res.ok || !data.token || !data.path) {
         throw new Error(data.error ?? "カードを始められませんでした");
       }
-      window.localStorage.setItem(`${STAMP_CARD_STORAGE_PREFIX}${slug}`, data.token);
+      writeStoredCardToken(slug, data.token);
 
       const accessToken = await getAccessToken();
       if (accessToken) {
@@ -182,27 +195,39 @@ export function StampEntryClient({
       className="stamp-surface mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center bg-[#f6f8fa] px-6 py-12"
       style={{ ["--stamp-accent" as string]: accentColor }}
     >
-      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <EntryCardPreview accent={accentColor} />
 
-        <h1 className="mt-5 text-center text-[1.5rem] font-bold leading-snug tracking-tight text-slate-900">
+        <h1 className="mt-5 text-center text-[1.45rem] font-bold leading-snug tracking-tight text-slate-900">
           {heading}
         </h1>
         {shortDescription ? (
-          <p className="mx-auto mt-2.5 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
+          <p className="mx-auto mt-2 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
             {shortDescription}
           </p>
         ) : (
-          <p className="mx-auto mt-2.5 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
+          <p className="mx-auto mt-2 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
             会計時にスタンプを貯めて、特典と交換できます。
           </p>
         )}
 
-        <ul className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-[13px] leading-relaxed text-slate-600">
-          <li>カードをはじめる（ログイン不要）</li>
-          <li>店内の押印QRをカメラで1日1回スキャン</li>
-          <li>特典はスタッフの前で確認して利用</li>
-        </ul>
+        <ol className="mt-5 space-y-2.5 border-t border-slate-100 pt-4">
+          {ENTRY_STEPS.map((step, index) => (
+            <li key={step} className="flex gap-2.5 text-[13px] leading-relaxed text-slate-600">
+              <span
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                style={{ backgroundColor: accentColor }}
+              >
+                {index + 1}
+              </span>
+              <span className="pt-0.5">{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5">
+          <StampGuestNotice variant="entry" />
+        </div>
 
         <button
           type="button"
