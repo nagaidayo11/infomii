@@ -8,8 +8,8 @@ import { normalizeStampStyle, type StampRewardTier } from "@/lib/stamp/styles";
 import type { StampCardView } from "@/lib/stamp/types";
 import {
   STAMP_CARD_STORAGE_PREFIX,
-  STAMP_SCAN_PENDING_TOKEN_KEY,
   buildStampCardPath,
+  buildStampScanPath,
   extractStampCodeFromScanText,
 } from "@/lib/stamp/types";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -49,7 +49,6 @@ export function StampCardClient() {
   const [busy, setBusy] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [showManual, setShowManual] = useState(false);
-  const [scanGuideOpen, setScanGuideOpen] = useState(false);
   const [animateLatest, setAnimateLatest] = useState(false);
   const [earnPopOpen, setEarnPopOpen] = useState(false);
   const [useConfirmTier, setUseConfirmTier] = useState<StampRewardTier | null>(null);
@@ -183,14 +182,9 @@ export function StampCardClient() {
     router.replace(buildStampCardPath(token));
   }, [router, searchParams, token, view]);
 
-  function openSystemScanGuide() {
+  function openCameraScan() {
     setError(null);
-    try {
-      window.sessionStorage.setItem(STAMP_SCAN_PENDING_TOKEN_KEY, token);
-    } catch {
-      /* ignore */
-    }
-    setScanGuideOpen(true);
+    router.push(buildStampScanPath(token));
   }
 
   async function applyCode(stampCode: string) {
@@ -204,7 +198,6 @@ export function StampCardClient() {
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "スタンプを付けられませんでした");
-      setScanGuideOpen(false);
       setShowManual(false);
       await reload({ celebrate: true });
     } catch (e) {
@@ -309,7 +302,7 @@ export function StampCardClient() {
             <button
               type="button"
               disabled={busy || Boolean(cooldownLabel)}
-              onClick={openSystemScanGuide}
+              onClick={openCameraScan}
               className="stamp-cta stamp-cta-primary"
             >
               {cooldownLabel ? "本日分は済み" : "カメラでスキャンして獲得"}
@@ -390,50 +383,6 @@ export function StampCardClient() {
         }
       />
       {error ? <p className="px-4 pb-6 text-center text-sm text-rose-600">{error}</p> : null}
-
-      {scanGuideOpen ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-5">
-          <button
-            type="button"
-            aria-label="閉じる"
-            className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
-            onClick={() => setScanGuideOpen(false)}
-          />
-          <div className="relative w-full max-w-[340px] rounded-[1.35rem] bg-white px-5 py-6 shadow-[0_28px_56px_-24px_rgba(15,23,42,0.5)]">
-            <p className="text-center text-[11px] font-semibold tracking-wide text-slate-500">
-              スタンプ獲得
-            </p>
-            <h2 className="mt-2 text-center text-lg font-bold tracking-tight text-slate-900">
-              端末のカメラで押印QRを読み取ってください
-            </h2>
-            <ol className="mt-4 space-y-2 text-left text-[13px] leading-relaxed text-slate-600">
-              <li>1. ホーム画面からカメラアプリを開く</li>
-              <li>2. 店内の押印QRを読み取る</li>
-              <li>3. 開いたページから自動でこのカードに戻ります</li>
-            </ol>
-            <p className="mt-3 text-center text-[12px] leading-relaxed text-slate-500">
-              ページ内カメラは使いません。読み取り後にスタンプが付与されます。
-            </p>
-            <button
-              type="button"
-              onClick={() => setScanGuideOpen(false)}
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[color:var(--stamp-ink,#0f172a)] px-4 text-sm font-semibold text-white"
-            >
-              わかりました
-            </button>
-            <button
-              type="button"
-              className="mt-2 w-full text-center text-[12px] text-slate-500 underline-offset-2 hover:underline"
-              onClick={() => {
-                setScanGuideOpen(false);
-                setShowManual(true);
-              }}
-            >
-              コードで付与する
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {conflict ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-5">

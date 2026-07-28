@@ -83,6 +83,11 @@ export function buildStampCardPath(token: string): string {
   return `/s/${encodeURIComponent(token)}`;
 }
 
+/** Full-screen camera scan page that returns to the card after a successful read. */
+export function buildStampScanPath(token: string): string {
+  return `/s/scan/${encodeURIComponent(token)}`;
+}
+
 export function buildStampPressPath(stampCode: string): string {
   return `/s/press/${encodeURIComponent(stampCode)}`;
 }
