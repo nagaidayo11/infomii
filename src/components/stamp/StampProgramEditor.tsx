@@ -81,6 +81,7 @@ export function StampProgramEditor() {
   const [message, setMessage] = useState<string | null>(null);
   const [opsToken, setOpsToken] = useState("");
   const [opsResult, setOpsResult] = useState<string | null>(null);
+  const [copiedPressCode, setCopiedPressCode] = useState(false);
   const [previewFilled, setPreviewFilled] = useState(4);
   const [previewAnimate, setPreviewAnimate] = useState(false);
   const [previewEarnPop, setPreviewEarnPop] = useState(false);
@@ -530,14 +531,15 @@ export function StampProgramEditor() {
           </section>
 
           <section className="stamp-editor-panel p-5">
-            <h2 className="text-base font-bold tracking-tight">印刷用QR</h2>
-            <p className="mt-1 text-[12px] text-slate-500">
-              入口は客室・フロント／各席。押印は会計・チェックアウトへ。
+            <h2 className="text-base font-bold tracking-tight">ゲスト用QR・押印コード</h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+              入口QRはカード発行用（客室・フロントなど）。押印QRは会計時にスタッフが提示します。
+              カメラが使えない場合のみ、押印コードを口頭で伝えてください。
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.15rem] border border-dashed border-black/15 bg-[#faf8f4] p-4">
                 <p className="text-sm font-semibold">入口QR</p>
-                <p className="text-[11px] text-slate-500">カード発行</p>
+                <p className="text-[11px] text-slate-500">カードをはじめる</p>
                 {entryUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -568,12 +570,35 @@ export function StampProgramEditor() {
                   <p className="mt-2 break-all text-[10px] leading-relaxed text-slate-500">
                     {pressUrl}
                   </p>
+                  <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                    <p className="text-[10px] font-semibold text-slate-500">押印コード（手入力用）</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <code className="min-w-0 flex-1 truncate text-[11px] text-slate-800">
+                        {program.stamp_code}
+                      </code>
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(program.stamp_code).then(() => {
+                            setCopiedPressCode(true);
+                            window.setTimeout(() => setCopiedPressCode(false), 2000);
+                          });
+                        }}
+                      >
+                        {copiedPressCode ? "コピー済み" : "コピー"}
+                      </button>
+                    </div>
+                    <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+                      ゲスト画面の「コードで付与する」に入力します。通常はQRスキャンを使ってください。
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
             {program.rotating_qr ? (
               <p className="mt-3 text-[11px] leading-relaxed text-amber-700">
-                回転式のため押印QRは印刷できません。会計時にスタッフ端末でこの画面を開いて提示してください。
+                回転式のため押印QRは印刷できません。会計時にスタッフ端末でこの画面を開いて提示してください。手入力コードは使えません。
               </p>
             ) : null}
           </section>

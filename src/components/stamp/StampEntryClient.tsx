@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { StampMark } from "@/components/stamp/StampMark";
 import { buildAuthCallbackUrl } from "@/lib/auth-redirect";
 import {
   STAMP_CARD_STORAGE_PREFIX,
@@ -12,6 +10,29 @@ import {
 } from "@/lib/stamp/types";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import "@/styles/stamp.css";
+
+function EntryCardPreview({ accent }: { accent: string }) {
+  return (
+    <div
+      className="mx-auto w-full max-w-[11.5rem] rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm"
+      aria-hidden
+    >
+      <div className="grid grid-cols-5 gap-1.5">
+        {Array.from({ length: 10 }, (_, i) => (
+          <div
+            key={i}
+            className="aspect-square rounded-full border"
+            style={
+              i < 2
+                ? { backgroundColor: accent, borderColor: accent }
+                : { backgroundColor: "#fff", borderColor: "#e2e8f0" }
+            }
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 async function getAccessToken(): Promise<string | null> {
   const client = getBrowserSupabaseClient();
@@ -154,52 +175,34 @@ export function StampEntryClient({
 
   const shortDescription =
     description.length > 90 ? `${description.slice(0, 88).trimEnd()}…` : description;
+  const heading = title.trim() || "スタンプカード";
 
   return (
     <main
-      className="stamp-surface relative mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center overflow-hidden px-6 py-12"
-      style={{
-        ["--stamp-accent" as string]: accentColor,
-        background: `
-          radial-gradient(100% 70% at 50% 0%, color-mix(in srgb, ${accentColor} 20%, transparent), transparent 55%),
-          linear-gradient(180deg, #f6f8fa 0%, #fff 55%)
-        `,
-      }}
+      className="stamp-surface mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center bg-[#f6f8fa] px-6 py-12"
+      style={{ ["--stamp-accent" as string]: accentColor }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative rounded-[1.5rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_40px_-28px_rgba(15,23,42,0.35)]"
-      >
-        <div className="mb-5 flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.08 + i * 0.06, duration: 0.35 }}
-            >
-              <StampMark filled accent={accentColor} styleId="seal" size="md" />
-            </motion.div>
-          ))}
-        </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6">
+        <EntryCardPreview accent={accentColor} />
 
-        <p className="text-center text-[11px] font-semibold text-slate-500">スタンプカード</p>
-        <h1 className="mt-2 text-center text-[1.75rem] font-bold leading-tight tracking-tight text-slate-900">
-          {title}
+        <h1 className="mt-5 text-center text-[1.5rem] font-bold leading-snug tracking-tight text-slate-900">
+          {heading}
         </h1>
         {shortDescription ? (
-          <p className="mx-auto mt-3 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
+          <p className="mx-auto mt-2.5 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
             {shortDescription}
           </p>
-        ) : null}
+        ) : (
+          <p className="mx-auto mt-2.5 max-w-sm text-center text-[14px] leading-relaxed text-slate-600">
+            会計時にスタンプを貯めて、特典と交換できます。
+          </p>
+        )}
 
-        <ol className="mt-5 space-y-1.5 text-left text-[12px] leading-relaxed text-slate-600">
-          <li>1. カードをはじめる（ログイン不要）</li>
-          <li>2. カメラで店内の押印QRを1日1回スキャン</li>
-          <li>3. 特典はスタッフの前で確認して利用</li>
-        </ol>
+        <ul className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-[13px] leading-relaxed text-slate-600">
+          <li>カードをはじめる（ログイン不要）</li>
+          <li>店内の押印QRをカメラで1日1回スキャン</li>
+          <li>特典はスタッフの前で確認して利用</li>
+        </ul>
 
         <button
           type="button"
@@ -210,8 +213,8 @@ export function StampEntryClient({
           {busy ? "準備中…" : "カードをはじめる"}
         </button>
 
-        <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3">
-          <p className="text-center text-[11px] leading-relaxed text-slate-500">
+        <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+          <p className="text-center text-[12px] leading-relaxed text-slate-500">
             以前保存したカードがありますか？
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -238,7 +241,7 @@ export function StampEntryClient({
           認証は任意です。カード画面からいつでも保存できます。
         </p>
         {error ? <p className="mt-3 text-center text-sm text-rose-600">{error}</p> : null}
-      </motion.div>
+      </div>
     </main>
   );
 }
