@@ -8,6 +8,7 @@ import { normalizeStampStyle, type StampRewardTier } from "@/lib/stamp/styles";
 import type { StampCardView } from "@/lib/stamp/types";
 import {
   STAMP_CARD_STORAGE_PREFIX,
+  STAMP_SCAN_PENDING_TOKEN_KEY,
   buildStampCardPath,
   extractStampCodeFromScanText,
 } from "@/lib/stamp/types";
@@ -46,9 +47,9 @@ export function StampCardClient() {
   const [view, setView] = useState<StampCardView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [scanning, setScanning] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [showManual, setShowManual] = useState(false);
+  const [scanGuideOpen, setScanGuideOpen] = useState(false);
   const [animateLatest, setAnimateLatest] = useState(false);
   const [earnPopOpen, setEarnPopOpen] = useState(false);
   const [useConfirmTier, setUseConfirmTier] = useState<StampRewardTier | null>(null);
@@ -59,11 +60,9 @@ export function StampCardClient() {
     current: { token: string; path: string; stampCount: number };
     existing: { token: string; path: string; stampCount: number };
   } | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanTimerRef = useRef<number | null>(null);
   const prevCountRef = useRef<number | null>(null);
   const linkAttemptedRef = useRef(false);
+  const earnedHandledRef = useRef(false);
 
   const reload = useCallback(
     async (opts?: { celebrate?: boolean }) => {
@@ -172,17 +171,27 @@ export function StampCardClient() {
     })();
   }, [linkToAccount, router, searchParams, token]);
 
-  function stopScan() {
-    setScanning(false);
-    if (scanTimerRef.current) {
-      window.clearInterval(scanTimerRef.current);
-    }
-    scanTimerRef.current = null;
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  }
+  useEffect(() => {
+    if (!view || !token || earnedHandledRef.current) return;
+    if (searchParams.get("earned") !== "1") return;
+    earnedHandledRef.current = true;
+    setAnimateLatest(true);
+    setEarnPopOpen(true);
+    window.setTimeout(() => setAnimateLatest(false), 900);
+    window.setTimeout(() => setEarnPopOpen(false), 2800);
+    prevCountRef.current = view.stampCount;
+    router.replace(buildStampCardPath(token));
+  }, [router, searchParams, token, view]);
 
-  useEffect(() => () => stopScan(), []);
+  function openSystemScanGuide() {
+    setError(null);
+    try {
+      window.sessionStorage.setItem(STAMP_SCAN_PENDING_TOKEN_KEY, token);
+    } catch {
+      /* ignore */
+    }
+    setScanGuideOpen(true);
+  }
 
   async function applyCode(stampCode: string) {
     setBusy(true);
@@ -195,58 +204,13 @@ export function StampCardClient() {
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "スタンプを付けられませんでした");
-      stopScan();
+      setScanGuideOpen(false);
+      setShowManual(false);
       await reload({ celebrate: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました");
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function startScan() {
-    setError(null);
-    setScanning(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      const Detector = (
-        window as unknown as {
-          BarcodeDetector?: new (opts: { formats: string[] }) => {
-            detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string }>>;
-          };
-        }
-      ).BarcodeDetector;
-
-      if (!Detector) {
-        setError("この端末ではカメラ読取に未対応です。コード入力をご利用ください。");
-        setShowManual(true);
-        return;
-      }
-
-      const detector = new Detector({ formats: ["qr_code"] });
-      scanTimerRef.current = window.setInterval(() => {
-        const video = videoRef.current;
-        if (!video || video.readyState < 2) return;
-        void detector.detect(video).then((codes) => {
-          const raw = codes[0]?.rawValue;
-          if (!raw) return;
-          const code = extractStampCodeFromScanText(raw);
-          if (code) void applyCode(code);
-        });
-      }, 700);
-    } catch {
-      setScanning(false);
-      setShowManual(true);
-      setError("カメラを開けませんでした。コード入力をご利用ください。");
     }
   }
 
@@ -345,14 +309,10 @@ export function StampCardClient() {
             <button
               type="button"
               disabled={busy || Boolean(cooldownLabel)}
-              onClick={() => (scanning ? stopScan() : void startScan())}
+              onClick={openSystemScanGuide}
               className="stamp-cta stamp-cta-primary"
             >
-              {scanning
-                ? "カメラを閉じる"
-                : cooldownLabel
-                  ? "本日分は済み"
-                  : "スキャンしてスタンプを獲得"}
+              {cooldownLabel ? "本日分は済み" : "カメラでスキャンして獲得"}
             </button>
           ) : null
         }
@@ -360,22 +320,12 @@ export function StampCardClient() {
           <>
             {!view.isFull ? (
               <>
-                {scanning ? (
-                  <div className="overflow-hidden rounded-[1.25rem] ring-1 ring-slate-200">
-                    <video
-                      ref={videoRef}
-                      className="aspect-[4/3] w-full bg-black object-cover"
-                      playsInline
-                      muted
-                    />
-                  </div>
-                ) : null}
                 <button
                   type="button"
                   className="w-full text-center text-[12px] text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
                   onClick={() => setShowManual((v) => !v)}
                 >
-                  {showManual ? "コード入力を閉じる" : "カメラが使えない場合"}
+                  {showManual ? "コード入力を閉じる" : "コードで付与する"}
                 </button>
                 {showManual ? (
                   <div className="rounded-[1.15rem] border border-slate-200 bg-white p-3.5">
@@ -440,6 +390,50 @@ export function StampCardClient() {
         }
       />
       {error ? <p className="px-4 pb-6 text-center text-sm text-rose-600">{error}</p> : null}
+
+      {scanGuideOpen ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-5">
+          <button
+            type="button"
+            aria-label="閉じる"
+            className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
+            onClick={() => setScanGuideOpen(false)}
+          />
+          <div className="relative w-full max-w-[340px] rounded-[1.35rem] bg-white px-5 py-6 shadow-[0_28px_56px_-24px_rgba(15,23,42,0.5)]">
+            <p className="text-center text-[11px] font-semibold tracking-wide text-slate-500">
+              スタンプ獲得
+            </p>
+            <h2 className="mt-2 text-center text-lg font-bold tracking-tight text-slate-900">
+              端末のカメラで押印QRを読み取ってください
+            </h2>
+            <ol className="mt-4 space-y-2 text-left text-[13px] leading-relaxed text-slate-600">
+              <li>1. ホーム画面からカメラアプリを開く</li>
+              <li>2. 店内の押印QRを読み取る</li>
+              <li>3. 開いたページから自動でこのカードに戻ります</li>
+            </ol>
+            <p className="mt-3 text-center text-[12px] leading-relaxed text-slate-500">
+              ページ内カメラは使いません。読み取り後にスタンプが付与されます。
+            </p>
+            <button
+              type="button"
+              onClick={() => setScanGuideOpen(false)}
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[color:var(--stamp-ink,#0f172a)] px-4 text-sm font-semibold text-white"
+            >
+              わかりました
+            </button>
+            <button
+              type="button"
+              className="mt-2 w-full text-center text-[12px] text-slate-500 underline-offset-2 hover:underline"
+              onClick={() => {
+                setScanGuideOpen(false);
+                setShowManual(true);
+              }}
+            >
+              コードで付与する
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {conflict ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-5">

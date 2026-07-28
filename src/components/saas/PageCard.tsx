@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { buildPublicUrlV } from "@/lib/storage";
+import { buildPagePublicUrl } from "@/lib/storage";
 import type { LiveOpsKey } from "@/lib/editor/live-ops";
 import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
 
@@ -11,6 +11,7 @@ export type PageCardProps = {
   editHref?: string | null;
   title: string;
   slug: string;
+  kind?: "guide" | "stamp";
   status: "draft" | "published";
   updatedAt: string;
   views7d?: number;
@@ -49,6 +50,7 @@ export function PageCard({
   editHref,
   title,
   slug,
+  kind,
   status,
   updatedAt,
   views7d = 0,
@@ -60,7 +62,7 @@ export function PageCard({
   canEdit = true,
   liveOpsKeys = [],
 }: PageCardProps) {
-  const publicUrl = buildPublicUrlV(slug);
+  const publicUrl = buildPagePublicUrl(slug, kind);
   const resolvedEditHref = editHref === undefined ? `/editor/${id}` : editHref;
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(title ?? "");

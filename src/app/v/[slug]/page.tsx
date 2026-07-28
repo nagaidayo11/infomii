@@ -1,7 +1,7 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, SEO_APP_URL } from "@/lib/seo/structured-data";
@@ -69,7 +69,7 @@ function readPageBackground(rows: Array<{ content: Record<string, unknown> }>): 
 const loadGuestPageCore = cache(async (slug: string) => {
   const supabase = getSupabaseAdminServerClient();
   const [{ data: page, error: pageError }, { data: infoRow }] = await Promise.all([
-    supabase.from("pages").select("id,title,slug,hotel_id").eq("slug", slug).maybeSingle(),
+    supabase.from("pages").select("id,title,slug,hotel_id,kind").eq("slug", slug).maybeSingle(),
     supabase.from("informations").select("status,hotel_id").eq("slug", slug).maybeSingle(),
   ]);
   if (pageError || !page) return null;
@@ -142,6 +142,10 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const core = await loadGuestPageCore(slug);
   if (!core) notFound();
   const { page, infoRow, hotelId: hotelIdForLocaleToggle, hotelName } = core;
+
+  if ((page as { kind?: string | null }).kind === "stamp") {
+    redirect(`/s/p/${encodeURIComponent(slug)}`);
+  }
 
   const isPublished = infoRow?.status === "published";
   // Soft-200 for unpublished URLs confuses crawlers; preview=1 still works for operators.

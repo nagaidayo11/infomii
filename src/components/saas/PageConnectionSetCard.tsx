@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  buildPublicUrlV,
+  buildPagePublicUrl,
   flattenPageConnectionTree,
   type PageConnectionSet,
   type PageConnectionTreeNode,
@@ -237,7 +237,7 @@ export function PageConnectionSetCard({
                   名前変更
                 </button>
                 <a
-                  href={buildPublicUrlV(row.page.slug)}
+                  href={buildPagePublicUrl(row.page.slug, row.page.kind)}
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-md border border-[#e6e8eb] bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"

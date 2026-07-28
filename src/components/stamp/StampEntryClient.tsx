@@ -197,7 +197,7 @@ export function StampEntryClient({
 
         <ol className="mt-5 space-y-1.5 text-left text-[12px] leading-relaxed text-slate-600">
           <li>1. カードをはじめる（ログイン不要）</li>
-          <li>2. 店内の押印QRを1日1回スキャン</li>
+          <li>2. 端末のカメラで店内の押印QRを1日1回スキャン</li>
           <li>3. 特典はスタッフの前で確認して利用</li>
         </ol>
 

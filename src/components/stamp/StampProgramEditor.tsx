@@ -642,7 +642,7 @@ export function StampProgramEditor() {
               statusLabel={
                 program.status === "published" ? "公開中プレビュー" : "下書きプレビュー"
               }
-              footerNote="※この画面はプレビューです。実機ではカメラ読取・1日1回制限・確認ダイアログ・アカウント保存が動きます"
+              footerNote="※この画面はプレビューです。実機では端末カメラでの読取・1日1回制限・確認ダイアログ・アカウント保存が動きます"
               primaryAction={
                 canPreviewStamp ? (
                   <button

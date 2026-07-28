@@ -2360,6 +2360,16 @@ export function buildPublicUrlV(slug: string): string {
   return `${window.location.origin}/qr/${slug}`;
 }
 
+/** Guest-facing URL for a page row. Stamp cards use `/s/p/`, guides use `/qr/`. */
+export function buildPagePublicUrl(slug: string, kind?: "guide" | "stamp"): string {
+  if (kind === "stamp") {
+    const path = `/s/p/${encodeURIComponent(slug)}`;
+    if (typeof window === "undefined") return path;
+    return `${window.location.origin}${path}`;
+  }
+  return buildPublicUrlV(slug);
+}
+
 /** Same as buildPublicUrlV — kept for call sites that want an explicit QR URL. */
 export function buildPublicQrUrlV(slug: string): string {
   return buildPublicUrlV(slug);

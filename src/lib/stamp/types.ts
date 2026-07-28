@@ -104,3 +104,6 @@ export function extractStampCodeFromScanText(raw: string): string | null {
 }
 
 export const STAMP_CARD_STORAGE_PREFIX = "infomii_stamp_card:";
+
+/** sessionStorage: card token waiting for a system-camera press QR scan. */
+export const STAMP_SCAN_PENDING_TOKEN_KEY = "infomii_stamp_scan_pending";
