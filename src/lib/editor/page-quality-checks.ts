@@ -55,7 +55,7 @@ const REQUIRED_TEXT_FIELDS: ReadonlyArray<{
   keys: string[];
   label: string;
 }> = [
-  { type: "welcome", keys: ["title", "message"], label: "ウェルカム" },
+  { type: "welcome", keys: ["title", "message"], label: "あいさつ文" },
   { type: "notice", keys: ["title", "body"], label: "お知らせ" },
   { type: "highlight", keys: ["title", "body"], label: "強調ブロック" },
   { type: "heading_body", keys: ["title", "body"], label: "見出し＋本文" },
@@ -187,7 +187,7 @@ function checkRequiredTextFields(card: EditorCard, out: PageQualityFinding[]): v
       out.push({
         severity: "error",
         code: "info_rows_empty",
-        message: "ラベル行リストに項目がありません",
+        message: "項目リストに項目がありません",
         cardId: card.id,
       });
     } else {
@@ -197,7 +197,7 @@ function checkRequiredTextFields(card: EditorCard, out: PageQualityFinding[]): v
           out.push({
             severity: "error",
             code: "info_row_incomplete",
-            message: `ラベル行リストの${i + 1}行目が未入力です`,
+            message: `項目リストの${i + 1}行目が未入力です`,
             cardId: card.id,
           });
         }
@@ -226,7 +226,7 @@ function checkHero(card: EditorCard, out: PageQualityFinding[]): void {
       out.push({
         severity: "error",
         code: "hero_image_missing",
-        message: "ヒーロー画像がありません",
+        message: "トップ写真がありません",
         cardId: card.id,
       });
     }
@@ -245,7 +245,7 @@ function checkHero(card: EditorCard, out: PageQualityFinding[]): void {
     out.push({
       severity: "error",
       code: "hero_slider_image_missing",
-      message: "ヒーロースライドに画像がありません",
+      message: "写真スライドに画像がありません",
       cardId: card.id,
     });
   }

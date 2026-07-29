@@ -83,16 +83,20 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
       </p>
 
       {usePricingTable ? (
-        <div className="mt-3 overflow-x-auto" style={getBodyFontSizeStyle()}>
+        <div className="mt-3 -mx-0.5 overflow-x-auto overscroll-x-contain" style={getBodyFontSizeStyle()}>
           <table
-            className={`w-full min-w-[280px] border-collapse text-left ${editorInnerRadiusClassName} overflow-hidden border border-slate-200`}
+            className={
+              "w-full border-collapse text-left text-[0.75rem] leading-snug sm:text-[0.8125rem] " +
+              editorInnerRadiusClassName +
+              " overflow-hidden border border-slate-200 " +
+              (colCount >= 3 ? "min-w-[24rem]" : "min-w-[17rem]")
+            }
           >
             <thead>
               <tr className="bg-slate-100 text-slate-800">
                 <th
                   scope="col"
-                  className="border-b border-slate-200 px-3 py-2.5 font-semibold text-slate-500"
-                  style={getTitleFontSizeStyle()}
+                  className="sticky left-0 z-[1] min-w-[4.5rem] max-w-[5.75rem] border-b border-r border-slate-200 bg-slate-100 px-2 py-2 font-semibold text-slate-500 sm:min-w-[5.25rem] sm:px-2.5 sm:py-2.5"
                 >
                   {labels.corner}
                 </th>
@@ -101,17 +105,16 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                     key={ci}
                     scope="col"
                     className={
-                      "border-b border-slate-200 px-3 py-2.5 font-semibold text-slate-800 " +
-                      (highlightColumnIndex === ci ? "bg-emerald-50 ring-1 ring-emerald-200/80" : "")
+                      "min-w-[5rem] border-b border-slate-200 px-2 py-2 text-center font-semibold text-slate-800 sm:min-w-[5.5rem] sm:px-2.5 sm:py-2.5 " +
+                      (highlightColumnIndex === ci ? "bg-emerald-50 ring-1 ring-inset ring-emerald-200/80" : "")
                     }
-                    style={getTitleFontSizeStyle()}
                   >
                     <InlineEditable
                       value={h}
                       onSave={(v) => editor.setPricingHeader(ci, v)}
                       editable={editable}
                       onActivate={onActivate}
-                      className="font-semibold text-slate-800"
+                      className="block w-full text-center font-semibold text-slate-800 [overflow-wrap:normal] [word-break:keep-all]"
                       placeholder="プラン"
                     />
                   </th>
@@ -128,13 +131,19 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
               ) : (
                 pricingRows.map((row, ri) => (
                   <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50/80"}>
-                    <th scope="row" className="border-t border-slate-200 px-3 py-2.5 font-medium text-slate-700">
+                    <th
+                      scope="row"
+                      className={
+                        "sticky left-0 z-[1] min-w-[4.5rem] max-w-[5.75rem] border-t border-r border-slate-200 px-2 py-2 text-left font-medium text-slate-700 sm:min-w-[5.25rem] sm:px-2.5 sm:py-2.5 " +
+                        (ri % 2 === 0 ? "bg-white" : "bg-slate-50")
+                      }
+                    >
                       <InlineEditable
                         value={getLocalizedContent(row.label as LocalizedString, locale)}
                         onSave={(v) => editor.setPricingRowLabel(ri, v)}
                         editable={editable}
                         onActivate={onActivate}
-                        className="font-medium text-slate-700"
+                        className="block w-full font-medium text-slate-700 [overflow-wrap:normal] [word-break:keep-all]"
                         placeholder={labels.corner}
                       />
                     </th>
@@ -142,8 +151,10 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                       <td
                         key={ci}
                         className={
-                          "border-t border-slate-200 px-3 py-2.5 text-slate-600 whitespace-pre-wrap " +
-                          (highlightColumnIndex === ci ? "bg-emerald-50/90 font-medium text-slate-800 ring-1 ring-emerald-200/60" : "")
+                          "min-w-[5rem] border-t border-slate-200 px-2 py-2 text-center text-slate-600 sm:min-w-[5.5rem] sm:px-2.5 sm:py-2.5 " +
+                          (highlightColumnIndex === ci
+                            ? "bg-emerald-50/90 font-medium text-slate-800 ring-1 ring-inset ring-emerald-200/60"
+                            : "")
                         }
                       >
                         <InlineEditable
@@ -151,7 +162,7 @@ export function CompareCard({ card, isSelected = false, locale = "ja" }: Compare
                           onSave={(v) => editor.setPricingCell(ri, ci, v)}
                           editable={editable}
                           onActivate={onActivate}
-                          className="block w-full whitespace-pre-wrap text-slate-600"
+                          className="block w-full text-center text-slate-600 [overflow-wrap:normal] [word-break:keep-all]"
                           placeholder="—"
                           multiline
                         />

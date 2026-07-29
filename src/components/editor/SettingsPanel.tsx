@@ -2137,11 +2137,12 @@ function ComparePricingSettings({
 
   const cellInputClass = inputClass + " !min-h-[36px] !py-1.5 text-xs";
   const planPlaceholders = ["シングル", "ダブル", "ツイン", "スイート"] as const;
+  const rowLabelPlaceholders = ["おすすめ", "定員", "料金目安", "設備"] as const;
 
   return (
     <div className="space-y-3">
       <p className="text-[11px] leading-relaxed text-slate-500">
-        見出しと各セルを下の表でまとめて編集できます。行の並びは「↑」「↓」、同じ内容を増やすときは「複製」が便利です。
+        プラン名と各行の内容を下で編集できます。行の並びは「↑」「↓」、同じ内容を増やすときは「複製」が便利です。
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={addColumn} disabled={headers.length >= MAX_PRICING_COLS} className={addButtonClass}>
@@ -2173,99 +2174,102 @@ function ComparePricingSettings({
           ))}
         </select>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full min-w-[480px] border-collapse text-left">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="w-[min(28vw,140px)] px-2 py-2 align-bottom text-[10px] font-semibold text-slate-500">項目</th>
-              {Array.from({ length: cols }, (_, i) => (
-                <th key={i} className="min-w-[104px] px-2 py-2 align-bottom font-normal">
-                  <span className="mb-1 block text-[10px] font-medium text-slate-500">プラン {i + 1}</span>
-                  <input
-                    type="text"
-                    value={readJaText(headers[i])}
-                    onChange={(e) => updateHeader(i, e.target.value)}
-                    placeholder={planPlaceholders[i] ?? "見出し"}
-                    className={cellInputClass}
-                    aria-label={`列${i + 1}の見出し`}
-                  />
-                </th>
-              ))}
-              <th className="w-[108px] px-1 py-2 align-bottom text-[10px] font-medium text-slate-400">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={cols + 2} className="px-3 py-6 text-center text-xs text-slate-500">
-                  行がありません。「+ 行を追加」から追加してください。
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, ri) => {
-                const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
-                const padded = [...vals];
-                while (padded.length < cols) padded.push("");
-                return (
-                  <tr key={ri} className="border-b border-slate-100 last:border-0">
-                    <td className="px-2 py-1.5 align-top">
+
+      <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+        <p className="text-[11px] font-semibold text-slate-700">プラン名（列の見出し）</p>
+        <div className="space-y-2">
+          {Array.from({ length: cols }, (_, i) => (
+            <div key={i} className="min-w-0">
+              <label className="mb-1 block text-[10px] font-medium text-slate-500">プラン {i + 1}</label>
+              <input
+                type="text"
+                value={readJaText(headers[i])}
+                onChange={(e) => updateHeader(i, e.target.value)}
+                placeholder={planPlaceholders[i] ?? "見出し"}
+                className={cellInputClass + " w-full min-w-0"}
+                aria-label={`列${i + 1}の見出し`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {rows.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-500">
+            行がありません。「+ 行を追加」から追加してください。
+          </p>
+        ) : (
+          rows.map((row, ri) => {
+            const vals = Array.isArray(row.values) ? row.values.map((x) => (typeof x === "string" ? x : "")) : [];
+            const padded = [...vals];
+            while (padded.length < cols) padded.push("");
+            return (
+              <div key={ri} className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <label className="mb-1 block text-[10px] font-medium text-slate-500">項目</label>
+                    <input
+                      type="text"
+                      value={readJaText((row as Record<string, unknown>).label)}
+                      onChange={(e) => updateRowLabel(ri, e.target.value)}
+                      placeholder={rowLabelPlaceholders[ri] ?? "例: 定員"}
+                      className={cellInputClass + " w-full min-w-0"}
+                      aria-label={`行${ri + 1}の見出し`}
+                    />
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-1 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => moveRow(ri, -1)}
+                      disabled={ri === 0}
+                      className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveRow(ri, 1)}
+                      disabled={ri >= rows.length - 1}
+                      className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {Array.from({ length: cols }, (_, ci) => (
+                    <div key={ci} className="min-w-0">
+                      <label className="mb-1 block truncate text-[10px] font-medium text-slate-500">
+                        {readJaText(headers[ci]) || `プラン ${ci + 1}`}
+                      </label>
                       <input
                         type="text"
-                        value={readJaText((row as Record<string, unknown>).label)}
-                        onChange={(e) => updateRowLabel(ri, e.target.value)}
-                        placeholder="例: 定員"
-                        className={cellInputClass}
-                        aria-label={`行${ri + 1}の見出し`}
+                        value={padded[ci] ?? ""}
+                        onChange={(e) => updateCell(ri, ci, e.target.value)}
+                        placeholder="内容"
+                        className={cellInputClass + " w-full min-w-0"}
+                        aria-label={`行${ri + 1}・列${ci + 1}`}
                       />
-                    </td>
-                    {Array.from({ length: cols }, (_, ci) => (
-                      <td key={ci} className="px-2 py-1.5 align-top">
-                        <textarea
-                          value={padded[ci] ?? ""}
-                          onChange={(e) => updateCell(ri, ci, e.target.value)}
-                          placeholder="内容"
-                          rows={2}
-                          className={cellInputClass + " min-h-[52px] resize-y"}
-                          aria-label={`行${ri + 1}・列${ci + 1}`}
-                        />
-                      </td>
-                    ))}
-                    <td className="px-1 py-1.5 align-top">
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => moveRow(ri, -1)}
-                          disabled={ri === 0}
-                          className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveRow(ri, 1)}
-                          disabled={ri >= rows.length - 1}
-                          className={`${reorderButtonClass} !min-h-[30px] !min-w-0 !px-2 !py-0.5 text-[11px] disabled:opacity-40`}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => duplicateRow(ri)}
-                          className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
-                        >
-                          複製
-                        </button>
-                        <button type="button" onClick={() => removeRow(ri)} className={`${removeButtonClass} !min-h-[30px] text-[11px]`}>
-                          削除
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => duplicateRow(ri)}
+                    className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    複製
+                  </button>
+                  <button type="button" onClick={() => removeRow(ri)} className={`${removeButtonClass} !min-h-[30px] text-[11px]`}>
+                    削除
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
@@ -4140,7 +4144,7 @@ export function CardSettings({
           {card.type === "icon_shortcuts" && (
             <SettingsSection title="コンテンツ">
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
-                このブロックは廃止予定です。新規追加は「ページリンク」をご利用ください（既存ページの表示・編集は継続できます）。
+                このブロックは廃止予定です。新規追加は「他ページへの入口」をご利用ください（既存ページの表示・編集は継続できます）。
               </p>
               <Input
                 label="タイトル（任意）"
@@ -4510,14 +4514,22 @@ export function CardSettings({
 
           {card.type === "faq_search" && (
             isNativeUi ? (
-              <FaqNativeSettings
-                content={content}
-                onUpdate={update}
-                title={display("title")}
-                onTitleChange={(v) => updateLocalized("title", v)}
-              />
+              <>
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                  このブロックは廃止予定です。新規追加は「よくある質問」をご利用ください（既存ページの表示・編集は継続できます）。ページを開き直すと「よくある質問」に統合されます。
+                </p>
+                <FaqNativeSettings
+                  content={content}
+                  onUpdate={update}
+                  title={display("title")}
+                  onTitleChange={(v) => updateLocalized("title", v)}
+                />
+              </>
             ) : (
               <SettingsSection title="コンテンツ">
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                  このブロックは廃止予定です。新規追加は「よくある質問」をご利用ください（既存ページの表示・編集は継続できます）。ページを開き直すと「よくある質問」に統合されます。
+                </p>
                 <Input
                   label="タイトル"
                   value={display("title")}
@@ -4686,9 +4698,9 @@ export function CardSettings({
                           layout: "pricing",
                           pricingColumnHeaders: ["シングル", "ダブル", "ツイン"],
                           pricingRows: [
-                            { label: "おすすめポイント", values: ["1名向け", "カップル向け", "2ベッド"] },
+                            { label: "おすすめ", values: ["1名向け", "カップル", "2ベッド"] },
                             { label: "定員", values: ["1名", "2名", "2名"] },
-                            { label: "料金（税サ込・目安）", values: ["7,800円〜", "9,800円〜", "10,800円〜"] },
+                            { label: "料金目安", values: ["7,800円〜", "9,800円〜", "10,800円〜"] },
                           ],
                           highlightColumnIndex: 1,
                         },

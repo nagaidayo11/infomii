@@ -1243,7 +1243,7 @@ function LabelRowPresetPopover({
     >
       <div
         role="menu"
-        aria-label="ラベル行リストの用途"
+        aria-label="項目リストの用途"
         className="w-[176px] shrink-0 rounded-xl border border-slate-200 bg-white py-1.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
       >
         {LABEL_ROW_LIBRARY_PRESETS.map((preset) => (
@@ -1274,7 +1274,7 @@ function LabelRowPresetPopover({
             (hoverKey === "blank" ? "bg-slate-100 text-slate-800" : "text-slate-600 hover:bg-slate-50")
           }
         >
-          空のラベル行リスト
+          空の項目リスト
         </button>
       </div>
       {previewCard ? (
@@ -1285,7 +1285,7 @@ function LabelRowPresetPopover({
           <LiveCardPreview card={previewCard} expandInner={expandInner} />
           <p className="mt-1.5 text-xs font-semibold text-slate-900">
             {hoverKey === "blank"
-              ? "空のラベル行リスト"
+              ? "空の項目リスト"
               : LABEL_ROW_LIBRARY_PRESETS.find((p) => p.id === hoverKey)?.label ?? "プレビュー"}
           </p>
         </div>
@@ -1583,7 +1583,7 @@ function QuickPresetPreviewPortal({
 
 /**
  * Left panel: Card Library — layouts and sections.
- * Hotel label-row presets open in a right-side popover from 「ラベル行リスト」.
+ * Hotel label-row presets open in a right-side popover from 「項目リスト」.
  */
 export function CardLibrary({
   onAddCard,

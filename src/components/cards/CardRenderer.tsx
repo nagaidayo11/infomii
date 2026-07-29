@@ -39,7 +39,6 @@ import { KpiCard } from "./KpiCard";
 import { SpaceCard } from "./SpaceCard";
 import { CampaignTimerCard } from "./CampaignTimerCard";
 import { TabsInfoCard } from "./TabsInfoCard";
-import { FaqSearchCard } from "./FaqSearchCard";
 import { NoticeTickerCard } from "./NoticeTickerCard";
 import { CouponCard } from "./CouponCard";
 import { AccordionInfoCard } from "./AccordionInfoCard";
@@ -179,6 +178,9 @@ function SingleCardRenderer({
       return <GalleryCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "faq":
       return <FaqCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "faq_search":
+      // Deprecated duplicate of faq — keep rendering for unpublished legacy rows.
+      return <FaqCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "emergency":
       return <EmergencyCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "text":
@@ -214,8 +216,6 @@ function SingleCardRenderer({
       return <CampaignTimerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "tabs_info":
       return <TabsInfoCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
-    case "faq_search":
-      return <FaqSearchCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "notice_ticker":
       return <NoticeTickerCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "coupon":

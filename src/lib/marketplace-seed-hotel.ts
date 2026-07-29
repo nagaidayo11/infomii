@@ -10,7 +10,6 @@ import {
   drinkMenu,
   emergency,
   faq,
-  faqSearch,
   gallery,
   headingBody,
   hero,
@@ -465,8 +464,8 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       block("notice", notice("House Rules", "No smoking in rooms. Quiet hours after 22:00.", "info")),
       block("checkout", checkout("11:00", "Please return your room key to the front desk.", "Check-out")),
       block(
-        "faq_search",
-        faqSearch("Guest FAQ", [
+        "faq",
+        faq("Guest FAQ", [
           { q: "Can I store luggage?", a: "Yes, same-day storage is available at the front desk." },
           { q: "Is English support available?", a: "Basic English support is available 24/7." },
         ]),
@@ -672,8 +671,8 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
       block("wifi", wifi("Global-Guest", "welcome2026", "Available in rooms and lobby. Good for translation apps.", "Wi-Fi")),
       block("notice", notice("Quiet Hours", "No smoking in rooms. Quiet hours after 22:00.", "info")),
       block(
-        "faq_search",
-        faqSearch("Guest FAQ", [
+        "faq",
+        faq("Guest FAQ", [
           { q: "Where can I store luggage?", a: "Same-day storage is available at the front desk." },
           { q: "How do I contact staff?", a: "Use the contact card or call the front desk." },
         ]),

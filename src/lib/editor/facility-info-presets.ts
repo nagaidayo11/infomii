@@ -381,12 +381,12 @@ export type LabelRowLibraryPreset = {
 
 /** Single layout (`info`) + these presets in the library. */
 export const LABEL_ROW_LIBRARY_PRESETS: LabelRowLibraryPreset[] = [
-  { id: "label-wifi", label: "Wi-Fi", description: "SSID・パスワード", seedFrom: "wifi" },
+  { id: "label-wifi", label: "Wi-Fi", description: "ネットワーク名・パスワード", seedFrom: "wifi" },
   { id: "label-taxi", label: "タクシー", description: "会社名・電話・備考", seedFrom: "taxi" },
   { id: "label-laundry", label: "ランドリー", description: "時間・料金・連絡先", seedFrom: "laundry" },
   { id: "label-parking", label: "駐車場", description: "台数・料金・場所", seedFrom: "parking" },
   { id: "label-breakfast", label: "朝食案内", description: "時間・会場・メニュー", seedFrom: "breakfast" },
-  { id: "label-spa", label: "スパ・温泉", description: "時間・場所・ご案内", seedFrom: "spa" },
+  { id: "label-spa", label: "大浴場・温泉", description: "時間・場所・ご案内", seedFrom: "spa" },
   { id: "label-restaurant", label: "レストラン", description: "時間・場所・内容", seedFrom: "restaurant" },
 ];
 

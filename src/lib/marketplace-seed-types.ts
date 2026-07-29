@@ -51,7 +51,6 @@ export type MarketplaceSeedCardType =
   | "compare"
   | "kpi"
   | "tabs_info"
-  | "faq_search"
   | "accordion_info"
   | "open_status"
   | "social_links"

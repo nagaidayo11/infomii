@@ -54,7 +54,9 @@ export function migrateCardsForEditor(cards: Array<{ id: string; type: string; c
     let content = { ...card.content };
 
     /* breakfast/spa は type のまま（施設案内フィールドを保持）。表示は CardRenderer が担当 */
-    if (type === "highlight" && isObjectJoinGarbageText(content.body)) {
+    if (type === "faq_search") {
+      type = "faq";
+    } else if (type === "highlight" && isObjectJoinGarbageText(content.body)) {
       const repaired = joinFacilityDetailFields(content, " · ");
       if (repaired) {
         content = { ...content, body: repaired };

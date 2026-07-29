@@ -182,7 +182,6 @@ export const checklist = (title: string, items: string[]) => ({
 });
 
 export const faq = (title: string, items: Array<{ q: string; a: string }>) => ({ title, items });
-export const faqSearch = (title: string, items: Array<{ q: string; a: string }>) => ({ title, items });
 
 export const menu = (title: string, items: Array<{ name: string; price: string; description: string }>) => ({
   title,
