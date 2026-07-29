@@ -1298,6 +1298,88 @@ function AccordionItemsEditor({
   );
 }
 
+type IconAccordionItem = {
+  label?: string;
+  description?: string;
+  icon?: string;
+  body?: string;
+};
+
+function IconAccordionItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as IconAccordionItem[];
+  const setItems = (next: IconAccordionItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, field: keyof IconAccordionItem, value: string) => {
+    const next = [...items];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">項目</span>
+        <button
+          type="button"
+          onClick={() => setItems([...items, { label: "新規", description: "", icon: "info", body: "" }])}
+          className={addButtonClass}
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setItems(items.filter((_, idx) => idx !== i))}
+              className={removeButtonClass}
+            >
+              削除
+            </button>
+          </div>
+          <IconTokenSelect
+            label="アイコン"
+            value={typeof item.icon === "string" ? item.icon : "info"}
+            onChange={(next) => updateItem(i, "icon", next || "info")}
+            className={inputClass}
+            labelClassName={labelClass}
+          />
+          <Input
+            label="ラベル"
+            value={readJaText(item.label)}
+            onChange={(e) => updateItem(i, "label", e.target.value)}
+            placeholder={`項目 ${i + 1}`}
+          />
+          <Input
+            label="説明（カード上）"
+            value={readJaText(item.description)}
+            onChange={(e) => updateItem(i, "description", e.target.value)}
+            placeholder="短い補足"
+          />
+          <div className="w-full">
+            <label className={labelClass}>開いたときの本文</label>
+            <textarea
+              value={readJaText(item.body)}
+              onChange={(e) => updateItem(i, "body", e.target.value)}
+              rows={3}
+              className={inputClass}
+              placeholder="タップで表示する詳しい案内"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MapPinsEditor({
   content,
   onUpdate,
@@ -3987,6 +4069,72 @@ export function CardSettings({
                 <PageLinksItemsEditor content={content} onUpdate={update} />
               </SettingsSection>
             )
+          )}
+
+          {card.type === "iconAccordion" && (
+            <SettingsSection title="コンテンツ">
+                <Input
+                  label="タイトル"
+                  value={display("title")}
+                  onChange={(e) => updateLocalized("title", e.target.value)}
+                  placeholder="よく使うご案内"
+                />
+              <div className="w-full">
+                <label className={labelClass}>列数</label>
+                <select
+                  value={String(
+                    typeof content.columns === "number"
+                      ? content.columns
+                      : Number(content.columns) || 2,
+                  )}
+                  onChange={(e) => update("columns", Number(e.target.value))}
+                  className={inputClass}
+                >
+                  <option value="2">2列</option>
+                  <option value="3">3列</option>
+                  <option value="4">4列</option>
+                </select>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>アイコンサイズ</label>
+                <select
+                  value={
+                    content.iconSize === "sm" || content.iconSize === "lg"
+                      ? String(content.iconSize)
+                      : "md"
+                  }
+                  onChange={(e) => update("iconSize", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="sm">小</option>
+                  <option value="md">中</option>
+                  <option value="lg">大</option>
+                </select>
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={
+                      typeof content.accentColor === "string" && content.accentColor.trim()
+                        ? content.accentColor.trim()
+                        : "#0f766e"
+                    }
+                    onChange={(e) => update("accentColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.accentColor as string) ?? ""}
+                    onChange={(e) => update("accentColor", e.target.value || undefined)}
+                    placeholder="#0f766e"
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+              </div>
+              <IconAccordionItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
           )}
 
           {card.type === "icon_shortcuts" && (

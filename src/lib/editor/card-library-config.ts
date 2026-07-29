@@ -67,6 +67,7 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   checklist: { label: "持ち物・TODO", description: "持ち物や確認リスト" },
   contact_hub: { label: "連絡先", description: "電話・メール・LINEなど" },
   pageLinks: { label: "リンクまとめ", description: "予約・地図・SNSなどへの導線" },
+  iconAccordion: { label: "アイコン案内", description: "押すと説明が開くアイコン一覧" },
   hero_slider: { label: "写真スライド", description: "旅行・イベントの写真を切り替え表示" },
   notice_ticker: { label: "お知らせスクロール", description: "当日の連絡を横に流して表示（Pro）" },
   emergency_banner: { label: "緊急連絡バナー", description: "集合変更など最優先の連絡" },
@@ -123,6 +124,7 @@ const MENU_ITEMS: LibraryItem[] = [
 const OPERATION_ITEMS: LibraryItem[] = [
   { type: "button", label: "リンクボタン", description: "予約・外部導線への誘導" },
   { type: "pageLinks", label: "ページリンク", description: "カード／リスト／サークルで導線を並べる" },
+  { type: "iconAccordion", label: "アイコン折りたたみ", description: "アイコンを押すと直下に本文が開く" },
   { type: "campaign_timer", label: "キャンペーンタイマー", description: "期間表示とカウントダウン（Pro）" },
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項を表示（Pro）" },
   { type: "social_links", label: "SNSリンク集", description: "SNSの導線を一括表示" },

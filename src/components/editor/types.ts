@@ -46,6 +46,7 @@ export type CardType =
   | "pageLinks"
   /** @deprecated Prefer pageLinks. Existing pages only — hidden from library. */
   | "icon_shortcuts"
+  | "iconAccordion"
   | "image_tiles"
   | "quote"
   | "checklist"
@@ -180,6 +181,7 @@ const HERO_COLUMN_WIDTH_TYPES: ReadonlySet<CardType> = new Set<CardType>([
   "map",
   "pageLinks",
   "icon_shortcuts",
+  "iconAccordion",
   "action",
   "button",
   "divider",
@@ -360,6 +362,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   parking: "駐車場",
   pageLinks: "ページリンク",
   icon_shortcuts: "アイコンショートカット",
+  iconAccordion: "アイコン折りたたみ",
   image_tiles: "画像タイル",
   quote: "引用",
   checklist: "チェックリスト",
@@ -413,6 +416,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "notice_ticker",
   "coupon",
   "accordion_info",
+  "iconAccordion",
   "open_status",
   "social_links",
   "contact_hub",
@@ -455,6 +459,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "notice_ticker", label: "お知らせティッカー", description: "流れるお知らせ（Pro）" },
   { type: "coupon", label: "クーポン", description: "特典コード表示（Pro）" },
   { type: "accordion_info", label: "アコーディオン案内", description: "折りたたみ式Q&A/案内" },
+  { type: "iconAccordion", label: "アイコン折りたたみ", description: "アイコンを押すと直下に本文が開く" },
   { type: "open_status", label: "営業時間ステータス", description: "現在営業中かを表示" },
   { type: "social_links", label: "SNSリンク集", description: "SNS導線をまとめて表示" },
   { type: "contact_hub", label: "連絡先ハブ", description: "電話/メール/地図導線を集約" },
@@ -519,6 +524,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "menu_time_band", label: "時間帯別メニュー", description: "時間帯切替（飲食テーマの静的サンプル・Business）" },
   { type: "parking", label: "駐車場", description: "台数・料金・場所" },
   { type: "pageLinks", label: "ページリンク", description: "子ページへのアイコンリンク" },
+  { type: "iconAccordion", label: "アイコン折りたたみ", description: "アイコンを押すと直下に本文が開く" },
   { type: "quote", label: "引用", description: "引用文・レビュー" },
   { type: "checklist", label: "チェックリスト", description: "チェック項目" },
   { type: "steps", label: "ステップ", description: "手順を段階表示" },
@@ -988,6 +994,39 @@ function defaultContent(type: CardType): Record<string, unknown> {
             linkType: "page" as const,
             pageSlug: "",
             link: "",
+          },
+        ],
+      };
+    case "iconAccordion":
+      return {
+        title: "よく使うご案内",
+        columns: 2,
+        iconSize: "md",
+        accentColor: "#0f766e",
+        items: [
+          {
+            label: "チェックイン",
+            description: "15:00〜",
+            icon: "key",
+            body: "チェックインは15:00からご利用いただけます。早めの到着はフロントまでお声がけください。",
+          },
+          {
+            label: "Wi-Fi",
+            description: "客室・ロビー",
+            icon: "wifi",
+            body: "ネットワーク名とパスワードは客室カードをご確認ください。ロビーでもご利用いただけます。",
+          },
+          {
+            label: "朝食",
+            description: "6:30–10:00",
+            icon: "breakfast",
+            body: "朝食会場は1階レストランです。最終入場は9:30となります。",
+          },
+          {
+            label: "チェックアウト",
+            description: "11:00まで",
+            icon: "checkout",
+            body: "チェックアウトは11:00までです。延長をご希望の場合はフロントまでご相談ください。",
           },
         ],
       };

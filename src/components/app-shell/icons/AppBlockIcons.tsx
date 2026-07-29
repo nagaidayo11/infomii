@@ -400,6 +400,7 @@ const BLOCK_ICON_COMPONENTS: Partial<Record<CardType, (props: BlockIconProps) =>
   divider: BlockIconDivider,
   parking: BlockIconParking,
   pageLinks: BlockIconAction,
+  iconAccordion: BlockIconAccordion,
   icon_shortcuts: BlockIconIcon,
   image_tiles: BlockIconMedia,
   quote: BlockIconText,

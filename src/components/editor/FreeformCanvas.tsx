@@ -84,6 +84,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   divider: 52,
   parking: 78,
   pageLinks: 104,
+  iconAccordion: 180,
   icon_shortcuts: 96,
   image_tiles: 180,
   quote: 84,

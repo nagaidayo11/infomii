@@ -28,6 +28,7 @@ import { MenuCard } from "./MenuCard";
 import { GalleryCard } from "./GalleryCard";
 import { DividerCard } from "./DividerCard";
 import { PageLinksCard } from "./PageLinksCard";
+import { IconAccordionCard } from "./IconAccordionCard";
 import { IconShortcutsCard } from "./IconShortcutsCard";
 import { ImageTilesCard } from "./ImageTilesCard";
 import { QuoteCard } from "./QuoteCard";
@@ -162,6 +163,8 @@ function SingleCardRenderer({
       return <MapCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "pageLinks":
       return <PageLinksCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "iconAccordion":
+      return <IconAccordionCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "icon_shortcuts":
       return <IconShortcutsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image_tiles":
