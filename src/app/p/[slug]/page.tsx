@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import type { InformationBlock, InformationStatus, InformationTheme } from "@/types/information";
 import type { Database } from "@/types/supabase";
@@ -74,8 +75,8 @@ export async function generateMetadata({ params, searchParams }: PublicPageProps
   // Card-based pages are also served at /v; prefer /v as the sole indexable URL.
   const canonicalPath = meta.hasCardPage ? `/v/${slug}` : `/p/${slug}`;
   const canonical = `${SEO_APP_URL}${canonicalPath}`;
-  // 埋め込み・下書きは検索インデックスさせない。
-  const noindex = isEmbed || !published;
+  // 埋め込み・下書き・カードページの /p エイリアスは検索インデックスさせない。
+  const noindex = isEmbed || !published || meta.hasCardPage;
   return {
     title: { absolute: title },
     description,
@@ -616,6 +617,14 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   const { slug } = await params;
   const query = await searchParams;
   const isEmbed = query.embed === "1";
+
+  if (!isEmbed) {
+    const meta = await loadLegacyPageMeta(slug);
+    if (meta?.hasCardPage) {
+      const qs = query.src === "qr" ? "?src=qr" : "";
+      redirect(`/v/${encodeURIComponent(slug)}${qs}`);
+    }
+  }
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return (
