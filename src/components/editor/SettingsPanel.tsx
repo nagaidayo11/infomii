@@ -822,8 +822,17 @@ function ImageTilesItemsEditor({
           <option value="3">3列</option>
         </select>
       </div>
+      <label className={checkboxInlineRowClass}>
+        <input
+          type="checkbox"
+          checked={content.showLabels !== false}
+          onChange={(e) => onUpdate("showLabels", e.target.checked)}
+          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+        />
+        ラベルを表示する
+      </label>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">タイル</span>
+        <span className="text-xs font-medium text-slate-500">写真</span>
         <button type="button" onClick={addItem} className={addButtonClass}>
           + 追加
         </button>
@@ -893,6 +902,139 @@ function ImageTilesItemsEditor({
               placeholder="https://..."
             />
           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DayTimelineItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{
+    time?: string;
+    title?: string;
+    description?: string;
+  }>;
+  const setItems = (next: typeof items) => onUpdate("items", next);
+  const updateItem = (index: number, field: "time" | "title" | "description", value: string) => {
+    const next = [...items];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]: writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">項目</span>
+        <button
+          type="button"
+          onClick={() => setItems([...items, { time: "", title: "新規", description: "" }])}
+          className={addButtonClass}
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>
+              削除
+            </button>
+          </div>
+          <Input label="時刻" value={readJaText(item.time)} onChange={(e) => updateItem(i, "time", e.target.value)} placeholder="15:00" />
+          <Input label="タイトル" value={readJaText(item.title)} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder="チェックイン" />
+          <div className="w-full">
+            <label className={labelClass}>説明</label>
+            <textarea
+              value={readJaText(item.description)}
+              onChange={(e) => updateItem(i, "description", e.target.value)}
+              rows={2}
+              className={inputClass}
+              placeholder="短い説明"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScrollCardsItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = (Array.isArray(content.items) ? content.items : []) as Array<{
+    src?: string;
+    label?: string;
+    description?: string;
+    linkType?: "page" | "url";
+    pageSlug?: string;
+    link?: string;
+  }>;
+  const setItems = (next: typeof items) => onUpdate("items", next);
+  const updateItem = (index: number, field: string, value: string) => {
+    const next = [...items];
+    next[index] = {
+      ...(next[index] ?? {}),
+      [field]:
+        field === "src" || field === "linkType" || field === "pageSlug" || field === "link"
+          ? value
+          : writeJaTextPreserving((next[index] as Record<string, unknown> | undefined)?.[field], value),
+    };
+    setItems(next);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">カード</span>
+        <button
+          type="button"
+          onClick={() =>
+            setItems([...items, { src: "", label: "新規", description: "", linkType: "url", pageSlug: "", link: "" }])
+          }
+          className={addButtonClass}
+        >
+          + 追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>
+              削除
+            </button>
+          </div>
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, "src", url)}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input label="ラベル" value={readJaText(item.label)} onChange={(e) => updateItem(i, "label", e.target.value)} placeholder="朝食" />
+          <Input
+            label="説明"
+            value={readJaText(item.description)}
+            onChange={(e) => updateItem(i, "description", e.target.value)}
+            placeholder="6:30–10:00"
+          />
+          <Input
+            label="リンクURL（任意）"
+            value={typeof item.link === "string" ? item.link : ""}
+            onChange={(e) => {
+              const next = [...items];
+              next[i] = { ...(next[i] ?? {}), linkType: "url", link: e.target.value };
+              setItems(next);
+            }}
+            placeholder="https://..."
+          />
         </div>
       ))}
     </div>
@@ -3029,13 +3171,15 @@ export function CardSettings({
 
   if (!card) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="border-b border-slate-200 bg-white px-4 py-4 ">
-          <h2 className="text-sm font-semibold text-slate-700">
-            ブロック設定
+      <div className={"flex min-h-0 flex-1 flex-col overflow-hidden" + (isNativeUi ? " app-native-settings-root" : "")}>
+        <div className={isNativeUi ? "app-native-settings-empty" : "border-b border-slate-200 bg-white px-4 py-4 "}>
+          <h2 className={isNativeUi ? "text-base font-extrabold text-[var(--app-text)]" : "text-sm font-semibold text-slate-700"}>
+            {isNativeUi ? "ブロックを選んで編集" : "ブロック設定"}
           </h2>
-          <p className="mt-3 text-sm text-slate-500">
-            キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。
+          <p className={isNativeUi ? "mt-2 text-sm leading-relaxed text-[var(--app-text-muted)]" : "mt-3 text-sm text-slate-500"}>
+            {isNativeUi
+              ? "ページ上のブロックをタップすると、内容や見た目をここで整えられます。"
+              : "キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。"}
           </p>
         </div>
       </div>
@@ -3281,7 +3425,7 @@ export function CardSettings({
                   : "text-sm font-semibold text-slate-700"
               }
             >
-              ブロック設定
+              {isNativeUi ? "整える" : "ブロック設定"}
             </h2>
             <button
               type="button"
@@ -3336,7 +3480,7 @@ export function CardSettings({
               ) : null}
               {getCardTypeLabel(card.type, libraryAudience)}
             </p>
-            {canEditCard || canReorderCard ? (
+            {!isNativeUi && (canEditCard || canReorderCard) ? (
               <div className="flex items-center gap-1.5">
                 {canReorderCard ? (
                   <>
@@ -3418,9 +3562,9 @@ export function CardSettings({
                 else activatePalette("appearance-spacing", appearanceSpacingId);
               }}
               options={[
-                { id: "content", label: "コンテンツ" },
+                { id: "content", label: "内容" },
                 { id: "appearance", label: "見た目" },
-                { id: "appearance-spacing", label: "サイズ・影" },
+                { id: "appearance-spacing", label: "余白" },
               ]}
             />
           ) : (
@@ -3464,7 +3608,10 @@ export function CardSettings({
       </div>
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 "
+        className={
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain " +
+          (isNativeUi ? "app-native-settings-scroll" : "px-4 py-4 pb-8 ")
+        }
       >
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
@@ -4162,9 +4309,196 @@ export function CardSettings({
                 label="タイトル（任意）"
                 value={display("title")}
                 onChange={(e) => updateLocalized("title", e.target.value)}
-                placeholder="施設案内"
+                placeholder="写真ギャラリー"
               />
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                写真をタップするとリンク先へ移動できます。各写真のリンクは下の項目で設定してください。
+              </p>
               <ImageTilesItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "storyBand" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="短い見出し"
+                value={display("eyebrow")}
+                onChange={(e) => updateLocalized("eyebrow", e.target.value)}
+                placeholder="館内の雰囲気"
+              />
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="静かな時間をお過ごしください"
+              />
+              <div className="w-full">
+                <label className={labelClass}>キャプション</label>
+                <textarea
+                  value={display("caption")}
+                  onChange={(e) => updateLocalized("caption", e.target.value)}
+                  rows={2}
+                  className={inputClass}
+                  placeholder="短い説明文"
+                />
+              </div>
+              <ImageUpload onUploaded={(url) => update("image", url)} className="mt-1.5" />
+              <label className={checkboxInlineRowClass}>
+                <input
+                  type="checkbox"
+                  checked={content.overlay !== false}
+                  onChange={(e) => update("overlay", e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                写真の上に文字を重ねる
+              </label>
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <input
+                  type="color"
+                  value={
+                    typeof content.accentColor === "string" && content.accentColor.trim()
+                      ? content.accentColor.trim()
+                      : "#0f766e"
+                  }
+                  onChange={(e) => update("accentColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "dayTimeline" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="滞在の一日"
+              />
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <input
+                  type="color"
+                  value={
+                    typeof content.accentColor === "string" && content.accentColor.trim()
+                      ? content.accentColor.trim()
+                      : "#0f766e"
+                  }
+                  onChange={(e) => update("accentColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+              </div>
+              <DayTimelineItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "scrollCards" && (
+            <SettingsSection title="コンテンツ">
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                このブロックは廃止予定です。新規追加は「写真ギャラリー」をご利用ください（既存ページの表示・編集は継続できます）。
+              </p>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="おすすめのご案内"
+              />
+              <ScrollCardsItemsEditor content={content} onUpdate={update} />
+            </SettingsSection>
+          )}
+
+          {card.type === "sectionTitle" && (
+            <SettingsSection title="コンテンツ">
+              <Input
+                label="見出し"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="館内のご案内"
+              />
+              <Input
+                label="補足（任意）"
+                value={display("subtitle")}
+                onChange={(e) => updateLocalized("subtitle", e.target.value)}
+                placeholder="滞在中に便利な情報をまとめました"
+              />
+              <div className="w-full">
+                <label className={labelClass}>配置</label>
+                <select
+                  value={content.align === "center" ? "center" : "left"}
+                  onChange={(e) => update("align", e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="left">左揃え</option>
+                  <option value="center">中央</option>
+                </select>
+              </div>
+              <label className={checkboxInlineRowClass}>
+                <input
+                  type="checkbox"
+                  checked={content.showLine !== false}
+                  onChange={(e) => update("showLine", e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                />
+                アクセントラインを表示
+              </label>
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <input
+                  type="color"
+                  value={
+                    typeof content.accentColor === "string" && content.accentColor.trim()
+                      ? content.accentColor.trim()
+                      : "#0f766e"
+                  }
+                  onChange={(e) => update("accentColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+              </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "photoCompare" && (
+            <SettingsSection title="コンテンツ">
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                このブロックは廃止予定です。新規追加は「写真ギャラリー」をご利用ください（既存ページの表示・編集は継続できます）。
+              </p>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="客室タイプ"
+              />
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                <p className="text-xs font-medium text-slate-500">左側</p>
+                <ImageUpload onUploaded={(url) => update("leftSrc", url)} />
+                <Input
+                  label="ラベル"
+                  value={display("leftLabel")}
+                  onChange={(e) => updateLocalized("leftLabel", e.target.value)}
+                  placeholder="シングル"
+                />
+              </div>
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                <p className="text-xs font-medium text-slate-500">右側</p>
+                <ImageUpload onUploaded={(url) => update("rightSrc", url)} />
+                <Input
+                  label="ラベル"
+                  value={display("rightLabel")}
+                  onChange={(e) => updateLocalized("rightLabel", e.target.value)}
+                  placeholder="ツイン"
+                />
+              </div>
+              <div className="w-full">
+                <label className={labelClass}>キャプション（任意）</label>
+                <textarea
+                  value={display("caption")}
+                  onChange={(e) => updateLocalized("caption", e.target.value)}
+                  rows={2}
+                  className={inputClass}
+                  placeholder="短い補足"
+                />
+              </div>
             </SettingsSection>
           )}
 
@@ -4448,6 +4782,9 @@ export function CardSettings({
 
           {card.type === "gallery" && (
             <SettingsSection title="コンテンツ">
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+                このブロックは廃止予定です。新規追加は「写真ギャラリー」をご利用ください（ラベル表示切替・タップでリンクが可能です）。
+              </p>
               <Input
                 label="タイトル"
                 value={display("title")}

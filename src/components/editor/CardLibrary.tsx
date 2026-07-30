@@ -694,6 +694,37 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <rect x="13" y="15" width="8" height="4" rx="1" strokeWidth={2} />
     </svg>
   ),
+  storyBand: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 15h10M7 12h6" />
+    </svg>
+  ),
+  dayTimeline: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="7" cy="6" r="1.5" strokeWidth={2} />
+      <circle cx="7" cy="12" r="1.5" strokeWidth={2} />
+      <circle cx="7" cy="18" r="1.5" strokeWidth={2} />
+      <path strokeLinecap="round" strokeWidth={2} d="M7 7.5v3M7 13.5v3M11 6h8M11 12h8M11 18h6" />
+    </svg>
+  ),
+  scrollCards: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="6" width="10" height="12" rx="1.5" strokeWidth={2} />
+      <rect x="15" y="6" width="6" height="12" rx="1.5" strokeWidth={2} />
+    </svg>
+  ),
+  sectionTitle: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeWidth={2} d="M4 8h16M4 12h10M4 16h7" />
+    </svg>
+  ),
+  photoCompare: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="8" height="14" rx="1.5" strokeWidth={2} />
+      <rect x="13" y="5" width="8" height="14" rx="1.5" strokeWidth={2} />
+    </svg>
+  ),
   quote: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8H6v4h3v4H5v-4c0-2.2 1.8-4 4-4zM19 8h-3v4h3v4h-4v-4c0-2.2 1.8-4 4-4z" />
@@ -1015,7 +1046,7 @@ function LibraryItemButton({
           : "cursor-not-allowed opacity-55") +
         (pickerOpen ? " bg-slate-50 ring-1 ring-slate-200" : "")
       }
-      aria-label={onActivate ? `${item.label}の用途を選ぶ` : appVariant ? `${item.label}を貼る` : `${item.label}を追加`}
+      aria-label={onActivate ? `${item.label}の用途を選ぶ` : `${item.label}を追加`}
       aria-expanded={onActivate ? pickerOpen : undefined}
       aria-haspopup={onActivate ? "menu" : undefined}
       aria-disabled={disabled || undefined}
@@ -1728,19 +1759,21 @@ export function CardLibrary({
       <div className={"shrink-0 border-b border-slate-200/80 px-3 py-3 " + (appVariant ? "app-card-library-header" : "")}>
         {!appVariant ? (
           <h2 className="text-sm font-semibold text-slate-700">ブロックライブラリ</h2>
-        ) : null}
+        ) : (
+          <h2 className="app-card-library-title">何を追加する？</h2>
+        )}
         <p className={"text-xs text-slate-500 " + (appVariant ? "font-medium text-teal-800/80" : "mt-1")}>
-          {appVariant ? "タップしてキャンバスに貼る" : "クリックでキャンバスに追加"}
+          {appVariant ? "タップしてページに追加" : "クリックでキャンバスに追加"}
         </p>
         {showAudienceSwitch ? (
           appVariant ? (
             <div className="mt-2.5">
               <AppSegmentedControl
                 variant="filled"
-                ariaLabel="シールの用途"
+                ariaLabel="ブロックの用途"
                 options={[
-                  { id: "hotel", label: "宿泊施設" },
                   { id: "personal", label: "個人・友達" },
+                  { id: "hotel", label: "宿泊施設" },
                 ]}
                 value={libraryAudience}
                 onChange={(id) => onLibraryAudienceChange(id as LibraryAudience)}
@@ -1787,7 +1820,7 @@ export function CardLibrary({
             <section aria-label="おすすめセット" className="space-y-2">
               <div className="flex items-center justify-between gap-2 px-0.5">
                 <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
-                  おすすめセット
+                  {appVariant ? "すぐ始める" : "おすすめセット"}
                 </h3>
                 {quickPresets.length > 2 ? (
                   <button

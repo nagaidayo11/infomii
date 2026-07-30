@@ -40,6 +40,7 @@ export type CardType =
   | "faq"
   | "schedule"
   | "menu"
+  /** @deprecated Prefer image_tiles. Existing pages only — hidden from library. */
   | "gallery"
   | "divider"
   | "parking"
@@ -48,6 +49,13 @@ export type CardType =
   | "icon_shortcuts"
   | "iconAccordion"
   | "image_tiles"
+  | "storyBand"
+  | "dayTimeline"
+  /** @deprecated Prefer image_tiles. Existing pages only — hidden from library. */
+  | "scrollCards"
+  | "sectionTitle"
+  /** @deprecated Prefer image_tiles. Existing pages only — hidden from library. */
+  | "photoCompare"
   | "quote"
   | "checklist"
   | "steps"
@@ -178,6 +186,11 @@ const HERO_COLUMN_WIDTH_TYPES: ReadonlySet<CardType> = new Set<CardType>([
   "image",
   "gallery",
   "image_tiles",
+  "storyBand",
+  "dayTimeline",
+  "scrollCards",
+  "sectionTitle",
+  "photoCompare",
   "video",
   "map",
   "pageLinks",
@@ -358,13 +371,18 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   faq: "よくある質問",
   schedule: "営業時間一覧",
   menu: "メニュー一覧",
-  gallery: "写真ギャラリー",
+  gallery: "写真ギャラリー（旧）",
   divider: "区切り線",
   parking: "駐車場案内",
   pageLinks: "他ページへの入口",
   icon_shortcuts: "アイコンショートカット",
   iconAccordion: "アイコンで開く案内",
-  image_tiles: "写真付きリンク",
+  image_tiles: "写真ギャラリー",
+  storyBand: "写真ストーリー帯",
+  dayTimeline: "一日のタイムライン",
+  scrollCards: "おすすめカード（旧）",
+  sectionTitle: "区切り見出し",
+  photoCompare: "写真で比較（旧）",
   quote: "お客様の声",
   checklist: "チェックリスト",
   steps: "手順ガイド",
@@ -417,13 +435,15 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "coupon",
   "accordion_info",
   "iconAccordion",
+  "storyBand",
+  "dayTimeline",
+  "sectionTitle",
   "open_status",
   "social_links",
   "contact_hub",
   "progress_steps",
   "emergency_banner",
   "scheduled_banner",
-  "gallery",
   "menu",
   "menu_categories",
   "daily_special",
@@ -433,6 +453,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "menu_time_band",
   "divider",
   "space",
+  "image_tiles",
 ];
 
 /** Card library items for the canvas editor. Click inserts at bottom of page. */
@@ -459,13 +480,16 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項（Pro）" },
   { type: "accordion_info", label: "折りたたみ案内", description: "タップで開くQ&A・説明" },
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
+  { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
+  { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
+  { type: "image_tiles", label: "写真ギャラリー", description: "写真グリッド。ラベル表示切替・タップでリンク可" },
   { type: "open_status", label: "営業中かどうか", description: "いま営業中か時間外かを表示" },
   { type: "social_links", label: "SNSリンク", description: "Instagram・Xなどの導線" },
   { type: "contact_hub", label: "連絡先まとめ", description: "電話・メール・地図をまとめる" },
   { type: "progress_steps", label: "進捗の見える化", description: "いまどこまで進んだかを表示" },
   { type: "emergency_banner", label: "緊急のお知らせ", description: "最優先の注意を大きく表示" },
   { type: "scheduled_banner", label: "期間限定のお知らせ", description: "決めた期間だけ表示（Business）" },
-  { type: "gallery", label: "写真ギャラリー", description: "写真をグリッドで並べる" },
   { type: "menu", label: "メニュー一覧", description: "料理・サービスの一覧" },
   { type: "menu_categories", label: "カテゴリ別メニュー", description: "カテゴリごとにメニューを分ける" },
   { type: "daily_special", label: "本日のおすすめ", description: "おすすめメニューを強調" },
@@ -524,6 +548,11 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "parking", label: "駐車場案内", description: "台数・料金・場所" },
   { type: "pageLinks", label: "他ページへの入口", description: "アイコンで子ページや外部へ案内" },
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
+  { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
+  { type: "scrollCards", label: "おすすめカード", description: "写真付きカードを横にスクロール" },
+  { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
+  { type: "photoCompare", label: "写真で比較", description: "2枚の写真を左右で見比べる" },
   { type: "quote", label: "お客様の声", description: "レビュー・口コミを掲載" },
   { type: "checklist", label: "チェックリスト", description: "持ち物や確認項目を並べる" },
   { type: "steps", label: "手順ガイド", description: "手順を順番に表示" },
@@ -1028,6 +1057,74 @@ function defaultContent(type: CardType): Record<string, unknown> {
           },
         ],
       };
+    case "storyBand":
+      return {
+        eyebrow: "館内の雰囲気",
+        title: "静かな時間をお過ごしください",
+        caption: "客室・ラウンジ・大浴場。滞在のひとコマをご紹介します。",
+        image: PRESET_HERO_SAMPLE_IMAGE,
+        imageAlt: "館内イメージ",
+        overlay: true,
+        accentColor: "#0f766e",
+      };
+    case "dayTimeline":
+      return {
+        title: "滞在の一日",
+        accentColor: "#0f766e",
+        items: [
+          { time: "15:00", title: "チェックイン", description: "フロントでお手続き後、客室へご案内します。" },
+          { time: "18:00", title: "夕食・ラウンジ", description: "レストランまたは周辺グルメをお楽しみください。" },
+          { time: "21:00", title: "大浴場", description: "ゆったりと一日の疲れを癒やしてください。" },
+          { time: "11:00", title: "チェックアウト", description: "フロントへ鍵のご返却をお願いします。" },
+        ],
+      };
+    case "scrollCards":
+      return {
+        title: "おすすめのご案内",
+        items: [
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "朝食ビュッフェ",
+            description: "6:30–10:00 / 1F",
+            linkType: "page",
+            pageSlug: "",
+            link: "",
+          },
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "大浴場",
+            description: "15:00–24:00",
+            linkType: "page",
+            pageSlug: "",
+            link: "",
+          },
+          {
+            src: PRESET_HERO_SAMPLE_IMAGE,
+            label: "周辺スポット",
+            description: "徒歩圏内のおすすめ",
+            linkType: "page",
+            pageSlug: "",
+            link: "",
+          },
+        ],
+      };
+    case "sectionTitle":
+      return {
+        title: "館内のご案内",
+        subtitle: "滞在中に便利な情報をまとめました",
+        align: "left",
+        showLine: true,
+        accentColor: "#0f766e",
+      };
+    case "photoCompare":
+      return {
+        title: "客室タイプ",
+        leftSrc: PRESET_HERO_SAMPLE_IMAGE,
+        leftLabel: "シングル",
+        rightSrc: PRESET_HERO_SAMPLE_IMAGE,
+        rightLabel: "ツイン",
+        caption: "ご人数や滞在スタイルに合わせてお選びください。",
+      };
     case "icon_shortcuts":
       return {
         title: "",
@@ -1044,8 +1141,9 @@ function defaultContent(type: CardType): Record<string, unknown> {
       };
     case "image_tiles":
       return {
-        title: "",
+        title: "写真ギャラリー",
         columns: 2,
+        showLabels: true,
         items: [
           {
             src: PRESET_HERO_SAMPLE_IMAGE,

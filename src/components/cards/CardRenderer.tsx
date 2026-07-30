@@ -31,6 +31,11 @@ import { PageLinksCard } from "./PageLinksCard";
 import { IconAccordionCard } from "./IconAccordionCard";
 import { IconShortcutsCard } from "./IconShortcutsCard";
 import { ImageTilesCard } from "./ImageTilesCard";
+import { StoryBandCard } from "./StoryBandCard";
+import { DayTimelineCard } from "./DayTimelineCard";
+import { ScrollCardsCard } from "./ScrollCardsCard";
+import { SectionTitleCard } from "./SectionTitleCard";
+import { PhotoCompareCard } from "./PhotoCompareCard";
 import { QuoteCard } from "./QuoteCard";
 import { ChecklistCard } from "./ChecklistCard";
 import { StepsCard } from "./StepsCard";
@@ -168,6 +173,16 @@ function SingleCardRenderer({
       return <IconShortcutsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image_tiles":
       return <ImageTilesCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "storyBand":
+      return <StoryBandCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "dayTimeline":
+      return <DayTimelineCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "scrollCards":
+      return <ScrollCardsCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "sectionTitle":
+      return <SectionTitleCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "photoCompare":
+      return <PhotoCompareCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "button":
       return <ButtonCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "image":

@@ -68,6 +68,12 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   contact_hub: { label: "連絡先", description: "電話・メール・LINEなど" },
   pageLinks: { label: "リンクまとめ", description: "予約・地図・SNSなどへの導線" },
   iconAccordion: { label: "アイコン案内", description: "押すと説明が開くアイコン一覧" },
+  storyBand: { label: "写真ストーリー", description: "大きな写真と短いコピー" },
+  dayTimeline: { label: "一日の流れ", description: "時刻つきで予定を縦に見せる" },
+  scrollCards: { label: "おすすめカード（旧）", description: "既存ページ用" },
+  sectionTitle: { label: "区切り見出し", description: "セクションの大きな見出し" },
+  photoCompare: { label: "写真で比較", description: "2枚の写真を並べて見せる" },
+  image_tiles: { label: "写真ギャラリー", description: "写真グリッド。ラベル表示切替・タップでリンク可" },
   hero: { label: "トップ写真＋タイトル", description: "しおりやイベントの冒頭写真と見出し" },
   hero_slider: { label: "写真スライド", description: "旅行・イベントの写真を切り替え表示" },
   notice_ticker: { label: "流れるお知らせ", description: "当日の連絡を横に流して表示（Pro）" },
@@ -91,6 +97,7 @@ const LAYOUT_ITEMS: LibraryItem[] = [
   { type: "notice", label: "お知らせ枠", description: "連絡事項を枠で目立たせる" },
   { type: "highlight", label: "注意・重要枠", description: "注意や告知を強く目立たせる" },
   { type: "text", label: "自由テキスト", description: "好きな文章を自由に書く" },
+  { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
   { type: "checkout", label: "チェックアウト案内", description: "退室時刻・補足・詳細リンク" },
 ];
 
@@ -140,14 +147,15 @@ const COMPARISON_ITEMS: LibraryItem[] = [
   { type: "quote", label: "お客様の声", description: "レビュー・口コミを掲載" },
   { type: "checklist", label: "チェックリスト", description: "持ち物や確認項目を並べる" },
   { type: "steps", label: "手順ガイド", description: "手順を順番に表示" },
+  { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
   { type: "progress_steps", label: "進捗の見える化", description: "いまどこまで進んだかを表示" },
 ];
 
 const MEDIA_ITEMS: LibraryItem[] = [
+  { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "image_tiles", label: "写真ギャラリー", description: "写真グリッド。ラベル表示切替・タップでリンク可" },
   { type: "image", label: "写真1枚", description: "写真を1枚表示" },
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
-  { type: "gallery", label: "写真ギャラリー", description: "写真をグリッドで並べる" },
-  { type: "image_tiles", label: "写真付きリンク", description: "写真とラベルのグリッド導線" },
   { type: "divider", label: "区切り線", description: "セクションの視覚的な区切り" },
   { type: "space", label: "余白", description: "上下のすき間を調整" },
 ];
@@ -171,6 +179,82 @@ const PERSONAL_SECTION_TITLES: Partial<Record<string, string>> = {
   comparison: "比較・手続き",
   media: "写真・動画・余白",
 };
+
+const PERSONAL_HIDDEN_BLOCK_TYPES: CardType[] = [
+  "scrollCards",
+  "photoCompare",
+];
+
+const PERSONAL_LIBRARY_SECTIONS: LibrarySection[] = [
+  {
+    id: "start",
+    title: "まず入れる",
+    items: [
+      { type: "hero", label: "トップ写真＋タイトル", description: "ページの第一印象を作る" },
+      { type: "hero_slider", label: "写真スライド", description: "旅行やイベントの写真を切り替え表示" },
+      { type: "welcome", label: "ひとこと・挨拶", description: "見てほしい人への導入メッセージ" },
+      { type: "sectionTitle", label: "区切り見出し", description: "内容を見やすく分ける" },
+    ],
+  },
+  {
+    id: "plan",
+    title: "予定・持ち物",
+    items: [
+      { type: "schedule", label: "日程・タイムライン", description: "集合から解散までを並べる" },
+      { type: "dayTimeline", label: "一日の流れ", description: "時刻つきで予定を縦に見せる" },
+      { type: "checklist", label: "持ち物・TODO", description: "持ち物や確認リスト" },
+      { type: "steps", label: "流れ・ステップ", description: "準備や手順を順番に表示" },
+      { type: "progress_steps", label: "進捗の見える化", description: "準備状況や現在地を見せる" },
+    ],
+  },
+  {
+    id: "photo",
+    title: "写真・見せ方",
+    items: [
+      { type: "storyBand", label: "写真ストーリー", description: "大きな写真と短いコピー" },
+      { type: "image_tiles", label: "写真ギャラリー", description: "複数の写真をきれいに並べる" },
+      { type: "image", label: "写真1枚", description: "写真を1枚大きく表示" },
+      { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
+      { type: "tabs_info", label: "タブで切替", description: "写真や本文をタブで切り替える" },
+    ],
+  },
+  {
+    id: "links",
+    title: "リンク・共有",
+    items: [
+      { type: "pageLinks", label: "リンクまとめ", description: "予約・地図・SNSなどへの入口" },
+      { type: "button", label: "リンクボタン", description: "見てほしいURLへ誘導" },
+      { type: "social_links", label: "SNSリンク", description: "Instagram・Xなどをまとめる" },
+      { type: "contact_hub", label: "連絡先", description: "電話・メール・地図をまとめる" },
+      { type: "map", label: "地図・集合場所", description: "待ち合わせや会場の住所" },
+    ],
+  },
+  {
+    id: "notice",
+    title: "案内・お知らせ",
+    items: [
+      { type: "highlight", label: "大事な連絡", description: "変更や注意を目立たせる" },
+      { type: "notice", label: "リマインド", description: "必ず読んでほしい連絡事項" },
+      { type: "nearby", label: "行きたい場所", description: "スポットやおすすめをリスト化" },
+      { type: "faq", label: "よくある質問", description: "迷いそうなことを先回りで共有" },
+      { type: "accordion_info", label: "折りたたみ案内", description: "詳しい説明をタップで開く" },
+      { type: "emergency_banner", label: "緊急の連絡", description: "集合変更など最優先の連絡" },
+    ],
+  },
+  {
+    id: "text",
+    title: "文章・整理",
+    items: [
+      { type: "heading_body", label: "見出し＋本文", description: "タイトルと本文を書く" },
+      { type: "text", label: "自由テキスト", description: "好きな文章を自由に書く" },
+      { type: "quote", label: "ひとこと引用", description: "印象に残したい言葉を見せる" },
+      { type: "compare", label: "比較表", description: "候補や料金を比較する" },
+      { type: "kpi", label: "数字の強調", description: "時間や数値を大きく見せる" },
+      { type: "divider", label: "区切り線", description: "セクションの視覚的な区切り" },
+      { type: "space", label: "余白", description: "上下のすき間を調整" },
+    ],
+  },
+];
 
 export const HOTEL_QUICK_PRESETS: QuickPreset[] = [
   {
@@ -311,6 +395,14 @@ function sortGuideForPersonal(items: LibraryItem[]): LibraryItem[] {
 }
 
 export function getLibrarySections(audience: LibraryAudience): LibrarySection[] {
+  if (audience === "personal") {
+    return PERSONAL_LIBRARY_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items
+        .filter((item) => !PERSONAL_HIDDEN_BLOCK_TYPES.includes(item.type))
+        .map(applyPersonalLabels),
+    })).filter((section) => section.items.length > 0);
+  }
   return BASE_LIBRARY_SECTIONS.map((section) => {
     let items = section.items.filter(
       (item) => audience === "hotel" || !HOTEL_ONLY_BLOCK_TYPES.includes(item.type),

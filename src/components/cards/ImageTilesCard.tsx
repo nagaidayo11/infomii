@@ -52,6 +52,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
   const items = (Array.isArray(content?.items) ? content.items : []) as TileItem[];
   const rawColumns = typeof content?.columns === "number" ? content.columns : Number(content?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 ? rawColumns : 2;
+  const showLabels = content?.showLabels !== false;
   const labels =
     locale === "ko"
       ? { emptyImage: "이미지", titlePlaceholder: "시설 안내", labelPlaceholder: "라벨" }
@@ -115,37 +116,39 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
           </div>
         )}
       </div>
-      <div className={isNativeUi ? "app-native-tile-label" : "mt-1.5 px-0.5"}>
-        {editable ? (
-          <InlineEditable
-            value={label}
-            onSave={(v) => {
-              const next = [...items];
-              next[i] = { ...item, label: v };
-              updateItems(next);
-            }}
-            editable={editable}
-            onActivate={onActivate}
-            className={
-              isNativeUi
-                ? "text-sm font-semibold text-[var(--app-text)]"
-                : "text-sm font-medium text-slate-800"
-            }
-            placeholder={labels.labelPlaceholder}
-          />
-        ) : (
-          <p
-            className={
-              isNativeUi
-                ? "truncate text-sm font-semibold text-[var(--app-text)]"
-                : "truncate text-sm font-medium text-slate-800"
-            }
-            style={getBodyFontSizeStyle()}
-          >
-            {label}
-          </p>
-        )}
-      </div>
+      {showLabels ? (
+        <div className={isNativeUi ? "app-native-tile-label" : "mt-1.5 px-0.5"}>
+          {editable ? (
+            <InlineEditable
+              value={label}
+              onSave={(v) => {
+                const next = [...items];
+                next[i] = { ...item, label: v };
+                updateItems(next);
+              }}
+              editable={editable}
+              onActivate={onActivate}
+              className={
+                isNativeUi
+                  ? "text-sm font-semibold text-[var(--app-text)]"
+                  : "text-sm font-medium text-slate-800"
+              }
+              placeholder={labels.labelPlaceholder}
+            />
+          ) : (
+            <p
+              className={
+                isNativeUi
+                  ? "truncate text-sm font-semibold text-[var(--app-text)]"
+                  : "truncate text-sm font-medium text-slate-800"
+              }
+              style={getBodyFontSizeStyle()}
+            >
+              {label}
+            </p>
+          )}
+        </div>
+      ) : null}
     </>
   );
 
