@@ -230,6 +230,159 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
       );
     }
 
+    if (styleVariant === "list" || styleVariant === "poster") {
+      const listIconSizes = PAGE_LINK_ICON_SIZES.list[iconSize];
+      const posterCols = columns >= 3 ? 3 : 2;
+      return (
+        <div
+          className="app-native-section app-native-guest-card"
+          style={{ ["--pres-accent" as string]: accent }}
+          onClick={editable ? onActivate : undefined}
+        >
+          {(editable || title) ? (
+            <AppSectionHeader
+              title={
+                editable ? (
+                  <InlineEditable
+                    value={title}
+                    onSave={(v) => update({ title: v })}
+                    editable={editable}
+                    onActivate={onActivate}
+                    className="app-section-header__title"
+                    placeholder={labels.titlePlaceholder}
+                  />
+                ) : (
+                  title
+                )
+              }
+              icon={<NativeLinkIcon />}
+              as="div"
+            />
+          ) : null}
+          {items.length === 0 ? (
+            <p className="text-sm text-[var(--app-text-muted)]">{labels.empty}</p>
+          ) : styleVariant === "list" ? (
+            <div className="pres-link-list">
+              {items.map((item, i) => {
+                const href = getHref(item);
+                const iconDisplay = getIconDisplay(item.icon);
+                const description = getLocalizedContent(
+                  item.description as LocalizedString | undefined,
+                  locale,
+                );
+                const inner = (
+                  <>
+                    <span className={`pres-link-list__icon ${listIconSizes.wrap}`} aria-hidden>
+                      <LineIcon name={iconDisplay} className={listIconSizes.icon} />
+                    </span>
+                    <span className="pres-link-list__copy">
+                      <span className="pres-link-list__label">
+                        <InlineEditable
+                          value={item.label ?? ""}
+                          onSave={(v) => saveLabel(i, v)}
+                          editable={editable}
+                          onActivate={onActivate}
+                          placeholder={labels.labelPlaceholder}
+                        />
+                      </span>
+                      {editable || description ? (
+                        <span className="pres-link-list__desc">
+                          <InlineEditable
+                            value={description}
+                            onSave={(v) => saveDescription(i, v)}
+                            editable={editable}
+                            onActivate={onActivate}
+                            placeholder={labels.descPlaceholder}
+                          />
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="pres-link-list__chevron" aria-hidden>
+                      ›
+                    </span>
+                  </>
+                );
+                if (href && href !== "#" && !editable) {
+                  return (
+                    <a
+                      key={i}
+                      href={href}
+                      target={isExternal(item) ? "_blank" : undefined}
+                      rel={isExternal(item) ? "noreferrer" : undefined}
+                      className="pres-link-list__item guest-page-link"
+                    >
+                      {inner}
+                    </a>
+                  );
+                }
+                return (
+                  <div key={i} className="pres-link-list__item" onClick={editable ? onActivate : undefined}>
+                    {inner}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="pres-link-poster" data-cols={String(posterCols)}>
+              {items.map((item, i) => {
+                const href = getHref(item);
+                const iconDisplay = getIconDisplay(item.icon);
+                const description = getLocalizedContent(
+                  item.description as LocalizedString | undefined,
+                  locale,
+                );
+                const inner = (
+                  <>
+                    <span className="pres-link-poster__icon" aria-hidden>
+                      <LineIcon name={iconDisplay} className="h-5 w-5" />
+                    </span>
+                    <span className="pres-link-poster__label">
+                      <InlineEditable
+                        value={item.label ?? ""}
+                        onSave={(v) => saveLabel(i, v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder={labels.labelPlaceholder}
+                      />
+                    </span>
+                    {editable || description ? (
+                      <span className="pres-link-poster__desc">
+                        <InlineEditable
+                          value={description}
+                          onSave={(v) => saveDescription(i, v)}
+                          editable={editable}
+                          onActivate={onActivate}
+                          placeholder={labels.descPlaceholder}
+                        />
+                      </span>
+                    ) : null}
+                  </>
+                );
+                if (href && href !== "#" && !editable) {
+                  return (
+                    <a
+                      key={i}
+                      href={href}
+                      target={isExternal(item) ? "_blank" : undefined}
+                      rel={isExternal(item) ? "noreferrer" : undefined}
+                      className="pres-link-poster__item guest-page-link"
+                    >
+                      {inner}
+                    </a>
+                  );
+                }
+                return (
+                  <div key={i} className="pres-link-poster__item" onClick={editable ? onActivate : undefined}>
+                    {inner}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="app-native-section app-native-guest-card" onClick={editable ? onActivate : undefined}>
         {(editable || title) ? (
@@ -393,6 +546,179 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                 <div
                   key={i}
                   className="pres-card-grid__item"
+                  role={editable ? "button" : undefined}
+                  tabIndex={editable ? 0 : undefined}
+                  onClick={editable ? onActivate : undefined}
+                  onKeyDown={editable ? (e) => e.key === "Enter" && onActivate?.() : undefined}
+                >
+                  {inner}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  /* list — horizontal rows */
+  if (styleVariant === "list") {
+    const listIconSizes = PAGE_LINK_ICON_SIZES.list[iconSize];
+    return (
+      <section
+        className="pres-block"
+        style={{ ["--pres-accent" as string]: accent }}
+        onClick={editable ? onActivate : undefined}
+      >
+        {titleNode}
+        {items.length === 0 ? (
+          <p className={CARD_BLOCK_CAPTION_CLASS} style={getBodyFontSizeStyle()}>
+            {labels.empty}
+          </p>
+        ) : (
+          <div className="pres-link-list">
+            {items.map((item, i) => {
+              const href = getHref(item);
+              const iconDisplay = getIconDisplay(item.icon);
+              const description = getLocalizedContent(
+                item.description as LocalizedString | undefined,
+                locale,
+              );
+              const inner = (
+                <>
+                  <span className={`pres-link-list__icon ${listIconSizes.wrap}`} aria-hidden>
+                    <LineIcon name={iconDisplay} className={listIconSizes.icon} />
+                  </span>
+                  <span className="pres-link-list__copy">
+                    <span className="pres-link-list__label">
+                      <InlineEditable
+                        value={item.label ?? ""}
+                        onSave={(v) => saveLabel(i, v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder={labels.labelPlaceholder}
+                      />
+                    </span>
+                    {editable || description ? (
+                      <span className="pres-link-list__desc">
+                        <InlineEditable
+                          value={description}
+                          onSave={(v) => saveDescription(i, v)}
+                          editable={editable}
+                          onActivate={onActivate}
+                          placeholder={labels.descPlaceholder}
+                        />
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="pres-link-list__chevron" aria-hidden>
+                    ›
+                  </span>
+                </>
+              );
+
+              if (href && href !== "#" && !editable) {
+                return (
+                  <a
+                    key={i}
+                    href={href}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="pres-link-list__item guest-page-link"
+                  >
+                    {inner}
+                  </a>
+                );
+              }
+
+              return (
+                <div
+                  key={i}
+                  className="pres-link-list__item"
+                  role={editable ? "button" : undefined}
+                  tabIndex={editable ? 0 : undefined}
+                  onClick={editable ? onActivate : undefined}
+                  onKeyDown={editable ? (e) => e.key === "Enter" && onActivate?.() : undefined}
+                >
+                  {inner}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  /* poster — larger tiles with stronger label */
+  if (styleVariant === "poster") {
+    const gridCols = columns >= 3 ? 3 : 2;
+    return (
+      <section
+        className="pres-block"
+        style={{ ["--pres-accent" as string]: accent }}
+        onClick={editable ? onActivate : undefined}
+      >
+        {titleNode}
+        {items.length === 0 ? (
+          <p className={CARD_BLOCK_CAPTION_CLASS} style={getBodyFontSizeStyle()}>
+            {labels.empty}
+          </p>
+        ) : (
+          <div className="pres-link-poster" data-cols={String(gridCols)}>
+            {items.map((item, i) => {
+              const href = getHref(item);
+              const iconDisplay = getIconDisplay(item.icon);
+              const description = getLocalizedContent(
+                item.description as LocalizedString | undefined,
+                locale,
+              );
+              const inner = (
+                <>
+                  <span className="pres-link-poster__icon" aria-hidden>
+                    <LineIcon name={iconDisplay} className="h-5 w-5" />
+                  </span>
+                  <span className="pres-link-poster__label">
+                    <InlineEditable
+                      value={item.label ?? ""}
+                      onSave={(v) => saveLabel(i, v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      placeholder={labels.labelPlaceholder}
+                    />
+                  </span>
+                  {editable || description ? (
+                    <span className="pres-link-poster__desc">
+                      <InlineEditable
+                        value={description}
+                        onSave={(v) => saveDescription(i, v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        placeholder={labels.descPlaceholder}
+                      />
+                    </span>
+                  ) : null}
+                </>
+              );
+
+              if (href && href !== "#" && !editable) {
+                return (
+                  <a
+                    key={i}
+                    href={href}
+                    target={isExternal(item) ? "_blank" : undefined}
+                    rel={isExternal(item) ? "noreferrer" : undefined}
+                    className="pres-link-poster__item guest-page-link"
+                  >
+                    {inner}
+                  </a>
+                );
+              }
+
+              return (
+                <div
+                  key={i}
+                  className="pres-link-poster__item"
                   role={editable ? "button" : undefined}
                   tabIndex={editable ? 0 : undefined}
                   onClick={editable ? onActivate : undefined}

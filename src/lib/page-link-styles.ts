@@ -34,7 +34,7 @@ export const PAGE_LINK_ICON_SIZES = {
 } as const;
 
 export type PageLinkIconSize = "sm" | "md" | "lg";
-export type PageLinkStyleVariant = "circle" | "tile" | "list";
+export type PageLinkStyleVariant = "circle" | "tile" | "list" | "poster";
 export type PageLinkShadowStrength = "none" | "sm" | "md" | "lg";
 
 export function readPageLinkIconSize(raw: unknown): PageLinkIconSize {
@@ -42,10 +42,16 @@ export function readPageLinkIconSize(raw: unknown): PageLinkIconSize {
 }
 
 export function readPageLinkStyleVariant(raw: unknown): PageLinkStyleVariant {
-  if (raw === "circle") return "circle";
-  // Legacy "list" style removed from pageLinks UI — render as card grid.
+  if (raw === "circle" || raw === "list" || raw === "poster") return raw;
   return "tile";
 }
+
+export const PAGE_LINK_STYLE_OPTIONS = [
+  { value: "tile", label: "カード", hint: "グリッド" },
+  { value: "circle", label: "サークル", hint: "丸アイコン" },
+  { value: "list", label: "リスト", hint: "横並び行" },
+  { value: "poster", label: "ポスター", hint: "大きめタイル" },
+] as const;
 
 export function readPageLinkShadowStrength(raw: unknown, fallback: PageLinkShadowStrength = "md"): PageLinkShadowStrength {
   return raw === "none" || raw === "sm" || raw === "md" || raw === "lg" ? raw : fallback;

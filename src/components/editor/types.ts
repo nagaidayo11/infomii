@@ -664,6 +664,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         image: PRESET_HERO_SAMPLE_IMAGE,
         subtitle: "館内案内をスマートにまとめました",
         widthMode: "full",
+        layout: "overlay",
       };
     case "hero_slider":
       return {
@@ -697,6 +698,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         title: "",
         icon: "",
         tone: "slate",
+        layout: "cards",
         rows: [{ label: "", value: "", show: true }],
       };
     case "checkout":
@@ -716,6 +718,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         title: "ご宿泊ありがとうございます",
         message:
           "滞在中によく使うご案内をまとめています。ご不明な点はフロント内線9までお気軽にお問い合わせください。",
+        layout: "boxed",
       };
     case "breakfast_crowd":
       return {
@@ -1029,6 +1032,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         title: "よく使うご案内",
         columns: 2,
         iconSize: "md",
+        styleVariant: "tile",
         accentColor: "#0f766e",
         items: [
           {

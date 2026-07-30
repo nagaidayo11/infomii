@@ -68,7 +68,9 @@ export function PageLinksNativeSettings({
   const columns = rawColumns === 2 || rawColumns === 3 || rawColumns === 4 ? rawColumns : 2;
   const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
   const styleVariant =
-    rawStyleVariant === "circle" ? "circle" : "tile";
+    rawStyleVariant === "circle" || rawStyleVariant === "list" || rawStyleVariant === "poster"
+      ? rawStyleVariant
+      : "tile";
   const accentColor =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
@@ -127,6 +129,8 @@ export function PageLinksNativeSettings({
         >
           <option value="tile">カードグリッド</option>
           <option value="circle">サークル</option>
+          <option value="list">リスト</option>
+          <option value="poster">ポスター</option>
         </select>
       </div>
 
@@ -150,23 +154,25 @@ export function PageLinksNativeSettings({
         </div>
       ) : null}
 
-      <div>
-        <AppFieldLabel>列数</AppFieldLabel>
-        <AppOptionCardRow aria-label="列数">
-          <AppOptionCard
-            label="2列"
-            selected={columns === 2}
-            preview={<ColumnsPreview cols={2} />}
-            onClick={() => onUpdate("columns", 2)}
-          />
-          <AppOptionCard
-            label="3列"
-            selected={columns === 3 || columns === 4}
-            preview={<ColumnsPreview cols={3} />}
-            onClick={() => onUpdate("columns", 3)}
-          />
-        </AppOptionCardRow>
-      </div>
+      {styleVariant !== "list" ? (
+        <div>
+          <AppFieldLabel>列数</AppFieldLabel>
+          <AppOptionCardRow aria-label="列数">
+            <AppOptionCard
+              label="2列"
+              selected={columns === 2}
+              preview={<ColumnsPreview cols={2} />}
+              onClick={() => onUpdate("columns", 2)}
+            />
+            <AppOptionCard
+              label="3列"
+              selected={columns === 3 || columns === 4}
+              preview={<ColumnsPreview cols={3} />}
+              onClick={() => onUpdate("columns", 3)}
+            />
+          </AppOptionCardRow>
+        </div>
+      ) : null}
 
       <div>
         <AppSectionHeader

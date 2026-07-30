@@ -417,7 +417,6 @@ function InfoRowsEditor({
     next[index] = { ...(next[index] ?? {}), show };
     setRows(next);
   };
-
   return (
     <div className="space-y-3">
       <div className="w-full">
@@ -1773,7 +1772,10 @@ function PageLinksItemsEditor({
   const rawIconSize = typeof content.iconSize === "string" ? content.iconSize : "";
   const iconSize = rawIconSize === "sm" || rawIconSize === "lg" ? rawIconSize : "md";
   const rawStyleVariant = typeof content.styleVariant === "string" ? content.styleVariant : "";
-  const styleVariant = rawStyleVariant === "circle" ? "circle" : "tile";
+  const styleVariant =
+    rawStyleVariant === "circle" || rawStyleVariant === "list" || rawStyleVariant === "poster"
+      ? rawStyleVariant
+      : "tile";
   const rawCircleShadow =
     typeof content.circleIconShadowStrength === "string" ? content.circleIconShadowStrength : "";
   const circleShadowStrength =
@@ -1845,6 +1847,8 @@ function PageLinksItemsEditor({
           >
             <option value="tile">カードグリッド</option>
             <option value="circle">サークル</option>
+            <option value="list">リスト</option>
+            <option value="poster">ポスター</option>
           </select>
         </div>
         {styleVariant !== "circle" ? (
@@ -4230,6 +4234,7 @@ export function CardSettings({
                   onChange={(e) => updateLocalized("title", e.target.value)}
                   placeholder="よく使うご案内"
                 />
+              {content.styleVariant !== "list" ? (
               <div className="w-full">
                 <label className={labelClass}>列数</label>
                 <select
@@ -4243,9 +4248,10 @@ export function CardSettings({
                 >
                   <option value="2">2列</option>
                   <option value="3">3列</option>
-                  <option value="4">4列</option>
+                  {content.styleVariant === "poster" ? null : <option value="4">4列</option>}
                 </select>
               </div>
+              ) : null}
               <div className="w-full">
                 <label className={labelClass}>アイコンサイズ</label>
                 <select
@@ -5897,6 +5903,180 @@ export function CardSettings({
           )}
 
           <SettingsSection title="見た目の調整" sectionId={appearanceSectionId}>
+            {card.type === "info" ? (
+              <div className="mb-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                <p className={labelClass}>並びの見え方</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      { value: "cards", label: "カード", hint: "行ごとに面" },
+                      { value: "table", label: "表形式", hint: "区切り線" },
+                      { value: "inline", label: "シンプル", hint: "枠なし" },
+                    ] as const
+                  ).map((opt) => {
+                    const selected =
+                      (content.layout === "table" || content.layout === "inline"
+                        ? content.layout
+                        : "cards") === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => update("layout", opt.value)}
+                        className={
+                          "rounded-lg border px-2 py-2 text-center transition " +
+                          (selected
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300")
+                        }
+                      >
+                        <span className="block text-xs font-semibold">{opt.label}</span>
+                        <span
+                          className={
+                            "mt-0.5 block text-[10px] leading-tight " +
+                            (selected ? "text-white/75" : "text-slate-500")
+                          }
+                        >
+                          {opt.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  左のキャンバスで、項目の並び方がすぐに切り替わります。
+                </p>
+              </div>
+            ) : null}
+            {card.type === "welcome" ? (
+              <div className="mb-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                <p className={labelClass}>あいさつ文の見え方</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      { value: "boxed", label: "ボックス", hint: "薄い面あり" },
+                      { value: "plain", label: "シンプル", hint: "枠なし" },
+                      { value: "quote", label: "引用", hint: "左に線" },
+                    ] as const
+                  ).map((opt) => {
+                    const selected =
+                      (content.layout === "plain" || content.layout === "quote"
+                        ? content.layout
+                        : "boxed") === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => update("layout", opt.value)}
+                        className={
+                          "rounded-lg border px-2 py-2 text-center transition " +
+                          (selected
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300")
+                        }
+                      >
+                        <span className="block text-xs font-semibold">{opt.label}</span>
+                        <span
+                          className={
+                            "mt-0.5 block text-[10px] leading-tight " +
+                            (selected ? "text-white/75" : "text-slate-500")
+                          }
+                        >
+                          {opt.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {card.type === "pageLinks" || card.type === "iconAccordion" ? (
+              <div className="mb-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                <p className={labelClass}>
+                  {card.type === "iconAccordion" ? "案内の見え方" : "入口の見え方"}
+                </p>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  {(
+                    [
+                      { value: "tile", label: "カード", hint: "グリッド" },
+                      { value: "circle", label: "サークル", hint: "丸アイコン" },
+                      { value: "list", label: "リスト", hint: "横並び行" },
+                      { value: "poster", label: "ポスター", hint: "大きめ" },
+                    ] as const
+                  ).map((opt) => {
+                    const raw = typeof content.styleVariant === "string" ? content.styleVariant : "";
+                    const current =
+                      raw === "circle" || raw === "list" || raw === "poster" ? raw : "tile";
+                    const selected = current === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => update("styleVariant", opt.value)}
+                        className={
+                          "rounded-lg border px-2 py-2 text-center transition " +
+                          (selected
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300")
+                        }
+                      >
+                        <span className="block text-xs font-semibold">{opt.label}</span>
+                        <span
+                          className={
+                            "mt-0.5 block text-[10px] leading-tight " +
+                            (selected ? "text-white/75" : "text-slate-500")
+                          }
+                        >
+                          {opt.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {card.type === "hero" ? (
+              <div className="mb-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+                <p className={labelClass}>トップ写真の見え方</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      { value: "overlay", label: "重ね", hint: "写真の上" },
+                      { value: "stack", label: "下配置", hint: "写真の下" },
+                      { value: "split", label: "帯付き", hint: "色帯" },
+                    ] as const
+                  ).map((opt) => {
+                    const selected =
+                      (content.layout === "stack" || content.layout === "split"
+                        ? content.layout
+                        : "overlay") === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => update("layout", opt.value)}
+                        className={
+                          "rounded-lg border px-2 py-2 text-center transition " +
+                          (selected
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300")
+                        }
+                      >
+                        <span className="block text-xs font-semibold">{opt.label}</span>
+                        <span
+                          className={
+                            "mt-0.5 block text-[10px] leading-tight " +
+                            (selected ? "text-white/75" : "text-slate-500")
+                          }
+                        >
+                          {opt.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             {demoMode ? (
               <button
                 type="button"
