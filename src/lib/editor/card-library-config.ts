@@ -171,15 +171,6 @@ const BASE_LIBRARY_SECTIONS: LibrarySection[] = [
   { id: "media", title: "写真・動画・余白", items: MEDIA_ITEMS },
 ];
 
-const PERSONAL_SECTION_TITLES: Partial<Record<string, string>> = {
-  main: "ページの顔",
-  layouts: "文章・お知らせ",
-  guide: "共有・案内",
-  operation: "リンク・連絡",
-  comparison: "比較・手続き",
-  media: "写真・動画・余白",
-};
-
 const PERSONAL_HIDDEN_BLOCK_TYPES: CardType[] = [
   "scrollCards",
   "photoCompare",
@@ -373,27 +364,6 @@ export function getCardTypeLabel(type: CardType, audience: LibraryAudience = "ho
   return CARD_TYPE_LABELS[type] ?? type;
 }
 
-/** 個人向け案内セクションの並び（旅のしおり用途を優先） */
-const PERSONAL_GUIDE_PRIORITY: CardType[] = [
-  "schedule",
-  "nearby",
-  "map",
-  "faq",
-  "accordion_info",
-  "emergency",
-  "notice_ticker",
-  "emergency_banner",
-  "scheduled_banner",
-];
-
-function sortGuideForPersonal(items: LibraryItem[]): LibraryItem[] {
-  const rank = (type: CardType) => {
-    const i = PERSONAL_GUIDE_PRIORITY.indexOf(type);
-    return i === -1 ? 100 : i;
-  };
-  return [...items].sort((a, b) => rank(a.type) - rank(b.type));
-}
-
 export function getLibrarySections(audience: LibraryAudience): LibrarySection[] {
   if (audience === "personal") {
     return PERSONAL_LIBRARY_SECTIONS.map((section) => ({
@@ -403,19 +373,12 @@ export function getLibrarySections(audience: LibraryAudience): LibrarySection[] 
         .map(applyPersonalLabels),
     })).filter((section) => section.items.length > 0);
   }
-  return BASE_LIBRARY_SECTIONS.map((section) => {
-    let items = section.items.filter(
+  return BASE_LIBRARY_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter(
       (item) => audience === "hotel" || !HOTEL_ONLY_BLOCK_TYPES.includes(item.type),
-    );
-    if (audience === "personal") {
-      items = items.map(applyPersonalLabels);
-      if (section.id === "guide") {
-        items = sortGuideForPersonal(items);
-      }
-    }
-    const title = audience === "personal" ? (PERSONAL_SECTION_TITLES[section.id] ?? section.title) : section.title;
-    return { ...section, title, items };
-  }).filter((section) => section.items.length > 0);
+    ),
+  })).filter((section) => section.items.length > 0);
 }
 
 export function getQuickPresets(audience: LibraryAudience): QuickPreset[] {
