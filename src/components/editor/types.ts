@@ -224,8 +224,10 @@ export function usesHeroColumnWidth(type: CardType | undefined): boolean {
 }
 
 /**
- * Block wrapper styles for the editor / guest preview (padding, typography, shadow, inner radius).
- * Block background / transparency / inner-surface colors are not user-configurable; use default surfaces from components.
+ * Block wrapper styles for the editor / guest preview (padding, typography, inner radius).
+ * Block-level box-shadow is intentionally ignored — shadows belong on entrance content
+ * (pageLinks / iconAccordion tiles & icons), not the outer card chrome.
+ * Block background / transparency / inner-surface colors are not user-configurable.
  */
 export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): import("react").CSSProperties {
   const s = card.style;
@@ -246,7 +248,6 @@ export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): imp
         ? innerR.trim()
         : undefined;
   const style: Record<string, string | number | undefined> = {
-    boxShadow: typeof s.boxShadow === "string" ? s.boxShadow : undefined,
     padding:
       typeof s.padding === "number"
         ? `${s.padding}px`

@@ -202,6 +202,8 @@ function SortableCardWrapper({
       : mediaOrStatus
         ? GUEST_CARD_SURFACE_MEDIA_CLASS
         : GUEST_CARD_SURFACE_CLASS;
+  /** Media keeps overflow hidden for radius clip; info/entrance cards need visible for tile shadows. */
+  const overflowClass = mediaOrStatus ? "overflow-hidden" : "overflow-visible";
 
   return (
     <div
@@ -230,12 +232,14 @@ function SortableCardWrapper({
       ) : (
         <div
           className={
-            "editor-card-selected relative overflow-hidden transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            "editor-card-selected relative transition-[transform,box-shadow,border-color,background-color] duration-250 ease-out " +
+            overflowClass +
+            " " +
             (surfaceClass ? surfaceClass + " " : "") +
             (isNewlyAdded ? "editor-card-enter " : "") +
             (isTemplateHighlighted ? "ring-2 ring-emerald-400/60 bg-emerald-50/40 " : "") +
             (isSelected
-              ? "border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
+              ? "editor-card-selected--active border border-blue-200/80 bg-blue-50/30 shadow-[0_6px_20px_-4px_rgba(0,0,0,0.08),0_2px_8px_-2px_rgba(0,0,0,0.04)] ring-[3px] ring-blue-200/40 ring-inset -translate-y-0.5"
               : mediaOrStatus || layoutOnly
                 ? ""
                 : "lg:hover:border-slate-300 lg:hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] lg:hover:-translate-y-1 lg:hover:scale-[1.005]")
@@ -264,7 +268,9 @@ function SortableCardWrapper({
             onContextMenu={onContextMenuClick}
             aria-label={isSelected ? "カードを選択中。右パネルで編集" : "カードを選択"}
             className={
-              "editor-card relative min-w-0 w-full overflow-hidden border-0 transition-[background-color] duration-250 ease-out " +
+              "editor-card relative min-w-0 w-full border-0 transition-[background-color] duration-250 ease-out " +
+              overflowClass +
+              " " +
               ((card.style as Record<string, unknown> | undefined)?.innerTonePreset ? "editor-inner-surface-overridden " : "") +
               (card.type === "space" || isMediaCardType(card.type) ? "bg-transparent " : "bg-white ")
             }

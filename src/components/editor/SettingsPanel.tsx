@@ -1787,7 +1787,7 @@ function PageLinksItemsEditor({
   const tileShadowStrength =
     rawTileShadow === "none" || rawTileShadow === "sm" || rawTileShadow === "md" || rawTileShadow === "lg"
       ? rawTileShadow
-      : "none";
+      : "md";
   const accentColor =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
@@ -1871,11 +1871,13 @@ function PageLinksItemsEditor({
             </div>
           </div>
         ) : null}
-        {styleVariant === "circle" ? (
+        {styleVariant === "circle" || styleVariant === "list" ? (
           <div className="w-full">
-            <label className={labelClass}>丸アイコンの影</label>
+            <label className={labelClass}>
+              {styleVariant === "list" ? "アイコンの影" : "丸アイコンの影"}
+            </label>
             <select
-              aria-label="丸アイコンの影の強さ"
+              aria-label="アイコンの影の強さ"
               value={circleShadowStrength}
               onChange={(e) => onUpdate("circleIconShadowStrength", e.target.value)}
               className={inputClass}
@@ -1888,9 +1890,11 @@ function PageLinksItemsEditor({
           </div>
         ) : (
           <div className="w-full">
-            <label className={labelClass}>カードタイルの影</label>
+            <label className={labelClass}>
+              {styleVariant === "poster" ? "ポスターの影" : "カードタイルの影"}
+            </label>
             <select
-              aria-label="カードタイルの影の強さ"
+              aria-label="カードの影の強さ"
               value={tileShadowStrength}
               onChange={(e) => onUpdate("tileShadowStrength", e.target.value)}
               className={inputClass}
@@ -3604,7 +3608,7 @@ export function CardSettings({
                     : "bg-white text-slate-700 hover:bg-slate-100"
                 }`}
               >
-                サイズ・影
+                サイズ
               </button>
             </div>
           )}
@@ -4268,6 +4272,66 @@ export function CardSettings({
                   <option value="lg">大</option>
                 </select>
               </div>
+              {(() => {
+                const raw = typeof content.styleVariant === "string" ? content.styleVariant : "";
+                const styleVariant =
+                  raw === "circle" || raw === "list" || raw === "poster" ? raw : "tile";
+                const rawCircle =
+                  typeof content.circleIconShadowStrength === "string"
+                    ? content.circleIconShadowStrength
+                    : "";
+                const circleShadow =
+                  rawCircle === "none" || rawCircle === "sm" || rawCircle === "lg"
+                    ? rawCircle
+                    : "md";
+                const rawTile =
+                  typeof content.tileShadowStrength === "string" ? content.tileShadowStrength : "";
+                const tileShadow =
+                  rawTile === "none" ||
+                  rawTile === "sm" ||
+                  rawTile === "md" ||
+                  rawTile === "lg"
+                    ? rawTile
+                    : "md";
+                if (styleVariant === "circle" || styleVariant === "list") {
+                  return (
+                    <div className="w-full">
+                      <label className={labelClass}>
+                        {styleVariant === "list" ? "アイコンの影" : "丸アイコンの影"}
+                      </label>
+                      <select
+                        aria-label="アイコンの影の強さ"
+                        value={circleShadow}
+                        onChange={(e) => update("circleIconShadowStrength", e.target.value)}
+                        className={inputClass}
+                      >
+                        <option value="none">なし</option>
+                        <option value="sm">弱い</option>
+                        <option value="md">標準</option>
+                        <option value="lg">強い</option>
+                      </select>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="w-full">
+                    <label className={labelClass}>
+                      {styleVariant === "poster" ? "ポスターの影" : "カードタイルの影"}
+                    </label>
+                    <select
+                      aria-label="カードの影の強さ"
+                      value={tileShadow}
+                      onChange={(e) => update("tileShadowStrength", e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="none">なし</option>
+                      <option value="sm">弱い</option>
+                      <option value="md">標準</option>
+                      <option value="lg">強い</option>
+                    </select>
+                  </div>
+                );
+              })()}
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <div className="flex items-center gap-2">
@@ -6162,7 +6226,7 @@ export function CardSettings({
               <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
             )}
                   </StyleGroup>
-                  <StyleGroup summary="細かい調整（サイズ・太さ・影）" defaultOpen={false}>
+                  <StyleGroup summary="細かい調整（サイズ・太さ）" defaultOpen={false}>
               <>
                 <div id={appearanceSpacingId} className={compactGridClass}>
                 {supportsGlobalFontSize || supportsTitleFontSize || supportsBodyFontSize ? (
@@ -6281,19 +6345,6 @@ export function CardSettings({
                     </div>
                   </div>
                 ) : null}
-                </div>
-                <div className="w-full">
-                  <label className={labelClass}>影</label>
-                  <select
-                    value={(style.boxShadow as string) ?? ""}
-                    onChange={(e) => updateStyle("boxShadow", e.target.value || undefined)}
-                    className={inputClass}
-                  >
-                    <option value="">なし</option>
-                    <option value="0 1px 3px rgba(0,0,0,0.08)">軽い</option>
-                    <option value="0 4px 12px rgba(0,0,0,0.1)">標準</option>
-                    <option value="0 8px 24px rgba(0,0,0,0.12)">強め</option>
-                  </select>
                 </div>
                 {supportsTextAlign ? (
                   <div className={compactGridClass}>

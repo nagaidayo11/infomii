@@ -1349,6 +1349,7 @@ body.lux-shell:has(.lp-page)::before {
   display: flex;
   flex-direction: column;
   gap: var(--guest-stack-gap, 1rem);
+  overflow: visible;
 }
 
 .guest-card-stack-flush {
@@ -1360,12 +1361,13 @@ body.lux-shell:has(.lp-page)::before {
   margin-right: var(--guest-gutter, 1rem);
 }
 
-/* Info / default inset cards — radius + light border/shadow */
+/* Info / default inset cards — radius + light border/shadow.
+ * overflow must stay visible so entrance tile/icon shadows are not clipped. */
 .guest-card-surface {
   border-radius: var(--guest-card-radius, 0.75rem);
   border: var(--guest-card-border);
   box-shadow: var(--guest-card-shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Guest preview / public pages: no block chrome borders (editor-only). */
@@ -1374,6 +1376,7 @@ body.lux-shell:has(.lp-page)::before {
   border: none;
   box-shadow: none;
   background: transparent;
+  overflow: visible;
 }
 
 /* Guest pages: flatten nested gray insets that read as editor block frames. */
@@ -1499,6 +1502,13 @@ body.lux-shell:has(.lp-page)::before {
     border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
     background-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Keep entrance tile shadows from being clipped by editor card chrome.
+ * Media surfaces still clip for radius (see .guest-card-surface-media). */
+[data-editor-layout] .editor-card-selected:not(.guest-card-surface-media),
+[data-editor-layout] .editor-card-selected:not(.guest-card-surface-media) > .editor-card {
+  overflow: visible !important;
 }
 
 .editor-reorder-smooth {

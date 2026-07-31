@@ -16,6 +16,7 @@ import {
   PAGE_LINK_ICON_SIZES,
   pageLinkShadowClass,
   readPageLinkIconSize,
+  readPageLinkShadowStrength,
   readPageLinkStyleVariant,
   type PageLinkStyleVariant,
 } from "@/lib/page-link-styles";
@@ -72,6 +73,8 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
           ? rawColumns
           : 2;
   const iconSize = readPageLinkIconSize(c?.iconSize);
+  const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
+  const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "md");
   const items = (Array.isArray(c?.items) ? c.items : []) as IconAccordionItem[];
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
@@ -197,7 +200,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
               "pres-icon-accordion__circle-icon flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 " +
               iconSizes.wrap +
               " " +
-              pageLinkShadowClass("md")
+              pageLinkShadowClass(circleShadowStrength)
             }
             aria-hidden
           >
@@ -218,7 +221,10 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
       const listIconSizes = PAGE_LINK_ICON_SIZES.list[iconSize];
       return (
         <>
-          <span className={`pres-link-list__icon ${listIconSizes.wrap}`} aria-hidden>
+          <span
+            className={`pres-link-list__icon ${listIconSizes.wrap} ${pageLinkShadowClass(circleShadowStrength)}`}
+            aria-hidden
+          >
             {isNativeUi ? (
               <AppLinkTileIcon name={iconDisplay} size={18} className="!bg-transparent" />
             ) : (
@@ -283,9 +289,13 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
       return "pres-icon-accordion__trigger pres-link-list__item" + (open ? " is-open" : "");
     }
     if (variant === "poster") {
-      return "pres-icon-accordion__trigger pres-link-poster__item";
+      return (
+        "pres-icon-accordion__trigger pres-link-poster__item " + pageLinkShadowClass(tileShadowStrength)
+      );
     }
-    return "pres-card-grid__item pres-icon-accordion__trigger";
+    return (
+      "pres-card-grid__item pres-icon-accordion__trigger " + pageLinkShadowClass(tileShadowStrength)
+    );
   };
 
   return (
@@ -388,7 +398,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
                         <button
                           key={i}
                           type="button"
-                          className="pres-card-grid__item pres-icon-accordion__trigger"
+                          className={triggerClass("tile", open)}
                           aria-expanded={open}
                           data-open={open ? "true" : "false"}
                           onClick={(e) => {

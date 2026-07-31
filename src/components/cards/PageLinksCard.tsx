@@ -95,6 +95,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const iconSize = readPageLinkIconSize(c?.iconSize);
   const styleVariant = readPageLinkStyleVariant(c?.styleVariant);
   const circleShadowStrength = readPageLinkShadowStrength(c?.circleIconShadowStrength, "md");
+  const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "md");
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
@@ -272,7 +273,10 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                 );
                 const inner = (
                   <>
-                    <span className={`pres-link-list__icon ${listIconSizes.wrap}`} aria-hidden>
+                    <span
+                      className={`pres-link-list__icon ${listIconSizes.wrap} ${pageLinkShadowClass(circleShadowStrength)}`}
+                      aria-hidden
+                    >
                       <LineIcon name={iconDisplay} className={listIconSizes.icon} />
                     </span>
                     <span className="pres-link-list__copy">
@@ -365,14 +369,18 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                       href={href}
                       target={isExternal(item) ? "_blank" : undefined}
                       rel={isExternal(item) ? "noreferrer" : undefined}
-                      className="pres-link-poster__item guest-page-link"
+                      className={`pres-link-poster__item guest-page-link ${pageLinkShadowClass(tileShadowStrength)}`}
                     >
                       {inner}
                     </a>
                   );
                 }
                 return (
-                  <div key={i} className="pres-link-poster__item" onClick={editable ? onActivate : undefined}>
+                  <div
+                    key={i}
+                    className={`pres-link-poster__item ${pageLinkShadowClass(tileShadowStrength)}`}
+                    onClick={editable ? onActivate : undefined}
+                  >
                     {inner}
                   </div>
                 );
@@ -535,7 +543,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                     href={href}
                     target={isExternal(item) ? "_blank" : undefined}
                     rel={isExternal(item) ? "noreferrer" : undefined}
-                    className="pres-card-grid__item guest-page-link"
+                    className={`pres-card-grid__item guest-page-link ${pageLinkShadowClass(tileShadowStrength)}`}
                   >
                     {inner}
                   </a>
@@ -545,7 +553,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
               return (
                 <div
                   key={i}
-                  className="pres-card-grid__item"
+                  className={`pres-card-grid__item ${pageLinkShadowClass(tileShadowStrength)}`}
                   role={editable ? "button" : undefined}
                   tabIndex={editable ? 0 : undefined}
                   onClick={editable ? onActivate : undefined}
@@ -586,7 +594,10 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
               );
               const inner = (
                 <>
-                  <span className={`pres-link-list__icon ${listIconSizes.wrap}`} aria-hidden>
+                  <span
+                    className={`pres-link-list__icon ${listIconSizes.wrap} ${pageLinkShadowClass(circleShadowStrength)}`}
+                    aria-hidden
+                  >
                     <LineIcon name={iconDisplay} className={listIconSizes.icon} />
                   </span>
                   <span className="pres-link-list__copy">
@@ -708,7 +719,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                     href={href}
                     target={isExternal(item) ? "_blank" : undefined}
                     rel={isExternal(item) ? "noreferrer" : undefined}
-                    className="pres-link-poster__item guest-page-link"
+                    className={`pres-link-poster__item guest-page-link ${pageLinkShadowClass(tileShadowStrength)}`}
                   >
                     {inner}
                   </a>
@@ -718,7 +729,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
               return (
                 <div
                   key={i}
-                  className="pres-link-poster__item"
+                  className={`pres-link-poster__item ${pageLinkShadowClass(tileShadowStrength)}`}
                   role={editable ? "button" : undefined}
                   tabIndex={editable ? 0 : undefined}
                   onClick={editable ? onActivate : undefined}
@@ -754,7 +765,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
         </h3>
       ) : null}
       <div
-        className="grid auto-rows-min gap-2"
+        className="grid auto-rows-min gap-2 p-2"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.length === 0 ? (

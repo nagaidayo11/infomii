@@ -1,15 +1,16 @@
-/** Box shadow presets for page link tiles / circle icons (`none` | `sm` | `md` | `lg`). */
+/** Box shadow presets for page link tiles / circle icons (`none` | `sm` | `md` | `lg`).
+ * Keep spreads tight — large blurs get clipped by scroll/phone ancestors. */
 export function pageLinkShadowClass(strength: string): string {
   switch (strength) {
     case "none":
       return "shadow-none";
     case "sm":
-      return "shadow-[0_2px_8px_rgba(2,6,23,0.1)]";
+      return "shadow-[0_1px_3px_rgba(15,23,42,0.08)]";
     case "lg":
-      return "shadow-[0_10px_28px_rgba(2,6,23,0.24)]";
+      return "shadow-[0_4px_14px_rgba(15,23,42,0.14)]";
     case "md":
     default:
-      return "shadow-[0_4px_12px_rgba(2,6,23,0.16)]";
+      return "shadow-[0_2px_8px_rgba(15,23,42,0.1)]";
   }
 }
 
