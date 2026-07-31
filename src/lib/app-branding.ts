@@ -5,7 +5,7 @@ export const APP_BRAND_TAGLINE = "旅のインフォメーション";
 export const APP_BRAND_SUBLINE = "あなただけの案内を、つくってシェア";
 
 /** 下部タブ（/dashboard/pages）のラベル */
-export const APP_PAGES_TAB_LABEL = "ページ";
+export const APP_PAGES_TAB_LABEL = "作品";
 
 export function buildAppSharePageLabel(pageTitle: string): string {
   const title = pageTitle.trim() || "Infomii";

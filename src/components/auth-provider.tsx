@@ -17,6 +17,8 @@ import {
   setAuthPresenceCookie,
 } from "@/lib/auth-presence-cookie";
 
+const AUTH_BOOT_TIMEOUT_MS = 6_000;
+
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
@@ -43,17 +45,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let active = true;
-
-    client.auth.getSession().then(({ data }) => {
-      if (!active) {
-        return;
-      }
-      const nextUser = data.session?.user ?? null;
-      setUser(nextUser);
-      if (nextUser) setAuthPresenceCookie();
-      else clearAuthPresenceCookie();
+    const bootTimeout = window.setTimeout(() => {
+      if (!active) return;
       setLoading(false);
-    });
+    }, AUTH_BOOT_TIMEOUT_MS);
+
+    client.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) {
+          return;
+        }
+        const nextUser = data.session?.user ?? null;
+        setUser(nextUser);
+        if (nextUser) setAuthPresenceCookie();
+        else clearAuthPresenceCookie();
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        clearAuthPresenceCookie();
+        setUser(null);
+        setLoading(false);
+      });
 
     const {
       data: { subscription },
@@ -67,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       active = false;
+      window.clearTimeout(bootTimeout);
       subscription.unsubscribe();
     };
   }, []);

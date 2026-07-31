@@ -25,6 +25,7 @@ import { shareViaNativeSheet } from "../lib/share-bridge";
 import { isAllowedNavigationUrl } from "../lib/navigation";
 
 const LOAD_TIMEOUT_MS = 20_000;
+const DEBUG_WEBVIEW_LOADS = __DEV__;
 
 export function InfomiiWebView() {
   const insets = useSafeAreaInsets();
@@ -45,7 +46,7 @@ export function InfomiiWebView() {
   const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [canGoBack, setCanGoBack] = useState(false);
-  const [loading, setLoading] = useState(originResolution.ok);
+  const [showBootLoading, setShowBootLoading] = useState(originResolution.ok);
   const [loadError, setLoadError] = useState<string | null>(
     originResolution.ok ? null : originResolution.message,
   );
@@ -68,14 +69,15 @@ export function InfomiiWebView() {
   const finishLoading = useCallback(() => {
     clearLoadTimeout();
     hasLoadedOnceRef.current = true;
-    setLoading(false);
+    setShowBootLoading(false);
     applySafeAreaToWeb();
   }, [applySafeAreaToWeb, clearLoadTimeout]);
 
   const armLoadTimeout = useCallback(() => {
+    if (hasLoadedOnceRef.current) return;
     clearLoadTimeout();
     loadTimeoutRef.current = setTimeout(() => {
-      setLoading(false);
+      setShowBootLoading(false);
       setLoadError(
         __DEV__
           ? "読み込みがタイムアウトしました。Next.js が起動しているか、.env の IP が正しいか確認してください。"
@@ -122,19 +124,22 @@ export function InfomiiWebView() {
     allowsBackForwardNavigationGestures: true,
     allowsInlineMediaPlayback: true,
     mediaPlaybackRequiresUserAction: true,
-    pullToRefreshEnabled: true,
+    pullToRefreshEnabled: false,
     setSupportMultipleWindows: false,
     onNavigationStateChange,
-    onLoadStart: () => {
-      if (!hasLoadedOnceRef.current) {
-        setLoading(true);
-        setLoadError(null);
-        armLoadTimeout();
+    onLoadStart: (event: { nativeEvent: { url?: string } }) => {
+      if (DEBUG_WEBVIEW_LOADS) {
+        console.log(
+          `[InfomiiWebView] load start: ${event.nativeEvent.url ?? "(unknown)"} loaded=${hasLoadedOnceRef.current}`,
+        );
       }
+      if (hasLoadedOnceRef.current) return;
+      setShowBootLoading(true);
+      setLoadError(null);
+      armLoadTimeout();
     },
     onLoadEnd: () => {
-      applySafeAreaToWeb();
-      if (!hasLoadedOnceRef.current) return;
+      finishLoading();
     },
     onMessage: (event: { nativeEvent: { data: string } }) => {
       try {
@@ -176,13 +181,27 @@ export function InfomiiWebView() {
       }
     },
     onError: (event: { nativeEvent: { description?: string } }) => {
+      const hadLoadedOnce = hasLoadedOnceRef.current;
       finishLoading();
-      setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
+      if (!hadLoadedOnce) {
+        setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
+        return;
+      }
+      if (DEBUG_WEBVIEW_LOADS) {
+        console.warn("[InfomiiWebView] suppressed post-boot load error", event.nativeEvent.description);
+      }
     },
     onHttpError: (event: { nativeEvent: { statusCode: number } }) => {
       if (event.nativeEvent.statusCode >= 400) {
+        const hadLoadedOnce = hasLoadedOnceRef.current;
         finishLoading();
-        setLoadError(`HTTP ${event.nativeEvent.statusCode}`);
+        if (!hadLoadedOnce) {
+          setLoadError(`HTTP ${event.nativeEvent.statusCode}`);
+          return;
+        }
+        if (DEBUG_WEBVIEW_LOADS) {
+          console.warn("[InfomiiWebView] suppressed post-boot HTTP error", event.nativeEvent.statusCode);
+        }
       }
     },
     onShouldStartLoadWithRequest: (request: { url: string }) =>
@@ -224,7 +243,7 @@ export function InfomiiWebView() {
         <WebView {...webViewProps} />
       </View>
 
-      {loading && !loadError ? (
+      {showBootLoading && !loadError ? (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#0d9488" />
           <Text style={styles.loadingLabel}>読み込み中…</Text>
@@ -238,7 +257,7 @@ export function InfomiiWebView() {
           onRetry={() => {
             setLoadError(null);
             hasLoadedOnceRef.current = false;
-            setLoading(true);
+            setShowBootLoading(true);
             armLoadTimeout();
             webViewRef.current?.reload();
           }}

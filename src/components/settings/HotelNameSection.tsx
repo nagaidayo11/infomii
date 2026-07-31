@@ -47,11 +47,11 @@ export function HotelNameSection() {
     try {
       await updateCurrentHotelName(trimmed);
       setMessageTone("success");
-      setMessage("施設名を保存しました。");
+      setMessage(isAppShell ? "スペース名を保存しました。" : "施設名を保存しました。");
       dispatchHotelNameUpdated(trimmed);
     } catch (err) {
       setMessageTone("error");
-      setMessage(err instanceof Error ? err.message : "施設名の保存に失敗しました。");
+      setMessage(err instanceof Error ? err.message : isAppShell ? "スペース名の保存に失敗しました。" : "施設名の保存に失敗しました。");
     } finally {
       setSaving(false);
     }
@@ -72,7 +72,7 @@ export function HotelNameSection() {
               <AppSettingsIconFacility size={26} />
             </span>
             <label htmlFor="hotel-name" className="app-settings-profile-label">
-              施設名
+              スペース名
             </label>
             <input
               id="hotel-name"
@@ -83,7 +83,7 @@ export function HotelNameSection() {
               maxLength={80}
               autoComplete="organization"
               className="app-settings-profile-input"
-              placeholder="例: Infomii Hotel"
+              placeholder="例: Infomii"
             />
             <button
               type="submit"

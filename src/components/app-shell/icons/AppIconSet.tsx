@@ -273,12 +273,11 @@ export function AppIcon({ name, size = 24, className = "" }: { name: AppIconName
 
 /** Tab bar icons (24px). */
 export const APP_TAB_ICON_COMPONENTS: Record<
-  "home" | "templates" | "works" | "plan" | "settings",
+  "home" | "templates" | "works" | "settings",
   (props: AppIconProps) => ReactNode
 > = {
   home: AppIconHome,
   templates: AppIconTemplates,
   works: AppIconPages,
-  plan: AppIconPlan,
   settings: AppIconSettings,
 };

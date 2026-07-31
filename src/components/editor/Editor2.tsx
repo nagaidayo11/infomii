@@ -65,7 +65,6 @@ import {
 import {
   getStarterCardTypes,
   persistLibraryAudience,
-  readStoredLibraryAudience,
   resolveAppLibraryAudience,
   type LibraryAudience,
 } from "@/lib/editor/card-library-config";
@@ -221,6 +220,7 @@ export function Editor2({
   const copiedCardRef = useRef<EditorCard | null>(null);
   const knownPageSlugsRef = useRef<Set<string> | null>(null);
   const qualityGateSkipRef = useRef(false);
+  const initialEditorLoadShownRef = useRef(false);
   const openPlanUpsell = useCallback((type: CardType) => {
     void trackUpgradeClick("editor");
     const requiredPlan = getMinimumPlanForCardType(type);
@@ -271,7 +271,7 @@ export function Editor2({
     (type: CardType) => {
       if (!useAppEditorChrome) return;
       const label = CARD_TYPE_LABELS[type] ?? type;
-      showToast(`「${label}」を貼りました`, "success");
+      showToast(`「${label}」を追加しました`, "success");
       setCloseLibraryNonce((n) => n + 1);
     },
     [useAppEditorChrome, showToast],
@@ -423,9 +423,18 @@ export function Editor2({
         // ignore malformed localStorage and fall back to starter cards
       }
     }
-    const starterTypes = isDemoMode ? DEMO_FRONTDESK_PRESET_TYPES : STARTER_CARD_TYPES;
+    const starterTypes = isDemoMode
+      ? DEMO_FRONTDESK_PRESET_TYPES
+      : useAppEditorChrome
+        ? getStarterCardTypes("personal")
+        : STARTER_CARD_TYPES;
     const starterCards = starterTypes.map((type, i) =>
-      createEmptyCard(type, `demo-${i}-${Math.random().toString(36).slice(2, 8)}`, i)
+      createEmptyCard(
+        type,
+        `demo-${i}-${Math.random().toString(36).slice(2, 8)}`,
+        i,
+        useAppEditorChrome ? "personal" : "hotel",
+      )
     );
     setCards(starterCards);
     selectCard(startUnselected ? null : (starterCards[0]?.id ?? null));
@@ -435,7 +444,7 @@ export function Editor2({
       slug: "demo-preview",
       publicUrl: demoPreviewUrl,
     });
-  }, [isDemoMode, demoPreviewUrl, setCards, selectCard, setPageMeta, setPageBackground, startUnselected]);
+  }, [isDemoMode, demoPreviewUrl, setCards, selectCard, setPageMeta, setPageBackground, startUnselected, useAppEditorChrome]);
 
   useEffect(() => {
     if (!isDemoMode || typeof window === "undefined") return;
@@ -488,7 +497,9 @@ export function Editor2({
       return;
     }
     const resume = canResumeEditorPage(pageId);
-    if (!resume) {
+    const hasHydratedCards = useEditor2Store.getState().cards.length > 0;
+    if (!resume && !initialEditorLoadShownRef.current && !hasHydratedCards) {
+      initialEditorLoadShownRef.current = true;
       setInitialEditorLoading(true);
     }
     let cancelled = false;
@@ -990,7 +1001,7 @@ export function Editor2({
         placed += 1;
       }
       if (useAppEditorChrome && placed > 0) {
-        showToast(`${placed}件のシールを貼りました`, "success");
+        showToast(`${placed}件のブロックを追加しました`, "success");
       }
     },
     [
@@ -1011,7 +1022,7 @@ export function Editor2({
       if (!content) return;
       addCardWithContent("info", content);
       if (useAppEditorChrome) {
-        showToast(`「${preset.label}」を貼りました`, "success");
+        showToast(`「${preset.label}」を追加しました`, "success");
       }
     },
     [addCardWithContent, useAppEditorChrome, showToast]
@@ -1443,6 +1454,7 @@ export function Editor2({
         : hasUnpublishedChanges
           ? ("unpublished_changes" as const)
           : null;
+  const shouldShowInitialLoadingOverlay = initialEditorLoading && !useAppEditorChrome;
 
   const liveOpsQuickLinks =
     !isDemoMode && pageId
@@ -1573,14 +1585,7 @@ export function Editor2({
           topBar={topBar}
           footerVariant={useAppEditorChrome ? "app" : "default"}
           closeLibraryNonce={useAppEditorChrome ? closeLibraryNonce : undefined}
-          onMobileSheetChange={(nextSheet) => {
-            if (nextSheet !== "settings" || !selectedCardId) return;
-            window.requestAnimationFrame(() => {
-              document
-                .querySelector(`[data-card-id="${selectedCardId}"]`)
-                ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-            });
-          }}
+          mobileActions={null}
           library={
             <CardLibrary
               onAddCard={(type) => {
@@ -1614,9 +1619,9 @@ export function Editor2({
           }
           canvas={
             <div ref={canvasRef} className="relative flex h-full flex-col overflow-hidden">
-              <div className={`flex h-full flex-col overflow-hidden transition ${initialEditorLoading ? "pointer-events-none select-none blur-[2px]" : ""}`}>
+              <div className={`flex h-full flex-col overflow-hidden transition ${shouldShowInitialLoadingOverlay ? "pointer-events-none select-none blur-[2px]" : ""}`}>
               <div className="min-h-0 flex-1 overflow-hidden">
-                {!isDemoMode && !initialEditorLoading && pageId && cards.length === 0 ? (
+                {!isDemoMode && !shouldShowInitialLoadingOverlay && pageId && cards.length === 0 ? (
                   <NewPageOnboarding pageId={pageId} pageTitle={pageMeta.title} />
                 ) : (
                 <FreeformCanvas
@@ -1644,7 +1649,7 @@ export function Editor2({
                 )}
               </div>
               </div>
-              {!isDemoMode && initialEditorLoading && (
+              {!isDemoMode && shouldShowInitialLoadingOverlay && (
                 <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/35 backdrop-blur-sm">
                   <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm">
                     読み込み中…

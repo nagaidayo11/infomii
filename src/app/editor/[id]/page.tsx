@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Editor2 } from "@/components/editor";
 import type { CardType } from "@/components/editor/types";
@@ -33,6 +33,7 @@ function EditorWithPageId() {
   const fromTemplate = searchParams.get("from") === "template";
   const [pageFound, setPageFound] = useState<boolean | null>(null);
   const [loaded, setLoaded] = useState(() => canResumeEditorPage(pageId));
+  const loadedPageIdRef = useRef<string | null>(canResumeEditorPage(pageId) ? pageId : null);
   const setCards = useEditor2Store((s) => s.setCards);
   const selectCard = useEditor2Store((s) => s.selectCard);
   const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
@@ -41,17 +42,22 @@ function EditorWithPageId() {
 
   useEffect(() => {
     if (!pageId) return;
-    if (canResumeEditorPage(pageId)) {
-      setPageFound(true);
-      setLoaded(true);
-      // SPA return from Quick Ops (or any other route): store is warm but may be stale.
-      void syncLiveOpsIntoEditorStore(pageId);
+    if (loadedPageIdRef.current === pageId && !fromTemplate) {
       return;
     }
-    setLoaded(false);
-    setCards([]);
-    selectCard(null);
+    if (canResumeEditorPage(pageId)) {
+      loadedPageIdRef.current = pageId;
+      const frame = window.requestAnimationFrame(() => {
+        setPageFound(true);
+        setLoaded(true);
+      });
+      // SPA return from Quick Ops (or any other route): store is warm but may be stale.
+      void syncLiveOpsIntoEditorStore(pageId);
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const loadingFrame = window.requestAnimationFrame(() => setLoaded(false));
     Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
+      window.cancelAnimationFrame(loadingFrame);
       if (page?.kind === "stamp") {
         router.replace(`/editor/stamp/${pageId}`);
         return;
@@ -121,6 +127,7 @@ function EditorWithPageId() {
           highlightFromTemplate(cards.map((c) => c.id));
           router.replace(`/editor/${pageId}`, { scroll: false });
         }
+        loadedPageIdRef.current = pageId;
         setLoaded(true);
         return;
       }
@@ -131,6 +138,7 @@ function EditorWithPageId() {
         selectCard(null);
         setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
       }
+      loadedPageIdRef.current = pageId;
       setLoaded(true);
     });
   }, [pageId, fromTemplate, router, setCards, selectCard, setAutosaveStatus, setPageBackground, highlightFromTemplate]);

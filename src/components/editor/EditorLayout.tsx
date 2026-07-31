@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AppBottomSheet } from "@/components/app-shell/primitives/AppBottomSheet";
 import { AppIcon } from "@/components/app-shell/icons/AppIconSet";
 
@@ -46,7 +46,7 @@ const MOBILE_SHEET_LABEL: Record<MobileSheetSize, string> = {
 
 /** モバイル下部タブの高さ（シートの bottom オフセット用。実寸に合わせて px 指定） */
 const MOBILE_NAV_HEIGHT =
-  "calc(58px + env(safe-area-inset-bottom, 0px))";
+  "calc(54px + env(safe-area-inset-bottom, 0px))";
 
 const mobileSheetAsideClass =
   "ui-pop-in fixed inset-x-0 z-[90] flex max-h-[min(88dvh,calc(100dvh-10rem))] min-h-0 flex-col overflow-hidden rounded-t-lg border border-[#e6e8eb] bg-white shadow-md lg:static lg:z-auto lg:max-h-none lg:rounded-none lg:shadow-none";
@@ -63,9 +63,9 @@ export function EditorLayout({
 }: EditorLayoutProps) {
   const isAppFooter = footerVariant === "app";
   const mobileSheetTopMap = isAppFooter ? MOBILE_SHEET_TOP_MAP_APP : MOBILE_SHEET_TOP_MAP_WEB;
-  const libraryTabLabel = isAppFooter ? "シール" : "ブロック追加";
-  const canvasTabLabel = isAppFooter ? "編集" : "キャンバス";
-  const settingsTabLabel = isAppFooter ? "設定" : "ブロック設定";
+  const libraryTabLabel = isAppFooter ? "追加" : "ブロック追加";
+  const canvasTabLabel = isAppFooter ? "キャンパス" : "キャンバス";
+  const settingsTabLabel = isAppFooter ? "編集" : "ブロック設定";
   const [sheet, setSheet] = useState<MobileSheet>("none");
   const [mobileSheetSize, setMobileSheetSize] = useState<MobileSheetSize>("comfortable");
   const [dragTopPx, setDragTopPx] = useState<number | null>(null);
@@ -78,23 +78,14 @@ export function EditorLayout({
   const getViewportHeight = () => (typeof window !== "undefined" ? window.innerHeight : 800);
   const editorTopChromePx = isAppFooter ? 88 : 56;
 
-  const getSnapTopPx = (size: MobileSheetSize, viewportHeight: number) => {
+  const getSnapTopPx = useCallback((size: MobileSheetSize, viewportHeight: number) => {
     if (size === "full") return editorTopChromePx;
     if (size === "comfortable") return Math.max(56, Math.round(viewportHeight * 0.32));
     return Math.max(56, Math.round(viewportHeight * 0.46));
-  };
-  const closeTopPx = (viewportHeight: number) => Math.round(viewportHeight * 0.82);
+  }, [editorTopChromePx]);
+  const closeTopPx = useCallback((viewportHeight: number) => Math.round(viewportHeight * 0.82), []);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const clear = () => {
-      if (mq.matches) applySheet("none");
-    };
-    mq.addEventListener("change", clear);
-    return () => mq.removeEventListener("change", clear);
-  }, []);
-
-  const applySheet = (next: MobileSheet) => {
+  const applySheet = useCallback((next: MobileSheet) => {
     if (next === "library" || next === "settings") {
       setMobileSheetSize("comfortable");
       setDragTopPx(null);
@@ -104,7 +95,16 @@ export function EditorLayout({
     }
     setSheet(next);
     onMobileSheetChange?.(next);
-  };
+  }, [onMobileSheetChange]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const clear = () => {
+      if (mq.matches) applySheet("none");
+    };
+    mq.addEventListener("change", clear);
+    return () => mq.removeEventListener("change", clear);
+  }, [applySheet]);
 
   const openLibrary = () => {
     applySheet(sheet === "library" ? "none" : "library");
@@ -123,8 +123,9 @@ export function EditorLayout({
 
   useEffect(() => {
     if (!closeLibraryNonce) return;
-    applySheet("none");
-  }, [closeLibraryNonce]);
+    const frame = window.requestAnimationFrame(() => applySheet("none"));
+    return () => window.cancelAnimationFrame(frame);
+  }, [applySheet, closeLibraryNonce]);
 
   const sheetOpen = sheet !== "none";
 
@@ -182,7 +183,7 @@ export function EditorLayout({
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
     };
-  }, [dragState]);
+  }, [applySheet, closeTopPx, dragState, getSnapTopPx]);
 
   const startHandleDrag = (event: { clientY: number }) => {
     if (sheet === "none") return;
@@ -319,27 +320,28 @@ export function EditorLayout({
 
       <div className="relative z-[100] shrink-0 lg:hidden">
         {mobileActions != null && !sheetOpen ? (
-          <div className="border-t border-slate-200/80 bg-white px-2 py-2">
-            <div className="mx-auto max-w-2xl rounded-xl border border-slate-200/90 bg-white p-2 shadow-sm">
+          <div className={isAppFooter ? "app-editor-mobile-actions px-3 pb-2" : "border-t border-slate-200/80 bg-white px-2 py-2"}>
+            <div className={isAppFooter ? "mx-auto max-w-2xl" : "mx-auto max-w-2xl rounded-xl border border-slate-200/90 bg-white p-2 shadow-sm"}>
               {mobileActions}
             </div>
           </div>
         ) : null}
         <nav
           className={
-            "flex border-t px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.1)] " +
-            (isAppFooter ? "border-slate-200/80 bg-slate-50" : "border-slate-200 bg-white")
+            (isAppFooter
+              ? "app-editor-bottom-nav mx-3 mb-0.5 flex border px-1 pt-0.5"
+              : "flex border-t px-1 pt-1 shadow-[0_-4px_12px_rgba(15,23,42,0.1)] border-slate-200 bg-white")
           }
-          style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
+          style={{ paddingBottom: isAppFooter ? "max(0.18rem, env(safe-area-inset-bottom, 0px))" : "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
           aria-label="エディタ操作"
         >
           <button
             type="button"
             onClick={openLibrary}
-            aria-label="シール一覧を開く"
+            aria-label="ブロックを追加"
             className={
               "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
-              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              (isAppFooter ? "min-h-[48px] text-xs" : "min-h-[50px] text-[11px]") +
               " " +
               (sheet === "library"
                 ? "text-slate-900"
@@ -358,10 +360,10 @@ export function EditorLayout({
           <button
             type="button"
             onClick={focusCanvas}
-            aria-label="キャンバスを表示"
+            aria-label={isAppFooter ? "キャンパスを表示" : "キャンバスを表示"}
             className={
               "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
-              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              (isAppFooter ? "min-h-[48px] text-xs" : "min-h-[50px] text-[11px]") +
               " " +
               (sheet === "none"
                 ? "text-slate-900"
@@ -380,10 +382,10 @@ export function EditorLayout({
           <button
             type="button"
             onClick={openSettings}
-            aria-label="ブロック設定を開く"
+            aria-label="選択中ブロックを編集"
             className={
               "ui-pop-tap flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 font-semibold transition-colors " +
-              (isAppFooter ? "min-h-[52px] text-xs" : "min-h-[50px] text-[11px]") +
+              (isAppFooter ? "min-h-[48px] text-xs" : "min-h-[50px] text-[11px]") +
               " " +
               (sheet === "settings"
                 ? "text-slate-900"
@@ -406,7 +408,7 @@ export function EditorLayout({
         <>
           <AppBottomSheet
             open={sheet === "library"}
-            title="シールを貼る"
+            title="ブロックを追加"
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"
@@ -433,7 +435,7 @@ export function EditorLayout({
           </AppBottomSheet>
           <AppBottomSheet
             open={sheet === "settings"}
-            title="ブロック設定"
+            ariaLabel="選択中ブロックを編集"
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"

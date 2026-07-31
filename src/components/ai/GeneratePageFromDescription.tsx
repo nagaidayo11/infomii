@@ -176,7 +176,7 @@ function PromptChipRow({
   chipClassName?: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={chipClassName.includes("app-ai-chip") ? "app-ai-chip-row" : "flex flex-wrap gap-2"}>
       {templates.map((tpl) => (
         <button
           key={tpl.id}
@@ -315,7 +315,10 @@ export function GeneratePageFromDescription({
             <div className="app-ai-compose-orb" aria-hidden>
               <IconSpark />
             </div>
-            <h2 className="text-lg font-bold leading-tight text-[var(--app-text)]">AIでつくる</h2>
+            <div className="min-w-0">
+              <p className="app-ai-compose-kicker">最短で下書き</p>
+              <h2 className="app-ai-compose-title">AIでページ作成</h2>
+            </div>
           </div>
         ) : (
           <div className="mb-3">

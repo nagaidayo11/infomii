@@ -86,14 +86,14 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
           </div>
         ) : null}
         <h2 className="text-lg font-semibold text-slate-900">
-          {isAppShell ? "ここから貼っていこう" : "空のページです"}
+          {isAppShell ? "ここから作っていこう" : "空のページです"}
         </h2>
         <p className={"truncate text-sm text-slate-500 " + (isAppShell ? "mt-1" : "mt-1")}>
           {pageTitle || "無題のページ"}
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
           {isAppShell
-            ? "下の「シール」から好きなブロックをタップして貼るか、旅のしおり向けの基本セットを一括で入れられます。"
+            ? "下の「追加」から好きなブロックを選ぶか、旅のしおり向けの基本セットを一括で入れられます。"
             : "左のライブラリからブロックを追加するか、下のショートカットを使って始めてください。"}
         </p>
 
@@ -112,7 +112,7 @@ export function NewPageOnboarding({ pageId, pageTitle }: NewPageOnboardingProps)
             {loading
               ? "追加中…"
               : isAppShell
-                ? `基本シールを入れる（${starterAudienceLabel()}）`
+                ? `基本セットを入れる（${starterAudienceLabel()}）`
                 : "基本ブロックを入れる"}
           </button>
           <Link

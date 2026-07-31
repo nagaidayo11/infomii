@@ -28,6 +28,45 @@ import { AppSection } from "../primitives/AppSection";
 import { AppTabPage } from "../primitives/AppTabPage";
 import { usePendingPublishApprovalCount } from "@/components/app/usePendingPublishApprovalCount";
 
+const APP_DASHBOARD_LOAD_TIMEOUT_MS = 10_000;
+
+const APP_HOME_STARTERS = [
+  {
+    href: "/templates?category=travel",
+    icon: "🧳",
+    title: "旅行しおり",
+    body: "日程・持ち物・MAP",
+  },
+  {
+    href: "/templates?category=oshi",
+    icon: "★",
+    title: "ライブ遠征",
+    body: "集合・グッズ・帰り",
+  },
+  {
+    href: "/templates?category=personal",
+    icon: "♡",
+    title: "おでかけ",
+    body: "リンク・予定・メモ",
+  },
+] as const;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 function sortPagesByRecent(
   pages: PageRow[],
   infoBySlug: Map<string, { status?: string; updatedAt?: string }>,
@@ -63,14 +102,17 @@ export function AppDashboardView() {
       setLoading(true);
     }
     try {
-      const [b, r, pageResult, metrics] = await Promise.all([
-        getDashboardBootstrapData(),
-        getCurrentUserHotelRole().catch(() => null),
-        listPagesForHotel()
-          .then((p) => ({ ok: true as const, pages: p }))
-          .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
-        getCurrentHotelViewMetrics().catch(() => null),
-      ]);
+      const [b, r, pageResult, metrics] = await withTimeout(
+        Promise.all([
+          getDashboardBootstrapData(),
+          getCurrentUserHotelRole().catch(() => null),
+          listPagesForHotel()
+            .then((p) => ({ ok: true as const, pages: p }))
+            .catch(() => ({ ok: false as const, pages: [] as PageRow[] })),
+          getCurrentHotelViewMetrics().catch(() => null),
+        ]),
+        APP_DASHBOARD_LOAD_TIMEOUT_MS,
+      );
       const nextPages = pageResult.ok ? pageResult.pages : [];
       const nextViews = metrics?.totalViews7d ?? 0;
       setBootstrap(b);
@@ -85,6 +127,13 @@ export function AppDashboardView() {
         role: r,
         totalViews7d: nextViews,
       });
+    } catch {
+      if (!getDashboardViewCache()) {
+        setBootstrap(null);
+        setRole(null);
+        setPages([]);
+        setTotalViews7d(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -167,8 +216,37 @@ export function AppDashboardView() {
             </AppSection>
           ) : null}
 
+          {canEdit ? (
+            <AppSection revealDelay={35}>
+              <div className="app-home-starter-panel">
+                <div className="app-home-starter-head">
+                  <div>
+                    <p className="app-home-starter-kicker">テンプレから始める</p>
+                    <h2 className="app-home-starter-title">近い用途を選ぶ</h2>
+                  </div>
+                  <AppShellLink href="/templates" className="app-home-starter-more app-pressable">
+                    すべて
+                  </AppShellLink>
+                </div>
+                <div className="app-home-starter-grid">
+                  {APP_HOME_STARTERS.map((item) => (
+                    <AppShellLink
+                      key={item.href}
+                      href={item.href}
+                      className="app-home-starter-card app-pressable ui-pop-tap no-underline"
+                    >
+                      <span className="app-home-starter-icon" aria-hidden>{item.icon}</span>
+                      <span className="app-home-starter-card-title">{item.title}</span>
+                      <span className="app-home-starter-card-body">{item.body}</span>
+                    </AppShellLink>
+                  ))}
+                </div>
+              </div>
+            </AppSection>
+          ) : null}
+
           {continuePage ? (
-            <AppSection revealDelay={60}>
+            <AppSection revealDelay={75}>
               <AppHomeContinueCard
                 pageId={continuePage.id}
                 title={continuePage.title}

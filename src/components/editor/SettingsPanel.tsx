@@ -15,7 +15,6 @@ import { IconTokenSelect } from "./IconTokenSelect";
 import type { EditorCard } from "./types";
 import { BUSINESS_ONLY_CARD_TYPES, PRO_AND_ABOVE_CARD_TYPES } from "./types";
 import { getCardTypeLabel, type LibraryAudience } from "@/lib/editor/card-library-config";
-import { SCHEDULE_ICON_CHOICES, scheduleGlyphForItem } from "@/components/cards/native-guest-icons";
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
@@ -341,7 +340,7 @@ type PageLinksItem = {
 type ChecklistItem = { text?: string; checked?: boolean };
 type StepsItem = { title?: string; description?: string };
 type KpiItem = { label?: string; value?: string };
-type ScheduleItem = { day?: string; time?: string; label?: string; icon?: string };
+type ScheduleItem = { day?: string; time?: string; label?: string };
 type ScheduleRule = {
   itemIndex?: number;
   days?: number[];
@@ -2451,7 +2450,6 @@ function ScheduleItemsEditor({
         day: "",
         time: "",
         label: "",
-        icon: SCHEDULE_ICON_CHOICES[items.length % SCHEDULE_ICON_CHOICES.length],
       },
     ]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
@@ -2529,30 +2527,6 @@ function ScheduleItemsEditor({
             <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
               削除
             </button>
-          </div>
-          <div>
-            <label className={labelClass}>アイコン</label>
-            <div className="flex flex-wrap gap-1.5">
-              {SCHEDULE_ICON_CHOICES.map((choice) => {
-                const selected = scheduleGlyphForItem(item.icon, i) === choice;
-                return (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => updateItem(i, "icon", choice)}
-                    className={
-                      "inline-flex h-9 w-9 items-center justify-center rounded-lg border text-base " +
-                      (selected
-                        ? "border-teal-400 bg-teal-50 ring-2 ring-teal-200"
-                        : "border-slate-200 bg-white hover:bg-slate-50")
-                    }
-                    aria-pressed={selected}
-                  >
-                    {choice}
-                  </button>
-                );
-              })}
-            </div>
           </div>
           <Input
             label="曜日・区分"
@@ -3361,7 +3335,11 @@ export function CardSettings({
                       onClick={onMoveCardUp}
                       disabled={!canMoveCardUp}
                       aria-label="ブロックを上へ移動"
-                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                      className={
+                        isNativeUi
+                          ? "app-native-settings-icon-action disabled:cursor-not-allowed disabled:opacity-40"
+                          : `${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`
+                      }
                     >
                       ↑
                     </button>
@@ -3370,7 +3348,11 @@ export function CardSettings({
                       onClick={onMoveCardDown}
                       disabled={!canMoveCardDown}
                       aria-label="ブロックを下へ移動"
-                      className={`${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`}
+                      className={
+                        isNativeUi
+                          ? "app-native-settings-icon-action disabled:cursor-not-allowed disabled:opacity-40"
+                          : `${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`
+                      }
                     >
                       ↓
                     </button>
@@ -3424,43 +3406,37 @@ export function CardSettings({
             : "border-slate-200 py-2")
         }
       >
-        <div className={"flex flex-col " + (isNativeUi ? "gap-1" : "gap-1.5")}>
-          <div className="flex items-center justify-between gap-2">
-            <h2
-              className={
-                isNativeUi
-                  ? "app-native-settings-chrome__title text-[var(--app-text)]"
-                  : "text-sm font-semibold text-slate-700"
-              }
-            >
-              {isNativeUi ? "整える" : "ブロック設定"}
-            </h2>
-            <button
-              type="button"
-              onClick={toggleDeleteProtection}
-              aria-pressed={isDeleteProtected}
-              aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
-              title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
-              className={
-                "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
-                (isDeleteProtected
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-slate-300 bg-white text-slate-500 hover:bg-slate-50")
-              }
-            >
-              {isDeleteProtected ? (
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <rect x="5" y="11" width="14" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 1 1 8 0v4" />
-                </svg>
-              ) : (
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <rect x="5" y="11" width="14" height="10" rx="2" />
-                  <path d="M8 11V7a4 4 0 0 1 7-2" />
-                </svg>
-              )}
-            </button>
-          </div>
+        <div className={"flex flex-col " + (isNativeUi ? "gap-1.5" : "gap-1.5")}>
+          {!isNativeUi ? (
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+              <button
+                type="button"
+                onClick={toggleDeleteProtection}
+                aria-pressed={isDeleteProtected}
+                aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
+                title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+                className={
+                  "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
+                  (isDeleteProtected
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-300 bg-white text-slate-500 hover:bg-slate-50")
+                }
+              >
+                {isDeleteProtected ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 7-2" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-2">
             <p
               className={
@@ -3488,8 +3464,30 @@ export function CardSettings({
               ) : null}
               {getCardTypeLabel(card.type, libraryAudience)}
             </p>
-            {!isNativeUi && (canEditCard || canReorderCard) ? (
-              <div className="flex items-center gap-1.5">
+            {canEditCard || canReorderCard ? (
+              <div className={isNativeUi ? "app-native-settings-toolbar" : "flex items-center gap-1.5"}>
+                {isNativeUi ? (
+                  <button
+                    type="button"
+                    onClick={toggleDeleteProtection}
+                    aria-pressed={isDeleteProtected}
+                    aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
+                    title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+                    className="app-native-settings-icon-action"
+                  >
+                    {isDeleteProtected ? (
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <rect x="5" y="11" width="14" height="10" rx="2" />
+                        <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                      </svg>
+                    ) : (
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                        <rect x="5" y="11" width="14" height="10" rx="2" />
+                        <path d="M8 11V7a4 4 0 0 1 7-2" />
+                      </svg>
+                    )}
+                  </button>
+                ) : null}
                 {canReorderCard ? (
                   <>
                     <button
@@ -3527,7 +3525,7 @@ export function CardSettings({
                 <button
                   type="button"
                   onClick={handleRemoveCard}
-                  disabled={!onRemoveCard}
+                  disabled={!onRemoveCard || isDeleteProtected}
                   className={
                     isNativeUi
                       ? "app-native-settings-action app-native-settings-action--danger"
@@ -3572,7 +3570,7 @@ export function CardSettings({
               options={[
                 { id: "content", label: "内容" },
                 { id: "appearance", label: "見た目" },
-                { id: "appearance-spacing", label: "余白" },
+                { id: "appearance-spacing", label: "サイズ" },
               ]}
             />
           ) : (

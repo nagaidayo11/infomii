@@ -1,6 +1,6 @@
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
 
-export type AppTabId = "home" | "templates" | "works" | "plan" | "settings";
+export type AppTabId = "home" | "templates" | "works" | "settings";
 
 export type AppTabConfig = {
   id: AppTabId;
@@ -9,7 +9,7 @@ export type AppTabConfig = {
   match: (pathname: string) => boolean;
 };
 
-/** Tab order: ホーム / テンプレート / ページ / プラン / 設定 */
+/** Tab order: ホーム / テンプレート / 作品 / 設定 */
 export const APP_TAB_CONFIGS: AppTabConfig[] = [
   {
     id: "home",
@@ -31,17 +31,10 @@ export const APP_TAB_CONFIGS: AppTabConfig[] = [
     match: (p) => p.startsWith("/dashboard/pages"),
   },
   {
-    id: "plan",
-    label: "プラン",
-    href: "/settings/billing",
-    match: (p) => p.startsWith("/settings/billing"),
-  },
-  {
     id: "settings",
     label: "設定",
     href: "/settings",
-    match: (p) =>
-      p === "/settings" || (p.startsWith("/settings/") && !p.startsWith("/settings/billing")),
+    match: (p) => p === "/settings" || p.startsWith("/settings/"),
   },
 ];
 

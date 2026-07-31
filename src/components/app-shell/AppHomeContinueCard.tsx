@@ -18,39 +18,36 @@ export function AppHomeContinueCard({ pageId, title, status, updatedAt }: AppHom
   return (
     <AppShellLink href={`/editor/${pageId}`} className="app-home-continue app-pressable ui-pop-tap block no-underline">
       <div className="app-home-continue__glow" aria-hidden />
-      <div className="relative flex items-center gap-3.5">
+      <div className="app-home-continue__inner">
         <div className="app-home-continue__thumb" aria-hidden>
-          <AppIconPages size={36} />
+          <AppIconPages size={30} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-[var(--app-accent)]">続きから</p>
-          <p className="mt-0.5 truncate text-lg font-bold leading-tight text-[var(--app-text)]">
-            {displayTitle}
-          </p>
-          <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-[var(--app-text-muted)]">
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className={
-                  "app-status-dot " + (published ? "app-status-dot--published" : "app-status-dot--draft")
-                }
-                aria-hidden
-              />
+          <div className="app-home-continue__eyebrow">
+            <span>続きから</span>
+            <span className={published ? "app-home-continue__pill is-published" : "app-home-continue__pill"}>
               {published ? "公開中" : "下書き"}
             </span>
-            <span aria-hidden>·</span>
-            <span>{formatRelativeTimeJa(updatedAt)}</span>
+          </div>
+          <p className="app-home-continue__title">
+            {displayTitle}
+          </p>
+          <p className="app-home-continue__meta">
+            {formatRelativeTimeJa(updatedAt)}
           </p>
         </div>
-        <svg
-          className="h-5 w-5 shrink-0 text-[var(--app-accent)] opacity-70"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          strokeWidth={2.2}
-          aria-hidden
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        <span className="app-home-continue__cta" aria-hidden>
+          開く
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2.2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
       </div>
     </AppShellLink>
   );

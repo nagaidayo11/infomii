@@ -50,6 +50,8 @@ import {
 import { createOpaqueToken } from "@/lib/stamp/types";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
+const ensuredSubscriptionHotelIds = new Set<string>();
+const ensuringSubscriptionByHotelId = new Map<string, Promise<void>>();
 
 async function postAuthenticatedWorkspaceApi<T extends Record<string, unknown>>(
   path: string,
@@ -79,6 +81,24 @@ async function postAuthenticatedWorkspaceApi<T extends Record<string, unknown>>(
     throw new Error(typeof payload.error === "string" ? payload.error : "リクエストに失敗しました");
   }
   return payload;
+}
+
+async function ensureSubscriptionOnceForHotel(hotelId: string): Promise<void> {
+  if (ensuredSubscriptionHotelIds.has(hotelId)) return;
+  const existing = ensuringSubscriptionByHotelId.get(hotelId);
+  if (existing) return existing;
+
+  const pending = postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
+    hotel_id: hotelId,
+  })
+    .then(() => {
+      ensuredSubscriptionHotelIds.add(hotelId);
+    })
+    .finally(() => {
+      ensuringSubscriptionByHotelId.delete(hotelId);
+    });
+  ensuringSubscriptionByHotelId.set(hotelId, pending);
+  return pending;
 }
 
 function toError(error: unknown, fallback: string): Error {
@@ -1019,9 +1039,7 @@ export async function ensureUserHotelScope(): Promise<string | null> {
         .is("owner_user_id", null);
     }
     try {
-      await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
-        hotel_id: membership.hotel_id,
-      });
+      await ensureSubscriptionOnceForHotel(membership.hotel_id);
     } catch {
       // Best-effort: local dev without service role must not block subscription reads.
     }
@@ -1062,9 +1080,7 @@ export async function ensureUserHotelScopeForOnboarding(): Promise<string | null
   }
   if (membership?.hotel_id) {
     try {
-      await postAuthenticatedWorkspaceApi("/api/workspace/ensure-subscription", {
-        hotel_id: membership.hotel_id,
-      });
+      await ensureSubscriptionOnceForHotel(membership.hotel_id);
     } catch {
       // Best-effort: local dev without service role must not block hotel scope reads.
     }
@@ -4861,6 +4877,7 @@ export type PageRow = {
   kind?: "guide" | "stamp";
   /** Mirrors `informations.status` for this slug (default draft if no row). */
   publishStatus?: "published" | "draft";
+  previewCards?: Array<{ type: string; content: Record<string, unknown>; order: number }>;
 };
 
 /** List all pages for the current hotel (card-based pages). Used for pageLinks block. */
@@ -4907,7 +4924,9 @@ export type PageConnectionSet = {
 
 type CardLinkRow = {
   page_id: string;
+  type?: string;
   content: Record<string, unknown>;
+  order?: number;
 };
 
 type PageLinkItem = {
@@ -5029,12 +5048,33 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
     const r = row as { slug: string; status: string };
     slugPublished.set(r.slug, r.status === "published");
   }
+  const pageIds = rawPages.map((p) => p.id);
+  const { data: previewCardRows, error: previewCardsError } = await supabase
+    .from("cards")
+    .select("page_id,type,content,order")
+    .in("page_id", pageIds)
+    .order("order", { ascending: true });
+
+  const cardsByPageId = new Map<string, Array<{ type: string; content: Record<string, unknown>; order: number }>>();
+  if (!previewCardsError) {
+    for (const row of (previewCardRows ?? []) as CardLinkRow[]) {
+      if (!row.page_id || typeof row.type !== "string") continue;
+      const list = cardsByPageId.get(row.page_id) ?? [];
+      list.push({
+        type: row.type,
+        content: row.content ?? {},
+        order: typeof row.order === "number" ? row.order : list.length,
+      });
+      cardsByPageId.set(row.page_id, list);
+    }
+  }
+
   const pages: PageRow[] = rawPages.map((p) => ({
     ...p,
     publishStatus: slugPublished.get(p.slug) === true ? "published" : "draft",
+    previewCards: cardsByPageId.get(p.id) ?? [],
   }));
 
-  const pageIds = pages.map((p) => p.id);
   const slugToId = new Map(pages.map((p) => [p.slug, p.id]));
   const idToPage = new Map(pages.map((p) => [p.id, p]));
   const undirected = new Map<string, Set<string>>();
@@ -5046,13 +5086,9 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
     directedIn.set(p.id, new Set<string>());
   }
 
-  const { data: linkCards, error: cardsError } = await supabase
-    .from("cards")
-    .select("page_id,content")
-    .eq("type", "pageLinks")
-    .in("page_id", pageIds);
-  if (!cardsError) {
-    for (const row of ((linkCards ?? []) as CardLinkRow[])) {
+  if (!previewCardsError) {
+    const linkCards = ((previewCardRows ?? []) as CardLinkRow[]).filter((row) => row.type === "pageLinks");
+    for (const row of linkCards) {
       const items = (Array.isArray(row.content?.items) ? row.content.items : []) as PageLinkItem[];
       for (const item of items) {
         if ((item.linkType ?? "page") !== "page") continue;

@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   /** Expo WebView など LAN IP から dev にアクセスするとき */
-  allowedDevOrigins: ["127.0.0.1", "localhost", "192.168.11.6"],
+  allowedDevOrigins: ["127.0.0.1", "localhost", "192.168.11.5", "192.168.11.6"],
   /** dev で .next が壊れる（manifest ENOENT）対策 */
   webpack: (config, { dev, isServer }) => {
     if (dev) {

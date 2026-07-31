@@ -6,6 +6,7 @@ import { btocTemplatePreviewPath, isSeedPlaceholderImagePath, marketplaceTemplat
 import { MARKETPLACE_SEED_TEMPLATES } from "@/lib/marketplace-seed-templates";
 import {
   ensurePageLinksAfterOpening,
+  normalizeMarketplaceSeedCardContent,
   normalizePageLinksCardContent,
   stripDeprecatedIconCards,
   templateCardsContainIcon,
@@ -568,21 +569,19 @@ function enrichCriticalCardContent(
         content.note = "体調不良・事故時はフロントへご連絡ください。";
       }
     }
-    if (card.type === "pageLinks") {
-      return { ...card, content: normalizePageLinksCardContent(content) };
-    }
+    const normalizedContent = normalizeMarketplaceSeedCardContent(card.type, content);
     if (card.type === "notice" && typeof content.body === "string" && content.body.length > 110) {
-      content.body = `${content.body.slice(0, 107)}...`;
+      normalizedContent.body = `${content.body.slice(0, 107)}...`;
     }
     if (card.type === "text" && typeof content.content === "string" && content.content.length > 100) {
-      content.content = `${content.content.slice(0, 97)}...`;
+      normalizedContent.content = `${content.content.slice(0, 97)}...`;
     }
-    for (const [key, value] of Object.entries(content)) {
+    for (const [key, value] of Object.entries(normalizedContent)) {
       if (typeof value === "string" && value.length > 220) {
-        content[key] = `${value.slice(0, 217)}...`;
+        normalizedContent[key] = `${value.slice(0, 217)}...`;
       }
     }
-    return { ...card, content };
+    return { ...card, content: normalizedContent };
   });
 }
 

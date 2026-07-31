@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Mous
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
+import { ClientShellContext } from "@/components/app-shell/ClientShellProvider";
+import { useClientShell } from "@/components/app-shell/useClientShell";
 import { guestCardColumnMaxWidthPx, GUEST_PAGE_MAIN_PADDING_X_PX } from "@/lib/guest-page-layout";
 import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
@@ -23,6 +25,8 @@ const DEFAULT_W = 280;
 const DEFAULT_H = 96;
 const MIN_W = 120;
 const MIN_H = 48;
+const EDITOR_WEB_FRAME_WIDTH = 350;
+const EDITOR_APP_FRAME_WIDTH = 390;
 /** Map blocks need room for 16:11 frame + address + pin list; legacy cap at 320 caused clipping. */
 const MAP_AUTO_MAX_H = 900;
 /** 観測要素の scrollHeight が親高さと再帰し暴走するのを防ぐ上限（px） */
@@ -323,10 +327,11 @@ export function FreeformCanvas({
   unframed = false,
   lastAddedCardId = null,
 }: FreeformCanvasProps) {
+  const clientShell = useClientShell();
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const [viewportWidth, setViewportWidth] = useState(350);
+  const [viewportWidth, setViewportWidth] = useState(() => (unframed ? EDITOR_APP_FRAME_WIDTH : EDITOR_WEB_FRAME_WIDTH));
   const contentWidth = guestCardColumnMaxWidthPx(viewportWidth);
   const stageWidth = contentWidth + CANVAS_PADDING_X * 2;
   const [dragState, setDragState] = useState<{
@@ -434,7 +439,12 @@ export function FreeformCanvas({
         return Math.max(MIN_H, contentHeight);
       }
       if (saved?.manualH) {
-        return pos.h ?? getCardDefaultHeight(card);
+        const auto = autoHeights[card.id];
+        const savedHeight = pos.h ?? getCardDefaultHeight(card);
+        if (typeof auto === "number" && Number.isFinite(auto) && auto > savedHeight + 1) {
+          return Math.max(MIN_H, auto);
+        }
+        return savedHeight;
       }
       const auto = autoHeights[card.id];
       if (card.type === "map") {
@@ -608,6 +618,7 @@ export function FreeformCanvas({
       return Math.max(max, pos.y + h + 32);
     }, 0)
   );
+  const frameWidth = unframed ? EDITOR_APP_FRAME_WIDTH : EDITOR_WEB_FRAME_WIDTH;
 
   return (
     <CardEditProvider inlineEditable>
@@ -620,7 +631,7 @@ export function FreeformCanvas({
     >
       <div className="editor-canvas-outer flex h-full min-h-0 min-w-0 flex-1 justify-center overflow-hidden bg-slate-200/80">
         <PhoneDeviceFrame
-          width={350}
+          width={frameWidth}
           fillHeight
           verticalInset={unframed ? 0 : 28}
           showNotch={!unframed}
@@ -743,6 +754,21 @@ export function FreeformCanvas({
                   } as Record<string, string>)
                 : {}),
             };
+            const selectedOutlineStyle =
+              unframed && isSelected
+                ? {
+                    "--editor-selected-outline-left": `${(fullBleed ? 0 : CANVAS_PADDING_X) - displayX - 8}px`,
+                    "--editor-selected-outline-width": `${(fullBleed ? stageWidth : contentWidth) + 16}px`,
+                  }
+                : {};
+            const cardRenderer = (
+              <CardRenderer
+                card={card}
+                isSelected={isSelected}
+                showSpaceLabel
+                businessFeaturesEnabled={isBusinessPlan}
+              />
+            );
             return (
               <Rnd
                 key={card.id}
@@ -798,14 +824,16 @@ export function FreeformCanvas({
                         ? "card-full-bleed rounded-none "
                         : "guest-card-surface-media ") +
                       (isSelected
-                        ? fullBleed
-                          ? "ring-2 ring-blue-300 "
-                          : "ring-2 ring-blue-300 ring-offset-2 "
+                        ? unframed
+                          ? "editor-card-selected--active "
+                          : fullBleed
+                            ? "ring-2 ring-blue-300 "
+                            : "ring-2 ring-blue-300 ring-offset-2 "
                         : "") +
                       ((card.style as Record<string, unknown> | undefined)?.textColor ? "editor-card-colorized " : "") +
                       ((card.style as Record<string, unknown> | undefined)?.innerTonePreset ? "editor-inner-surface-overridden " : "")
                     }
-                    style={shellStyle}
+                    style={{ ...shellStyle, ...selectedOutlineStyle }}
                   >
                     {/*
                       カード本体を flex-shrink させない（既定の Rnd 高さに縮ませない）。
@@ -821,12 +849,13 @@ export function FreeformCanvas({
                           : "justify-center")
                       }
                     >
-                      <CardRenderer
-                        card={card}
-                        isSelected={isSelected}
-                        showSpaceLabel
-                        businessFeaturesEnabled={isBusinessPlan}
-                      />
+                      {unframed ? (
+                        <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+                          {cardRenderer}
+                        </ClientShellContext.Provider>
+                      ) : (
+                        cardRenderer
+                      )}
                     </div>
                   </div>
                 </div>

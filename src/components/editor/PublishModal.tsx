@@ -68,7 +68,7 @@ function OpenPageIcon({ className }: { className?: string }) {
 export function PublishModal({
   publicUrl,
   pageTitle,
-  slug: _slug,
+  slug,
   onClose,
   variant = "publish-success",
   showBusinessUpsell = false,
@@ -80,8 +80,10 @@ export function PublishModal({
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
+  void slug;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -167,21 +169,21 @@ export function PublishModal({
   const actionButtons = [
     {
       id: "share",
-      label: "共有",
+      label: isAppShell ? "送る" : "共有",
       className: "publish-share-btn publish-share-btn--share",
       icon: <ShareIcon className="h-5 w-5" />,
       onClick: () => void handleShare(),
     },
     {
       id: "copy",
-      label: copyUrlStatus === "ok" ? "コピー済" : copyUrlStatus === "fail" ? "失敗" : "リンク",
+      label: copyUrlStatus === "ok" ? "コピー済" : copyUrlStatus === "fail" ? "失敗" : isAppShell ? "リンクコピー" : "リンク",
       className: "publish-share-btn publish-share-btn--copy",
       icon: <CopyIcon className="h-5 w-5" />,
       onClick: () => void handleCopyUrl(),
     },
     {
       id: "open",
-      label: "開く",
+      label: isAppShell ? "見る" : "開く",
       className: "publish-share-btn publish-share-btn--open",
       icon: <OpenPageIcon className="h-5 w-5" />,
       onClick: handleOpenPage,
@@ -197,7 +199,10 @@ export function PublishModal({
       onClick={onClose}
     >
       <div
-        className="publish-modal-panel ui-pop-in w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl max-h-[85dvh]"
+        className={
+          "publish-modal-panel ui-pop-in w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xl max-h-[85dvh]" +
+          (isAppShell ? " publish-modal-panel--app" : "")
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -230,25 +235,20 @@ export function PublishModal({
             )}
           </div>
           <h2 id="publish-modal-title" className="text-xl font-semibold text-slate-900">
-            {isShare ? "QR・リンク" : "公開しました"}
+            {isAppShell ? (isShare ? "送る・見せる" : "公開できました") : isShare ? "QR・リンク" : "公開しました"}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">{pageTitle}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {isAppShell ? "LINEで送る、QRを見せる。相手はアプリ不要です。" : pageTitle}
+          </p>
         </div>
 
-        <div className="space-y-5 p-4 sm:p-6">
-          <div className="flex flex-col items-center">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">QRコード</p>
-            <div className="flex shrink-0 overflow-hidden rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-inner">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrImageUrl}
-                alt=""
-                width={QR_SIZE}
-                height={QR_SIZE}
-                className="h-44 w-44 object-contain sm:h-52 sm:w-52"
-              />
+        <div className="publish-modal-content space-y-5 p-4 sm:p-6">
+          {isAppShell ? (
+            <div className="publish-app-summary">
+              <p className="publish-app-summary-kicker">公開ページ</p>
+              <p className="publish-app-summary-title">{pageTitle || "無題のページ"}</p>
             </div>
-          </div>
+          ) : null}
 
           <div>
             <div className="publish-share-grid publish-share-grid--compact">
@@ -289,7 +289,23 @@ export function PublishModal({
             ) : null}
           </div>
 
-          <div>
+          <div className="publish-qr-section flex flex-col items-center">
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+              {isAppShell ? "QRを見せる" : "QRコード"}
+            </p>
+            <div className="flex shrink-0 overflow-hidden rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-inner">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qrImageUrl}
+                alt=""
+                width={QR_SIZE}
+                height={QR_SIZE}
+                className="h-44 w-44 object-contain sm:h-52 sm:w-52"
+              />
+            </div>
+          </div>
+
+          <div className="publish-url-section">
             <p className="mb-1.5 text-xs font-medium text-slate-500">公開URL</p>
             <input
               type="text"
@@ -302,7 +318,7 @@ export function PublishModal({
             />
           </div>
 
-          {!isShare && showBusinessUpsell ? (
+          {!isAppShell && !isShare && showBusinessUpsell ? (
             <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-4">
               <div
                 className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-300/30 blur-2xl"

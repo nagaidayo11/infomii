@@ -74,7 +74,7 @@ export function normalizeMarketplaceTemplateCardContent(
   ctx: TemplateMediaContext,
   categoryFallback: string,
 ): Record<string, unknown> {
-  const base = { ...(content ?? {}) };
+  const base = normalizeMarketplaceSeedCardContent(type, content ?? {});
   const resolve = (src?: string) =>
     resolveTemplateMediaSrc(
       src,
@@ -183,6 +183,7 @@ function resolveComputedOrCategoryFallback(
  * - Empty → deterministic path, then category fallback.
  */
 import { isBtocMarketplaceCategory } from "@/lib/template-marketplace-meta";
+import { normalizeMarketplaceSeedCardContent } from "@/lib/template-marketplace";
 
 /** BtoC: preview_image 未設定時のみプレースホルダー（パスがあれば表示を試みる） */
 export function templateListingUsesPlaceholder(

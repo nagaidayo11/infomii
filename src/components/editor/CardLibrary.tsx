@@ -1760,10 +1760,10 @@ export function CardLibrary({
         {!appVariant ? (
           <h2 className="text-sm font-semibold text-slate-700">ブロックライブラリ</h2>
         ) : (
-          <h2 className="app-card-library-title">何を追加する？</h2>
+          <h2 className="app-card-library-title">素材を追加</h2>
         )}
         <p className={"text-xs text-slate-500 " + (appVariant ? "font-medium text-teal-800/80" : "mt-1")}>
-          {appVariant ? "タップしてページに追加" : "クリックでキャンバスに追加"}
+          {appVariant ? "タップでキャンバスに入ります" : "クリックでキャンバスに追加"}
         </p>
         {showAudienceSwitch ? (
           appVariant ? (
@@ -1820,7 +1820,7 @@ export function CardLibrary({
             <section aria-label="おすすめセット" className="space-y-2">
               <div className="flex items-center justify-between gap-2 px-0.5">
                 <h3 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
-                  {appVariant ? "すぐ始める" : "おすすめセット"}
+                  {appVariant ? "よく使うセット" : "おすすめセット"}
                 </h3>
                 {quickPresets.length > 2 ? (
                   <button

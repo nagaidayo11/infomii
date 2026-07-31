@@ -17,9 +17,21 @@ function cardsSignature(
     angle: number;
   }
 ): string {
+  const normalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(normalize);
+    if (value && typeof value === "object") {
+      return Object.keys(value as Record<string, unknown>)
+        .sort()
+        .reduce<Record<string, unknown>>((acc, key) => {
+          acc[key] = normalize((value as Record<string, unknown>)[key]);
+          return acc;
+        }, {});
+    }
+    return value;
+  };
   return [
-    cards.map((c) => `${c.id}:${c.order}:${JSON.stringify(c.content)}:${JSON.stringify(c.style ?? {})}`).join("|"),
-    JSON.stringify(pageBackground),
+    cards.map((c) => `${c.id}:${c.order}:${JSON.stringify(normalize(c.content))}:${JSON.stringify(normalize(c.style ?? {}))}`).join("|"),
+    JSON.stringify(normalize(pageBackground)),
   ].join("::");
 }
 
@@ -42,18 +54,20 @@ async function saveAndMerge(
   try {
     const { updatedIds, liveOpsContentById } = await savePageCards(pageId, cards, { pageStyle });
     if (!isMounted.current) return;
-    const current = useEditor2Store.getState().cards;
-    const merged = current.map((c) => {
-      const nextId = updatedIds[c.id] ?? c.id;
-      const opsPatch = liveOpsContentById[c.id] ?? liveOpsContentById[nextId];
-      if (!opsPatch && nextId === c.id) return c;
-      return {
-        ...c,
-        id: nextId,
-        content: opsPatch ? { ...c.content, ...opsPatch } : c.content,
-      };
-    });
-    useEditor2Store.getState().setCards(merged);
+    if (Object.keys(updatedIds).length > 0 || Object.keys(liveOpsContentById).length > 0) {
+      const current = useEditor2Store.getState().cards;
+      const merged = current.map((c) => {
+        const nextId = updatedIds[c.id] ?? c.id;
+        const opsPatch = liveOpsContentById[c.id] ?? liveOpsContentById[nextId];
+        if (!opsPatch && nextId === c.id) return c;
+        return {
+          ...c,
+          id: nextId,
+          content: opsPatch ? { ...c.content, ...opsPatch } : c.content,
+        };
+      });
+      useEditor2Store.getState().setCards(merged);
+    }
     if (isMounted.current) {
       useEditor2Store.getState().setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
     }

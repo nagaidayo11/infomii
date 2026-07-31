@@ -6,6 +6,9 @@ import { APP_TAB_CONFIGS } from "./app-tab-config";
 type AppAuthBootScreenProps = {
   /** Tab shell for dashboard routes; minimal chrome for editor */
   variant?: "tabs" | "editor";
+  recoverable?: boolean;
+  onRetry?: () => void;
+  onLogin?: () => void;
 };
 
 function DashboardBootSkeleton() {
@@ -59,7 +62,12 @@ function TabBarPlaceholder() {
 /**
  * App WebView boot state while auth/session scope resolves — matches tab shell + dashboard skeleton (no technical copy).
  */
-export function AppAuthBootScreen({ variant = "tabs" }: AppAuthBootScreenProps) {
+export function AppAuthBootScreen({
+  variant = "tabs",
+  recoverable = false,
+  onRetry,
+  onLogin,
+}: AppAuthBootScreenProps) {
   const showTabBar = variant === "tabs";
 
   return (
@@ -74,6 +82,30 @@ export function AppAuthBootScreen({ variant = "tabs" }: AppAuthBootScreenProps) 
         style={{ paddingBottom: showTabBar ? APP_TAB_BAR_OFFSET : undefined }}
       >
         {variant === "editor" ? <EditorBootSkeleton /> : <DashboardBootSkeleton />}
+        {recoverable ? (
+          <div className="mx-auto mt-5 w-full max-w-lg rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface)]/92 p-4 shadow-sm">
+            <p className="text-sm font-semibold text-[var(--app-text)]">読み込みに時間がかかっています</p>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--app-text-muted)]">
+              通信状況を確認して、もう一度読み込み直してください。
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="app-pressable rounded-xl bg-[var(--app-accent)] px-3 py-2 text-sm font-semibold text-white"
+              >
+                再読み込み
+              </button>
+              <button
+                type="button"
+                onClick={onLogin}
+                className="app-pressable rounded-xl border border-[var(--app-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--app-text)]"
+              >
+                ログインへ
+              </button>
+            </div>
+          </div>
+        ) : null}
       </main>
       {showTabBar ? <TabBarPlaceholder /> : null}
     </div>

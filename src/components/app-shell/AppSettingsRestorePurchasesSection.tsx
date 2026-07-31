@@ -26,14 +26,14 @@ export function AppSettingsRestorePurchasesSection() {
         Boolean(sub?.hasStripeCustomer) || sub?.billingProvider === "stripe";
       if (stripeManaged) {
         await syncStripeSubscriptionFromServer();
-        setMessage("ご契約情報を同期しました。プランタブでご確認ください。");
+        setMessage("ご契約情報を同期しました。設定のプランからご確認ください。");
         return;
       }
 
       const result = await restoreAppleSubscriptions();
       const planLabel =
         result.plan === "business" ? "Business" : result.plan === "pro" ? "Pro" : "Free";
-      setMessage(`購入情報を同期しました（${planLabel}プラン）。プランタブでご確認ください。`);
+      setMessage(`購入情報を同期しました（${planLabel}プラン）。設定のプランからご確認ください。`);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "購入の復元に失敗しました";
       if (msg.includes("プラン画面から")) {
@@ -45,7 +45,7 @@ export function AppSettingsRestorePurchasesSection() {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [showToast]);
 
   if (!isNativeIapAvailable()) return null;
 

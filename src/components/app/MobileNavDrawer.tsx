@@ -88,16 +88,11 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
                 className={
                   "flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium transition-colors " +
                   (isActive
-                    ? "bg-slate-100 text-slate-900"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")
+                    ? "bg-slate-100 text-slate-800"
+                    : "text-slate-800 hover:bg-slate-50 hover:text-slate-900")
                 }
               >
-                <span
-                  className={
-                    "relative flex h-6 w-6 shrink-0 items-center justify-center " +
-                    (isActive ? "text-slate-800" : "text-slate-400")
-                  }
-                >
+                <span className="relative flex h-6 w-6 shrink-0 items-center justify-center text-current">
                   {item.icon}
                   {showTeamPendingDot ? (
                     <span
@@ -115,7 +110,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           <Link
             href="/lp/business"
             onClick={onClose}
-            className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+            className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-slate-800 transition-colors hover:bg-slate-50 hover:text-slate-900"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

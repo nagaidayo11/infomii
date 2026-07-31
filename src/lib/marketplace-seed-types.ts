@@ -1,4 +1,7 @@
-import { ensurePageLinksAfterOpening } from "@/lib/template-marketplace";
+import {
+  ensurePageLinksAfterOpening,
+  normalizeMarketplaceSeedCardContent,
+} from "@/lib/template-marketplace";
 
 export type MarketplaceSeedCategory =
   | "travel"
@@ -88,5 +91,9 @@ export function block(type: MarketplaceSeedCardType, content: Record<string, unk
 }
 
 export function ordered(cards: CardDraft[]): MarketplaceSeedCard[] {
-  return ensurePageLinksAfterOpening(cards).map((card, order) => ({ ...card, order }));
+  return ensurePageLinksAfterOpening(cards).map((card, order) => ({
+    ...card,
+    content: normalizeMarketplaceSeedCardContent(card.type, card.content),
+    order,
+  }));
 }

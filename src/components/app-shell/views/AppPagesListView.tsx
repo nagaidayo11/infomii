@@ -34,6 +34,24 @@ import {
   setPagesListViewCache,
 } from "@/lib/session-resume-cache";
 
+const APP_PAGES_LOAD_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("timeout")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export function AppPagesListView() {
   const router = useRouter();
   const initialCache = getPagesListViewCache();
@@ -66,11 +84,14 @@ export function AppPagesListView() {
       setLoading(true);
     }
     try {
-      const [bootstrap, connectionSets, r] = await Promise.all([
-        getDashboardBootstrapData(),
-        listPageConnectionSetsForHotel().catch(() => []),
-        getCurrentUserHotelRole().catch(() => null),
-      ]);
+      const [bootstrap, connectionSets, r] = await withTimeout(
+        Promise.all([
+          getDashboardBootstrapData(),
+          listPageConnectionSetsForHotel().catch(() => []),
+          getCurrentUserHotelRole().catch(() => null),
+        ]),
+        APP_PAGES_LOAD_TIMEOUT_MS,
+      );
       const nextInfoBySlug = new Map(
         (bootstrap.informations ?? []).map((info) => [
           info.slug,
@@ -91,7 +112,12 @@ export function AppPagesListView() {
         role: r,
       });
     } catch {
-      setSets([]);
+      if (!getPagesListViewCache()) {
+        setSets([]);
+        setInfoBySlug(new Map());
+        setRole(null);
+        setSubscriptionPlan(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -114,9 +140,9 @@ export function AppPagesListView() {
   async function handleCreate() {
     if (createBusyRef.current) return;
     const entered = await prompt({
-      title: "新しい案内ページ",
-      message: "ページ名を入力してください",
-      placeholder: "例: 旅のしおり",
+      title: "新しい作品",
+      message: "作りたい作品の名前を入力してください",
+      placeholder: "例: 京都2泊3日のしおり",
       confirmLabel: "作成",
     });
     if (entered == null) return;
@@ -190,7 +216,7 @@ export function AppPagesListView() {
         await setInformationStatusBySlug(target.slug, nextStatus);
       }
       showToast(
-        nextStatus === "published" ? "ゲストに公開しました" : "非公開にしました",
+        nextStatus === "published" ? "公開しました" : "下書きに戻しました",
         "success",
       );
     } catch (e) {
@@ -209,8 +235,8 @@ export function AppPagesListView() {
   async function handleDelete(page: PageRow) {
     if (!canEdit || deleteBusyRef.current) return;
     const ok = await confirm({
-      title: "ページを削除",
-      message: `${page.title?.trim() ? `「${page.title}」を` : "このページを"}削除しますか？\n削除すると元に戻せません。`,
+      title: "作品を削除",
+      message: `${page.title?.trim() ? `「${page.title}」を` : "この作品を"}削除しますか？\n削除すると元に戻せません。`,
       confirmLabel: "削除",
       destructive: true,
     });
@@ -265,8 +291,8 @@ export function AppPagesListView() {
       ) : pageCount === 0 ? (
         <AppEmptyState
           icon={<AppIconEmptyPages />}
-          title="ページがまだありません"
-          description="ホームのAIやテンプレートから案内を作ると、ここに並びます。"
+          title="作品がまだありません"
+          description="AIで作るか、テンプレートから始めると、ここに並びます。"
           action={
             <div className="flex flex-col gap-3">
               <AppShellLink
@@ -280,7 +306,7 @@ export function AppPagesListView() {
                 onClick={() => void handleCreate()}
                 className="app-touch-btn app-pressable border border-[var(--app-border)] bg-[var(--app-surface)] font-semibold text-[var(--app-text)]"
               >
-                案内ページを作成
+                空の作品から作る
               </button>
               <button
                 type="button"

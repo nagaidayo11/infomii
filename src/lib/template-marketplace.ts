@@ -1,20 +1,127 @@
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 26;
+export const MARKETPLACE_SEED_VERSION = 27;
 
 /** Default grid columns for pageLinks blocks in marketplace templates. */
 export const PAGE_LINKS_DEFAULT_COLUMNS = 2;
+
+function readPageLinksColumns(value: unknown): 1 | 2 | 3 | 4 {
+  const raw = typeof value === "number" ? value : Number(value);
+  return raw === 1 || raw === 2 || raw === 3 || raw === 4 ? raw : PAGE_LINKS_DEFAULT_COLUMNS;
+}
 
 export function normalizePageLinksCardContent(
   content: Record<string, unknown>,
 ): Record<string, unknown> {
   return {
     ...content,
-    columns: PAGE_LINKS_DEFAULT_COLUMNS,
+    columns: readPageLinksColumns(content.columns),
     iconSize: content.iconSize ?? "md",
     styleVariant: content.styleVariant ?? "tile",
     tileShadowStrength: content.tileShadowStrength ?? "md",
     circleIconShadowStrength: content.circleIconShadowStrength ?? "md",
+    accentColor: content.accentColor ?? "#0f766e",
   };
+}
+
+function normalizeItemsWithoutDeadScheduleIcons(items: unknown): unknown {
+  if (!Array.isArray(items)) return items;
+  return items.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+    const rest = { ...(item as Record<string, unknown>) };
+    delete rest.icon;
+    return rest;
+  });
+}
+
+function normalizeColumns(value: unknown, fallback: 2 | 3 = 2): 2 | 3 {
+  const raw = typeof value === "number" ? value : Number(value);
+  return raw === 2 || raw === 3 ? raw : fallback;
+}
+
+function withAccent(content: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...content,
+    accentColor: content.accentColor ?? "#0f766e",
+  };
+}
+
+export function normalizeMarketplaceSeedCardContent(
+  type: string,
+  content: Record<string, unknown>,
+): Record<string, unknown> {
+  const base = { ...(content ?? {}) };
+  switch (type) {
+    case "hero":
+      return {
+        ...withAccent(base),
+        layout: base.layout ?? "overlay",
+        widthMode: base.widthMode ?? "full",
+      };
+    case "hero_slider":
+      return {
+        ...base,
+        widthMode: base.widthMode ?? "full",
+        height: base.height ?? "s",
+        autoplay: base.autoplay ?? true,
+        transitionEnabled: base.transitionEnabled ?? true,
+        transitionType: base.transitionType ?? "fade",
+      };
+    case "pageLinks":
+    case "icon_shortcuts":
+      return normalizePageLinksCardContent(base);
+    case "heading_body":
+      return {
+        ...base,
+        dividerStyle: base.dividerStyle ?? "solid",
+      };
+    case "sectionTitle":
+    case "storyBand":
+    case "dayTimeline":
+    case "tabs_info":
+    case "accordion_info":
+    case "iconAccordion":
+    case "map":
+      return withAccent(base);
+    case "schedule":
+      return {
+        ...base,
+        dynamicEnabled: base.dynamicEnabled ?? false,
+        timezone: base.timezone ?? "Asia/Tokyo",
+        rules: Array.isArray(base.rules) ? base.rules : [],
+        items: normalizeItemsWithoutDeadScheduleIcons(base.items),
+      };
+    case "checklist":
+      return {
+        ...base,
+        items: Array.isArray(base.items)
+          ? base.items.map((item) => {
+              if (item && typeof item === "object" && !Array.isArray(item)) {
+                return { checked: false, ...(item as Record<string, unknown>) };
+              }
+              return { text: String(item ?? ""), checked: false };
+            })
+          : [],
+      };
+    case "gallery":
+    case "image_tiles":
+      return {
+        ...base,
+        columns: normalizeColumns(base.columns, 2),
+      };
+    case "open_status":
+      return {
+        ...base,
+        mode: base.mode ?? "manual",
+        openNow: base.openNow ?? true,
+      };
+    case "notice":
+      return {
+        ...base,
+        variant: base.variant ?? "info",
+      };
+    default:
+      return base;
+  }
 }
 
 type TemplateCardLike = { type: string; order?: number };

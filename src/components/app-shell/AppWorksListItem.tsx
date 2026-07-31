@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { PublishModal } from "@/components/editor/PublishModal";
 import { formatRelativeTimeJa } from "@/lib/format-relative-time";
 import { buildPublicUrl } from "@/lib/storage";
@@ -24,6 +24,7 @@ export type AppWorksListItemProps = {
   onTogglePublish?: (id: string, nextStatus: "draft" | "published") => Promise<void> | void;
   onDelete?: (id: string) => void;
   liveOpsKeys?: LiveOpsKey[];
+  previewCards?: Array<{ type: string; content: Record<string, unknown>; order?: number }>;
 };
 
 function TrashIcon() {
@@ -57,13 +58,77 @@ function ChevronRight() {
 function QrLinkIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0 4 4m-4-4-4 4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6" />
     </svg>
   );
+}
+
+type ResolvedWorkPreview = {
+  image?: string;
+  title: string;
+  subtitle?: string;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function firstImageFromContent(content: Record<string, unknown>): string | undefined {
+  const direct = readString(content.src) ?? readString(content.imageSrc) ?? readString(content.imageUrl) ?? readString(content.image);
+  if (direct) return direct;
+
+  for (const key of ["slides", "items", "images"]) {
+    const items = Array.isArray(content[key]) ? content[key] : [];
+    for (const item of items) {
+      const row = asRecord(item);
+      if (!row) continue;
+      const src = readString(row.src) ?? readString(row.imageSrc) ?? readString(row.imageUrl) ?? readString(row.image);
+      if (src) return src;
+    }
+  }
+  return undefined;
+}
+
+function firstTextFromContent(content: Record<string, unknown>): string | undefined {
+  return (
+    readString(content.subtitle) ??
+    readString(content.caption) ??
+    readString(content.body) ??
+    readString(content.description) ??
+    readString(content.content) ??
+    readString(content.note)
+  );
+}
+
+function resolveWorkPreview(
+  cards: AppWorksListItemProps["previewCards"],
+  fallbackTitle: string,
+): ResolvedWorkPreview {
+  const orderedCards = [...(cards ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const heroCard =
+    orderedCards.find((card) => card.type === "hero" || card.type === "hero_slider") ??
+    orderedCards.find((card) => firstImageFromContent(card.content));
+  const textCard = orderedCards.find((card) => readString(card.content.title) || firstTextFromContent(card.content));
+  const title = readString(heroCard?.content.title) ?? readString(textCard?.content.title) ?? (fallbackTitle || "無題");
+  const subtitle = firstTextFromContent(heroCard?.content ?? {}) ?? firstTextFromContent(textCard?.content ?? {});
+  return {
+    image: heroCard ? firstImageFromContent(heroCard.content) : undefined,
+    title,
+    subtitle,
+  };
+}
+
+function buildPreviewStyle(image?: string): CSSProperties | undefined {
+  if (!image) return undefined;
+  const safeImage = image.replace(/"/g, "%22");
+  return {
+    backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.62)), url("${safeImage}")`,
+  };
 }
 
 export function AppWorksListItem({
@@ -79,6 +144,7 @@ export function AppWorksListItem({
   onTogglePublish,
   onDelete,
   liveOpsKeys = [],
+  previewCards,
 }: AppWorksListItemProps) {
   const { showToast } = useAppToast();
   const [shareOpen, setShareOpen] = useState(false);
@@ -92,6 +158,10 @@ export function AppWorksListItem({
       : slug
         ? buildPublicUrl(slug)
         : "";
+  const preview = useMemo(
+    () => resolveWorkPreview(previewCards, title),
+    [previewCards, title],
+  );
 
   const handleShareClick = () => {
     if (!slug) {
@@ -99,7 +169,7 @@ export function AppWorksListItem({
       return;
     }
     if (!published) {
-      showToast("公開するとQRとリンクを共有できます", "info");
+      showToast("公開すると送れます", "info");
       return;
     }
     setShareOpen(true);
@@ -107,8 +177,23 @@ export function AppWorksListItem({
 
   return (
     <>
-      <article className="app-shell-card ui-pop-card overflow-hidden">
-        <div className="flex items-center gap-1 px-4 py-3.5">
+      <article className="app-works-card app-shell-card ui-pop-card overflow-hidden">
+        <AppShellLink
+          href={editHref}
+          className={`app-works-preview app-pressable no-underline ${preview.image ? "has-image" : "has-no-image"}`}
+          aria-label={`${title || "無題"}を編集`}
+          style={buildPreviewStyle(preview.image)}
+        >
+          <div className="app-works-preview-live">
+            <span className="app-works-preview-live-status">{published ? "公開中" : "下書き"}</span>
+            <div className="app-works-preview-live-copy">
+              <strong>{preview.title}</strong>
+              {preview.subtitle ? <span>{preview.subtitle}</span> : null}
+            </div>
+          </div>
+        </AppShellLink>
+
+        <div className="app-works-title-row flex items-center gap-1 px-4 py-3.5">
           <AppShellLink
             href={editHref}
             className="app-pressable flex min-w-0 flex-1 items-center gap-2 border-0 bg-transparent text-left no-underline"
@@ -166,10 +251,10 @@ export function AppWorksListItem({
             type="button"
             onClick={handleShareClick}
             className="app-works-share-btn ui-pop-tap inline-flex shrink-0 items-center gap-0.5"
-            aria-label="QRとリンクを表示"
+            aria-label="送る"
           >
             <QrLinkIcon className="h-3.5 w-3.5" />
-            <span>QR / リンク</span>
+            <span>送る</span>
           </button>
         </div>
         {liveOpsKeys.length > 0 ? (

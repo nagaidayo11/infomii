@@ -17,12 +17,10 @@ import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
-import { PhoneDeviceFrame, PHONE_SCREEN_WIDTH } from "@/components/ui/PhoneDeviceFrame";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import {
   normalizeMarketplaceTemplateCardContent,
-  resolveTemplateMediaSrc,
   TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS,
 } from "@/lib/template-preview";
 import {
@@ -47,6 +45,7 @@ import { AppEmptyState } from "@/components/app-shell/AppEmptyState";
 import { AppIconEmptyTemplates } from "@/components/app-shell/icons/AppIconSet";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 import { useClientShell } from "@/components/app-shell/useClientShell";
+import { ClientShellContext } from "@/components/app-shell/ClientShellProvider";
 
 /** Marketplace preview chrome — same bottom tabs as editor / guest preview. */
 const MARKETPLACE_PREVIEW_GUEST_SHELL = {
@@ -198,7 +197,8 @@ function TemplateRail({
  * Use Template creates a page and populates cards, then opens the editor.
  */
 export default function TemplatesPage() {
-  const { isAppShell } = useClientShell();
+  const clientShell = useClientShell();
+  const { isAppShell } = clientShell;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
@@ -387,22 +387,6 @@ export default function TemplatesPage() {
     }
   }
 
-  function resolvePreviewMediaSrc(
-    src: string | undefined,
-    template: TemplateRow,
-  ): string {
-    const categoryFallback =
-      TEMPLATE_MARKETPLACE_CATEGORY_FALLBACKS[template.category ?? ""] ??
-      PRESET_HERO_SAMPLE_IMAGE;
-    return resolveTemplateMediaSrc(
-      src,
-      template.preview_image,
-      template.category ?? null,
-      template.name,
-      categoryFallback,
-    );
-  }
-
   function normalizeTemplatePreviewContent(
     type: CardType,
     content: Record<string, unknown> | undefined,
@@ -474,39 +458,34 @@ export default function TemplatesPage() {
                     プレビューを読み込み中…
                   </div>
                 ) : (
-                  <div className="h-[min(72vh,680px)] w-full max-w-[390px]">
-                    <PhoneDeviceFrame
-                      width={PHONE_SCREEN_WIDTH}
-                      fillHeight
-                      verticalInset={0}
-                      className="h-full w-full"
-                      header={
-                        <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
-                          {previewTemplate.name}
-                        </h1>
-                      }
-                      footer={
-                        MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
-                          <GuestBottomTabBar
-                            tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
-                            currentSlug="preview"
-                            locale="ja"
-                            previewMode
-                          />
-                        ) : null
-                      }
-                    >
+                  <div className="template-preview-canvas h-[min(72vh,680px)] w-full max-w-[430px] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+                    <div className="template-preview-canvas__header">
+                      <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+                        {previewTemplate.name}
+                      </h1>
+                    </div>
+                    <div className="template-preview-canvas__body template-preview-scroll">
                       <LocaleProvider value="ja">
-                        <div
-                          className="guest-page guest-content-gutter min-h-full w-full"
-                          style={{ paddingTop: 16, paddingBottom: 12 }}
-                        >
-                          <div className={GUEST_CARD_STACK_CLASS}>
-                            <CardRenderer cards={previewCards} />
+                        <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+                          <div
+                            className="guest-page guest-content-gutter min-h-full w-full"
+                            style={{ paddingTop: 16, paddingBottom: 12 }}
+                          >
+                            <div className={GUEST_CARD_STACK_CLASS}>
+                              <CardRenderer cards={previewCards} />
+                            </div>
                           </div>
-                        </div>
+                        </ClientShellContext.Provider>
                       </LocaleProvider>
-                    </PhoneDeviceFrame>
+                    </div>
+                    {MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
+                      <GuestBottomTabBar
+                        tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
+                        currentSlug="preview"
+                        locale="ja"
+                        previewMode
+                      />
+                    ) : null}
                   </div>
                 )}
               </div>

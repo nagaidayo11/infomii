@@ -12,16 +12,8 @@ import { AppSettingsLegalSection } from "../AppSettingsLegalSection";
 import { AppSettingsPushSection } from "../AppSettingsPushSection";
 import { AppSettingsRestorePurchasesSection } from "../AppSettingsRestorePurchasesSection";
 import { AppSettingsSignOutSection } from "../AppSettingsSignOutSection";
+import { AppShellLink } from "../AppShellLink";
 import { AppSettingsShell } from "./AppSettingsShell";
-import {
-  AppSettingsIconAccount,
-  AppSettingsIconDelete,
-  AppSettingsIconFacility,
-  AppSettingsIconNotifications,
-  AppSettingsIconProfile,
-  AppSettingsIconRestore,
-  AppSettingsIconSupport,
-} from "../icons/AppSettingsIcons";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
 
@@ -41,35 +33,49 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
-        <AppSettingsGroup title="施設" icon={<AppSettingsIconFacility size={22} />}>
+        <AppSettingsGroup title="マイスペース">
           <HotelNameSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="プロフィール" icon={<AppSettingsIconProfile size={22} />}>
+        <AppSettingsGroup title="プロフィール">
           <ProfileDisplayNameSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup
           title="アカウント"
-          icon={<AppSettingsIconAccount size={22} />}
           footer="Google を連携すると、次回から Google でもログインできます。"
         >
           <AccountAuthLinkSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="一般" icon={<AppSettingsIconNotifications size={22} />}>
+        <AppSettingsGroup title="一般">
           <AppSettingsPushSection />
         </AppSettingsGroup>
 
         <AppSettingsGroup
+          title="プラン"
+          footer="プラン確認やアップグレードはここから開けます。"
+        >
+          <AppShellLink
+            href="/settings/billing"
+            className="app-settings-card app-settings-plan-link app-pressable no-underline"
+          >
+            <span className="app-settings-plan-link-copy">
+              <span>プランを確認</span>
+              <small>必要になった時だけ見られます</small>
+            </span>
+            <span className="app-settings-plan-link-chevron" aria-hidden>›</span>
+          </AppShellLink>
+        </AppSettingsGroup>
+
+        <AppSettingsGroup
           title="App Store"
-          icon={<AppSettingsIconRestore size={22} />}
-          footer="同じ Infomii アカウントでログインしていれば、プランは通常自動で共有されます。反映されない場合のみご利用ください。"
+          footer="同じ Infomii アカウントでログインしていれば、プランは通常自動で反映されます。反映されない場合のみご利用ください。"
         >
           <AppSettingsRestorePurchasesSection />
         </AppSettingsGroup>
 
-        <AppSettingsGroup title="サポート" icon={<AppSettingsIconSupport size={22} />}>
+        <AppSettingsGroup title="サポート">
           <AppSettingsLegalSection />
         </AppSettingsGroup>
 
@@ -79,7 +85,6 @@ export function AppSettingsPage() {
 
         <AppSettingsGroup
           title="危険な操作"
-          icon={<AppSettingsIconDelete size={22} />}
           footer="削除するとワークスペースのデータにアクセスできなくなります。有料プランは先に解約してください。"
         >
           <AppSettingsAccountDeleteSection />
