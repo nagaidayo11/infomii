@@ -3649,7 +3649,7 @@ export function CardSettings({
                 <div className="w-full">
                   <label className={labelClass}>幅</label>
                   <select
-                    value={readCardWidthMode(content)}
+                    value={readCardWidthMode(content, "full")}
                     onChange={(e) => update("widthMode", e.target.value)}
                     className={inputClass}
                   >
@@ -3693,7 +3693,7 @@ export function CardSettings({
               <div className="w-full">
                 <label className={labelClass}>幅</label>
                 <select
-                  value={readCardWidthMode(content)}
+                  value={readCardWidthMode(content, "full")}
                   onChange={(e) => update("widthMode", e.target.value)}
                   className={inputClass}
                 >
@@ -3735,7 +3735,7 @@ export function CardSettings({
               <div className="w-full">
                 <label className={labelClass}>幅</label>
                 <select
-                  value={readCardWidthMode(content)}
+                  value={readCardWidthMode(content, "full")}
                   onChange={(e) => update("widthMode", e.target.value)}
                   className={inputClass}
                 >

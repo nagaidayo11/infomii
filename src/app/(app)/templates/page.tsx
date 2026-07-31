@@ -16,6 +16,8 @@ import { PAGE_HELP } from "@/lib/page-help-content";
 import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
+import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { PhoneDeviceFrame, PHONE_SCREEN_WIDTH } from "@/components/ui/PhoneDeviceFrame";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import {
@@ -33,6 +35,11 @@ import {
   CASE_STUDY_TEMPLATE_SLUGS,
   type TemplateMarketplaceAudience,
 } from "@/lib/template-marketplace-meta";
+import {
+  createDefaultGuestShellConfig,
+  resolveVisibleGuestShellTabs,
+} from "@/lib/guest-shell";
+import { GUEST_CARD_STACK_CLASS } from "@/lib/editor/card-width-mode";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AppSection } from "@/components/app-shell/primitives/AppSection";
 import { AppTabPage } from "@/components/app-shell/primitives/AppTabPage";
@@ -41,6 +48,14 @@ import { AppIconEmptyTemplates } from "@/components/app-shell/icons/AppIconSet";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
+/** Marketplace preview chrome — same bottom tabs as editor / guest preview. */
+const MARKETPLACE_PREVIEW_GUEST_SHELL = {
+  ...createDefaultGuestShellConfig(),
+  enabled: true,
+  navStyle: "tabs" as const,
+};
+
+const MARKETPLACE_PREVIEW_SHELL_TABS = resolveVisibleGuestShellTabs(MARKETPLACE_PREVIEW_GUEST_SHELL);
 const TEMPLATE_CATEGORIES = [
   { id: "all", label: TEMPLATE_CATEGORY_LABELS.all },
   ...HOTEL_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
@@ -48,14 +63,35 @@ const TEMPLATE_CATEGORIES = [
 ] as const;
 
 const TEMPLATE_AUDIENCE_OPTIONS: { id: TemplateMarketplaceAudience; label: string }[] = [
-  { id: "hotel", label: TEMPLATE_AUDIENCE_LABELS.hotel },
   { id: "personal", label: TEMPLATE_AUDIENCE_LABELS.personal },
+  { id: "hotel", label: TEMPLATE_AUDIENCE_LABELS.hotel },
   { id: "all", label: TEMPLATE_AUDIENCE_LABELS.all },
 ];
 
 const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
 
 const HIDDEN_TEMPLATE_NAMES = new Set<string>([]);
+
+const APP_TEMPLATE_RECOMMENDS = [
+  {
+    href: "/templates?category=travel",
+    kicker: "旅行",
+    title: "旅のしおりを作る",
+    body: "集合・日程・持ち物を1ページに",
+  },
+  {
+    href: "/templates?category=oshi",
+    kicker: "推し活",
+    title: "ライブ遠征まとめ",
+    body: "開演・グッズ・帰りの予定まで",
+  },
+  {
+    href: "/templates?category=personal",
+    kicker: "リンク",
+    title: "おでかけ・リンク集",
+    body: "友達に送る予定表やメモに",
+  },
+] as const;
 
 function templateSeedSyncStorageKey(version: number): string {
   return `infomii-template-seed-v${version}`;
@@ -121,7 +157,7 @@ function TemplateRail({
       aria-label={`${groupLabel} テンプレート一覧（横スクロール）`}
       tabIndex={0}
     >
-      <div className="grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]">
+      <div className={variant === "app" ? "grid w-max min-w-full grid-flow-col auto-cols-[min(72vw,236px)] gap-3" : "grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]"}>
         {items.map((template) => {
           const highlighted = highlightSlug === template.slug;
           return (
@@ -303,7 +339,7 @@ export default function TemplatesPage() {
       : filtered.length > 0
         ? [{ sectionId: "single", sectionLabel: "", category, label: selectedCategoryLabel, items: filtered }]
         : [];
-  const showCaseStudyFeatured = category === "all" && caseStudyTemplates.length > 0;
+  const showCaseStudyFeatured = audience !== "personal" && category === "all" && caseStudyTemplates.length > 0;
   const hasTemplates = showCaseStudyFeatured || groupsToRender.length > 0;
 
   useEffect(() => {
@@ -402,8 +438,6 @@ export default function TemplatesPage() {
   }
 
   const previewCards = previewTemplate ? buildPreviewCards(previewTemplate) : [];
-  const previewFrameClassName =
-    "mx-auto w-full max-w-[375px] rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.12)]";
 
   const previewDialog =
     mounted && previewTemplate
@@ -416,10 +450,10 @@ export default function TemplatesPage() {
             onClick={() => setPreviewTemplate(null)}
           >
             <div
-              className="ui-pop-in max-h-[92vh] w-full max-w-[600px] overflow-hidden rounded-lg border border-[#e6e8eb] bg-white shadow-md"
+              className="ui-pop-in flex max-h-[92vh] w-full max-w-[480px] flex-col overflow-hidden rounded-lg border border-[#e6e8eb] bg-white shadow-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-3">
                 <div>
                   <h3 className="text-base font-semibold text-slate-900">{previewTemplate.name}</h3>
                   <p className="text-xs text-slate-500">テンプレート適用時の実プレビュー</p>
@@ -434,20 +468,47 @@ export default function TemplatesPage() {
                   </button>
                 </div>
               </div>
-              <div className="max-h-[78vh] overflow-y-auto bg-slate-100 p-4">
-                <div className={previewFrameClassName}>
-                  {previewLoading ? (
-                    <div className="flex min-h-[240px] items-center justify-center text-sm text-slate-500">
-                      プレビューを読み込み中…
-                    </div>
-                  ) : (
-                    <LocaleProvider value="ja">
-                      <div className="space-y-3">
-                        <CardRenderer cards={previewCards} />
-                      </div>
-                    </LocaleProvider>
-                  )}
-                </div>
+              <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#e8eef4] px-4 py-5">
+                {previewLoading ? (
+                  <div className="flex min-h-[240px] items-center justify-center text-sm text-slate-500">
+                    プレビューを読み込み中…
+                  </div>
+                ) : (
+                  <div className="h-[min(72vh,680px)] w-full max-w-[390px]">
+                    <PhoneDeviceFrame
+                      width={PHONE_SCREEN_WIDTH}
+                      fillHeight
+                      verticalInset={0}
+                      className="h-full w-full"
+                      header={
+                        <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+                          {previewTemplate.name}
+                        </h1>
+                      }
+                      footer={
+                        MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
+                          <GuestBottomTabBar
+                            tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
+                            currentSlug="preview"
+                            locale="ja"
+                            previewMode
+                          />
+                        ) : null
+                      }
+                    >
+                      <LocaleProvider value="ja">
+                        <div
+                          className="guest-page guest-content-gutter min-h-full w-full"
+                          style={{ paddingTop: 16, paddingBottom: 12 }}
+                        >
+                          <div className={GUEST_CARD_STACK_CLASS}>
+                            <CardRenderer cards={previewCards} />
+                          </div>
+                        </div>
+                      </LocaleProvider>
+                    </PhoneDeviceFrame>
+                  </div>
+                )}
               </div>
             </div>
           </div>,
@@ -460,18 +521,29 @@ export default function TemplatesPage() {
       <>
         <AppTabPage
           title="テンプレート"
-          description="旅行・イベント・おでかけ。用途に近い型から選べます。"
+          description="旅行・推し活・おでかけ。近い型からすぐ始められます。"
           className="pb-4"
           contentClassName="space-y-4"
         >
           <AppSection revealDelay={0}>
             <section className="app-template-intro">
-              <p className="app-template-intro-kicker">はじめの型</p>
-              <h2 className="app-template-intro-title">迷ったら、ここから</h2>
+              <p className="app-template-intro-kicker">個人向けテンプレ</p>
+              <h2 className="app-template-intro-title">作りたい雰囲気から選ぶ</h2>
               <p className="app-template-intro-body">
-                あとから自由に編集できるので、近いテンプレートを選んで始めてください。
+                旅のしおり、ライブ遠征、リンクまとめ。あとから写真も文章も自由に変えられます。
               </p>
             </section>
+          </AppSection>
+          <AppSection revealDelay={0}>
+            <div className="app-template-recommend-rail" aria-label="おすすめテンプレート">
+              {APP_TEMPLATE_RECOMMENDS.map((item) => (
+                <Link key={item.href} href={item.href} className="app-template-recommend-card app-pressable no-underline">
+                  <span className="app-template-recommend-kicker">{item.kicker}</span>
+                  <span className="app-template-recommend-title">{item.title}</span>
+                  <span className="app-template-recommend-body">{item.body}</span>
+                </Link>
+              ))}
+            </div>
           </AppSection>
           <AppSection revealDelay={0}>
             <AppSegmentedControl

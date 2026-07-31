@@ -60,7 +60,11 @@ export type MarketplaceSeedCardType =
   | "daily_special"
   | "drink_menu"
   | "hero_slider"
-  | "image_tiles";
+  | "image_tiles"
+  | "sectionTitle"
+  | "storyBand"
+  | "dayTimeline"
+  | "iconAccordion";
 
 export type MarketplaceSeedCard = {
   type: MarketplaceSeedCardType;

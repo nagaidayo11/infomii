@@ -1438,6 +1438,22 @@ body.lux-shell:has(.lp-page)::before {
   margin-right: 0;
 }
 
+/*
+ * Phone mock: backdrop-filter on bottom tabs creates a compositing layer that
+ * escapes border-radius clipping (bottom corners leak). Solid fill inside the
+ * mock keeps corners matching the top curve.
+ */
+[data-phone-screen] .guest-bottom-tabs {
+  background-color: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-phone-screen] .guest-bottom-chrome {
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
 .dashboard-tab-fade {
   animation: dashboard-tab-fade 220ms ease-out;
 }

@@ -2,14 +2,38 @@
 
 export const SEED_PREVIEW_IMAGE = "/preset-hero-sample.png" as const;
 
-export const hero = (title: string, subtitle: string) => ({
+export type HeroLayout = "overlay" | "stack" | "split";
+export type WelcomeLayout = "boxed" | "plain" | "quote";
+export type InfoLayout = "cards" | "table" | "inline";
+export type PageLinkStyle = "tile" | "circle" | "list" | "poster";
+
+export const hero = (
+  title: string,
+  subtitle: string,
+  imageOrOpts?: string | { layout?: HeroLayout; image?: string; accentColor?: string },
+) => {
+  const opts = typeof imageOrOpts === "string" ? { image: imageOrOpts } : imageOrOpts;
+  return {
+    title,
+    subtitle,
+    image: opts?.image ?? SEED_PREVIEW_IMAGE,
+    widthMode: "full",
+    layout: opts?.layout ?? "overlay",
+    ...(opts?.accentColor ? { accentColor: opts.accentColor } : {}),
+  };
+};
+
+export const welcome = (
+  title: string,
+  message: string,
+  opts?: { layout?: WelcomeLayout; accentColor?: string },
+) => ({
   title,
-  subtitle,
-  image: SEED_PREVIEW_IMAGE,
-  widthMode: "full",
+  message,
+  layout: opts?.layout ?? "boxed",
+  ...(opts?.accentColor ? { accentColor: opts.accentColor } : {}),
 });
 
-export const welcome = (title: string, message: string) => ({ title, message });
 export const notice = (title: string, body: string, variant = "info") => ({ title, body, variant });
 export const headingBody = (title: string, body: string) => ({
   title,
@@ -30,7 +54,71 @@ export const infoRows = (
   title: string,
   icon: string,
   rows: Array<{ label: string; value: string }>,
-) => ({ title, icon, rows });
+  opts?: { layout?: InfoLayout; tone?: string },
+) => ({
+  title,
+  icon,
+  tone: opts?.tone ?? "slate",
+  layout: opts?.layout ?? "cards",
+  rows: rows.map((r) => ({ ...r, show: true })),
+});
+
+export const sectionTitle = (
+  title: string,
+  opts?: { subtitle?: string; align?: "left" | "center"; showLine?: boolean; accentColor?: string },
+) => ({
+  title,
+  subtitle: opts?.subtitle ?? "",
+  align: opts?.align ?? "left",
+  showLine: opts?.showLine !== false,
+  accentColor: opts?.accentColor ?? "#0f766e",
+});
+
+export const storyBand = (
+  title: string,
+  caption: string,
+  opts?: { eyebrow?: string; image?: string; overlay?: boolean; accentColor?: string },
+) => ({
+  eyebrow: opts?.eyebrow ?? "",
+  title,
+  caption,
+  image: opts?.image ?? SEED_PREVIEW_IMAGE,
+  imageAlt: title,
+  overlay: opts?.overlay !== false,
+  accentColor: opts?.accentColor ?? "#0f766e",
+});
+
+export const dayTimeline = (
+  title: string,
+  items: Array<{ time: string; title: string; description?: string }>,
+  opts?: { accentColor?: string },
+) => ({
+  title,
+  accentColor: opts?.accentColor ?? "#0f766e",
+  items: items.map((item) => ({
+    time: item.time,
+    title: item.title,
+    description: item.description ?? "",
+  })),
+});
+
+export const iconAccordion = (
+  title: string,
+  items: Array<{ label: string; icon: string; description?: string; body: string }>,
+  opts?: { columns?: number; styleVariant?: PageLinkStyle; accentColor?: string },
+) => ({
+  title,
+  columns: opts?.columns ?? 2,
+  iconSize: "md",
+  styleVariant: opts?.styleVariant ?? "tile",
+  accentColor: opts?.accentColor ?? "#0f766e",
+  items: items.map((item) => ({
+    label: item.label,
+    icon: item.icon,
+    description: item.description ?? "",
+    body: item.body,
+  })),
+});
 
 export const openStatus = (
   title: string,
@@ -82,15 +170,15 @@ export const comparePricing = (
 export const pageLinks = (
   title: string,
   items: Array<{ label: string; icon: string; description?: string }>,
-  columns = 2,
+  opts?: { columns?: number; styleVariant?: PageLinkStyle; accentColor?: string },
 ) => ({
   title,
-  columns,
+  columns: opts?.columns ?? 2,
   iconSize: "md",
-  styleVariant: "tile",
+  styleVariant: opts?.styleVariant ?? "tile",
   tileShadowStrength: "md",
   circleIconShadowStrength: "md",
-  accentColor: "#0f766e",
+  accentColor: opts?.accentColor ?? "#0f766e",
   items: items.map((item) => ({
     label: item.label,
     icon: item.icon,
@@ -101,7 +189,11 @@ export const pageLinks = (
   })),
 });
 
-export const heroSlider = (title: string) => ({
+/** @deprecated Prefer pageLinks(..., { styleVariant: "circle" }) */
+export const circlePageLinks = (items: Array<{ label: string; icon: string }>) =>
+  pageLinks("", items, { columns: 3, styleVariant: "circle" });
+
+export const heroSlider = (title: string, images?: string[]) => ({
   title,
   autoplay: true,
   intervalSec: 4,
@@ -113,7 +205,7 @@ export const heroSlider = (title: string) => ({
   widthMode: "full",
   slides: [
     {
-      src: SEED_PREVIEW_IMAGE,
+      src: images?.[0] ?? SEED_PREVIEW_IMAGE,
       alt: "館内イメージ",
       caption: "ご滞在のご案内",
       linkEnabled: false,
@@ -122,7 +214,7 @@ export const heroSlider = (title: string) => ({
       openInNewTab: false,
     },
     {
-      src: "/templates/previews/business/515b796d.jpg",
+      src: images?.[1] ?? "/templates/previews/business/515b796d.jpg",
       alt: "朝食イメージ",
       caption: "朝食ビュッフェ",
       linkEnabled: false,
@@ -131,7 +223,7 @@ export const heroSlider = (title: string) => ({
       openInNewTab: false,
     },
     {
-      src: "/templates/previews/business/4bfe5cc6.jpg",
+      src: images?.[2] ?? "/templates/previews/business/4bfe5cc6.jpg",
       alt: "施設イメージ",
       caption: "館内施設",
       linkEnabled: false,
@@ -142,19 +234,13 @@ export const heroSlider = (title: string) => ({
   ],
 });
 
-export const circlePageLinks = (items: Array<{ label: string; icon: string }>) => ({
+export const imageTiles = (
+  items: Array<{ label: string; src?: string }>,
+  opts?: { columns?: number; showLabels?: boolean },
+) => ({
   title: "",
-  columns: 3,
-  iconSize: "md",
-  styleVariant: "circle" as const,
-  tileShadowStrength: "md",
-  circleIconShadowStrength: "md",
-  items: items.map((item) => ({ ...item, linkType: "page", pageSlug: "", link: "" })),
-});
-
-export const imageTiles = (items: Array<{ label: string; src?: string }>, columns = 2) => ({
-  title: "",
-  columns,
+  columns: opts?.columns ?? 2,
+  showLabels: opts?.showLabels !== false,
   items: items.map((item) => ({
     src: item.src ?? SEED_PREVIEW_IMAGE,
     label: item.label,

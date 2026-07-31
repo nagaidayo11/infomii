@@ -10,6 +10,15 @@ import {
 /** Editor / guest mock screen width. */
 export const PHONE_SCREEN_WIDTH = 350;
 const BEZEL_PX = 10;
+/** Outer chassis corner radius (rem). */
+const OUTER_RADIUS_REM = 2.4;
+/** Tailwind stone-900 — must match chassis fill for corner masks. */
+const CHASSIS_COLOR = "#1c1917";
+/**
+ * Inner screen radius = outer − bezel.
+ * Bezel is padding (not CSS border) so the screen sits inset from the chassis curve.
+ */
+const SCREEN_RADIUS = `calc(${OUTER_RADIUS_REM}rem - ${BEZEL_PX}px)`;
 
 type PhoneDeviceFrameProps = {
   children: ReactNode;
@@ -66,6 +75,28 @@ export function PhoneDeviceFrame({
     onScreenWidthChange?.(width);
   }, [width, onScreenWidthChange]);
 
+  const headerChrome = header ? (
+    <div
+      className="guest-header-chrome relative z-[90] shrink-0 border-b border-slate-100 bg-white/95 px-3 py-2.5"
+      data-guest-header
+    >
+      {header}
+    </div>
+  ) : null;
+
+  const footerChrome = footer ? (
+    <div
+      className="guest-bottom-chrome relative z-20 shrink-0 overflow-hidden bg-white"
+      style={{
+        // Match top screen curve so footer white cannot square-off the bottom corners.
+        borderBottomLeftRadius: SCREEN_RADIUS,
+        borderBottomRightRadius: SCREEN_RADIUS,
+      }}
+    >
+      {footer}
+    </div>
+  ) : null;
+
   return (
     <div
       ref={hostRef}
@@ -77,68 +108,74 @@ export function PhoneDeviceFrame({
       aria-label="スマートフォンプレビュー"
     >
       <div
-        className="relative flex min-h-0 shrink-0 flex-col overflow-hidden rounded-[2.4rem] border-[10px] border-stone-900 bg-stone-900"
+        className="relative flex min-h-0 shrink-0 flex-col overflow-hidden"
         style={{
           width: outerW,
           maxWidth: "100%",
           height: fillHeight ? `calc(100% - ${inset * 2}px)` : undefined,
           maxHeight: fillHeight ? `calc(100% - ${inset * 2}px)` : undefined,
-          boxShadow:
-            "0 22px 48px -14px rgba(15,23,42,0.35), inset 0 0 0 1px rgba(255,255,255,0.06)",
+          padding: BEZEL_PX,
+          borderRadius: `${OUTER_RADIUS_REM}rem`,
+          backgroundColor: CHASSIS_COLOR,
+          boxShadow: "0 22px 48px -14px rgba(15,23,42,0.35)",
         }}
       >
         {showNotch ? (
           <div
-            className="pointer-events-none absolute left-1/2 top-2.5 z-30 h-7 w-[108px] -translate-x-1/2 rounded-full bg-stone-950 shadow-inner"
+            className="pointer-events-none absolute left-1/2 z-30 h-7 w-[108px] -translate-x-1/2 rounded-full bg-stone-950 shadow-inner"
+            style={{ top: BEZEL_PX + 10 }}
             aria-hidden
           />
         ) : null}
 
         <div
           className={
-            "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.55rem] bg-white " +
+            "relative flex min-h-0 flex-1 flex-col bg-white " +
             (showNotch ? "pt-9" : "pt-1")
           }
-          style={screenStyle}
+          style={{
+            ...screenStyle,
+            borderRadius: SCREEN_RADIUS,
+            overflow: "hidden",
+            // clip-path survives backdrop-filter stacking (footer blur) better than overflow alone
+            clipPath: `inset(0 round ${SCREEN_RADIUS})`,
+            WebkitClipPath: `inset(0 round ${SCREEN_RADIUS})`,
+          }}
           data-phone-screen
         >
           {manageScroll ? (
             <>
-              {header ? (
-                <div
-                  className="guest-header-chrome relative z-[90] shrink-0 overflow-visible border-b border-slate-100 bg-white/95 px-3 py-2.5"
-                  data-guest-header
-                >
-                  {header}
-                </div>
-              ) : null}
+              {headerChrome}
               <div
                 className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
                 {children}
               </div>
-              {footer ? (
-                <div className="guest-bottom-chrome shrink-0 z-20 bg-white">{footer}</div>
-              ) : null}
+              {footerChrome}
             </>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              {header ? (
-                <div
-                  className="guest-header-chrome relative z-[90] shrink-0 overflow-visible border-b border-slate-100 bg-white/95 px-3 py-2.5"
-                  data-guest-header
-                >
-                  {header}
-                </div>
-              ) : null}
+              {headerChrome}
               <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
-              {footer ? (
-                <div className="guest-bottom-chrome shrink-0 z-20 bg-white">{footer}</div>
-              ) : null}
+              {footerChrome}
             </div>
           )}
         </div>
+
+        {/*
+          Corner bezel mask: paints chassis color over any white that still
+          escapes the screen curve (esp. bottom tabs with backdrop-filter).
+          Same visual treatment top and bottom.
+        */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[60]"
+          style={{
+            borderRadius: `${OUTER_RADIUS_REM}rem`,
+            boxShadow: `inset 0 0 0 ${BEZEL_PX}px ${CHASSIS_COLOR}`,
+          }}
+        />
       </div>
     </div>
   );

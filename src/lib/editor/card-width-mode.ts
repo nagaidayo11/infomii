@@ -14,10 +14,17 @@ function coerceWidthModeToken(value: unknown): CardWidthMode | null {
   return null;
 }
 
-/** Default is inset (with page gutter). Explicit `"full"` is edge-to-edge. */
-export function readCardWidthMode(content: unknown): CardWidthMode {
-  if (!content || typeof content !== "object") return "inset";
-  return coerceWidthModeToken((content as { widthMode?: unknown }).widthMode) ?? "inset";
+/**
+ * Default is inset (with page gutter). Explicit `"full"` is edge-to-edge.
+ * Pass `fallback` for media heroes (typically `"full"`) so missing widthMode
+ * matches new-card defaults / seed templates.
+ */
+export function readCardWidthMode(
+  content: unknown,
+  fallback: CardWidthMode = "inset",
+): CardWidthMode {
+  if (!content || typeof content !== "object") return fallback;
+  return coerceWidthModeToken((content as { widthMode?: unknown }).widthMode) ?? fallback;
 }
 
 /** Heal corrupted / missing widthMode into a plain enum string before persist. */
@@ -26,14 +33,15 @@ export function normalizeCardWidthModeContent(
   content: Record<string, unknown>,
 ): Record<string, unknown> {
   if (type !== "hero" && type !== "hero_slider") return content;
-  const mode = readCardWidthMode(content);
+  const mode = readCardWidthMode(content, "full");
   if (content.widthMode === mode) return content;
   return { ...content, widthMode: mode };
 }
 
 export function isCardFullBleed(card: Pick<EditorCard, "type" | "content">): boolean {
   if (card.type !== "hero" && card.type !== "hero_slider") return false;
-  return readCardWidthMode(card.content) === "full";
+  // Heroes default to full-bleed (same as defaultContent / marketplace seeds).
+  return readCardWidthMode(card.content, "full") === "full";
 }
 
 /**

@@ -32,7 +32,7 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   const layout = readHeroLayout(c?.layout);
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
-  const fullBleed = readCardWidthMode(c) === "full";
+  const fullBleed = readCardWidthMode(c, "full") === "full";
   const squareCorners = c?.cornerStyle === "square" || fullBleed;
   const labels =
     locale === "ko"

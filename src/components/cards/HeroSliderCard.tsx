@@ -155,7 +155,7 @@ export function HeroSliderCard({ card }: { card: EditorCard; isSelected?: boolea
       : heightPreset === "l"
         ? "h-72 sm:h-80"
         : "h-56 sm:h-64";
-  const fullBleed = readCardWidthMode(content) === "full";
+  const fullBleed = readCardWidthMode(content, "full") === "full";
   const frameRadiusClass = fullBleed ? "rounded-none" : editorInnerRadiusClassName;
 
   const currentIndex = normalizedSlides.length === 0 ? 0 : index % normalizedSlides.length;
