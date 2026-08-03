@@ -83,7 +83,7 @@ type VariantPreset = {
   currentSlug?: string;
 };
 
-/** Bottom tabs = quick actions. Page body = browsable stay guide (no overlap). */
+/** Bottom tabs aligned with marketplace / guest defaults (ホーム・フロント・FAQ). */
 const LP_HOTEL_SHELL: GuestShellConfig = {
   enabled: true,
   navStyle: "tabs",
@@ -97,14 +97,6 @@ const LP_HOTEL_SHELL: GuestShellConfig = {
       icon: "home",
     },
     {
-      id: "wifi",
-      type: "page",
-      label: { ja: "Wi-Fi", en: "Wi-Fi", zh: "Wi-Fi", ko: "Wi-Fi" },
-      enabled: true,
-      pageSlug: "wifi",
-      icon: "wifi",
-    },
-    {
       id: "front",
       type: "phone",
       label: { ja: "フロント", en: "Front", zh: "前台", ko: "프론트" },
@@ -113,12 +105,12 @@ const LP_HOTEL_SHELL: GuestShellConfig = {
       icon: "phone",
     },
     {
-      id: "more",
+      id: "faq",
       type: "page",
-      label: { ja: "案内一覧", en: "Guide", zh: "导览", ko: "안내" },
+      label: { ja: "FAQ", en: "FAQ", zh: "FAQ", ko: "FAQ" },
       enabled: true,
-      pageSlug: "guide",
-      icon: "menu",
+      pageSlug: "faq",
+      icon: "page",
     },
   ],
 };
@@ -143,8 +135,9 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
   };
   switch (variant) {
     case "infomii-hotel":
+      // Matches marketplace template 「滞在の流れ・ステップ」(hotel-stay-flow).
       return {
-        title: "ビジネスホテル東京",
+        title: "滞在の流れ・ステップ",
         bg: baseBg,
         contentInset: "default",
         showLocaleToggle: false,
@@ -152,39 +145,62 @@ function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
         guestShell: LP_HOTEL_SHELL,
         cards: [
           createCard("hero", 0, {
-            title: "ようこそビジネスホテル東京へ",
-            subtitle: "ごゆっくりお過ごしくださいませ",
-            image: LP_DEMO_HERO_IMAGES.hotel,
+            title: "ご滞在の流れ",
+            subtitle: "初めての方でも迷わないステップ案内",
+            image: "/preset-hero-sample.png",
             widthMode: "full",
+            layout: "split",
           }),
-          createCard("notice", 1, {
-            title: "本日のお知らせ",
-            body: "16階〜18階の客室清掃は 10:00–14:00 です。この時間帯は入室をお控えください。",
-            variant: "info",
+          createCard("sectionTitle", 1, {
+            title: "いまの進捗",
+            subtitle: "チェックイン後の確認項目",
+            align: "left",
+            showLine: true,
           }),
-          createCard("schedule", 2, {
-            title: "ご案内",
+          createCard("progress_steps", 2, {
+            title: "いまの進捗",
+            currentStep: 2,
             items: [
-              { day: "朝食（1F ダイニング）", time: "6:30–10:00", label: "ラストオーダー 9:45" },
-              { day: "大浴場・サウナ", time: "15:00–翌1:00 / 6:00–10:00", label: "B1F" },
-              { day: "チェックアウト", time: "11:00", label: "延長はフロントまで" },
+              { label: "チェックイン完了", done: true },
+              { label: "Wi-Fi接続", done: false },
+              { label: "館内案内の確認", done: false },
+              { label: "チェックアウト", done: false },
             ],
           }),
-          createCard("wifi", 3, {
-            title: "Wi-Fi",
-            ssid: "GrandCity-Guest",
-            password: "welcome2024",
-            description: "接続できない場合はフロント（内線9）までお電話ください。",
-          }),
-          createCard("pageLinks", 4, {
-            title: "館内のご案内",
-            columns: 2,
+          createCard("steps", 3, {
+            title: "チェックイン〜チェックアウト",
             items: [
-              { label: "レストラン・バー", icon: "restaurant", linkType: "page", pageSlug: "", link: "" },
-              { label: "フィットネス", icon: "spa", linkType: "page", pageSlug: "", link: "" },
-              { label: "コインランドリー", icon: "laundry", linkType: "page", pageSlug: "", link: "" },
-              { label: "駐車場・送迎", icon: "parking", linkType: "page", pageSlug: "", link: "" },
+              { title: "1. チェックイン", description: "フロントで鍵をお受け取りください。" },
+              { title: "2. 客室でWi-Fi接続", description: "QRまたは客室カードの情報をご利用ください。" },
+              { title: "3. チェックアウト", description: "指定時刻までに鍵をフロントへお返しください。" },
             ],
+          }),
+          createCard("checklist", 4, {
+            title: "出発前チェック",
+            items: [
+              { text: "カードキーの返却", checked: false },
+              { text: "冷蔵庫の確認", checked: false },
+              { text: "忘れ物の確認", checked: false },
+            ],
+          }),
+          createCard("pageLinks", 5, {
+            title: "次に見る",
+            columns: 1,
+            styleVariant: "list",
+            circleIconShadowStrength: "md",
+            iconSize: "md",
+            items: [
+              { label: "Wi-Fi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
+              { label: "チェックアウト", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
+              { label: "FAQ", icon: "info", linkType: "page", pageSlug: "", link: "" },
+            ],
+          }),
+          createCard("checkout", 6, {
+            title: "チェックアウト",
+            time: "11:00",
+            note: "早朝出発の場合は自動精算機もご利用いただけます。",
+            linkLabel: "詳細を見る",
+            linkUrl: "",
           }),
         ],
       };

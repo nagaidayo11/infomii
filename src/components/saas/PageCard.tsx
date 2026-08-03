@@ -154,14 +154,19 @@ export function PageCard({
         </div>
         <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           {canEdit ? <LiveOpsPageRowActions pageId={id} keys={liveOpsKeys} /> : null}
-          <Link
-            href={publicUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => {
+              if (status !== "published") {
+                window.alert("非公開ページのため、公開ページを開けません。先に公開してください。");
+                return;
+              }
+              window.open(publicUrl, "_blank", "noopener,noreferrer");
+            }}
             className="app-button-native inline-flex min-h-[40px] flex-1 items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:min-h-0 sm:flex-initial"
           >
             公開ページ
-          </Link>
+          </button>
           {canEdit && resolvedEditHref && (
           <Link
             href={resolvedEditHref}

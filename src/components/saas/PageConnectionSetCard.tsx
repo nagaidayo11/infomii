@@ -236,14 +236,23 @@ export function PageConnectionSetCard({
                 >
                   名前変更
                 </button>
-                <a
-                  href={buildPagePublicUrl(row.page.slug, row.page.kind)}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (row.page.publishStatus !== "published") {
+                      window.alert("非公開ページのため、公開ページを開けません。先に公開してください。");
+                      return;
+                    }
+                    window.open(
+                      buildPagePublicUrl(row.page.slug, row.page.kind),
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }}
                   className="rounded-md border border-[#e6e8eb] bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
                   公開ページ
-                </a>
+                </button>
                 <button
                   type="button"
                   disabled={deletingPageId === row.page.id}

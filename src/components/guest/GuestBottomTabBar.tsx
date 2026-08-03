@@ -122,15 +122,41 @@ function scrollGuestPageToTop() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function getAppAwareTabLabel(tab: Pick<GuestShellTab, "label" | "type">, locale: SupportedLocale, clientApp: boolean): string {
-  const label = getGuestShellTabLabel(tab, locale);
-  if (!clientApp || tab.type !== "phone") return label;
-  const legacyDefaults = new Set(["フロント", "Front desk", "前台", "프론트"]);
-  if (!legacyDefaults.has(label)) return label;
-  if (locale === "en") return "Contact";
-  if (locale === "zh") return "联系方式";
-  if (locale === "ko") return "연락처";
-  return "連絡先";
+function getPhoneSheetCopy(locale: SupportedLocale, title: string) {
+  if (locale === "ko") {
+    return {
+      title,
+      canCall: "등록된 연락처로 전화할 수 있습니다",
+      call: "전화하기",
+      missing: "전화번호가 아직 설정되지 않았습니다.",
+      close: "닫기",
+    };
+  }
+  if (locale === "zh") {
+    return {
+      title,
+      canCall: "可拨打已设置的联系电话",
+      call: "拨打电话",
+      missing: "尚未设置电话号码。",
+      close: "关闭",
+    };
+  }
+  if (locale === "en") {
+    return {
+      title,
+      canCall: "You can call the saved contact",
+      call: "Call",
+      missing: "A phone number has not been set yet.",
+      close: "Close",
+    };
+  }
+  return {
+    title,
+    canCall: "登録された連絡先へ電話できます",
+    call: "電話する",
+    missing: "電話番号がまだ設定されていません。施設の設定から番号を登録してください。",
+    close: "閉じる",
+  };
 }
 
 /**
@@ -147,6 +173,7 @@ export function GuestBottomTabBar({
 }: GuestBottomTabBarProps) {
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [phoneValue, setPhoneValue] = useState<string | null>(null);
+  const [phoneTitle, setPhoneTitle] = useState("電話");
   const titleId = useId();
 
   useEffect(() => {
@@ -164,24 +191,20 @@ export function GuestBottomTabBar({
   const inactiveTabClass = "text-slate-500 font-medium active:bg-slate-50";
   const disabledTabClass = "cursor-not-allowed text-slate-300";
 
+  function openPhoneSheet(tab: GuestShellTab) {
+    setPhoneTitle(getGuestShellTabLabel(tab, locale) || "電話");
+    setPhoneValue(tab.phone?.trim() || null);
+    setPhoneOpen(true);
+  }
+
   function handleTab(tab: GuestShellTab) {
     if (tab.type === "locale") return;
     if (previewMode) {
-      if (tab.type === "phone") {
-        setPhoneValue(tab.phone?.trim() || null);
-        setPhoneOpen(true);
-      }
+      if (tab.type === "phone") openPhoneSheet(tab);
       return;
     }
     if (tab.type === "phone") {
-      const phone = tab.phone?.trim() || null;
-      if (!phone) {
-        setPhoneValue(null);
-        setPhoneOpen(true);
-        return;
-      }
-      setPhoneValue(phone);
-      setPhoneOpen(true);
+      openPhoneSheet(tab);
       return;
     }
     const slug = tab.type === "home" ? (tab.pageSlug?.trim() || currentSlug) : tab.pageSlug?.trim();
@@ -199,71 +222,7 @@ export function GuestBottomTabBar({
   }
 
   const telHref = phoneValue ? toTelHref(phoneValue) : null;
-
-  const phoneSheetCopy =
-    clientApp
-      ? locale === "ko"
-        ? {
-            title: "연락처",
-            canCall: "등록된 연락처로 전화할 수 있습니다",
-            call: "전화하기",
-            missing: "전화번호가 아직 설정되지 않았습니다.",
-            close: "닫기",
-          }
-        : locale === "zh"
-          ? {
-              title: "联系方式",
-              canCall: "可拨打已设置的联系电话",
-              call: "拨打电话",
-              missing: "尚未设置电话号码。",
-              close: "关闭",
-            }
-          : locale === "en"
-            ? {
-                title: "Contact",
-                canCall: "You can call the saved contact",
-                call: "Call",
-                missing: "A phone number has not been set yet.",
-                close: "Close",
-              }
-            : {
-                title: "連絡先",
-                canCall: "登録された連絡先へ電話できます",
-                call: "電話する",
-                missing: "電話番号がまだ設定されていません。",
-                close: "閉じる",
-              }
-      : locale === "ko"
-      ? {
-          title: "프론트",
-          canCall: "프론트로 전화할 수 있습니다",
-          call: "전화하기",
-          missing: "전화번호가 아직 설정되지 않았습니다.",
-          close: "닫기",
-        }
-      : locale === "zh"
-        ? {
-            title: "前台",
-            canCall: "可拨打前台电话",
-            call: "拨打电话",
-            missing: "尚未设置电话号码。",
-            close: "关闭",
-          }
-        : locale === "en"
-          ? {
-              title: "Front desk",
-              canCall: "You can call the front desk",
-              call: "Call",
-              missing: "A phone number has not been set yet.",
-              close: "Close",
-            }
-          : {
-              title: "フロント",
-              canCall: "フロントへ電話できます",
-              call: "電話する",
-              missing: "電話番号がまだ設定されていません。施設の設定からフロント番号を登録してください。",
-              close: "閉じる",
-            };
+  const phoneSheetCopy = getPhoneSheetCopy(locale, phoneTitle);
 
   return (
     <>
@@ -296,7 +255,7 @@ export function GuestBottomTabBar({
                 aria-current={active ? "page" : undefined}
               >
                 <TabIcon name={resolveGuestShellTabIcon(tab)} />
-                <span className="max-w-full truncate">{getAppAwareTabLabel(tab, locale, clientApp)}</span>
+                <span className="max-w-full truncate">{getGuestShellTabLabel(tab, locale)}</span>
               </button>
             );
           })}
