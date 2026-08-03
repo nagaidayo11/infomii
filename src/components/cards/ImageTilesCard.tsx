@@ -74,7 +74,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
 
   const getHref = (item: TileItem): string => {
     const linkType = item.linkType ?? "page";
-    if (linkType === "url" && item.link) return item.link;
+    if (linkType === "url" && item.link) return resolveGuestHref(item.link);
     if (linkType === "page" && item.pageSlug) {
       return resolveGuestHref(`/v/${item.pageSlug}`);
     }

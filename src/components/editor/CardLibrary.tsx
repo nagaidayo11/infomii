@@ -28,6 +28,7 @@ import {
   type EditorPlanTier,
 } from "./types";
 import { useEditorHoverPreviewEnabled } from "./useEditorHoverPreview";
+import { ClientShellContext } from "@/components/app-shell/ClientShellProvider";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppBlockIcon } from "@/components/app-shell/icons/AppBlockIcons";
 import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmentedControl";
@@ -115,6 +116,8 @@ const TOOLTIP_GAP = 8;
 /** Motion rhythm aligned with onboarding UI timings. */
 const HOVER_OPEN_DELAY_MS = 150;
 const HOVER_CLOSE_DELAY_MS = 100;
+const MOBILE_LONG_PRESS_PREVIEW_MS = 420;
+const MOBILE_LONG_PRESS_MOVE_TOLERANCE = 14;
 /** Hover preview fade out duration (matches CSS transition). */
 const TOOLTIP_FADE_MS = 220;
 
@@ -143,18 +146,7 @@ const PREVIEW_SPEC_BY_TYPE: Record<CardType, PreviewSpec> = (Object.keys(CARD_TY
 );
 
 function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expandInner?: boolean }) {
-  if (expandInner) {
-    return (
-      <div data-library-live-preview className="library-preview-root w-full">
-        <div className="library-preview-frame box-border w-full rounded-xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
-          <div className="library-preview-inner w-full min-w-0 overflow-hidden">
-            <CardRenderer card={card} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  const clientShell = useClientShell();
   const scaledRef = useRef<HTMLDivElement | null>(null);
   /**
    * Avoid a tall placeholder height (previously 480px): it inflated the tooltip on first layout,
@@ -164,6 +156,7 @@ function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expa
   const [clipBox, setClipBox] = useState<{ w: number; h: number } | null>(null);
 
   useLayoutEffect(() => {
+    if (expandInner) return;
     const scaled = scaledRef.current;
     if (!scaled) return;
 
@@ -183,7 +176,21 @@ function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expa
       ro.disconnect();
       window.removeEventListener("resize", fit);
     };
-  }, [card.type, card.id]);
+  }, [card.type, card.id, expandInner]);
+
+  if (expandInner) {
+    return (
+      <div data-library-live-preview className="library-preview-root w-full">
+        <div className="library-preview-frame box-border w-full rounded-xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
+          <div className="library-preview-inner w-full min-w-0 overflow-hidden">
+            <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+              <CardRenderer card={card} />
+            </ClientShellContext.Provider>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const clipWidth = clipBox?.w ?? LIVE_PREVIEW_NATURAL_WIDTH * LIVE_PREVIEW_DETAIL_SCALE;
   const clipStyle =
@@ -204,7 +211,9 @@ function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expa
           }}
         >
           <div className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
-            <CardRenderer card={card} />
+            <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+              <CardRenderer card={card} />
+            </ClientShellContext.Provider>
           </div>
         </div>
       </div>
@@ -309,7 +318,7 @@ function LibraryTooltipPortal({
         const vh = window.innerHeight;
 
         let tw = tipRect && tipRect.width > 48 ? tipRect.width : TOOLTIP_PLACEHOLDER_WIDTH;
-        let th = tipRect && tipRect.height > 48 ? tipRect.height : 250;
+        const th = tipRect && tipRect.height > 48 ? tipRect.height : 250;
 
         tw = Math.min(tw, vw - TOOLTIP_VIEWPORT_MARGIN * 2);
 
@@ -930,12 +939,30 @@ function LibraryItemButton({
   const rowRef = useRef<HTMLDivElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
+  const longPressPreviewTimerRef = useRef<number | null>(null);
+  const longPressPreviewStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const longPressPreviewTriggeredRef = useRef(false);
   const blockAddClickRef = useRef(false);
   const [hoverOpen, setHoverOpen] = useState(false);
   const [focusOpen, setFocusOpen] = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [pressPreviewOpen, setPressPreviewOpen] = useState(false);
   const hoverPreviewEnabled = useEditorHoverPreviewEnabled() && !appVariant;
   const usesPurposePicker = Boolean(onOpenPicker);
+  const previewCard = useMemo(
+    () => createEmptyCard(item.type, `press-preview-${item.type}-${libraryAudience}`, 0, libraryAudience),
+    [item.type, libraryAudience],
+  );
+  const pressPreviewSpec: PreviewSpec = useMemo(
+    () => ({
+      mode: "live",
+      title: item.label,
+      previewData: { card: previewCard },
+      showImage: false,
+    }),
+    [item.label, previewCard],
+  );
+  const previewExpandInner = useLibraryPreviewExpandInner();
 
   const closeMobilePreview = useCallback(() => {
     blockAddClickRef.current = true;
@@ -943,6 +970,22 @@ function LibraryItemButton({
     window.setTimeout(() => {
       blockAddClickRef.current = false;
     }, 450);
+  }, []);
+
+  const clearLongPressPreview = useCallback((blockNextClick = false) => {
+    if (longPressPreviewTimerRef.current) {
+      window.clearTimeout(longPressPreviewTimerRef.current);
+      longPressPreviewTimerRef.current = null;
+    }
+    longPressPreviewStartRef.current = null;
+    setPressPreviewOpen(false);
+    if (blockNextClick || longPressPreviewTriggeredRef.current) {
+      blockAddClickRef.current = true;
+      window.setTimeout(() => {
+        blockAddClickRef.current = false;
+      }, 450);
+    }
+    longPressPreviewTriggeredRef.current = false;
   }, []);
 
   const clearTimers = () => {
@@ -954,9 +997,18 @@ function LibraryItemButton({
       window.clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+    if (longPressPreviewTimerRef.current) {
+      window.clearTimeout(longPressPreviewTimerRef.current);
+      longPressPreviewTimerRef.current = null;
+    }
   };
 
-  useEffect(() => () => clearTimers(), []);
+  useEffect(
+    () => () => {
+      clearTimers();
+    },
+    [],
+  );
 
   const handlePointerEnter = () => {
     if (usesPurposePicker) {
@@ -997,9 +1049,38 @@ function LibraryItemButton({
   };
 
   const handleRowPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!mobilePreviewOpen) return;
-    e.preventDefault();
-    e.stopPropagation();
+    if (mobilePreviewOpen) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (!appVariant || disabled || usesPurposePicker || e.pointerType === "mouse") return;
+    longPressPreviewTriggeredRef.current = false;
+    longPressPreviewStartRef.current = { x: e.clientX, y: e.clientY, pointerId: e.pointerId };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    longPressPreviewTimerRef.current = window.setTimeout(() => {
+      longPressPreviewTimerRef.current = null;
+      longPressPreviewTriggeredRef.current = true;
+      window.getSelection()?.removeAllRanges();
+      setPressPreviewOpen(true);
+    }, MOBILE_LONG_PRESS_PREVIEW_MS);
+  };
+
+  const handleRowPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const start = longPressPreviewStartRef.current;
+    if (!start || start.pointerId !== e.pointerId || longPressPreviewTriggeredRef.current) return;
+    const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+    if (moved > MOBILE_LONG_PRESS_MOVE_TOLERANCE) clearLongPressPreview(false);
+  };
+
+  const handleRowPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!longPressPreviewStartRef.current && !pressPreviewOpen) return;
+    const triggered = longPressPreviewTriggeredRef.current || pressPreviewOpen;
+    if (triggered) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    clearLongPressPreview(triggered);
   };
 
   const handleRowKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -1010,6 +1091,7 @@ function LibraryItemButton({
   };
 
   return (
+    <>
     <div
       ref={rowRef}
       key={`${sectionId}-${item.type}`}
@@ -1021,6 +1103,9 @@ function LibraryItemButton({
       }}
       onKeyDown={handleRowKeyDown}
       onPointerDown={handleRowPointerDown}
+      onPointerMove={handleRowPointerMove}
+      onPointerUp={handleRowPointerUp}
+      onPointerCancel={handleRowPointerUp}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onFocus={() => {
@@ -1100,6 +1185,37 @@ function LibraryItemButton({
         ) : null}
       </div>
     </div>
+    {pressPreviewOpen
+      ? createPortal(
+          <div
+            data-mobile-block-preview-overlay="true"
+            className="pointer-events-none fixed inset-0 z-[10000] bg-black/35 lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${item.label}のプレビュー`}
+          >
+            <div
+              data-mobile-tooltip-panel="true"
+              className="mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-lg border border-[#e6e8eb] bg-white p-2.5 shadow-md"
+            >
+              <div className="w-full overflow-hidden">
+                {renderPreviewVisual(item, pressPreviewSpec, previewExpandInner)}
+              </div>
+              <p className="mt-1.5 text-xs font-semibold text-slate-900">{pressPreviewSpec.title}</p>
+              <p
+                className={
+                  "mt-1 text-[11px] leading-[1.45] " +
+                  (isGatedType ? (planGate === "business" ? "text-violet-600" : "text-sky-600") : "text-slate-500")
+                }
+              >
+                {item.description}
+              </p>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null}
+    </>
   );
 }
 
@@ -1543,7 +1659,7 @@ function QuickPresetPreviewPortal({
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         let tw = tipRect && tipRect.width > 48 ? tipRect.width : TOOLTIP_PLACEHOLDER_WIDTH;
-        let th = tipRect && tipRect.height > 48 ? tipRect.height : 280;
+        const th = tipRect && tipRect.height > 48 ? tipRect.height : 280;
         tw = Math.min(tw, vw - TOOLTIP_VIEWPORT_MARGIN * 2);
         const preferRight = rect.right + TOOLTIP_GAP + tw <= vw - TOOLTIP_VIEWPORT_MARGIN;
         let left = preferRight ? rect.right + TOOLTIP_GAP : rect.left - tw - TOOLTIP_GAP;
@@ -1763,7 +1879,7 @@ export function CardLibrary({
           <h2 className="app-card-library-title">素材を追加</h2>
         )}
         <p className={"text-xs text-slate-500 " + (appVariant ? "font-medium text-teal-800/80" : "mt-1")}>
-          {appVariant ? "タップでキャンバスに入ります" : "クリックでキャンバスに追加"}
+          {appVariant ? "長押しでブロック内容を確認できます" : "クリックでキャンバスに追加"}
         </p>
         {showAudienceSwitch ? (
           appVariant ? (

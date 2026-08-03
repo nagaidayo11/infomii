@@ -12,6 +12,7 @@ import { dispatchProfileDisplayNameUpdated } from "@/lib/use-profile-display-nam
 export function ProfileDisplayNameSection() {
   const { isAppShell } = useClientShell();
   const { user } = useAuth();
+  const userId = user?.id;
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -19,7 +20,7 @@ export function ProfileDisplayNameSection() {
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
 
   const load = useCallback(async () => {
-    if (!user?.id || !hasSupabaseEnv) {
+    if (!userId || !hasSupabaseEnv) {
       setLoading(false);
       return;
     }
@@ -29,12 +30,12 @@ export function ProfileDisplayNameSection() {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
+    const { data, error } = await supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
     if (!error && data) {
       setValue(data.display_name ?? "");
     }
     setLoading(false);
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
     void load();
@@ -84,8 +85,9 @@ export function ProfileDisplayNameSection() {
             <span className="app-settings-row-icon">
               <AppSettingsIconProfile size={26} />
             </span>
-            <label htmlFor="display-name" className="app-settings-profile-label">
-              表示名
+            <label htmlFor="display-name" className="app-settings-profile-label app-settings-profile-copy">
+              <span>あなたの表示名</span>
+              <small>共有・編集メンバーに表示されます</small>
             </label>
             <input
               id="display-name"
@@ -96,7 +98,7 @@ export function ProfileDisplayNameSection() {
               maxLength={80}
               autoComplete="nickname"
               className="app-settings-profile-input"
-              placeholder="例: 山田 花子"
+              placeholder="例: Infomii"
             />
             <button
               type="submit"

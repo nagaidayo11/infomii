@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { buildAppSharePageLabel } from "@/lib/app-branding";
 import { openGuestPageInNewTab } from "@/lib/app-href";
+import { shareViaNativeApp } from "@/lib/native-app-bridge";
 import {
   buildLineShareUrl,
   buildMailShareUrl,
@@ -122,6 +123,16 @@ export function PublishModal({
   };
 
   const handleShare = async () => {
+    if (
+      isAppShell &&
+      shareViaNativeApp({
+        title: pageTitle || "Infomii",
+        url: publicUrl,
+        message: buildAppSharePageLabel(pageTitle || "Infomii"),
+      })
+    ) {
+      return;
+    }
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         await navigator.share({
@@ -134,6 +145,7 @@ export function PublishModal({
         if (error instanceof Error && error.name === "AbortError") return;
       }
     }
+    if (isAppShell) return;
     setShareMenuOpen((open) => !open);
   };
 
@@ -238,7 +250,7 @@ export function PublishModal({
             {isAppShell ? (isShare ? "送る・見せる" : "公開できました") : isShare ? "QR・リンク" : "公開しました"}
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            {isAppShell ? "LINEで送る、QRを見せる。相手はアプリ不要です。" : pageTitle}
+            {isAppShell ? "共有で送る、QRを見せる。相手はアプリ不要です。" : pageTitle}
           </p>
         </div>
 

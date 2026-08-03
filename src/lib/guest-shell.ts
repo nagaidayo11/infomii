@@ -59,9 +59,11 @@ const DEFAULT_LABELS: Record<GuestShellTabType, LocalizedContent> = {
   locale: { ja: "言語", en: "Language", zh: "语言", ko: "언어" },
 };
 
+export const DEFAULT_GUEST_SHELL_PHONE = "01234567890";
+
 export const DEFAULT_GUEST_SHELL_TABS: GuestShellTab[] = [
   { id: "home", type: "home", label: { ...DEFAULT_LABELS.home }, enabled: true, pageSlug: null },
-  { id: "front", type: "phone", label: { ...DEFAULT_LABELS.phone }, enabled: true, phone: null },
+  { id: "front", type: "phone", label: { ...DEFAULT_LABELS.phone }, enabled: true, phone: DEFAULT_GUEST_SHELL_PHONE },
   { id: "faq", type: "page", label: { ...DEFAULT_LABELS.page }, enabled: true, pageSlug: null },
 ];
 
@@ -233,7 +235,9 @@ function normalizeTab(raw: unknown, index: number): GuestShellTab | null {
   const phone =
     typeof obj.phone === "string" && obj.phone.trim()
       ? obj.phone.trim().slice(0, 40)
-      : null;
+      : type === "phone"
+        ? DEFAULT_GUEST_SHELL_PHONE
+        : null;
   const icon = normalizeTabIcon(obj.icon);
   return { id, type, label, enabled, pageSlug, phone, icon };
 }

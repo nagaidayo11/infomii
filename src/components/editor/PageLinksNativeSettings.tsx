@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import { IconTokenSelect } from "@/components/editor/IconTokenSelect";
@@ -25,6 +25,16 @@ type PageLinksItem = {
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
+}
+
+function resolvePageRef(pages: PageRow[], value: unknown, fallbackSlug?: string): PageRow | null {
+  const ref = readJaText(value).trim();
+  if (ref) {
+    const exact = pages.find((p) => p.slug === ref || p.id === ref || p.title === ref);
+    if (exact) return exact;
+  }
+  if (!fallbackSlug) return null;
+  return pages.find((p) => p.slug === fallbackSlug) ?? null;
 }
 
 function ColumnsPreview({ cols }: { cols: 2 | 3 }) {
@@ -77,7 +87,7 @@ export function PageLinksNativeSettings({
       : "#0f766e";
   const defaultPageSlug = pages[0]?.slug ?? "";
 
-  const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
+  const setItems = useCallback((next: PageLinksItem[]) => onUpdate("items", next), [onUpdate]);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
     next[index] = { ...(next[index] ?? {}), [field]: value };
@@ -101,11 +111,35 @@ export function PageLinksNativeSettings({
     });
   };
 
-  const openLinkedPageEditor = (slug: string) => {
+  useEffect(() => {
+    if (!defaultPageSlug || pages.length === 0 || items.length === 0) return;
+    let changed = false;
+    const next = items.map((item) => {
+      if ((item.linkType ?? "page") !== "page") return item;
+      const currentSlug = readJaText(item.pageSlug).trim();
+      const resolved = resolvePageRef(pages, item.pageSlug, currentSlug ? undefined : defaultPageSlug);
+      if (!resolved?.slug || resolved.slug === currentSlug) return item;
+      changed = true;
+      return { ...item, pageSlug: resolved.slug };
+    });
+    if (changed) setItems(next);
+  }, [defaultPageSlug, items, pages, setItems]);
+
+  const openLinkedPageEditor = (pageRef: unknown) => {
     if (typeof window === "undefined") return;
-    const target = pages.find((p) => p.slug === slug);
+    const target = resolvePageRef(pages, pageRef);
     if (!target?.id) return;
-    window.open(`/editor/${target.id}`, "_blank", "noopener,noreferrer");
+    const href = new URL(`/editor/${target.id}`, window.location.origin);
+    const isAppShell =
+      new URLSearchParams(window.location.search).get("client") === "app" ||
+      document.documentElement.getAttribute("data-client-shell") === "app" ||
+      document.documentElement.getAttribute("data-infomii-native") === "1";
+    if (isAppShell) {
+      href.searchParams.set("client", "app");
+      window.location.assign(`${href.pathname}${href.search}`);
+      return;
+    }
+    window.open(`${href.pathname}${href.search}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -195,10 +229,11 @@ export function PageLinksNativeSettings({
             items.map((item, i) => {
               const label = readJaText(item.label) || "項目";
               const iconName = normalizeIconToken(item.icon, "link");
+              const resolvedPage = resolvePageRef(pages, item.pageSlug);
               const subtitle =
                 (item.linkType ?? "page") === "url"
                   ? readJaText(item.link) || "外部URL"
-                  : readJaText(item.pageSlug) || "ページ連携";
+                  : resolvedPage?.title || readJaText(item.pageSlug) || "ページ連携";
               const expanded = expandedIndex === i;
 
               return (
@@ -289,11 +324,12 @@ export function PageLinksNativeSettings({
                         <div>
                           <AppFieldLabel>ページを選択</AppFieldLabel>
                           <select
-                            value={readJaText(item.pageSlug) || defaultPageSlug}
+                            value={resolvedPage?.slug ?? ""}
                             onChange={(e) => updateItem(i, "pageSlug", e.target.value)}
                             className="app-field-input"
                           >
                             {pages.length === 0 ? <option value="">ページがありません</option> : null}
+                            {pages.length > 0 ? <option value="">ページを選択</option> : null}
                             {pages.map((p) => (
                               <option key={p.id} value={p.slug}>
                                 {p.title || p.slug || ""}
@@ -302,8 +338,8 @@ export function PageLinksNativeSettings({
                           </select>
                           <button
                             type="button"
-                            onClick={() => openLinkedPageEditor(item.pageSlug ?? "")}
-                            disabled={!item.pageSlug}
+                            onClick={() => openLinkedPageEditor(item.pageSlug)}
+                            disabled={!resolvedPage?.id}
                             className="mt-2 min-h-[44px] w-full rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--app-text)] disabled:opacity-50"
                           >
                             リンク先ページを編集する

@@ -1,179 +1,21 @@
-"use client";
+import { EditorPageClient } from "./EditorPageClient";
 
-import { useEffect, useRef, useState, Suspense } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { Editor2 } from "@/components/editor";
-import type { CardType } from "@/components/editor/types";
-import { useEditor2Store } from "@/components/editor/store";
-import {
-  getInformation,
-  getPage,
-  getPageCards,
-  getPageStyleFromRows,
-  listPagesForHotel,
-  rowToCard,
-} from "@/lib/storage";
-import { migrateCardsForEditor } from "@/lib/migrate-cards";
-import { canResumeEditorPage } from "@/lib/editor-resume";
-import {
-  applyLiveOpsByKeyToCards,
-  isLiveOpsCardType,
-  resolvePageLiveOps,
-  syncLiveOpsIntoEditorStore,
-  type LiveOpsKey,
-  type LiveOpsStatus,
-  liveOpsKeyForCardType,
-} from "@/lib/editor/live-ops";
-
-function EditorWithPageId() {
-  const params = useParams();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pageId = typeof params.id === "string" ? params.id : null;
-  const fromTemplate = searchParams.get("from") === "template";
-  const [pageFound, setPageFound] = useState<boolean | null>(null);
-  const [loaded, setLoaded] = useState(() => canResumeEditorPage(pageId));
-  const loadedPageIdRef = useRef<string | null>(canResumeEditorPage(pageId) ? pageId : null);
-  const setCards = useEditor2Store((s) => s.setCards);
-  const selectCard = useEditor2Store((s) => s.selectCard);
-  const setAutosaveStatus = useEditor2Store((s) => s.setAutosaveStatus);
-  const setPageBackground = useEditor2Store((s) => s.setPageBackground);
-  const highlightFromTemplate = useEditor2Store((s) => s.highlightFromTemplate);
-
-  useEffect(() => {
-    if (!pageId) return;
-    if (loadedPageIdRef.current === pageId && !fromTemplate) {
-      return;
-    }
-    if (canResumeEditorPage(pageId)) {
-      loadedPageIdRef.current = pageId;
-      const frame = window.requestAnimationFrame(() => {
-        setPageFound(true);
-        setLoaded(true);
-      });
-      // SPA return from Quick Ops (or any other route): store is warm but may be stale.
-      void syncLiveOpsIntoEditorStore(pageId);
-      return () => window.cancelAnimationFrame(frame);
-    }
-    const loadingFrame = window.requestAnimationFrame(() => setLoaded(false));
-    Promise.all([getPage(pageId), getPageCards(pageId)]).then(async ([page, rows]) => {
-      window.cancelAnimationFrame(loadingFrame);
-      if (page?.kind === "stamp") {
-        router.replace(`/editor/stamp/${pageId}`);
-        return;
-      }
-      if (!page) {
-        const legacy = await getInformation(pageId).catch(() => null);
-        if (legacy) {
-          const pages = await listPagesForHotel().catch(() => []);
-          const resolved =
-            pages.find((p) => p.slug === legacy.slug) ??
-            pages.find((p) => p.title.trim() && p.title.trim() === legacy.title.trim());
-          if (resolved) {
-            router.replace(`/editor/${resolved.id}`);
-            return;
-          }
-        }
-      }
-      setPageFound(!!page);
-      const pageStyle = getPageStyleFromRows(rows);
-      if (pageStyle?.background) {
-        setPageBackground({
-          mode: pageStyle.background.mode,
-          color: pageStyle.background.color,
-          from: pageStyle.background.from,
-          to: pageStyle.background.to,
-          angle: pageStyle.background.angle,
-        });
-      } else {
-        setPageBackground({
-          mode: "solid",
-          color: "#ffffff",
-          from: "#f8fafc",
-          to: "#e2e8f0",
-          angle: 180,
-        });
-      }
-      const cardsFromDb = rows.map((r) => {
-        const card = rowToCard(r);
-        return { ...card, type: card.type as CardType };
-      });
-      let cards = migrateCardsForEditor(cardsFromDb);
-      if (cards.some((c) => isLiveOpsCardType(c.type))) {
-        const keys = new Set<LiveOpsKey>();
-        for (const c of cards) {
-          const key = liveOpsKeyForCardType(c.type);
-          if (key) keys.add(key);
-        }
-        const opsByKey: Partial<Record<LiveOpsKey, LiveOpsStatus>> = {};
-        await Promise.all(
-          [...keys].map(async (key) => {
-            const ops = await resolvePageLiveOps(pageId, key, {
-              cardRows: cards
-                .filter((c) => liveOpsKeyForCardType(c.type) === key)
-                .map((c) => ({ content: c.content })),
-            }).catch(() => null);
-            if (ops) opsByKey[key] = ops;
-          }),
-        );
-        cards = applyLiveOpsByKeyToCards(cards, opsByKey).cards;
-      }
-
-      if (cards.length > 0) {
-        setCards(cards);
-        selectCard(cards[0]?.id ?? null);
-        setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now() });
-        if (fromTemplate) {
-          highlightFromTemplate(cards.map((c) => c.id));
-          router.replace(`/editor/${pageId}`, { scroll: false });
-        }
-        loadedPageIdRef.current = pageId;
-        setLoaded(true);
-        return;
-      }
-
-      if (page) {
-        // Empty pages should stay empty. Do not auto-seed starter blocks (e.g. hero).
-        setCards([]);
-        selectCard(null);
-        setAutosaveStatus({ isSaving: false, lastSavedAt: Date.now(), saveError: null });
-      }
-      loadedPageIdRef.current = pageId;
-      setLoaded(true);
-    });
-  }, [pageId, fromTemplate, router, setCards, selectCard, setAutosaveStatus, setPageBackground, highlightFromTemplate]);
-
-  if (!pageId) {
-    return (
-      <div className="flex h-full items-center justify-center text-slate-500">
-        ページが見つかりません
-      </div>
-    );
-  }
-
-  if (!loaded) {
-    return null;
-  }
-
-  if (pageFound === false) {
-    return (
-      <div className="flex h-full items-center justify-center text-slate-500">
-        ページが見つかりません
-      </div>
-    );
-  }
-
-  return <Editor2 pageId={pageId} />;
-}
+type EditorPageProps = {
+  params: Promise<{ id?: string | string[] }>;
+  searchParams?: Promise<{ from?: string | string[] }>;
+};
 
 /**
- * Editor page at /editor/[id]. Loads page and cards, initializes starter cards for new pages.
- * Dashboard "Create Page" redirects here with /editor/{pageId}.
+ * Editor page at /editor/[id]. Resolve route params on the server, then render
+ * the client editor with stable initial props to avoid hydration drift.
  */
-export default function EditorPage() {
-  return (
-    <Suspense fallback={null}>
-      <EditorWithPageId />
-    </Suspense>
-  );
+export default async function EditorPage({ params, searchParams }: EditorPageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const id = resolvedParams.id;
+  const from = resolvedSearchParams.from;
+  const pageId = typeof id === "string" ? id : null;
+  const fromTemplate = Array.isArray(from) ? from.includes("template") : from === "template";
+
+  return <EditorPageClient pageId={pageId} fromTemplate={fromTemplate} />;
 }

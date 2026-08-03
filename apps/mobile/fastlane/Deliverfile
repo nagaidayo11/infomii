@@ -1,0 +1,5 @@
+app_identifier("com.infomii.app")
+app_version("1.0.2")
+skip_binary_upload(true)
+overwrite_screenshots(true)
+force(true)

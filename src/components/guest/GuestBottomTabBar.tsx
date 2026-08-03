@@ -9,6 +9,7 @@ import {
   type GuestShellTab,
   type GuestShellTabIcon,
 } from "@/lib/guest-shell";
+import { openGuestNavigationHref } from "@/lib/guest-hard-navigation";
 import type { SupportedLocale } from "@/lib/localized-content";
 
 type GuestBottomTabBarProps = {
@@ -100,10 +101,36 @@ function TabIcon({ name }: { name: GuestShellTabIcon }) {
 }
 
 function isTabActive(tab: GuestShellTab, currentSlug: string): boolean {
-  if (tab.type === "home" || tab.type === "page") {
-    return Boolean(tab.pageSlug) && tab.pageSlug === currentSlug;
+  if (tab.type === "home") {
+    return !tab.pageSlug?.trim() || tab.pageSlug === currentSlug;
+  }
+  if (tab.type === "page") {
+    return Boolean(tab.pageSlug?.trim()) && tab.pageSlug === currentSlug;
   }
   return false;
+}
+
+function scrollGuestPageToTop() {
+  const scrollRoot =
+    document.querySelector<HTMLElement>("[data-phone-screen] [data-guest-page-shell]") ??
+    document.querySelector<HTMLElement>("[data-guest-page-shell]") ??
+    document.scrollingElement;
+  if (scrollRoot && "scrollTo" in scrollRoot) {
+    scrollRoot.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function getAppAwareTabLabel(tab: Pick<GuestShellTab, "label" | "type">, locale: SupportedLocale, clientApp: boolean): string {
+  const label = getGuestShellTabLabel(tab, locale);
+  if (!clientApp || tab.type !== "phone") return label;
+  const legacyDefaults = new Set(["フロント", "Front desk", "前台", "프론트"]);
+  if (!legacyDefaults.has(label)) return label;
+  if (locale === "en") return "Contact";
+  if (locale === "zh") return "联系方式";
+  if (locale === "ko") return "연락처";
+  return "連絡先";
 }
 
 /**
@@ -157,21 +184,56 @@ export function GuestBottomTabBar({
       setPhoneOpen(true);
       return;
     }
-    const slug = tab.pageSlug?.trim();
+    const slug = tab.type === "home" ? (tab.pageSlug?.trim() || currentSlug) : tab.pageSlug?.trim();
     if (!slug) return;
-    if (slug === currentSlug) return;
+    if (slug === currentSlug) {
+      scrollGuestPageToTop();
+      return;
+    }
     const href = buildGuestPagePath(slug, {
       preview,
       clientApp,
       lang: locale !== "ja" ? locale : null,
     });
-    window.location.assign(href);
+    openGuestNavigationHref(href);
   }
 
   const telHref = phoneValue ? toTelHref(phoneValue) : null;
 
   const phoneSheetCopy =
-    locale === "ko"
+    clientApp
+      ? locale === "ko"
+        ? {
+            title: "연락처",
+            canCall: "등록된 연락처로 전화할 수 있습니다",
+            call: "전화하기",
+            missing: "전화번호가 아직 설정되지 않았습니다.",
+            close: "닫기",
+          }
+        : locale === "zh"
+          ? {
+              title: "联系方式",
+              canCall: "可拨打已设置的联系电话",
+              call: "拨打电话",
+              missing: "尚未设置电话号码。",
+              close: "关闭",
+            }
+          : locale === "en"
+            ? {
+                title: "Contact",
+                canCall: "You can call the saved contact",
+                call: "Call",
+                missing: "A phone number has not been set yet.",
+                close: "Close",
+              }
+            : {
+                title: "連絡先",
+                canCall: "登録された連絡先へ電話できます",
+                call: "電話する",
+                missing: "電話番号がまだ設定されていません。",
+                close: "閉じる",
+              }
+      : locale === "ko"
       ? {
           title: "프론트",
           canCall: "프론트로 전화할 수 있습니다",
@@ -215,7 +277,7 @@ export function GuestBottomTabBar({
             if (tab.type === "locale") return null;
             const active = isTabActive(tab, currentSlug);
             const disabled =
-              ((tab.type === "home" || tab.type === "page") && !tab.pageSlug?.trim()) ||
+              (tab.type === "page" && !tab.pageSlug?.trim()) ||
               (tab.type === "phone" && !tab.phone?.trim());
             return (
               <button
@@ -234,7 +296,7 @@ export function GuestBottomTabBar({
                 aria-current={active ? "page" : undefined}
               >
                 <TabIcon name={resolveGuestShellTabIcon(tab)} />
-                <span className="max-w-full truncate">{getGuestShellTabLabel(tab, locale)}</span>
+                <span className="max-w-full truncate">{getAppAwareTabLabel(tab, locale, clientApp)}</span>
               </button>
             );
           })}

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   BackHandler,
   DevSettings,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -25,10 +26,13 @@ import { shareViaNativeSheet } from "../lib/share-bridge";
 import { isAllowedNavigationUrl } from "../lib/navigation";
 
 const LOAD_TIMEOUT_MS = 20_000;
+const INITIAL_AUTO_RELOAD_DELAY_MS = 450;
+const MAX_INITIAL_AUTO_RELOADS = 1;
 const DEBUG_WEBVIEW_LOADS = __DEV__;
 
 export function InfomiiWebView() {
   const insets = useSafeAreaInsets();
+  const { top: insetTop, bottom: insetBottom, left: insetLeft, right: insetRight } = insets;
   const originResolution = resolveWebOrigin();
   const [entryUrl] = useState(() =>
     originResolution.ok
@@ -37,12 +41,13 @@ export function InfomiiWebView() {
   );
 
   const injectedBeforeLoad = useMemo(
-    () => buildInjectedBootstrap(insets),
-    [insets.top, insets.bottom, insets.left, insets.right],
+    () => buildInjectedBootstrap({ top: insetTop, bottom: insetBottom, left: insetLeft, right: insetRight }),
+    [insetTop, insetBottom, insetLeft, insetRight],
   );
 
   const webViewRef = useRef<WebView>(null);
   const hasLoadedOnceRef = useRef(false);
+  const initialAutoReloadsRef = useRef(0);
   const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [canGoBack, setCanGoBack] = useState(false);
@@ -69,14 +74,33 @@ export function InfomiiWebView() {
   const finishLoading = useCallback(() => {
     clearLoadTimeout();
     hasLoadedOnceRef.current = true;
+    initialAutoReloadsRef.current = 0;
     setShowBootLoading(false);
     applySafeAreaToWeb();
   }, [applySafeAreaToWeb, clearLoadTimeout]);
+
+  const retryInitialLoad = useCallback((reason: string) => {
+    if (hasLoadedOnceRef.current || initialAutoReloadsRef.current >= MAX_INITIAL_AUTO_RELOADS) {
+      return false;
+    }
+    initialAutoReloadsRef.current += 1;
+    clearLoadTimeout();
+    setLoadError(null);
+    setShowBootLoading(true);
+    if (DEBUG_WEBVIEW_LOADS) {
+      console.log(`[InfomiiWebView] initial auto reload: ${reason}`);
+    }
+    setTimeout(() => {
+      webViewRef.current?.reload();
+    }, INITIAL_AUTO_RELOAD_DELAY_MS);
+    return true;
+  }, [clearLoadTimeout]);
 
   const armLoadTimeout = useCallback(() => {
     if (hasLoadedOnceRef.current) return;
     clearLoadTimeout();
     loadTimeoutRef.current = setTimeout(() => {
+      if (retryInitialLoad("timeout")) return;
       setShowBootLoading(false);
       setLoadError(
         __DEV__
@@ -84,7 +108,7 @@ export function InfomiiWebView() {
           : "読み込みがタイムアウトしました。通信環境を確認して、もう一度お試しください。",
       );
     }, LOAD_TIMEOUT_MS);
-  }, [clearLoadTimeout]);
+  }, [clearLoadTimeout, retryInitialLoad]);
 
   useEffect(() => {
     if (!originResolution.ok) return;
@@ -172,6 +196,13 @@ export function InfomiiWebView() {
           }
           return;
         }
+        if (data.type === "app-open-url") {
+          const openData = data as { url?: string };
+          if (openData.url) {
+            void Linking.openURL(openData.url);
+          }
+          return;
+        }
         if (data.type === "iap-purchase" || data.type === "iap-restore") {
           void handleIapBridgeMessage(event.nativeEvent.data, webViewRef);
           return;
@@ -182,6 +213,9 @@ export function InfomiiWebView() {
     },
     onError: (event: { nativeEvent: { description?: string } }) => {
       const hadLoadedOnce = hasLoadedOnceRef.current;
+      if (!hadLoadedOnce && retryInitialLoad(event.nativeEvent.description || "load error")) {
+        return;
+      }
       finishLoading();
       if (!hadLoadedOnce) {
         setLoadError(event.nativeEvent.description || "ページを読み込めませんでした。");
@@ -194,6 +228,9 @@ export function InfomiiWebView() {
     onHttpError: (event: { nativeEvent: { statusCode: number } }) => {
       if (event.nativeEvent.statusCode >= 400) {
         const hadLoadedOnce = hasLoadedOnceRef.current;
+        if (!hadLoadedOnce && retryInitialLoad(`HTTP ${event.nativeEvent.statusCode}`)) {
+          return;
+        }
         finishLoading();
         if (!hadLoadedOnce) {
           setLoadError(`HTTP ${event.nativeEvent.statusCode}`);

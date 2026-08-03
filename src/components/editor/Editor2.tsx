@@ -193,11 +193,9 @@ export function Editor2({
   const [qrModalPreparing, setQrModalPreparing] = useState(false);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewGuestShell, setPreviewGuestShell] = useState(() => createDefaultGuestShellConfig());
+  const [openSettingsNonce, setOpenSettingsNonce] = useState(0);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
-  const [initialEditorLoading, setInitialEditorLoading] = useState<boolean>(() => {
-    if (isDemoMode || !pageId) return false;
-    return !canResumeEditorPage(pageId);
-  });
+  const [initialEditorLoading, setInitialEditorLoading] = useState(false);
   const [hotelRole, setHotelRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(null);
   const [hasPendingApproval, setHasPendingApproval] = useState(false);
   const [publishedBaselineSignature, setPublishedBaselineSignature] = useState<string | null>(null);
@@ -251,7 +249,6 @@ export function Editor2({
   const saveError = useEditor2Store((s) => s.saveError);
   const pageMeta = useEditor2Store((s) => s.pageMeta);
   const addCardRaw = useEditor2Store((s) => s.addCard);
-
   useEffect(() => {
     if (!useAppEditorChrome) {
       libraryAudiencePageRef.current = null;
@@ -288,6 +285,10 @@ export function Editor2({
   const reorderCards = useEditor2Store((s) => s.reorderCards);
   const moveCard = useEditor2Store((s) => s.moveCard);
   const selectCard = useEditor2Store((s) => s.selectCard);
+  const openPageSettings = useCallback(() => {
+    selectCard(null);
+    setOpenSettingsNonce((value) => value + 1);
+  }, [selectCard]);
   const removeCard = useEditor2Store((s) => s.removeCard);
   const duplicateCard = useEditor2Store((s) => s.duplicateCard);
   const pasteCard = useEditor2Store((s) => s.pasteCard);
@@ -1235,13 +1236,8 @@ export function Editor2({
         }
       }
 
-      if (!guardPublishedBeforeGuestView()) {
-        if (!previewNavigatedEarly) {
-          closeGuestPreviewTab(previewWindow);
-        }
-        return;
-      }
-
+      // Preview uses /v/:slug?preview=1, so it can show the latest saved draft
+      // without requiring the public page to be updated first.
       const state = useEditor2Store.getState();
       try {
         await savePageCards(pageId, state.cards, {
@@ -1291,7 +1287,6 @@ export function Editor2({
     pageMeta.slug,
     pageId,
     flushAutosaveNow,
-    guardPublishedBeforeGuestView,
     useAppEditorChrome,
     ensureTranslationsBeforeGuestAction,
     openQualityGateIfNeeded,
@@ -1499,6 +1494,7 @@ export function Editor2({
           publishToggleLoading={publishToggleLoading}
           publishToggleChecked={publishStatus === "published"}
           onRenamePageTitle={handleRenamePageTitle}
+          onOpenPageSettings={openPageSettings}
           publishNotice={publishNotice}
           liveOpsQuickLinks={liveOpsQuickLinks}
         />
@@ -1585,6 +1581,7 @@ export function Editor2({
           topBar={topBar}
           footerVariant={useAppEditorChrome ? "app" : "default"}
           closeLibraryNonce={useAppEditorChrome ? closeLibraryNonce : undefined}
+          openSettingsNonce={useAppEditorChrome ? openSettingsNonce : undefined}
           mobileActions={null}
           library={
             <CardLibrary
@@ -1630,6 +1627,8 @@ export function Editor2({
                   onSelectCard={selectCard}
                   onUpdateCard={updateCard}
                   onReorderCards={reorderCards}
+                  onRemoveCard={removeCard}
+                  onUndo={undo}
                   scrollPriorityMode={isMobileViewport && scrollPriorityMode}
                   pageBackground={{
                     mode: pageBackgroundMode,

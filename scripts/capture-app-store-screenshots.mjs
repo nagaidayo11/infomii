@@ -62,24 +62,36 @@ function resolveCaptureCredentials(env) {
 
 async function loginForCapture(page, env) {
   const { email, password } = resolveCaptureCredentials(env);
-  const next = encodeURIComponent("/dashboard?client=app");
-  await page.goto(`${BASE}/login?client=app&next=${next}`, {
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase browser env in .env.local");
+  }
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false },
+  });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.session) {
+    throw new Error(`Capture login failed: ${error?.message ?? "no session returned"}`);
+  }
+
+  const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
+  const authKey = `sb-${projectRef}-auth-token`;
+  await page.goto(`${BASE}/login?client=app`, {
     waitUntil: "domcontentloaded",
     timeout: 120_000,
   });
-  await page.evaluate((key) => {
+  await page.evaluate(({ key, authKey, session }) => {
     localStorage.setItem(key, "1");
     localStorage.setItem("infomii_app_onboarding_completed", "1");
     localStorage.setItem("infomii_onboarding_tour_completed", "1");
-  }, LAUNCH_ONBOARDING_KEY);
-  await page.reload({ waitUntil: "domcontentloaded", timeout: 120_000 });
-  const emailInput = page.locator('input[type="email"]');
-  await emailInput.waitFor({ state: "visible", timeout: 60_000 });
-  await emailInput.fill(email);
-  await page.fill('input[type="password"]', password);
-  await page.locator('form button[type="submit"]').click();
-  await page.waitForURL(/\/dashboard/, { timeout: 90_000 });
-  await page.locator("text=AIでつくる").first().waitFor({ timeout: 60_000 });
+    localStorage.setItem(authKey, JSON.stringify(session));
+  }, { key: LAUNCH_ONBOARDING_KEY, authKey, session: data.session });
+  await page.goto(`${BASE}/dashboard?client=app`, {
+    waitUntil: "domcontentloaded",
+    timeout: 120_000,
+  });
+  await page.getByText(/AIで(ページ作成|つくる)/).first().waitFor({ timeout: 60_000 });
   console.log("Logged in as", email);
 }
 
@@ -275,7 +287,7 @@ async function markTemplateSeedSynced(page) {
 async function ensureTravelTemplateVisible(page) {
   await markTemplateSeedSynced(page);
   await page.goto(`${BASE}/templates?client=app&category=travel&starter=${TEMPLATE_SLUG}`, {
-    waitUntil: "networkidle",
+    waitUntil: "domcontentloaded",
     timeout: 120_000,
   });
   await waitForTemplatesLoaded(page);
@@ -314,7 +326,7 @@ async function findGroupEditorPageId(page) {
   }
 
   const travelCard = await ensureTravelTemplateVisible(page);
-  const useButton = travelCard.getByRole("button", { name: /このテンプレートを使う|テンプレートを使う/ });
+  const useButton = travelCard.getByRole("button", { name: /このテンプレートを使う|テンプレートを使う|使う/ });
   await useButton.click();
   await page.waitForURL(/\/editor\/[^/?#]+/, { timeout: 120_000 });
   await page.waitForTimeout(2500);
@@ -351,7 +363,7 @@ async function captureTemplates(page, outPath) {
 
 async function captureAiHome(page, outPath) {
   await page.goto(`${BASE}/dashboard?client=app`, { waitUntil: "domcontentloaded", timeout: 120_000 });
-  await page.locator("text=AIでつくる").first().waitFor({ timeout: 60_000 });
+  await page.getByText(/AIで(ページ作成|つくる)/).first().waitFor({ timeout: 60_000 });
   await page
     .locator(".app-shell-skeleton")
     .first()
@@ -373,7 +385,17 @@ async function captureEditor(page, pageId, outPath) {
   } else {
     await page.locator("[data-card-id]").filter({ hasText: "リンク" }).first().click();
   }
-  await page.getByRole("button", { name: "ブロック設定を開く" }).click();
+  const editButtons = [
+    page.getByRole("button", { name: "ブロック設定を開く" }),
+    page.getByRole("button", { name: "選択中ブロックを編集" }),
+    page.getByRole("button", { name: "編集" }),
+  ];
+  for (const button of editButtons) {
+    if (await button.first().isVisible().catch(() => false)) {
+      await button.first().click();
+      break;
+    }
+  }
   await page.waitForTimeout(800);
   const columnsSelect = page.locator('label:has-text("列数")').locator("..").locator("select").first();
   if (await columnsSelect.count()) {
@@ -455,7 +477,7 @@ async function captureGuestDemo(page, outPath) {
   await resetGuestFrameForCapture(page);
   await hideDevOverlays(page);
   await page.waitForTimeout(300);
-  const shell = page.locator("[data-guest-page-shell]");
+  const shell = page.locator("[data-guest-page-shell]").first();
   await shell.waitFor({ timeout: 30_000 });
   await shell.screenshot({ path: outPath, type: "png" });
   console.log("saved", path.relative(ROOT, outPath));

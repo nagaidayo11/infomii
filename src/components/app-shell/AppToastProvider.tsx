@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -72,8 +73,13 @@ function AppToastViewport({
   onDismiss: (id: number) => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (typeof document === "undefined") return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div className="app-toast-viewport" aria-live="polite" aria-relevant="additions">

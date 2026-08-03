@@ -33,11 +33,11 @@ export function AppSettingsPage() {
   if (isAppShell) {
     return (
       <AppSettingsShell>
-        <AppSettingsGroup title="マイスペース">
+        <AppSettingsGroup
+          title="アカウント表示"
+          footer="作業スペース名は管理する場所の名前、表示名は共有や編集メンバーに見える名前です。"
+        >
           <HotelNameSection />
-        </AppSettingsGroup>
-
-        <AppSettingsGroup title="プロフィール">
           <ProfileDisplayNameSection />
         </AppSettingsGroup>
 

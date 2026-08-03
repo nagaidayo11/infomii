@@ -71,8 +71,9 @@ export function HotelNameSection() {
             <span className="app-settings-row-icon">
               <AppSettingsIconFacility size={26} />
             </span>
-            <label htmlFor="hotel-name" className="app-settings-profile-label">
-              スペース名
+            <label htmlFor="hotel-name" className="app-settings-profile-label app-settings-profile-copy">
+              <span>作業スペース名</span>
+              <small>あなたが管理する場所の名前です</small>
             </label>
             <input
               id="hotel-name"
@@ -83,7 +84,7 @@ export function HotelNameSection() {
               maxLength={80}
               autoComplete="organization"
               className="app-settings-profile-input"
-              placeholder="例: Infomii"
+              placeholder="例: ナガイ"
             />
             <button
               type="submit"

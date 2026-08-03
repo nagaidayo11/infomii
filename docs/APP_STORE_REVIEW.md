@@ -6,7 +6,7 @@
 |------|-----|
 | メール | `review@infomii.com`（審査用） / `support@infomii.com`（サポート・審査ログイン確認用） |
 | パスワード | `.env.local` の `APP_STORE_REVIEW_PASSWORD`（本番のみ。App Store Connect に記載） |
-| 公開デモ URL | `https://www.infomii.com/p/app-store-review` |
+| 公開デモ URL | `https://www.infomii.com/p/app-store-review-2026` |
 | 備考 | Google / Apple ログインは使わずメールログインで確認可能にする |
 
 ### 推奨セットアップ（本番 DB）
@@ -17,7 +17,7 @@ npm run app-store:seed-review
 ```
 
 1. ワークスペース 1 件（オーナー: 審査用アカウント）
-2. 公開ページ `app-store-review`（シードで `published`）
+2. 公開ページ `app-store-review-2026`（シードで `published`）
 3. 無料プランのまま（有料は App Store IAP または Web Stripe の説明どおり）
 
 提出前のローカル確認: `npm run app-store:verify`（本番 AASA を叩く。オフラインのみなら `--skip-remote`）

@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
+import { PublishModal } from "@/components/editor/PublishModal";
 import {
+  buildPagePublicUrl,
   getCurrentHotelViewMetrics,
   getCurrentUserHotelRole,
   getDashboardBootstrapData,
@@ -21,7 +23,7 @@ import {
 import { AppHomeContinueCard } from "../AppHomeContinueCard";
 import { AppHomeStatsStrip } from "../AppHomeStatsStrip";
 import { AppEmptyState } from "../AppEmptyState";
-import { AppIconEmptyPages, AppIconLogo, AppIconPages } from "../icons/AppIconSet";
+import { AppIconEmptyPages, AppIconPages } from "../icons/AppIconSet";
 import { AppShellLink } from "../AppShellLink";
 import { AppListRow } from "../primitives/AppListRow";
 import { AppSection } from "../primitives/AppSection";
@@ -33,19 +35,22 @@ const APP_DASHBOARD_LOAD_TIMEOUT_MS = 10_000;
 const APP_HOME_STARTERS = [
   {
     href: "/templates?category=travel",
-    icon: "🧳",
+    image: "/lp/use-cases/travel.jpg",
+    kicker: "旅",
     title: "旅行しおり",
     body: "日程・持ち物・MAP",
   },
   {
     href: "/templates?category=oshi",
-    icon: "★",
+    image: "/lp/use-cases/oshi.jpg",
+    kicker: "推し活",
     title: "ライブ遠征",
     body: "集合・グッズ・帰り",
   },
   {
     href: "/templates?category=personal",
-    icon: "♡",
+    image: "/lp/use-cases/date.jpg",
+    kicker: "予定",
     title: "おでかけ",
     body: "リンク・予定・メモ",
   },
@@ -90,6 +95,11 @@ export function AppDashboardView() {
     initialCache?.role ?? null,
   );
   const [totalViews7d, setTotalViews7d] = useState(initialCache?.totalViews7d ?? 0);
+  const [sharePage, setSharePage] = useState<{
+    title: string;
+    slug: string;
+    publicUrl: string;
+  } | null>(null);
 
   const canEdit = role === "owner" || role === "admin" || role === "editor";
   const teamPendingApprovals = usePendingPublishApprovalCount();
@@ -176,15 +186,6 @@ export function AppDashboardView() {
       description={pageCount > 0 ? "続きから、すぐ編集。" : "好きな案内を、1ページに。"}
       className="pb-4"
       contentClassName="space-y-4"
-      headerAction={
-        <AppShellLink
-          href="/settings"
-          className="app-home-avatar app-pressable"
-          aria-label="設定を開く"
-        >
-          <AppIconLogo size={28} />
-        </AppShellLink>
-      }
     >
       {loading ? (
         isNativeAppWebView() ? null : (
@@ -234,8 +235,9 @@ export function AppDashboardView() {
                       key={item.href}
                       href={item.href}
                       className="app-home-starter-card app-pressable ui-pop-tap no-underline"
+                      style={{ "--starter-image": `url(${item.image})` } as CSSProperties}
                     >
-                      <span className="app-home-starter-icon" aria-hidden>{item.icon}</span>
+                      <span className="app-home-starter-badge">{item.kicker}</span>
                       <span className="app-home-starter-card-title">{item.title}</span>
                       <span className="app-home-starter-card-body">{item.body}</span>
                     </AppShellLink>
@@ -252,6 +254,19 @@ export function AppDashboardView() {
                 title={continuePage.title}
                 status={infoBySlug.get(continuePage.slug)?.status === "published" ? "published" : "draft"}
                 updatedAt={infoBySlug.get(continuePage.slug)?.updatedAt ?? new Date().toISOString()}
+                onShare={
+                  infoBySlug.get(continuePage.slug)?.status === "published"
+                    ? () =>
+                        setSharePage({
+                          title: continuePage.title.trim() || "無題",
+                          slug: continuePage.slug,
+                          publicUrl: buildPagePublicUrl(
+                            continuePage.slug,
+                            continuePage.kind === "stamp" ? "stamp" : "guide",
+                          ),
+                        })
+                    : undefined
+                }
               />
             </AppSection>
           ) : (
@@ -312,6 +327,15 @@ export function AppDashboardView() {
           ) : null}
         </>
       )}
+      {sharePage ? (
+        <PublishModal
+          variant="share"
+          publicUrl={sharePage.publicUrl}
+          pageTitle={sharePage.title}
+          slug={sharePage.slug}
+          onClose={() => setSharePage(null)}
+        />
+      ) : null}
     </AppTabPage>
   );
 }

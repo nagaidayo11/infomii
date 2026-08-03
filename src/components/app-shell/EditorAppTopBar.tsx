@@ -3,6 +3,8 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import type { EditorTopBarProps } from "@/components/editor/EditorTopBar";
+import { buildAppSharePageLabel } from "@/lib/app-branding";
+import { shareViaNativeApp } from "@/lib/native-app-bridge";
 import { AppShellLink } from "./AppShellLink";
 import { AppBottomSheet } from "./primitives/AppBottomSheet";
 import { AppSwitch } from "./primitives/AppSwitch";
@@ -37,7 +39,9 @@ type EditorAppTopBarProps = Pick<
   | "onBulkFont"
   | "publishNotice"
   | "liveOpsQuickLinks"
->;
+> & {
+  onOpenPageSettings?: () => void;
+};
 
 function ShareArrowIcon({ className }: { className?: string }) {
   return (
@@ -111,6 +115,7 @@ export function EditorAppTopBar({
   onBulkFont,
   publishNotice = null,
   liveOpsQuickLinks = null,
+  onOpenPageSettings,
 }: EditorAppTopBarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -123,6 +128,16 @@ export function EditorAppTopBar({
 
   const hintKey = saveHintKey(saveError, saving, lastSavedAt);
   const saveHint = saveHintText(saveError, saving, lastSavedAt);
+  const handleSend = () => {
+    if (publicUrl && shareViaNativeApp({
+      title: pageTitle || "Infomii",
+      url: publicUrl,
+      message: buildAppSharePageLabel(pageTitle || "Infomii"),
+    })) {
+      return;
+    }
+    onQr();
+  };
 
   return (
     <header
@@ -198,7 +213,7 @@ export function EditorAppTopBar({
 
         <button
           type="button"
-          onClick={onQr}
+          onClick={handleSend}
           disabled={publishing || qrPreparing}
           className="editor-topbar-btn editor-topbar-btn--share h-10 shrink-0"
           aria-label="送る"
@@ -229,7 +244,12 @@ export function EditorAppTopBar({
         </button>
       </div>
 
-      <AppBottomSheet open={moreOpen} onClose={() => setMoreOpen(false)} title="その他の操作">
+      <AppBottomSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        title="その他の操作"
+        panelClassName="app-bottom-sheet-panel--topbar-actions"
+      >
         {saveError ? (
           <div className="border-b border-[var(--app-border)] px-3 py-2 text-sm text-rose-600">
             {saveError}
@@ -292,15 +312,28 @@ export function EditorAppTopBar({
             className="app-sheet-action app-sheet-action--primary"
             onClick={() => {
               setMoreOpen(false);
-              onQr();
+              handleSend();
             }}
           >
             {qrPreparing ? "準備中…" : "送る・見せる"}
           </button>
         </AppSheetSection>
 
-        {onRenamePageTitle || onBulkFont || (liveOpsQuickLinks && liveOpsQuickLinks.length > 0) ? (
+        {onOpenPageSettings || onRenamePageTitle || onBulkFont || (liveOpsQuickLinks && liveOpsQuickLinks.length > 0) ? (
           <AppSheetSection label="ページ">
+            {onOpenPageSettings ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="app-sheet-action"
+                onClick={() => {
+                  onOpenPageSettings();
+                  setMoreOpen(false);
+                }}
+              >
+                ページ設定
+              </button>
+            ) : null}
             {onRenamePageTitle ? (
               <button
                 type="button"

@@ -737,6 +737,19 @@ body.lux-shell:has(.lp-page)::before {
   touch-action: manipulation;
   -webkit-tap-highlight-color: rgba(15, 23, 42, 0.08);
   cursor: pointer;
+  transition:
+    transform 120ms var(--motion-ease-standard),
+    filter 120ms var(--motion-ease-standard),
+    box-shadow 160ms var(--motion-ease-standard),
+    border-color 160ms var(--motion-ease-standard),
+    background-color 160ms var(--motion-ease-standard);
+}
+
+[data-guest-page-shell] .guest-page-link:active,
+[data-guest-page-shell] a.guest-page-link:active,
+[data-guest-page-shell] a[href]:not([href="#"]):active {
+  transform: scale(0.985);
+  filter: brightness(0.97);
 }
 
 .editor-card-colorized :is(p, h1, h2, h3, h4, h5, h6, li, dt, dd, small, label, span) {

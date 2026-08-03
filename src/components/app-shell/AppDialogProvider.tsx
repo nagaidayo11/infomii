@@ -216,8 +216,14 @@ function AppDialogSheet({
     active.kind === "alert" ? active.title ?? "お知らせ" : active.title;
 
   return (
-    <AppBottomSheet open={Boolean(active)} onClose={onDismiss} title={title} size="compact">
-      <div className="app-dialog-body px-3 pb-4">
+    <AppBottomSheet
+      open={Boolean(active)}
+      onClose={onDismiss}
+      title={title}
+      size="compact"
+      panelClassName="app-bottom-sheet-panel--dialog"
+    >
+      <div className="app-dialog-body px-3 pb-2">
         {active.message ? (
           <p className="app-dialog-message whitespace-pre-wrap text-sm leading-relaxed text-[var(--app-text-muted)]">
             {active.message}

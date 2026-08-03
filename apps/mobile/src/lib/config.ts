@@ -60,7 +60,7 @@ export function resolveWebOrigin(): WebOriginResolution {
     };
   }
 
-  let origin = normalizeOrigin(raw);
+  const origin = normalizeOrigin(raw);
 
   try {
     new URL(origin);
@@ -97,7 +97,7 @@ export function getWebOrigin(): string {
 
 export function getAppEntryUrl(): string {
   const origin = getWebOrigin();
-  return `${origin}/onboarding?client=app`;
+  return `${origin}/dashboard?client=app`;
 }
 
 /** Appended to the WebView user agent for Phase 1 client detection on the web app. */

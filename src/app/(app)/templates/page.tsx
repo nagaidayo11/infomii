@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -74,21 +74,27 @@ const HIDDEN_TEMPLATE_NAMES = new Set<string>([]);
 const APP_TEMPLATE_RECOMMENDS = [
   {
     href: "/templates?category=travel",
+    category: "travel",
     kicker: "旅行",
     title: "旅のしおりを作る",
     body: "集合・日程・持ち物を1ページに",
+    image: "/templates/previews/travel/travel-itinerary.jpg",
   },
   {
     href: "/templates?category=oshi",
+    category: "oshi",
     kicker: "推し活",
     title: "ライブ遠征まとめ",
     body: "開演・グッズ・帰りの予定まで",
+    image: "/templates/previews/oshi/oshi-live-set.jpg",
   },
   {
     href: "/templates?category=personal",
+    category: "personal",
     kicker: "リンク",
     title: "おでかけ・リンク集",
     body: "友達に送る予定表やメモに",
+    image: "/templates/previews/personal/personal-link-collection.jpg",
   },
 ] as const;
 
@@ -211,10 +217,15 @@ export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const pendingCategoryScrollRef = useRef<string | null>(null);
 
   const starterSlug = searchParams.get("starter");
 
   useRouteProgressLoading(loading || !!usingId);
+
+  const requestTemplateCategoryScroll = useCallback((targetCategory: string) => {
+    pendingCategoryScrollRef.current = targetCategory;
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -235,8 +246,9 @@ export default function TemplatesPage() {
       } else if ((BTOC_MARKETPLACE_CATEGORIES as readonly string[]).includes(paramCategory)) {
         setAudience("personal");
       }
+      requestTemplateCategoryScroll(paramCategory);
     }
-  }, [searchParams, isAppShell]);
+  }, [searchParams, isAppShell, requestTemplateCategoryScroll]);
 
   useEffect(() => {
     if (!isAppShell && audience !== "hotel") {
@@ -341,6 +353,18 @@ export default function TemplatesPage() {
         : [];
   const showCaseStudyFeatured = audience !== "personal" && category === "all" && caseStudyTemplates.length > 0;
   const hasTemplates = showCaseStudyFeatured || groupsToRender.length > 0;
+
+  useEffect(() => {
+    const targetCategory = pendingCategoryScrollRef.current;
+    if (!targetCategory || loading || !hasTemplates) return;
+    const target = document.getElementById(`template-category-${targetCategory}`);
+    if (!target) return;
+    pendingCategoryScrollRef.current = null;
+    const scrollId = window.setTimeout(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+    return () => window.clearTimeout(scrollId);
+  }, [category, groupsToRender, hasTemplates, loading]);
 
   useEffect(() => {
     if (!starterSlug || loading || templates.length === 0) return;
@@ -483,6 +507,7 @@ export default function TemplatesPage() {
                         tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
                         currentSlug="preview"
                         locale="ja"
+                        clientApp={clientShell.isAppShell}
                         previewMode
                       />
                     ) : null}
@@ -516,7 +541,19 @@ export default function TemplatesPage() {
           <AppSection revealDelay={0}>
             <div className="app-template-recommend-rail" aria-label="おすすめテンプレート">
               {APP_TEMPLATE_RECOMMENDS.map((item) => (
-                <Link key={item.href} href={item.href} className="app-template-recommend-card app-pressable no-underline">
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setAudience("personal");
+                    setCategory(item.category);
+                    requestTemplateCategoryScroll(item.category);
+                    router.replace(item.href, { scroll: false });
+                  }}
+                  className="app-template-recommend-card app-pressable no-underline"
+                  style={{ "--template-recommend-image": `url(${item.image})` } as CSSProperties}
+                >
                   <span className="app-template-recommend-kicker">{item.kicker}</span>
                   <span className="app-template-recommend-title">{item.title}</span>
                   <span className="app-template-recommend-body">{item.body}</span>
@@ -591,6 +628,7 @@ export default function TemplatesPage() {
                       className="app-template-group space-y-2"
                       revealDelay={Math.min(index * 50, 200)}
                     >
+                      <div id={`template-category-${group.category}`} className="app-template-category-anchor" />
                       {showSectionHeading ? (
                         <h2 className="app-template-section-heading">
                           {group.sectionLabel}

@@ -1,7 +1,7 @@
 {
   "configVersion": 0,
   "apple": {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "copyright": "© 2026 Infomii",
     "release": {
       "automaticRelease": true
@@ -115,7 +115,7 @@
       "demoUsername": "review@infomii.com",
       "demoPassword": "InfomiiReview2026!",
       "demoRequired": true,
-      "notes": "Infomii allows users to create and share travel guides, link collections, event pages and information pages.\n\nReview account:\nEmail: review@infomii.com\nPassword: InfomiiReview2026!\n\nLogin methods available:\n- Email and Password\n- Sign in with Google\n- Sign in with Apple\n\nNo special permissions are required.\nAll features can be tested with the review account.\n\n\nUsers can report inappropriate content.\nContent can be removed by the service administrator when necessary."
+      "notes": "Infomii allows users to create and share travel guides, link collections, event pages and information pages.\n\nReview account:\nEmail: review@infomii.com\nPassword: InfomiiReview2026!\n\nDemo public page:\nhttps://www.infomii.com/p/app-store-review-2026\n\nLogin methods available:\n- Email and Password\n- Sign in with Google\n- Sign in with Apple\n\nNo special permissions are required.\nAll features can be tested with the review account.\n\nUsers can report inappropriate content.\nContent can be removed by the service administrator when necessary."
     }
   }
 }

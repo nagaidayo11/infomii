@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { Rnd } from "react-rnd";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { CardEditProvider } from "@/components/cards/card-inline-edit";
@@ -32,6 +41,10 @@ const MAP_AUTO_MAX_H = 900;
 /** 観測要素の scrollHeight が親高さと再帰し暴走するのを防ぐ上限（px） */
 const MAX_AUTO_BLOCK_H = 2400;
 const GRID = 8;
+const APP_LONG_PRESS_REORDER_MS = 380;
+const APP_TRASH_DELETE_DELAY_MS = 180;
+const APP_REORDER_SCROLL_EDGE_PX = 112;
+const APP_REORDER_SCROLL_MAX_STEP = 18;
 
 /**
  * 自動高さ用の実測。コンテナに `h-full`+`justify-center` があると `scrollHeight` が親の高さに引きずられ再帰しやすいので、
@@ -292,6 +305,8 @@ type FreeformCanvasProps = {
   onSelectCard: (id: string | null) => void;
   onUpdateCard: (id: string, patch: { content?: Record<string, unknown>; style?: Record<string, unknown> }) => void;
   onReorderCards?: (cards: EditorCard[]) => void;
+  onRemoveCard?: (id: string) => void;
+  onUndo?: () => void;
   scrollPriorityMode?: boolean;
   pageBackground?: {
     mode: "solid" | "gradient";
@@ -317,6 +332,8 @@ export function FreeformCanvas({
   onSelectCard,
   onUpdateCard,
   onReorderCards,
+  onRemoveCard,
+  onUndo,
   scrollPriorityMode = false,
   pageBackground,
   guestShell = null,
@@ -329,6 +346,7 @@ export function FreeformCanvas({
 }: FreeformCanvasProps) {
   const clientShell = useClientShell();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const appTrashRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [viewportWidth, setViewportWidth] = useState(() => (unframed ? EDITOR_APP_FRAME_WIDTH : EDITOR_WEB_FRAME_WIDTH));
@@ -342,6 +360,42 @@ export function FreeformCanvas({
     h: number;
     guides: { axis: "x" | "y"; value: number }[];
   } | null>(null);
+  const [appReorderState, setAppReorderState] = useState<{
+    id: string;
+    input: "pointer" | "touch";
+    pointerId: number;
+    touchIdentifier?: number;
+    startClientX: number;
+    startClientY: number;
+    startScrollTop: number;
+    startX: number;
+    startY: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const longPressRef = useRef<{
+    timer: number;
+    id: string;
+    input: "pointer" | "touch";
+    pointerId: number;
+    touchIdentifier?: number;
+    startClientX: number;
+    startClientY: number;
+    latestClientX: number;
+    latestClientY: number;
+    startScrollTop: number;
+    startX: number;
+    startY: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const appDragPointRef = useRef<{ clientX: number; clientY: number } | null>(null);
+  const appDragFrameRef = useRef<number | null>(null);
+  const appAutoScrollFrameRef = useRef<number | null>(null);
+  const [appTrashActive, setAppTrashActive] = useState(false);
+  const [appUndoVisible, setAppUndoVisible] = useState(false);
+  const [absorbingCardId, setAbsorbingCardId] = useState<string | null>(null);
+  const [appLongPressPendingId, setAppLongPressPendingId] = useState<string | null>(null);
   const [autoHeights, setAutoHeights] = useState<Record<string, number>>({});
   const [previewLocale, setPreviewLocale] = useState<SupportedLocale>("ja");
   const navStyle = guestShell ? getGuestShellNavStyle(guestShell) : "off";
@@ -542,6 +596,428 @@ export function FreeformCanvas({
     [cards, contentWidth, onReorderCards, onUpdateCard]
   );
 
+  const clearLongPress = useCallback(() => {
+    const pending = longPressRef.current;
+    if (pending) {
+      window.clearTimeout(pending.timer);
+    }
+    longPressRef.current = null;
+    setAppLongPressPendingId(null);
+  }, []);
+
+  const isClientPointOverAppTrash = useCallback((clientX: number, clientY: number) => {
+    if (typeof window === "undefined") return false;
+    const rect = appTrashRef.current?.getBoundingClientRect();
+    if (rect) {
+      const padX = 34;
+      const padTop = 54;
+      const padBottom = 54;
+      return (
+        clientX >= rect.left - padX &&
+        clientX <= rect.right + padX &&
+        clientY >= rect.top - padTop &&
+        clientY <= rect.bottom + padBottom
+      );
+    }
+    const width = Math.min(260, window.innerWidth - 56);
+    const right = window.innerWidth - 18;
+    const left = right - width;
+    const top = window.innerHeight - 236;
+    const bottom = window.innerHeight - 96;
+    return clientX >= left - 34 && clientX <= right + 34 && clientY >= top && clientY <= bottom;
+  }, []);
+
+  const cancelAppDragFrame = useCallback(() => {
+    if (appDragFrameRef.current === null) return;
+    window.cancelAnimationFrame(appDragFrameRef.current);
+    appDragFrameRef.current = null;
+  }, []);
+
+  const cancelAppAutoScroll = useCallback(() => {
+    if (appAutoScrollFrameRef.current === null) return;
+    window.cancelAnimationFrame(appAutoScrollFrameRef.current);
+    appAutoScrollFrameRef.current = null;
+  }, []);
+
+  const getAppScrollRoot = useCallback(() => {
+    return canvasRef.current?.querySelector(".template-preview-scroll") as HTMLElement | null;
+  }, []);
+
+  const getAppScrollTop = useCallback(() => {
+    return getAppScrollRoot()?.scrollTop ?? 0;
+  }, [getAppScrollRoot]);
+
+  const updateAppDragFromPoint = useCallback(
+    (
+      reorder: NonNullable<typeof appReorderState>,
+      clientX: number,
+      clientY: number,
+    ) => {
+      const scrollDelta = getAppScrollTop() - reorder.startScrollTop;
+      const rawX = reorder.startX;
+      const rawY = reorder.startY + (clientY - reorder.startClientY) + scrollDelta;
+      const nextX = Math.max(0, Math.min(stageWidth - reorder.w, rawX));
+      const nextY = Math.max(0, rawY);
+      const { x, y, guides } = computeSnap(
+        reorder.id,
+        nextX,
+        nextY,
+        reorder.w,
+        reorder.h,
+        cards,
+        contentWidth,
+      );
+      setDragState({
+        id: reorder.id,
+        x,
+        y,
+        w: reorder.w,
+        h: reorder.h,
+        guides,
+      });
+      setAppTrashActive(isClientPointOverAppTrash(clientX, clientY));
+      return y;
+    },
+    [cards, contentWidth, getAppScrollTop, isClientPointOverAppTrash, stageWidth],
+  );
+
+  useEffect(() => {
+    const active = Boolean(appLongPressPendingId || appReorderState);
+    document.body.classList.toggle("app-editor-reorder-active", active);
+    if (active) {
+      window.getSelection()?.removeAllRanges();
+    }
+    return () => {
+      document.body.classList.remove("app-editor-reorder-active");
+    };
+  }, [appLongPressPendingId, appReorderState]);
+
+  useEffect(() => {
+    if (!appReorderState) {
+      cancelAppAutoScroll();
+      return;
+    }
+
+    const step = () => {
+      const root = getAppScrollRoot();
+      const point = appDragPointRef.current;
+      if (!root || !point) {
+        appAutoScrollFrameRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
+      const rect = root.getBoundingClientRect();
+      const topDistance = point.clientY - rect.top;
+      const bottomDistance = rect.bottom - point.clientY;
+      let delta = 0;
+
+      if (topDistance < APP_REORDER_SCROLL_EDGE_PX) {
+        const ratio = Math.max(0, Math.min(1, (APP_REORDER_SCROLL_EDGE_PX - topDistance) / APP_REORDER_SCROLL_EDGE_PX));
+        delta = -Math.max(3, Math.round(APP_REORDER_SCROLL_MAX_STEP * ratio));
+      } else if (bottomDistance < APP_REORDER_SCROLL_EDGE_PX) {
+        const ratio = Math.max(0, Math.min(1, (APP_REORDER_SCROLL_EDGE_PX - bottomDistance) / APP_REORDER_SCROLL_EDGE_PX));
+        delta = Math.max(3, Math.round(APP_REORDER_SCROLL_MAX_STEP * ratio));
+      }
+
+      if (delta !== 0) {
+        const before = root.scrollTop;
+        root.scrollTop = Math.max(0, Math.min(root.scrollHeight - root.clientHeight, before + delta));
+        if (root.scrollTop !== before) {
+          updateAppDragFromPoint(appReorderState, point.clientX, point.clientY);
+        }
+      }
+
+      appAutoScrollFrameRef.current = window.requestAnimationFrame(step);
+    };
+
+    appAutoScrollFrameRef.current = window.requestAnimationFrame(step);
+    return () => {
+      cancelAppAutoScroll();
+    };
+  }, [appReorderState, cancelAppAutoScroll, getAppScrollRoot, updateAppDragFromPoint]);
+
+  useEffect(() => {
+    if (!appReorderState) return;
+    if (appReorderState.input !== "pointer") return;
+
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerId !== appReorderState.pointerId) return;
+      event.preventDefault();
+      window.getSelection()?.removeAllRanges();
+      appDragPointRef.current = { clientX: event.clientX, clientY: event.clientY };
+      if (appDragFrameRef.current !== null) return;
+      appDragFrameRef.current = window.requestAnimationFrame(() => {
+        appDragFrameRef.current = null;
+        const point = appDragPointRef.current;
+        if (!point) return;
+        updateAppDragFromPoint(appReorderState, point.clientX, point.clientY);
+      });
+    };
+
+    const onUp = (event: PointerEvent) => {
+      if (event.pointerId !== appReorderState.pointerId) return;
+      event.preventDefault();
+      window.getSelection()?.removeAllRanges();
+      cancelAppAutoScroll();
+      cancelAppDragFrame();
+      clearLongPress();
+      const point = appDragPointRef.current ?? { clientX: event.clientX, clientY: event.clientY };
+      const shouldDelete = Boolean(onRemoveCard) && isClientPointOverAppTrash(point.clientX, point.clientY);
+      if (shouldDelete) {
+        setAbsorbingCardId(appReorderState.id);
+        setAppTrashActive(true);
+        window.setTimeout(() => {
+          onRemoveCard?.(appReorderState.id);
+          setDragState(null);
+          setAppReorderState(null);
+          setAppTrashActive(false);
+          setAbsorbingCardId(null);
+          setAppUndoVisible(Boolean(onUndo));
+        }, APP_TRASH_DELETE_DELAY_MS);
+        return;
+      }
+
+      const finalY = Math.max(
+        0,
+        appReorderState.startY +
+          (point.clientY - appReorderState.startClientY) +
+          (getAppScrollTop() - appReorderState.startScrollTop),
+      );
+      commitReorderAtY(appReorderState.id, finalY);
+      setDragState(null);
+      setAppReorderState(null);
+      setAppTrashActive(false);
+      appDragPointRef.current = null;
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp, { passive: false });
+    window.addEventListener("pointercancel", onUp, { passive: false });
+    return () => {
+      cancelAppDragFrame();
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [
+    appReorderState,
+    cards,
+    cancelAppDragFrame,
+    cancelAppAutoScroll,
+    clearLongPress,
+    commitReorderAtY,
+    contentWidth,
+    getAppScrollTop,
+    isClientPointOverAppTrash,
+    onRemoveCard,
+    onUndo,
+    stageWidth,
+    updateAppDragFromPoint,
+  ]);
+
+  useEffect(() => {
+    if (!appReorderState) return;
+    if (appReorderState.input !== "touch") return;
+
+    const findTouch = (touches: TouchList) => {
+      for (let i = 0; i < touches.length; i += 1) {
+        const touch = touches.item(i);
+        if (touch && touch.identifier === appReorderState.touchIdentifier) return touch;
+      }
+      return null;
+    };
+
+    const moveToPoint = (clientX: number, clientY: number) => {
+      appDragPointRef.current = { clientX, clientY };
+      if (appDragFrameRef.current !== null) return;
+      appDragFrameRef.current = window.requestAnimationFrame(() => {
+        appDragFrameRef.current = null;
+        const point = appDragPointRef.current;
+        if (!point) return;
+        updateAppDragFromPoint(appReorderState, point.clientX, point.clientY);
+      });
+    };
+
+    const finishAtPoint = (clientX: number, clientY: number) => {
+      cancelAppAutoScroll();
+      cancelAppDragFrame();
+      clearLongPress();
+      const shouldDelete = Boolean(onRemoveCard) && isClientPointOverAppTrash(clientX, clientY);
+      if (shouldDelete) {
+        setAbsorbingCardId(appReorderState.id);
+        setAppTrashActive(true);
+        window.setTimeout(() => {
+          onRemoveCard?.(appReorderState.id);
+          setDragState(null);
+          setAppReorderState(null);
+          setAppTrashActive(false);
+          setAbsorbingCardId(null);
+          setAppUndoVisible(Boolean(onUndo));
+          appDragPointRef.current = null;
+        }, APP_TRASH_DELETE_DELAY_MS);
+        return;
+      }
+
+      const finalY = Math.max(
+        0,
+        appReorderState.startY +
+          (clientY - appReorderState.startClientY) +
+          (getAppScrollTop() - appReorderState.startScrollTop),
+      );
+      commitReorderAtY(appReorderState.id, finalY);
+      setDragState(null);
+      setAppReorderState(null);
+      setAppTrashActive(false);
+      appDragPointRef.current = null;
+    };
+
+    const onMove = (event: TouchEvent) => {
+      const touch = findTouch(event.touches);
+      if (!touch) return;
+      event.preventDefault();
+      window.getSelection()?.removeAllRanges();
+      moveToPoint(touch.clientX, touch.clientY);
+    };
+
+    const onEnd = (event: TouchEvent) => {
+      const touch = findTouch(event.changedTouches);
+      const point = touch
+        ? { clientX: touch.clientX, clientY: touch.clientY }
+        : appDragPointRef.current;
+      if (!point) return;
+      event.preventDefault();
+      window.getSelection()?.removeAllRanges();
+      finishAtPoint(point.clientX, point.clientY);
+    };
+
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd, { passive: false });
+    window.addEventListener("touchcancel", onEnd, { passive: false });
+    return () => {
+      cancelAppDragFrame();
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onEnd);
+    };
+  }, [
+    appReorderState,
+    cards,
+    cancelAppDragFrame,
+    cancelAppAutoScroll,
+    clearLongPress,
+    commitReorderAtY,
+    contentWidth,
+    getAppScrollTop,
+    isClientPointOverAppTrash,
+    onRemoveCard,
+    onUndo,
+    stageWidth,
+    updateAppDragFromPoint,
+  ]);
+
+  useEffect(() => clearLongPress, [clearLongPress]);
+
+  const startAppLongPressReorder = useCallback(
+    (card: EditorCard, index: number, event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!unframed || event.pointerType === "mouse" || event.pointerType === "touch") return;
+      event.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      clearLongPress();
+      const pos = getPosition(card, index, contentWidth, cards);
+      const w = pos.w ?? DEFAULT_W;
+      const h = getRenderHeight(card, index);
+      const pending = {
+        id: card.id,
+        input: "pointer" as const,
+        pointerId: event.pointerId,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        latestClientX: event.clientX,
+        latestClientY: event.clientY,
+        startScrollTop: getAppScrollTop(),
+        startX: pos.x,
+        startY: pos.y,
+        w,
+        h,
+      };
+      setAppLongPressPendingId(card.id);
+      longPressRef.current = {
+        ...pending,
+        timer: window.setTimeout(() => {
+          longPressRef.current = null;
+          setAppLongPressPendingId(null);
+          window.getSelection()?.removeAllRanges();
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          onSelectCard(card.id);
+          setAppUndoVisible(false);
+          appDragPointRef.current = { clientX: pending.latestClientX, clientY: pending.latestClientY };
+          setAppReorderState({
+            ...pending,
+            startClientX: pending.latestClientX,
+            startClientY: pending.latestClientY,
+          });
+          setDragState({ id: card.id, x: pos.x, y: pos.y, w, h, guides: [] });
+          setAppTrashActive(false);
+        }, APP_LONG_PRESS_REORDER_MS),
+      };
+    },
+    [cards, clearLongPress, contentWidth, getAppScrollTop, getRenderHeight, onSelectCard, unframed],
+  );
+
+  const startAppTouchLongPressReorder = useCallback(
+    (card: EditorCard, index: number, event: ReactTouchEvent<HTMLDivElement>) => {
+      if (!unframed) return;
+      const touch = event.changedTouches.item(0);
+      if (!touch) return;
+      event.stopPropagation();
+      window.getSelection()?.removeAllRanges();
+      clearLongPress();
+      const pos = getPosition(card, index, contentWidth, cards);
+      const w = pos.w ?? DEFAULT_W;
+      const h = getRenderHeight(card, index);
+      const pending = {
+        id: card.id,
+        input: "touch" as const,
+        pointerId: -1,
+        touchIdentifier: touch.identifier,
+        startClientX: touch.clientX,
+        startClientY: touch.clientY,
+        latestClientX: touch.clientX,
+        latestClientY: touch.clientY,
+        startScrollTop: getAppScrollTop(),
+        startX: pos.x,
+        startY: pos.y,
+        w,
+        h,
+      };
+      setAppLongPressPendingId(card.id);
+      longPressRef.current = {
+        ...pending,
+        timer: window.setTimeout(() => {
+          longPressRef.current = null;
+          setAppLongPressPendingId(null);
+          window.getSelection()?.removeAllRanges();
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          onSelectCard(card.id);
+          setAppUndoVisible(false);
+          appDragPointRef.current = { clientX: pending.latestClientX, clientY: pending.latestClientY };
+          setAppReorderState({
+            ...pending,
+            startClientX: pending.latestClientX,
+            startClientY: pending.latestClientY,
+          });
+          setDragState({ id: card.id, x: pos.x, y: pos.y, w, h, guides: [] });
+          setAppTrashActive(false);
+        }, APP_LONG_PRESS_REORDER_MS),
+      };
+    },
+    [cards, clearLongPress, contentWidth, getAppScrollTop, getRenderHeight, onSelectCard, unframed],
+  );
+
   const handleDragStop = useCallback(
     (id: string, _e: unknown, d: { x: number; y: number }) => {
       setDragState(null);
@@ -656,6 +1132,7 @@ export function FreeformCanvas({
                     tabs={shellTabs}
                     currentSlug={pageSlug}
                     locale={previewLocale}
+                    clientApp={clientShell.isAppShell}
                     previewMode
                   />
                 ) : null}
@@ -668,6 +1145,7 @@ export function FreeformCanvas({
                 tabs={shellTabs}
                 currentSlug={pageSlug}
                 locale={previewLocale}
+                clientApp={clientShell.isAppShell}
                 previewMode
               />
             ) : null
@@ -785,9 +1263,13 @@ export function FreeformCanvas({
                 dragGrid={[1, 1]}
                 resizeGrid={[GRID, GRID]}
                 bounds="parent"
-                className={(scrollPriorityMode ? "!cursor-default " : "!cursor-move ") + "editor-reorder-smooth"}
+                className={
+                  (scrollPriorityMode ? "!cursor-default " : "!cursor-move ") +
+                  "editor-reorder-smooth " +
+                  (appReorderState?.id === card.id ? "app-editor-rnd-reordering " : "")
+                }
                 style={{ zIndex: isSelected || isDragging ? 200 : 1 }}
-                disableDragging={scrollPriorityMode}
+                disableDragging={scrollPriorityMode || unframed}
                 enableResizing={
                   isSelected && !scrollPriorityMode
                     ? usesHeroColumnWidth(card.type)
@@ -806,20 +1288,86 @@ export function FreeformCanvas({
                 }
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
+                  if (unframed && (appReorderState || absorbingCardId)) {
+                    e.preventDefault();
+                    return;
+                  }
                   onSelectCard(card.id);
                 }}
               >
                 <div
-                  className="relative h-full w-full"
+                  className={
+                    "relative h-full w-full " +
+                    (unframed && appReorderState?.id === card.id
+                      ? "app-editor-reorder-touch-guard "
+                      : "")
+                  }
                   onPointerDown={(e) => {
                     e.stopPropagation();
-                    onSelectCard(card.id);
+                    if (unframed) {
+                      window.getSelection()?.removeAllRanges();
+                    }
+                    startAppLongPressReorder(card, idx, e);
+                  }}
+                  onPointerMove={(e) => {
+                    const pending = longPressRef.current;
+                    if (!pending || pending.pointerId !== e.pointerId) return;
+                    pending.latestClientX = e.clientX;
+                    pending.latestClientY = e.clientY;
+                    e.stopPropagation();
+                    window.getSelection()?.removeAllRanges();
+                  }}
+                  onPointerUp={clearLongPress}
+                  onPointerCancel={() => {
+                    const pending = longPressRef.current;
+                    if (!appReorderState && pending?.input !== "touch") clearLongPress();
+                  }}
+                  onTouchStart={(e) => {
+                    startAppTouchLongPressReorder(card, idx, e);
+                  }}
+                  onTouchMove={(e) => {
+                    const pending = longPressRef.current;
+                    if (!pending || pending.input !== "touch") return;
+                    const touch = Array.from(e.changedTouches).find(
+                      (entry) => entry.identifier === pending.touchIdentifier,
+                    );
+                    if (!touch) return;
+                    pending.latestClientX = touch.clientX;
+                    pending.latestClientY = touch.clientY;
+                    window.getSelection()?.removeAllRanges();
+                  }}
+                  onTouchEnd={(e) => {
+                    const pending = longPressRef.current;
+                    if (!pending || pending.input !== "touch") return;
+                    const touch = Array.from(e.changedTouches).find(
+                      (entry) => entry.identifier === pending.touchIdentifier,
+                    );
+                    if (!touch) return;
+                    clearLongPress();
+                  }}
+                  onTouchCancel={(e) => {
+                    const pending = longPressRef.current;
+                    if (!pending || pending.input !== "touch") return;
+                    const touch = Array.from(e.changedTouches).find(
+                      (entry) => entry.identifier === pending.touchIdentifier,
+                    );
+                    if (!touch) return;
+                    pending.latestClientX = touch.clientX;
+                    pending.latestClientY = touch.clientY;
+                  }}
+                  onContextMenu={(e) => {
+                    if (!unframed) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.getSelection()?.removeAllRanges();
                   }}
                 >
                   <div
                     className={
                       "editor-card-selected h-full w-full overflow-hidden transition-shadow " +
                       (isNewlyAdded ? "editor-card-enter " : "") +
+                      (appReorderState?.id === card.id ? "app-editor-card-reordering " : "") +
+                      (absorbingCardId === card.id ? "app-editor-card-absorbing " : "") +
                       (fullBleed
                         ? "card-full-bleed rounded-none "
                         : "guest-card-surface-media ") +
@@ -866,6 +1414,40 @@ export function FreeformCanvas({
           </div>
           </div>
         </PhoneDeviceFrame>
+        {unframed && appReorderState ? (
+          <div
+            ref={appTrashRef}
+            className={
+              "app-editor-drag-trash " +
+              (appTrashActive ? "app-editor-drag-trash--active" : "")
+            }
+            aria-live="polite"
+          >
+            <span className="app-editor-drag-trash-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M3 6h18" />
+                <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
+                <path d="M19 6l-.9 13.1A2 2 0 0 1 16.1 21H7.9a2 2 0 0 1-2-1.9L5 6" />
+                <path d="M10 11v5" />
+                <path d="M14 11v5" />
+              </svg>
+            </span>
+          </div>
+        ) : null}
+        {unframed && appUndoVisible && onUndo ? (
+          <div className="app-editor-undo-toast" role="status">
+            <span>ブロックを削除しました</span>
+            <button
+              type="button"
+              onClick={() => {
+                onUndo();
+                setAppUndoVisible(false);
+              }}
+            >
+              元に戻す
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
     </LocaleProvider>

@@ -44,6 +44,13 @@ export function shareViaNativeApp(payload: { title?: string; url: string; messag
   return true;
 }
 
+/** Open an external URL through the native shell instead of navigating inside the WebView. */
+export function openUrlViaNativeApp(url: string): boolean {
+  if (!isNativeAppWebView()) return false;
+  postToNativeApp({ type: "app-open-url", url });
+  return true;
+}
+
 /**
  * Best-effort tap feedback: native haptic in WebView, vibration API elsewhere.
  * Respects reduced motion.

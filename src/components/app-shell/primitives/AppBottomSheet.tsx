@@ -1,10 +1,21 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 
 export type AppBottomSheetSize = "compact" | "comfortable" | "full";
+
+const SHEET_MIN_VISIBLE_PX = 300;
+const SHEET_TOP_MARGIN_PX = 52;
 
 type AppBottomSheetProps = {
   open: boolean;
@@ -34,6 +45,47 @@ export function AppBottomSheet({
   const reduceMotion = useReducedMotion();
   const duration = reduceMotion ? 0.12 : 0.28;
   const sizeClass = `app-bottom-sheet-panel--size-${size}`;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
+  const [customHeight, setCustomHeight] = useState<{ height: number; size: AppBottomSheetSize } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const startHandleDrag = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const currentHeight = panelRef.current?.getBoundingClientRect().height ?? customHeight?.height ?? window.innerHeight * 0.72;
+      dragRef.current = { startY: event.clientY, startHeight: currentHeight };
+      setCustomHeight({ height: currentHeight, size });
+    },
+    [customHeight, size],
+  );
+
+  const moveHandleDrag = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      event.preventDefault();
+      const maxHeight = Math.max(SHEET_MIN_VISIBLE_PX, window.innerHeight - SHEET_TOP_MARGIN_PX);
+      const nextHeight = Math.max(
+        SHEET_MIN_VISIBLE_PX,
+        Math.min(maxHeight, drag.startHeight - (event.clientY - drag.startY)),
+      );
+      setCustomHeight({ height: nextHeight, size });
+    },
+    [size],
+  );
+
+  const endHandleDrag = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragRef.current) return;
+    event.preventDefault();
+    dragRef.current = null;
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +101,17 @@ export function AppBottomSheet({
     };
   }, [open, onClose]);
 
-  if (typeof document === "undefined") return null;
+  if (!mounted) return null;
+
+  const activeCustomHeight = customHeight?.size === size ? customHeight.height : null;
+  const panelStyle: CSSProperties | undefined =
+    activeCustomHeight == null
+      ? undefined
+      : {
+          height: `${Math.round(activeCustomHeight)}px`,
+          minHeight: `${Math.round(activeCustomHeight)}px`,
+          maxHeight: `${Math.round(activeCustomHeight)}px`,
+        };
 
   return createPortal(
     <AnimatePresence>
@@ -66,7 +128,9 @@ export function AppBottomSheet({
             onClick={onClose}
           />
           <motion.div
+            ref={panelRef}
             className={["app-bottom-sheet-panel", sizeClass, panelClassName].filter(Boolean).join(" ")}
+            style={panelStyle}
             role="dialog"
             aria-modal="true"
             aria-label={title ?? ariaLabel}
@@ -75,7 +139,17 @@ export function AppBottomSheet({
             exit={{ y: "100%" }}
             transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="app-bottom-sheet-handle" aria-hidden />
+            <button
+              type="button"
+              className="app-bottom-sheet-handle-button"
+              aria-label="シートの高さを調整"
+              onPointerDown={startHandleDrag}
+              onPointerMove={moveHandleDrag}
+              onPointerUp={endHandleDrag}
+              onPointerCancel={endHandleDrag}
+            >
+              <span className="app-bottom-sheet-handle" aria-hidden />
+            </button>
             {title || headerTrailing ? (
               <div className="app-bottom-sheet-header">
                 {title ? <p className="app-bottom-sheet-title">{title}</p> : <span />}

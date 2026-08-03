@@ -21,6 +21,8 @@ export type EditorLayoutProps = {
   footerVariant?: "default" | "app";
   /** Increment to close the library sheet after placing a sticker (App editor). */
   closeLibraryNonce?: number;
+  /** Increment to open the settings sheet from external chrome (App editor). */
+  openSettingsNonce?: number;
 };
 
 type MobileSheet = "none" | "library" | "settings";
@@ -60,6 +62,7 @@ export function EditorLayout({
   onMobileSheetChange,
   footerVariant = "default",
   closeLibraryNonce = 0,
+  openSettingsNonce = 0,
 }: EditorLayoutProps) {
   const isAppFooter = footerVariant === "app";
   const mobileSheetTopMap = isAppFooter ? MOBILE_SHEET_TOP_MAP_APP : MOBILE_SHEET_TOP_MAP_WEB;
@@ -126,6 +129,12 @@ export function EditorLayout({
     const frame = window.requestAnimationFrame(() => applySheet("none"));
     return () => window.cancelAnimationFrame(frame);
   }, [applySheet, closeLibraryNonce]);
+
+  useEffect(() => {
+    if (!openSettingsNonce) return;
+    const frame = window.requestAnimationFrame(() => applySheet("settings"));
+    return () => window.cancelAnimationFrame(frame);
+  }, [applySheet, openSettingsNonce]);
 
   const sheetOpen = sheet !== "none";
 
@@ -412,24 +421,6 @@ export function EditorLayout({
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"
-            headerTrailing={
-              <div className="flex items-center gap-1" role="group" aria-label="シートの高さ">
-                {(["compact", "comfortable", "full"] as MobileSheetSize[]).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={
-                      "app-bottom-sheet-size-chip ui-pop-tap" +
-                      (mobileSheetSize === size ? " app-bottom-sheet-size-chip--active" : "")
-                    }
-                    aria-pressed={mobileSheetSize === size}
-                    onClick={() => setMobileSheetSize(size)}
-                  >
-                    {MOBILE_SHEET_LABEL[size]}
-                  </button>
-                ))}
-              </div>
-            }
           >
             {library}
           </AppBottomSheet>
@@ -439,24 +430,6 @@ export function EditorLayout({
             onClose={() => applySheet("none")}
             size={mobileSheetSize}
             panelClassName="app-bottom-sheet-panel--editor"
-            headerTrailing={
-              <div className="flex items-center gap-1" role="group" aria-label="シートの高さ">
-                {(["compact", "comfortable", "full"] as MobileSheetSize[]).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={
-                      "app-bottom-sheet-size-chip ui-pop-tap" +
-                      (mobileSheetSize === size ? " app-bottom-sheet-size-chip--active" : "")
-                    }
-                    aria-pressed={mobileSheetSize === size}
-                    onClick={() => setMobileSheetSize(size)}
-                  >
-                    {MOBILE_SHEET_LABEL[size]}
-                  </button>
-                ))}
-              </div>
-            }
           >
             {settings}
           </AppBottomSheet>

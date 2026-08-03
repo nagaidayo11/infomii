@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent, MouseEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
@@ -10,6 +10,7 @@ import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { GuestLanguageToggle } from "@/components/guest/GuestLanguageToggle";
 import { GuestShareButton } from "@/components/guest/GuestShareButton";
+import { ClientShellContext } from "@/components/app-shell/ClientShellProvider";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import {
@@ -79,7 +80,6 @@ export function GuestCardPageView({
   isEmbed = false,
   embedFit = "card",
   pageBackground = null,
-  unpublishedPreview = false,
   localeToggleHint = null,
   disableLocaleSwitch = false,
   showLocaleToggle = true,
@@ -94,12 +94,9 @@ export function GuestCardPageView({
   clientApp = false,
   contentInset = "default",
 }: GuestCardPageViewProps) {
-  const { isNativeUi } = useClientShell();
-  const [locale, setLocale] = useState<SupportedLocale>(() => {
-    if (localeLocked || typeof navigator === "undefined") return initialLocale;
-    const normalized = normalizeLocale(navigator.language);
-    return normalized ?? initialLocale;
-  });
+  const clientShell = useClientShell();
+  const { isNativeUi } = clientShell;
+  const [locale, setLocale] = useState<SupportedLocale>(initialLocale);
   const [hintVisible, setHintVisible] = useState(false);
   const [hintNonce, setHintNonce] = useState(0);
 
@@ -114,6 +111,16 @@ export function GuestCardPageView({
         : [],
     [guestShell, businessFeaturesEnabled, guestNavMaxVisible],
   );
+
+  useEffect(() => {
+    if (localeLocked || typeof navigator === "undefined") return;
+    const normalized = normalizeLocale(navigator.language);
+    if (!normalized) return;
+    const timer = window.setTimeout(() => {
+      setLocale((current) => (current === normalized ? current : normalized));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [localeLocked]);
 
   const triggerLocaleHint = () => {
     if (localeToggleHint?.trim()) {
@@ -216,7 +223,9 @@ export function GuestCardPageView({
           onSubmitCapture={stopInteractiveAction}
           aria-disabled={disableInteractions || undefined}
         >
-          <CardRenderer cards={cards} businessFeaturesEnabled={businessFeaturesEnabled} />
+          <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+            <CardRenderer cards={cards} businessFeaturesEnabled={businessFeaturesEnabled} />
+          </ClientShellContext.Provider>
         </div>
       </PublicPageShell>
     </LocaleProvider>

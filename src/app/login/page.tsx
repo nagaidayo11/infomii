@@ -23,7 +23,6 @@ import { FadeIn } from "@/components/motion";
 import { APP_BRAND_SUBLINE, APP_BRAND_TAGLINE } from "@/lib/app-branding";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
-import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 import {
   formatAppleAuthError,
   formatGoogleAuthError,
@@ -122,13 +121,6 @@ function LoginForm() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useNotifyNativeAppShellWhenReady(isAppShell && !loading && !user);
-
-  useEffect(() => {
-    if (loading || user) return;
-    if (shouldShowLaunchOnboarding(isAppShell)) {
-      router.replace(withAppClientQuery("/onboarding"));
-    }
-  }, [loading, user, isAppShell, router]);
 
   useEffect(() => {
     const stored = readPendingInviteCode();

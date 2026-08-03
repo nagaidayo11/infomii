@@ -16,7 +16,7 @@ import { join } from "node:path";
 const ROOT = process.cwd();
 const REVIEW_EMAIL = "review@infomii.com";
 const SUPPORT_EMAIL = "support@infomii.com";
-const REVIEW_SLUG = "app-store-review";
+const REVIEW_SLUG = "app-store-review-2026";
 const REVIEW_PAGE_TITLE = "App Store 審査デモ";
 
 function loadEnvLocal() {
@@ -48,11 +48,6 @@ function requireEnv(name) {
   return value;
 }
 
-function buildDefaultHotelName(email) {
-  const label = email.split("@")[0]?.trim();
-  return label ? `${label} Store` : "My Store";
-}
-
 async function findUserByEmail(admin, email) {
   let page = 1;
   const perPage = 200;
@@ -67,7 +62,7 @@ async function findUserByEmail(admin, email) {
   return null;
 }
 
-async function ensureHotel(admin, userId, email) {
+async function ensureHotel(admin, userId) {
   const { data: membership } = await admin
     .from("hotel_memberships")
     .select("hotel_id")
@@ -222,7 +217,7 @@ async function ensureConfirmedAuthUser(admin, email, displayName, password) {
     { onConflict: "user_id" },
   );
 
-  await ensureHotel(admin, user.id, email);
+  await ensureHotel(admin, user.id);
   return { user, created };
 }
 
@@ -246,7 +241,7 @@ async function main() {
 
   const reviewUser = await findUserByEmail(admin, REVIEW_EMAIL);
   if (!reviewUser) throw new Error("Review user missing after seed");
-  const hotelId = await ensureHotel(admin, reviewUser.id, REVIEW_EMAIL);
+  const hotelId = await ensureHotel(admin, reviewUser.id);
   await ensurePublishedDemoPage(admin, hotelId);
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.infomii.com").replace(

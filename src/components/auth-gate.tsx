@@ -6,7 +6,6 @@ import { useAuth } from "@/components/auth-provider";
 import { AppAuthBootScreen } from "@/components/app-shell/AppAuthBootScreen";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
-import { shouldShowLaunchOnboarding } from "@/lib/launch-onboarding";
 import {
   clearCachedAuthScopeUserId,
   hasCachedAuthScope,
@@ -16,7 +15,30 @@ import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
 const SCOPE_CHECK_TIMEOUT_MS = 7_000;
-const APP_BOOT_RECOVERY_MS = 9_000;
+const APP_BOOT_AUTO_RELOAD_MS = 7_000;
+const APP_BOOT_RECOVERY_MS = 14_000;
+const APP_BOOT_AUTO_RELOAD_COOLDOWN_MS = 60_000;
+
+function appBootAutoReloadKey(pathname: string | null): string {
+  return `infomii-app-boot-auto-reload:${pathname ?? "/dashboard"}`;
+}
+
+function autoReloadCurrentAppRoute(pathname: string | null): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const key = appBootAutoReloadKey(pathname);
+    const lastReloadedAt = Number(window.sessionStorage.getItem(key) ?? "0");
+    if (Number.isFinite(lastReloadedAt) && Date.now() - lastReloadedAt < APP_BOOT_AUTO_RELOAD_COOLDOWN_MS) {
+      return false;
+    }
+    window.sessionStorage.setItem(key, String(Date.now()));
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.location.replace(withAppClientQuery(currentPath || pathname || "/dashboard"));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -51,19 +73,22 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       setShowRecovery(false);
       return;
     }
+    const reloadTimer = window.setTimeout(() => {
+      if (autoReloadCurrentAppRoute(pathname)) return;
+      setShowRecovery(true);
+    }, APP_BOOT_AUTO_RELOAD_MS);
     const timer = window.setTimeout(() => setShowRecovery(true), APP_BOOT_RECOVERY_MS);
-    return () => window.clearTimeout(timer);
-  }, [bootWaiting, isAppShell]);
+    return () => {
+      window.clearTimeout(reloadTimer);
+      window.clearTimeout(timer);
+    };
+  }, [bootWaiting, isAppShell, pathname]);
 
   useEffect(() => {
     if (!enabled || loading || user) {
       return;
     }
     clearCachedAuthScopeUserId();
-    if (shouldShowLaunchOnboarding(isAppShell)) {
-      router.replace(withAppClientQuery("/onboarding"));
-      return;
-    }
     const nextPath = pathname ?? "/dashboard";
     const loginNext = isAppShell ? withAppClientQuery(nextPath) : nextPath;
     router.replace(`/login?next=${encodeURIComponent(loginNext)}`);

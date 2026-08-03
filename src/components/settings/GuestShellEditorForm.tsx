@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   createDefaultGuestShellConfig,
+  DEFAULT_GUEST_SHELL_PHONE,
   getGuestShellLabelJa,
   getGuestShellNavStyle,
   guestShellLabelNeedsTranslation,
@@ -35,11 +36,16 @@ const NAV_STYLE_OPTIONS: Array<{ value: GuestShellNavStyle; label: string; hint:
 function ensureDefaultTabs(config: GuestShellConfig): GuestShellConfig {
   const navStyle = getGuestShellNavStyle(config);
   const tabs = config.tabs.filter((tab) => tab.type !== "locale");
+  const defaultedTabs = tabs.map((tab) =>
+    tab.type === "phone" && !tab.phone?.trim()
+      ? { ...tab, phone: DEFAULT_GUEST_SHELL_PHONE }
+      : tab,
+  );
   const normalized: GuestShellConfig = {
     ...config,
     navStyle,
     enabled: navStyle !== "off",
-    tabs: tabs.length > 0 ? tabs : createDefaultGuestShellConfig().tabs,
+    tabs: defaultedTabs.length > 0 ? defaultedTabs : createDefaultGuestShellConfig().tabs,
   };
   if (normalized.tabs.length > 0) return normalized;
   return createDefaultGuestShellConfig();
@@ -322,7 +328,9 @@ export function GuestShellEditorForm({
                       }
                       className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800"
                     >
-                      <option value="">未設定</option>
+                      <option value="">
+                        {tab.type === "home" ? "現在のページ（ページトップ）" : "未設定"}
+                      </option>
                       {pages.map((page) => (
                         <option key={page.id} value={page.slug}>
                           {page.title || "(無題)"}

@@ -313,7 +313,7 @@ export function GeneratePageFromDescription({
         {isApp ? (
           <div className="flex items-center gap-2.5">
             <div className="app-ai-compose-orb" aria-hidden>
-              <IconSpark />
+              <img src="/app-icon-glossy.png" alt="" />
             </div>
             <div className="min-w-0">
               <p className="app-ai-compose-kicker">最短で下書き</p>
