@@ -17,6 +17,7 @@ import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { PhoneDeviceFrame, PHONE_SCREEN_WIDTH } from "@/components/ui/PhoneDeviceFrame";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
 import {
@@ -482,13 +483,29 @@ export default function TemplatesPage() {
                     プレビューを読み込み中…
                   </div>
                 ) : (
-                  <div className="template-preview-canvas h-[min(72vh,680px)] w-full max-w-[430px] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-                    <div className="template-preview-canvas__header">
-                      <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
-                        {previewTemplate.name}
-                      </h1>
-                    </div>
-                    <div className="template-preview-canvas__body template-preview-scroll">
+                  <div className="h-[min(72vh,680px)] w-full max-w-[390px]">
+                    <PhoneDeviceFrame
+                      width={PHONE_SCREEN_WIDTH}
+                      fillHeight
+                      verticalInset={0}
+                      className="h-full w-full"
+                      header={
+                        <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+                          {previewTemplate.name}
+                        </h1>
+                      }
+                      footer={
+                        MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
+                          <GuestBottomTabBar
+                            tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
+                            currentSlug="preview"
+                            locale="ja"
+                            clientApp={clientShell.isAppShell}
+                            previewMode
+                          />
+                        ) : null
+                      }
+                    >
                       <LocaleProvider value="ja">
                         <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
                           <div
@@ -501,16 +518,7 @@ export default function TemplatesPage() {
                           </div>
                         </ClientShellContext.Provider>
                       </LocaleProvider>
-                    </div>
-                    {MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
-                      <GuestBottomTabBar
-                        tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
-                        currentSlug="preview"
-                        locale="ja"
-                        clientApp={clientShell.isAppShell}
-                        previewMode
-                      />
-                    ) : null}
+                    </PhoneDeviceFrame>
                   </div>
                 )}
               </div>
