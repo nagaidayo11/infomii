@@ -356,7 +356,6 @@ export function GuestShellEditorForm({
                         value={tab.type}
                         onChange={(e) => {
                           const nextType = e.target.value as Exclude<GuestShellTabType, "locale">;
-                          if (nextType === "locale") return;
                           updateTab(tab.id, {
                             type: nextType,
                             icon: defaultIconForType(nextType),
