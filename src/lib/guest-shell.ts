@@ -22,7 +22,25 @@ export type GuestShellTabIcon =
   | "phone"
   | "page"
   | "locale"
-  | "wifi";
+  | "wifi"
+  | "map"
+  | "luggage";
+
+/** Icons users can pick in the guest-nav editor (excludes legacy `locale`). */
+export const GUEST_SHELL_TAB_ICON_CHOICES: Array<{
+  value: Exclude<GuestShellTabIcon, "locale">;
+  label: string;
+}> = [
+  { value: "home", label: "ホーム" },
+  { value: "phone", label: "電話" },
+  { value: "page", label: "FAQ" },
+  { value: "map", label: "地図" },
+  { value: "luggage", label: "荷物" },
+  { value: "wifi", label: "Wi-Fi" },
+  { value: "search", label: "検索" },
+  { value: "heart", label: "ハート" },
+  { value: "menu", label: "メニュー" },
+];
 
 /** Exclusive chrome: off | bottom tabs | hamburger menu. */
 export type GuestShellNavStyle = "off" | "tabs" | "hamburger";
@@ -104,16 +122,13 @@ function normalizeTabIcon(value: unknown): GuestShellTabIcon | null {
     value === "phone" ||
     value === "page" ||
     value === "locale" ||
-    value === "wifi"
+    value === "wifi" ||
+    value === "map" ||
+    value === "luggage"
   ) {
     return value;
   }
   return null;
-}
-
-/** Resolve which glyph to show for a tab (explicit icon, else type default). */
-export function resolveGuestShellTabIcon(tab: Pick<GuestShellTab, "type" | "icon">): GuestShellTabIcon {
-  return tab.icon ?? (tab.type === "locale" ? "locale" : tab.type);
 }
 
 function normalizeNavStyle(value: unknown, enabledLegacy: boolean): GuestShellNavStyle {
@@ -187,6 +202,102 @@ export function getGuestShellTabLabel(
   const text = getLocalizedContent(tab.label, locale);
   if (text) return text;
   return getLocalizedContent(DEFAULT_LABELS[tab.type], locale) || DEFAULT_LABELS[tab.type].ja || "";
+}
+
+/**
+ * Recommended page-link presets for the remaining guest-nav slots
+ * (beyond the default ホーム / フロント / FAQ).
+ * Web keeps the fuller wording; App chrome uses the shorter `appLabel`.
+ */
+export const GUEST_SHELL_PAGE_PRESETS = [
+  {
+    id: "access-map",
+    icon: "map" as const satisfies GuestShellTabIcon,
+    label: {
+      ja: "アクセス・地図",
+      en: "Access / Map",
+      zh: "交通・地图",
+      ko: "오시는 길",
+    },
+    appLabel: {
+      ja: "地図",
+      en: "Map",
+      zh: "地图",
+      ko: "지도",
+    },
+  },
+  {
+    id: "checkout-luggage",
+    icon: "luggage" as const satisfies GuestShellTabIcon,
+    label: {
+      ja: "チェックアウト・荷物預かり",
+      en: "Checkout / Luggage",
+      zh: "退房・行李寄存",
+      ko: "체크아웃·짐",
+    },
+    appLabel: {
+      ja: "荷物",
+      en: "Luggage",
+      zh: "行李",
+      ko: "짐",
+    },
+  },
+] as const;
+
+export type GuestShellPagePresetId = (typeof GUEST_SHELL_PAGE_PRESETS)[number]["id"];
+
+function guestShellLabelMatchesPreset(
+  text: string,
+  preset: (typeof GUEST_SHELL_PAGE_PRESETS)[number],
+): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  return (
+    trimmed === preset.label.ja ||
+    trimmed === preset.label.en ||
+    trimmed === preset.label.zh ||
+    trimmed === preset.label.ko ||
+    trimmed === preset.appLabel.ja ||
+    trimmed === preset.appLabel.en ||
+    trimmed === preset.appLabel.zh ||
+    trimmed === preset.appLabel.ko
+  );
+}
+
+/** Resolve which glyph to show for a tab (explicit icon, else preset / type default). */
+export function resolveGuestShellTabIcon(
+  tab: Pick<GuestShellTab, "type" | "icon" | "label">,
+): GuestShellTabIcon {
+  if (tab.icon) return tab.icon;
+  const ja = getLocalizedContent(tab.label, "ja");
+  const en = getLocalizedContent(tab.label, "en");
+  for (const preset of GUEST_SHELL_PAGE_PRESETS) {
+    if (guestShellLabelMatchesPreset(ja, preset) || guestShellLabelMatchesPreset(en, preset)) {
+      return preset.icon;
+    }
+  }
+  return tab.type === "locale" ? "locale" : tab.type;
+}
+
+/**
+ * Guest chrome label. On App, known long presets shorten to tab-friendly copy.
+ * Custom labels are never remapped (saved wording wins).
+ */
+export function getGuestShellTabLabelForDisplay(
+  tab: Pick<GuestShellTab, "label" | "type">,
+  locale: SupportedLocale | string,
+  options?: { clientApp?: boolean },
+): string {
+  const label = getGuestShellTabLabel(tab, locale);
+  if (!options?.clientApp) return label;
+  for (const preset of GUEST_SHELL_PAGE_PRESETS) {
+    if (!guestShellLabelMatchesPreset(label, preset)) continue;
+    if (locale === "en") return preset.appLabel.en;
+    if (locale === "zh") return preset.appLabel.zh;
+    if (locale === "ko") return preset.appLabel.ko;
+    return preset.appLabel.ja;
+  }
+  return label;
 }
 
 /** Japanese display value for editor inputs. */

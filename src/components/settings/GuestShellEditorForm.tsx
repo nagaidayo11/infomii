@@ -8,11 +8,14 @@ import {
   getGuestShellNavStyle,
   guestShellLabelNeedsTranslation,
   GUEST_SHELL_MIGRATION_SQL,
+  GUEST_SHELL_TAB_ICON_CHOICES,
+  resolveGuestShellTabIcon,
   withGuestShellNavStyle,
   writeGuestShellLabelJa,
   type GuestShellConfig,
   type GuestShellNavStyle,
   type GuestShellTab,
+  type GuestShellTabIcon,
   type GuestShellTabType,
 } from "@/lib/guest-shell";
 import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
@@ -20,6 +23,7 @@ import { getLocalizedContent, type LocalizedString } from "@/lib/localized-conte
 import { PAGE_GUEST_SHELL_MIGRATION_SQL } from "@/lib/page-guest-shell";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { GuestShellTabIconGlyph } from "@/components/guest/GuestShellTabIconGlyph";
 
 const TYPE_LABEL: Record<Exclude<GuestShellTabType, "locale">, string> = {
   home: "ホーム",
@@ -27,11 +31,18 @@ const TYPE_LABEL: Record<Exclude<GuestShellTabType, "locale">, string> = {
   page: "ページ",
 };
 
+/** Hard cap stored in guest_shell JSON (see parseGuestShellConfig). */
+const HARD_MAX_TABS = 5;
+
 const NAV_STYLE_OPTIONS: Array<{ value: GuestShellNavStyle; label: string; hint: string }> = [
   { value: "off", label: "なし", hint: "ナビを表示しません" },
   { value: "tabs", label: "下タブ", hint: "画面下に常時表示" },
   { value: "hamburger", label: "ハンバーガー", hint: "右上から必要な分だけ下に開く" },
 ];
+
+function defaultIconForType(type: Exclude<GuestShellTabType, "locale">): GuestShellTabIcon {
+  return type;
+}
 
 function ensureDefaultTabs(config: GuestShellConfig): GuestShellConfig {
   const navStyle = getGuestShellNavStyle(config);
@@ -116,7 +127,6 @@ export type GuestShellEditorFormProps = {
   isBusinessPlan?: boolean;
   /** Current plan for Free guest-nav link caps (defaults from isBusinessPlan). */
   planTier?: PlanLimitTier;
-  /** Show Business translation note in editor context only. */
   showTranslationHint?: boolean;
 };
 
@@ -135,6 +145,7 @@ export function GuestShellEditorForm({
   showTranslationHint = false,
 }: GuestShellEditorFormProps) {
   const [pages, setPages] = useState<PageRow[]>([]);
+  const [openedTabId, setOpenedTabId] = useState<string | null>(null);
   const resolvedPlan: PlanLimitTier =
     planTier ?? (isBusinessPlan ? "business" : "free");
   const maxEnabledTabs = resolveGuestNavLinkLimit(resolvedPlan);
@@ -167,6 +178,35 @@ export function GuestShellEditorForm({
     updateTab(tab.id, { label: writeGuestShellLabelJa(tab.label, value) });
   }
 
+  function addLink() {
+    if (editableTabs.length >= HARD_MAX_TABS) return;
+    const id = `page-${Date.now().toString(36)}`;
+    const nextTab: GuestShellTab = {
+      id,
+      type: "page",
+      label: { ja: "新規", en: "New", zh: "新", ko: "신규" },
+      enabled: enabledCount < maxEnabledTabs,
+      pageSlug: null,
+      phone: null,
+      icon: "page",
+    };
+    onChange({
+      ...config,
+      tabs: [...config.tabs.filter((tab) => tab.type !== "locale"), nextTab],
+    });
+    setOpenedTabId(id);
+  }
+
+  function removeTab(tabId: string) {
+    if (editableTabs.length <= 1) return;
+    onChange({
+      ...config,
+      tabs: config.tabs.filter((tab) => tab.id !== tabId && tab.type !== "locale"),
+    });
+    if (openedTabId === tabId) setOpenedTabId(null);
+  }
+
+  const canAddTab = editableTabs.length < HARD_MAX_TABS;
   const migrationSql =
     migrationScope === "page" ? PAGE_GUEST_SHELL_MIGRATION_SQL : GUEST_SHELL_MIGRATION_SQL;
   const migrationTable = migrationScope === "page" ? "pages" : "hotels";
@@ -248,30 +288,55 @@ export function GuestShellEditorForm({
       ) : null}
 
       <div className={"space-y-2 " + (navActive ? "" : "pointer-events-none opacity-50")}>
-        <p className="text-xs font-medium text-slate-600">
-          リンク（共通）
-          {navActive ? (
-            <span className="ml-2 font-normal text-slate-400">
-              表示中 {enabledCount}/{maxEnabledTabs}
-            </span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-medium text-slate-600">
+            リンク（共通）
+            {navActive ? (
+              <span className="ml-2 font-normal text-slate-400">
+                表示中 {enabledCount}/{maxEnabledTabs}
+                {" · "}
+                設定 {editableTabs.length}/{HARD_MAX_TABS}
+              </span>
+            ) : null}
+          </p>
+          {navActive && canAddTab ? (
+            <button
+              type="button"
+              onClick={addLink}
+              className="inline-flex min-h-[32px] items-center justify-center rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              + リンクを追加
+            </button>
           ) : null}
-        </p>
+        </div>
         {editableTabs.map((tab) => {
           const enabledHint = tab.enabled ? "表示中" : "非表示";
           const typeLabel = TYPE_LABEL[tab.type as Exclude<GuestShellTabType, "locale">] ?? tab.type;
+          const selectedIcon = resolveGuestShellTabIcon(tab);
           return (
             <details
               key={tab.id}
+              open={openedTabId === tab.id ? true : undefined}
+              onToggle={(event) => {
+                const el = event.currentTarget;
+                if (el.open) setOpenedTabId(tab.id);
+                else if (openedTabId === tab.id) setOpenedTabId(null);
+              }}
               className="app-guest-shell-tab group rounded-lg border border-slate-200 bg-white [&_summary::-webkit-details-marker]:hidden"
             >
               <summary className="app-guest-shell-tab-summary flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
-                <span className="min-w-0">
-                  <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    {typeLabel}
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-600">
+                    <GuestShellTabIconGlyph name={selectedIcon} className="h-4 w-4" />
                   </span>
-                  <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">
-                    {getGuestShellLabelJa(tab.label) || typeLabel}
-                    <span className="ml-2 text-xs font-normal text-slate-400">{enabledHint}</span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      {typeLabel}
+                    </span>
+                    <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">
+                      {getGuestShellLabelJa(tab.label) || typeLabel}
+                      <span className="ml-2 text-xs font-normal text-slate-400">{enabledHint}</span>
+                    </span>
                   </span>
                 </span>
                 <span
@@ -284,7 +349,64 @@ export function GuestShellEditorForm({
 
               <div className="space-y-2 border-t border-slate-100 px-3 pb-3 pt-2">
                 <div className="app-guest-shell-tab-header flex flex-wrap items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <label className="block text-xs text-slate-500">
+                      種類
+                      <select
+                        value={tab.type}
+                        onChange={(e) => {
+                          const nextType = e.target.value as Exclude<GuestShellTabType, "locale">;
+                          if (nextType === "locale") return;
+                          updateTab(tab.id, {
+                            type: nextType,
+                            icon: defaultIconForType(nextType),
+                            pageSlug: nextType === "phone" ? null : tab.pageSlug ?? null,
+                            phone:
+                              nextType === "phone"
+                                ? tab.phone?.trim() || DEFAULT_GUEST_SHELL_PHONE
+                                : null,
+                          });
+                        }}
+                        className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-800"
+                      >
+                        <option value="home">ホーム</option>
+                        <option value="phone">電話</option>
+                        <option value="page">ページ</option>
+                      </select>
+                    </label>
+
+                    <div className="block text-xs text-slate-500">
+                      <span className="block">アイコン</span>
+                      <div
+                        className="mt-1.5 grid grid-cols-5 gap-1.5 sm:grid-cols-9"
+                        role="listbox"
+                        aria-label="アイコン"
+                      >
+                        {GUEST_SHELL_TAB_ICON_CHOICES.map((choice) => {
+                          const selected = selectedIcon === choice.value;
+                          return (
+                            <button
+                              key={choice.value}
+                              type="button"
+                              role="option"
+                              aria-selected={selected}
+                              title={choice.label}
+                              aria-label={choice.label}
+                              onClick={() => updateTab(tab.id, { icon: choice.value })}
+                              className={
+                                "inline-flex h-9 w-full items-center justify-center rounded-md border transition " +
+                                (selected
+                                  ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                              }
+                            >
+                              <GuestShellTabIconGlyph name={choice.value} className="h-4 w-4" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <label className="block text-xs text-slate-500">
                       ラベル
                       <input
@@ -294,6 +416,7 @@ export function GuestShellEditorForm({
                         className="app-guest-shell-label-input mt-1 w-full min-w-[8rem] rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-900"
                         maxLength={20}
                         aria-label={`${typeLabel}のラベル`}
+                        placeholder="例: アクセス・地図"
                       />
                     </label>
                     {isBusinessPlan && typeof tab.label === "object" && tab.label ? (
@@ -352,10 +475,25 @@ export function GuestShellEditorForm({
                     />
                   </label>
                 ) : null}
+
+                {editableTabs.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeTab(tab.id)}
+                    className="inline-flex min-h-[32px] items-center justify-center rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                  >
+                    このリンクを削除
+                  </button>
+                ) : null}
               </div>
             </details>
           );
         })}
+        {navActive && !canAddTab ? (
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            リンクは最大{HARD_MAX_TABS}件までです。不要なリンクを削除すると追加できます。
+          </p>
+        ) : null}
       </div>
 
       <div className="app-guest-shell-actions flex flex-wrap items-center gap-2">

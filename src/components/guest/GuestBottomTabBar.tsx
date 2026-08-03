@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   buildGuestPagePath,
   getGuestShellTabLabel,
+  getGuestShellTabLabelForDisplay,
   resolveGuestShellTabIcon,
   toTelHref,
   type GuestShellTab,
@@ -64,6 +66,29 @@ function TabIcon({ name }: { name: GuestShellTabIcon }) {
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M3 5a2 2 0 012-2h2.3a1 1 0 01.96.73l1.1 3.7a1 1 0 01-.27 1.05L7.9 10.7a12.05 12.05 0 005.4 5.4l2.22-1.19a1 1 0 011.05-.27l3.7 1.1a1 1 0 01.73.96V19a2 2 0 01-2 2h-.5C10.16 21 3 13.84 3 5.5V5z"
+        />
+      </svg>
+    );
+  }
+  if (name === "map") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z"
+        />
+        <circle cx="12" cy="10" r="2.25" />
+      </svg>
+    );
+  }
+  if (name === "luggage") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 6V5a2 2 0 012-2h2a2 2 0 012 2v1m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2zm2 4v6m6-6v6"
         />
       </svg>
     );
@@ -174,7 +199,17 @@ export function GuestBottomTabBar({
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [phoneValue, setPhoneValue] = useState<string | null>(null);
   const [phoneTitle, setPhoneTitle] = useState("電話");
+  const [overlayHost, setOverlayHost] = useState<HTMLElement | null>(null);
+  const navRef = useRef<HTMLElement>(null);
   const titleId = useId();
+
+  useEffect(() => {
+    const host =
+      navRef.current?.closest<HTMLElement>("[data-phone-screen]") ??
+      navRef.current?.closest<HTMLElement>("[data-guest-page-shell]") ??
+      null;
+    setOverlayHost(host);
+  }, []);
 
   useEffect(() => {
     if (!phoneOpen) return;
@@ -190,8 +225,15 @@ export function GuestBottomTabBar({
   const activeTabClass = "text-[#2D7078] font-semibold";
   const inactiveTabClass = "text-slate-500 font-medium active:bg-slate-50";
   const disabledTabClass = "cursor-not-allowed text-slate-300";
+  const containOverlays = Boolean(overlayHost);
+  const overlayPositionClass = containOverlays ? "absolute" : "fixed";
 
   function openPhoneSheet(tab: GuestShellTab) {
+    const host =
+      navRef.current?.closest<HTMLElement>("[data-phone-screen]") ??
+      navRef.current?.closest<HTMLElement>("[data-guest-page-shell]") ??
+      null;
+    if (host) setOverlayHost(host);
     setPhoneTitle(getGuestShellTabLabel(tab, locale) || "電話");
     setPhoneValue(tab.phone?.trim() || null);
     setPhoneOpen(true);
@@ -224,9 +266,17 @@ export function GuestBottomTabBar({
   const telHref = phoneValue ? toTelHref(phoneValue) : null;
   const phoneSheetCopy = getPhoneSheetCopy(locale, phoneTitle);
 
+  function renderOverlay(node: ReactNode) {
+    if (containOverlays && overlayHost) {
+      return createPortal(node, overlayHost);
+    }
+    return node;
+  }
+
   return (
     <>
       <nav
+        ref={navRef}
         className="guest-bottom-tabs shrink-0 border-t border-slate-200/90 bg-white/95 backdrop-blur-sm"
         style={{ paddingBottom: "max(0.35rem, env(safe-area-inset-bottom, 0px))" }}
         aria-label="館内ナビ"
@@ -255,55 +305,70 @@ export function GuestBottomTabBar({
                 aria-current={active ? "page" : undefined}
               >
                 <TabIcon name={resolveGuestShellTabIcon(tab)} />
-                <span className="max-w-full truncate">{getGuestShellTabLabel(tab, locale)}</span>
+                <span className="max-w-full truncate">
+                  {getGuestShellTabLabelForDisplay(tab, locale, { clientApp })}
+                </span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      {phoneOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/40 p-3 sm:items-center" role="presentation">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            aria-label={phoneSheetCopy.close}
-            onClick={() => setPhoneOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`${titleId}-phone`}
-            className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ui-pop-in"
-          >
-            <h2 id={`${titleId}-phone`} className="text-base font-semibold text-slate-900">
-              {phoneSheetCopy.title}
-            </h2>
-            {phoneValue && telHref ? (
-              <>
-                <p className="mt-2 text-sm text-slate-600">{phoneSheetCopy.canCall}</p>
-                <p className="mt-1 text-lg font-semibold tracking-wide text-slate-900">{phoneValue}</p>
-                <a
-                  href={telHref}
-                  className="ui-pop-tap mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-[#2D7078] px-4 text-sm font-semibold !text-white"
-                  style={{ color: "#ffffff" }}
-                >
-                  {phoneSheetCopy.call}
-                </a>
-              </>
-            ) : (
-              <p className="mt-2 text-sm text-slate-500">{phoneSheetCopy.missing}</p>
-            )}
-            <button
-              type="button"
-              onClick={() => setPhoneOpen(false)}
-              className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+      {phoneOpen
+        ? renderOverlay(
+            <div
+              className={`${overlayPositionClass} inset-0 z-[100] flex items-end justify-center bg-slate-900/40`}
+              role="presentation"
             >
-              {phoneSheetCopy.close}
-            </button>
-          </div>
-        </div>
-      ) : null}
+              <button
+                type="button"
+                className="absolute inset-0 cursor-default"
+                aria-label={phoneSheetCopy.close}
+                onClick={() => setPhoneOpen(false)}
+              />
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={`${titleId}-phone`}
+                className={
+                  "relative z-[1] w-full rounded-t-2xl border border-b-0 border-slate-200 bg-white p-4 shadow-[0_-8px_28px_rgba(15,23,42,0.14)] ui-pop-in " +
+                  (containOverlays ? "" : "max-w-[420px]")
+                }
+                style={{
+                  paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+                }}
+              >
+                <h2 id={`${titleId}-phone`} className="text-base font-semibold text-slate-900">
+                  {phoneSheetCopy.title}
+                </h2>
+                {phoneValue && telHref ? (
+                  <>
+                    <p className="mt-2 text-sm text-slate-600">{phoneSheetCopy.canCall}</p>
+                    <p className="mt-1 break-all text-lg font-semibold tracking-wide text-slate-900">
+                      {phoneValue}
+                    </p>
+                    <a
+                      href={telHref}
+                      className="ui-pop-tap mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-[#2D7078] px-4 text-sm font-semibold !text-white"
+                      style={{ color: "#ffffff" }}
+                    >
+                      {phoneSheetCopy.call}
+                    </a>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-500">{phoneSheetCopy.missing}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPhoneOpen(false)}
+                  className="mt-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  {phoneSheetCopy.close}
+                </button>
+              </div>
+            </div>,
+          )
+        : null}
     </>
   );
 }

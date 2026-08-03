@@ -5,8 +5,11 @@ import { createPortal } from "react-dom";
 import {
   buildGuestPagePath,
   getGuestShellTabLabel,
+  getGuestShellTabLabelForDisplay,
+  resolveGuestShellTabIcon,
   toTelHref,
   type GuestShellTab,
+  type GuestShellTabIcon,
 } from "@/lib/guest-shell";
 import { openGuestNavigationHref } from "@/lib/guest-hard-navigation";
 import type { SupportedLocale } from "@/lib/localized-content";
@@ -26,16 +29,16 @@ type GuestHamburgerMenuProps = {
   contained?: boolean;
 };
 
-function MenuIcon({ type }: { type: GuestShellTab["type"] }) {
+function MenuIcon({ name }: { name: GuestShellTabIcon }) {
   const className = "h-5 w-5 shrink-0";
-  if (type === "home") {
+  if (name === "home") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z" />
       </svg>
     );
   }
-  if (type === "phone") {
+  if (name === "phone") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path
@@ -46,7 +49,30 @@ function MenuIcon({ type }: { type: GuestShellTab["type"] }) {
       </svg>
     );
   }
-  if (type === "page") {
+  if (name === "map") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11z"
+        />
+        <circle cx="12" cy="10" r="2.25" />
+      </svg>
+    );
+  }
+  if (name === "luggage") {
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9 6V5a2 2 0 012-2h2a2 2 0 012 2v1m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2zm2 4v6m6-6v6"
+        />
+      </svg>
+    );
+  }
+  if (name === "page") {
     return (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} aria-hidden>
         <path
@@ -377,8 +403,10 @@ export function GuestHamburgerMenu({
                             style={active ? { color: "#ffffff" } : undefined}
                             aria-current={active ? "page" : undefined}
                           >
-                            <MenuIcon type={tab.type} />
-                            <span className="min-w-0 flex-1 truncate">{getGuestShellTabLabel(tab, locale)}</span>
+                            <MenuIcon name={resolveGuestShellTabIcon(tab)} />
+                            <span className="min-w-0 flex-1 truncate">
+                              {getGuestShellTabLabelForDisplay(tab, locale, { clientApp })}
+                            </span>
                           </button>
                         </li>
                       );
@@ -393,7 +421,7 @@ export function GuestHamburgerMenu({
       {phoneOpen
         ? renderOverlay(
             <div
-              className={`${overlayPositionClass} inset-0 z-[80] flex items-end justify-center bg-slate-900/40 p-3`}
+              className={`${overlayPositionClass} inset-0 z-[100] flex items-end justify-center bg-slate-900/40`}
               role="presentation"
             >
               <button
@@ -406,7 +434,13 @@ export function GuestHamburgerMenu({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={`${titleId}-phone`}
-                className="relative z-[1] w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl ui-pop-in"
+                className={
+                  "relative z-[1] w-full rounded-t-2xl border border-b-0 border-slate-200 bg-white p-4 shadow-[0_-8px_28px_rgba(15,23,42,0.14)] ui-pop-in " +
+                  (containOverlays ? "" : "max-w-[420px]")
+                }
+                style={{
+                  paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+                }}
               >
                 <h2 id={`${titleId}-phone`} className="text-base font-semibold text-slate-900">
                   {phoneSheetCopy.title}
@@ -414,7 +448,9 @@ export function GuestHamburgerMenu({
                 {phoneValue && telHref ? (
                   <>
                     <p className="mt-2 text-sm text-slate-600">{phoneSheetCopy.canCall}</p>
-                    <p className="mt-1 text-lg font-semibold tracking-wide text-slate-900">{phoneValue}</p>
+                    <p className="mt-1 break-all text-lg font-semibold tracking-wide text-slate-900">
+                      {phoneValue}
+                    </p>
                     <a
                       href={telHref}
                       className="ui-pop-tap mt-4 flex min-h-[48px] items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold !text-white"
