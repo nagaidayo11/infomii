@@ -38,6 +38,17 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Store builds still cold-start at /onboarding?client=app after that route was removed.
+      {
+        source: "/onboarding",
+        destination: "/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/onboarding/:path*",
+        destination: "/dashboard",
+        permanent: true,
+      },
       // Personal LP removed; send bookmarks and external links to hotel LP.
       {
         source: "/lp/saas",

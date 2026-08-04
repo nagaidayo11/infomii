@@ -18,7 +18,6 @@ function buildAasa(teamId: string) {
             "/settings*",
             "/editor/*",
             "/login*",
-            "/onboarding*",
             "NOT /v/*",
             "NOT /p/*",
             "NOT /qr/*",
