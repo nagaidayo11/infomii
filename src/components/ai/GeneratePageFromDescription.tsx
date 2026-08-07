@@ -401,7 +401,7 @@ export function GeneratePageFromDescription({
                 : "app-button-native rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium !text-white transition hover:bg-slate-800 disabled:opacity-60"
             }
           >
-            <span>{loading ? "つくってる…" : isApp ? "つくる" : "AIでページ作成"}</span>
+            <span>{loading ? "ページ生成中…" : isApp ? "つくる" : "AIでページ作成"}</span>
           </button>
         </div>
       </form>
@@ -409,7 +409,7 @@ export function GeneratePageFromDescription({
         loading &&
         createPortal(
           <FullScreenLoadingOverlay
-            title="つくってる…"
+            title="ページ生成中…"
             subtitle="AIがカードを並べています"
             classNameZ="z-[90]"
           />,
