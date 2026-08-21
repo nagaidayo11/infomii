@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
+import { GuestPageBackButton } from "@/components/guest/GuestPageBackButton";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, SEO_APP_URL } from "@/lib/seo/structured-data";
 import type { EditorCard, CardType } from "@/components/editor/types";
 import { getVisitorLocaleFromHeader, normalizeLocale, type SupportedLocale } from "@/lib/localized-content";
 import { buildGuestPreviewBackLink } from "@/lib/app-href";
+import { guestParentSlugFromReferer } from "@/lib/guest-page-link";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
 import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getSupabaseAdminServerClient } from "@/lib/server/supabase-server";
@@ -124,11 +126,13 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
   const { slug } = await params;
   const query = await searchParams;
   const isPreviewRequest = query.preview === "1";
-  const fromSlug = typeof query.from === "string" && query.from.trim() ? query.from.trim() : "";
+  const fromQuery = typeof query.from === "string" && query.from.trim() ? query.from.trim() : "";
   const returnEditorPageId =
     typeof query.returnEditor === "string" && query.returnEditor.trim() ? query.returnEditor.trim() : "";
   const isAppClient = query.client === "app";
   const requestHeaders = await headers();
+  const fromReferer = guestParentSlugFromReferer(requestHeaders.get("referer"), slug);
+  const fromSlug = fromQuery || fromReferer || "";
   const acceptLanguage = requestHeaders.get("accept-language");
   const forcedFromUrl =
     typeof query.lang === "string" && query.lang.trim() !== ""
@@ -249,14 +253,19 @@ export default async function PublicCardPageBySlug({ params, searchParams }: Pag
       preview={isPreviewRequest}
       clientApp={isAppClient}
       backButton={
-        backLink ? (
-          <a
-            href={backLink.href}
-            className="guest-page-link inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
-          >
-            {backLink.label}
-          </a>
-        ) : null
+        <GuestPageBackButton
+          currentSlug={page.slug}
+          serverBack={
+            backLink ? (
+              <a
+                href={backLink.href}
+                className="guest-page-link inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
+              >
+                {backLink.label}
+              </a>
+            ) : null
+          }
+        />
       }
       />
     </>

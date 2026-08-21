@@ -76,7 +76,7 @@ function PageHeader({
         className="mx-auto flex w-full flex-col gap-2.5"
         style={{ maxWidth: GUEST_PAGE_MAX_CONTENT_WIDTH_PX }}
       >
-        {backButton ? <div className="min-h-[44px]">{backButton}</div> : null}
+        {backButton ? <div className="min-h-[44px] empty:hidden">{backButton}</div> : null}
         {(title.trim() || headerActions) && (
           <div className={"flex justify-between gap-2 " + (brandLogoSrc || compactTitle ? "items-center" : "items-start")}>
             {title.trim() ? (

@@ -10,6 +10,7 @@ import { PublicFooterBackButton } from "@/components/public-footer-back-button";
 import { PublicPageShell } from "@/components/public-page/PublicPageShell";
 import { PublicPerformanceTracker } from "@/components/public-performance-tracker";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
+import { GuestPageBackButton } from "@/components/guest/GuestPageBackButton";
 import type { EditorCard } from "@/components/editor/types";
 import { renderInformationIconVisual } from "@/components/information/InformationIconVisual";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/supabase-config";
@@ -18,6 +19,7 @@ import { resolveGuestNavLinkLimit } from "@/lib/plan-limits";
 import { getVisitorLocaleFromHeader } from "@/lib/localized-content";
 import { parseGuestShellConfig } from "@/lib/guest-shell";
 import { fetchResolvedGuestShellForPage } from "@/lib/server/guest-shell-resolve";
+import { guestParentSlugFromReferer } from "@/lib/guest-page-link";
 import { rowToCard } from "@/lib/storage";
 import { applyLiveOpsByKeyToCards } from "@/lib/editor/live-ops/status";
 import { isLiveOpsCardType } from "@/lib/editor/live-ops/registry";
@@ -96,7 +98,15 @@ export async function generateMetadata({ params, searchParams }: PublicPageProps
 
 type PublicPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ src?: string; embed?: string }>;
+  searchParams: Promise<{
+    src?: string;
+    embed?: string;
+    from?: string;
+    lang?: string;
+    preview?: string;
+    client?: string;
+    returnEditor?: string;
+  }>;
 };
 
 function hasLocalizedPayload(value: unknown): boolean {
@@ -621,8 +631,14 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   if (!isEmbed) {
     const meta = await loadLegacyPageMeta(slug);
     if (meta?.hasCardPage) {
-      const qs = query.src === "qr" ? "?src=qr" : "";
-      redirect(`/v/${encodeURIComponent(slug)}${qs}`);
+      const params = new URLSearchParams();
+      if (query.src === "qr") params.set("src", "qr");
+      for (const key of ["from", "lang", "preview", "client", "returnEditor"] as const) {
+        const value = query[key];
+        if (typeof value === "string" && value.trim()) params.set(key, value.trim());
+      }
+      const qs = params.toString();
+      redirect(`/v/${encodeURIComponent(slug)}${qs ? `?${qs}` : ""}`);
     }
   }
 
@@ -693,22 +709,9 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
   const source = query.src === "qr" ? "qr" : "direct";
   const requestHeaders = await headers();
   const initialLocale = getVisitorLocaleFromHeader(requestHeaders.get("accept-language"));
-  const referer = requestHeaders.get("referer");
-  const parentSlug = (() => {
-    if (!referer) {
-      return null;
-    }
-    try {
-      const refererPath = new URL(referer).pathname;
-      if (!refererPath.startsWith("/p/") || refererPath === `/p/${slug}`) {
-        return null;
-      }
-      const raw = refererPath.replace("/p/", "").trim();
-      return raw || null;
-    } catch {
-      return null;
-    }
-  })();
+  const parentSlug =
+    (typeof query.from === "string" && query.from.trim() ? query.from.trim() : null) ||
+    guestParentSlugFromReferer(requestHeaders.get("referer"), slug);
   const isChildPage = Boolean(parentSlug);
   let parentPageTitle: string | null = null;
   if (parentSlug) {
@@ -1395,12 +1398,17 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           guestShell={guestShell}
           currentSlug={slug}
           backButton={
-            isChildPage ? (
-              <PublicFooterBackButton
-                fallbackHref="/"
-                label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
-              />
-            ) : undefined
+            <GuestPageBackButton
+              currentSlug={slug}
+              serverBack={
+                isChildPage ? (
+                  <PublicFooterBackButton
+                    fallbackHref={parentSlug ? `/v/${encodeURIComponent(parentSlug)}` : "/"}
+                    label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
+                  />
+                ) : null
+              }
+            />
           }
         />
       ) : (
@@ -1410,7 +1418,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
             {isChildPage ? (
               <div className="mb-4">
                 <PublicFooterBackButton
-                  fallbackHref="/"
+                  fallbackHref={parentSlug ? `/v/${encodeURIComponent(parentSlug)}` : "/"}
                   label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
                 />
               </div>
@@ -1425,7 +1433,7 @@ export default async function PublicInformationPage({ params, searchParams }: Pu
           backButton={
             isChildPage ? (
               <PublicFooterBackButton
-                fallbackHref="/"
+                fallbackHref={parentSlug ? `/v/${encodeURIComponent(parentSlug)}` : "/"}
                 label={parentPageTitle ? `${parentPageTitle}へ戻る` : "親ページへ戻る"}
               />
             ) : undefined

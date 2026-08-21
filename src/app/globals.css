@@ -721,9 +721,11 @@ body.lux-shell:has(.lp-page)::before {
   background: rgba(148, 163, 184, 0.55);
 }
 
-/* Guest preview (incl. app WebView): animated transforms on card wrappers break iOS link taps. */
+/* Guest preview (incl. app WebView): animated transforms on card wrappers break iOS link taps.
+   Also skip header/footer enter fades — they make published navigations feel heavier. */
 [data-guest-page-shell] .ui-pop-appear,
-[data-guest-page-shell] .app-stagger > * {
+[data-guest-page-shell] .app-stagger > *,
+[data-guest-page-shell] .app-page-enter {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;

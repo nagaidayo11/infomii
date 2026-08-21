@@ -13,7 +13,34 @@ const HTTP_LINK_SCHEME = /^https?:/i;
 
 function currentParentSlug(pathname: string | null | undefined): string {
   if (!pathname || !/^\/(?:v|p)\//.test(pathname)) return "";
-  return pathname.replace(/^\/(?:v|p)\//, "").split("/")[0] ?? "";
+  try {
+    return decodeURIComponent(pathname.replace(/^\/(?:v|p)\//, "").split("/")[0] ?? "");
+  } catch {
+    return pathname.replace(/^\/(?:v|p)\//, "").split("/")[0] ?? "";
+  }
+}
+
+/** Parent guest slug from an absolute Referer URL (or null). */
+export function guestParentSlugFromReferer(
+  referer: string | null | undefined,
+  currentSlug: string,
+): string | null {
+  if (!referer?.trim()) return null;
+  try {
+    const url = new URL(referer);
+    const match = url.pathname.match(INTERNAL_GUEST_PATH);
+    if (!match?.[1]) return null;
+    let slug = match[1];
+    try {
+      slug = decodeURIComponent(slug);
+    } catch {
+      /* keep raw */
+    }
+    if (!slug || slug === currentSlug) return null;
+    return slug;
+  } catch {
+    return null;
+  }
 }
 
 function isInfomiiGuestHost(hostname: string): boolean {
@@ -60,8 +87,11 @@ export function resolveGuestPageHref(href: string, ctx: GuestLinkContext = {}): 
   const params = new URLSearchParams(existingParams);
 
   const parentSlug = currentParentSlug(ctx.pathname ?? null);
-  if (parentSlug && parentSlug !== slug && !params.has("from")) {
+  const existingFrom = params.get("from")?.trim() ?? "";
+  if (parentSlug && parentSlug !== slug && !existingFrom) {
     params.set("from", parentSlug);
+  } else if (!existingFrom && params.has("from")) {
+    params.delete("from");
   }
 
   const lang = ctx.searchParams?.get("lang");
