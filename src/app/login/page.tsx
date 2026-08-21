@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth-provider";
 import {
   ensureUserHotelScope,
   redeemHotelInvite,
+  trackOnboardingAuthEvent,
 } from "@/lib/storage";
 import { formatHotelInviteRedeemError } from "@/lib/invite-redeem-errors";
 import {
@@ -34,6 +35,10 @@ import {
 } from "@/lib/auth-redirect";
 import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
+import {
+  trackLoginSuccess,
+  trackSignupComplete,
+} from "@/lib/analytics/ga4";
 
 function isEmailCollisionMessage(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -317,6 +322,8 @@ function LoginForm() {
         setSubmitting(false);
         return;
       }
+      trackSignupComplete("email");
+      void trackOnboardingAuthEvent("signup_completed").catch(() => undefined);
       setMessage(
         "登録しました。確認メールをご確認の上、メールアドレスでログインしてください。",
       );
@@ -337,6 +344,8 @@ function LoginForm() {
         setSubmitting(false);
         return;
       }
+      trackLoginSuccess("email");
+      void trackOnboardingAuthEvent("login_success").catch(() => undefined);
     }
     setSubmitting(false);
   }

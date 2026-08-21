@@ -21,10 +21,11 @@ const metadataBase = (() => {
 export const metadata: Metadata = {
   metadataBase,
   title: {
-    default: "Infomii | ホテル案内ページ作成SaaS",
+    default: "Infomii｜ホテル館内案内ページ作成SaaS",
     template: "%s | Infomii",
   },
-  description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
+  description:
+    "ホテル向けの館内案内をスマホページとQRでペーパーレス化。最短数分で作成・公開し、現場で即時更新できます。",
   // Do not set a sitewide canonical/OG url here — child routes without an override
   // would inherit /lp/business and mis-canonicalize legal/login/app pages.
   manifest: "/manifest.webmanifest",
@@ -32,21 +33,23 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Infomii",
     locale: "ja_JP",
-    title: "Infomii | ホテル案内ページ作成SaaS",
-    description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
+    title: "Infomii｜ホテル館内案内ページ作成SaaS",
+    description:
+      "ホテル向けの館内案内をスマホページとQRでペーパーレス化。最短数分で作成・公開し、現場で即時更新できます。",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Infomii | ホテル案内ページ作成SaaS",
+        alt: "Infomii｜ホテル館内案内ページ作成SaaS",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Infomii | ホテル案内ページ作成SaaS",
-    description: "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
+    title: "Infomii｜ホテル館内案内ページ作成SaaS",
+    description:
+      "ホテル向けの館内案内をスマホページとQRでペーパーレス化。最短数分で作成・公開し、現場で即時更新できます。",
     images: ["/twitter-image"],
   },
   // Search Console 等の所有権確認。トークンは env で差し替え（未設定なら出力しない）。

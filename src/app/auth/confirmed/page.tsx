@@ -2,17 +2,22 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { AppShellLink } from "@/components/app-shell/AppShellLink";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { FadeIn } from "@/components/motion";
 import { withAppClientQuery } from "@/lib/app-href";
+import { trackGa4Event } from "@/lib/analytics/ga4";
 
 function AuthConfirmedInner() {
   const { isAppShell } = useClientShell();
   const searchParams = useSearchParams();
   const isAppClient = isAppShell || searchParams.get("client") === "app";
   const loginHref = isAppClient ? withAppClientQuery("/login?confirmed=1") : "/login?confirmed=1";
+
+  useEffect(() => {
+    trackGa4Event("signup_verified", { method: "email" });
+  }, []);
 
   return (
     <div

@@ -17,7 +17,7 @@ export function organizationJsonLd(): Record<string, unknown> {
     name: "Infomii",
     url: SEO_APP_URL,
     logo: `${SEO_APP_URL}/icon-512.png`,
-    description: "ホテル・宿泊施設向けの案内ページをスマホ・QRで公開できるSaaS。",
+    description: "ホテル・宿泊施設向けの館内案内をスマホ・QRでペーパーレス化できるSaaS。",
   };
 }
 
@@ -46,7 +46,7 @@ export function softwareApplicationJsonLd(): Record<string, unknown> {
     url: SEO_APP_URL,
     publisher: { "@id": ORG_ID },
     description:
-      "ホテル向け案内ページを最短3分で作成・公開。編集画面から即時更新でき、QR運用にも対応。",
+      "ホテルの館内案内をスマホページとQRで作成・公開。現場で即時更新でき、ペーパーレス運用に対応。",
     offers: [
       {
         "@type": "Offer",

@@ -5,7 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatAuthCallbackError } from "@/lib/auth-oauth-errors";
 import { buildAuthConfirmedUrl, buildLoginConfirmedUrl } from "@/lib/auth-redirect";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
-import { ensureUserHotelScope } from "@/lib/storage";
+import { ensureUserHotelScope, trackOnboardingAuthEvent } from "@/lib/storage";
+import {
+  isLikelyNewAuthUser,
+  trackLoginSuccess,
+  trackSignupComplete,
+} from "@/lib/analytics/ga4";
 
 function sanitizeNextPath(raw: string | null): string | null {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
@@ -157,6 +162,22 @@ function AuthCallbackInner() {
             await ensureUserHotelScope();
           } catch {
             /* AuthGate / login will retry; still send user toward their destination. */
+          }
+        }
+
+        const oauthProvider =
+          data.session.user.app_metadata?.provider === "apple"
+            ? "apple"
+            : data.session.user.app_metadata?.provider === "google"
+              ? "google"
+              : null;
+        if (oauthProvider) {
+          if (isLikelyNewAuthUser(data.session.user.created_at)) {
+            trackSignupComplete(oauthProvider);
+            void trackOnboardingAuthEvent("signup_completed").catch(() => undefined);
+          } else {
+            trackLoginSuccess(oauthProvider);
+            void trackOnboardingAuthEvent("login_success").catch(() => undefined);
           }
         }
 
