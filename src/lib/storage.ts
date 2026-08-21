@@ -32,6 +32,7 @@ import {
   parseGuestShellConfig,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
+import { resolveTemplateGuestShellConfig } from "@/lib/template-guest-shell";
 import {
   buildPageGuestShellEditorState,
   getConnectionRootPageIdForPage,
@@ -4726,7 +4727,7 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
 
   const { data: template, error: tError } = await supabase
     .from("templates")
-    .select("id,name,cards")
+    .select("id,name,slug,cards")
     .eq("id", templateId)
     .single();
   if (tError || !template) {
@@ -4739,19 +4740,47 @@ export async function createPageFromTemplate(templateId: string): Promise<{ page
   const title = (template.name as string) ?? "無題のページ";
   const baseSlug = createSlug(title);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
+  const templateSlug =
+    typeof (template as { slug?: unknown }).slug === "string"
+      ? ((template as { slug: string }).slug).trim()
+      : "";
 
-  const { data: newPage, error: pError } = await supabase
-    .from("pages")
-    .insert({ hotel_id: hotelId, title, slug })
-    .select("id")
-    .single();
-  if (pError || !newPage) {
-    throw toError(
-      pError ?? new Error("Insert failed"),
-      "ページ作成に失敗しました。ページ上限・重複・権限設定をご確認ください。"
-    );
+  const guestShell = resolveTemplateGuestShellConfig(templateSlug || null);
+
+  let pageId: string;
+  {
+    const { data: newPage, error: pError } = await supabase
+      .from("pages")
+      .insert({ hotel_id: hotelId, title, slug, guest_shell: guestShell })
+      .select("id")
+      .single();
+    if (newPage?.id) {
+      pageId = newPage.id as string;
+    } else {
+      const missingGuestShell =
+        typeof pError?.message === "string" &&
+        pError.message.includes("guest_shell") &&
+        (pError.message.includes("schema cache") || pError.message.includes("column"));
+      if (!missingGuestShell) {
+        throw toError(
+          pError ?? new Error("Insert failed"),
+          "ページ作成に失敗しました。ページ上限・重複・権限設定をご確認ください。"
+        );
+      }
+      const { data: fallbackPage, error: fallbackError } = await supabase
+        .from("pages")
+        .insert({ hotel_id: hotelId, title, slug })
+        .select("id")
+        .single();
+      if (fallbackError || !fallbackPage) {
+        throw toError(
+          fallbackError ?? new Error("Insert failed"),
+          "ページ作成に失敗しました。ページ上限・重複・権限設定をご確認ください。"
+        );
+      }
+      pageId = fallbackPage.id as string;
+    }
   }
-  const pageId = newPage.id as string;
 
   const rawCards =
     (template.cards as Array<{ type: string; content?: Record<string, unknown>; order?: number }>) ?? [];

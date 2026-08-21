@@ -17,6 +17,7 @@ import type { CardType, EditorCard } from "@/components/editor/types";
 import { CardRenderer } from "@/components/cards/CardRenderer";
 import { LocaleProvider } from "@/components/locale-context";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
+import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { PhoneDeviceFrame, PHONE_SCREEN_WIDTH } from "@/components/ui/PhoneDeviceFrame";
 import { PRESET_HERO_SAMPLE_IMAGE } from "@/components/editor/types";
 import { MARKETPLACE_SEED_VERSION, stripDeprecatedIconCards } from "@/lib/template-marketplace";
@@ -35,9 +36,14 @@ import {
   type TemplateMarketplaceAudience,
 } from "@/lib/template-marketplace-meta";
 import {
-  createDefaultGuestShellConfig,
+  getGuestShellNavStyle,
   resolveVisibleGuestShellTabs,
 } from "@/lib/guest-shell";
+import {
+  getTemplateGuestNavHint,
+  getTemplateGuestNavLabel,
+  resolveTemplateGuestShellConfig,
+} from "@/lib/template-guest-shell";
 import { GUEST_CARD_STACK_CLASS } from "@/lib/editor/card-width-mode";
 import { useRouteProgressLoading } from "@/components/app/RouteProgressContext";
 import { AppSection } from "@/components/app-shell/primitives/AppSection";
@@ -48,14 +54,6 @@ import { AppSegmentedControl } from "@/components/app-shell/primitives/AppSegmen
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { ClientShellContext } from "@/components/app-shell/ClientShellProvider";
 
-/** Marketplace preview chrome — same bottom tabs as editor / guest preview. */
-const MARKETPLACE_PREVIEW_GUEST_SHELL = {
-  ...createDefaultGuestShellConfig(),
-  enabled: true,
-  navStyle: "tabs" as const,
-};
-
-const MARKETPLACE_PREVIEW_SHELL_TABS = resolveVisibleGuestShellTabs(MARKETPLACE_PREVIEW_GUEST_SHELL);
 const TEMPLATE_CATEGORIES = [
   { id: "all", label: TEMPLATE_CATEGORY_LABELS.all },
   ...HOTEL_MARKETPLACE_CATEGORIES.map((id) => ({ id, label: TEMPLATE_CATEGORY_LABELS[id] })),
@@ -68,7 +66,68 @@ const TEMPLATE_AUDIENCE_OPTIONS: { id: TemplateMarketplaceAudience; label: strin
   { id: "all", label: TEMPLATE_AUDIENCE_LABELS.all },
 ];
 
-const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
+const CARD_TYPE_PREVIEW_LABELS: Record<string, string> = {
+  hero: "トップ写真・タイトル",
+  hero_slider: "スライダー写真",
+  welcome: "歓迎メッセージ",
+  wifi: "Wi-Fi案内",
+  breakfast: "朝食案内",
+  checkout: "チェックアウト",
+  nearby: "周辺案内",
+  faq: "よくある質問",
+  map: "地図",
+  restaurant: "レストラン",
+  laundry: "ランドリー",
+  spa: "温泉・スパ",
+  pageLinks: "ページリンク",
+  schedule: "スケジュール",
+  menu: "メニュー",
+  gallery: "ギャラリー",
+  accordion_info: "開閉式の案内",
+  tabs_info: "タブ切り替え案内",
+  contact_hub: "連絡先まとめ",
+  steps: "手順・流れ",
+  checklist: "チェックリスト",
+  dayTimeline: "1日の流れ",
+  storyBand: "ストーリー帯",
+  notice: "お知らせ",
+  highlight: "注目ポイント",
+  info: "情報一覧",
+  heading_body: "見出し＋本文",
+  iconRow: "アイコン導線",
+  parking: "駐車場",
+  emergency: "緊急連絡",
+  open_status: "営業状況",
+  social_links: "SNSリンク",
+  drink_menu: "ドリンクメニュー",
+  menu_categories: "メニュー分類",
+  daily_special: "本日のおすすめ",
+  progress_steps: "進捗ステップ",
+  image_tiles: "写真タイル",
+  sectionTitle: "セクション見出し",
+  quote: "引用・メッセージ",
+  compare: "比較",
+  kpi: "数字・指標",
+  iconAccordion: "アイコン＋開閉",
+};
+
+function summarizePreviewCardTypes(
+  cards: Array<{ type?: string | null }>,
+  limit = 6,
+): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const card of cards) {
+    const type = typeof card.type === "string" ? card.type : "";
+    if (!type || type === "divider" || type === "icon") continue;
+    const label = CARD_TYPE_PREVIEW_LABELS[type] ?? null;
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    labels.push(label);
+    if (labels.length >= limit) break;
+  }
+  return labels;
+}
 
 const HIDDEN_TEMPLATE_NAMES = new Set<string>([]);
 
@@ -447,80 +506,180 @@ export default function TemplatesPage() {
   }
 
   const previewCards = previewTemplate ? buildPreviewCards(previewTemplate) : [];
+  const previewGuestShell = previewTemplate
+    ? resolveTemplateGuestShellConfig(previewTemplate.slug)
+    : null;
+  const previewNavStyle = previewGuestShell ? getGuestShellNavStyle(previewGuestShell) : "off";
+  const previewShellTabs = previewGuestShell
+    ? resolveVisibleGuestShellTabs(previewGuestShell)
+    : [];
+  const previewIncluded = summarizePreviewCardTypes(previewCards);
+  const previewContentCardCount = previewCards.filter(
+    (card) => card.type !== "divider" && card.type !== "icon",
+  ).length;
+  const previewCategoryLabel =
+    previewTemplate?.category && TEMPLATE_CATEGORY_LABELS[previewTemplate.category]
+      ? TEMPLATE_CATEGORY_LABELS[previewTemplate.category]
+      : null;
+  const phoneFrameOuterW = PHONE_SCREEN_WIDTH + 20;
+  /** ~iPhone aspect for the chassis width used in PhoneDeviceFrame. */
+  const phoneFrameH = Math.round(phoneFrameOuterW * (852 / 393));
 
   const previewDialog =
     mounted && previewTemplate
       ? createPortal(
           <div
-            className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4 py-6"
+            className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 px-2 py-2 sm:px-4 sm:py-3"
             role="dialog"
             aria-modal="true"
             aria-label={`${previewTemplate.name} テンプレートプレビュー`}
             onClick={() => setPreviewTemplate(null)}
           >
             <div
-              className="ui-pop-in flex max-h-[92vh] w-full max-w-[480px] flex-col overflow-hidden rounded-lg border border-[#e6e8eb] bg-white shadow-md"
+              className="ui-pop-in flex max-h-[98vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-3">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900">{previewTemplate.name}</h3>
-                  <p className="text-xs text-slate-500">テンプレート適用時の実プレビュー</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewTemplate(null)}
-                    className="app-button-native rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-                  >
-                    閉じる
-                  </button>
-                </div>
-              </div>
-              <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#e8eef4] px-4 py-5">
-                {previewLoading ? (
-                  <div className="flex min-h-[240px] items-center justify-center text-sm text-slate-500">
-                    プレビューを読み込み中…
-                  </div>
-                ) : (
-                  <div className="h-[min(72vh,680px)] w-full max-w-[390px]">
-                    <PhoneDeviceFrame
-                      width={PHONE_SCREEN_WIDTH}
-                      fillHeight
-                      verticalInset={0}
-                      className="h-full w-full"
-                      header={
-                        <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
-                          {previewTemplate.name}
-                        </h1>
-                      }
-                      footer={
-                        MARKETPLACE_PREVIEW_SHELL_TABS.length > 0 ? (
-                          <GuestBottomTabBar
-                            tabs={MARKETPLACE_PREVIEW_SHELL_TABS}
-                            currentSlug="preview"
-                            locale="ja"
-                            clientApp={clientShell.isAppShell}
-                            previewMode
-                          />
-                        ) : null
-                      }
+              <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-stretch">
+                <div className="flex min-h-0 flex-col overflow-y-auto border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6 lg:border-b-0 lg:border-r">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      テンプレートプレビュー
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(null)}
+                      className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 lg:hidden"
                     >
-                      <LocaleProvider value="ja">
-                        <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
-                          <div
-                            className="guest-page guest-content-gutter min-h-full w-full"
-                            style={{ paddingTop: 16, paddingBottom: 12 }}
-                          >
-                            <div className={GUEST_CARD_STACK_CLASS}>
-                              <CardRenderer cards={previewCards} />
-                            </div>
-                          </div>
-                        </ClientShellContext.Provider>
-                      </LocaleProvider>
-                    </PhoneDeviceFrame>
+                      閉じる
+                    </button>
                   </div>
-                )}
+                  {previewCategoryLabel ? (
+                    <p className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                      {previewCategoryLabel}
+                    </p>
+                  ) : null}
+                  <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
+                    {previewTemplate.name}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                    {previewTemplate.description?.trim() ||
+                      "この型からすぐ編集を始められます。写真も文言もあとから自由に変更できます。"}
+                  </p>
+
+                  {previewIncluded.length > 0 ? (
+                    <div className="mt-5">
+                      <p className="text-xs font-semibold text-slate-800">含まれている主なブロック</p>
+                      <ul className="mt-2 space-y-1.5">
+                        {previewIncluded.map((label) => (
+                          <li
+                            key={label}
+                            className="flex items-start gap-2 text-sm leading-snug text-slate-600"
+                          >
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
+                            <span>{label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {previewContentCardCount > previewIncluded.length ? (
+                        <p className="mt-2 text-[11px] text-slate-400">
+                          全{previewContentCardCount}ブロック構成
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3">
+                    <p className="text-xs font-semibold text-slate-800">
+                      ゲストナビ: {getTemplateGuestNavLabel(previewNavStyle)}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                      {getTemplateGuestNavHint(previewNavStyle)}
+                      。ページ作成時にこの設定が入ります。あとからページ設定で変更できます。
+                    </p>
+                  </div>
+
+                  <div className="mt-auto flex flex-col gap-2 pt-6">
+                    <button
+                      type="button"
+                      disabled={usingId === previewTemplate.id}
+                      onClick={() => void handleUseTemplate(previewTemplate.id)}
+                      className="app-button-native inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold !text-white hover:bg-slate-800 disabled:opacity-60"
+                    >
+                      {usingId === previewTemplate.id ? "作成中…" : "このテンプレートを使う"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(null)}
+                      className="app-button-native hidden min-h-[40px] w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex min-h-0 items-center justify-center bg-[#d7e0ea] px-3 py-3 sm:px-5 sm:py-4">
+                  {previewLoading ? (
+                    <div className="flex min-h-[420px] items-center justify-center text-sm text-slate-500">
+                      プレビューを読み込み中…
+                    </div>
+                  ) : (
+                    <div
+                      className="shrink-0"
+                      style={{
+                        width: phoneFrameOuterW,
+                        height: `min(92dvh, ${phoneFrameH}px)`,
+                      }}
+                    >
+                      <PhoneDeviceFrame
+                        width={PHONE_SCREEN_WIDTH}
+                        fillHeight
+                        verticalInset={0}
+                        className="h-full w-full"
+                        header={
+                          <div className="flex items-start justify-between gap-2">
+                            <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+                              {previewTemplate.name}
+                            </h1>
+                            {previewNavStyle === "hamburger" && previewShellTabs.length > 0 ? (
+                              <GuestHamburgerMenu
+                                tabs={previewShellTabs}
+                                currentSlug="preview"
+                                locale="ja"
+                                clientApp={clientShell.isAppShell}
+                                previewMode
+                                contained
+                              />
+                            ) : null}
+                          </div>
+                        }
+                        footer={
+                          previewNavStyle === "tabs" && previewShellTabs.length > 0 ? (
+                            <GuestBottomTabBar
+                              tabs={previewShellTabs}
+                              currentSlug="preview"
+                              locale="ja"
+                              clientApp={clientShell.isAppShell}
+                              previewMode
+                            />
+                          ) : null
+                        }
+                      >
+                        <LocaleProvider value="ja">
+                          <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+                            <div
+                              className="guest-page guest-content-gutter min-h-full w-full"
+                              style={{ paddingTop: 16, paddingBottom: 12 }}
+                            >
+                              <div className={GUEST_CARD_STACK_CLASS}>
+                                <CardRenderer cards={previewCards} />
+                              </div>
+                            </div>
+                          </ClientShellContext.Provider>
+                        </LocaleProvider>
+                      </PhoneDeviceFrame>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>,
