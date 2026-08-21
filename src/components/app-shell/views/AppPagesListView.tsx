@@ -260,7 +260,7 @@ export function AppPagesListView() {
       title={APP_PAGES_TAB_LABEL}
       description={loading ? undefined : `${pageCount}件`}
       className="app-pages-tab"
-      contentClassName="app-reveal"
+      contentClassName=""
       style={{ paddingBottom: APP_SCROLL_WITH_FAB_PADDING }}
       headerAction={
         <div className="flex items-center gap-2">

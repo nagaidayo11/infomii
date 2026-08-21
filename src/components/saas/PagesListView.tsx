@@ -328,18 +328,20 @@ function PagesListViewWeb() {
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">単体 {singleCount}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">総ページ {pageCount}</span>
           </div>
-          {visibleSets.map((set) => (
-            <PageConnectionSetCard
-              key={set.id}
-              set={set}
-              deletingPageId={deletingPageId}
-              onEdit={(page) =>
-                router.push(page.kind === "stamp" ? `/editor/stamp/${page.id}` : `/editor/${page.id}`)
-              }
-              onRename={(page) => void handleRenamePage(page)}
-              onDelete={(page) => void handleDeleteCardPage(page)}
-            />
-          ))}
+          <div className="ui-stagger space-y-4">
+            {visibleSets.map((set) => (
+              <PageConnectionSetCard
+                key={set.id}
+                set={set}
+                deletingPageId={deletingPageId}
+                onEdit={(page) =>
+                  router.push(page.kind === "stamp" ? `/editor/stamp/${page.id}` : `/editor/${page.id}`)
+                }
+                onRename={(page) => void handleRenamePage(page)}
+                onDelete={(page) => void handleDeleteCardPage(page)}
+              />
+            ))}
+          </div>
         </section>
       )}
 

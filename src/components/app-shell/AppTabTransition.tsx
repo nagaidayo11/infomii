@@ -35,9 +35,9 @@ export function AppTabTransition({ children }: AppTabTransitionProps) {
     tabIdRef.current = tabId;
   }
 
-  const slide = reduceMotion ? 0 : 14;
-  const floatY = reduceMotion ? 0 : 10;
-  const duration = reduceMotion ? 0.12 : 0.26;
+  const slide = reduceMotion ? 0 : 10;
+  const floatY = reduceMotion ? 0 : 6;
+  const duration = reduceMotion ? 0.1 : 0.2;
   const direction = directionRef.current;
 
   const variants = {
@@ -45,19 +45,16 @@ export function AppTabTransition({ children }: AppTabTransitionProps) {
       opacity: 0,
       x: d * slide,
       y: floatY,
-      filter: "blur(2px)",
     }),
     center: {
       opacity: 1,
       x: 0,
       y: 0,
-      filter: "blur(0px)",
     },
     exit: (d: number) => ({
       opacity: 0,
-      x: d * -slide,
-      y: -floatY * 0.5,
-      filter: "blur(2px)",
+      x: d * -slide * 0.6,
+      y: -floatY * 0.35,
     }),
   };
 

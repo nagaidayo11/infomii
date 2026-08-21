@@ -1312,13 +1312,13 @@
 }
 
 [data-client-shell="app"] .app-shell-page-enter {
-  animation: app-shell-page-in 320ms var(--app-motion-ease) both;
+  animation: app-shell-page-in 240ms var(--app-motion-ease) both;
 }
 
 @keyframes app-shell-page-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.992);
+    transform: translateY(8px) scale(0.996);
   }
   to {
     opacity: 1;
@@ -1326,13 +1326,45 @@
   }
 }
 
+/* Soft header/body enter after tab route swap (avoids stacking with AppTabTransition). */
+[data-client-shell="app"] .app-tab-page-header-enter {
+  animation: app-tab-header-in 240ms var(--app-motion-ease) both;
+}
+
+[data-client-shell="app"] .app-tab-page-body-enter {
+  animation: app-tab-body-in 280ms var(--app-motion-ease) both;
+  animation-delay: 40ms;
+}
+
+@keyframes app-tab-header-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes app-tab-body-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Scroll-driven fade-up (AppScrollReveal toggles .app-reveal--visible) */
 [data-client-shell="app"] .app-reveal {
   opacity: 0;
-  transform: translate3d(0, 16px, 0);
+  transform: translate3d(0, 10px, 0);
   transition:
-    opacity 0.5s var(--app-motion-ease),
-    transform 0.55s var(--app-motion-spring);
+    opacity 0.35s var(--app-motion-ease),
+    transform 0.4s var(--app-motion-spring);
   will-change: opacity, transform;
 }
 
@@ -5077,6 +5109,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-client-shell="app"] .app-shell-page-enter,
+  [data-client-shell="app"] .app-tab-page-header-enter,
+  [data-client-shell="app"] .app-tab-page-body-enter,
   [data-client-shell="app"] .app-shell-skeleton {
     animation: none;
   }

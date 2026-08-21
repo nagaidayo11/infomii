@@ -24,10 +24,10 @@ export function AppTabPage({
 }: AppTabPageProps) {
   return (
     <div
-      className={`app-tab-page app-shell-page-enter mx-auto w-full max-w-lg ${className}`.trim()}
+      className={`app-tab-page mx-auto w-full max-w-lg ${className}`.trim()}
       style={style}
     >
-      <header className="app-screen-header app-reveal app-reveal--visible relative z-30">
+      <header className="app-screen-header app-tab-page-header-enter relative z-30">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h1 className="text-[1.75rem] font-bold tracking-tight text-[var(--app-text)]">{title}</h1>
@@ -41,7 +41,9 @@ export function AppTabPage({
         </div>
       </header>
 
-      <div className={`app-tab-page-content relative z-0 ${contentClassName}`.trim()}>{children}</div>
+      <div className={`app-tab-page-content app-tab-page-body-enter relative z-0 ${contentClassName}`.trim()}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -224,7 +224,7 @@ function TemplateRail({
       aria-label={`${groupLabel} テンプレート一覧（横スクロール）`}
       tabIndex={0}
     >
-      <div className={variant === "app" ? "grid w-max min-w-full grid-flow-col auto-cols-[min(72vw,236px)] gap-3" : "grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]"}>
+      <div className={(variant === "app" ? "grid w-max min-w-full grid-flow-col auto-cols-[min(72vw,236px)] gap-3" : "grid w-max min-w-full grid-flow-col auto-cols-[min(88vw,280px)] gap-3 sm:auto-cols-[300px] sm:gap-4 lg:auto-cols-[320px]") + " ui-stagger"}>
         {items.map((template) => {
           const highlighted = highlightSlug === template.slug;
           return (
@@ -770,7 +770,7 @@ export default function TemplatesPage() {
                 description="しばらくしてからもう一度お試しください。"
               />
             ) : (
-              <div className="space-y-6">
+              <div key={`${audience}-${category}`} className="space-y-6 dashboard-tab-fade">
                 {showCaseStudyFeatured ? (
                   <AppSection className="app-template-group space-y-2" revealDelay={0}>
                     <h2 className="app-template-section-heading">導入事例テンプレ</h2>
@@ -891,7 +891,7 @@ export default function TemplatesPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div key={`${audience}-${category}`} className="space-y-6 dashboard-tab-fade">
             {showCaseStudyFeatured ? (
               <AppSection className="space-y-2">
                 <h2 className="text-base font-bold tracking-tight text-slate-800">導入事例テンプレ</h2>

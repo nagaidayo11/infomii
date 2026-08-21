@@ -44,7 +44,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
         aria-label="メニューを閉じる"
       />
       <nav
-        className="ui-pop-in absolute inset-y-0 left-0 flex w-[min(100%,280px)] flex-col border-r border-[#e6e8eb] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
+        className="ui-drawer-in absolute inset-y-0 left-0 flex w-[min(100%,280px)] flex-col border-r border-[#e6e8eb] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <div className="border-b border-[#e6e8eb] px-4 pb-3">

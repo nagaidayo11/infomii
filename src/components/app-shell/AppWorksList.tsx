@@ -28,7 +28,7 @@ type AppWorksListItemMotionProps = {
 };
 
 export function AppWorksListItemMotion({ children, index = 0 }: AppWorksListItemMotionProps) {
-  const delay = Math.min(index, 10) * 45;
+  const delay = Math.min(index, 8) * 35;
   return (
     <div className="app-reveal" style={delay > 0 ? { transitionDelay: `${delay}ms` } : undefined}>
       {children}
