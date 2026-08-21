@@ -66,6 +66,8 @@ const TEMPLATE_AUDIENCE_OPTIONS: { id: TemplateMarketplaceAudience; label: strin
   { id: "all", label: TEMPLATE_AUDIENCE_LABELS.all },
 ];
 
+const VALID_CATEGORY_IDS = new Set<string>(TEMPLATE_CATEGORIES.map((c) => c.id));
+
 const CARD_TYPE_PREVIEW_LABELS: Record<string, string> = {
   hero: "トップ写真・タイトル",
   hero_slider: "スライダー写真",
