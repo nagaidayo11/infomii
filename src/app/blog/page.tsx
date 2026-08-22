@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BLOG_CATEGORIES, getAllPosts } from "@/lib/blog";
+import { BLOG_CATEGORIES, getAllPosts, getPillarPosts } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
@@ -11,13 +11,19 @@ import {
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
+const READ_CTA_SOLID_CLASS =
+  "inline-flex min-h-[40px] items-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold !text-white hover:bg-emerald-700 hover:!text-white";
+
+const READ_CTA_OUTLINE_CLASS =
+  "inline-flex min-h-[40px] items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/60";
+
 export const metadata: Metadata = {
   title: "ブログ",
-  description: "ホテル運営に役立つQR館内案内の実践記事。現場課題から導入ステップまで、初心者向けにわかりやすく解説します。",
+  description: "ホテルの館内案内の作り方、QRコード化、ホテルDX、紙からの置き換えまで。宿泊施設の現場向け実践記事。",
   alternates: { canonical: "/blog" },
   openGraph: {
     title: "Infomiiブログ | ホテル運営に効くQR案内ノウハウ",
-    description: "ホテル向けQR館内案内の実践記事。現場課題から導入ステップまで、初心者向けにわかりやすく解説します。",
+    description: "ホテルの館内案内の作り方、QR化、ホテルDX、紙からの置き換えまで。宿泊施設の現場向け実践記事。",
     url: `${appUrl}/blog`,
     type: "website",
   },
@@ -25,6 +31,9 @@ export const metadata: Metadata = {
 
 export default function BlogIndexPage() {
   const posts = getAllPosts();
+  const pillars = getPillarPosts();
+  const pillarSlugs = new Set(pillars.map((post) => post.slug));
+  const rest = posts.filter((post) => !pillarSlugs.has(post.slug));
 
   return (
     <main className="min-h-screen bg-[#F2FBF7] px-4 py-10 text-slate-900 antialiased sm:px-6">
@@ -57,7 +66,7 @@ export default function BlogIndexPage() {
             ホテル運営をラクにする実践記事
           </h1>
           <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-            記事で課題を整理し、LPで機能を確認して、無料登録へ進める導線を用意しています。
+            館内案内の作り方、QR化、ホテルDX、ツール比較まで。課題を整理してから無料登録へ進める導線です。
           </p>
 
           <nav aria-label="カテゴリ" className="mt-5 flex flex-wrap gap-2">
@@ -73,30 +82,60 @@ export default function BlogIndexPage() {
           </nav>
         </header>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {posts.map((post) => (
-            <article
-              key={post.slug}
-              className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm ring-1 ring-emerald-50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
-            >
-              <p className="text-xs font-medium text-slate-500">{post.date}</p>
-              <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
-                <Link href={`/blog/${post.slug}`} className="hover:text-emerald-700">
-                  {post.title}
-                </Link>
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-slate-600">{post.description}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="inline-flex min-h-[40px] items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/60"
+        {pillars.length > 0 ? (
+          <section className="mb-10">
+            <h2 className="text-lg font-bold tracking-tight text-slate-900">まず読む記事</h2>
+            <p className="mt-1 text-sm text-slate-600">検索されやすい入口。作り方・QR化・比較から Infomii の機能まで。</p>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {pillars.map((post) => (
+                <article
+                  key={post.slug}
+                  className="flex h-full flex-col rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm ring-1 ring-emerald-100 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
                 >
-                  記事を読む
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">入口記事</p>
+                  <h3 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
+                    <Link href={`/blog/${post.slug}`} className="hover:text-emerald-700">
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{post.description}</p>
+                  <div className="mt-auto pt-4">
+                    <Link href={`/blog/${post.slug}`} className={READ_CTA_SOLID_CLASS}>
+                      記事を読む
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {rest.length > 0 ? (
+          <section>
+            <h2 className="mb-4 text-lg font-bold tracking-tight text-slate-900">その他の記事</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {rest.map((post) => (
+                <article
+                  key={post.slug}
+                  className="flex h-full flex-col rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm ring-1 ring-emerald-50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+                >
+                  <p className="text-xs font-medium text-slate-500">{post.date}</p>
+                  <h3 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
+                    <Link href={`/blog/${post.slug}`} className="hover:text-emerald-700">
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{post.description}</p>
+                  <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                    <Link href={`/blog/${post.slug}`} className={READ_CTA_OUTLINE_CLASS}>
+                      記事を読む
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );

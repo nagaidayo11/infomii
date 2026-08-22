@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug, getPostCategories, getRelatedPosts } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { articleJsonLd, breadcrumbJsonLd, organizationJsonLd } from "@/lib/seo/structured-data";
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd, organizationJsonLd } from "@/lib/seo/structured-data";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://infomii.com";
 
@@ -50,29 +50,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const categories = getPostCategories(post.slug);
   const primaryCategory = categories[0] ?? null;
   const relatedPosts = getRelatedPosts(post.slug, 4);
+  const tocHeadings = post.headings.filter((heading) => heading.level === 2);
+  const jsonLd = [
+    organizationJsonLd(),
+    articleJsonLd({
+      title: post.title,
+      description: post.description,
+      slug: post.slug,
+      datePublished: `${post.date}T00:00:00.000Z`,
+      ...(post.updated ? { dateModified: `${post.updated}T00:00:00.000Z` } : {}),
+    }),
+    breadcrumbJsonLd([
+      { name: "ホーム", path: "/lp/business" },
+      { name: "ブログ", path: "/blog" },
+      ...(primaryCategory
+        ? [{ name: primaryCategory.label, path: `/blog/category/${primaryCategory.id}` }]
+        : []),
+      { name: post.title, path: `/blog/${post.slug}` },
+    ]),
+    ...(post.faq.length >= 2 ? [faqJsonLd(post.faq)] : []),
+  ];
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
-      <JsonLd
-        data={[
-          organizationJsonLd(),
-          articleJsonLd({
-            title: post.title,
-            description: post.description,
-            slug: post.slug,
-            datePublished: `${post.date}T00:00:00.000Z`,
-            ...(post.updated ? { dateModified: `${post.updated}T00:00:00.000Z` } : {}),
-          }),
-          breadcrumbJsonLd([
-            { name: "ホーム", path: "/lp/business" },
-            { name: "ブログ", path: "/blog" },
-            ...(primaryCategory
-              ? [{ name: primaryCategory.label, path: `/blog/category/${primaryCategory.id}` }]
-              : []),
-            { name: post.title, path: `/blog/${post.slug}` },
-          ]),
-        ]}
-      />
+      <JsonLd data={jsonLd} />
       <article className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <nav aria-label="パンくず" className="flex flex-wrap items-center gap-1 text-xs font-medium text-slate-500">
           <Link href="/blog" className="hover:text-emerald-700">
@@ -107,6 +108,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </Link>
             ))}
           </div>
+        ) : null}
+
+        {tocHeadings.length >= 3 ? (
+          <nav
+            aria-label="目次"
+            className="mt-8 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">目次</p>
+            <ol className="mt-3 space-y-2 text-sm">
+              {tocHeadings.map((heading) => (
+                <li key={heading.id}>
+                  <a
+                    href={`#${heading.id}`}
+                    className="text-slate-700 underline-offset-2 hover:text-emerald-700 hover:underline"
+                  >
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
         ) : null}
 
         <div

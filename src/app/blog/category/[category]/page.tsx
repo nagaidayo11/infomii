@@ -114,7 +114,7 @@ export default async function BlogCategoryPage({ params }: BlogCategoryPageProps
             {posts.map((post) => (
               <article
                 key={post.slug}
-                className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm ring-1 ring-emerald-50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+                className="flex h-full flex-col rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm ring-1 ring-emerald-50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
               >
                 <p className="text-xs font-medium text-slate-500">{post.date}</p>
                 <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
@@ -123,7 +123,7 @@ export default async function BlogCategoryPage({ params }: BlogCategoryPageProps
                   </Link>
                 </h2>
                 <p className="mt-2 text-sm leading-7 text-slate-600">{post.description}</p>
-                <div className="mt-4">
+                <div className="mt-auto pt-4">
                   <Link
                     href={`/blog/${post.slug}`}
                     className="inline-flex min-h-[40px] items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/60"

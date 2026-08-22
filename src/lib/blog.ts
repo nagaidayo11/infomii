@@ -9,10 +9,33 @@ export type BlogPostMeta = {
   description: string;
 };
 
+export type BlogHeading = {
+  id: string;
+  text: string;
+  level: 2 | 3;
+};
+
+export type BlogFaqItem = {
+  q: string;
+  a: string;
+};
+
 export type BlogPost = BlogPostMeta & {
   content: string;
   contentHtml: string;
+  headings: BlogHeading[];
+  faq: BlogFaqItem[];
 };
+
+/** High-intent hub posts shown first on /blog. Keep in sync with live slugs. */
+export const BLOG_PILLAR_SLUGS = [
+  "how-to-create-hotel-guide",
+  "hotel-qr-guide",
+  "hotel-information-smartphone",
+  "hotel-dx-getting-started",
+  "hotel-guide-app-vs-qr-web",
+  "infomii-features-overview",
+] as const;
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
 
@@ -90,9 +113,85 @@ function parseInlineMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '<code class="rounded bg-slate-100 px-1 py-0.5 text-[0.92em]">$1</code>');
 }
 
-function renderMarkdownToHtml(markdown: string): string {
+function plainMarkdownText(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .trim();
+}
+
+function headingIdFromText(text: string, used: Set<string>): string {
+  const plain = plainMarkdownText(text);
+  let base = Array.from(plain)
+    .filter((ch) => /[\p{L}\p{N}\-ー]/u.test(ch) || ch === " " || ch === "／")
+    .join("")
+    .replace(/\s+/g, "-")
+    .replace(/／/g, "-")
+    .slice(0, 60);
+  if (!base) base = "section";
+  let id = base;
+  let n = 2;
+  while (used.has(id)) {
+    id = `${base}-${n}`;
+    n += 1;
+  }
+  used.add(id);
+  return id;
+}
+
+const TOC_SKIP_HEADINGS = /^(内部リンク候補|内部リンク|⑤ CTA)/;
+
+function extractFaqFromMarkdown(markdown: string): BlogFaqItem[] {
+  const lines = markdown.split(/\r?\n/);
+  const items: BlogFaqItem[] = [];
+  let inFaq = false;
+  let current: { q: string; aLines: string[] } | null = null;
+
+  const flush = () => {
+    if (!current) return;
+    const a = current.aLines
+      .map((line) =>
+        plainMarkdownText(line.replace(/^[-*]\s+/, "").replace(/^\d+\.\s+/, "")),
+      )
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (current.q && a) items.push({ q: current.q, a });
+    current = null;
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    const h2 = line.match(/^##\s+(.+)$/);
+    if (h2) {
+      if (/よくある質問/.test(h2[1])) {
+        inFaq = true;
+        flush();
+        continue;
+      }
+      if (inFaq) break;
+    }
+    if (!inFaq) continue;
+    const h3 = line.match(/^###\s+(.+)$/);
+    if (h3) {
+      flush();
+      current = { q: plainMarkdownText(h3[1]), aLines: [] };
+      continue;
+    }
+    if (current && line && !line.startsWith("|")) {
+      current.aLines.push(line);
+    }
+  }
+  flush();
+  return items;
+}
+
+function renderMarkdownToHtml(markdown: string): { html: string; headings: BlogHeading[] } {
   const lines = markdown.split(/\r?\n/);
   const out: string[] = [];
+  const headings: BlogHeading[] = [];
+  const usedIds = new Set<string>();
   let i = 0;
 
   while (i < lines.length) {
@@ -106,15 +205,20 @@ function renderMarkdownToHtml(markdown: string): string {
 
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     if (heading) {
-      const level = heading[1].length;
-      const text = parseInlineMarkdown(heading[2].trim());
+      const level = heading[1].length as 1 | 2 | 3;
+      const rawText = heading[2].trim();
+      const text = parseInlineMarkdown(rawText);
+      const id = headingIdFromText(rawText, usedIds);
       const cls =
         level === 1
-          ? "mt-8 text-2xl font-bold tracking-tight text-slate-900"
+          ? "mt-8 scroll-mt-24 text-2xl font-bold tracking-tight text-slate-900"
           : level === 2
-            ? "mt-8 text-xl font-semibold text-slate-900"
-            : "mt-6 text-lg font-semibold text-slate-900";
-      out.push(`<h${level} class="${cls}">${text}</h${level}>`);
+            ? "mt-8 scroll-mt-24 text-xl font-semibold text-slate-900"
+            : "mt-6 scroll-mt-24 text-lg font-semibold text-slate-900";
+      out.push(`<h${level} id="${escapeHtml(id)}" class="${cls}">${text}</h${level}>`);
+      if ((level === 2 || level === 3) && !TOC_SKIP_HEADINGS.test(plainMarkdownText(rawText))) {
+        headings.push({ id, text: plainMarkdownText(rawText), level });
+      }
       i += 1;
       continue;
     }
@@ -178,13 +282,14 @@ function renderMarkdownToHtml(markdown: string): string {
     out.push(`<p class="mt-4 leading-8 text-slate-700">${parseInlineMarkdown(paragraph.join(" "))}</p>`);
   }
 
-  return out.join("\n");
+  return { html: out.join("\n"), headings };
 }
 
 function readMarkdownFile(filePath: string): BlogPost {
   const raw = fs.readFileSync(filePath, "utf8");
   const { frontmatter, body } = parseFrontmatter(raw);
   const slug = path.basename(filePath, ".md");
+  const rendered = renderMarkdownToHtml(body);
 
   const title = frontmatter.title ?? slug;
   const date = frontmatter.date ?? "1970-01-01";
@@ -198,7 +303,9 @@ function readMarkdownFile(filePath: string): BlogPost {
     ...(updated ? { updated } : {}),
     description,
     content: body,
-    contentHtml: renderMarkdownToHtml(body),
+    contentHtml: rendered.html,
+    headings: rendered.headings,
+    faq: extractFaqFromMarkdown(body),
   };
 }
 
@@ -254,6 +361,9 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
       "features-overview",
       "pricing",
       "canva",
+      "notion",
+      "google-sites",
+      "dx",
       "writing",
       "clear-writing",
       "content-items",
@@ -274,13 +384,15 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
       "landing",
       "smartphone",
       "information-smartphone",
+      "line",
+      "tablet",
     ],
   },
   {
     id: "checkin",
     label: "チェックイン/アウト",
     description: "チェックイン・チェックアウト前後の案内改善。",
-    match: ["checkin", "checkout", "congestion"],
+    match: ["checkin", "checkout", "congestion", "self-checkin"],
   },
   {
     id: "inbound",
@@ -426,5 +538,12 @@ export function getRelatedPosts(slug: string, limit = 4): BlogPostMeta[] {
     .sort((a, b) => b.score - a.score || (a.post.date < b.post.date ? 1 : -1))
     .slice(0, limit)
     .map((entry) => entry.post);
+}
+
+export function getPillarPosts(): BlogPostMeta[] {
+  const bySlug = new Map(getAllPosts().map((post) => [post.slug, post]));
+  return BLOG_PILLAR_SLUGS.map((slug) => bySlug.get(slug)).filter(
+    (post): post is BlogPostMeta => Boolean(post),
+  );
 }
 

@@ -72,3 +72,4 @@ Infomiiのようにブロック単位で差し替えられる構成は、本テ�
 
 - [朝食案内の作り方｜時間帯変更に強いブロック構成](/blog/breakfast-guide-block-design)
 - [ホテル案内テンプレの選び方｜施設タイプ別の必須ブロック](/blog/hotel-guide-template-picks)
+- [Notion・Googleサイトで館内案内を作る限界](/blog/notion-google-sites-hotel-guide)

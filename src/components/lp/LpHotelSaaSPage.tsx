@@ -130,6 +130,24 @@ export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHot
           <p className="text-sm text-slate-500">© {new Date().getFullYear()} Infomii</p>
           <div className="flex flex-wrap justify-center gap-6 text-sm sm:justify-end">
             <Link
+              href="/blog"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
+            >
+              ブログ
+            </Link>
+            <Link
+              href="/blog/how-to-create-hotel-guide"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
+            >
+              館内案内の作り方
+            </Link>
+            <Link
+              href="/blog/hotel-dx-getting-started"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
+            >
+              ホテルDX
+            </Link>
+            <Link
               href="/terms"
               className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
             >
