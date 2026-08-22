@@ -46,7 +46,11 @@ export function AccentColorNativeField({
   content,
   onUpdate,
   hint,
-}: FieldProps & { hint?: string }) {
+}: {
+  content?: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+  hint?: string;
+}) {
   const accentColor = readAccentColor(content);
 
   return (
@@ -69,6 +73,7 @@ export function AccentColorNativeField({
   );
 }
 
+function NativeToggle({
   checked,
   onChange,
   label,
