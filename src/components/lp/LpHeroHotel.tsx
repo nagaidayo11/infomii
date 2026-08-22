@@ -33,7 +33,7 @@ function GuestPhoneMock({ src }: { src: string }) {
   const screenRadius = "1.55rem";
 
   return (
-    <div className="relative mx-auto w-[min(100%,300px)] sm:w-[min(100%,320px)] lg:w-[336px]">
+    <div className="relative mx-auto w-[min(100%,300px)] sm:w-[min(100%,320px)] lg:w-[352px]">
       <div
         className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] blur-2xl"
         style={{
@@ -42,7 +42,7 @@ function GuestPhoneMock({ src }: { src: string }) {
         aria-hidden
       />
       <div
-        className="relative aspect-[9/19.2] max-h-[min(46svh,360px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:max-h-[min(56svh,480px)] lg:max-h-[min(72svh,640px)]"
+        className="relative aspect-[9/19.2] max-h-[min(50svh,420px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:max-h-[min(62svh,560px)] lg:max-h-[min(80svh,720px)]"
         style={{ boxShadow: `0 28px 64px rgba(15, 23, 42, 0.5), 0 0 0 1px ${LP_HOTEL_RING_RGBA}, inset 0 0 0 1px rgba(255, 255, 255, 0.06)` }}
       >
         <div
@@ -115,7 +115,7 @@ export function LpHeroHotel({
       />
 
       <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-7xl items-center px-4 py-10 sm:px-6 sm:py-12 lg:h-full lg:min-h-0 lg:px-8 lg:py-12">
-        <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,360px)] lg:gap-10 xl:gap-14">
+        <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(260px,380px)] lg:gap-10 xl:gap-14">
           <div className="max-w-2xl text-white">
             <ClipReveal delay={0.05} duration={0.7}>
               <p className="text-sm font-medium tracking-[0.14em] text-white/75 sm:tracking-[0.18em]">
@@ -171,7 +171,7 @@ export function LpHeroHotel({
           </div>
 
           <motion.div
-            className="mx-auto w-full max-w-[360px] lg:mx-0 lg:justify-self-end"
+            className="mx-auto w-full max-w-[380px] lg:mx-0 lg:justify-self-end"
             initial={reduceMotion ? false : { opacity: 0, y: 28 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
