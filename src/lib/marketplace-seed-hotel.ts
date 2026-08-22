@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from "./brand-accent";
 import {
   accordionInfo,
   breakfast,
@@ -654,7 +655,7 @@ export const HOTEL_MARKETPLACE_SEED_TEMPLATES: MarketplaceSeedTemplate[] = [
         "storyBand",
         storyBand("スパ・ウェルネス", "ごゆっくりおくつろぎください", {
           eyebrow: "Wellness",
-          accentColor: "#0f766e",
+          accentColor: BRAND_ACCENT,
         }),
       ),
       block(

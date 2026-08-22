@@ -1,5 +1,6 @@
 import { personalDefaultContent } from "@/lib/editor/card-defaults-personal";
 import { defaultFacilityContent } from "@/lib/editor/facility-info-presets";
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 
 /**
  * Infomii Editor 2.0 — Card-based page system.
@@ -868,7 +869,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
       return {
         title: "施設のご案内",
         defaultIndex: 0,
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
         tabs: [
           {
             label: "朝食",
@@ -916,7 +917,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
     case "accordion_info":
       return {
         title: "よくあるご質問",
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
         items: [
           {
             title: "チェックイン・チェックアウト",
@@ -992,7 +993,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         styleVariant: "tile",
         tileShadowStrength: "md",
         circleIconShadowStrength: "md",
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
         items: [
           {
             label: "チェックイン",
@@ -1034,7 +1035,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         columns: 2,
         iconSize: "md",
         styleVariant: "tile",
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
         items: [
           {
             label: "チェックイン",
@@ -1070,12 +1071,12 @@ function defaultContent(type: CardType): Record<string, unknown> {
         image: PRESET_HERO_SAMPLE_IMAGE,
         imageAlt: "館内イメージ",
         overlay: true,
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
       };
     case "dayTimeline":
       return {
         title: "滞在の一日",
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
         items: [
           { time: "15:00", title: "チェックイン", description: "フロントでお手続き後、客室へご案内します。" },
           { time: "18:00", title: "夕食・ラウンジ", description: "レストランまたは周辺グルメをお楽しみください。" },
@@ -1119,7 +1120,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         subtitle: "滞在中に便利な情報をまとめました",
         align: "left",
         showLine: true,
-        accentColor: "#0f766e",
+        accentColor: BRAND_ACCENT,
       };
     case "photoCompare":
       return {

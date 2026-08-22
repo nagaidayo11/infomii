@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 import { useCallback, useEffect, useState } from "react";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
@@ -84,7 +85,7 @@ export function PageLinksNativeSettings({
   const accentColor =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
-      : "#0f766e";
+      : BRAND_ACCENT;
   const defaultPageSlug = pages[0]?.slug ?? "";
 
   const setItems = useCallback((next: PageLinksItem[]) => onUpdate("items", next), [onUpdate]);
@@ -182,7 +183,7 @@ export function PageLinksNativeSettings({
             <AppFieldInput
               value={accentColor}
               onChange={(e) => onUpdate("accentColor", e.target.value)}
-              placeholder="#0f766e"
+              placeholder={BRAND_ACCENT}
             />
           </div>
         </div>

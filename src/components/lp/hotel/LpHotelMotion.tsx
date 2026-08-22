@@ -192,7 +192,7 @@ export function ScrollProgressLine({ className = "" }: { className?: string }) {
   return (
     <div ref={ref} className={`h-px w-full origin-left overflow-hidden bg-emerald-100 ${className}`}>
       <motion.div
-        className="h-full origin-left bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300"
+        className="h-full origin-left bg-gradient-to-r from-emerald-300 via-ds-accent to-emerald-400"
         style={reduceMotion ? { scaleX: 1 } : { scaleX }}
       />
     </div>

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Button, Container } from "@/components/ui";
 import { ScrollReveal } from "@/components/motion";
+import { LP_HOTEL_CTA_LG_CLASS } from "@/lib/lp/hotel-accent";
 
 type LpFinalCtaSectionProps = {
   ctaHref: string;
@@ -34,12 +35,12 @@ export function LpFinalCtaSection({
         aria-hidden
       />
       <div
-        className="lp-glow-pulse pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-teal-300/15 blur-3xl"
+        className="lp-glow-pulse pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-ds-accent/15 blur-3xl"
         style={{ animationDelay: "0.8s" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-teal-300/40 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ds-accent/40 to-transparent"
         aria-hidden
       />
       <ScrollReveal intensity={revealIntensity}>
@@ -61,7 +62,7 @@ export function LpFinalCtaSection({
             <Button
               href={ctaHref}
               size="lg"
-              className="lp-cta-attention min-h-[52px] px-8 !text-base !border-emerald-300 !bg-emerald-500 !text-white hover:!bg-emerald-400"
+              className={`${LP_HOTEL_CTA_LG_CLASS} lp-cta-attention`}
             >
               無料ではじめる
             </Button>

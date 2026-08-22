@@ -4,7 +4,7 @@
 
 /* ─── Design system v1 (Infomii) ───
    Web product (Stripe-calm): slate primary, hairline borders, quiet surfaces.
-   LP marketing: ds-accent* (emerald). Native App: app-shell.css teal.
+   LP marketing: ds-accent* (emerald). Guest blocks: --pres-accent → ds-accent. Native App: app-shell.css teal.
    Type: Noto Sans JP first for product calm; LP may still use Rounded via local classes.
 */
 @theme {
@@ -1361,8 +1361,8 @@ body.lux-shell:has(.lp-page)::before {
 
 .lp-hotel-surface {
   background-image:
-    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(45, 212, 191, 0.07), transparent 55%),
-    radial-gradient(ellipse 70% 45% at 90% 8%, rgba(16, 185, 129, 0.06), transparent 50%);
+    radial-gradient(ellipse 80% 50% at 10% 0%, color-mix(in srgb, var(--color-ds-accent) 7%, transparent), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 90% 8%, color-mix(in srgb, var(--color-ds-accent) 6%, transparent), transparent 50%);
 }
 
 /* Guest / editor content column — spacing + card surface + type tokens.

@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import { useMemo, useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
@@ -23,7 +25,7 @@ export function TabsInfoCard({ card }: TabsInfoCardProps) {
   const accent =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
-      : "#0f766e";
+      : BRAND_ACCENT;
   const defaultIndexRaw = Number(content.defaultIndex);
   const tabs = useMemo(
     () =>

@@ -1,5 +1,7 @@
 /** Shared block content builders for marketplace seed templates (hotel + legacy). */
 
+import { BRAND_ACCENT } from "./brand-accent";
+
 export const SEED_PREVIEW_IMAGE = "/preset-hero-sample.png" as const;
 
 export type HeroLayout = "overlay" | "stack" | "split";
@@ -71,7 +73,7 @@ export const sectionTitle = (
   subtitle: opts?.subtitle ?? "",
   align: opts?.align ?? "left",
   showLine: opts?.showLine !== false,
-  accentColor: opts?.accentColor ?? "#0f766e",
+  accentColor: opts?.accentColor ?? BRAND_ACCENT,
 });
 
 export const storyBand = (
@@ -85,7 +87,7 @@ export const storyBand = (
   image: opts?.image ?? SEED_PREVIEW_IMAGE,
   imageAlt: title,
   overlay: opts?.overlay !== false,
-  accentColor: opts?.accentColor ?? "#0f766e",
+  accentColor: opts?.accentColor ?? BRAND_ACCENT,
 });
 
 export const dayTimeline = (
@@ -94,7 +96,7 @@ export const dayTimeline = (
   opts?: { accentColor?: string },
 ) => ({
   title,
-  accentColor: opts?.accentColor ?? "#0f766e",
+  accentColor: opts?.accentColor ?? BRAND_ACCENT,
   items: items.map((item) => ({
     time: item.time,
     title: item.title,
@@ -111,7 +113,7 @@ export const iconAccordion = (
   columns: opts?.columns ?? 2,
   iconSize: "md",
   styleVariant: opts?.styleVariant ?? "tile",
-  accentColor: opts?.accentColor ?? "#0f766e",
+  accentColor: opts?.accentColor ?? BRAND_ACCENT,
   items: items.map((item) => ({
     label: item.label,
     icon: item.icon,
@@ -146,7 +148,7 @@ export const tabsInfo = (
 ) => ({
   title,
   defaultIndex: 0,
-  accentColor: "#0f766e",
+  accentColor: BRAND_ACCENT,
   tabs: tabs.map((t) => ({
     label: t.label,
     body: t.body,
@@ -156,7 +158,7 @@ export const tabsInfo = (
 
 export const accordionInfo = (title: string, items: Array<{ title: string; body: string }>) => ({
   title,
-  accentColor: "#0f766e",
+  accentColor: BRAND_ACCENT,
   items,
 });
 
@@ -178,7 +180,7 @@ export const pageLinks = (
   styleVariant: opts?.styleVariant ?? "tile",
   tileShadowStrength: "md",
   circleIconShadowStrength: "md",
-  accentColor: opts?.accentColor ?? "#0f766e",
+  accentColor: opts?.accentColor ?? BRAND_ACCENT,
   items: items.map((item) => ({
     label: item.label,
     icon: item.icon,
@@ -394,7 +396,7 @@ export const map = (
   title,
   address,
   mapEmbedUrl: "",
-  accentColor: "#0f766e",
+  accentColor: BRAND_ACCENT,
   pins,
 });
 

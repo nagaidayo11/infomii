@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -20,7 +22,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
   const title = typeof c.title === "string" ? c.title : "ご案内";
   const accent =
-    typeof c.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const items = (Array.isArray(c.items) ? c.items : []) as Array<{ title?: string; body?: string }>;
   const [openIndex, setOpenIndex] = useState<number>(0);
 

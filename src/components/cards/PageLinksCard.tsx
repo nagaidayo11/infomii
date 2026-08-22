@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import Link from "next/link";
 import type { EditorCard } from "@/components/editor/types";
 import {
@@ -98,7 +100,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
   const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "md");
   const items = (Array.isArray(c?.items) ? c.items : []) as PageLinksItem[];
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

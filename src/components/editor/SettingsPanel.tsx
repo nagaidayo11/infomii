@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 import { useRef, useEffect, useState } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { getLocalizedContent } from "@/lib/localized-content";
@@ -1790,7 +1791,7 @@ function PageLinksItemsEditor({
   const accentColor =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
-      : "#0f766e";
+      : BRAND_ACCENT;
   const setItems = (next: PageLinksItem[]) => onUpdate("items", next);
   const updateItem = (index: number, field: keyof PageLinksItem, value: string) => {
     const next = [...items];
@@ -1864,7 +1865,7 @@ function PageLinksItemsEditor({
                 type="text"
                 value={accentColor}
                 onChange={(e) => onUpdate("accentColor", e.target.value)}
-                placeholder="#0f766e"
+                placeholder={BRAND_ACCENT}
                 className={inputClass + " flex-1"}
               />
             </div>
@@ -3622,7 +3623,12 @@ export function CardSettings({
         <div id={contentSectionId} className="space-y-6">
           {card.type === "welcome" && (
             isNativeUi ? (
-              <WelcomeNativeSettings display={display} updateLocalized={updateLocalized} />
+              <WelcomeNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                content={content}
+                onUpdate={update}
+              />
             ) : (
             <SettingsSection title="コンテンツ">
               <Input
@@ -3641,13 +3647,43 @@ export function CardSettings({
                   className={inputClass}
                 />
               </div>
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={
+                      typeof content.accentColor === "string" && content.accentColor.trim()
+                        ? content.accentColor.trim()
+                        : BRAND_ACCENT
+                    }
+                    onChange={(e) => update("accentColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.accentColor as string) ?? ""}
+                    onChange={(e) => update("accentColor", e.target.value || undefined)}
+                    placeholder={BRAND_ACCENT}
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  左のアクセントラインや見出しの強調色に使われます。
+                </p>
+              </div>
             </SettingsSection>
             )
           )}
 
           {card.type === "hero" && (
             isNativeUi ? (
-              <HeroNativeSettings display={display} updateLocalized={updateLocalized}>
+              <HeroNativeSettings
+                display={display}
+                updateLocalized={updateLocalized}
+                content={content}
+                onUpdate={update}
+              >
                 <div className="w-full">
                   <label className={labelClass}>幅</label>
                   <select
@@ -3721,6 +3757,31 @@ export function CardSettings({
                   />
                 </div>
               ) : null}
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={
+                      typeof content.accentColor === "string" && content.accentColor.trim()
+                        ? content.accentColor.trim()
+                        : BRAND_ACCENT
+                    }
+                    onChange={(e) => update("accentColor", e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                  />
+                  <input
+                    type="text"
+                    value={(content.accentColor as string) ?? ""}
+                    onChange={(e) => update("accentColor", e.target.value || undefined)}
+                    placeholder={BRAND_ACCENT}
+                    className={inputClass + " flex-1"}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  「帯付き」レイアウトの色帯などに使われます。
+                </p>
+              </div>
             </SettingsSection>
             )
           )}
@@ -4338,7 +4399,7 @@ export function CardSettings({
                     value={
                       typeof content.accentColor === "string" && content.accentColor.trim()
                         ? content.accentColor.trim()
-                        : "#0f766e"
+                        : BRAND_ACCENT
                     }
                     onChange={(e) => update("accentColor", e.target.value)}
                     className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -4347,7 +4408,7 @@ export function CardSettings({
                     type="text"
                     value={(content.accentColor as string) ?? ""}
                     onChange={(e) => update("accentColor", e.target.value || undefined)}
-                    placeholder="#0f766e"
+                    placeholder={BRAND_ACCENT}
                     className={inputClass + " flex-1"}
                   />
                 </div>
@@ -4427,7 +4488,7 @@ export function CardSettings({
                   value={
                     typeof content.accentColor === "string" && content.accentColor.trim()
                       ? content.accentColor.trim()
-                      : "#0f766e"
+                      : BRAND_ACCENT
                   }
                   onChange={(e) => update("accentColor", e.target.value)}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -4451,7 +4512,7 @@ export function CardSettings({
                   value={
                     typeof content.accentColor === "string" && content.accentColor.trim()
                       ? content.accentColor.trim()
-                      : "#0f766e"
+                      : BRAND_ACCENT
                   }
                   onChange={(e) => update("accentColor", e.target.value)}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -4517,7 +4578,7 @@ export function CardSettings({
                   value={
                     typeof content.accentColor === "string" && content.accentColor.trim()
                       ? content.accentColor.trim()
-                      : "#0f766e"
+                      : BRAND_ACCENT
                   }
                   onChange={(e) => update("accentColor", e.target.value)}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -4660,7 +4721,7 @@ export function CardSettings({
                       value={
                         typeof content.accentColor === "string" && content.accentColor.trim()
                           ? content.accentColor.trim()
-                          : "#0f766e"
+                          : BRAND_ACCENT
                       }
                       onChange={(e) => update("accentColor", e.target.value)}
                       className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -4669,7 +4730,7 @@ export function CardSettings({
                       type="text"
                       value={(content.accentColor as string) ?? ""}
                       onChange={(e) => update("accentColor", e.target.value || undefined)}
-                      placeholder="#0f766e"
+                      placeholder={BRAND_ACCENT}
                       className={inputClass + " flex-1"}
                     />
                   </div>
@@ -5058,7 +5119,7 @@ export function CardSettings({
                       value={
                         typeof content.accentColor === "string" && content.accentColor.trim()
                           ? content.accentColor.trim()
-                          : "#0f766e"
+                          : BRAND_ACCENT
                       }
                       onChange={(e) => update("accentColor", e.target.value)}
                       className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -5067,7 +5128,7 @@ export function CardSettings({
                       type="text"
                       value={(content.accentColor as string) ?? ""}
                       onChange={(e) => update("accentColor", e.target.value || undefined)}
-                      placeholder="#0f766e"
+                      placeholder={BRAND_ACCENT}
                       className={inputClass + " flex-1"}
                     />
                   </div>
@@ -5309,7 +5370,7 @@ export function CardSettings({
                     value={
                       typeof content.accentColor === "string" && content.accentColor.trim()
                         ? content.accentColor.trim()
-                        : "#0f766e"
+                        : BRAND_ACCENT
                     }
                     onChange={(e) => update("accentColor", e.target.value)}
                     className="h-9 w-12 cursor-pointer rounded border border-slate-200"
@@ -5318,7 +5379,7 @@ export function CardSettings({
                     type="text"
                     value={(content.accentColor as string) ?? ""}
                     onChange={(e) => update("accentColor", e.target.value || undefined)}
-                    placeholder="#0f766e"
+                    placeholder={BRAND_ACCENT}
                     className={inputClass + " flex-1"}
                   />
                 </div>

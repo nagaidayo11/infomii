@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { getTitleFontSizeStyle, getBodyFontSizeStyle } from "@/components/editor/types";
@@ -31,7 +32,7 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   const overlayAlign = c?.overlayAlign === "center" ? "center" : "bottom";
   const layout = readHeroLayout(c?.layout);
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const fullBleed = readCardWidthMode(c, "full") === "full";
   const squareCorners = c?.cornerStyle === "square" || fullBleed;
   const labels =

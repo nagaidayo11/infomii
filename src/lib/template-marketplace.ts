@@ -1,5 +1,7 @@
+import { BRAND_ACCENT } from "./brand-accent";
+
 /** Bump when marketplace `SEED_TEMPLATES` cards change (forces client refresh). */
-export const MARKETPLACE_SEED_VERSION = 29;
+export const MARKETPLACE_SEED_VERSION = 30;
 
 /** Default grid columns for pageLinks blocks in marketplace templates. */
 export const PAGE_LINKS_DEFAULT_COLUMNS = 2;
@@ -19,7 +21,7 @@ export function normalizePageLinksCardContent(
     styleVariant: content.styleVariant ?? "tile",
     tileShadowStrength: content.tileShadowStrength ?? "md",
     circleIconShadowStrength: content.circleIconShadowStrength ?? "md",
-    accentColor: content.accentColor ?? "#0f766e",
+    accentColor: content.accentColor ?? BRAND_ACCENT,
   };
 }
 
@@ -41,7 +43,7 @@ function normalizeColumns(value: unknown, fallback: 2 | 3 = 2): 2 | 3 {
 function withAccent(content: Record<string, unknown>): Record<string, unknown> {
   return {
     ...content,
-    accentColor: content.accentColor ?? "#0f766e",
+    accentColor: content.accentColor ?? BRAND_ACCENT,
   };
 }
 

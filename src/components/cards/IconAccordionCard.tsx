@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { EditorCard } from "@/components/editor/types";
@@ -77,7 +79,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
   const tileShadowStrength = readPageLinkShadowStrength(c?.tileShadowStrength, "md");
   const items = (Array.isArray(c?.items) ? c.items : []) as IconAccordionItem[];
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const [openIndex, setOpenIndex] = useState<number>(-1);
   const rows = chunkItems(
     items.map((item, index) => ({ item, index })),

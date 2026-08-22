@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 import {
   AppFieldInput,
   AppFieldLabel,
@@ -35,7 +36,39 @@ function NativeField({
   );
 }
 
-function NativeToggle({
+function readAccentColor(content?: Record<string, unknown>): string {
+  return typeof content?.accentColor === "string" && content.accentColor.trim()
+    ? content.accentColor.trim()
+    : BRAND_ACCENT;
+}
+
+export function AccentColorNativeField({
+  content,
+  onUpdate,
+  hint,
+}: FieldProps & { hint?: string }) {
+  const accentColor = readAccentColor(content);
+
+  return (
+    <NativeField label="アクセント色">
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={accentColor}
+          onChange={(e) => onUpdate("accentColor", e.target.value)}
+          className="h-10 w-12 cursor-pointer rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white"
+        />
+        <AppFieldInput
+          value={accentColor}
+          onChange={(e) => onUpdate("accentColor", e.target.value)}
+          placeholder={BRAND_ACCENT}
+        />
+      </div>
+      {hint ? <p className="mt-1.5 text-xs text-[var(--app-text-muted)]">{hint}</p> : null}
+    </NativeField>
+  );
+}
+
   checked,
   onChange,
   label,
@@ -188,10 +221,6 @@ export function MapNativeSettings({
     walk?: string;
     note?: string;
   }>;
-  const accentColor =
-    typeof content?.accentColor === "string" && content.accentColor.trim()
-      ? content.accentColor.trim()
-      : "#0f766e";
 
   const setPins = (next: typeof pins) => onUpdate("pins", next);
   const updatePin = (index: number, field: "name" | "walk" | "note", value: string) => {
@@ -228,21 +257,7 @@ export function MapNativeSettings({
       <p className="text-xs text-[var(--app-text-muted)]">
         共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
       </p>
-      <NativeField label="アクセント色">
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={accentColor}
-            onChange={(e) => onUpdate("accentColor", e.target.value)}
-            className="h-10 w-12 cursor-pointer rounded-[var(--app-radius-md)] border border-[var(--app-border)] bg-white"
-          />
-          <AppFieldInput
-            value={accentColor}
-            onChange={(e) => onUpdate("accentColor", e.target.value)}
-            placeholder="#0f766e"
-          />
-        </div>
-      </NativeField>
+      <AccentColorNativeField content={content} onUpdate={onUpdate} />
       <div>
         <AppSectionHeader
           title="周辺ピン"
@@ -307,7 +322,11 @@ export function MapNativeSettings({
 export function WelcomeNativeSettings({
   display,
   updateLocalized,
-}: Pick<LocalizedFieldProps, "display" | "updateLocalized">) {
+  content,
+  onUpdate,
+}: Pick<LocalizedFieldProps, "display" | "updateLocalized" | "onUpdate"> & {
+  content?: Record<string, unknown>;
+}) {
   return (
     <div className="app-native-settings space-y-5">
       <NativeField label="タイトル">
@@ -325,6 +344,11 @@ export function WelcomeNativeSettings({
           rows={3}
         />
       </NativeField>
+      <AccentColorNativeField
+        content={content}
+        onUpdate={onUpdate}
+        hint="左のアクセントラインや見出しの強調色に使われます。"
+      />
     </div>
   );
 }
@@ -565,8 +589,11 @@ export function ImageNativeSettings({
 export function HeroNativeSettings({
   display,
   updateLocalized,
+  content,
+  onUpdate,
   children,
-}: Pick<LocalizedFieldProps, "display" | "updateLocalized"> & {
+}: Pick<LocalizedFieldProps, "display" | "updateLocalized" | "onUpdate"> & {
+  content?: Record<string, unknown>;
   children?: ReactNode;
 }) {
   return (
@@ -585,6 +612,11 @@ export function HeroNativeSettings({
           placeholder="任意"
         />
       </NativeField>
+      <AccentColorNativeField
+        content={content}
+        onUpdate={onUpdate}
+        hint="「帯付き」レイアウトの色帯などに使われます。"
+      />
       {children}
     </div>
   );

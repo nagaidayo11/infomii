@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
 import { useState } from "react";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
 import { ImageUpload } from "@/components/editor/ImageUpload";
@@ -40,7 +41,7 @@ export function TabsInfoNativeSettings({
   const accentColor =
     typeof content.accentColor === "string" && content.accentColor.trim()
       ? content.accentColor.trim()
-      : "#0f766e";
+      : BRAND_ACCENT;
 
   const setItems = (next: TabsInfoItem[]) => onUpdate("tabs", next);
   const updateItem = (index: number, field: keyof TabsInfoItem, value: string) => {
@@ -121,7 +122,7 @@ export function TabsInfoNativeSettings({
           <AppFieldInput
             value={accentColor}
             onChange={(e) => onUpdate("accentColor", e.target.value)}
-            placeholder="#0f766e"
+            placeholder={BRAND_ACCENT}
           />
         </div>
       </div>

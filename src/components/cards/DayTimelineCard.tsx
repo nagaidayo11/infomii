@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
 import { useEditor2Store } from "@/components/editor/store";
@@ -16,7 +18,7 @@ export function DayTimelineCard({ card, locale = "ja" }: DayTimelineCardProps) {
   const title = getLocalizedContent(c?.title as LocalizedString | undefined, locale);
   const items = (Array.isArray(c?.items) ? c.items : []) as TimelineItem[];
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

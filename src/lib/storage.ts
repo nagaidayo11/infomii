@@ -4633,7 +4633,7 @@ export async function createStampPage(title = "スタンプカード"): Promise<
     reward_description_5: "スタッフにこの画面を提示してください。",
     reward_title_10: "10個特典",
     reward_description_10: "スタッフにこの画面を提示してください。",
-    accent_color: "#0f766e",
+    accent_color: "#059669",
     stamp_style: "seal",
     stamp_code: stampCode,
     cooldown_hours: 24,

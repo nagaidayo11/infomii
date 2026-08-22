@@ -15,7 +15,7 @@ type Row = { before: string; after: string };
 
 export function LpHotelTrustMarquee({ points }: { points: readonly string[] }) {
   return (
-    <div className="border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/90 via-white to-teal-50/70 py-5">
+    <div className="border-b border-emerald-100/80 bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/70 py-5">
       <ul className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-0.5 px-4 text-sm font-medium text-slate-700 sm:gap-x-10">
         {points.map((point) => (
           <li key={point} className="inline-flex items-center gap-2 py-1">
@@ -101,7 +101,7 @@ export function LpHotelWorkflowMotion({
                 key={item.step}
                 className="relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm ring-1 ring-slate-100/80"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-base font-bold text-white shadow-[0_10px_24px_rgba(16,185,129,0.3)]">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-ds-accent text-base font-bold text-white shadow-[0_10px_24px_rgba(5,150,105,0.3)]">
                   {item.step}
                 </span>
                 <h3 className="mt-5 text-lg font-semibold text-slate-900">{item.title}</h3>

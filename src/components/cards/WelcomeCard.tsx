@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import type { EditorCard } from "@/components/editor/types";
 import {
   CARD_BLOCK_BODY_CLASS,
@@ -36,7 +38,7 @@ export function WelcomeCard({ card, locale = "ja" }: WelcomeCardProps) {
   const c = card.content as Record<string, unknown> | undefined;
   const layout = readWelcomeLayout(c?.layout);
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const message = getLocalizedContent(c?.message as LocalizedString | undefined, locale);
   const labels =
     locale === "ko"

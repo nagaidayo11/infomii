@@ -4,6 +4,12 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui";
 import { ClipReveal, WordReveal } from "@/components/lp/hotel/LpHotelMotion";
+import {
+  LP_HOTEL_CTA_LG_CLASS,
+  LP_HOTEL_GRADIENT_TEXT_CLASS,
+  LP_HOTEL_GLOW_RGBA,
+  LP_HOTEL_RING_RGBA,
+} from "@/lib/lp/hotel-accent";
 import { LP_POP_HEADING_CLASS } from "@/lib/lp/typography";
 
 const GUEST_PREVIEW_SRC = "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel";
@@ -29,10 +35,16 @@ function GuestPhoneMock({ src }: { src: string }) {
   return (
     <div className="relative mx-auto w-[min(100%,300px)] sm:w-[min(100%,320px)] lg:w-[336px]">
       <div
-        className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] bg-[radial-gradient(circle_at_50%_40%,rgba(45,212,191,0.28),transparent_62%)] blur-2xl"
+        className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] blur-2xl"
+        style={{
+          background: `radial-gradient(circle at 50% 40%, ${LP_HOTEL_GLOW_RGBA}, transparent 62%)`,
+        }}
         aria-hidden
       />
-      <div className="relative aspect-[9/19.2] max-h-[min(46svh,360px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),0_0_0_1px_rgba(45,212,191,0.12),inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:max-h-[min(56svh,480px)] lg:max-h-[min(72svh,640px)]">
+      <div
+        className="relative aspect-[9/19.2] max-h-[min(46svh,360px)] w-full overflow-hidden rounded-[2.4rem] border-[10px] border-[#0b0f14] bg-[#0b0f14] shadow-[0_28px_64px_rgba(15,23,42,0.5),inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:max-h-[min(56svh,480px)] lg:max-h-[min(72svh,640px)]"
+        style={{ boxShadow: `0 28px 64px rgba(15, 23, 42, 0.5), 0 0 0 1px ${LP_HOTEL_RING_RGBA}, inset 0 0 0 1px rgba(255, 255, 255, 0.06)` }}
+      >
         <div
           className="pointer-events-none absolute left-1/2 top-2.5 z-30 h-7 w-[108px] -translate-x-1/2 rounded-full bg-black shadow-inner ring-1 ring-white/5"
           aria-hidden
@@ -94,11 +106,11 @@ export function LpHeroHotel({
       />
 
       <div
-        className="pointer-events-none absolute -left-24 top-1/4 -z-10 h-72 w-72 rounded-full bg-teal-400/22 blur-3xl"
+        className="pointer-events-none absolute -left-24 top-1/4 -z-10 h-72 w-72 rounded-full bg-ds-accent/20 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-16 bottom-8 -z-10 h-80 w-80 rounded-full bg-emerald-300/16 blur-3xl"
+        className="pointer-events-none absolute -right-16 bottom-8 -z-10 h-80 w-80 rounded-full bg-ds-accent/14 blur-3xl"
         aria-hidden
       />
 
@@ -114,9 +126,7 @@ export function LpHeroHotel({
             <ClipReveal delay={0.12} duration={0.85} className="mt-4">
               <p className="text-5xl font-black tracking-tight sm:text-6xl lg:text-[4.35rem]">
                 Infom
-                <span className="bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-                  ii
-                </span>
+                <span className={LP_HOTEL_GRADIENT_TEXT_CLASS}>ii</span>
               </p>
             </ClipReveal>
 
@@ -125,7 +135,7 @@ export function LpHeroHotel({
                 <span className={`block text-white ${popHeadingClass}`}>{headlineLine1}</span>
               </ClipReveal>
               <ClipReveal delay={0.32}>
-                <span className="block bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-300 bg-clip-text text-transparent lg:whitespace-nowrap">
+                <span className={`block ${LP_HOTEL_GRADIENT_TEXT_CLASS} lg:whitespace-nowrap`}>
                   {headlineLine2}
                 </span>
               </ClipReveal>
@@ -143,13 +153,13 @@ export function LpHeroHotel({
                 <Button
                   href={ctaHref}
                   size="lg"
-                  className="lp-cta-attention min-h-[52px] w-full sm:w-auto !border-teal-400/80 !bg-teal-500 px-8 !text-base !text-white shadow-[0_0_28px_rgba(45,212,191,0.22)] hover:!bg-teal-400 hover:!shadow-[0_12px_36px_rgba(13,148,136,0.4)]"
+                  className={`${LP_HOTEL_CTA_LG_CLASS} w-full sm:w-auto shadow-[0_0_28px_rgba(5,150,105,0.22)] hover:!shadow-[0_12px_36px_rgba(5,150,105,0.35)]`}
                 >
                   無料で公開する
                 </Button>
                 <Link
                   href={demoEditorHref}
-                  className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-semibold text-teal-100/90 underline-offset-4 transition hover:text-white hover:underline"
+                  className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-semibold text-emerald-100/90 underline-offset-4 transition hover:text-white hover:underline"
                 >
                   30秒デモを見る
                 </Link>

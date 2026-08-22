@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import type { EditorCard } from "@/components/editor/types";
 import { getBodyFontSizeStyle } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -76,7 +78,7 @@ export function MapCard({ card, locale = "ja" }: MapCardProps) {
   const address = getLocalizedContent(c?.address as LocalizedString | undefined, locale);
   const mapEmbedUrl = normalizeMapEmbedUrl((c?.mapEmbedUrl as string) ?? "");
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const pins = (Array.isArray(c?.pins) ? c.pins : []) as MapPin[];
   const labels =
     locale === "ko"
@@ -129,7 +131,7 @@ export function MapCard({ card, locale = "ja" }: MapCardProps) {
               referrerPolicy="no-referrer-when-downgrade"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-[var(--pres-accent,#0f766e)]">
+            <div className="flex h-full items-center justify-center text-[var(--pres-accent,#059669)]">
               <LineIcon name="map" className="h-8 w-8" />
             </div>
           )}

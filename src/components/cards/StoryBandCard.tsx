@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 import type { EditorCard } from "@/components/editor/types";
 import { EditorCoverImage } from "@/components/editor/EditorCoverImage";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -20,7 +22,7 @@ export function StoryBandCard({ card, locale = "ja" }: StoryBandCardProps) {
   const imageAlt = typeof c?.imageAlt === "string" ? c.imageAlt : title || "イメージ";
   const overlay = c?.overlay !== false;
   const accent =
-    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : "#0f766e";
+    typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
 
   const update = (patch: Record<string, unknown>) => {
     updateCard(card.id, { content: { ...c, ...patch } });

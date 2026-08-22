@@ -21,7 +21,7 @@ export function LpDemoSection({
   return (
     <Section id="live-demo" kicker="体験" title={title} description={description} variant="muted" popTitle>
       <ScrollReveal intensity="strong">
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/50 p-6 shadow-sm ring-1 ring-emerald-100/80 sm:p-8">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/40 to-emerald-50/50 p-6 shadow-sm ring-1 ring-emerald-100/80 sm:p-8">
           <div
             className="lp-glow-pulse pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-300/20 blur-2xl"
             aria-hidden
@@ -30,7 +30,7 @@ export function LpDemoSection({
             <Button
               href={demoEditorHref}
               size="lg"
-              className="lp-cta-attention min-h-[48px] flex-1 sm:flex-none !bg-emerald-600 hover:!bg-emerald-700"
+              className="lp-cta-attention min-h-[48px] flex-1 sm:flex-none !bg-ds-accent hover:!bg-ds-accent-strong"
             >
               30秒デモを開く
             </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { GuestCardPageView } from "@/components/guest/GuestCardPageView";
@@ -8,7 +9,16 @@ import { LP_DEMO_HERO_IMAGES } from "@/lib/lp/data";
 import type { GuestShellConfig } from "@/lib/guest-shell";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
+import { BRAND_ACCENT } from "@/lib/brand-accent";
+
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
+
+const LP_HOTEL_DEMO_ACCENT_STYLE: CSSProperties = {
+  ["--app-accent" as string]: BRAND_ACCENT,
+  ["--app-accent-soft" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 8%, #ffffff)",
+  ["--app-tile-bg" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 8%, #ffffff)",
+  ["--app-tile-border" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 22%, transparent)",
+};
 
 const FALLBACK_CARDS: EditorCard[] = [
   {
@@ -793,23 +803,28 @@ export default function DemoGuestLivePage() {
   }, [syncFromDemoStorage, variantPreset]);
 
   return (
-    <GuestCardPageView
-      title={variantPreset?.title ?? "ご案内"}
-      cards={cards}
-      initialLocale="ja"
-      localeLocked
-      isEmbed={isEmbed}
-      embedFit={embedFit}
-      disableInteractions={isEmbed}
-      pageBackground={pageBackground}
-      localeToggleHint={null}
-      disableLocaleSwitch
-      showLocaleToggle={variantPreset?.showLocaleToggle ?? true}
-      brandLogoSrc={variantPreset?.brandLogoSrc ?? null}
-      guestShell={variantPreset?.guestShell ?? null}
-      currentSlug={variantPreset?.currentSlug ?? ""}
-      contentInset={variantPreset?.contentInset ?? "default"}
-      guestNavMaxVisible={4}
-    />
+    <div
+      className={templateVariant === "infomii-hotel" ? "h-full min-h-full" : undefined}
+      style={templateVariant === "infomii-hotel" ? LP_HOTEL_DEMO_ACCENT_STYLE : undefined}
+    >
+      <GuestCardPageView
+        title={variantPreset?.title ?? "ご案内"}
+        cards={cards}
+        initialLocale="ja"
+        localeLocked
+        isEmbed={isEmbed}
+        embedFit={embedFit}
+        disableInteractions={isEmbed}
+        pageBackground={pageBackground}
+        localeToggleHint={null}
+        disableLocaleSwitch
+        showLocaleToggle={variantPreset?.showLocaleToggle ?? true}
+        brandLogoSrc={variantPreset?.brandLogoSrc ?? null}
+        guestShell={variantPreset?.guestShell ?? null}
+        currentSlug={variantPreset?.currentSlug ?? ""}
+        contentInset={variantPreset?.contentInset ?? "default"}
+        guestNavMaxVisible={4}
+      />
+    </div>
   );
 }

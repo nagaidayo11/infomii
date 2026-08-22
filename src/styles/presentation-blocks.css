@@ -4,7 +4,7 @@
  */
 
 .pres-block {
-  --pres-accent: #0f766e;
+  --pres-accent: var(--color-ds-accent, #059669);
   --pres-accent-soft: color-mix(in srgb, var(--pres-accent) 12%, white);
   --pres-border: color-mix(in srgb, #94a3b8 35%, transparent);
   --pres-surface: #ffffff;
@@ -848,7 +848,7 @@
 
 /* Welcome layouts */
 .pres-welcome {
-  --pres-accent: #0f766e;
+  --pres-accent: var(--color-ds-accent, #059669);
 }
 
 .pres-welcome--plain {
@@ -922,8 +922,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--pres-accent, #0f766e) 12%, white);
-  color: var(--pres-accent, #0f766e);
+  background: color-mix(in srgb, var(--pres-accent, #059669) 12%, white);
+  color: var(--pres-accent, #059669);
 }
 
 .pres-link-list__copy {
@@ -974,11 +974,11 @@
   gap: 0.35rem;
   padding: 1rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--pres-accent, #0f766e) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pres-accent, #059669) 22%, transparent);
   background:
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--pres-accent, #0f766e) 10%, white),
+      color-mix(in srgb, var(--pres-accent, #059669) 10%, white),
       #fff 55%
     );
   text-decoration: none;
@@ -988,7 +988,7 @@
 .pres-link-poster__icon {
   display: inline-flex;
   margin-bottom: auto;
-  color: var(--pres-accent, #0f766e);
+  color: var(--pres-accent, #059669);
 }
 
 .pres-link-poster__label {
@@ -1009,7 +1009,7 @@
 
 /* Hero layouts */
 .pres-hero {
-  --pres-accent: #0f766e;
+  --pres-accent: var(--color-ds-accent, #059669);
   background: #fff;
 }
 
