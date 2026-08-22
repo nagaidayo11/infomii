@@ -5,6 +5,7 @@ import { useState } from "react";
 import { buildPagePublicUrl } from "@/lib/storage";
 import type { LiveOpsKey } from "@/lib/editor/live-ops";
 import { LiveOpsPageRowActions } from "@/components/ops/LiveOpsPageRowActions";
+import { PageStatusPill } from "@/components/ui/PageStatusPill";
 
 export type PageCardProps = {
   id: string;
@@ -119,13 +120,7 @@ export function PageCard({
           </div>
           <dl className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-normal text-slate-500">
             <div className="flex items-center gap-2">
-              <span
-                className={
-                  status === "published" ? "text-emerald-700" : "text-slate-500"
-                }
-              >
-                {status === "published" ? "公開中" : "下書き"}
-              </span>
+              <PageStatusPill status={status} />
               {canEdit && onTogglePublish && (
                 <button
                   type="button"

@@ -8,6 +8,7 @@ import {
   usePendingPublishApprovalCount,
 } from "./usePendingPublishApprovalCount";
 import { useHotelName } from "@/lib/use-hotel-name";
+import { SidebarPlanHint } from "./SidebarPlanHint";
 
 /**
  * Desktop sidebar (`lg+`). Mobile uses {@link MobileNavDrawer}.
@@ -83,6 +84,7 @@ export function Sidebar() {
         })}
       </nav>
       <div className="border-t border-[#e6e8eb] p-2.5">
+        <SidebarPlanHint />
         <Link
           href="/lp/business"
           className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-slate-800 transition-colors hover:bg-slate-50 hover:text-slate-900"

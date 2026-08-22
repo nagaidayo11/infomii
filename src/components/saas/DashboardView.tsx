@@ -42,6 +42,10 @@ import { LiveOpsDashboardHelp } from "@/components/ops/LiveOpsDashboardHelp";
 import { usePendingPublishApprovalCount } from "@/components/app/usePendingPublishApprovalCount";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { dispatchHotelNameUpdated } from "@/lib/use-hotel-name";
+import { DashboardSetupChecklist } from "@/components/dashboard/DashboardSetupChecklist";
+import { DashboardContinueCard } from "@/components/dashboard/DashboardContinueCard";
+import { PlanUsageStrip } from "@/components/dashboard/PlanUsageStrip";
+import { DashboardHomeStarters } from "@/components/dashboard/DashboardHomeStarters";
 
 export function DashboardView() {
   const { isAppShell } = useClientShell();
@@ -226,11 +230,18 @@ function DashboardViewWeb() {
   }
 
   const items = cardPages;
-  const recent = items.slice(0, 5);
   const infoBySlug = new Map((bootstrap?.informations ?? []).map((info) => [info.slug, info]));
+  const sortedByRecent = [...items].sort((a, b) => {
+    const aTime = infoBySlug.get(a.slug)?.updatedAt ?? "";
+    const bTime = infoBySlug.get(b.slug)?.updatedAt ?? "";
+    return bTime.localeCompare(aTime);
+  });
+  const continuePage = sortedByRecent[0] ?? null;
+  const recent = sortedByRecent.slice(continuePage ? 1 : 0, continuePage ? 6 : 5);
   const published = items.filter((i) => infoBySlug.get(i.slug)?.status === "published");
   const totalViews = viewMetrics?.totalViews7d ?? pageViewAnalytics?.totalViews ?? 0;
   const todayViews = viewMetrics?.totalViewsToday ?? 0;
+  const qrViews7d = viewMetrics?.qrViews7d ?? 0;
   const topPages = viewMetrics?.pageStats?.slice(0, 5) ?? [];
 
   return (
@@ -286,7 +297,7 @@ function DashboardViewWeb() {
               {creating ? "作成中…" : "ページを作成"}
             </button>
             <Link
-              href="/templates"
+              href="/templates?category=business"
               className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md border border-[#e6e8eb] bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               テンプレート
@@ -316,6 +327,35 @@ function DashboardViewWeb() {
           {createError}
         </div>
       )}
+
+      {!loading && bootstrap?.subscription ? (
+        <PlanUsageStrip
+          plan={bootstrap.subscription.plan}
+          publishedCount={published.length}
+          maxPublishedPages={bootstrap.subscription.maxPublishedPages}
+        />
+      ) : null}
+
+      {!loading && bootstrap ? (
+        <DashboardSetupChecklist
+          hotelName={bootstrap.hotelName}
+          pageCount={items.length}
+          publishedCount={published.length}
+          qrViews7d={qrViews7d}
+          canEdit={canEdit}
+        />
+      ) : null}
+
+      {!loading && canEdit && items.length === 0 ? <DashboardHomeStarters /> : null}
+
+      {!loading && continuePage ? (
+        <DashboardContinueCard
+          pageId={continuePage.id}
+          title={continuePage.title}
+          status={infoBySlug.get(continuePage.slug)?.status === "published" ? "published" : "draft"}
+          updatedAt={infoBySlug.get(continuePage.slug)?.updatedAt ?? new Date().toISOString()}
+        />
+      ) : null}
 
       {!loading && bootstrap?.subscription ? (
         <UpgradeCtaBanner
@@ -390,6 +430,7 @@ function DashboardViewWeb() {
         emptyHint="ページを編集すると、ここに最近の活動が表示されます"
       />
 
+      {(loading || items.length === 0 || recent.length > 0) ? (
       <section>
         <div className="flex items-center justify-between gap-2">
           <h2 className="app-section-title">最近のページ</h2>
@@ -403,7 +444,7 @@ function DashboardViewWeb() {
               <div key={i} className="h-[72px] animate-pulse rounded-lg bg-slate-100" />
             ))}
           </div>
-        ) : recent.length === 0 ? (
+        ) : items.length === 0 ? (
           <EmptyState
             className="mt-3"
             compact
@@ -413,7 +454,7 @@ function DashboardViewWeb() {
               canEdit ? (
                 <>
                   <Link
-                    href="/templates"
+                    href="/templates?category=business"
                     className="app-button-native inline-flex min-h-[40px] items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium !text-white hover:bg-slate-800"
                   >
                     テンプレートを選ぶ
@@ -430,7 +471,7 @@ function DashboardViewWeb() {
               ) : undefined
             }
           />
-        ) : (
+        ) : recent.length === 0 ? null : (
           <div className="mt-3 space-y-2">
             {recent.map((item) => {
               const stat = viewMetrics?.pageStats?.find((p) => p.informationId === item.id);
@@ -457,6 +498,7 @@ function DashboardViewWeb() {
           </div>
         )}
       </section>
+      ) : null}
 
       <PlanLimitModal
         open={planLimitModalOpen}
