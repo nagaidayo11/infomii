@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 
-const SHOW_DELAY_MS = 50;
+const SHOW_DELAY_MS = 280;
 const HIDE_FADE_MS = 120;
 const TRICKLE_TICK_MS = 120;
 const TRICKLE_MAX = 70;
@@ -17,6 +17,19 @@ function isSameOriginNavigation(href: string) {
   } catch {
     return false;
   }
+}
+
+function isAppChromePath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/templates") ||
+    pathname.startsWith("/settings")
+  );
+}
+
+/** Sidebar/top-level app switches already animate the page; skip the extra top bar. */
+function shouldSkipAutoProgress(currentPath: string, nextPath: string): boolean {
+  return isAppChromePath(currentPath) && isAppChromePath(nextPath);
 }
 
 function normalizeHistoryUrl(url: string | URL | null | undefined): string | null {
@@ -186,6 +199,7 @@ export function GlobalRouteProgress({ manualPending = false }: { manualPending?:
       const current = `${window.location.pathname}${window.location.search}`;
       const incoming = `${next.pathname}${next.search}`;
       if (current === incoming) return;
+      if (shouldSkipAutoProgress(window.location.pathname, next.pathname)) return;
       scheduleStartPending();
     };
 
@@ -195,7 +209,10 @@ export function GlobalRouteProgress({ manualPending = false }: { manualPending?:
     window.history.pushState = ((...args: Parameters<History["pushState"]>) => {
       const historyUrl = normalizeHistoryUrl(args[2]);
       if (historyUrl && isSameOriginNavigation(historyUrl)) {
-        scheduleStartPending();
+        const next = new URL(historyUrl, window.location.href);
+        if (!shouldSkipAutoProgress(window.location.pathname, next.pathname)) {
+          scheduleStartPending();
+        }
       }
       return originalPushState(...args);
     }) as History["pushState"];
@@ -203,7 +220,10 @@ export function GlobalRouteProgress({ manualPending = false }: { manualPending?:
     window.history.replaceState = ((...args: Parameters<History["replaceState"]>) => {
       const historyUrl = normalizeHistoryUrl(args[2]);
       if (historyUrl && isSameOriginNavigation(historyUrl)) {
-        scheduleStartPending();
+        const next = new URL(historyUrl, window.location.href);
+        if (!shouldSkipAutoProgress(window.location.pathname, next.pathname)) {
+          scheduleStartPending();
+        }
       }
       return originalReplaceState(...args);
     }) as History["replaceState"];

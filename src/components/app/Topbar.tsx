@@ -144,7 +144,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
 
   return (
     <header
-      className="flex min-h-12 shrink-0 items-center justify-between gap-2 border-b border-[#e6e8eb] bg-white px-3 sm:gap-4 sm:px-5"
+      className="flex min-h-14 shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white/90 px-3 backdrop-blur-md sm:gap-4 sm:px-5"
       style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
@@ -162,14 +162,14 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
         )}
         <div className="min-w-0 flex-1">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
-            {sectionTitle && (
-              <h1 className="truncate text-sm font-medium text-slate-700">{sectionTitle}</h1>
-            )}
+            {sectionTitle ? (
+              <h1 className="truncate text-[13px] font-semibold tracking-tight text-slate-800">{sectionTitle}</h1>
+            ) : null}
           </div>
           <div className="min-w-0 sm:hidden">
-            {sectionTitle && (
+            {sectionTitle ? (
               <h1 className="truncate text-sm font-medium leading-tight text-slate-900">{sectionTitle}</h1>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export function Topbar({ title: _title, subtitle: _subtitle, actions, onOpenMobi
               return next;
             });
           }}
-          className="app-button-native flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="app-button-native flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-300"
           aria-expanded={menuOpen}
           aria-haspopup="true"
           aria-label={displayName ? `${displayName}のメニュー` : "ユーザーメニュー"}
