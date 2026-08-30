@@ -611,6 +611,11 @@
   opacity: 1;
 }
 
+.pres-story-band__media--tall {
+  aspect-ratio: 3 / 4;
+  min-height: 22rem;
+}
+
 /* Day timeline */
 .pres-timeline {
   margin: 0;
@@ -1137,3 +1142,354 @@
   color: var(--pres-muted);
   text-align: center;
 }
+
+/* Editorial lookbook cover */
+.pres-editorial-cover {
+  width: 100%;
+}
+
+.pres-editorial-cover__media {
+  position: relative;
+  overflow: hidden;
+  min-height: min(82vh, 720px);
+  aspect-ratio: 3 / 4;
+  background: #1a1410;
+}
+
+.pres-editorial-cover[data-size="chapter"] .pres-editorial-cover__media {
+  min-height: min(58vh, 520px);
+}
+
+.pres-editorial-cover__media img,
+.pres-editorial-cover__media > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.pres-editorial-cover__empty {
+  display: flex;
+  height: 100%;
+  min-height: 22rem;
+  align-items: center;
+  justify-content: center;
+  color: #c4b5a5;
+  font-size: 0.875rem;
+}
+
+.pres-editorial-cover__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(12 8 6 / 0.12) 0%, transparent 34%, rgb(12 8 6 / 0.82) 100%);
+  pointer-events: none;
+}
+
+.pres-editorial-cover__copy,
+.pres-editorial-cover__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.75rem 1.25rem 1.6rem;
+  color: #f7efe6;
+  text-decoration: none;
+}
+
+.pres-editorial-cover__kicker {
+  margin: 0 0 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.pres-editorial-cover__title {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(1.85rem, 8vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.pres-editorial-cover__fact {
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.pres-photo-poster {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 0.2rem;
+  background: #1a1410;
+}
+
+.pres-photo-poster__media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.pres-photo-poster__media img,
+.pres-photo-poster__media > span:not(.pres-photo-poster__label) {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.pres-photo-poster__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  z-index: 1;
+  height: auto;
+  padding: 3rem 0.85rem 0.9rem;
+  background: linear-gradient(transparent, rgb(12 8 6 / 0.88));
+  color: #f7efe6;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+[data-lookbook="akari"] {
+  --color-ds-card: transparent;
+  --editor-card-surface: transparent;
+  --editor-block-surface: transparent;
+  background: #120e0b;
+  color: #f4e6d4;
+  min-height: 100%;
+}
+
+[data-lookbook="akari"] [data-guest-page-root] {
+  background: #0c0a08 !important;
+}
+
+[data-lookbook="akari"] [data-guest-page-shell] {
+  background: #120e0b !important;
+}
+
+[data-lookbook="akari"] .guest-page {
+  --pres-accent: #e8b086;
+  --pres-accent-soft: color-mix(in srgb, #e8b086 16%, #1a1410);
+  --pres-border: rgb(255 255 255 / 0.12);
+  --pres-surface: transparent;
+  --pres-muted: #c4b5a5;
+  --pres-text: #f4e6d4;
+  --guest-title-color: #f4e6d4;
+  --guest-body-color: #e8dcc8;
+  --guest-caption-color: #c4b5a5;
+  color: #f4e6d4;
+}
+
+[data-lookbook="akari"] .guest-page-main {
+  padding-top: 0;
+  padding-bottom: 2.75rem;
+}
+
+[data-lookbook="akari"] [data-guest-header] {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 40;
+  background: rgb(12 8 6 / 0.78) !important;
+  border-color: rgb(255 255 255 / 0.06) !important;
+  backdrop-filter: blur(18px);
+}
+
+[data-lookbook="akari"] [data-guest-header] h1,
+[data-lookbook="akari"] [data-guest-header] button,
+[data-lookbook="akari"] [data-guest-header] a,
+[data-lookbook="akari"] [data-guest-header] span {
+  color: #f7efe6 !important;
+}
+
+[data-lookbook="akari"] [data-guest-header] img {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.18);
+}
+
+[data-lookbook="akari"] [data-guest-header] button[aria-label="Language"] span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+[data-lookbook="akari"] [role="listbox"] {
+  background: #1c1612 !important;
+  border-color: rgb(255 255 255 / 0.14) !important;
+  color: #f4e6d4 !important;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.45) !important;
+}
+
+[data-lookbook="akari"] .guest-card-stack {
+  --guest-stack-gap: 0;
+  --guest-stack-gap-flush: 0;
+}
+
+[data-lookbook="akari"] .guest-card-surface,
+[data-lookbook="akari"] .guest-card-surface-media,
+[data-lookbook="akari"] [class*="rounded-[var(--guest-card-radius"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #f4e6d4;
+}
+
+[data-lookbook="akari"] .guest-page-link.inline-flex {
+  background: rgb(255 255 255 / 0.08);
+  border-color: rgb(255 255 255 / 0.16);
+  color: #f4e6d4;
+}
+
+[data-lookbook="akari"] .pres-editorial-cover__media {
+  min-height: min(92dvh, 820px);
+  aspect-ratio: auto;
+}
+
+[data-lookbook="akari"] .pres-editorial-cover[data-size="chapter"] .pres-editorial-cover__media {
+  min-height: min(68dvh, 560px);
+}
+
+[data-lookbook="akari"] .pres-quote {
+  padding: 3.1rem 1.35rem 2.6rem !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+[data-lookbook="akari"] .pres-quote__label {
+  display: none;
+}
+
+[data-lookbook="akari"] .pres-quote blockquote {
+  margin: 0 auto;
+  max-width: 18em;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: #f7efe6 !important;
+  font-size: clamp(1.35rem, 6.4vw, 1.85rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em;
+  line-height: 1.4 !important;
+}
+
+[data-lookbook="akari"] .pres-quote > p {
+  margin: 1rem 0 0 !important;
+  color: #c4b5a5 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+[data-lookbook="akari"] .guest-page-main [class*="bg-slate-50"],
+[data-lookbook="akari"] .guest-page-main [class*="bg-slate-100"],
+[data-lookbook="akari"] .guest-page-main [class*="bg-white"] {
+  background-color: rgb(255 255 255 / 0.05) !important;
+}
+
+[data-lookbook="akari"] .guest-page-main [class*="border-slate"] {
+  border-color: rgb(255 255 255 / 0.1) !important;
+}
+
+[data-lookbook="akari"] .guest-page-main [class*="text-slate"],
+[data-lookbook="akari"] .guest-page-main [class*="text-emerald"],
+[data-lookbook="akari"] .guest-page-main [class*="text-amber"],
+[data-lookbook="akari"] .guest-page-main [class*="text-red-"] {
+  color: #f4e6d4 !important;
+}
+
+[data-lookbook="akari"] .guest-page-main [class*="bg-emerald-100"],
+[data-lookbook="akari"] .guest-page-main [class*="bg-amber-100"],
+[data-lookbook="akari"] .guest-page-main [class*="bg-red-100"] {
+  background: rgb(232 176 134 / 0.16) !important;
+  color: #e8b086 !important;
+  box-shadow: none !important;
+}
+
+[data-lookbook="akari"] .pres-icon-accordion {
+  padding: 0.5rem 1.1rem 1.6rem;
+}
+
+[data-lookbook="akari"] .pres-icon-accordion__body-inner {
+  background: rgb(255 255 255 / 0.04);
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+[data-lookbook="akari"] .pres-icon-accordion__body-inner p {
+  color: #c4b5a5 !important;
+}
+
+[data-lookbook="akari"] .pres-block {
+  --pres-accent: #e8b086;
+  --pres-accent-soft: color-mix(in srgb, #e8b086 16%, #1a1410);
+  --pres-border: rgb(255 255 255 / 0.12);
+  --pres-surface: transparent;
+  --pres-muted: #c4b5a5;
+  --pres-text: #f4e6d4;
+  padding: 0.35rem 1.2rem 1.8rem;
+}
+
+[data-lookbook="akari"] .pres-block__title {
+  color: #f4e6d4;
+}
+
+[data-lookbook="akari"] .pres-timeline__dot {
+  box-shadow: 0 0 0 3px rgb(232 176 134 / 0.18);
+}
+
+[data-lookbook="akari"] .pres-timeline__line {
+  background: rgb(232 176 134 / 0.28);
+}
+
+[data-lookbook="akari"] .card-content-inset {
+  margin-left: 0.9rem;
+  margin-right: 0.9rem;
+}
+
+[data-lookbook="akari"] .pres-link-list {
+  gap: 0;
+}
+
+[data-lookbook="akari"] .pres-link-list__item {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 0;
+  padding: 1.05rem 0.1rem;
+}
+
+[data-lookbook="akari"] .pres-link-list__item[data-open="true"] {
+  box-shadow: none;
+}
+
+[data-lookbook="akari"] .pres-link-list__label {
+  color: #f7efe6;
+  font-size: 1.05rem;
+}
+
+[data-lookbook="akari"] .pres-link-list__desc,
+[data-lookbook="akari"] .pres-link-list__chevron {
+  color: #c4b5a5;
+}
+
+[data-lookbook="akari"] .pres-link-list__icon {
+  background: rgb(232 176 134 / 0.14);
+  color: #e8b086;
+}
+
+[data-lookbook="akari"] .guest-card-pad {
+  padding-top: 1.35rem;
+  padding-bottom: 1.6rem;
+}
+

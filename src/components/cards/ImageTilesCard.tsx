@@ -53,6 +53,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
   const rawColumns = typeof content?.columns === "number" ? content.columns : Number(content?.columns);
   const columns = rawColumns === 2 || rawColumns === 3 ? rawColumns : 2;
   const showLabels = content?.showLabels !== false;
+  const isPoster = content?.layout === "poster";
   const labels =
     locale === "ko"
       ? { emptyImage: "이미지", titlePlaceholder: "시설 안내", labelPlaceholder: "라벨" }
@@ -86,7 +87,30 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
     return href.startsWith("http://") || href.startsWith("https://") || href.startsWith("tel:");
   };
 
-  const renderTileBody = (item: TileItem, i: number, label: string) => (
+  const renderTileBody = (item: TileItem, i: number, label: string) => {
+    if (isPoster) {
+      return (
+        <div className="pres-photo-poster">
+          <div className="pres-photo-poster__media">
+            {item?.src ? (
+              <EditorCoverImage
+                src={item.src}
+                alt={label}
+                sizes="46vw"
+                className="object-cover object-center"
+              />
+            ) : (
+              <div className="flex h-full min-h-[12rem] items-center justify-center text-slate-400">
+                {labels.emptyImage}
+              </div>
+            )}
+            {showLabels ? <span className="pres-photo-poster__label">{label}</span> : null}
+          </div>
+        </div>
+      );
+    }
+
+    return (
     <>
       <div
         data-inner-surface={!isNativeUi ? true : undefined}
@@ -150,7 +174,8 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
         </div>
       ) : null}
     </>
-  );
+    );
+  };
 
   if (isNativeUi) {
     return (
@@ -228,7 +253,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
   }
 
   return (
-    <Card padding="md">
+    <Card padding={isPoster ? "none" : "md"} className={isPoster ? "bg-transparent shadow-none ring-0" : undefined}>
       {(editable || title) ? (
         <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <InlineEditable
@@ -243,7 +268,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
       ) : null}
 
       <div
-        className="grid gap-3"
+        className={isPoster ? "grid gap-[5px] px-[5px]" : "grid gap-3"}
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {items.slice(0, 12).map((item, i) => {

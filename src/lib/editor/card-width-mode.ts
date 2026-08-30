@@ -39,6 +39,10 @@ export function normalizeCardWidthModeContent(
 }
 
 export function isCardFullBleed(card: Pick<EditorCard, "type" | "content">): boolean {
+  if (card.type === "editorialCover") return true;
+  if (card.type === "image_tiles" && (card.content as { layout?: unknown } | undefined)?.layout === "poster") {
+    return true;
+  }
   if (card.type !== "hero" && card.type !== "hero_slider") return false;
   // Heroes default to full-bleed (same as defaultContent / marketplace seeds).
   return readCardWidthMode(card.content, "full") === "full";

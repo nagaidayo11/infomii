@@ -68,8 +68,8 @@ export function QuoteCard({ card, isSelected = false, locale = "ja" }: QuoteCard
   }
 
   return (
-    <Card padding="md">
-      <div className="flex items-center gap-2 text-slate-500">
+    <Card padding="md" className="pres-quote">
+      <div className="pres-quote__label flex items-center gap-2 text-slate-500">
         <LineIcon name="quote" className="h-4 w-4" />
         <span className="text-xs font-normal tracking-wide">{labels.quote}</span>
       </div>

@@ -50,6 +50,7 @@ export type CardType =
   | "icon_shortcuts"
   | "iconAccordion"
   | "image_tiles"
+  | "editorialCover"
   | "storyBand"
   | "dayTimeline"
   /** @deprecated Prefer image_tiles. Existing pages only — hidden from library. */
@@ -170,7 +171,7 @@ export const CARD_CONTENT_INSET_X = "px-3" as const;
 export const CARD_CONTENT_INSET_Y = "py-3" as const;
 export const CARD_CONTENT_INSET = "guest-card-pad" as const;
 
-const DEFAULT_TRANSPARENT_MEDIA_TYPES: readonly CardType[] = ["hero", "hero_slider", "image", "gallery"] as const;
+const DEFAULT_TRANSPARENT_MEDIA_TYPES: readonly CardType[] = ["hero", "hero_slider", "image", "gallery", "editorialCover"] as const;
 export const TRANSPARENT_MEDIA_CARD_TYPES = new Set<CardType>(DEFAULT_TRANSPARENT_MEDIA_TYPES);
 
 export function isMediaCardType(type: CardType | undefined): type is CardType {
@@ -187,6 +188,7 @@ const HERO_COLUMN_WIDTH_TYPES: ReadonlySet<CardType> = new Set<CardType>([
   "image",
   "gallery",
   "image_tiles",
+  "editorialCover",
   "storyBand",
   "dayTimeline",
   "scrollCards",
@@ -380,6 +382,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   icon_shortcuts: "アイコンショートカット",
   iconAccordion: "アイコンで開く案内",
   image_tiles: "写真ギャラリー",
+  editorialCover: "表紙カバー",
   storyBand: "写真ストーリー帯",
   dayTimeline: "一日のタイムライン",
   scrollCards: "おすすめカード（旧）",
@@ -437,6 +440,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "coupon",
   "accordion_info",
   "iconAccordion",
+  "editorialCover",
   "storyBand",
   "dayTimeline",
   "sectionTitle",
@@ -482,6 +486,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "coupon", label: "クーポン", description: "特典コード・期限・注意事項（Pro）" },
   { type: "accordion_info", label: "折りたたみ案内", description: "タップで開くQ&A・説明" },
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
+  { type: "editorialCover", label: "表紙カバー", description: "画面いっぱいに写真と大きな見出しを置く" },
   { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
   { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
   { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
@@ -550,6 +555,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "parking", label: "駐車場案内", description: "台数・料金・場所" },
   { type: "pageLinks", label: "他ページへの入口", description: "アイコンで子ページや外部へ案内" },
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
+  { type: "editorialCover", label: "表紙カバー", description: "画面いっぱいに写真と大きな見出しを置く" },
   { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
   { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
   { type: "scrollCards", label: "おすすめカード", description: "写真付きカードを横にスクロール" },
@@ -1071,7 +1077,19 @@ function defaultContent(type: CardType): Record<string, unknown> {
         image: PRESET_HERO_SAMPLE_IMAGE,
         imageAlt: "館内イメージ",
         overlay: true,
+        size: "default",
         accentColor: BRAND_ACCENT,
+      };
+    case "editorialCover":
+      return {
+        kicker: "Stay",
+        title: "今夜は、灯のそばで",
+        fact: "大浴場 〜23:00 · 内線 9",
+        image: PRESET_HERO_SAMPLE_IMAGE,
+        imageAlt: "カバー",
+        size: "cover",
+        href: "",
+        widthMode: "full",
       };
     case "dayTimeline":
       return {
@@ -1150,6 +1168,7 @@ function defaultContent(type: CardType): Record<string, unknown> {
         title: "写真ギャラリー",
         columns: 2,
         showLabels: true,
+        layout: "caption",
         items: [
           {
             src: PRESET_HERO_SAMPLE_IMAGE,

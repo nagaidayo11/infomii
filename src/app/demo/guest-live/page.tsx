@@ -10,6 +10,8 @@ import type { GuestShellConfig } from "@/lib/guest-shell";
 import type { PageBackgroundStyle } from "@/lib/storage";
 
 import { BRAND_ACCENT } from "@/lib/brand-accent";
+import { getAkariPreset } from "@/lib/demo/akari-hotel";
+import Link from "next/link";
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
 
@@ -18,6 +20,13 @@ const LP_HOTEL_DEMO_ACCENT_STYLE: CSSProperties = {
   ["--app-accent-soft" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 8%, #ffffff)",
   ["--app-tile-bg" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 8%, #ffffff)",
   ["--app-tile-border" as string]: "color-mix(in srgb, var(--color-ds-accent, #059669) 22%, transparent)",
+};
+
+const AKARI_ACCENT_STYLE: CSSProperties = {
+  ["--app-accent" as string]: "#c2410c",
+  ["--app-accent-soft" as string]: "color-mix(in srgb, #c2410c 10%, #f6f1ea)",
+  ["--app-tile-bg" as string]: "color-mix(in srgb, #c2410c 8%, #ffffff)",
+  ["--app-tile-border" as string]: "color-mix(in srgb, #c2410c 22%, transparent)",
 };
 
 const FALLBACK_CARDS: EditorCard[] = [
@@ -63,6 +72,7 @@ const FALLBACK_BG: PageBackgroundStyle = {
 };
 
 const TEMPLATE_VARIANTS = [
+  "akari",
   "infomii-hotel",
   "city-hotel",
   "travel",
@@ -135,7 +145,10 @@ function createCard(type: CardType, order: number, content: Record<string, unkno
   };
 }
 
-function variantCardsAndBg(variant: TemplateVariant): VariantPreset {
+function variantCardsAndBg(variant: TemplateVariant, page?: string | null): VariantPreset {
+  if (variant === "akari") {
+    return getAkariPreset(page ?? null);
+  }
   const baseBg: PageBackgroundStyle = {
     mode: "solid",
     color: "#ffffff",
@@ -757,8 +770,9 @@ export default function DemoGuestLivePage() {
   const isEmbed = searchParams.get("embed") === "1";
   const embedFit = searchParams.get("fit") === "device" ? "device" : "card";
   const variantParam = searchParams.get("variant");
+  const pageParam = searchParams.get("page");
   const templateVariant: TemplateVariant | null = isTemplateVariant(variantParam) ? variantParam : null;
-  const variantPreset = templateVariant ? variantCardsAndBg(templateVariant) : null;
+  const variantPreset = templateVariant ? variantCardsAndBg(templateVariant, pageParam) : null;
   // Keep first render identical between server/client to avoid hydration mismatch.
   const [liveCards, setLiveCards] = useState<EditorCard[]>(FALLBACK_CARDS);
   const [livePageBackground, setLivePageBackground] = useState<PageBackgroundStyle>(FALLBACK_BG);
@@ -802,10 +816,19 @@ export default function DemoGuestLivePage() {
     };
   }, [syncFromDemoStorage, variantPreset]);
 
+  const akariHomeHref = "/demo/guest-live?variant=akari&page=home";
+  const wrapStyle =
+    templateVariant === "akari"
+      ? AKARI_ACCENT_STYLE
+      : templateVariant === "infomii-hotel"
+        ? LP_HOTEL_DEMO_ACCENT_STYLE
+        : undefined;
+
   return (
     <div
-      className={templateVariant === "infomii-hotel" ? "h-full min-h-full" : undefined}
-      style={templateVariant === "infomii-hotel" ? LP_HOTEL_DEMO_ACCENT_STYLE : undefined}
+      className={templateVariant === "infomii-hotel" || templateVariant === "akari" ? "h-full min-h-full" : undefined}
+      data-lookbook={templateVariant === "akari" ? "akari" : undefined}
+      style={wrapStyle}
     >
       <GuestCardPageView
         title={variantPreset?.title ?? "ご案内"}
@@ -824,6 +847,17 @@ export default function DemoGuestLivePage() {
         currentSlug={variantPreset?.currentSlug ?? ""}
         contentInset={variantPreset?.contentInset ?? "default"}
         guestNavMaxVisible={4}
+        businessFeaturesEnabled={templateVariant === "akari"}
+        backButton={
+          templateVariant === "akari" && pageParam && pageParam !== "home" ? (
+            <Link
+              href={akariHomeHref}
+              className="guest-page-link inline-flex min-h-[32px] items-center rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 shadow-sm"
+            >
+              ← ホテル灯
+            </Link>
+          ) : undefined
+        }
       />
     </div>
   );

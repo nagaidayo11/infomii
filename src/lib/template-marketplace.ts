@@ -78,6 +78,7 @@ export function normalizeMarketplaceSeedCardContent(
       };
     case "sectionTitle":
     case "storyBand":
+    case "editorialCover":
     case "dayTimeline":
     case "tabs_info":
     case "accordion_info":

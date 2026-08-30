@@ -21,6 +21,7 @@ export function StoryBandCard({ card, locale = "ja" }: StoryBandCardProps) {
   const image = typeof c?.image === "string" ? c.image : "";
   const imageAlt = typeof c?.imageAlt === "string" ? c.imageAlt : title || "イメージ";
   const overlay = c?.overlay !== false;
+  const tall = c?.size === "tall";
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
 
@@ -77,7 +78,13 @@ export function StoryBandCard({ card, locale = "ja" }: StoryBandCardProps) {
 
   return (
     <section className="pres-block pres-story-band" style={{ ["--pres-accent" as string]: accent }}>
-      <div className={overlay ? "pres-story-band__media" : "pres-story-band__media pres-story-band__media--plain"}>
+      <div
+        className={
+          overlay
+            ? `pres-story-band__media${tall ? " pres-story-band__media--tall" : ""}`
+            : "pres-story-band__media pres-story-band__media--plain"
+        }
+      >
         {image ? (
           <EditorCoverImage src={image} alt={imageAlt} sizes="420px" className="object-cover object-center" />
         ) : (
