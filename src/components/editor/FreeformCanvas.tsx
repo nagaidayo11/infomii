@@ -103,6 +103,7 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
   pageLinks: 104,
   iconAccordion: 180,
   storyBand: 220,
+  editorialCover: 280,
   dayTimeline: 200,
   scrollCards: 200,
   sectionTitle: 88,

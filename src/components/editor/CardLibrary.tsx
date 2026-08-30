@@ -709,6 +709,12 @@ export const CARD_ICONS: Record<CardType, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 15h10M7 12h6" />
     </svg>
   ),
+  editorialCover: (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <rect x="4" y="3" width="16" height="18" rx="2" strokeWidth={2} />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16h10M7 13h7" />
+    </svg>
+  ),
   dayTimeline: (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="7" cy="6" r="1.5" strokeWidth={2} />
