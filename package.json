@@ -29,7 +29,8 @@
     "app-store:seed-review": "node scripts/seed-app-store-review-account.mjs",
     "app-store:verify": "node scripts/verify-app-store-readiness.mjs",
     "supabase:email-templates-ja": "node scripts/apply-supabase-email-templates-ja.mjs",
-    "app-store:capture-screenshots": "node scripts/capture-app-store-screenshots.mjs"
+    "app-store:capture-screenshots": "node scripts/capture-app-store-screenshots.mjs",
+    "instagram:export": "node scripts/export-instagram-carousel.mjs"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
@@ -57,6 +58,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "playwright": "^1.60.0",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
