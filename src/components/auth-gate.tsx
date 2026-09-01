@@ -15,6 +15,7 @@ import { ensureUserHotelScope } from "@/lib/storage";
 import { isAccessRevokedError } from "@/lib/access-revoked";
 
 const SCOPE_CHECK_TIMEOUT_MS = 7_000;
+const WEB_BOOT_AUTO_RELOAD_MS = 2_500;
 const APP_BOOT_AUTO_RELOAD_MS = 7_000;
 const APP_BOOT_RECOVERY_MS = 14_000;
 const APP_BOOT_AUTO_RELOAD_COOLDOWN_MS = 60_000;
@@ -23,7 +24,7 @@ function appBootAutoReloadKey(pathname: string | null): string {
   return `infomii-app-boot-auto-reload:${pathname ?? "/dashboard"}`;
 }
 
-function autoReloadCurrentAppRoute(pathname: string | null): boolean {
+function autoReloadCurrentAppRoute(pathname: string | null, asAppShell: boolean): boolean {
   if (typeof window === "undefined") return false;
   try {
     const key = appBootAutoReloadKey(pathname);
@@ -33,7 +34,11 @@ function autoReloadCurrentAppRoute(pathname: string | null): boolean {
     }
     window.sessionStorage.setItem(key, String(Date.now()));
     const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    window.location.replace(withAppClientQuery(currentPath || pathname || "/dashboard"));
+    const fallback = pathname || "/dashboard";
+    const next = asAppShell
+      ? withAppClientQuery(currentPath || fallback)
+      : currentPath || fallback;
+    window.location.replace(next);
     return true;
   } catch {
     return false;
@@ -69,14 +74,15 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const bootWaiting = enabled && (loading || !user || Boolean(user && !scopeChecked && !hasCachedAuthScope(user.id)));
 
   useEffect(() => {
-    if (!isAppShell || !bootWaiting) {
+    if (!bootWaiting) {
       setShowRecovery(false);
       return;
     }
+    const reloadAfterMs = isAppShell ? APP_BOOT_AUTO_RELOAD_MS : WEB_BOOT_AUTO_RELOAD_MS;
     const reloadTimer = window.setTimeout(() => {
-      if (autoReloadCurrentAppRoute(pathname)) return;
+      if (autoReloadCurrentAppRoute(pathname, isAppShell)) return;
       setShowRecovery(true);
-    }, APP_BOOT_AUTO_RELOAD_MS);
+    }, reloadAfterMs);
     const timer = window.setTimeout(() => setShowRecovery(true), APP_BOOT_RECOVERY_MS);
     return () => {
       window.clearTimeout(reloadTimer);
@@ -138,6 +144,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     })();
     return () => {
       active = false;
+      if (checkingScopeUserIdRef.current === userId) {
+        checkingScopeUserIdRef.current = null;
+      }
     };
   }, [enabled, loading, user?.id, router, isAppShell]);
 
@@ -171,6 +180,15 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <main className="mx-auto min-h-screen w-full max-w-xl px-4 py-10 sm:px-6">
         <p className="text-sm text-slate-600">認証状態を確認しています...</p>
+        {showRecovery ? (
+          <button
+            type="button"
+            className="mt-4 text-sm font-medium text-emerald-700 underline underline-offset-2"
+            onClick={() => window.location.reload()}
+          >
+            進まないときは再読み込み
+          </button>
+        ) : null}
       </main>
     );
   }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BLOG_CATEGORIES, getCategory, getPostsByCategory } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import {
   breadcrumbJsonLd,
   itemListJsonLd,
@@ -75,7 +76,9 @@ export default async function BlogCategoryPage({ params }: BlogCategoryPageProps
             </span>
             <span className="text-slate-700">{category.label}</span>
           </nav>
-          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Infomii Blog</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">
+            <InfomiiWordmark /> Blog
+          </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 drop-shadow-[0_3px_0_rgba(16,185,129,0.15)] sm:text-4xl">
             {category.label}
           </h1>

@@ -54,3 +54,13 @@ export function buildLoginConfirmedUrl(client?: "app"): string {
   }
   return `${origin}/login?${params.toString()}`;
 }
+
+/**
+ * Full document navigation after login. Client `router.replace` can land on
+ * /dashboard before the session is visible to AuthGate; a refresh then works.
+ */
+export function hardReplaceAppPath(path: string) {
+  if (typeof window === "undefined") return;
+  const next = path.startsWith("/") && !path.startsWith("//") ? path : "/dashboard";
+  window.location.replace(next);
+}

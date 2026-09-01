@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui";
 import { ClipReveal, WordReveal } from "@/components/lp/hotel/LpHotelMotion";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import {
   LP_HOTEL_CTA_LG_CLASS,
   LP_HOTEL_GRADIENT_TEXT_CLASS,
@@ -125,8 +126,7 @@ export function LpHeroHotel({
 
             <ClipReveal delay={0.12} duration={0.85} className="mt-4">
               <p className="text-5xl font-black tracking-tight sm:text-6xl lg:text-[4.35rem]">
-                Infom
-                <span className={LP_HOTEL_GRADIENT_TEXT_CLASS}>ii</span>
+                <InfomiiWordmark tone="onDark" />
               </p>
             </ClipReveal>
 

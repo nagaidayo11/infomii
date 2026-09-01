@@ -6,6 +6,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { buildAuthCallbackUrl } from "@/lib/auth-redirect";
 import { FadeIn } from "@/components/motion";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -74,7 +75,9 @@ export default function ForgotPasswordPage() {
       <FadeIn className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-block">
-            <span className="text-xl font-semibold text-slate-900">Infomii</span>
+            <span className="text-xl font-semibold text-slate-900">
+              <InfomiiWordmark />
+            </span>
           </Link>
           <p className="mt-2 text-sm text-slate-500">パスワードを再設定</p>
         </div>

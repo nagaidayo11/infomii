@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import { motion, useReducedMotion } from "framer-motion";
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
@@ -62,7 +63,9 @@ export default function SaasMobileDemoPage() {
                 variants={{ hidden: fadeUp, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
               >
                 <div className="min-w-0">
-                  <span className="text-[13px] font-semibold tracking-[-0.02em] text-slate-900">Infomii</span>
+                  <span className="text-[13px] font-semibold tracking-[-0.02em] text-slate-900">
+                    <InfomiiWordmark />
+                  </span>
                   <p className="mt-1 max-w-[200px] text-[11px] font-medium leading-snug tracking-wide text-[var(--demo-muted)]">
                     館内インフォメーション
                   </p>

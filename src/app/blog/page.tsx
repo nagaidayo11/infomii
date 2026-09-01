@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOG_CATEGORIES, getAllPosts, getPillarPosts } from "@/lib/blog";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import {
   breadcrumbJsonLd,
   itemListJsonLd,
@@ -61,7 +62,9 @@ export default function BlogIndexPage() {
               ← 戻る
             </Link>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Infomii Blog</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">
+            <InfomiiWordmark /> Blog
+          </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 drop-shadow-[0_3px_0_rgba(16,185,129,0.15)] sm:text-4xl">
             ホテル運営をラクにする実践記事
           </h1>

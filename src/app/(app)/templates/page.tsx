@@ -258,6 +258,89 @@ function TemplateRail({
   );
 }
 
+const PREVIEW_IMAGE_WAIT_MS = 2000;
+
+/**
+ * Hold template preview until images have painted, then reveal in one shot.
+ * Avoids the small pop → correct-size swap.
+ */
+function usePreviewPaintReady(enabled: boolean, nonce: string) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(false);
+    if (!enabled) return;
+
+    let cancelled = false;
+    let settled = false;
+    let timeoutId = 0;
+    let startRaf = 0;
+    let startRaf2 = 0;
+    let settleRaf1 = 0;
+    let settleRaf2 = 0;
+    const listeners: Array<{ img: HTMLImageElement; onDone: () => void }> = [];
+
+    const finish = () => {
+      if (cancelled || settled) return;
+      settled = true;
+      settleRaf1 = window.requestAnimationFrame(() => {
+        settleRaf2 = window.requestAnimationFrame(() => {
+          if (!cancelled) setReady(true);
+        });
+      });
+    };
+
+    const watchImages = () => {
+      const host = hostRef.current;
+      if (!host) {
+        finish();
+        return;
+      }
+      const imgs = Array.from(host.querySelectorAll("img"));
+      const pending = imgs.filter((img) => !img.complete);
+      if (imgs.length === 0) {
+        finish();
+        return;
+      }
+      if (pending.length === 0) {
+        finish();
+        return;
+      }
+      let remaining = pending.length;
+      pending.forEach((img) => {
+        const onDone = () => {
+          remaining -= 1;
+          if (remaining <= 0) finish();
+        };
+        img.addEventListener("load", onDone);
+        img.addEventListener("error", onDone);
+        listeners.push({ img, onDone });
+      });
+      timeoutId = window.setTimeout(finish, PREVIEW_IMAGE_WAIT_MS);
+    };
+
+    startRaf = window.requestAnimationFrame(() => {
+      startRaf2 = window.requestAnimationFrame(watchImages);
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(startRaf);
+      window.cancelAnimationFrame(startRaf2);
+      window.cancelAnimationFrame(settleRaf1);
+      window.cancelAnimationFrame(settleRaf2);
+      window.clearTimeout(timeoutId);
+      listeners.forEach(({ img, onDone }) => {
+        img.removeEventListener("load", onDone);
+        img.removeEventListener("error", onDone);
+      });
+    };
+  }, [enabled, nonce]);
+
+  return { hostRef, ready };
+}
+
 /**
  * Template marketplace — /templates
  * Display template cards (title, description, preview image, Use Template).
@@ -280,6 +363,11 @@ export default function TemplatesPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pendingCategoryScrollRef = useRef<string | null>(null);
+  const previewRequestIdRef = useRef(0);
+  const { hostRef: previewHostRef, ready: previewPaintReady } = usePreviewPaintReady(
+    !!previewTemplate,
+    previewTemplate?.id ?? "",
+  );
 
   const starterSlug = searchParams.get("starter");
 
@@ -325,16 +413,20 @@ export default function TemplatesPage() {
     setCategory("all");
   }, [isAppShell, searchParams]);
 
+  const closePreview = useCallback(() => {
+    previewRequestIdRef.current += 1;
+    setPreviewTemplate(null);
+    setPreviewLoading(false);
+  }, []);
+
   useEffect(() => {
-    if (!previewTemplate) return;
+    if (!previewLoading && !previewTemplate) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setPreviewTemplate(null);
-      }
+      if (e.key === "Escape") closePreview();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [previewTemplate]);
+  }, [previewLoading, previewTemplate, closePreview]);
 
   useEffect(() => {
     let active = true;
@@ -444,17 +536,24 @@ export default function TemplatesPage() {
   }, [starterSlug, loading, templates]);
 
   async function handlePreview(template: TemplateRow) {
+    const requestId = ++previewRequestIdRef.current;
     setPreviewLoading(true);
-    setPreviewTemplate(template);
+    setPreviewTemplate(null);
     setError(null);
     try {
       const full = await getTemplateWithCards(template.id);
-      if (full) setPreviewTemplate(full);
+      if (previewRequestIdRef.current !== requestId) return;
+      if (full) {
+        setPreviewTemplate(full);
+      }
     } catch (e) {
+      if (previewRequestIdRef.current !== requestId) return;
       setPreviewTemplate(null);
       setError(e instanceof Error ? e.message : "プレビューの読み込みに失敗しました");
     } finally {
-      setPreviewLoading(false);
+      if (previewRequestIdRef.current === requestId) {
+        setPreviewLoading(false);
+      }
     }
   }
 
@@ -527,104 +626,120 @@ export default function TemplatesPage() {
   /** ~iPhone aspect for the chassis width used in PhoneDeviceFrame. */
   const phoneFrameH = Math.round(phoneFrameOuterW * (852 / 393));
 
+  const previewOpen = previewLoading || previewTemplate !== null;
+  const previewRevealed = !!previewTemplate && previewPaintReady;
+
   const previewDialog =
-    mounted && previewTemplate
+    mounted && previewOpen
       ? createPortal(
           <div
             className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 px-2 py-2 sm:px-4 sm:py-3"
             role="dialog"
             aria-modal="true"
-            aria-label={`${previewTemplate.name} テンプレートプレビュー`}
-            onClick={() => setPreviewTemplate(null)}
+            aria-busy={!previewRevealed}
+            aria-label={
+              previewTemplate
+                ? `${previewTemplate.name} テンプレートプレビュー`
+                : "テンプレートプレビューを読み込み中"
+            }
+            onClick={closePreview}
           >
-            <div
-              className="ui-pop-in flex max-h-[98vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-stretch">
-                <div className="flex min-h-0 flex-col overflow-y-auto border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6 lg:border-b-0 lg:border-r">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                      テンプレートプレビュー
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewTemplate(null)}
-                      className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 lg:hidden"
-                    >
-                      閉じる
-                    </button>
-                  </div>
-                  {previewCategoryLabel ? (
-                    <p className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-                      {previewCategoryLabel}
-                    </p>
-                  ) : null}
-                  <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
-                    {previewTemplate.name}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    {previewTemplate.description?.trim() ||
-                      "この型からすぐ編集を始められます。写真も文言もあとから自由に変更できます。"}
-                  </p>
-
-                  {previewIncluded.length > 0 ? (
-                    <div className="mt-5">
-                      <p className="text-xs font-semibold text-slate-800">含まれている主なブロック</p>
-                      <ul className="mt-2 space-y-1.5">
-                        {previewIncluded.map((label) => (
-                          <li
-                            key={label}
-                            className="flex items-start gap-2 text-sm leading-snug text-slate-600"
-                          >
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
-                            <span>{label}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {previewContentCardCount > previewIncluded.length ? (
-                        <p className="mt-2 text-[11px] text-slate-400">
-                          全{previewContentCardCount}ブロック構成
-                        </p>
-                      ) : null}
+            {!previewRevealed ? (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                <p className="rounded-full bg-slate-900/70 px-4 py-2 text-sm text-white">
+                  プレビューを読み込み中…
+                </p>
+              </div>
+            ) : null}
+            {previewTemplate ? (
+              <div
+                ref={previewHostRef}
+                className={
+                  (previewRevealed ? "ui-fade-in " : "pointer-events-none opacity-0 ") +
+                  "flex max-h-[98vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl"
+                }
+                aria-hidden={!previewRevealed}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-stretch">
+                  <div className="flex min-h-0 flex-col overflow-y-auto border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6 lg:border-b-0 lg:border-r">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        テンプレートプレビュー
+                      </p>
+                      <button
+                        type="button"
+                        onClick={closePreview}
+                        className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 lg:hidden"
+                      >
+                        閉じる
+                      </button>
                     </div>
-                  ) : null}
-
-                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3">
-                    <p className="text-xs font-semibold text-slate-800">
-                      ゲストナビ: {getTemplateGuestNavLabel(previewNavStyle)}
+                    {previewCategoryLabel ? (
+                      <p className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                        {previewCategoryLabel}
+                      </p>
+                    ) : null}
+                    <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
+                      {previewTemplate.name}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                      {previewTemplate.description?.trim() ||
+                        "この型からすぐ編集を始められます。写真も文言もあとから自由に変更できます。"}
                     </p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                      {getTemplateGuestNavHint(previewNavStyle)}
-                      。ページ作成時にこの設定が入ります。あとからページ設定で変更できます。
-                    </p>
-                  </div>
 
-                  <div className="mt-auto flex flex-col gap-2 pt-6">
-                    <button
-                      type="button"
-                      disabled={usingId === previewTemplate.id}
-                      onClick={() => void handleUseTemplate(previewTemplate.id)}
-                      className="app-button-native inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold !text-white hover:bg-slate-800 disabled:opacity-60"
-                    >
-                      {usingId === previewTemplate.id ? "作成中…" : "このテンプレートを使う"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewTemplate(null)}
-                      className="app-button-native hidden min-h-[40px] w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
-                    >
-                      閉じる
-                    </button>
-                  </div>
-                </div>
+                    {previewIncluded.length > 0 ? (
+                      <div className="mt-5">
+                        <p className="text-xs font-semibold text-slate-800">含まれている主なブロック</p>
+                        <ul className="mt-2 space-y-1.5">
+                          {previewIncluded.map((label) => (
+                            <li
+                              key={label}
+                              className="flex items-start gap-2 text-sm leading-snug text-slate-600"
+                            >
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
+                              <span>{label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {previewContentCardCount > previewIncluded.length ? (
+                          <p className="mt-2 text-[11px] text-slate-400">
+                            全{previewContentCardCount}ブロック構成
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
 
-                <div className="flex min-h-0 items-center justify-center bg-[#d7e0ea] px-3 py-3 sm:px-5 sm:py-4">
-                  {previewLoading ? (
-                    <div className="flex min-h-[420px] items-center justify-center text-sm text-slate-500">
-                      プレビューを読み込み中…
+                    <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3">
+                      <p className="text-xs font-semibold text-slate-800">
+                        ゲストナビ: {getTemplateGuestNavLabel(previewNavStyle)}
+                      </p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                        {getTemplateGuestNavHint(previewNavStyle)}
+                        。ページ作成時にこの設定が入ります。あとからページ設定で変更できます。
+                      </p>
                     </div>
-                  ) : (
+
+                    <div className="mt-auto flex flex-col gap-2 pt-6">
+                      <button
+                        type="button"
+                        disabled={usingId === previewTemplate.id}
+                        onClick={() => void handleUseTemplate(previewTemplate.id)}
+                        className="app-button-native inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold !text-white hover:bg-slate-800 disabled:opacity-60"
+                      >
+                        {usingId === previewTemplate.id ? "作成中…" : "このテンプレートを使う"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={closePreview}
+                        className="app-button-native hidden min-h-[40px] w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
+                      >
+                        閉じる
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-0 items-center justify-center bg-[#d7e0ea] px-3 py-3 sm:px-5 sm:py-4">
                     <div
                       className="shrink-0"
                       style={{
@@ -673,17 +788,17 @@ export default function TemplatesPage() {
                               style={{ paddingTop: 16, paddingBottom: 12 }}
                             >
                               <div className={GUEST_CARD_STACK_CLASS}>
-                                <CardRenderer cards={previewCards} />
+                                <CardRenderer cards={previewCards} appearAnimation={false} />
                               </div>
                             </div>
                           </ClientShellContext.Provider>
                         </LocaleProvider>
                       </PhoneDeviceFrame>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
           </div>,
           document.body,
         )

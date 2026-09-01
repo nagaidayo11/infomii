@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import { Button, Container } from "@/components/ui";
 
 type LpSaasHeaderProps = {
@@ -44,7 +45,7 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
           href={homeHref}
           className="shrink-0 text-lg font-semibold tracking-tight text-slate-900 transition-colors duration-200 motion-safe:hover:text-emerald-800"
         >
-          Infomii
+          <InfomiiWordmark />
         </Link>
 
         <div className="min-w-0 flex-1 md:flex-none" />

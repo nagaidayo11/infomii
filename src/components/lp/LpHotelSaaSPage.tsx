@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import { Container } from "@/components/ui";
 import { LpHeroHotel } from "@/components/lp/LpHeroHotel";
 import { LpSaasHeader } from "@/components/lp/LpSaasHeader";
@@ -127,7 +128,9 @@ export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHot
 
       <footer className="border-t border-slate-200 bg-slate-50/80 py-8">
         <Container className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
-          <p className="text-sm text-slate-500">© {new Date().getFullYear()} Infomii</p>
+          <p className="text-sm text-slate-500">
+            © {new Date().getFullYear()} <InfomiiWordmark />
+          </p>
           <div className="flex flex-wrap justify-center gap-6 text-sm sm:justify-end">
             <Link
               href="/blog"

@@ -29,7 +29,10 @@ export default async function BlogPostOgImage({ params }: ImageProps) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 30, fontWeight: 700, opacity: 0.95 }}>
-          <span>Infomii</span>
+          <span style={{ display: "flex" }}>
+            Infom
+            <span style={{ color: "#6ee7b7" }}>ii</span>
+          </span>
           <span style={{ fontSize: 24, fontWeight: 500, opacity: 0.85 }}>Blog</span>
         </div>
         <div

@@ -10,6 +10,7 @@ export const LP_HOTEL_CTA_CLASS =
 
 export const LP_HOTEL_CTA_LG_CLASS = `${LP_HOTEL_CTA_CLASS} min-h-[52px] px-8 !text-base`;
 
+/** Hero / dark-surface accent type — same green family as the Infomii “ii”. */
 export const LP_HOTEL_GRADIENT_TEXT_CLASS =
   "bg-gradient-to-r from-emerald-200 via-emerald-300 to-emerald-400 bg-clip-text text-transparent";
 

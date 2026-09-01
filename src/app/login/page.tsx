@@ -21,6 +21,7 @@ import {
   INVITE_REDEEM_LOCK_KEY,
 } from "@/lib/invite-pending";
 import { FadeIn } from "@/components/motion";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import { APP_BRAND_SUBLINE, APP_BRAND_TAGLINE } from "@/lib/app-branding";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { withAppClientQuery } from "@/lib/app-href";
@@ -32,6 +33,7 @@ import {
 import { getLegalPageUrl } from "@/lib/app-store-compliance";
 import {
   buildAuthCallbackUrl,
+  hardReplaceAppPath,
 } from "@/lib/auth-redirect";
 import { ACCESS_REVOKED_MESSAGE, isAccessRevokedError } from "@/lib/access-revoked";
 import { isNativeAppWebView, useNotifyNativeAppShellWhenReady } from "@/lib/native-app-bridge";
@@ -175,11 +177,11 @@ function LoginForm() {
       if (user) {
         try {
           await ensureUserHotelScope();
-          router.replace(next);
+          hardReplaceAppPath(next);
           return;
         } catch (error) {
           if (!isAccessRevokedError(error)) {
-            router.replace(next);
+            hardReplaceAppPath(next);
             return;
           }
         }
@@ -200,13 +202,13 @@ function LoginForm() {
       void (async () => {
         try {
           await ensureUserHotelScope();
-          router.replace(next);
+          hardReplaceAppPath(next);
         } catch (error) {
           if (isAccessRevokedError(error)) {
             router.replace(`/login?access=revoked&next=${encodeURIComponent(next)}`);
             return;
           }
-          router.replace(next);
+          hardReplaceAppPath(next);
         }
       })();
       return;
@@ -220,11 +222,11 @@ function LoginForm() {
         await redeemHotelInvite(pending);
         clearPendingInviteCode();
         setDashboardInviteSuccessFlash();
-        router.replace("/dashboard");
+        hardReplaceAppPath("/dashboard");
       } catch (e) {
         clearPendingInviteCode();
         setDashboardInviteErrorFlash(formatHotelInviteRedeemError(e));
-        router.replace("/dashboard");
+        hardReplaceAppPath("/dashboard");
       } finally {
         sessionStorage.removeItem(INVITE_REDEEM_LOCK_KEY);
       }
@@ -271,7 +273,7 @@ function LoginForm() {
       await redeemHotelInvite(code);
       clearPendingInviteCode();
       setDashboardInviteSuccessFlash();
-      router.replace("/dashboard");
+      hardReplaceAppPath("/dashboard");
     } catch (err) {
       setMessage(formatHotelInviteRedeemError(err));
     } finally {
@@ -427,7 +429,9 @@ function LoginForm() {
         {!isAppShell ? (
           <div className="mb-4 text-center sm:mb-5">
             <Link href="/" className="inline-block">
-              <span className="text-lg font-semibold text-slate-900 sm:text-xl">Infomii</span>
+              <span className="text-lg font-semibold text-slate-900 sm:text-xl">
+                <InfomiiWordmark />
+              </span>
             </Link>
             <p className="mt-1 text-xs text-slate-500 sm:text-sm">案内を1つ作って、QRで届ける</p>
           </div>

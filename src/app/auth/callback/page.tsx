@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatAuthCallbackError } from "@/lib/auth-oauth-errors";
-import { buildAuthConfirmedUrl, buildLoginConfirmedUrl } from "@/lib/auth-redirect";
+import { buildAuthConfirmedUrl, buildLoginConfirmedUrl, hardReplaceAppPath } from "@/lib/auth-redirect";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { ensureUserHotelScope, trackOnboardingAuthEvent } from "@/lib/storage";
 import {
@@ -183,7 +183,7 @@ function AuthCallbackInner() {
 
         const preferred = nextPath ?? (isAppClient ? "/dashboard?client=app" : "/dashboard");
         if (!active) return;
-        router.replace(preferred);      } catch (err) {
+        hardReplaceAppPath(preferred);      } catch (err) {
         if (!active) return;
         const description =
           err instanceof Error ? err.message : "認証処理中にエラーが発生しました。";

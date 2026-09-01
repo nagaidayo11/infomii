@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { hasSupabaseEnv } from "@/lib/supabase-config";
 import { FadeIn } from "@/components/motion";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 
 type LinkState = "checking" | "valid" | "invalid";
 const RESET_LINK_EXPIRES_MINUTES = 5;
@@ -107,7 +108,9 @@ export default function ResetPasswordPage() {
       <FadeIn className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-block">
-            <span className="text-xl font-semibold text-slate-900">Infomii</span>
+            <span className="text-xl font-semibold text-slate-900">
+              <InfomiiWordmark />
+            </span>
           </Link>
           <p className="mt-2 text-sm text-slate-500">新しいパスワードを設定</p>
         </div>

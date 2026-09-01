@@ -36,7 +36,10 @@ export default function OpenGraphImage() {
             alignItems: "center",
           }}
         >
-          <div style={{ fontSize: 34, letterSpacing: 0.6, opacity: 0.95, fontWeight: 700 }}>Infomii</div>
+          <div style={{ fontSize: 34, letterSpacing: 0.6, opacity: 0.95, fontWeight: 700, display: "flex" }}>
+            <span>Infom</span>
+            <span style={{ color: "#6ee7b7" }}>ii</span>
+          </div>
           <div
             style={{
               fontSize: 60,

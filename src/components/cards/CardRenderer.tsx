@@ -290,6 +290,8 @@ export type CardRendererListProps = {
   selectedCardId?: string | null;
   showSpaceLabel?: boolean;
   businessFeaturesEnabled?: boolean;
+  /** Staggered pop-in on each card. Off for one-shot surfaces (template preview). */
+  appearAnimation?: boolean;
 };
 
 export type CardRendererProps = CardRendererSingleProps | CardRendererListProps;
@@ -305,7 +307,13 @@ function isListProps(props: CardRendererProps): props is CardRendererListProps {
  */
 export function CardRenderer(props: CardRendererProps) {
   if (isListProps(props)) {
-    const { cards, selectedCardId = null, showSpaceLabel = false, businessFeaturesEnabled = false } = props;
+    const {
+      cards,
+      selectedCardId = null,
+      showSpaceLabel = false,
+      businessFeaturesEnabled = false,
+      appearAnimation = true,
+    } = props;
     const sorted = [...cards].sort((a, b) => a.order - b.order);
     return (
       <>
@@ -321,7 +329,7 @@ export function CardRenderer(props: CardRendererProps) {
               className={
                 (textColor ? "editor-card-colorized " : "") +
                 guestCardChromeClass(card) +
-                " ui-pop-appear"
+                (appearAnimation ? " ui-pop-appear" : "")
               }
               style={{
                 ...blockStyle,
@@ -330,7 +338,7 @@ export function CardRenderer(props: CardRendererProps) {
                       ["--editor-card-text-color"]: textColor,
                     } as Record<string, string>)
                   : {}),
-                animationDelay: `${Math.min(idx, 5) * 40}ms`,
+                ...(appearAnimation ? { animationDelay: `${Math.min(idx, 5) * 40}ms` } : {}),
               }}
             >
               <SingleCardRenderer

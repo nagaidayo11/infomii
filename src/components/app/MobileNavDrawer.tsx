@@ -6,6 +6,7 @@ import { getNavItemsByGroup, PRODUCT_TAGLINE } from "./app-nav-items";
 import { AppNavLink } from "./AppNavLink";
 import { useHotelName } from "@/lib/use-hotel-name";
 import { SidebarPlanHint } from "./SidebarPlanHint";
+import { InfomiiWordmark } from "@/components/brand/InfomiiWordmark";
 import { InfomiiAppMark } from "./InfomiiAppMark";
 import { LayoutGroup } from "framer-motion";
 
@@ -50,7 +51,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             <InfomiiAppMark className="h-8 w-8 drop-shadow-[0_1px_1px_rgba(15,23,42,0.12)]" />
             <span className="min-w-0">
               <span className="block text-[15px] font-semibold leading-none tracking-tight text-slate-900">
-                Infomii
+                <InfomiiWordmark />
               </span>
               {hotelNameLoaded && hotelName ? (
                 <span className="mt-1 block truncate text-[11px] font-medium leading-snug text-slate-500" title={hotelName}>
