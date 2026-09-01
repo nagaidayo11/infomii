@@ -20,6 +20,16 @@ import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
 import { isFacilityInfoType } from "@/lib/editor/facility-info-presets";
+import {
+  PHOTO_SPLIT_MAX_ITEMS,
+  createEmptyPhotoSplitItem,
+  isPhotoSplitAlign,
+  isPhotoSplitMark,
+  isPhotoSplitMediaSize,
+  isPhotoSplitVAlign,
+  normalizePhotoSplitItems,
+  type PhotoSplitItem,
+} from "@/lib/editor/photo-split";
 import { FacilityInfoSettingsFields } from "./FacilityInfoSettingsFields";
 import {
   SOCIAL_PLATFORM_OPTIONS,
@@ -958,6 +968,148 @@ function DayTimelineItemsEditor({
               className={inputClass}
               placeholder="短い説明"
             />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PhotoSplitItemsEditor({
+  content,
+  onUpdate,
+}: {
+  content: Record<string, unknown>;
+  onUpdate: (key: string, value: unknown) => void;
+}) {
+  const items = normalizePhotoSplitItems(content.items);
+  const setItems = (next: PhotoSplitItem[]) => onUpdate("items", next);
+  const updateItem = (index: number, patch: Partial<PhotoSplitItem>) => {
+    const next = items.map((item, i) => (i === index ? { ...item, ...patch } : item));
+    setItems(next);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500">列</span>
+        <button
+          type="button"
+          disabled={items.length >= PHOTO_SPLIT_MAX_ITEMS}
+          onClick={() => setItems([...items, createEmptyPhotoSplitItem()])}
+          className={addButtonClass}
+        >
+          + 列を追加
+        </button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-slate-500">{i + 1}列目</span>
+            <button
+              type="button"
+              onClick={() => setItems(items.filter((_, idx) => idx !== i))}
+              className={removeButtonClass}
+            >
+              削除
+            </button>
+          </div>
+          <ImageUpload
+            onUploaded={(url) => updateItem(i, { image: url })}
+            className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
+          />
+          <Input
+            label="見出し"
+            value={readJaText(item.title)}
+            onChange={(e) =>
+              updateItem(i, { title: writeJaTextPreserving(item.title, e.target.value) })
+            }
+            placeholder="客室"
+          />
+          <div className="w-full">
+            <label className={labelClass}>本文</label>
+            <textarea
+              value={readJaText(item.body)}
+              onChange={(e) =>
+                updateItem(i, { body: writeJaTextPreserving(item.body, e.target.value) })
+              }
+              rows={3}
+              className={inputClass}
+              placeholder="説明文。箇条書きは改行で区切る"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => updateItem(i, { reverse: !item.reverse })}
+            className="app-button-native min-h-[40px] w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            {item.reverse ? "配置: テキスト | 写真" : "配置: 写真 | テキスト"}（入れ替え）
+          </button>
+          <div className="w-full">
+            <label className={labelClass}>写真カラムの大きさ</label>
+            <select
+              value={item.mediaSize}
+              onChange={(e) =>
+                updateItem(i, {
+                  mediaSize: isPhotoSplitMediaSize(e.target.value) ? e.target.value : "md",
+                })
+              }
+              className={inputClass}
+            >
+              <option value="sm">小</option>
+              <option value="md">中</option>
+              <option value="lg">大</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="w-full">
+              <label className={labelClass}>横位置</label>
+              <select
+                value={item.align}
+                onChange={(e) =>
+                  updateItem(i, {
+                    align: isPhotoSplitAlign(e.target.value) ? e.target.value : "left",
+                  })
+                }
+                className={inputClass}
+              >
+                <option value="left">左揃え</option>
+                <option value="center">中央</option>
+                <option value="right">右揃え</option>
+              </select>
+            </div>
+            <div className="w-full">
+              <label className={labelClass}>縦位置</label>
+              <select
+                value={item.valign}
+                onChange={(e) =>
+                  updateItem(i, {
+                    valign: isPhotoSplitVAlign(e.target.value) ? e.target.value : "center",
+                  })
+                }
+                className={inputClass}
+              >
+                <option value="start">上寄せ</option>
+                <option value="center">中央</option>
+                <option value="end">下寄せ</option>
+              </select>
+            </div>
+          </div>
+          <div className="w-full">
+            <label className={labelClass}>テキストの飾り</label>
+            <select
+              value={item.mark}
+              onChange={(e) =>
+                updateItem(i, {
+                  mark: isPhotoSplitMark(e.target.value) ? e.target.value : "none",
+                })
+              }
+              className={inputClass}
+            >
+              <option value="none">なし</option>
+              <option value="bar">縦アクセントバー</option>
+              <option value="dots">箇条書きドット</option>
+            </select>
           </div>
         </div>
       ))}
@@ -4494,6 +4646,28 @@ export function CardSettings({
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
                 />
               </div>
+            </SettingsSection>
+          )}
+
+          {card.type === "photoSplit" && (
+            <SettingsSection title="コンテンツ">
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                各列は写真とテキストの2カラムです。左右の入れ替え・写真幅・文字位置は列ごとに変えられます。
+              </p>
+              <div className="w-full">
+                <label className={labelClass}>アクセント色</label>
+                <input
+                  type="color"
+                  value={
+                    typeof content.accentColor === "string" && content.accentColor.trim()
+                      ? content.accentColor.trim()
+                      : BRAND_ACCENT
+                  }
+                  onChange={(e) => update("accentColor", e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                />
+              </div>
+              <PhotoSplitItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
 

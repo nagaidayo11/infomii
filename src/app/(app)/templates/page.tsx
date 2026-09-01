@@ -92,6 +92,7 @@ const CARD_TYPE_PREVIEW_LABELS: Record<string, string> = {
   checklist: "チェックリスト",
   dayTimeline: "1日の流れ",
   storyBand: "ストーリー帯",
+  photoSplit: "写真＋テキスト",
   notice: "お知らせ",
   highlight: "注目ポイント",
   info: "情報一覧",

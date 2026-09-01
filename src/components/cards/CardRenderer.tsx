@@ -32,6 +32,7 @@ import { IconAccordionCard } from "./IconAccordionCard";
 import { IconShortcutsCard } from "./IconShortcutsCard";
 import { ImageTilesCard } from "./ImageTilesCard";
 import { StoryBandCard } from "./StoryBandCard";
+import { PhotoSplitCard } from "./PhotoSplitCard";
 import { EditorialCoverCard } from "./EditorialCoverCard";
 import { DayTimelineCard } from "./DayTimelineCard";
 import { ScrollCardsCard } from "./ScrollCardsCard";
@@ -176,6 +177,8 @@ function SingleCardRenderer({
       return <ImageTilesCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "storyBand":
       return <StoryBandCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
+    case "photoSplit":
+      return <PhotoSplitCard card={resolvedCard} isSelected={isSelected} locale={locale} />;
     case "editorialCover":
       return <EditorialCoverCard card={resolvedCard} locale={locale} />;
     case "dayTimeline":

@@ -52,6 +52,7 @@ export type CardType =
   | "image_tiles"
   | "editorialCover"
   | "storyBand"
+  | "photoSplit"
   | "dayTimeline"
   /** @deprecated Prefer image_tiles. Existing pages only — hidden from library. */
   | "scrollCards"
@@ -190,6 +191,7 @@ const HERO_COLUMN_WIDTH_TYPES: ReadonlySet<CardType> = new Set<CardType>([
   "image_tiles",
   "editorialCover",
   "storyBand",
+  "photoSplit",
   "dayTimeline",
   "scrollCards",
   "sectionTitle",
@@ -384,6 +386,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   image_tiles: "写真ギャラリー",
   editorialCover: "表紙カバー",
   storyBand: "写真ストーリー帯",
+  photoSplit: "写真＋テキスト",
   dayTimeline: "一日のタイムライン",
   scrollCards: "おすすめカード（旧）",
   sectionTitle: "区切り見出し",
@@ -442,6 +445,7 @@ export const EDITOR_LIBRARY_CARD_TYPES: CardType[] = [
   "iconAccordion",
   "editorialCover",
   "storyBand",
+  "photoSplit",
   "dayTimeline",
   "sectionTitle",
   "open_status",
@@ -488,6 +492,7 @@ export const CARD_LIBRARY_ITEMS: Array<{ type: CardType; label: string; descript
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
   { type: "editorialCover", label: "表紙カバー", description: "画面いっぱいに写真と大きな見出しを置く" },
   { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "photoSplit", label: "写真＋テキスト", description: "左に写真・右に説明。列の追加と左右入替ができる" },
   { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
   { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
   { type: "image_tiles", label: "写真ギャラリー", description: "写真グリッド。ラベル表示切替・タップでリンク可" },
@@ -557,6 +562,7 @@ export const CARD_LIBRARY_ITEMS_FULL: Array<{ type: CardType; label: string; des
   { type: "iconAccordion", label: "アイコンで開く案内", description: "アイコンを押すとその場で説明が開く" },
   { type: "editorialCover", label: "表紙カバー", description: "画面いっぱいに写真と大きな見出しを置く" },
   { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "photoSplit", label: "写真＋テキスト", description: "左に写真・右に説明。列の追加と左右入替ができる" },
   { type: "dayTimeline", label: "一日のタイムライン", description: "時刻つきで一日の流れを縦に見せる" },
   { type: "scrollCards", label: "おすすめカード", description: "写真付きカードを横にスクロール" },
   { type: "sectionTitle", label: "区切り見出し", description: "セクションを区切る大きな見出し" },
@@ -1079,6 +1085,34 @@ function defaultContent(type: CardType): Record<string, unknown> {
         overlay: true,
         size: "default",
         accentColor: BRAND_ACCENT,
+      };
+    case "photoSplit":
+      return {
+        accentColor: BRAND_ACCENT,
+        items: [
+          {
+            image: PRESET_HERO_SAMPLE_IMAGE,
+            imageAlt: "客室",
+            title: "客室",
+            body: "ゆったりとした空間でおくつろぎください。",
+            reverse: false,
+            mediaSize: "md",
+            align: "left",
+            valign: "center",
+            mark: "bar",
+          },
+          {
+            image: PRESET_HERO_SAMPLE_IMAGE,
+            imageAlt: "大浴場",
+            title: "大浴場",
+            body: "15:00〜23:00\n朝は6:00からご利用いただけます",
+            reverse: true,
+            mediaSize: "md",
+            align: "left",
+            valign: "center",
+            mark: "dots",
+          },
+        ],
       };
     case "editorialCover":
       return {

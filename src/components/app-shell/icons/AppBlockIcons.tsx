@@ -402,6 +402,7 @@ const BLOCK_ICON_COMPONENTS: Partial<Record<CardType, (props: BlockIconProps) =>
   pageLinks: BlockIconAction,
   iconAccordion: BlockIconAccordion,
   storyBand: BlockIconMedia,
+  photoSplit: BlockIconMedia,
   dayTimeline: BlockIconChecklist,
   scrollCards: BlockIconMedia,
   sectionTitle: BlockIconText,

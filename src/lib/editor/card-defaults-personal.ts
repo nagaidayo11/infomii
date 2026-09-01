@@ -235,6 +235,34 @@ export function personalDefaultContent(type: CardType): Record<string, unknown> 
       return { title: "メモ", content: "自由に書ける欄。割り勘メモや連絡先など。" };
     case "image":
       return { src: PERSONAL_HERO_IMAGE, alt: "思い出の写真" };
+    case "photoSplit":
+      return {
+        accentColor: "#059669",
+        items: [
+          {
+            image: PERSONAL_HERO_IMAGE,
+            imageAlt: "集合場所",
+            title: "集合",
+            body: "改札前で待ち合わせ。遅れるときはチャットで一声。",
+            reverse: false,
+            mediaSize: "md",
+            align: "left",
+            valign: "center",
+            mark: "bar",
+          },
+          {
+            image: PERSONAL_HERO_IMAGE,
+            imageAlt: "当日の流れ",
+            title: "当日メモ",
+            body: "開場 12:00\n集合 11:40\n解散は改札前",
+            reverse: true,
+            mediaSize: "md",
+            align: "left",
+            valign: "center",
+            mark: "dots",
+          },
+        ],
+      };
     case "video":
       return { title: "動画メモ", videoUrl: "", caption: "当日の様子など" };
     case "gallery":

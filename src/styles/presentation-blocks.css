@@ -1493,3 +1493,201 @@
   padding-bottom: 1.6rem;
 }
 
+/* Photo + text split rows */
+.pres-photo-split {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pres-photo-split__empty-block {
+  margin: 0;
+  padding: 0.85rem 0.25rem;
+  color: var(--pres-muted);
+  font-size: 0.8125rem;
+}
+
+.pres-photo-split__row {
+  --photo-fr: 1fr;
+  --text-fr: 1fr;
+  display: grid;
+  grid-template-columns: minmax(0, var(--photo-fr)) minmax(0, var(--text-fr));
+  gap: 0.7rem;
+  min-height: 6.25rem;
+  align-items: stretch;
+}
+
+.pres-photo-split__row[data-size="sm"] {
+  --photo-fr: 0.72fr;
+  --text-fr: 1.28fr;
+}
+
+.pres-photo-split__row[data-size="lg"] {
+  --photo-fr: 1.28fr;
+  --text-fr: 0.72fr;
+}
+
+.pres-photo-split__row[data-reverse="true"] {
+  grid-template-columns: minmax(0, var(--text-fr)) minmax(0, var(--photo-fr));
+}
+
+.pres-photo-split__row[data-reverse="true"] .pres-photo-split__media {
+  order: 2;
+}
+
+.pres-photo-split__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 6.25rem;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--pres-radius);
+  background: #e2e8f0;
+}
+
+.pres-photo-split__media img,
+.pres-photo-split__media > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.pres-photo-split__media-empty {
+  display: flex;
+  height: 100%;
+  min-height: 6.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pres-photo-split__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  min-height: 6.25rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pres-photo-split__row[data-valign="start"] .pres-photo-split__text {
+  justify-content: flex-start;
+}
+
+.pres-photo-split__row[data-valign="center"] .pres-photo-split__text {
+  justify-content: center;
+}
+
+.pres-photo-split__row[data-valign="end"] .pres-photo-split__text {
+  justify-content: flex-end;
+}
+
+.pres-photo-split__row[data-align="left"] .pres-photo-split__text {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.pres-photo-split__row[data-align="center"] .pres-photo-split__text {
+  align-items: center;
+  text-align: center;
+}
+
+.pres-photo-split__row[data-align="right"] .pres-photo-split__text {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.pres-photo-split__copy {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pres-photo-split__copy--bar {
+  border-inline-start: 3px solid var(--pres-accent);
+  padding-inline-start: 0.7rem;
+}
+
+.pres-photo-split__row[data-align="right"] .pres-photo-split__copy--bar {
+  border-inline-start: 0;
+  border-inline-end: 3px solid var(--pres-accent);
+  padding-inline-start: 0;
+  padding-inline-end: 0.7rem;
+}
+
+.pres-photo-split__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--pres-text);
+}
+
+.pres-photo-split__body {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #334155;
+  white-space: pre-line;
+}
+
+.pres-photo-split__dots {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pres-photo-split__dots li {
+  position: relative;
+  margin: 0;
+  padding-inline-start: 0.9rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.pres-photo-split__dots li + li {
+  margin-top: 0.28rem;
+}
+
+.pres-photo-split__dots li::before {
+  content: "";
+  position: absolute;
+  top: 0.52em;
+  inset-inline-start: 0;
+  width: 0.34em;
+  height: 0.34em;
+  border-radius: 999px;
+  background: var(--pres-accent);
+}
+
+.pres-photo-split__row[data-align="right"] .pres-photo-split__dots li {
+  padding-inline-start: 0;
+  padding-inline-end: 0.9rem;
+}
+
+.pres-photo-split__row[data-align="right"] .pres-photo-split__dots li::before {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.pres-photo-split__row[data-align="center"] .pres-photo-split__dots {
+  display: inline-block;
+  text-align: left;
+}
+
+.pres-photo-split__dot-line {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+

@@ -69,6 +69,7 @@ const PERSONAL_LABEL_OVERRIDES: Partial<Record<CardType, { label: string; descri
   pageLinks: { label: "リンクまとめ", description: "予約・地図・SNSなどへの導線" },
   iconAccordion: { label: "アイコン案内", description: "押すと説明が開くアイコン一覧" },
   storyBand: { label: "写真ストーリー", description: "大きな写真と短いコピー" },
+  photoSplit: { label: "写真＋テキスト", description: "左に写真・右に説明。列追加と左右入替" },
   dayTimeline: { label: "一日の流れ", description: "時刻つきで予定を縦に見せる" },
   scrollCards: { label: "おすすめカード（旧）", description: "既存ページ用" },
   sectionTitle: { label: "区切り見出し", description: "セクションの大きな見出し" },
@@ -153,6 +154,7 @@ const COMPARISON_ITEMS: LibraryItem[] = [
 
 const MEDIA_ITEMS: LibraryItem[] = [
   { type: "storyBand", label: "写真ストーリー帯", description: "大きな写真と短いコピーで雰囲気を伝える" },
+  { type: "photoSplit", label: "写真＋テキスト", description: "左に写真・右に説明。列の追加と左右入替ができる" },
   { type: "image_tiles", label: "写真ギャラリー", description: "写真グリッド。ラベル表示切替・タップでリンク可" },
   { type: "image", label: "写真1枚", description: "写真を1枚表示" },
   { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
@@ -203,6 +205,7 @@ const PERSONAL_LIBRARY_SECTIONS: LibrarySection[] = [
     title: "写真・見せ方",
     items: [
       { type: "storyBand", label: "写真ストーリー", description: "大きな写真と短いコピー" },
+      { type: "photoSplit", label: "写真＋テキスト", description: "写真と説明を左右に並べる" },
       { type: "image_tiles", label: "写真ギャラリー", description: "複数の写真をきれいに並べる" },
       { type: "image", label: "写真1枚", description: "写真を1枚大きく表示" },
       { type: "video", label: "動画", description: "YouTube・Vimeo・直リンクを埋め込み" },
