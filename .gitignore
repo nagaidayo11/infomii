@@ -44,6 +44,9 @@ yarn-error.log*
 # local editor / agent config
 .cursor/
 
+# playwright browsers (local export only)
+.playwright-browsers/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

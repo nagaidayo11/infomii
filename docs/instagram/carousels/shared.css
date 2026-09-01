@@ -278,6 +278,18 @@ body {
   line-height: 1.22;
 }
 
+/* 1行見出し（~12文字まで 56px / 13〜16文字は --long） */
+.title--content.title--one-line {
+  font-size: 56px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.title--content.title--one-line.title--one-line--long {
+  font-size: 50px;
+  letter-spacing: -0.04em;
+}
+
 .lead {
   margin: 0;
   font-size: var(--fs-lead);
@@ -468,6 +480,15 @@ body {
   margin-bottom: 16px;
 }
 
+.text-panel--dense .title--content.title--one-line {
+  font-size: 52px;
+}
+
+.text-panel--dense .title--content.title--one-line.title--one-line--long {
+  font-size: 46px;
+  letter-spacing: -0.045em;
+}
+
 .text-panel--dense .compare-table {
   font-size: 24px;
 }
@@ -613,6 +634,38 @@ body {
   border: none;
   background: var(--surface) var(--art-image, none) center center / cover no-repeat;
   box-shadow: none;
+}
+
+.slide-content .art--screen {
+  background-position: center top;
+  background-size: cover;
+}
+
+.slide-content .art--photo {
+  background-position: center 42%;
+}
+
+/* Hallway / diagram scenes — keep full illustration visible (no top crop) */
+.slide-content .art--fit {
+  background-size: contain;
+  background-position: center center;
+  background-color: var(--mint-wash);
+}
+
+.slide-cover .hero.hero--photo {
+  background-position: center 40%;
+}
+
+.slide-content .art--photo::after,
+.slide-content .art--screen::after {
+  background: linear-gradient(
+    180deg,
+    rgba(242, 251, 247, 0.06) 0%,
+    rgba(5, 150, 105, 0.08) 52%,
+    var(--surface) 100%
+  );
+  height: 100%;
+  bottom: auto;
 }
 
 .slide-content .text-panel {

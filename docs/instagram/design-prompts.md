@@ -268,6 +268,103 @@ docs/instagram/design-prompts.md の方針に沿って redesign してくださ�
 
 ---
 
+## 8. イラスト生成プロンプト（GenerateImage / API 共通）
+
+### マスター参照（全生成で必須）
+
+```
+reference_image_paths:
+  1. docs/instagram/assets/inquiry-not-decreasing-cover.png  （色・トーン・ロビーの正）
+  2. docs/instagram/assets/character-tone-reference.jpg     （人物画風）
+PCシーン追加: laptop-angle-reference.png
+```
+
+### ブランドキャノン（毎回先頭に付ける）
+
+```
+Infomii illustration canon — match reference images EXACTLY, same illustration family.
+
+COLORS (no variation between images):
+- Staff: emerald blazer #059669, white shirt, gold name tag. NEVER samue/kimono/wrap uniform.
+- Guest man: muted teal-green sweater, khaki #C9B896 pants, cream suitcase with green accent.
+- Skin: peach #F5C4A8. Dot eyes. Flat editorial, soft grain texture.
+- Wall upper: off-white #F5F3EF. Wall lower: #059669 vertical wainscoting slats.
+- Desk: warm honey wood #DDB88A, emerald paneled base. Floor: light cream tile.
+- 3 emerald #059669 dome pendant lights. Mint #F2FBF7 only in sky/distant accents.
+- QR: white stand, emerald QR pattern. Silver service bell.
+
+LOBBY SET (all character scenes):
+Curved front desk + bell + QR stand. Left: wooden key rack. Right: gold luggage cart + arch doorway. White-pot plant.
+
+Avoid: different green shades (forest/sage/mint walls), samue uniform, lobby armchairs, circular wall logo, POV hands-only cover, 3D render, readable text.
+```
+
+### 人物トーン（必ず付ける）
+
+```
+Match character style from reference: friendly flat editorial hotel illustration.
+Expressive simple dot eyes, soft peach skin, gentle smile or concerned expression.
+Hotel staff wear emerald #059669 blazers ONLY. Guests in muted travel clothes per canon above.
+Same illustration family as inquiry-not-decreasing-cover — NOT 3D, NOT faceless hands only, NOT different uniform styles.
+```
+
+### SaaS・PC管理（テーマに応じて）
+
+```
+Hotel or minpaku staff managing guest guide on laptop or desktop monitor at front desk.
+Screen shows simple emerald green content blocks, icons, drag blocks — NO readable text, NO letters.
+Optional: staff also holds smartphone showing same guide for mobile editing.
+Conveys business SaaS: front desk team updates guide from PC, guests read on phone.
+```
+
+### PC・モニター描画ルール（必須 — AI不自然さ防止）
+
+```
+CRITICAL — physically correct hardware (violations = reject & regenerate):
+- UI appears ONLY on the inner front glass of an open laptop, or monitor screen facing the user/camera.
+- Monitor rear/back housing: plain matte black or white plastic, NO icons, NO UI, NO green blocks.
+- Laptop outer lid/back cover: plain solid gray or silver, completely blank — NO UI bleed-through.
+- NEVER put interface on the back of a monitor, laptop lid, or wrong surface.
+- DEFAULT: laptop only (no desktop monitor). Desktop monitors cause back-panel UI artifacts too often.
+- MANDATORY reference for any PC scene: laptop-angle-reference.png + character-tone-reference.jpg
+- Winning composition (copy this):
+  One seated staff, 3/4 view from guest side, open laptop on desk, inner screen angled ~45° toward camera,
+  plain lid back not visible or blank, QR stand + bell on desk, emerald SaaS blocks on inner screen only.
+- Avoid: two staff behind desk with monitor/laptop backs toward camera; over-shoulder from behind hardware.
+```
+
+生成後チェック（必須）: モニター背面・ノートPCのふたにUIがないか目視確認。1枚でもあれば即再生成。
+
+### 接続中断時の代替（GenerateImage がタイムアウトする場合）
+
+画像生成は1枚7〜10分かかり、接続が切れると中断アラートが出ます。その場合は **再生成せず既存アセットを差し替え**:
+
+| 必要シーン | 流用元 |
+| --- | --- |
+| PC編集（座り・ノートPC） | `inquiry-not-decreasing-slide04.png` |
+| 紙混乱 vs スマホ解決（分割） | `inquiry-not-decreasing-slide03.png` |
+| 廊下 QR 設置 | `hotel-qr-guide-slide04.png` + HTML `art--fit` |
+
+QR・廊下イラストは CSS `.art--fit`（`background-size: contain`）で切れを防ぐ。
+
+### サイズ・共通ネガティブ
+
+- 比率: **3:4** portrait（カルーセル art / cover 用）
+- reference: `character-tone-reference.jpg` + `laptop-angle-reference.png`（PCシーン必須）
+- §6 ネガティブプロンプトも必ず付ける
+
+### テーマ別シーン例
+
+| テーマ | Cover | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- |
+| 1 Infomiiとは | スタッフPC編集＋ゲストスマホ | 紙混乱（人物） | QR解決（人物） | PC更新＋QR |
+| 2 QR化5ステップ | 既存維持可 | 既存 | **PCでページ作成** | 既存 |
+| 3 問い合わせ | 既存（基準） | 既存 | 既存 | **PCで見直し** |
+| 4 紙PDF Web | 既存 compare | 紙の負担 | PDF vs スマホ | **PC運用** |
+| 5 Wi-Fi | ゲストWi-Fi質問 | スタッフ誘導 | **PCでWi-Fiブロック編集** | QR設置 |
+
+---
+
 ## 6. ネガティブプロンプト（共通・必ず付ける）
 
 ```
@@ -277,7 +374,9 @@ over-rounded pill buttons, drop shadows on everything,
 rainbow gradients, glossy 3D app icon style, stock photo collage,
 busy patterns, readable text inside illustrations, 
 English UI labels, watermark, low contrast body text,
-center-aligned long paragraphs, cramped horizontal two-column text layout
+center-aligned long paragraphs, cramped horizontal two-column text layout,
+faceless product render without characters, hyper-realistic 3D desk scene,
+anime style, chibi, photorealistic faces
 ```
 
 ---
@@ -290,3 +389,5 @@ center-aligned long paragraphs, cramped horizontal two-column text layout
 - [ ] 2〜4枚目の下部に不自然な余白がないか
 - [ ] スマホ実寸で本文が読めるか（最小 24px 相当）
 - [ ] 5枚目だけ見ても「無料で試せる」とわかるか
+- [ ] PC・モニター: UIが画面正面のみか（背面・ふたにUIがないか）
+- [ ] 色・トーン: ブレザー #059669 / 壁腰板 / ウッド / ペンダントが他スライドと同系か

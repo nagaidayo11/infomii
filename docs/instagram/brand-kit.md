@@ -61,15 +61,20 @@
 - スライドに `body--compact-art` を付ける → イラスト高さ 280px に縮小、テキスト領域を拡大
 - テキストパネルに `text-panel--dense` → 表や文章向けに padding / 字号を調整
 
-#### 10本テーマの型割り当て（案）
+#### 10本テーマの型・イラスト（1〜5）
+
+| # | テーマ | イラスト（1〜4枚目） |
+| ---: | --- | --- |
+| 1 | Infomiiとは？ | `what-is-infomii-*.png`（4枚専用） |
+| 2 | QR化5ステップ | `hotel-qr-guide-*.png`（4枚専用・既存） |
+| 3 | 問い合わせが減らない理由 | `inquiry-not-decreasing-*.png`（4枚専用） |
+| 4 | 紙・PDF・Web比較 | Cover: `compare-paper-pdf-phone.png` / 2–4: `paper-pdf-web-compare-*.png` |
+| 5 | Wi-Fi案内 | `wifi-guide-*.png`（4枚専用） |
+
+#### 10本テーマの型割り当て（6〜10・案）
 
 | # | テーマ | 2枚目 | 3枚目 | 4枚目 |
 | ---: | --- | --- | --- | --- |
-| 1 | Infomiiとは？ | bullets | bullets | bullets |
-| 2 | QR化5ステップ | bullets | steps | steps |
-| 3 | 問い合わせが減らない理由 | prose | bullets | prose |
-| 4 | **紙・PDF・Web比較** | **compare-table** | **compare-table** | bullets |
-| 5 | Wi-Fi説明 | diagram | bullets | prose |
 | 6 | 館内案内の作り方 | steps | bullets | bullets |
 | 7 | チェックアウト案内 | bullets | prose | diagram |
 | 8 | 多言語案内 | bullets | compare-table | prose |
@@ -80,7 +85,7 @@ HTML の参考例: `carousels/_content-variants.html`（書き出し対象外）
 
 ### 2〜4枚目（箇条書き型のとき）
 
-- **見出し** 2行以内（62px）
+- **見出し** 2行以内（62px）。~12文字は `title--one-line`（56px）で1行、13〜16文字は `--long`（50px）
 - **bullets** 3点（32px・太字）
 - **note** 1行（任意・30px）
 
@@ -121,10 +126,61 @@ docs/instagram/
     _cta-slide.html      … 5枚目（全投稿共通・ここだけ編集）
     _template.html       … 新規投稿の雛形
     what-is-infomii.html … 1〜4枚目だけ（投稿ごと）
-  assets/                … イラスト（テキストなし）
+  assets/                … イラスト（テキストなし・投稿ごとに4枚）
   exports/<slug>/        … 書き出し PNG
   captions/<slug>.md     … 投稿文
 ```
+
+### イラスト方針
+
+- **1〜4枚目**: テーマ専用イラスト（フラット・エメラルド `#059669`・文字なし）
+- **5枚目 CTA**: 共通 `cta-friendly-desk.png`
+- テーマ2（`hotel-qr-guide`）のように **投稿ごとに4枚生成** すると使い回し感が消える
+- 生成: OpenAI Images API（`design-prompts.md` 参照）または Cursor GenerateImage
+
+#### 人物トーン（全テーマ共通）
+
+**基準画像（必ず参照）:** `inquiry-not-decreasing-cover.png` + `character-tone-reference.jpg`
+
+| 要素 | ルール |
+| --- | --- |
+| 画風 | フラット編集イラスト。ソフトグレイン、やわらかい影、丸み、点目 |
+| 人物 | ホテルスタッフ（**緑ブレザー**）＋ゲスト。作務衣・着物・POV手のみは禁止 |
+| 禁止 | リアル写真風、3Dグロス、/samue/forest green 別トーン、壁ロゴ |
+
+#### イラストカラーキャノン（全テーマ・全枚共通）
+
+| 要素 | HEX / 指定 |
+| --- | --- |
+| スタッフブレザー | `#059669`（エメラルド）白シャツ、金の名札 |
+| ゲスト（男性） | くすみティールグリーンのセーター、カーキ `#C9B896` パンツ、クリームスーツケース |
+| 肌 | ピーチ `#F5C4A8` |
+| 壁上段 | オフホワイト `#F5F3EF` |
+| 壁下段（腰板） | `#059669` 縦板張り |
+| カウンター | ウォームウッド `#DDB88A`、基部 `#059669` 縦板 |
+| 背景アクセント | ミント `#F2FBF7`（空・遠景のみ） |
+| ペンダント | 3灯 `#059669` ドーム |
+| QR | 白スタンド + `#059669` QR |
+
+#### ロビーセット（人物シーン共通）
+
+左: 木製キーラック / 中央: 曲線フロントデスク・ベル・QR / 右: 金のラゲッジカート・アーチ扉 / 観葉植物（白鉢）
+
+#### SaaSらしさ（PC + スマホ）
+
+Infomii は **業務用SaaS**。イラストでも次を伝える:
+
+| 見せ方 | 向くスライド |
+| --- | --- |
+| **PC（ノートPC・モニター）で案内ページを編集** | 解決・運用・更新・ステップ系 |
+| **スマホでゲストが読む / スタッフがサッと更新** | 導入・Wi-Fi・QR設置系 |
+| **PC + スマホのセット** | Cover、Infomiiとは、CTA手前 |
+
+画面は **緑ブロック＋アイコンだけ**（文字・SSID・URL は描かない）
+
+**PC描画（必須）:** UIは画面の**正面ガラス面のみ**。モニター背面・ノートPCのふたにUIを描かない。生成後に目視チェック。
+
+詳細プロンプト: `design-prompts.md` §8
 
 ## 新しい投稿の作り方
 
