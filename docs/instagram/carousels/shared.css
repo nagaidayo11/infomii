@@ -595,7 +595,11 @@ body {
   margin: 0 20px 20px;
   border-radius: 20px;
   overflow: hidden;
-  background: var(--hero-image, none) center center / cover no-repeat;
+  background-color: var(--mint-wash);
+  background-image: var(--hero-image, none);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
   box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.1);
 }
 
@@ -632,7 +636,11 @@ body {
   border-radius: 0;
   overflow: hidden;
   border: none;
-  background: var(--surface) var(--art-image, none) center center / cover no-repeat;
+  background-color: var(--mint-wash);
+  background-image: var(--art-image, none);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
   box-shadow: none;
 }
 

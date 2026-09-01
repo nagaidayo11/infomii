@@ -322,6 +322,8 @@ Conveys business SaaS: front desk team updates guide from PC, guests read on pho
 ```
 CRITICAL — physically correct hardware (violations = reject & regenerate):
 - UI appears ONLY on the inner front glass of an open laptop, or monitor screen facing the user/camera.
+- NEVER show a laptop or monitor screen facing the guest/customer. PC screens face staff only; guest sees plain lid or no PC.
+- At front desk with guest + staff: prefer QR stand / smartphone only — omit laptop unless staff is seated editing (screen toward staff/camera).
 - Monitor rear/back housing: plain matte black or white plastic, NO icons, NO UI, NO green blocks.
 - Laptop outer lid/back cover: plain solid gray or silver, completely blank — NO UI bleed-through.
 - NEVER put interface on the back of a monitor, laptop lid, or wrong surface.
@@ -331,6 +333,7 @@ CRITICAL — physically correct hardware (violations = reject & regenerate):
   One seated staff, 3/4 view from guest side, open laptop on desk, inner screen angled ~45° toward camera,
   plain lid back not visible or blank, QR stand + bell on desk, emerald SaaS blocks on inner screen only.
 - Avoid: two staff behind desk with monitor/laptop backs toward camera; over-shoulder from behind hardware.
+- Composition: leave ~10–12% empty margin at top (pendant lights, speech bubbles) so exports with `background-size: contain` do not feel cropped.
 ```
 
 生成後チェック（必須）: モニター背面・ノートPCのふたにUIがないか目視確認。1枚でもあれば即再生成。
@@ -345,7 +348,7 @@ CRITICAL — physically correct hardware (violations = reject & regenerate):
 | 紙混乱 vs スマホ解決（分割） | `inquiry-not-decreasing-slide03.png` |
 | 廊下 QR 設置 | `hotel-qr-guide-slide04.png` + HTML `art--fit` |
 
-QR・廊下イラストは CSS `.art--fit`（`background-size: contain`）で切れを防ぐ。
+QR・廊下イラストは HTML/CSS で `background-size: contain` + mint wash 背景（`shared.css` の `.hero` / `.art` 既定）で上部切れを防ぐ。
 
 ### サイズ・共通ネガティブ
 
