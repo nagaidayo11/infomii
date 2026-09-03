@@ -319,24 +319,60 @@ Conveys business SaaS: front desk team updates guide from PC, guests read on pho
 
 ### PC・モニター描画ルール（必須 — AI不自然さ防止）
 
+**正解の参照画像（PCシーンは必ずこれに寄せる）:** `laptop-angle-reference.png`  
+→ スタッフがキーボードを操作、**カメラ側にはふたの背面（無地グレー）だけ**が見える構図。
+
+#### 完全NG（1つでも該当 → 即リジェクト・再生成）
+
+| NG | 説明 |
+| --- | --- |
+| **ふた背面にUI** | ノートPCの**外側のふた・背面**に緑ブロック・Wi-Fiアイコン・ダッシュボードが描かれている |
+| **画面がゲスト向き** | フロント越しにPC画面がゲスト／カメラに向いている |
+| **PCが反対向き** | キーボードがゲスト側、画面がスタッフ側など物理的に逆 |
+| **デスクトップモニター** | 背面にUIが出やすいため原則禁止 |
+| **2人がふた側を指す** | スタッフ2人がモニター／ふたの背面を見ている |
+| **画面＝ふた** | 開いた内側のパネルとふたの区別がなく、UIが「机の上の板」に描かれている |
+
+#### 正しい構図（PCシーンはこのどちらかのみ）
+
+**A. 参照画像コピー型（推奨・最も安全）**  
+`laptop-angle-reference.png` と同型：座りスタッフ、キーボード操作、**カメラには無地のふた背面のみ**（UIは描かない。画面はスタッフの視線先に隠れてよい）。
+
+**B. 内側スクリーン見せ型（上級・条件付き）**  
+3/4斜めから、**ヒンジで開いた内側ガラス面だけ**にUI。ふた背面は必ず無地グレー／シルバー。内側画面はスタッフとカメラの間の角度のみ。
+
 ```
 CRITICAL — physically correct hardware (violations = reject & regenerate):
-- UI appears ONLY on the inner front glass of an open laptop, or monitor screen facing the user/camera.
-- NEVER show a laptop or monitor screen facing the guest/customer. PC screens face staff only; guest sees plain lid or no PC.
-- At front desk with guest + staff: prefer QR stand / smartphone only — omit laptop unless staff is seated editing (screen toward staff/camera).
-- Monitor rear/back housing: plain matte black or white plastic, NO icons, NO UI, NO green blocks.
-- Laptop outer lid/back cover: plain solid gray or silver, completely blank — NO UI bleed-through.
-- NEVER put interface on the back of a monitor, laptop lid, or wrong surface.
-- DEFAULT: laptop only (no desktop monitor). Desktop monitors cause back-panel UI artifacts too often.
-- MANDATORY reference for any PC scene: laptop-angle-reference.png + character-tone-reference.jpg
-- Winning composition (copy this):
-  One seated staff, 3/4 view from guest side, open laptop on desk, inner screen angled ~45° toward camera,
-  plain lid back not visible or blank, QR stand + bell on desk, emerald SaaS blocks on inner screen only.
-- Avoid: two staff behind desk with monitor/laptop backs toward camera; over-shoulder from behind hardware.
-- Composition: leave ~10–12% empty margin at top (pendant lights, speech bubbles) so exports with `background-size: contain` do not feel cropped.
+- UI appears ONLY on the inner hinged panel of an OPEN laptop — NEVER on outer lid/back cover.
+- Camera/guest viewpoint: sees plain matte gray/silver laptop LID BACK with ZERO UI, OR inner screen at shallow angle — NEVER full UI on lid facing camera.
+- Keyboard always faces the staff member who is typing. Staff looks DOWN at inner screen, not at lid back.
+- NEVER show laptop/monitor screen facing the guest. Guest sees plain lid or no PC.
+- At front desk with guest + staff: guest uses smartphone; staff uses laptop with geometry A or B above.
+- Monitor rear/back housing: plain matte — NO icons, NO UI.
+- DEFAULT: laptop only (no desktop monitor).
+- MANDATORY reference for any PC scene: laptop-angle-reference.png FIRST, then character-tone-reference.jpg
+- FORBIDDEN compositions: two staff pointing at laptop back; over-shoulder from behind showing UI on wrong surface; clamshell with UI painted on closed lid.
+- 16:9 FULL BLEED + 12% top headroom for export.
 ```
 
-生成後チェック（必須）: モニター背面・ノートPCのふたにUIがないか目視確認。1枚でもあれば即再生成。
+**生成後チェック（必須・目視）:**  
+1. ふた背面に色付きUIがないか  
+2. キーボードがスタッフ側か  
+3. ゲストにPC画面が向いていないか  
+→ 1つでもNGなら **再生成**。再生成2回失敗時は `laptop-angle-reference.png` を `pc-editing-canon.png` として流用（UIなしでも可）。
+
+#### PC編集スライド共通アセット
+
+正しいPC構図のマスター: **`pc-editing-canon.png`**（`laptop-angle-reference.png` 準拠・16:9）。  
+以下は原則この1枚を流用:
+
+- `hotel-qr-guide-slide03.png`
+- `wifi-guide-slide03.png`
+- `breakfast-guide-slide03.png`
+- `paper-pdf-web-compare-slide04.png`
+- `inquiry-not-decreasing-slide04.png`
+
+ゲスト＋スマホが必要な **`what-is-infomii-slide04.png`** のみ別生成（PCは上記ジオメトリ厳守）。
 
 ### 接続中断時の代替（GenerateImage がタイムアウトする場合）
 
@@ -344,15 +380,20 @@ CRITICAL — physically correct hardware (violations = reject & regenerate):
 
 | 必要シーン | 流用元 |
 | --- | --- |
-| PC編集（座り・ノートPC） | `inquiry-not-decreasing-slide04.png` |
+| PC編集（座り・ノートPC） | **`pc-editing-canon.png`**（なければ `laptop-angle-reference.png`） |
 | 紙混乱 vs スマホ解決（分割） | `inquiry-not-decreasing-slide03.png` |
-| 廊下 QR 設置 | `hotel-qr-guide-slide04.png` + HTML `art--fit` |
+| 廊下 QR 設置 | `hotel-qr-guide-slide04.png`（廊下シーンのトーン基準） |
+| Wi-Fi 廊下 QR | `wifi-guide-slide04.png` — `hotel-qr-guide-slide04.png` 準拠 + Wi-Fiアイコン |
+| 朝食 PC編集（座り） | **`pc-editing-canon.png`** |
+| 朝食 ページ2ブロック | `breakfast-guide-slide04.png` |
+| ゲスト＋PC（Infomiiとは 4枚目） | **`what-is-infomii-slide04.png`** 専用生成 |
 
-QR・廊下イラストは HTML/CSS で `background-size: contain` + mint wash 背景（`shared.css` の `.hero` / `.art` 既定）で上部切れを防ぐ。
+QR・廊下イラストは HTML/CSS で `background-size: cover` + `background-position: center top`（`shared.css` の `.hero` / `.art` 既定）で横幅いっぱいに表示。上部切れ防止のためイラスト生成時は **16:9 FULL BLEED** + 上12% headroom を必須とする。
 
 ### サイズ・共通ネガティブ
 
-- 比率: **3:4** portrait（カルーセル art / cover 用）
+- 比率: **16:9** landscape（カルーセル art / cover 用 — 枠幅いっぱい・左右余白なし）
+- 構図: **FULL BLEED** — シーンは左右端まで描く。レターボックス・側面の空白禁止。上部12% headroom
 - reference: `character-tone-reference.jpg` + `laptop-angle-reference.png`（PCシーン必須）
 - §6 ネガティブプロンプトも必ず付ける
 
@@ -365,6 +406,11 @@ QR・廊下イラストは HTML/CSS で `background-size: contain` + mint wash �
 | 3 問い合わせ | 既存（基準） | 既存 | 既存 | **PCで見直し** |
 | 4 紙PDF Web | 既存 compare | 紙の負担 | PDF vs スマホ | **PC運用** |
 | 5 Wi-Fi | ゲストWi-Fi質問 | スタッフ誘導 | **PCでWi-Fiブロック編集** | QR設置 |
+| 6 朝食 | ゲスト朝食質問（？＋食事アイコン） | レストラン誘導 | **PCで朝食ブロック編集** | ページ内の載せ方 |
+| 7 チェックアウト | TBD | TBD | TBD | TBD |
+| 8 多言語 | TBD | TBD | TBD | TBD |
+| 9 引き継ぎ | スタッフ交代・メモ | 口頭に戻る混乱 | **PC更新ルール** | 引き継ぎ4ステップ |
+| 10 料金 | TBD | TBD | TBD | TBD |
 
 ---
 
@@ -379,7 +425,10 @@ busy patterns, readable text inside illustrations,
 English UI labels, watermark, low contrast body text,
 center-aligned long paragraphs, cramped horizontal two-column text layout,
 faceless product render without characters, hyper-realistic 3D desk scene,
-anime style, chibi, photorealistic faces
+anime style, chibi, photorealistic faces,
+UI on laptop lid, UI on laptop back cover, screen on outer lid, backwards laptop, reversed laptop keyboard,
+monitor back with UI, dashboard on laptop lid, two staff pointing at laptop back,
+clamshell laptop with UI facing camera on wrong surface, desktop monitor at front desk
 ```
 
 ---
@@ -392,5 +441,7 @@ anime style, chibi, photorealistic faces
 - [ ] 2〜4枚目の下部に不自然な余白がないか
 - [ ] スマホ実寸で本文が読めるか（最小 24px 相当）
 - [ ] 5枚目だけ見ても「無料で試せる」とわかるか
-- [ ] PC・モニター: UIが画面正面のみか（背面・ふたにUIがないか）
+- [ ] PC・モニター: **ふた背面にUIがないか**（完全NG — 即差し替え）
+- [ ] PC・モニター: キーボードがスタッフ側か、ゲストに画面が向いていないか
+- [ ] PCシーン: `laptop-angle-reference.png` と同型か、または `pc-editing-canon.png` 流用か
 - [ ] 色・トーン: ブレザー #059669 / 壁腰板 / ウッド / ペンダントが他スライドと同系か

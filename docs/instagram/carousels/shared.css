@@ -598,8 +598,8 @@ body {
   background-color: var(--mint-wash);
   background-image: var(--hero-image, none);
   background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
+  background-position: center top;
+  background-size: cover;
   box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.1);
 }
 
@@ -639,8 +639,8 @@ body {
   background-color: var(--mint-wash);
   background-image: var(--art-image, none);
   background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
+  background-position: center top;
+  background-size: cover;
   box-shadow: none;
 }
 
@@ -653,10 +653,10 @@ body {
   background-position: center 42%;
 }
 
-/* Hallway / diagram scenes — keep full illustration visible (no top crop) */
+/* Legacy alias — same as default art sizing */
 .slide-content .art--fit {
-  background-size: contain;
-  background-position: center center;
+  background-size: cover;
+  background-position: center top;
   background-color: var(--mint-wash);
 }
 
@@ -798,7 +798,7 @@ body {
   position: relative;
   flex: 1 1 auto;
   min-height: 520px;
-  background: var(--surface) var(--cta-art-image, none) center center / cover no-repeat;
+  background: var(--surface) var(--cta-art-image, none) center top / cover no-repeat;
 }
 
 .cta-art::before {

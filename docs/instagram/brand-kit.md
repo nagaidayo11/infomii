@@ -70,16 +70,55 @@
 | 3 | 問い合わせが減らない理由 | `inquiry-not-decreasing-*.png`（4枚専用） |
 | 4 | 紙・PDF・Web比較 | Cover: `compare-paper-pdf-phone.png` / 2–4: `paper-pdf-web-compare-*.png` |
 | 5 | Wi-Fi案内 | `wifi-guide-*.png`（4枚専用） |
+| 6 | 朝食案内の書き方 | `breakfast-guide-*.png`（4枚専用・**作成済**） |
+
+#### 10本テーマの型・イラスト（6〜10・案）
+
+| # | slug | テーマ | イラスト |
+| ---: | --- | --- | --- |
+| 6 | `breakfast-guide` | 朝食案内の書き方 | `breakfast-guide-*.png`（**作成済**） |
+| 7 | `checkout-guide` | チェックアウト案内 | `checkout-guide-*.png`（4枚専用） |
+| 8 | `multilingual-guide` | 多言語案内 | `multilingual-guide-*.png`（4枚専用） |
+| 9 | `staff-handover-update` | スタッフ引き継ぎ・更新ルール | `staff-handover-update-*.png`（4枚専用） |
+| 10 | `pricing-compare` | 料金プラン比較 | Cover + 2–4 専用 |
 
 #### 10本テーマの型割り当て（6〜10・案）
 
-| # | テーマ | 2枚目 | 3枚目 | 4枚目 |
+| # | テーマ | 2枚目 | 3枚目 | 4枚目 | 既存との切り分け |
+| ---: | --- | --- | --- | --- | --- |
+| 6 | 朝食案内の書き方 | **diagram** | bullets | prose | **5 Wi-Fi** と同型。載せる項目・ページ内の順番に特化（QR設置は触れない） |
+| 7 | チェックアウト案内 | bullets | prose | diagram | 1で「何時まで？」は触れるが、退室・精算・鍵は未着手 |
+| 8 | 多言語案内 | bullets | compare-table | prose | 4で多言語1行のみ。インバウンド向けとして独立 |
+| 9 | スタッフ引き継ぎ・更新ルール | prose | bullets | **steps** | **2・3** はゲスト向け設計。**9** はシフト・担当者の運用ルール |
+| 10 | 料金プラン比較 | **compare-table** | bullets | bullets | コンバージョン系。完全新規 |
+
+##### 6. 朝食案内の書き方（`breakfast-guide`）— Wi-Fi姉妹
+
+**Cover:** 朝食案内 / の書き方  
+**キャプションの入口:** 「朝食、何時からですか？」
+
+| # | 型 | kicker | 見出し案 | 中身案 |
 | ---: | --- | --- | --- | --- |
-| 6 | 館内案内の作り方 | steps | bullets | bullets |
-| 7 | チェックアウト案内 | bullets | prose | diagram |
-| 8 | 多言語案内 | bullets | compare-table | prose |
-| 9 | QRの置き場所 | diagram | bullets | bullets |
-| 10 | 料金プラン比較 | **compare-table** | bullets | bullets |
+| 2 | diagram | 2番目に多い | 朝食はWi-Fiの次 | チェックイン翌朝に必ず聞かれる。Wi-Fiの下に載せると読まれやすい |
+| 3 | bullets | 載せる内容 | この4点を載せる | ① 時間（開始・終了）② 場所（階・部屋名）③ 料金／宿泊に含むか ④ 予約・変更の有無 |
+| 4 | prose | ページ内 | Wi-Fiの下に見出しで | 同じ1ページの2ブロック目に。地図リンクや写真は後から足せる |
+
+**イラスト:** レストラン／ビュッフェ／フロント誘導。Coverは **？＋朝食アイコン** の吹き出し（Wi-Fi cover と同パターン）。PC画面はゲスト向き禁止。
+
+##### 9. スタッフ引き継ぎ・更新ルール（`staff-handover-update`）
+
+**Cover:** 引き継ぎ・更新 / ルール  
+**キャプションの入口:** 「昨日の担当者にしか分からない…」
+
+| # | 型 | kicker | 見出し案 | 中身案 |
+| ---: | --- | --- | --- | --- |
+| 2 | prose | よくある状況 | シフトで案内がズレる | パート・交代制だと「誰が直したか」が残らず、口頭案内に戻る |
+| 3 | bullets | 更新ルール | この3つを決める | ① 誰が更新するか ② いつ見直すか（週1／変更時） ③ 何を直すか（質問ログ・季節メニュー等） |
+| 4 | steps | 引き継ぎ | 交代時の4ステップ | ① 最新URLを共有 ② 直近の変更点を1行メモ ③ ゲストから聞かれたことを追記 ④ 次担当に口頭30秒 |
+
+**イラスト:** スタッフ同士の引き継ぎ、**座ってPC編集**（`laptop-angle-reference.png` 必須）。ゲストシーンは Cover のみ可。
+
+**既存との違い:** テーマ3＝ゲストが読まない原因 / テーマ2 STEP⑤＝1週間の質問見直し → テーマ9＝**チーム内の更新・引き継ぎの型**
 
 HTML の参考例: `carousels/_content-variants.html`（書き出し対象外）
 
@@ -178,7 +217,17 @@ Infomii は **業務用SaaS**。イラストでも次を伝える:
 
 画面は **緑ブロック＋アイコンだけ**（文字・SSID・URL は描かない）
 
-**PC描画（必須）:** UIは画面の**正面ガラス面のみ**。モニター背面・ノートPCのふたにUIを描かない。生成後に目視チェック。
+**PC描画（必須 — 違反は完全NG）:**
+
+| ルール | 内容 |
+| --- | --- |
+| 正解参照 | `laptop-angle-reference.png` / `pc-editing-canon.png` |
+| ふた背面 | **無地グレーのみ**。UI・アイコン・緑ブロック禁止 |
+| 画面の向き | ゲスト向き禁止。キーボードは必ずスタッフ側 |
+| 禁止構図 | スタッフ2人＋モニター背面、デスクトップモニター、ふたにUI |
+| 失敗時 | 再生成2回NG → `laptop-angle-reference.png` をそのまま流用 |
+
+詳細: `design-prompts.md` §8「完全NG」表
 
 詳細プロンプト: `design-prompts.md` §8
 
