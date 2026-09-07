@@ -48,12 +48,12 @@ const APP_REORDER_SCROLL_MAX_STEP = 18;
 
 /**
  * 自動高さ用の実測。コンテナに `h-full`+`justify-center` があると `scrollHeight` が親の高さに引きずられ再帰しやすいので、
- * 中身のルート要素（firstElementChild）の `offsetHeight` を優先する。
+ * 中身のルート要素（firstElementChild）の高さを優先する。
  */
 function measureCardContentHeightPx(container: HTMLElement): number {
   const first = container.firstElementChild as HTMLElement | null;
   if (first) {
-    const h = first.offsetHeight;
+    const h = Math.max(first.offsetHeight, first.scrollHeight);
     if (Number.isFinite(h) && h > 0) {
       return Math.min(MAX_AUTO_BLOCK_H, Math.ceil(h + 8));
     }
@@ -61,6 +61,17 @@ function measureCardContentHeightPx(container: HTMLElement): number {
   const sh = container.scrollHeight;
   const capped = Math.min(MAX_AUTO_BLOCK_H - 8, Math.max(MIN_H, sh));
   return Math.ceil(capped + 8);
+}
+
+function readVerticalPaddingPx(card: EditorCard): number {
+  if (isMediaCardType(card.type)) return 0;
+  const raw = (card.style as Record<string, unknown> | undefined)?.padding;
+  if (typeof raw === "number" && Number.isFinite(raw)) return Math.max(0, raw) * 2;
+  if (typeof raw === "string") {
+    const n = Number.parseFloat(raw);
+    if (Number.isFinite(n)) return Math.max(0, n) * 2;
+  }
+  return 0;
 }
 const SNAP_THRESHOLD = 8;
 const STACK_GAP_Y = 12;
@@ -494,27 +505,33 @@ export function FreeformCanvas({
         }
         return Math.max(MIN_H, contentHeight);
       }
-      if (saved?.manualH) {
-        const auto = autoHeights[card.id];
-        const savedHeight = pos.h ?? getCardDefaultHeight(card);
-        if (typeof auto === "number" && Number.isFinite(auto) && auto > savedHeight + 1) {
-          return Math.max(MIN_H, auto);
-        }
-        return savedHeight;
-      }
+      const current = pos.h ?? getCardDefaultHeight(card);
+      const padY = readVerticalPaddingPx(card);
       const auto = autoHeights[card.id];
+      const innerAvailable = Math.max(0, current - padY);
+      const overflows =
+        typeof auto === "number" && Number.isFinite(auto) && auto > innerAvailable - 4;
+      const needed =
+        typeof auto === "number" && Number.isFinite(auto) ? auto + padY : undefined;
       if (card.type === "map") {
         const floor = getMapMinHeight(card);
-        if (typeof auto === "number" && Number.isFinite(auto)) {
-          return Math.max(floor, Math.min(MAP_AUTO_MAX_H, auto));
+        if (overflows && typeof needed === "number") {
+          return Math.max(floor, Math.min(MAP_AUTO_MAX_H, needed));
         }
-        const fallback = pos.h ?? getCardDefaultHeight(card);
-        return Math.max(floor, Math.min(MAP_AUTO_MAX_H, fallback));
+        return Math.max(floor, Math.min(MAP_AUTO_MAX_H, current));
       }
-      if (typeof auto === "number" && Number.isFinite(auto)) {
-        return Math.max(MIN_H, auto);
+      if (overflows && typeof needed === "number") {
+        return Math.max(MIN_H, needed);
       }
-      return pos.h ?? getCardDefaultHeight(card);
+      if (
+        !saved?.manualH &&
+        !isMediaCardType(card.type) &&
+        typeof needed === "number" &&
+        current > needed + 8
+      ) {
+        return Math.max(MIN_H, needed);
+      }
+      return Math.max(MIN_H, current);
     },
     [autoHeights, contentWidth, cards]
   );
@@ -530,10 +547,13 @@ export function FreeformCanvas({
       const pos = getPosition(card, idx, contentWidth, cards);
       const saved = (card.style?.[POSITION_KEY] as Position | undefined) ?? undefined;
       const manualH = saved?.manualH === true;
-      const width = pos.w ?? contentWidth;
-      const nextX = pos.x;
+      const width =
+        typeof saved?.w === "number" && Number.isFinite(saved.w)
+          ? saved.w
+          : (pos.w ?? contentWidth);
+      const nextX = typeof saved?.x === "number" && Number.isFinite(saved.x) ? saved.x : pos.x;
       const renderH = getRenderHeight(card, idx);
-      const nextH = manualH ? (typeof saved?.h === "number" ? saved.h : renderH) : renderH;
+      const nextH = renderH;
       const nextPos: Position = {
         x: nextX,
         y: currentY,
@@ -1215,7 +1235,7 @@ export function FreeformCanvas({
             const isOverflowing =
               typeof measuredContentHeight === "number" &&
               Number.isFinite(measuredContentHeight) &&
-              measuredContentHeight > h + 1;
+              measuredContentHeight > h - readVerticalPaddingPx(card) + 1;
             const fullBleed = isCardFullBleed(card);
             const blockStyle = getBlockStyle(card);
             const shellBackgroundColor =
@@ -1393,10 +1413,10 @@ export function FreeformCanvas({
                       ref={setContentRef(card.id)}
                       data-card-content-id={card.id}
                       className={
-                        "flex h-full w-full min-h-0 flex-col items-stretch overflow-x-hidden overflow-y-visible p-0 [&>*]:shrink-0 " +
+                        "flex h-full w-full min-h-0 flex-col items-stretch overflow-x-hidden p-0 [&>*]:shrink-0 " +
                         (isOverflowing || card.type === "map" || card.type === "tabs_info" || card.type === "accordion_info"
-                          ? "justify-start"
-                          : "justify-center")
+                          ? "justify-start overflow-y-visible"
+                          : "justify-center overflow-y-hidden")
                       }
                     >
                       {unframed ? (

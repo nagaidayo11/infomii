@@ -252,13 +252,16 @@ export function getBlockStyle(card: { style?: CardStyle; type?: CardType }): imp
       : typeof innerR === "string" && innerR.trim()
         ? innerR.trim()
         : undefined;
+  const media = isMediaCardType(card.type);
   const style: Record<string, string | number | undefined> = {
     padding:
-      typeof s.padding === "number"
-        ? `${s.padding}px`
-        : typeof s.padding === "string"
-          ? s.padding
-          : undefined,
+      media
+        ? undefined
+        : typeof s.padding === "number"
+          ? `${s.padding}px`
+          : typeof s.padding === "string"
+            ? s.padding
+            : undefined,
     color: typeof s.textColor === "string" ? s.textColor : undefined,
     textAlign:
       s.textAlign === "left" || s.textAlign === "center" || s.textAlign === "right"
