@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; }
+      .banner {
+        position: relative;
+        width: 1500px;
+        height: 500px;
+        overflow: hidden;
+        background: #04372d;
+      }
+      .banner img.bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 78% 50%;
+      }
+      .veil {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(4, 45, 38, 0.82) 0%,
+          rgba(6, 78, 59, 0.46) 44%,
+          rgba(15, 118, 110, 0.08) 100%
+        );
+      }
+      .lockup {
+        position: absolute;
+        left: 96px;
+        top: 72px;
+        display: flex;
+        align-items: center;
+        gap: 40px;
+      }
+      .mark {
+        width: 252px;
+        height: 252px;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 28px rgba(2, 24, 20, 0.38));
+      }
+      .copy { color: #fff; font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif; }
+      .wordmark {
+        font-size: 96px;
+        font-weight: 800;
+        letter-spacing: -1.2px;
+        line-height: 1;
+      }
+      .wordmark .ii { color: #a7f3d0; }
+      .ja {
+        margin-top: 20px;
+        font-size: 32px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: #ecfdf5;
+      }
+      .en {
+        margin-top: 14px;
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: #d1fae5;
+        opacity: 0.92;
+        font-family: "Helvetica Neue", "Hiragino Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner" id="banner">
+      <img class="bg" src="./_banner-bg-1500x500.png" alt="" />
+      <div class="veil"></div>
+      <div class="lockup">
+        <img class="mark" src="./icon-mark.png" alt="" />
+        <div class="copy">
+          <div class="wordmark">Infom<span class="ii">ii</span></div>
+          <div class="ja">誰でも爆速で案内が作れる</div>
+          <div class="en">Hotel information, instantly.</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
