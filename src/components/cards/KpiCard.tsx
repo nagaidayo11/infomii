@@ -55,8 +55,8 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
           <p className="col-span-full text-slate-500">{labels.empty}</p>
         ) : (
           items.map((item, i) => (
-            <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} bg-slate-50 p-3`}>
-              <p className="text-xs text-slate-500">
+            <div key={i} data-inner-surface className={`${editorInnerRadiusClassName} min-w-0 bg-slate-50 p-3`}>
+              <p className="text-xs text-slate-500 break-words [overflow-wrap:anywhere]">
                 <InlineEditable
                   value={item.label ?? ""}
                   onSave={(v) => {
@@ -70,7 +70,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
                   placeholder="ラベル"
                 />
               </p>
-              <p className="mt-1 text-lg font-normal text-slate-800">
+              <p className="mt-1 text-base font-normal leading-snug text-slate-800 break-words [overflow-wrap:anywhere]">
                 <InlineEditable
                   value={item.value ?? ""}
                   onSave={(v) => {
@@ -80,7 +80,7 @@ export function KpiCard({ card, isSelected = false, locale = "ja" }: KpiCardProp
                   }}
                   editable={editable}
                   onActivate={onActivate}
-                  className="text-lg font-normal text-slate-800"
+                  className="text-base font-normal leading-snug text-slate-800 break-words [overflow-wrap:anywhere]"
                   placeholder="数値"
                 />
               </p>

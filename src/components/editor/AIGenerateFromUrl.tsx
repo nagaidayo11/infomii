@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useEditor2Store } from "./store";
+import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 
 type ApiCard = { type: string; content: Record<string, unknown>; order: number };
 
@@ -31,10 +32,21 @@ export function AIGenerateFromUrl({ onClose, className = "" }: AIGenerateFromUrl
     setLoading(true);
     setError(null);
     try {
+      const supabase = getBrowserSupabaseClient();
+      const { data: { session } } = supabase
+        ? await supabase.auth.getSession()
+        : { data: { session: null } };
+      if (!session?.access_token) {
+        setError("ログインが必要です");
+        return;
+      }
       const res = await fetch("/api/ai/generate-cards-from-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmed }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ url: trimmed, create_page: false }),
       });
       const data = (await res.json()) as {
         cards?: ApiCard[];
@@ -71,7 +83,8 @@ export function AIGenerateFromUrl({ onClose, className = "" }: AIGenerateFromUrl
     <div className={className}>
       <h3 className="text-sm font-semibold text-slate-800">URLから自動作成</h3>
       <p className="mt-1 text-xs text-slate-500">
-        ホテルサイトのURLを入力すると、情報を取得してカードを自動生成します。
+        ホテル公式サイトのURLから、内容に合う構成とブロックをAIが設計します。
+        写真・ロゴは著作権保護のため取り込みません。
       </p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         {error && (

@@ -34,7 +34,8 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const fullBleed = readCardWidthMode(c, "full") === "full";
-  const squareCorners = c?.cornerStyle === "square" || fullBleed;
+  const squareCorners =
+    c?.cornerStyle === "square" || (fullBleed && layout === "overlay");
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }
@@ -175,8 +176,8 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
               : "bottom-0 left-0 right-0 p-4")
           }
         >
-          {titleField("app-native-hero-title leading-snug")}
-          {subtitleField("app-native-hero-subtitle mt-1 opacity-95")}
+          {titleField("app-native-hero-title leading-snug break-words [overflow-wrap:anywhere]")}
+          {subtitleField("app-native-hero-subtitle mt-1 opacity-95 break-words [overflow-wrap:anywhere]")}
         </div>
       </div>
     );
@@ -201,14 +202,14 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
         }
       >
         {titleField(
-          "leading-snug " +
+          "leading-snug break-words [overflow-wrap:anywhere] " +
             (overlayAlign === "center"
               ? "text-[15px] font-semibold tracking-wide sm:text-base"
               : "leading-tight"),
           overlayAlign === "center" ? undefined : getTitleFontSizeStyle(),
         )}
         {subtitleField(
-          "opacity-95 " +
+          "opacity-95 break-words [overflow-wrap:anywhere] " +
             (overlayAlign === "center"
               ? "mt-2 text-[13px] font-medium tracking-wide sm:text-sm"
               : "mt-1"),

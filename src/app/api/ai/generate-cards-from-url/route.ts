@@ -1,358 +1,154 @@
+import { isIP } from "node:net";
+import { lookup } from "node:dns/promises";
 import { NextResponse } from "next/server";
-import { finalizeAiPageCards } from "@/lib/ai-page-content-enrichment";
-import { AI_GENERATED_PAGE_TITLE, inferAiPageImageTheme } from "@/lib/ai-page-theme-images";
 import { createSlug } from "@/lib/slug";
+import { composeInfomiiPage, createCompositionGuestShell } from "@/lib/server/ai-page-composer";
 import { getSupabaseAdminServerClient, getSupabaseAnonServerClient } from "@/lib/server/supabase-server";
-import {
-  pageQuotaForbiddenPayload,
-  resolveHotelPageQuota,
-} from "@/lib/server/resolve-hotel-page-quota";
+import { pageQuotaForbiddenPayload, resolveHotelPageQuota } from "@/lib/server/resolve-hotel-page-quota";
 
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-
-/** Strip HTML and get plain text (rough extraction for AI). */
 function extractTextFromHtml(html: string): string {
-  const noScript = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
-  const noStyle = noScript.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
-  const text = noStyle
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
+    .replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
-    .trim();
-  return text.slice(0, 24000); // limit token usage
+    .trim()
+    .slice(0, 24000);
 }
 
-type ExtractedHotel = {
-  hotelName: string;
-  address: string;
-  wifiInfo: string;
-  breakfastInfo: string;
-  checkIn: string;
-  checkOut: string;
-  nearbyInfo: string;
-  taxiInfo: string;
-  emergencyInfo: string;
-};
+function isPrivateAddress(address: string): boolean {
+  const normalized = address.toLowerCase();
+  if (normalized === "::1" || normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe80:")) return true;
+  const parts = address.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) return false;
+  return parts[0] === 10 || parts[0] === 127 || parts[0] === 0 ||
+    (parts[0] === 169 && parts[1] === 254) ||
+    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+    (parts[0] === 192 && parts[1] === 168);
+}
 
-/** Extract structured hotel data from webpage text using AI. */
-async function extractHotelData(
-  apiKey: string,
-  url: string,
-  pageText: string
-): Promise<ExtractedHotel> {
-  const prompt = `次のホテル・宿泊施設のウェブサイトから取得したテキストを分析し、以下の項目を抽出してJSONで返してください。不明な項目は空文字にしてください。JSON以外は出力しないでください。
-
-URL: ${url}
-
-テキスト（抜粋）:
-${pageText.slice(0, 12000)}
-
-出力形式（このJSONのみ）:
-{
-  "hotelName": "施設名",
-  "address": "住所（番地・市区町村・都道府県）",
-  "wifiInfo": "WiFiのSSID・パスワードや案内",
-  "breakfastInfo": "朝食の時間・場所・内容・形式",
-  "checkIn": "チェックイン時刻",
-  "checkOut": "チェックアウト時刻",
-  "nearbyInfo": "周辺の観光地・駅・コンビニ・レストランなど",
-  "taxiInfo": "タクシー会社名・電話番号・手配案内",
-  "emergencyInfo": "緊急時の連絡先（火災119・警察110・病院・フロントなど）"
-}`;
-
-  const res = await fetch(OPENAI_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You output only valid JSON. No markdown, no explanation." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.3,
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`AI extraction failed: ${err.slice(0, 200)}`);
+async function assertPublicUrl(value: string): Promise<URL> {
+  const url = new URL(value);
+  if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("URLは http(s) のみ指定できます");
+  if (url.username || url.password) throw new Error("認証情報を含むURLは指定できません");
+  const hostname = url.hostname.toLowerCase();
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
+    throw new Error("公開サイトのURLを指定してください");
   }
-
-  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("No content in AI response");
-
-  const trimmed = content.trim().replace(/^```json?\s*|\s*```$/g, "");
-  const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-  return {
-    hotelName: String(parsed.hotelName ?? "").trim(),
-    address: String(parsed.address ?? "").trim(),
-    wifiInfo: String(parsed.wifiInfo ?? "").trim(),
-    breakfastInfo: String(parsed.breakfastInfo ?? "").trim(),
-    checkIn: String(parsed.checkIn ?? "").trim(),
-    checkOut: String(parsed.checkOut ?? "").trim(),
-    nearbyInfo: String(parsed.nearbyInfo ?? "").trim(),
-    taxiInfo: String(parsed.taxiInfo ?? "").trim(),
-    emergencyInfo: String(parsed.emergencyInfo ?? "").trim(),
-  };
+  const addresses = isIP(hostname) ? [{ address: hostname }] : await lookup(hostname, { all: true });
+  if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
+    throw new Error("公開サイトのURLを指定してください");
+  }
+  return url;
 }
 
-/** Parse WiFi info into SSID and password if possible (e.g. "SSID: xxx / パスワード: yyy"). */
-function parseWifiInfo(wifiInfo: string): { ssid: string; password: string; description: string } {
-  const d = wifiInfo.trim();
-  if (!d) return { ssid: "", password: "", description: d };
-  let ssid = "";
-  let password = "";
-  const ssidMatch = d.match(/(?:SSID|ssid|ネットワーク名)[:\s]*([^\n/]+)/i);
-  if (ssidMatch) ssid = ssidMatch[1].trim();
-  const pwMatch = d.match(/(?:パスワード|password|PW)[:\s]*([^\n/]+)/i);
-  if (pwMatch) password = pwMatch[1].trim();
-  if (!ssid && d.length < 200) ssid = d.split(/\n/)[0]?.trim() ?? d.slice(0, 40);
-  return { ssid, password, description: d };
-}
-
-/** Build Infomii cards from extracted hotel data. Order: Welcome, WiFi, Breakfast, Checkout, Nearby, Taxi, Emergency, Map. */
-function buildCardsFromExtracted(extracted: ExtractedHotel): Array<{ type: string; content: Record<string, unknown>; order: number }> {
-  const name = extracted.hotelName || "当施設";
-  const welcomeMessage = `${name}へようこそ。ご宿泊ありがとうございます。ごゆっくりお過ごしください。`;
-
-  const wifi = parseWifiInfo(extracted.wifiInfo);
-  const cards: Array<{ type: string; content: Record<string, unknown>; order: number }> = [
-    { type: "welcome", content: { title: "ようこそ", message: welcomeMessage }, order: 0 },
-    { type: "wifi", content: { ssid: wifi.ssid, password: wifi.password, description: wifi.description || undefined }, order: 1 },
-    {
-      type: "breakfast",
-      content: {
-        time: extracted.breakfastInfo ? extracted.breakfastInfo.split(/[。\n]/)[0]?.trim().slice(0, 80) ?? "" : "",
-        location: "",
-        menu: extracted.breakfastInfo || "",
-      },
-      order: 2,
-    },
-    {
-      type: "checkout",
-      content: {
-        title: "チェックアウト",
-        time: extracted.checkOut || "11:00",
-        note: extracted.checkIn ? `チェックイン: ${extracted.checkIn}` : "",
-        linkUrl: "",
-        linkLabel: "詳細",
-      },
-      order: 3,
-    },
-    {
-      type: "nearby",
-      content: {
-        title: "周辺案内",
-        items: extracted.nearbyInfo
-          ? [{ name: "周辺情報", description: extracted.nearbyInfo.slice(0, 300), link: "" }]
-          : [{ name: "", description: "", link: "" }],
-      },
-      order: 4,
-    },
-    {
-      type: "taxi",
-      content: {
-        title: "タクシー",
-        phone: extracted.taxiInfo.replace(/[^\d\-+]/g, "").slice(0, 20) || "",
-        companyName: extracted.taxiInfo ? extracted.taxiInfo.split(/[\n\d]/)[0]?.trim().slice(0, 60) || "" : "",
-        note: extracted.taxiInfo || "",
-      },
-      order: 5,
-    },
-    {
-      type: "emergency",
-      content: {
-        title: "緊急連絡先",
-        fire: "119",
-        police: "110",
-        hospital: extracted.emergencyInfo ? extracted.emergencyInfo.slice(0, 120) : "",
-        note: extracted.emergencyInfo || "",
-      },
-      order: 6,
-    },
-    { type: "map", content: { address: extracted.address || "住所を入力してください" }, order: 7 },
-  ];
-  return cards;
+async function fetchOfficialPage(input: string): Promise<{ finalUrl: URL; text: string }> {
+  let url = await assertPublicUrl(input);
+  for (let redirects = 0; redirects <= 3; redirects += 1) {
+    const response = await fetch(url, {
+      redirect: "manual",
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Infomii/1.0; +https://www.infomii.com)" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location || redirects === 3) throw new Error("サイトのリダイレクトを確認できませんでした");
+      url = await assertPublicUrl(new URL(location, url).toString());
+      continue;
+    }
+    if (!response.ok) throw new Error(`公式サイトを取得できませんでした（${response.status}）`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/html")) throw new Error("HTMLページのURLを指定してください");
+    const text = extractTextFromHtml(await response.text());
+    if (text.length < 50) throw new Error("ページから十分な案内文を取得できませんでした");
+    return { finalUrl: url, text };
+  }
+  throw new Error("公式サイトを取得できませんでした");
 }
 
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured" },
-      { status: 503 }
-    );
-  }
+  if (!apiKey) return NextResponse.json({ error: "OPENAI_API_KEY が設定されていません" }, { status: 503 });
 
-  let body: { url?: string; page_id?: string };
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  if (!token) return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+
+  let body: { url?: string; page_id?: string; create_page?: boolean };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+  const inputUrl = String(body.url ?? "").trim();
+  const requestedPageId = String(body.page_id ?? "").trim();
+  if (!inputUrl) return NextResponse.json({ error: "公式サイトのURLを入力してください" }, { status: 400 });
 
-  const url = String(body.url ?? "").trim();
-  const pageId = typeof body.page_id === "string" ? body.page_id.trim() : undefined;
-  if (!url) {
-    return NextResponse.json(
-      { error: "url is required" },
-      { status: 400 }
-    );
-  }
-
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    return NextResponse.json(
-      { error: "Invalid URL" },
-      { status: 400 }
-    );
-  }
+  const supabase = getSupabaseAdminServerClient();
+  const anon = getSupabaseAnonServerClient();
+  const { data: { user }, error: userError } = await anon.auth.getUser(token);
+  if (userError || !user) return NextResponse.json({ error: "認証に失敗しました" }, { status: 401 });
+  const { data: membership, error: memberError } = await supabase
+    .from("hotel_memberships").select("hotel_id").eq("user_id", user.id).maybeSingle();
+  if (memberError || !membership?.hotel_id) return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
 
   try {
-    const fetchRes = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; Infomii/1.0)" },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!fetchRes.ok) {
-      return NextResponse.json(
-        { error: `Failed to fetch URL: ${fetchRes.status}` },
-        { status: 502 }
-      );
-    }
-    const html = await fetchRes.text();
-    const pageText = extractTextFromHtml(html);
-    if (!pageText || pageText.length < 50) {
-      return NextResponse.json(
-        { error: "ページから十分なテキストを取得できませんでした" },
-        { status: 422 }
-      );
-    }
+    const fetched = await fetchOfficialPage(inputUrl);
+    const slug = `${createSlug(fetched.finalUrl.hostname.replace(/^www\./, ""))}-${Date.now().toString(36)}`;
+    const sourceText = `公式サイトURL: ${fetched.finalUrl.toString()}\n\n公式サイト本文:\n${fetched.text}`;
+    const generated = await composeInfomiiPage({ apiKey, sourceText, sourceKind: "official_website", pageSlug: slug });
+    const payload = generated.cards.map((card, order) => ({ type: card.type, content: card.content, order }));
+    let pageId = requestedPageId;
 
-    const extracted = await extractHotelData(apiKey, url, pageText);
-    const description = [
-      extracted.hotelName,
-      extracted.address,
-      extracted.breakfastInfo,
-      extracted.nearbyInfo,
-      url,
-    ]
-      .filter(Boolean)
-      .join(" ");
-    const baseCards = buildCardsFromExtracted(extracted);
-    const cards = finalizeAiPageCards(
-      baseCards.map((c, i) => ({ ...c, order: i })),
-      description || extracted.hotelName || "ホテル案内",
-    );
-
-    if (cards.length === 0) {
-      return NextResponse.json(
-        { error: "カードを生成できませんでした" },
-        { status: 502 }
-      );
-    }
-
-    const payload = cards.map((c, i) => ({
-      type: c.type,
-      content: c.content,
-      order: i,
-    }));
-
-    const supabase = getSupabaseAdminServerClient();
-    let targetPageId = pageId;
-
-    if (!targetPageId) {
-      const authHeader = request.headers.get("authorization") ?? "";
-      const token = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
-      if (!token) {
-        return NextResponse.json({
-          cards: payload,
-          extracted: { hotelName: extracted.hotelName, address: extracted.address },
-          message: "page_id を指定するか、Authorization Bearer でログインして新しいページを自動作成してください",
-        });
-      }
-      const anon = getSupabaseAnonServerClient();
-      const { data: { user }, error: userError } = await anon.auth.getUser(token);
-      if (userError || !user) {
-        return NextResponse.json({ error: "認証に失敗しました" }, { status: 401 });
-      }
-      const { data: membership, error: memberError } = await supabase
-        .from("hotel_memberships")
-        .select("hotel_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (memberError || !membership?.hotel_id) {
-        return NextResponse.json({ error: "施設が選択されていません" }, { status: 403 });
-      }
-      const quota = await resolveHotelPageQuota({
-        admin: supabase,
-        hotelId: membership.hotel_id,
-        user,
+    if (!pageId && body.create_page !== true) {
+      return NextResponse.json({
+        cards: payload,
+        source: { url: fetched.finalUrl.toString(), imagesImported: false },
+        composition: generated.design,
+        ai: { modelUsed: generated.modelUsed, fallbackUsed: generated.fallbackUsed, mode: "structured_composition" },
       });
-      if (!quota.allowed) {
-        return NextResponse.json(pageQuotaForbiddenPayload(quota), { status: 403 });
-      }
-      const title = AI_GENERATED_PAGE_TITLE;
-      const slug = `${createSlug(extracted.hotelName || "info")}-${Date.now().toString(36)}`;
-      const { data: newPage, error: pageError } = await supabase
+    }
+
+    if (pageId) {
+      const { data: existing } = await supabase.from("pages").select("id,slug").eq("id", pageId).eq("hotel_id", membership.hotel_id).maybeSingle();
+      if (!existing?.id) return NextResponse.json({ error: "対象ページが見つかりません" }, { status: 404 });
+      const shell = createCompositionGuestShell(generated.design.navigationStyle, generated.cards, existing.slug as string);
+      await supabase.from("pages").update({ guest_shell: shell }).eq("id", pageId).eq("hotel_id", membership.hotel_id);
+    } else {
+      const quota = await resolveHotelPageQuota({ admin: supabase, hotelId: membership.hotel_id, user });
+      if (!quota.allowed) return NextResponse.json(pageQuotaForbiddenPayload(quota), { status: 403 });
+      const { data: page, error: pageError } = await supabase
         .from("pages")
-        .insert({ hotel_id: membership.hotel_id, title, slug })
+        .insert({ hotel_id: membership.hotel_id, title: generated.title, slug, guest_shell: generated.guestShell })
         .select("id")
         .single();
-      if (pageError || !newPage?.id) {
-        return NextResponse.json(
-          { error: "ページの作成に失敗しました", details: pageError?.message },
-          { status: 500 }
-        );
-      }
-      targetPageId = newPage.id as string;
+      if (pageError || !page?.id) return NextResponse.json({ error: "ページの作成に失敗しました", details: pageError?.message }, { status: 500 });
+      pageId = page.id as string;
     }
 
-    try {
-      const { data: inserted, error: insertError } = await supabase
-        .from("cards")
-        .insert(
-          payload.map((p, i) => ({
-            page_id: targetPageId,
-            type: p.type,
-            content: p.content,
-            order: i,
-          }))
-        )
-        .select("id,order");
-      if (insertError) {
-        return NextResponse.json({
-          cards: payload,
-          page_id: targetPageId,
-          extracted: { hotelName: extracted.hotelName, address: extracted.address },
-          dbError: insertError.message,
-        });
-      }
-      return NextResponse.json({
-        cards: payload,
-        inserted: inserted?.length ?? 0,
-        page_id: targetPageId,
-        pageId: targetPageId,
-        extracted: { hotelName: extracted.hotelName, address: extracted.address },
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown";
-      return NextResponse.json({
-        cards: payload,
-        page_id: targetPageId,
-        extracted: { hotelName: extracted.hotelName, address: extracted.address },
-        dbError: msg,
-      });
-    }
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
+    const { data: inserted, error: insertError } = await supabase.from("cards").insert(
+      payload.map((card) => ({ page_id: pageId, ...card })),
+    ).select("id");
+    if (insertError) return NextResponse.json({ error: "カードの保存に失敗しました", details: insertError.message }, { status: 500 });
+
+    return NextResponse.json({
+      cards: payload,
+      inserted: inserted?.length ?? 0,
+      page_id: pageId,
+      pageId,
+      source: { url: fetched.finalUrl.toString(), imagesImported: false },
+      composition: generated.design,
+      ai: { modelUsed: generated.modelUsed, fallbackUsed: generated.fallbackUsed, mode: "structured_composition" },
+    });
+  } catch (error) {
     return NextResponse.json(
-      { error: "Generation failed", details: message },
-      { status: 500 }
+      { error: "取り込みに失敗しました", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 },
     );
   }
 }

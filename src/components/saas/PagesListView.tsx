@@ -16,6 +16,7 @@ import {
 } from "@/lib/storage";
 import { planHasStampCards } from "@/lib/plan-limits";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
+import { GeneratePageFromUrl } from "@/components/ai/GeneratePageFromUrl";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { UpgradeCtaBanner } from "@/components/dashboard/UpgradeCtaBanner";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
@@ -37,6 +38,7 @@ function PagesListViewWeb() {
   const router = useRouter();
   const [sets, setSets] = useState<PageConnectionSet[]>([]);
   const [pageFilter, setPageFilter] = useState<"all" | "linked" | "single">("all");
+  const [creationMode, setCreationMode] = useState<"text" | "import">("text");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
@@ -272,7 +274,25 @@ function PagesListViewWeb() {
         />
       ) : null}
 
-      <GeneratePageFromDescription />
+      <section>
+        <div className="mb-3 inline-flex rounded-md border border-[#e6e8eb] bg-white p-0.5">
+          <button
+            type="button"
+            onClick={() => setCreationMode("text")}
+            className={`app-button-native rounded px-4 py-2 text-sm font-medium transition ${creationMode === "text" ? "bg-slate-900 !text-white" : "text-slate-600 hover:bg-slate-50"}`}
+          >
+            テキストで作る
+          </button>
+          <button
+            type="button"
+            onClick={() => setCreationMode("import")}
+            className={`app-button-native rounded px-4 py-2 text-sm font-medium transition ${creationMode === "import" ? "bg-slate-900 !text-white" : "text-slate-600 hover:bg-slate-50"}`}
+          >
+            取り込みで作る
+          </button>
+        </div>
+        {creationMode === "text" ? <GeneratePageFromDescription /> : <GeneratePageFromUrl />}
+      </section>
 
       {loading ? (
         <div className="space-y-3">

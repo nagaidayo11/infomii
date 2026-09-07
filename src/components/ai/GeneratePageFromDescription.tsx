@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FullScreenLoadingOverlay } from "@/components/ui/FullScreenLoadingOverlay";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
@@ -146,20 +147,6 @@ function IconDate() {
       />
       <circle cx="13.2" cy="15.2" r="1.2" fill="#fff" opacity="0.9" />
       <circle cx="18.8" cy="15.2" r="1.2" fill="#fff" opacity="0.9" />
-    </svg>
-  );
-}
-
-function IconSpark() {
-  return (
-    <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden>
-      <circle cx="16" cy="16" r="10" fill="rgba(255,255,255,0.22)" />
-      <path
-        d="M16 7.5c.5 3.2 2.3 5 5.5 5.5-3.2.5-5 2.3-5.5 5.5-.5-3.2-2.3-5-5.5-5.5 3.2-.5 5-2.3 5.5-5.5z"
-        fill="#fff"
-      />
-      <circle cx="23.5" cy="10" r="1.4" fill="#fff" opacity="0.85" />
-      <circle cx="9.5" cy="21.5" r="1.1" fill="#fff" opacity="0.7" />
     </svg>
   );
 }
@@ -313,7 +300,7 @@ export function GeneratePageFromDescription({
         {isApp ? (
           <div className="flex items-center gap-2.5">
             <div className="app-ai-compose-orb" aria-hidden>
-              <img src="/app-icon-glossy.png" alt="" />
+              <Image src="/app-icon-glossy.png" alt="" width={32} height={32} />
             </div>
             <div className="min-w-0">
               <p className="app-ai-compose-kicker">最短で下書き</p>
@@ -322,9 +309,9 @@ export function GeneratePageFromDescription({
           </div>
         ) : (
           <div className="mb-3">
-            <h2 className="text-base font-semibold text-slate-900">説明を書くだけでページができる</h2>
+            <h2 className="text-base font-semibold text-slate-900">説明から、最適な案内ページを設計</h2>
             <p className="mt-1 text-sm text-slate-500">
-              ホテル・旅館の館内案内を、短い説明から作成できます。
+              AIが内容を読み取り、構成・ブロック・ナビゲーションまで最適化します。
             </p>
           </div>
         )}
@@ -410,7 +397,7 @@ export function GeneratePageFromDescription({
         createPortal(
           <FullScreenLoadingOverlay
             title="ページ生成中…"
-            subtitle="AIがカードを並べています"
+            subtitle="AIが情報を整理し、構成と導線を設計しています"
             classNameZ="z-[90]"
           />,
           document.body

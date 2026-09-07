@@ -252,7 +252,11 @@ function insertCard(
  * Apply themed local images and contextual copy to AI-generated cards.
  * Images always come from /public (no generative image API).
  */
-export function finalizeAiPageCards(cards: AiGeneratedCard[], description: string): AiGeneratedCard[] {
+export function finalizeAiPageCards(
+  cards: AiGeneratedCard[],
+  description: string,
+  options: { ensureHero?: boolean; ensurePersonalSlider?: boolean } = {},
+): AiGeneratedCard[] {
   const theme = inferAiPageImageTheme(description);
   const img = getAiPageDefaultImages(theme);
   const personal = isPersonalDailyDescription(description);
@@ -266,7 +270,7 @@ export function finalizeAiPageCards(cards: AiGeneratedCard[], description: strin
       ...list[heroIndex],
       content: buildHeroContent(list, description, theme, img),
     };
-  } else {
+  } else if (options.ensureHero !== false) {
     list = insertCard(
       list,
       { type: "hero", content: buildHeroContent(list, description, theme, img), order: 0 },
@@ -274,7 +278,7 @@ export function finalizeAiPageCards(cards: AiGeneratedCard[], description: strin
     );
   }
 
-  if (personal && !hotel) {
+  if (personal && !hotel && options.ensurePersonalSlider !== false) {
     const sliderIndex = list.findIndex((c) => c.type === "hero_slider");
     if (sliderIndex >= 0) {
       list[sliderIndex] = {
