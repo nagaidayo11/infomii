@@ -64,6 +64,13 @@ export const GUEST_CARD_SURFACE_CLASS = "guest-card-surface";
 /** Media / live-ops: outer radius only — fill/border stay on the block. */
 export const GUEST_CARD_SURFACE_MEDIA_CLASS = "guest-card-surface-media";
 
+/** Heroes sit under the guest header — keep the top edge square. */
+export const GUEST_HERO_FLUSH_TOP_CLASS = "guest-hero-flush-top";
+
+export function isHeroCardType(type: string | undefined): boolean {
+  return type === "hero" || type === "hero_slider";
+}
+
 /** Shared inner padding (`--guest-card-pad-x` / `--guest-card-pad-y`). */
 export const GUEST_CARD_PAD_CLASS = "guest-card-pad";
 
@@ -89,7 +96,8 @@ export function guestCardChromeClass(card: Pick<EditorCard, "type" | "content">)
   if (isCardFullBleed(card)) return CARD_FULL_BLEED_CLASS;
   if (LAYOUT_ONLY_CARD_TYPES.has(card.type)) return CARD_INSET_GUTTER_CLASS;
   if (isMediaCardType(card.type) || STATUS_BAND_CARD_TYPES.has(card.type)) {
-    return `${CARD_INSET_GUTTER_CLASS} ${GUEST_CARD_SURFACE_MEDIA_CLASS}`;
+    const flushTop = isHeroCardType(card.type) ? ` ${GUEST_HERO_FLUSH_TOP_CLASS}` : "";
+    return `${CARD_INSET_GUTTER_CLASS} ${GUEST_CARD_SURFACE_MEDIA_CLASS}${flushTop}`;
   }
   return `${CARD_INSET_GUTTER_CLASS} ${GUEST_CARD_SURFACE_CLASS}`;
 }

@@ -13,7 +13,7 @@ import { useEditor2Store } from "@/components/editor/store";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { useCardInlineEdit } from "./card-inline-edit";
 import { getLocalizedContent, type LocalizedString } from "@/lib/localized-content";
-import { readCardWidthMode } from "@/lib/editor/card-width-mode";
+import { readCardWidthMode, GUEST_HERO_FLUSH_TOP_CLASS } from "@/lib/editor/card-width-mode";
 import { readHeroLayout } from "@/lib/editor/hero-layout";
 
 type HeroCardProps = { card: EditorCard; isSelected?: boolean; locale?: string };
@@ -34,8 +34,10 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   const accent =
     typeof c?.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
   const fullBleed = readCardWidthMode(c, "full") === "full";
-  const squareCorners =
-    c?.cornerStyle === "square" || (fullBleed && layout === "overlay");
+  const squareCorners = c?.cornerStyle === "square" || fullBleed;
+  const radiusClass = squareCorners
+    ? `rounded-none ${GUEST_HERO_FLUSH_TOP_CLASS}`
+    : `${editorInnerRadiusClassName} ${GUEST_HERO_FLUSH_TOP_CLASS}`;
   const labels =
     locale === "ko"
       ? { titlePlaceholder: "제목", subtitlePlaceholder: "부제" }
@@ -58,6 +60,9 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
     <div
       className={
         "relative w-full overflow-hidden " +
+        GUEST_HERO_FLUSH_TOP_CLASS +
+        " " +
+        (squareCorners ? "rounded-none " : "") +
         (isNativeUi ? "bg-[var(--app-surface-muted)] " : "bg-slate-800 ") +
         mediaAspect
       }
@@ -124,12 +129,7 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
 
   if (layout === "stack") {
     return (
-      <section
-        className={
-          "pres-hero pres-hero--stack overflow-hidden " +
-          (squareCorners ? "rounded-none" : editorInnerRadiusClassName)
-        }
-      >
+      <section className={`pres-hero pres-hero--stack overflow-hidden ${radiusClass}`}>
         {media}
         <div className="pres-hero__copy-below">
           {titleField("pres-hero__title", getTitleFontSizeStyle())}
@@ -142,10 +142,7 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   if (layout === "split") {
     return (
       <section
-        className={
-          "pres-hero pres-hero--split overflow-hidden " +
-          (squareCorners ? "rounded-none" : editorInnerRadiusClassName)
-        }
+        className={`pres-hero pres-hero--split overflow-hidden ${radiusClass}`}
         style={{ ["--pres-accent" as string]: accent }}
       >
         {media}
@@ -158,7 +155,6 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
   }
 
   if (isNativeUi) {
-    const radiusClass = squareCorners ? "rounded-none" : "";
     return (
       <div
         className={
@@ -189,7 +185,7 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
       className={
         "app-interactive relative w-full overflow-hidden bg-transparent transition-transform duration-200 ease-out " +
         (fullBleed ? "" : "hover:-translate-y-0.5 ") +
-        (squareCorners ? "rounded-none" : editorInnerRadiusClassName)
+        radiusClass
       }
     >
       {media}

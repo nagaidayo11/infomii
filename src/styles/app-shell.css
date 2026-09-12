@@ -949,6 +949,11 @@
   border-right: 0;
 }
 
+[data-client-shell="app"][data-app-ui="native"] .app-native-hero.guest-hero-flush-top {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 [data-client-shell="app"][data-app-ui="native"] .app-native-hero-title {
   font-size: 1.125rem;
   font-weight: 800;

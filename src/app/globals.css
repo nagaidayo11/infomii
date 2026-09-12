@@ -1461,6 +1461,12 @@ body.lux-shell:has(.lp-page)::before {
   overflow: hidden;
 }
 
+/* Hero photos should meet the header with a square top edge (full or inset). */
+.guest-hero-flush-top.guest-hero-flush-top {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 /* Shared inner padding for guest card chrome / inset surfaces */
 .guest-card-pad {
   padding: var(--guest-card-pad-y, 0.75rem) var(--guest-card-pad-x, 0.75rem);
@@ -1579,6 +1585,13 @@ body.lux-shell:has(.lp-page)::before {
 [data-editor-layout] .editor-card-selected:not(.guest-card-surface-media),
 [data-editor-layout] .editor-card-selected:not(.guest-card-surface-media) > .editor-card {
   overflow: visible !important;
+}
+
+/* Hero selection ring: same radius on all four corners.
+ * Image clip (square top) lives on the inner photo, not this chrome. */
+[data-editor-layout] .editor-hero-shell.guest-card-surface-media {
+  overflow: visible;
+  border-radius: var(--guest-card-radius, 0.75rem);
 }
 
 .editor-reorder-smooth {

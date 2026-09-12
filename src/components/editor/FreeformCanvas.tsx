@@ -1386,13 +1386,19 @@ export function FreeformCanvas({
                 >
                   <div
                     className={
-                      "editor-card-selected h-full w-full overflow-hidden transition-shadow " +
+                      "editor-card-selected h-full w-full transition-shadow " +
+                      ((card.type === "hero" || card.type === "hero_slider") && !fullBleed
+                        ? "overflow-visible "
+                        : "overflow-hidden ") +
                       (isNewlyAdded ? "editor-card-enter " : "") +
                       (appReorderState?.id === card.id ? "app-editor-card-reordering " : "") +
                       (absorbingCardId === card.id ? "app-editor-card-absorbing " : "") +
                       (fullBleed
                         ? "card-full-bleed rounded-none "
                         : "guest-card-surface-media ") +
+                      ((card.type === "hero" || card.type === "hero_slider")
+                        ? "editor-hero-shell "
+                        : "") +
                       (isSelected
                         ? unframed
                           ? "editor-card-selected--active "
