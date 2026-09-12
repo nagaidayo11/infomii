@@ -98,6 +98,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
                 alt={label}
                 sizes="46vw"
                 className="object-cover object-center"
+                priority={i < 4}
               />
             ) : (
               <div className="flex h-full min-h-[12rem] items-center justify-center text-slate-400">
@@ -126,6 +127,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
             alt={label}
             sizes="200px"
             className="object-cover object-center"
+            priority={i < 4}
           />
         ) : (
           <div
@@ -253,7 +255,7 @@ export function ImageTilesCard({ card, locale = "ja" }: ImageTilesCardProps) {
   }
 
   return (
-    <Card padding={isPoster ? "none" : "md"} className={isPoster ? "bg-transparent shadow-none ring-0" : undefined}>
+    <Card padding={isPoster || !title ? "none" : "md"} className={isPoster ? "bg-transparent shadow-none ring-0" : undefined}>
       {(editable || title) ? (
         <p className={`mb-3 ${CARD_BLOCK_TITLE_CLASS}`} style={getTitleFontSizeStyle()}>
           <InlineEditable

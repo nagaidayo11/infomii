@@ -5,7 +5,7 @@ import {
 import { PLAN_PAGE_LIMITS } from "@/lib/plan-limits";
 
 /** public/lp 画像差し替え時にインクリメント（Next/Image・ブラウザキャッシュ対策） */
-export const LP_ASSET_VERSION = "20260521b";
+export const LP_ASSET_VERSION = "20260911d";
 
 export function lpAsset(path: string): string {
   const sep = path.includes("?") ? "&" : "?";
@@ -27,7 +27,7 @@ export const HERO_TEMPLATE_PREVIEWS: HeroTemplatePreview[] = [
     id: "city-hotel",
     label: "ホテル案内",
     tag: "宿泊",
-    description: "お知らせ・施設・FAQを1ホームに",
+    description: "客室で開く、今夜の案内",
     previewHref: `/demo/guest-live?embed=1&variant=infomii-hotel&lpv=${LP_ASSET_VERSION}`,
     openHref: "/demo/guest-live?variant=infomii-hotel",
   },

@@ -11,6 +11,13 @@ import type { PageBackgroundStyle } from "@/lib/storage";
 
 import { BRAND_ACCENT } from "@/lib/brand-accent";
 import { getAkariPreset } from "@/lib/demo/akari-hotel";
+import {
+  breakfast,
+  checkout,
+  hero,
+  highlight,
+  wifi,
+} from "@/lib/marketplace-seed-blocks";
 import Link from "next/link";
 
 const DEMO_STORAGE_KEY = "editor2:demo-state:v2";
@@ -103,7 +110,7 @@ type VariantPreset = {
   currentSlug?: string;
 };
 
-/** Bottom tabs aligned with marketplace / guest defaults (ホーム・フロント・FAQ). */
+/** Bottom tabs for the hotel LP phone mock (ホーム・フロント・Wi-Fi). */
 const LP_HOTEL_SHELL: GuestShellConfig = {
   enabled: true,
   navStyle: "tabs",
@@ -125,12 +132,12 @@ const LP_HOTEL_SHELL: GuestShellConfig = {
       icon: "phone",
     },
     {
-      id: "faq",
+      id: "wifi",
       type: "page",
-      label: { ja: "FAQ", en: "FAQ", zh: "FAQ", ko: "FAQ" },
+      label: { ja: "Wi-Fi", en: "Wi-Fi", zh: "Wi-Fi", ko: "Wi-Fi" },
       enabled: true,
-      pageSlug: "faq",
-      icon: "page",
+      pageSlug: "home",
+      icon: "wifi",
     },
   ],
 };
@@ -157,76 +164,60 @@ function variantCardsAndBg(variant: TemplateVariant, page?: string | null): Vari
     angle: 180,
   };
   switch (variant) {
-    case "infomii-hotel":
-      // Matches marketplace template 「滞在の流れ・ステップ」(hotel-stay-flow).
+    case "infomii-hotel": {
+      const lpHotelHero = "/templates/previews/business/hotel-guest-guide.jpg";
+      const lpHotelBreakfast = "/templates/previews/business/515b796d.jpg";
+      const lpHotelFront = "/templates/previews/business/4bfe5cc6.jpg";
       return {
-        title: "滞在の流れ・ステップ",
+        title: "ホテル青葉",
         bg: baseBg,
         contentInset: "default",
         showLocaleToggle: false,
         currentSlug: "home",
         guestShell: LP_HOTEL_SHELL,
         cards: [
-          createCard("hero", 0, {
-            title: "ご滞在の流れ",
-            subtitle: "初めての方でも迷わないステップ案内",
-            image: "/preset-hero-sample.png",
-            widthMode: "full",
-            layout: "split",
-          }),
-          createCard("sectionTitle", 1, {
-            title: "いまの進捗",
-            subtitle: "チェックイン後の確認項目",
-            align: "left",
-            showLine: true,
-          }),
-          createCard("progress_steps", 2, {
-            title: "いまの進捗",
-            currentStep: 2,
+          createCard(
+            "hero",
+            0,
+            hero("おかえりなさい", "つながる、食べる、休む。", {
+              layout: "overlay",
+              image: lpHotelHero,
+            }),
+          ),
+          createCard("image_tiles", 1, {
+            title: "",
+            columns: 2,
+            showLabels: true,
             items: [
-              { label: "チェックイン完了", done: true },
-              { label: "Wi-Fi接続", done: false },
-              { label: "館内案内の確認", done: false },
-              { label: "チェックアウト", done: false },
+              {
+                src: lpHotelBreakfast,
+                label: "朝食 6:30–",
+                alt: "朝食ビュッフェ",
+                linkType: "page",
+                pageSlug: "",
+                link: "",
+              },
+              {
+                src: lpHotelFront,
+                label: "フロント 24h",
+                alt: "フロント",
+                linkType: "page",
+                pageSlug: "",
+                link: "",
+              },
             ],
           }),
-          createCard("steps", 3, {
-            title: "チェックイン〜チェックアウト",
-            items: [
-              { title: "1. チェックイン", description: "フロントで鍵をお受け取りください。" },
-              { title: "2. 客室でWi-Fi接続", description: "QRまたは客室カードの情報をご利用ください。" },
-              { title: "3. チェックアウト", description: "指定時刻までに鍵をフロントへお返しください。" },
-            ],
-          }),
-          createCard("checklist", 4, {
-            title: "出発前チェック",
-            items: [
-              { text: "カードキーの返却", checked: false },
-              { text: "冷蔵庫の確認", checked: false },
-              { text: "忘れ物の確認", checked: false },
-            ],
-          }),
-          createCard("pageLinks", 5, {
-            title: "次に見る",
-            columns: 1,
-            styleVariant: "list",
-            circleIconShadowStrength: "md",
-            iconSize: "md",
-            items: [
-              { label: "Wi-Fi", icon: "wifi", linkType: "page", pageSlug: "", link: "" },
-              { label: "チェックアウト", icon: "checkout", linkType: "page", pageSlug: "", link: "" },
-              { label: "FAQ", icon: "info", linkType: "page", pageSlug: "", link: "" },
-            ],
-          }),
-          createCard("checkout", 6, {
-            title: "チェックアウト",
-            time: "11:00",
-            note: "早朝出発の場合は自動精算機もご利用いただけます。",
-            linkLabel: "詳細を見る",
-            linkUrl: "",
-          }),
+          createCard("wifi", 2, wifi("Aoba-Guest", "welcome2026", "客室・ロビーですぐつながります。")),
+          createCard(
+            "highlight",
+            3,
+            highlight("本日の朝食", "和食コーナーを増量しています。最終入場は 9:15 です。", "amber"),
+          ),
+          createCard("breakfast", 4, breakfast("朝食", "6:30–9:30", "2F レストラン", "和洋ビュッフェ")),
+          createCard("checkout", 5, checkout("11:00", "カードキーはフロントへお返しください。", "精算・領収書")),
         ],
       };
+    }
     case "resort":
       return {
         title: "リゾートご案内",

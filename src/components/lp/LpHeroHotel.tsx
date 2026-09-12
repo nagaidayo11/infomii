@@ -11,9 +11,10 @@ import {
   LP_HOTEL_GLOW_RGBA,
   LP_HOTEL_RING_RGBA,
 } from "@/lib/lp/hotel-accent";
+import { LP_ASSET_VERSION } from "@/lib/lp/data";
 import { LP_POP_HEADING_CLASS } from "@/lib/lp/typography";
 
-const GUEST_PREVIEW_SRC = "/demo/guest-live?embed=1&fit=device&variant=infomii-hotel";
+const GUEST_PREVIEW_SRC = `/demo/guest-live?embed=1&fit=device&variant=infomii-hotel&lpv=${LP_ASSET_VERSION}`;
 const HERO_IMAGE_SRC = "/lp/hero/hotel-desk-qr.png";
 const HERO_IMAGE_ALT =
   "ホテルフロントのQR案内。紙の館内案内に代わるスマホ向けインフォメーションの現場イメージ";
