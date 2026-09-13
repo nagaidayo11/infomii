@@ -820,6 +820,28 @@ body.lux-shell:has(.lp-page)::before {
   }
 }
 
+@keyframes ui-soft-dim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-soft-float {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 @keyframes ui-pop-in {
   from {
     opacity: 0;
@@ -913,6 +935,14 @@ body.lux-shell:has(.lp-page)::before {
 
 .ui-overlay-fade {
   animation: ui-fade-in 180ms var(--ui-ease-out) both;
+}
+
+.ui-soft-dim {
+  animation: ui-soft-dim 380ms var(--ui-ease-out) both;
+}
+
+.ui-soft-float {
+  animation: ui-soft-float 520ms var(--ui-ease-out) both;
 }
 
 .ui-pop-in {
@@ -1129,7 +1159,9 @@ body.lux-shell:has(.lp-page)::before {
   .ui-fade-in,
   .ui-overlay-fade,
   .ui-pop-in,
-  .ui-tab-switch-in {
+  .ui-tab-switch-in,
+  .ui-soft-dim,
+  .ui-soft-float {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
   }
@@ -1735,10 +1767,13 @@ body.lux-shell:has(.lp-page)::before {
   .ui-overlay-fade,
   .ui-pop-in,
   .ui-tab-switch-in,
-  .ui-drawer-in {
+  .ui-drawer-in,
+  .ui-soft-dim,
+  .ui-soft-float {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
   }
 
   .lux-section-card:hover {

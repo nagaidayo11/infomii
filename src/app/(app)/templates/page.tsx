@@ -38,6 +38,8 @@ import {
 import {
   getGuestShellNavStyle,
   resolveVisibleGuestShellTabs,
+  type GuestShellNavStyle,
+  type GuestShellTab,
 } from "@/lib/guest-shell";
 import {
   getTemplateGuestNavHint,
@@ -630,11 +632,27 @@ export default function TemplatesPage() {
   const previewOpen = previewLoading || previewTemplate !== null;
   const previewRevealed = !!previewTemplate && previewPaintReady;
 
+  const previewGuestView = previewTemplate ? (
+    <TemplatePreviewGuestView
+      name={previewTemplate.name}
+      cards={previewCards}
+      navStyle={previewNavStyle}
+      shellTabs={previewShellTabs}
+      clientShell={clientShell}
+      framed={!isAppShell}
+    />
+  ) : null;
+
   const previewDialog =
     mounted && previewOpen
       ? createPortal(
           <div
-            className="ui-overlay-fade fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 px-2 py-2 sm:px-4 sm:py-3"
+            className={
+              "ui-overlay-fade fixed inset-0 z-[100] flex bg-slate-900/55 " +
+              (isAppShell
+                ? "items-stretch justify-center px-2 py-[max(8px,env(safe-area-inset-top))] pb-[max(8px,env(safe-area-inset-bottom))]"
+                : "items-center justify-center px-2 py-2 sm:px-4 sm:py-3")
+            }
             role="dialog"
             aria-modal="true"
             aria-busy={!previewRevealed}
@@ -657,71 +675,29 @@ export default function TemplatesPage() {
                 ref={previewHostRef}
                 className={
                   (previewRevealed ? "ui-fade-in " : "pointer-events-none opacity-0 ") +
-                  "flex max-h-[98vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl"
+                  (isAppShell
+                    ? "flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl"
+                    : "flex max-h-[98vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl")
                 }
                 aria-hidden={!previewRevealed}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-stretch">
-                  <div className="flex min-h-0 flex-col overflow-y-auto border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6 lg:border-b-0 lg:border-r">
-                    <div className="flex items-start justify-between gap-3">
+                {isAppShell ? (
+                  <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                         テンプレートプレビュー
                       </p>
                       <button
                         type="button"
                         onClick={closePreview}
-                        className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 lg:hidden"
+                        className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
                       >
                         閉じる
                       </button>
                     </div>
-                    {previewCategoryLabel ? (
-                      <p className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-                        {previewCategoryLabel}
-                      </p>
-                    ) : null}
-                    <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
-                      {previewTemplate.name}
-                    </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                      {previewTemplate.description?.trim() ||
-                        "この型からすぐ編集を始められます。写真も文言もあとから自由に変更できます。"}
-                    </p>
-
-                    {previewIncluded.length > 0 ? (
-                      <div className="mt-5">
-                        <p className="text-xs font-semibold text-slate-800">含まれている主なブロック</p>
-                        <ul className="mt-2 space-y-1.5">
-                          {previewIncluded.map((label) => (
-                            <li
-                              key={label}
-                              className="flex items-start gap-2 text-sm leading-snug text-slate-600"
-                            >
-                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
-                              <span>{label}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {previewContentCardCount > previewIncluded.length ? (
-                          <p className="mt-2 text-[11px] text-slate-400">
-                            全{previewContentCardCount}ブロック構成
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-
-                    <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3">
-                      <p className="text-xs font-semibold text-slate-800">
-                        ゲストナビ: {getTemplateGuestNavLabel(previewNavStyle)}
-                      </p>
-                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                        {getTemplateGuestNavHint(previewNavStyle)}
-                        。ページ作成時にこの設定が入ります。あとからページ設定で変更できます。
-                      </p>
-                    </div>
-
-                    <div className="mt-auto flex flex-col gap-2 pt-6">
+                    <div className="min-h-0 flex-1 overflow-hidden">{previewGuestView}</div>
+                    <div className="shrink-0 border-t border-slate-100 px-4 py-3">
                       <button
                         type="button"
                         disabled={usingId === previewTemplate.id}
@@ -730,74 +706,100 @@ export default function TemplatesPage() {
                       >
                         {usingId === previewTemplate.id ? "作成中…" : "このテンプレートを使う"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={closePreview}
-                        className="app-button-native hidden min-h-[40px] w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
-                      >
-                        閉じる
-                      </button>
                     </div>
                   </div>
+                ) : (
+                  <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-stretch">
+                    <div className="flex min-h-0 flex-col overflow-y-auto border-b border-slate-100 px-5 py-5 sm:px-7 sm:py-6 lg:border-b-0 lg:border-r">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                          テンプレートプレビュー
+                        </p>
+                        <button
+                          type="button"
+                          onClick={closePreview}
+                          className="app-button-native shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 lg:hidden"
+                        >
+                          閉じる
+                        </button>
+                      </div>
+                      {previewCategoryLabel ? (
+                        <p className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                          {previewCategoryLabel}
+                        </p>
+                      ) : null}
+                      <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl">
+                        {previewTemplate.name}
+                      </h3>
+                      <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                        {previewTemplate.description?.trim() ||
+                          "この型からすぐ編集を始められます。写真も文言もあとから自由に変更できます。"}
+                      </p>
 
-                  <div className="flex min-h-0 items-center justify-center bg-[#d7e0ea] px-3 py-3 sm:px-5 sm:py-4">
-                    <div
-                      className="shrink-0"
-                      style={{
-                        width: phoneFrameOuterW,
-                        height: `min(92dvh, ${phoneFrameH}px)`,
-                      }}
-                    >
-                      <PhoneDeviceFrame
-                        width={PHONE_SCREEN_WIDTH}
-                        fillHeight
-                        verticalInset={0}
-                        className="h-full w-full"
-                        header={
-                          <div className="flex items-start justify-between gap-2">
-                            <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
-                              {previewTemplate.name}
-                            </h1>
-                            {previewNavStyle === "hamburger" && previewShellTabs.length > 0 ? (
-                              <GuestHamburgerMenu
-                                tabs={previewShellTabs}
-                                currentSlug="preview"
-                                locale="ja"
-                                clientApp={clientShell.isAppShell}
-                                previewMode
-                                contained
-                              />
-                            ) : null}
-                          </div>
-                        }
-                        footer={
-                          previewNavStyle === "tabs" && previewShellTabs.length > 0 ? (
-                            <GuestBottomTabBar
-                              tabs={previewShellTabs}
-                              currentSlug="preview"
-                              locale="ja"
-                              clientApp={clientShell.isAppShell}
-                              previewMode
-                            />
-                          ) : null
-                        }
+                      {previewIncluded.length > 0 ? (
+                        <div className="mt-5">
+                          <p className="text-xs font-semibold text-slate-800">含まれている主なブロック</p>
+                          <ul className="mt-2 space-y-1.5">
+                            {previewIncluded.map((label) => (
+                              <li
+                                key={label}
+                                className="flex items-start gap-2 text-sm leading-snug text-slate-600"
+                              >
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
+                                <span>{label}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {previewContentCardCount > previewIncluded.length ? (
+                            <p className="mt-2 text-[11px] text-slate-400">
+                              全{previewContentCardCount}ブロック構成
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3">
+                        <p className="text-xs font-semibold text-slate-800">
+                          ゲストナビ: {getTemplateGuestNavLabel(previewNavStyle)}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                          {getTemplateGuestNavHint(previewNavStyle)}
+                          。ページ作成時にこの設定が入ります。あとからページ設定で変更できます。
+                        </p>
+                      </div>
+
+                      <div className="mt-auto flex flex-col gap-2 pt-6">
+                        <button
+                          type="button"
+                          disabled={usingId === previewTemplate.id}
+                          onClick={() => void handleUseTemplate(previewTemplate.id)}
+                          className="app-button-native inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-semibold !text-white hover:bg-slate-800 disabled:opacity-60"
+                        >
+                          {usingId === previewTemplate.id ? "作成中…" : "このテンプレートを使う"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={closePreview}
+                          className="app-button-native hidden min-h-[40px] w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
+                        >
+                          閉じる
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex min-h-0 items-center justify-center bg-[#d7e0ea] px-3 py-3 sm:px-5 sm:py-4">
+                      <div
+                        className="shrink-0"
+                        style={{
+                          width: phoneFrameOuterW,
+                          height: `min(92dvh, ${phoneFrameH}px)`,
+                        }}
                       >
-                        <LocaleProvider value="ja">
-                          <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
-                            <div
-                              className="guest-page guest-content-gutter min-h-full w-full"
-                              style={{ paddingTop: 16, paddingBottom: 12 }}
-                            >
-                              <div className={GUEST_CARD_STACK_CLASS}>
-                                <CardRenderer cards={previewCards} appearAnimation={false} />
-                              </div>
-                            </div>
-                          </ClientShellContext.Provider>
-                        </LocaleProvider>
-                      </PhoneDeviceFrame>
+                        {previewGuestView}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : null}
           </div>,
@@ -1063,6 +1065,101 @@ export default function TemplatesPage() {
 
       {previewDialog}
 
+    </div>
+  );
+}
+
+function TemplatePreviewGuestView({
+  name,
+  cards,
+  navStyle,
+  shellTabs,
+  clientShell,
+  framed,
+}: {
+  name: string;
+  cards: EditorCard[];
+  navStyle: GuestShellNavStyle;
+  shellTabs: GuestShellTab[];
+  clientShell: ReturnType<typeof useClientShell>;
+  framed: boolean;
+}) {
+  const header = (
+    <div className="flex items-start justify-between gap-2">
+      <h1 className="min-w-0 flex-1 break-words text-[15px] font-bold leading-tight tracking-tight text-slate-900">
+        {name}
+      </h1>
+      {navStyle === "hamburger" && shellTabs.length > 0 ? (
+        <GuestHamburgerMenu
+          tabs={shellTabs}
+          currentSlug="preview"
+          locale="ja"
+          clientApp={clientShell.isAppShell}
+          previewMode
+          contained={framed}
+        />
+      ) : null}
+    </div>
+  );
+
+  const footer =
+    navStyle === "tabs" && shellTabs.length > 0 ? (
+      <GuestBottomTabBar
+        tabs={shellTabs}
+        currentSlug="preview"
+        locale="ja"
+        clientApp={clientShell.isAppShell}
+        previewMode
+      />
+    ) : null;
+
+  const body = (
+    <LocaleProvider value="ja">
+      <ClientShellContext.Provider value={{ ...clientShell, isNativeUi: false }}>
+        <div
+          className="guest-page guest-content-gutter min-h-full w-full"
+          style={{ paddingTop: 16, paddingBottom: 12 }}
+        >
+          <div className={GUEST_CARD_STACK_CLASS}>
+            <CardRenderer cards={cards} appearAnimation={false} />
+          </div>
+        </div>
+      </ClientShellContext.Provider>
+    </LocaleProvider>
+  );
+
+  if (framed) {
+    return (
+      <PhoneDeviceFrame
+        width={PHONE_SCREEN_WIDTH}
+        fillHeight
+        verticalInset={0}
+        className="h-full w-full"
+        header={header}
+        footer={footer}
+      >
+        {body}
+      </PhoneDeviceFrame>
+    );
+  }
+
+  return (
+    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div
+        className="guest-header-chrome relative z-[90] shrink-0 border-b border-slate-100 bg-white/95 px-3 py-2.5"
+        data-guest-header
+      >
+        {header}
+      </div>
+      <div
+        className="template-preview-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        {body}
+      </div>
+      {footer ? (
+        <div className="guest-bottom-chrome relative z-20 shrink-0 overflow-hidden bg-white">{footer}</div>
+      ) : null}
     </div>
   );
 }

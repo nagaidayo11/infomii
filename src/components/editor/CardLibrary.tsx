@@ -118,6 +118,10 @@ const HOVER_OPEN_DELAY_MS = 150;
 const HOVER_CLOSE_DELAY_MS = 100;
 const MOBILE_LONG_PRESS_PREVIEW_MS = 420;
 const MOBILE_LONG_PRESS_MOVE_TOLERANCE = 14;
+const MOBILE_BLOCK_PREVIEW_OVERLAY_CLASS =
+  "ui-soft-dim fixed inset-0 z-[10000] bg-slate-900/22 backdrop-blur-[10px] lg:hidden";
+const MOBILE_BLOCK_PREVIEW_CARD_CLASS =
+  "ui-soft-float mx-auto mt-[12vh] w-[calc(100%-2.5rem)] max-w-sm rounded-2xl border border-white/80 bg-white/95 p-3.5 shadow-[0_28px_64px_-22px_rgba(15,23,42,0.28)]";
 /** Hover preview fade out duration (matches CSS transition). */
 const TOOLTIP_FADE_MS = 220;
 
@@ -474,7 +478,7 @@ function DescriptionWithTooltip({
         createPortal(
           <div
             data-mobile-block-preview-overlay="true"
-            className="fixed inset-0 z-[10000] bg-black/35 lg:hidden"
+            className={MOBILE_BLOCK_PREVIEW_OVERLAY_CLASS}
             role="dialog"
             aria-modal="true"
             aria-label={`${item.label}のプレビュー`}
@@ -492,7 +496,7 @@ function DescriptionWithTooltip({
           >
             <div
               data-mobile-tooltip-panel="true"
-              className="pointer-events-auto mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-lg border border-[#e6e8eb] bg-white p-2.5 shadow-md"
+              className={"pointer-events-auto " + MOBILE_BLOCK_PREVIEW_CARD_CLASS}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1069,7 +1073,11 @@ function LibraryItemButton({
     if (!appVariant || disabled || usesPurposePicker || e.pointerType === "mouse") return;
     longPressPreviewTriggeredRef.current = false;
     longPressPreviewStartRef.current = { x: e.clientX, y: e.clientY, pointerId: e.pointerId };
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* Synthetic or already-released pointers can throw; the timer still runs. */
+    }
     longPressPreviewTimerRef.current = window.setTimeout(() => {
       longPressPreviewTimerRef.current = null;
       longPressPreviewTriggeredRef.current = true;
@@ -1201,14 +1209,14 @@ function LibraryItemButton({
       ? createPortal(
           <div
             data-mobile-block-preview-overlay="true"
-            className="pointer-events-none fixed inset-0 z-[10000] bg-black/35 lg:hidden"
+            className={"pointer-events-none " + MOBILE_BLOCK_PREVIEW_OVERLAY_CLASS}
             role="dialog"
             aria-modal="true"
             aria-label={`${item.label}のプレビュー`}
           >
             <div
               data-mobile-tooltip-panel="true"
-              className="mx-auto mt-[10vh] w-[calc(100%-2rem)] max-w-sm rounded-lg border border-[#e6e8eb] bg-white p-2.5 shadow-md"
+              className={MOBILE_BLOCK_PREVIEW_CARD_CLASS}
             >
               <div className="w-full overflow-hidden">
                 {renderPreviewVisual(item, pressPreviewSpec, previewExpandInner)}
