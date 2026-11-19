@@ -151,6 +151,12 @@ export default function LpHotelSaaSPage({ content = BUSINESS_LP_CONTENT }: LpHot
               ホテルDX
             </Link>
             <Link
+              href="/contact"
+              className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
+            >
+              ご意見・ご相談
+            </Link>
+            <Link
               href="/terms"
               className="text-slate-600 underline decoration-transparent underline-offset-4 transition hover:text-emerald-700 hover:decoration-emerald-400/80"
             >

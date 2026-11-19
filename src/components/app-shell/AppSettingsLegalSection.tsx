@@ -3,7 +3,7 @@
 import { AppListRow } from "@/components/app-shell/primitives/AppListRow";
 import { AppSettingsCard } from "@/components/app-shell/AppSettingsCard";
 import { AppShellLink } from "@/components/app-shell/AppShellLink";
-import { getLegalPageUrl, SUPPORT_EMAIL } from "@/lib/app-store-compliance";
+import { getLegalPageUrl } from "@/lib/app-store-compliance";
 import { useClientShell } from "@/components/app-shell/useClientShell";
 import { AppSettingsIconLegal, AppSettingsIconSupport } from "./icons/AppSettingsIcons";
 
@@ -18,9 +18,9 @@ export function AppSettingsLegalSection() {
       <AppSettingsCard className="app-settings-legal-card overflow-hidden p-0">
         <div className="app-settings-legal-list">
           <AppListRow
-            href={`mailto:${SUPPORT_EMAIL}`}
-            title="お問い合わせ"
-            subtitle={SUPPORT_EMAIL}
+            href="/contact"
+            title="ご意見・ご相談"
+            subtitle="使いづらさや機能の要望など"
             leading={<AppSettingsIconSupport size={24} />}
           />
           <AppListRow
@@ -46,10 +46,10 @@ export function AppSettingsLegalSection() {
   return (
     <AppSettingsCard className="app-settings-legal-card overflow-hidden p-0">
       <div className="app-settings-legal-list divide-y divide-slate-100/90">
-        <a href={`mailto:${SUPPORT_EMAIL}`} className={webLinkClass}>
-          <span>お問い合わせ</span>
-          <span className="text-[var(--app-text-muted)]">{SUPPORT_EMAIL}</span>
-        </a>
+        <AppShellLink href="/contact" className={webLinkClass}>
+          <span>ご意見・ご相談</span>
+          <span className="text-[var(--app-text-muted)]">気軽にメールできます</span>
+        </AppShellLink>
         <AppShellLink href={getLegalPageUrl("/terms", isAppShell)} className={webLinkClass}>
           <span>利用規約</span>
           <span className="text-[var(--app-text-muted)]" aria-hidden>

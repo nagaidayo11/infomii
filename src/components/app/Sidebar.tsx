@@ -61,6 +61,17 @@ export function Sidebar() {
       <div className="border-t border-slate-200/80 p-2.5">
         <SidebarPlanHint />
         <Link
+          href="/contact"
+          className="flex min-h-[40px] items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-200/50 text-slate-500">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.9}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </span>
+          ご意見・ご相談
+        </Link>
+        <Link
           href="/lp/business"
           className="flex min-h-[40px] items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
         >

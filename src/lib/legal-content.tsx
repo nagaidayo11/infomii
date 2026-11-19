@@ -150,6 +150,10 @@ export function PrivacyPolicySections({ variant = "web" }: { variant?: LegalVari
           <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700 underline">
             {SUPPORT_EMAIL}
           </a>
+          {" "}／{" "}
+          <Link href="/contact" className="text-emerald-700 underline">
+            お問い合わせフォーム
+          </Link>
         </p>
       </section>
     </>
@@ -184,6 +188,10 @@ export function CommerceDisclosureTable({ variant = "web" }: { variant?: LegalVa
               <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700 underline">
                 {SUPPORT_EMAIL}
               </a>
+              {" "}／{" "}
+              <Link href="/contact" className="text-emerald-700 underline">
+                お問い合わせフォーム
+              </Link>
             </td>
           </tr>
           <tr className="border-b border-slate-200">

@@ -80,6 +80,10 @@ export function LpFinalCtaSection({
             <Link href={loginHref} className="font-medium text-emerald-200 underline hover:no-underline">
               ログイン
             </Link>
+            。導入や使い方の相談は{" "}
+            <Link href="/contact?topic=consult" className="font-medium text-emerald-200 underline hover:no-underline">
+              気軽にどうぞ
+            </Link>
           </p>
         </Container>
       </ScrollReveal>

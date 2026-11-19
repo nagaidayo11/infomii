@@ -500,6 +500,13 @@ function DashboardViewWeb() {
       </section>
       ) : null}
 
+      <p className="text-center text-xs text-slate-500">
+        使いづらい点や、欲しい機能・ブロックがあれば{" "}
+        <Link href="/contact" className="font-medium text-slate-700 underline underline-offset-2 hover:text-emerald-700">
+          気軽にご連絡ください
+        </Link>
+      </p>
+
       <PlanLimitModal
         open={planLimitModalOpen}
         onClose={() => setPlanLimitModalOpen(false)}

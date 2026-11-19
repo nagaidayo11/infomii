@@ -85,8 +85,9 @@ export function Button({
     className;
 
   if (href) {
+    const { type: _type, ...anchorRest } = rest;
     return (
-      <a href={href} className={combined}>
+      <a href={href} className={combined} {...anchorRest}>
         {children}
       </a>
     );

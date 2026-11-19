@@ -63,6 +63,9 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
           <Link href="/blog" className={navLinkClass}>
             ブログ
           </Link>
+          <Link href="/contact" className={navLinkClass}>
+            ご相談
+          </Link>
           <Button href={loginHref} variant="ghost" size="md" className="min-h-[44px] rounded-lg px-2 sm:px-4">
             ログイン
           </Button>
@@ -130,6 +133,9 @@ export function LpSaasHeader({ loginHref, ctaHref }: LpSaasHeaderProps) {
             </a>
             <Link href="/blog" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
               ブログ
+            </Link>
+            <Link href="/contact" className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
+              ご相談
             </Link>
             <Link href={loginHref} className={navLinkClass} onClick={() => setMobileMenuOpen(false)}>
               ログイン

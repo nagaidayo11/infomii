@@ -325,6 +325,16 @@ export function AppDashboardView() {
               </div>
             </AppSection>
           ) : null}
+
+          <AppSection revealDelay={160}>
+            <div className="app-shell-card overflow-hidden">
+              <AppListRow
+                href="/contact"
+                title="ご意見・ご相談"
+                subtitle="使いづらさや、欲しいブロックなど"
+              />
+            </div>
+          </AppSection>
         </>
       )}
       {sharePage ? (

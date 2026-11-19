@@ -40,6 +40,10 @@ export default function RefundPage() {
               <p>
                 返金・請求に関するお問い合わせ:
                 {" "}
+                <Link href="/contact" className="text-emerald-700 underline">
+                  お問い合わせフォーム
+                </Link>
+                {" "}または{" "}
                 <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700 underline">
                   {SUPPORT_EMAIL}
                 </a>

@@ -102,6 +102,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     })),
     ...guestPages,
+    { url: `${appUrl}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${appUrl}/terms`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
     { url: `${appUrl}/privacy`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
     { url: `${appUrl}/commerce`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },

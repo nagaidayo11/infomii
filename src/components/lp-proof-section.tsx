@@ -174,7 +174,7 @@ export default function LpProofSection({
         </ul>
         <p>※ 数値は導入施設ヒアリングに基づく目安です。運用体制・更新頻度により変動します。</p>
         <p className="mt-1">
-          法務・運営情報: <Link className="underline" href="/terms">利用規約</Link> / <Link className="underline" href="/privacy">プライバシーポリシー</Link> / <Link className="underline" href="/commerce">特定商取引法に基づく表記</Link>
+          法務・運営情報: <Link className="underline" href="/contact">ご意見・ご相談</Link> / <Link className="underline" href="/terms">利用規約</Link> / <Link className="underline" href="/privacy">プライバシーポリシー</Link> / <Link className="underline" href="/commerce">特定商取引法に基づく表記</Link>
         </p>
       </div>
     </section>
