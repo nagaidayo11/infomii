@@ -128,6 +128,8 @@ export type GuestShellEditorFormProps = {
   /** Current plan for Free guest-nav link caps (defaults from isBusinessPlan). */
   planTier?: PlanLimitTier;
   showTranslationHint?: boolean;
+  /** Editor sidebar: quieter chrome, same fields. */
+  compact?: boolean;
 };
 
 export function GuestShellEditorForm({
@@ -143,6 +145,7 @@ export function GuestShellEditorForm({
   isBusinessPlan = false,
   planTier,
   showTranslationHint = false,
+  compact = false,
 }: GuestShellEditorFormProps) {
   const [pages, setPages] = useState<PageRow[]>([]);
   const [openedTabId, setOpenedTabId] = useState<string | null>(null);
@@ -213,8 +216,12 @@ export function GuestShellEditorForm({
   const navStyle = getGuestShellNavStyle(config);
   const navActive = navStyle !== "off";
 
+  const planHint = !isBusinessPlan && navActive
+    ? `表示リンクは最大${maxEnabledTabs}件。言語切替はBusinessプランです。`
+    : null;
+
   return (
-    <div className="app-guest-shell-form space-y-4">
+    <div className={"app-guest-shell-form " + (compact ? "space-y-3" : "space-y-4")}>
       {inheritBanner}
 
       {!columnReady && migrationScope ? (
@@ -232,21 +239,30 @@ export function GuestShellEditorForm({
       ) : null}
 
       <fieldset className="app-guest-shell-nav-style space-y-2">
-        <legend className="text-sm font-medium text-slate-800">表示形式（いずれか1つ）</legend>
-        <p className="text-xs text-slate-500">
-          下タブとハンバーガーは同時に使えません。リンク設定は共通です。
-        </p>
-        <div className="flex flex-col gap-2">
+        <legend className={compact ? "text-[11px] font-medium text-slate-400" : "text-sm font-medium text-slate-800"}>
+          {compact ? "表示形式" : "表示形式（いずれか1つ）"}
+        </legend>
+        {compact ? null : (
+          <p className="text-xs text-slate-500">
+            下タブとハンバーガーは同時に使えません。リンク設定は共通です。
+          </p>
+        )}
+        <div className={compact ? "grid grid-cols-3 gap-1.5" : "flex flex-col gap-2"}>
           {NAV_STYLE_OPTIONS.map((option) => {
             const selected = navStyle === option.value;
             return (
               <label
                 key={option.value}
                 className={
-                  "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition " +
-                  (selected
-                    ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600"
-                    : "border-slate-200 bg-white hover:bg-slate-50")
+                  compact
+                    ? "flex cursor-pointer flex-col items-center gap-0.5 rounded-lg border px-1.5 py-2 text-center transition " +
+                      (selected
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300")
+                    : "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition " +
+                      (selected
+                        ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600"
+                        : "border-slate-200 bg-white hover:bg-slate-50")
                 }
               >
                 <input
@@ -255,11 +271,21 @@ export function GuestShellEditorForm({
                   value={option.value}
                   checked={selected}
                   onChange={() => onChange(withGuestShellNavStyle(config, option.value))}
-                  className="mt-0.5 accent-emerald-700"
+                  className={compact ? "sr-only" : "mt-0.5 accent-emerald-700"}
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-medium text-slate-900">{option.label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{option.hint}</span>
+                  <span className={"block font-medium " + (compact ? "text-xs" : "text-sm text-slate-900")}>
+                    {option.label}
+                  </span>
+                  <span
+                    className={
+                      compact
+                        ? "mt-0.5 block text-[10px] leading-tight " + (selected ? "text-white/75" : "text-slate-400")
+                        : "mt-0.5 block text-[11px] leading-snug text-slate-500"
+                    }
+                  >
+                    {option.hint}
+                  </span>
                 </span>
               </label>
             );
@@ -267,30 +293,42 @@ export function GuestShellEditorForm({
         </div>
       </fieldset>
 
-      {isBusinessPlan && showTranslationHint ? (
-        <p className="text-xs text-slate-500">
-          Businessプランでは、保存時にラベルを EN / 中文 / 한국어 へまとめて翻訳します（入力中は翻訳しません）。
-        </p>
-      ) : null}
+      {compact ? (
+        isBusinessPlan && showTranslationHint ? (
+          <p className="text-[11px] leading-snug text-slate-400">
+            保存時にラベルを自動翻訳します。言語切替はゲストページ右上の Language です。
+          </p>
+        ) : planHint ? (
+          <p className="text-[11px] leading-snug text-slate-400">{planHint}</p>
+        ) : null
+      ) : (
+        <>
+          {isBusinessPlan && showTranslationHint ? (
+            <p className="text-xs text-slate-500">
+              Businessプランでは、保存時にラベルを EN / 中文 / 한국어 へまとめて翻訳します（入力中は翻訳しません）。
+            </p>
+          ) : null}
 
-      {!isBusinessPlan && navActive ? (
-        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
-          {resolvedPlan === "pro"
-            ? `ゲストナビは最大${maxEnabledTabs}件まで表示できます。言語切替はBusinessプランの機能です（ヘッダーの Language）。`
-            : `Freeではゲストナビの表示リンクは最大${maxEnabledTabs}件です。言語切替・多言語はBusinessプランで利用できます（ヘッダーの Language）。`}
-        </p>
-      ) : null}
+          {planHint ? (
+            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+              {resolvedPlan === "pro"
+                ? `ゲストナビは最大${maxEnabledTabs}件まで表示できます。言語切替はBusinessプランの機能です（ヘッダーの Language）。`
+                : `Freeではゲストナビの表示リンクは最大${maxEnabledTabs}件です。言語切替・多言語はBusinessプランで利用できます（ヘッダーの Language）。`}
+            </p>
+          ) : null}
 
-      {isBusinessPlan ? (
-        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
-          言語切替はゲストページ右上の「Language」からシートで行います。ナビ（下タブ / ハンバーガー）には言語項目を置きません。
-        </p>
-      ) : null}
+          {isBusinessPlan ? (
+            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+              言語切替はゲストページ右上の「Language」からシートで行います。ナビ（下タブ / ハンバーガー）には言語項目を置きません。
+            </p>
+          ) : null}
+        </>
+      )}
 
       <div className={"space-y-2 " + (navActive ? "" : "pointer-events-none opacity-50")}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-medium text-slate-600">
-            リンク（共通）
+          <p className={compact ? "text-[11px] font-medium text-slate-400" : "text-xs font-medium text-slate-600"}>
+            {compact ? "リンク" : "リンク（共通）"}
             {navActive ? (
               <span className="ml-2 font-normal text-slate-400">
                 表示中 {enabledCount}/{maxEnabledTabs}
@@ -322,18 +360,23 @@ export function GuestShellEditorForm({
                 if (el.open) setOpenedTabId(tab.id);
                 else if (openedTabId === tab.id) setOpenedTabId(null);
               }}
-              className="app-guest-shell-tab group rounded-lg border border-slate-200 bg-white [&_summary::-webkit-details-marker]:hidden"
+              className={
+                "app-guest-shell-tab group [&_summary::-webkit-details-marker]:hidden " +
+                (compact ? "border-b border-slate-100 last:border-b-0" : "rounded-lg border border-slate-200 bg-white")
+              }
             >
-              <summary className="app-guest-shell-tab-summary flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30">
-                <span className="flex min-w-0 items-center gap-2.5">
-                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-600">
+              <summary className={"app-guest-shell-tab-summary flex cursor-pointer list-none items-center justify-between gap-2 text-left outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-emerald-500/30 " + (compact ? "px-1 py-2" : "px-3 py-2.5")}>
+                <span className={"flex min-w-0 items-center " + (compact ? "gap-2" : "gap-2.5")}>
+                  <span className={"inline-flex shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-600 " + (compact ? "h-7 w-7" : "h-8 w-8")}>
                     <GuestShellTabIconGlyph name={selectedIcon} className="h-4 w-4" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      {typeLabel}
-                    </span>
-                    <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">
+                    {compact ? null : (
+                      <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        {typeLabel}
+                      </span>
+                    )}
+                    <span className={"block truncate font-medium text-slate-800 " + (compact ? "text-sm" : "mt-0.5 text-sm")}>
                       {getGuestShellLabelJa(tab.label) || typeLabel}
                       <span className="ml-2 text-xs font-normal text-slate-400">{enabledHint}</span>
                     </span>
@@ -347,7 +390,7 @@ export function GuestShellEditorForm({
                 </span>
               </summary>
 
-              <div className="space-y-2 border-t border-slate-100 px-3 pb-3 pt-2">
+              <div className={"space-y-2 " + (compact ? "px-1 pb-3 pt-1" : "border-t border-slate-100 px-3 pb-3 pt-2")}>
                 <div className="app-guest-shell-tab-header flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0 flex-1 space-y-2">
                     <label className="block text-xs text-slate-500">
@@ -500,7 +543,11 @@ export function GuestShellEditorForm({
           type="button"
           onClick={() => void onSave()}
           disabled={saving || !columnReady}
-          className="inline-flex min-h-[40px] items-center justify-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+          className={
+            compact
+              ? "inline-flex min-h-[36px] items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              : "inline-flex min-h-[40px] items-center justify-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+          }
         >
           {saving ? "保存中…" : saveLabel}
         </button>

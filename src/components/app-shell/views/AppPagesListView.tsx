@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createBlankPage,
-  createStampPage,
   deletePage,
   getCurrentUserHotelRole,
   getDashboardBootstrapData,
@@ -15,7 +14,6 @@ import {
   type PageConnectionSet,
   type PageRow,
 } from "@/lib/storage";
-import { planHasStampCards, resolvePlanTierFromSubscription } from "@/lib/plan-limits";
 import { PlanLimitModal } from "@/components/plan-limit/PlanLimitModal";
 import { AppPageSetsList } from "../AppPageSetsList";
 import { APP_PAGES_TAB_LABEL } from "@/lib/app-branding";
@@ -29,6 +27,7 @@ import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
+import { StampSunsetNotice } from "@/components/stamp/StampSunsetNotice";
 import {
   getPagesListViewCache,
   setPagesListViewCache,
@@ -64,9 +63,6 @@ export function AppPagesListView() {
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [subscriptionPlan, setSubscriptionPlan] = useState<"free" | "pro" | "business" | null>(
-    null,
-  );
   const [role, setRole] = useState<"owner" | "admin" | "editor" | "viewer" | null>(
     initialCache?.role ?? null,
   );
@@ -99,11 +95,6 @@ export function AppPagesListView() {
         ]),
       );
       setRole(r);
-      setSubscriptionPlan(
-        bootstrap.subscription
-          ? resolvePlanTierFromSubscription(bootstrap.subscription.plan)
-          : null,
-      );
       setSets(connectionSets);
       setInfoBySlug(nextInfoBySlug);
       setPagesListViewCache({
@@ -116,7 +107,6 @@ export function AppPagesListView() {
         setSets([]);
         setInfoBySlug(new Map());
         setRole(null);
-        setSubscriptionPlan(null);
       }
     } finally {
       setLoading(false);
@@ -153,36 +143,6 @@ export function AppPagesListView() {
     try {
       const id = await createBlankPage(title);
       if (id) router.push(`/editor/${id}`);
-    } catch (e) {
-      const err = e as Error & { code?: string };
-      if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
-      else showToast(err.message || "作成に失敗しました", "error");
-    } finally {
-      createBusyRef.current = false;
-      setCreating(false);
-    }
-  }
-
-  async function handleCreateStamp() {
-    if (createBusyRef.current) return;
-    if (subscriptionPlan && !planHasStampCards(subscriptionPlan)) {
-      showToast("スタンプカードはBusinessプランでご利用いただけます", "error");
-      return;
-    }
-    const entered = await prompt({
-      title: "スタンプカード",
-      message: "カード名を入力してください",
-      placeholder: "例: リピートスタンプ",
-      confirmLabel: "作成",
-      defaultValue: "スタンプカード",
-    });
-    if (entered == null) return;
-    const title = entered.trim() || "スタンプカード";
-    createBusyRef.current = true;
-    setCreating(true);
-    try {
-      const id = await createStampPage(title);
-      if (id) router.push(`/editor/stamp/${id}`);
     } catch (e) {
       const err = e as Error & { code?: string };
       if (err.code === PAGE_LIMIT_REACHED) setPlanLimitModalOpen(true);
@@ -308,13 +268,7 @@ export function AppPagesListView() {
               >
                 空の作品から作る
               </button>
-              <button
-                type="button"
-                onClick={() => void handleCreateStamp()}
-                className="app-touch-btn app-pressable border border-teal-200 bg-teal-50 font-semibold text-teal-900"
-              >
-                スタンプカードを作成
-              </button>
+              <StampSunsetNotice compact />
             </div>
           }
         />

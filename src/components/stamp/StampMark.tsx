@@ -8,17 +8,7 @@ function IconSeal({ color }: { color: string }) {
     <svg viewBox="0 0 48 48" className="h-[58%] w-[58%]" aria-hidden>
       <circle cx="24" cy="24" r="18" fill="none" stroke={color} strokeWidth="2.2" />
       <circle cx="24" cy="24" r="13.5" fill="none" stroke={color} strokeWidth="1.2" opacity="0.55" />
-      <text
-        x="24"
-        y="28.5"
-        textAnchor="middle"
-        fill={color}
-        fontSize="15"
-        fontWeight="700"
-        fontFamily='"Noto Sans JP", "Hiragino Sans", sans-serif'
-      >
-        印
-      </text>
+      <path d="m17 24 5 5 10-11" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -184,12 +174,12 @@ export function StampMark({
         }`}
         style={{
           background: filled
-            ? `radial-gradient(circle at 32% 28%, color-mix(in srgb, ${accent} 72%, white), ${accent} 62%, color-mix(in srgb, ${accent} 75%, #0b1220))`
+            ? `color-mix(in srgb, ${accent} 8%, #fffdf8)`
             : highlight
               ? `color-mix(in srgb, ${accent} 6%, transparent)`
               : "transparent",
           boxShadow: filled
-            ? `0 8px 16px -8px color-mix(in srgb, ${accent} 60%, transparent), inset 0 1px 0 rgb(255 255 255 / 0.4)`
+            ? `inset 0 0 0 1.5px ${accent}`
             : highlight
               ? `inset 0 0 0 1.5px color-mix(in srgb, ${accent} 40%, #94a3b8)`
               : "none",
@@ -205,26 +195,10 @@ export function StampMark({
         transition={{ duration: 0.2, delay: index * 0.015 }}
       >
         {filled ? (
-          <StampGlyph styleId={styleId} color="#fff" />
+          <span className="flex h-full w-full items-center justify-center" style={{ transform: `rotate(${[-8, 5, -3, 9, -5][index % 5]}deg)` }}><StampGlyph styleId={styleId} color={accent} /></span>
         ) : (
-          <span
-            className="block h-[34%] w-[34%] rounded-full"
-            style={{
-              background: highlight
-                ? `color-mix(in srgb, ${accent} 28%, transparent)`
-                : "rgb(20 24 31 / 0.06)",
-            }}
-          />
+          <span className="text-xs tabular-nums" style={{ color: highlight ? accent : "#8a857a" }}>{index + 1}</span>
         )}
-        {filled ? (
-          <span
-            className="pointer-events-none absolute inset-0 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle at 28% 22%, rgb(255 255 255 / 0.45), transparent 52%)",
-            }}
-          />
-        ) : null}
       </motion.div>
     </div>
   );

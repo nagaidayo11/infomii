@@ -43,12 +43,11 @@ import {
   formatCreatePageLimitError,
   formatPublishLimitError,
   normalizeMaxPublishedPages,
-  planHasStampCards,
   resolveEffectivePageLimit,
   resolveMaxPublishedPagesByPlan,
   resolvePlanTierFromSubscription,
 } from "@/lib/plan-limits";
-import { createOpaqueToken } from "@/lib/stamp/types";
+import { STAMP_SUNSET_BODY } from "@/lib/stamp/sunset";
 
 const LOCAL_STORAGE_KEY = "hotel-informations";
 const ensuredSubscriptionHotelIds = new Set<string>();
@@ -4569,85 +4568,11 @@ export async function createBlankPage(title = ""): Promise<string> {
   }
 }
 
-/** Creates a stamp-card page + program (Business only). */
-export async function createStampPage(title = "スタンプカード"): Promise<string> {
-  const normalizedTitle = (title ?? "").trim() || "スタンプカード";
-  const supabase = getBrowserSupabaseClient();
-  if (!supabase) throw new Error("Supabase設定が未完了です");
-  const hotelId = await ensureUserHotelScope();
-  if (!hotelId) throw new Error("施設が選択されていません");
-
-  const sub = await getCurrentHotelSubscription();
-  const plan = resolvePlanTierFromSubscription(sub?.plan);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!planHasStampCards(plan) && !canUseDevBusinessOverride(user ?? undefined)) {
-    const e = new Error("スタンプカードはBusinessプランでご利用いただけます") as Error & {
-      code?: string;
-    };
-    e.code = "STAMP_BUSINESS_REQUIRED";
-    throw e;
-  }
-
-  if (sub) {
-    const { count, error } = await supabase
-      .from("pages")
-      .select("id", { count: "exact", head: true })
-      .eq("hotel_id", hotelId);
-    const pageCount = count ?? 0;
-    const createLimit = resolveEffectivePageLimit({
-      plan,
-      storedMax: sub.maxPublishedPages,
-      existingCount: pageCount,
-    });
-    if (!error && pageCount >= createLimit) {
-      const e = new Error(formatCreatePageLimitError(plan, createLimit)) as Error & { code?: string };
-      e.code = PAGE_LIMIT_REACHED;
-      throw e;
-    }
-  }
-
-  const baseSlug = createSlug(normalizedTitle);
-  const slug = `${baseSlug}-${Date.now().toString(36)}`;
-  const stampCode = createOpaqueToken(12);
-
-  const { data: newPage, error: pageError } = await supabase
-    .from("pages")
-    .insert({ hotel_id: hotelId, title: normalizedTitle, slug, kind: "stamp" })
-    .select("id")
-    .single();
-  if (pageError || !newPage) {
-    throw toError(pageError ?? new Error("Insert failed"), "スタンプカードの作成に失敗しました");
-  }
-
-  const { error: programError } = await supabase.from("stamp_programs").insert({
-    hotel_id: hotelId,
-    page_id: newPage.id,
-    title: normalizedTitle,
-    description: "会計時にスタンプを貯めて、特典と交換できます。",
-    stamps_required: 10,
-    reward_title: "10個特典",
-    reward_description: "スタッフにこの画面を提示してください。",
-    reward_title_5: "5個特典",
-    reward_description_5: "スタッフにこの画面を提示してください。",
-    reward_title_10: "10個特典",
-    reward_description_10: "スタッフにこの画面を提示してください。",
-    accent_color: "#059669",
-    stamp_style: "seal",
-    stamp_code: stampCode,
-    cooldown_hours: 24,
-    once_per_day: true,
-    timezone: "Asia/Tokyo",
-    rotating_qr: false,
-    status: "draft",
-  });
-  if (programError) {
-    await supabase.from("pages").delete().eq("id", newPage.id);
-    throw toError(programError, "スタンププログラムの作成に失敗しました");
-  }
-
-  return newPage.id as string;
+/** Stamp card creation is closed during the sunset notice window. */
+export async function createStampPage(_title = "スタンプカード"): Promise<string> {
+  const sunset = new Error(STAMP_SUNSET_BODY) as Error & { code?: string };
+  sunset.code = "STAMP_SUNSET";
+  throw sunset;
 }
 
 export async function getStampProgramByPageId(pageId: string) {

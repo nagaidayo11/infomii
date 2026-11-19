@@ -21,7 +21,7 @@ export function StampSlotGrid({
   const latestIndex = animateLatest && filled > 0 ? filled - 1 : -1;
 
   return (
-    <div className="grid grid-cols-5 justify-items-center gap-x-2.5 gap-y-3.5">
+    <div role="img" aria-label={`${capacity}個中${Math.min(capacity, Math.max(0, filled))}個のスタンプがたまっています`} className="grid grid-cols-5 justify-items-center gap-x-2 gap-y-5">
       {Array.from({ length: capacity }).map((_, i) => (
         <StampMark
           key={i}

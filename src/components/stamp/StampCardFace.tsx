@@ -38,7 +38,7 @@ export function StampCardFace({
   onUseReward,
   useBusy = false,
 }: StampCardFaceProps) {
-  const progress = Math.min(1, stampCount / STAMP_CAPACITY);
+  const nextGoal = stampCount < 5 ? 5 : STAMP_CAPACITY;
   const shortDescription =
     description.length > 72 ? `${description.slice(0, 70).trimEnd()}…` : description;
 
@@ -49,37 +49,33 @@ export function StampCardFace({
     >
       <header
         className="stamp-card-header"
-        style={{ backgroundColor: accent }}
+        style={{ borderTop: `4px solid ${accent}` }}
       >
         <div className="relative z-[1] flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="relative z-[1] text-[1.35rem] font-bold leading-snug tracking-tight text-white">
+            <p className="mb-3 text-[10px] font-medium tracking-[0.22em] text-stone-500">MEMBERS CARD</p>
+            <h2 className="relative z-[1] text-[1.35rem] font-bold leading-snug tracking-tight text-stone-900">
               {title || "スタンプカード"}
             </h2>
             {shortDescription ? (
-              <p className="mt-1.5 text-[12px] leading-relaxed text-white/75">{shortDescription}</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-stone-600">{shortDescription}</p>
             ) : null}
           </div>
-          <div className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-white ring-1 ring-white/25 backdrop-blur-sm">
+          <div className="shrink-0 pt-6 text-2xl font-medium tabular-nums text-stone-800">
             {stampCount}
-            <span className="text-white/55">/{STAMP_CAPACITY}</span>
+            <span className="ml-1 text-xs text-stone-500">/ {STAMP_CAPACITY}</span>
           </div>
         </div>
-        <div className="stamp-progress-rail relative z-[1] mt-3.5 bg-white/20">
-          <div
-            className="stamp-progress-fill bg-white"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
+        <p className="mt-5 text-sm font-medium" style={{ color: accent }}>{stampCount >= STAMP_CAPACITY ? "10個たまりました。特典を選べます。" : `次の特典まで、あと${nextGoal - stampCount}個。`}</p>
         {cooldownLabel ? (
-          <p className="relative z-[1] mt-2.5 text-[11px] font-medium text-white/80">
+          <p className="relative z-[1] mt-2 text-xs text-stone-500">
             {cooldownLabel}
           </p>
         ) : null}
       </header>
 
       <div className="relative px-4 pb-4 pt-3.5">
-        <div className="rounded-[1.2rem] bg-white/55 px-3 py-3.5 ring-1 ring-black/[0.04]">
+        <div className="border-y border-dashed border-stone-300 px-1 py-6">
           <StampSlotGrid
             filled={stampCount}
             accent={accent}
@@ -182,7 +178,7 @@ function RewardRow({
           className="mt-2.5 flex min-h-10 w-full items-center justify-center rounded-xl text-sm font-bold text-white disabled:opacity-60"
           style={{ background: accent }}
         >
-          スタッフ確認のうえ利用
+          この特典を使う
         </button>
       ) : null}
     </div>

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { StampGuestScreen } from "@/components/stamp/StampGuestScreen";
-import { StampBetaNotice } from "@/components/stamp/StampBetaNotice";
+import { StampSunsetNotice } from "@/components/stamp/StampSunsetNotice";
+import { STAMP_SUNSET_TITLE } from "@/lib/stamp/sunset";
 import { StampMark } from "@/components/stamp/StampMark";
 import { StampPhoneFrame } from "@/components/stamp/StampPhoneFrame";
 import { StampRotatingQr } from "@/components/stamp/StampRotatingQr";
@@ -70,15 +71,23 @@ function pickReward(
   return { title: String(title), description: String(description) };
 }
 
-export function StampProgramEditor() {
+const DEMO_PROGRAM: ProgramState = {
+  id: "preview", title: "喫茶 こもれび", description: "いつもの一杯に、小さな楽しみを。",
+  reward_title_5: "お好きなドリンク 1杯", reward_description_5: "ご注文時にスタッフへお見せください。",
+  reward_title_10: "ケーキとドリンクのセット", reward_description_10: "ショーケースからお好きなケーキをひとつ。",
+  accent_color: "#52634b", stamp_style: "coffee", stamp_code: "", once_per_day: true,
+  timezone: "Asia/Tokyo", rotating_qr: false, status: "draft",
+};
+
+export function StampProgramEditor({ demo = false }: { demo?: boolean }) {
   const params = useParams();
   const router = useRouter();
   const pageId = typeof params.id === "string" ? params.id : "";
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!demo);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [slug, setSlug] = useState("");
-  const [program, setProgram] = useState<ProgramState | null>(null);
+  const [program, setProgram] = useState<ProgramState | null>(demo ? { ...DEMO_PROGRAM } : null);
   const [message, setMessage] = useState<string | null>(null);
   const [opsToken, setOpsToken] = useState("");
   const [opsResult, setOpsResult] = useState<string | null>(null);
@@ -87,8 +96,12 @@ export function StampProgramEditor() {
   const [previewAnimate, setPreviewAnimate] = useState(false);
   const [previewEarnPop, setPreviewEarnPop] = useState(false);
   const [previewUseTier, setPreviewUseTier] = useState<5 | 10 | null>(null);
+  const [editorTab, setEditorTab] = useState<"design" | "operate">("design");
+  const [origin, setOrigin] = useState("");
+  useEffect(() => { setOrigin(window.location.origin); }, []);
 
   const load = useCallback(async () => {
+    if (demo) return;
     if (!pageId) return;
     setLoading(true);
     const page = await getPage(pageId);
@@ -129,23 +142,23 @@ export function StampProgramEditor() {
     });
     setPreviewFilled((prev) => Math.min(prev, STAMP_CAPACITY));
     setLoading(false);
-  }, [pageId, router]);
+  }, [demo, pageId, router]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const entryUrl = useMemo(
     () => (slug ? `${origin}${buildStampEntryPath(slug)}` : ""),
     [origin, slug],
   );
   const pressUrl = useMemo(
-    () => (program ? `${origin}${buildStampPressPath(program.stamp_code)}` : ""),
+    () => (program?.stamp_code && origin ? `${origin}${buildStampPressPath(program.stamp_code)}` : ""),
     [origin, program],
   );
 
   async function handleSave() {
+    if (demo) { setMessage("試作画面のため保存されません。右側で見え方を確認できます。"); return false; }
     if (!program || !pageId) return;
     setSaving(true);
     setMessage(null);
@@ -172,8 +185,10 @@ export function StampProgramEditor() {
       await updatePageTitle(pageId, program.title.trim() || "スタンプカード");
       setMessage("保存しました");
       await load();
+      return true;
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "保存に失敗しました");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -184,7 +199,7 @@ export function StampProgramEditor() {
     setPublishing(true);
     setMessage(null);
     try {
-      await handleSave();
+      if (!(await handleSave())) return;
       await publishStampProgram(pageId, next);
       setMessage(next ? "公開しました" : "非公開にしました");
       await load();
@@ -196,6 +211,7 @@ export function StampProgramEditor() {
   }
 
   async function runOps(action: "manual_stamp" | "confirm_redeem" | "reissue") {
+    if (demo) { setOpsResult("試作画面では実際のカードは変更しません。"); return; }
     setOpsResult(null);
     const token = opsToken.trim();
     if (!token) {
@@ -271,14 +287,19 @@ export function StampProgramEditor() {
 
   return (
     <div className="stamp-surface stamp-editor-studio text-[color:var(--stamp-ink)]">
-      <StampBetaNotice />
+      {demo ? (
+        <p className="bg-stone-800 px-4 py-2 text-center text-xs text-white">
+          デザイン確認用の試作です。保存・公開・実際の押印は行いません。
+        </p>
+      ) : null}
+      <StampSunsetNotice />
       <header className="sticky top-0 z-30 border-b border-black/[0.06] bg-[#f5f3ef]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3.5">
           <div>
             <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               スタンプカード
               <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold tracking-normal text-amber-800">
-                ベータ版
+                提供終了予定
               </span>
             </p>
             <h1 className="text-xl font-bold leading-tight tracking-tight">{program.title || "無題"}</h1>
@@ -302,7 +323,7 @@ export function StampProgramEditor() {
             <button
               type="button"
               onClick={() => void handleSave()}
-              disabled={saving}
+              disabled={saving || publishing}
               className="inline-flex min-h-10 items-center rounded-xl border border-black/10 bg-white/70 px-3 text-sm font-medium disabled:opacity-60"
             >
               {saving ? "保存中…" : "保存"}
@@ -310,7 +331,8 @@ export function StampProgramEditor() {
             <button
               type="button"
               onClick={() => void handlePublish(program.status !== "published")}
-              disabled={publishing}
+              disabled
+              title={STAMP_SUNSET_TITLE}
               className="inline-flex min-h-10 items-center rounded-xl bg-[color:var(--stamp-ink)] px-3.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {publishing
@@ -323,6 +345,14 @@ export function StampProgramEditor() {
         </div>
       </header>
 
+      <nav aria-label="スタンプカードの編集" className="stamp-editor-tabs mx-auto flex max-w-6xl gap-6 px-4 pt-5">
+        {([{ id: "design", label: "カードをつくる" }, { id: "operate", label: "配布・運用" }] as const).map((tab) => (
+          <button key={tab.id} type="button" aria-pressed={editorTab === tab.id} onClick={() => setEditorTab(tab.id)} className="min-h-11 border-b-2 border-transparent px-1 pb-3 text-sm font-medium aria-pressed:border-current">
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           {message ? (
@@ -331,8 +361,8 @@ export function StampProgramEditor() {
             </p>
           ) : null}
 
-          <section className="stamp-editor-panel p-5">
-            <h2 className="text-base font-bold tracking-tight">基本</h2>
+          <section hidden={editorTab !== "design"} className="stamp-editor-panel p-5">
+            <h2 className="text-base font-bold tracking-tight">カードの名前</h2>
             <div className="mt-4 grid gap-4">
               <label className="block text-sm">
                 <span className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500">
@@ -354,6 +384,8 @@ export function StampProgramEditor() {
                   onChange={(e) => setProgram({ ...program, description: e.target.value })}
                 />
               </label>
+              <details className="stamp-advanced">
+                <summary className="cursor-pointer py-3 text-sm font-medium">ため方の設定</summary>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm">
                   <span className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500">
@@ -395,19 +427,9 @@ export function StampProgramEditor() {
                   </select>
                 </label>
               </div>
-              <label className="block text-sm">
-                <span className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500">
-                  プレビュー進捗 · {filledPreview}/{STAMP_CAPACITY}
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={STAMP_CAPACITY}
-                  value={filledPreview}
-                  onChange={(e) => setPreviewFilled(Number(e.target.value))}
-                  className="mt-3 w-full accent-[color:var(--stamp-ink)]"
-                />
-              </label>
+              </details>
+              <details className="stamp-advanced">
+              <summary className="cursor-pointer py-3 text-sm font-medium">QRの表示方法</summary>
               <label className="flex items-start gap-2.5 rounded-xl border border-black/10 bg-white/70 px-3 py-2.5 text-sm">
                 <input
                   type="checkbox"
@@ -418,7 +440,7 @@ export function StampProgramEditor() {
                   }
                 />
                 <span>
-                  <span className="font-semibold">回転式の押印QRにする</span>
+                  <span className="font-semibold">スタッフの画面にQRを表示する</span>
                   <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500">
                     スタッフ端末に約90秒ごとに変わるQRを表示。写真の使い回しを防げます。
                     印刷して貼る運用の場合はオフのままにしてください。
@@ -429,11 +451,13 @@ export function StampProgramEditor() {
                 カードは常に10枠。ゲストは5個特典と10個特典を好きなタイミングで選べます。
                 1日1回の場合、施設タイムゾーンの午前4時にリセットされます。
               </p>
+              </details>
             </div>
           </section>
 
-          <section className="stamp-editor-panel p-5">
-            <h2 className="text-base font-bold tracking-tight">特典</h2>
+          <section hidden={editorTab !== "design"} className="stamp-editor-panel p-5">
+            <h2 className="text-base font-bold tracking-tight">集めたら、何をプレゼント？</h2>
+            <p className="mt-1 text-sm text-slate-500">特典を使うと、その個数のスタンプが引かれます。</p>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               {[
                 {
@@ -481,9 +505,9 @@ export function StampProgramEditor() {
             </div>
           </section>
 
-          <section className="stamp-editor-panel p-5">
+          <section hidden={editorTab !== "design"} className="stamp-editor-panel p-5">
             <h2 className="text-base font-bold tracking-tight">見た目</h2>
-            <p className="mt-1 text-[12px] text-slate-500">印のスタイルとカラーで世界観を決めます。</p>
+            <p className="mt-1 text-sm text-slate-500">お店に似合う印と色を選んでください。</p>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {STAMP_STYLE_OPTIONS.map((opt) => {
                 const active = program.stamp_style === opt.id;
@@ -491,6 +515,7 @@ export function StampProgramEditor() {
                   <button
                     key={opt.id}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => setProgram({ ...program, stamp_style: opt.id })}
                     className={`flex flex-col items-center gap-2 rounded-[1rem] border px-2 py-3 transition ${
                       active
@@ -531,8 +556,8 @@ export function StampProgramEditor() {
             </div>
           </section>
 
-          <section className="stamp-editor-panel p-5">
-            <h2 className="text-base font-bold tracking-tight">ゲスト用QR・押印コード</h2>
+          <section hidden={editorTab !== "operate"} className="stamp-editor-panel p-5">
+            <h2 className="text-base font-bold tracking-tight">お客さまに渡す・スタンプを押す</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
               入口QRはカード発行用（客室・フロントなど）。押印QRは会計時にスタッフが提示します。
               カメラが使えない場合のみ、押印コードを口頭で伝えてください。
@@ -554,7 +579,7 @@ export function StampProgramEditor() {
                 </p>
               </div>
 
-              {program.rotating_qr ? (
+              {program.rotating_qr && !demo ? (
                 <StampRotatingQr pageId={pageId} origin={origin} />
               ) : (
                 <div className="rounded-[1.15rem] border border-dashed border-black/15 bg-[#faf8f4] p-4">
@@ -607,8 +632,8 @@ export function StampProgramEditor() {
             ) : null}
           </section>
 
-          <section className="stamp-editor-panel p-5">
-            <h2 className="text-base font-bold tracking-tight">運用</h2>
+          <details hidden={editorTab !== "operate"} className="stamp-editor-panel p-5">
+            <summary className="cursor-pointer text-base font-bold tracking-tight">困ったときの個別対応</summary>
             <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
               通常の特典利用はゲストがカード上で確認ダイアログを進めて完了します。
               ここはトラブル時の手動対応用です。再発行時はアカウント紐付けを引き継ぎます。
@@ -641,10 +666,16 @@ export function StampProgramEditor() {
               「提示中の交換を確定」は旧フロー（pending_redeem）向けです。通常のゲスト自己利用では不要です。
             </p>
             {opsResult ? <p className="mt-3 text-sm text-slate-700">{opsResult}</p> : null}
-          </section>
+          </details>
         </div>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
+          <div className="mx-auto mb-4 max-w-[340px]">
+            <p className="text-sm font-semibold">お客さまにはこう見えます</p>
+            <div className="mt-3 flex gap-2">
+              {[0, 4, 5, 10].map((count) => <button key={count} type="button" aria-pressed={filledPreview === count} onClick={() => setPreviewFilled(count)} className="min-h-10 flex-1 rounded-md border border-black/10 bg-white text-xs aria-pressed:bg-stone-800 aria-pressed:text-white">{count}個</button>)}
+            </div>
+          </div>
           <StampPhoneFrame label="ゲスト画面プレビュー" width={340}>
             <StampGuestScreen
               compact
@@ -671,7 +702,7 @@ export function StampProgramEditor() {
               statusLabel={
                 program.status === "published" ? "公開中プレビュー" : "下書きプレビュー"
               }
-              footerNote="※この画面はプレビューです。実機では端末カメラでの読取・1日1回制限・確認ダイアログ・アカウント保存が動きます"
+              footerNote="お試し表示です。実際のスタンプは増えません。"
               primaryAction={
                 canPreviewStamp ? (
                   <button
@@ -679,7 +710,7 @@ export function StampProgramEditor() {
                     onClick={demoEarnStamp}
                     className="stamp-cta stamp-cta-primary"
                   >
-                    スキャンしてスタンプを獲得
+                    スタンプを押してみる
                   </button>
                 ) : null
               }

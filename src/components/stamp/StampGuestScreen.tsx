@@ -64,7 +64,7 @@ export function StampGuestScreen({
 
   return (
     <div
-      className={`stamp-surface relative bg-[#f6f8fa] ${compact ? "px-3 pb-6 pt-3" : "px-4 pb-8 pt-5"}`}
+      className={`stamp-surface relative bg-[#f4f2ed] ${compact ? "px-3 pb-6 pt-3" : "px-4 pb-8 pt-5"}`}
       style={{ ["--stamp-accent" as string]: accent }}
     >
       <StampEarnPop
@@ -74,7 +74,8 @@ export function StampGuestScreen({
         stampCount={stampCount}
         onClose={() => onEarnPopClose?.()}
       />
-      <StampUseConfirmPop
+      {useConfirmTier !== null ? <StampUseConfirmPop
+        key={useConfirmTier}
         open={useConfirmTier !== null}
         tier={useConfirmTier}
         rewardTitle={confirmTitle}
@@ -82,7 +83,7 @@ export function StampGuestScreen({
         busy={useConfirmBusy}
         onCancel={() => onCancelUse?.()}
         onConfirm={() => onConfirmUse?.()}
-      />
+      /> : null}
 
       <StampCardFace
         title={title}

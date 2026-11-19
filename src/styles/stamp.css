@@ -1,10 +1,10 @@
 /* Stamp card surface — uses Infomii product font stack */
 .stamp-surface {
-  --stamp-ink: #0f172a;
-  --stamp-muted: #64748b;
+  --stamp-ink: #292820;
+  --stamp-muted: #716e65;
   --stamp-line: rgb(15 23 42 / 0.1);
-  --stamp-paper: #f8fafc;
-  --stamp-paper-2: #f1f5f9;
+  --stamp-paper: #fffdf8;
+  --stamp-paper-2: #f4f2ed;
   font-family: var(--font-sans);
   color: var(--stamp-ink);
 }
@@ -12,7 +12,7 @@
 .stamp-card-shell {
   position: relative;
   overflow: hidden;
-  border-radius: 1.35rem;
+  border-radius: 0.65rem;
   background: var(--stamp-paper);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.8) inset,
@@ -48,9 +48,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 100% 0%, rgb(255 255 255 / 0.16), transparent 50%),
-    linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent 60%);
+  background: none;
 }
 
 .stamp-progress-rail {
@@ -69,9 +67,10 @@
 .stamp-reward-row {
   position: relative;
   padding: 0.7rem 0.85rem;
-  border-radius: 1rem;
-  border: 1px solid var(--stamp-line);
-  background: rgb(255 255 255 / 0.7);
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--stamp-line);
+  background: transparent;
   transition:
     border-color 0.25s ease,
     background 0.25s ease;
@@ -88,19 +87,17 @@
 }
 
 .stamp-reward-row[data-reached="false"] {
-  opacity: 0.55;
+  opacity: 1;
 }
 
 .stamp-editor-studio {
   min-height: 100dvh;
-  background:
-    radial-gradient(90% 60% at 10% -10%, rgb(15 118 110 / 0.06), transparent 50%),
-    linear-gradient(180deg, #f6f8fa 0%, #eef2f6 100%);
+  background: #f4f3ef;
 }
 
 .stamp-editor-panel {
   border: 1px solid rgb(15 23 42 / 0.08);
-  border-radius: 1.15rem;
+  border-radius: 0.65rem;
   background: rgb(255 255 255 / 0.9);
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
 }
@@ -147,12 +144,8 @@
 
 .stamp-cta-primary {
   color: #fff;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--stamp-accent) 78%, #0b1220),
-    var(--stamp-accent)
-  );
-  box-shadow: 0 14px 28px -16px color-mix(in srgb, var(--stamp-accent) 70%, transparent);
+  background: var(--stamp-accent);
+  box-shadow: none;
 }
 
 .stamp-cta-secondary {
@@ -186,4 +179,21 @@
 
 .stamp-mark-press {
   animation: stamp-press 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stamp-surface button:focus-visible,
+.stamp-surface summary:focus-visible {
+  outline: 2px solid var(--stamp-accent, #292820);
+  outline-offset: 4px;
+}
+
+.stamp-advanced { border-top: 1px solid var(--stamp-line); }
+.stamp-editor-panel[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-mark-press { animation: none; }
+  .stamp-surface *, .stamp-surface *::before, .stamp-surface *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

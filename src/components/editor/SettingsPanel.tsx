@@ -101,12 +101,18 @@ import {
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-slate-400 focus:border-ds-primary focus:ring-2 focus:ring-ds-primary/20 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.08)]";
 const labelClass = "mb-1.5 block text-xs font-medium text-slate-500";
+const hintClass = "mt-1.5 text-[11px] leading-snug text-slate-400";
+const hintMutedClass = "text-[11px] leading-snug text-slate-400";
 const addButtonClass =
   "rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[34px]";
 const removeButtonClass =
   "rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 min-h-[34px]";
 const reorderButtonClass =
   "rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[34px] min-w-[34px]";
+const webToolBtnClass =
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-35";
+const webToolDangerBtnClass =
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-slate-500 transition hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-35";
 const checkboxRowClass =
   "flex min-h-[44px] items-center gap-2 rounded-md px-2 text-sm text-slate-700";
 const checkboxInlineRowClass =
@@ -120,6 +126,15 @@ const appearanceSectionId = "settings-appearance";
 const appearanceTypographyId = "appearance-typography";
 const appearanceSpacingId = "appearance-spacing";
 
+function webTabClass(active: boolean) {
+  return (
+    "border-b-2 pb-2 text-sm transition " +
+    (active
+      ? "border-slate-900 font-semibold text-slate-900"
+      : "border-transparent font-medium text-slate-400 hover:text-slate-600")
+  );
+}
+
 function SettingsSection({
   title,
   children,
@@ -131,11 +146,24 @@ function SettingsSection({
   sectionId?: string;
   contentClassName?: string;
 }) {
+  const { isNativeUi } = useClientShell();
+  const hideTitle = !isNativeUi && (title === "コンテンツ" || title === "見た目の調整");
   return (
-    <div id={sectionId} className="space-y-3 scroll-mt-28">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 ">
-        {title}
-      </h3>
+    <div
+      id={sectionId}
+      className={isNativeUi ? "space-y-3 scroll-mt-28" : "space-y-2.5 scroll-mt-24"}
+    >
+      {hideTitle ? null : (
+        <h3
+          className={
+            isNativeUi
+              ? "text-xs font-semibold uppercase tracking-wider text-slate-500 "
+              : "text-[11px] font-medium text-slate-400"
+          }
+        >
+          {title}
+        </h3>
+      )}
       <div className={`space-y-2.5 ${contentClassName ?? ""}`.trim()}>{children}</div>
     </div>
   );
@@ -150,18 +178,35 @@ function StyleGroup({
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
+  const { isNativeUi } = useClientShell();
+  if (isNativeUi) {
+    return (
+      <details
+        open={defaultOpen}
+        className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30 ">
+          <span>{summary}</span>
+          <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180" aria-hidden>
+            ▼
+          </span>
+        </summary>
+        <div className="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">{children}</div>
+      </details>
+    );
+  }
   return (
     <details
       open={defaultOpen}
-      className="group rounded-xl border border-slate-200/90 bg-white [&_summary::-webkit-details-marker]:hidden"
+      className="group [&_summary::-webkit-details-marker]:hidden"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-left text-xs font-semibold text-slate-800 outline-none ring-offset-2 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-ds-primary/30 ">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-1.5 text-left text-[11px] font-medium text-slate-500 outline-none hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-ds-primary/30">
         <span>{summary}</span>
-        <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180" aria-hidden>
+        <span className="text-[10px] text-slate-300 transition-transform group-open:rotate-180" aria-hidden>
           ▼
         </span>
       </summary>
-      <div className="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">{children}</div>
+      <div className="space-y-2.5 pb-1 pt-0.5">{children}</div>
     </details>
   );
 }
@@ -454,7 +499,7 @@ function InfoRowsEditor({
         </button>
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs text-slate-500">行が未設定です。追加するか、キャンバス上のブロックから編集できます。</p>
+        <p className={hintMutedClass}>行が未設定です。追加するか、キャンバス上のブロックから編集できます。</p>
       ) : null}
       {rows.map((row, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/90 p-3">
@@ -1798,7 +1843,7 @@ function SocialLinksItemsEditor({
           <option value="text">タイトルテキスト</option>
           <option value="icon">アイコン</option>
         </select>
-        <p className="mt-1 text-[11px] text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-400">
           アイコンは公式ロゴではなく、各SNSを示すオリジナルアイコンです。
         </p>
       </div>
@@ -2443,7 +2488,7 @@ function ComparePricingSettings({
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] leading-relaxed text-slate-500">
+      <p className={hintMutedClass}>
         プラン名と各行の内容を下で編集できます。行の並びは「↑」「↓」、同じ内容を増やすときは「複製」が便利です。
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -3307,14 +3352,14 @@ export function CardSettings({
   if (!card) {
     return (
       <div className={"flex min-h-0 flex-1 flex-col overflow-hidden" + (isNativeUi ? " app-native-settings-root" : "")}>
-        <div className={isNativeUi ? "app-native-settings-empty" : "border-b border-slate-200 bg-white px-4 py-4 "}>
-          <h2 className={isNativeUi ? "text-base font-extrabold text-[var(--app-text)]" : "text-sm font-semibold text-slate-700"}>
-            {isNativeUi ? "ブロックを選んで編集" : "ブロック設定"}
+        <div className={isNativeUi ? "app-native-settings-empty" : "border-b border-slate-200 bg-white px-4 py-3"}>
+          <h2 className={isNativeUi ? "text-base font-extrabold text-[var(--app-text)]" : "text-sm font-semibold text-slate-800"}>
+            {isNativeUi ? "ブロックを選んで編集" : "ブロックを選択"}
           </h2>
-          <p className={isNativeUi ? "mt-2 text-sm leading-relaxed text-[var(--app-text-muted)]" : "mt-3 text-sm text-slate-500"}>
+          <p className={isNativeUi ? "mt-2 text-sm leading-relaxed text-[var(--app-text-muted)]" : "mt-1 text-[11px] leading-snug text-slate-400"}>
             {isNativeUi
               ? "ページ上のブロックをタップすると、内容や見た目をここで整えられます。"
-              : "キャンバスでブロックを選択すると、ここで編集できます。変更はリアルタイムで反映されます。"}
+              : "キャンバスでブロックを選ぶと、ここで編集できます。"}
           </p>
         </div>
       </div>
@@ -3444,23 +3489,19 @@ export function CardSettings({
   if (planLocked) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2 ">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-sm font-semibold text-slate-800">
+              {getCardTypeLabel(card.type, libraryAudience)}
+            </p>
+            <div className="flex shrink-0 items-center gap-0.5">
               <button
                 type="button"
                 onClick={toggleDeleteProtection}
                 disabled
                 aria-label={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
                 title={isDeleteProtected ? "削除保護: ロック中（このブロックは編集不可）" : "削除保護: ロック解除中（このブロックは編集不可）"}
-                className={
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
-                  (isDeleteProtected
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-slate-300 bg-white text-slate-500") +
-                  " cursor-not-allowed opacity-60"
-                }
+                className={webToolBtnClass + (isDeleteProtected ? " text-emerald-700" : "")}
               >
                 {isDeleteProtected ? (
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -3474,70 +3515,66 @@ export function CardSettings({
                   </svg>
                 )}
               </button>
+              {canReorderCard ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onMoveCardUp}
+                    disabled={!canMoveCardUp}
+                    aria-label="ブロックを上へ移動"
+                    className={webToolBtnClass}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onMoveCardDown}
+                    disabled={!canMoveCardDown}
+                    aria-label="ブロックを下へ移動"
+                    className={webToolBtnClass}
+                  >
+                    ↓
+                  </button>
+                </>
+              ) : null}
+              {canEditCard ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleDuplicateCard}
+                    disabled={!onDuplicateCard}
+                    aria-label="コピー"
+                    title="コピー"
+                    className={webToolBtnClass}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCard}
+                    disabled={!onRemoveCard}
+                    aria-label="削除"
+                    title="削除"
+                    className={webToolDangerBtnClass}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
+                </>
+              ) : null}
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <p className="min-w-0 text-lg font-extrabold tracking-tight text-slate-950">
-              {getCardTypeLabel(card.type, libraryAudience)}
-            </p>
-            {canEditCard || canReorderCard ? (
-              <div className="flex items-center gap-1.5">
-                {canReorderCard ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={onMoveCardUp}
-                      disabled={!canMoveCardUp}
-                      aria-label="ブロックを上へ移動"
-                      className={
-                        isNativeUi
-                          ? "app-native-settings-icon-action disabled:cursor-not-allowed disabled:opacity-40"
-                          : `${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`
-                      }
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onMoveCardDown}
-                      disabled={!canMoveCardDown}
-                      aria-label="ブロックを下へ移動"
-                      className={
-                        isNativeUi
-                          ? "app-native-settings-icon-action disabled:cursor-not-allowed disabled:opacity-40"
-                          : `${reorderButtonClass} !min-h-[34px] !min-w-[34px] disabled:cursor-not-allowed disabled:opacity-40`
-                      }
-                    >
-                      ↓
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={handleDuplicateCard}
-                  disabled={!onDuplicateCard}
-                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                >
-                  コピー
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRemoveCard}
-                  disabled={!onRemoveCard}
-                  className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                >
-                  削除
-                </button>
-              </div>
-            ) : null}
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="mt-1 text-[11px] leading-snug text-slate-400">
             {businessLocked ? "Businessプラン限定ブロック" : "Proプラン以上のブロック"}
           </p>
-          </div>
         </div>
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-8 "
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 pb-8"
         >
           <section className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
             {businessLocked
@@ -3556,91 +3593,51 @@ export function CardSettings({
           "shrink-0 border-b bg-white px-4 " +
           (isNativeUi
             ? "app-native-settings-chrome flex flex-col border-[var(--app-border)]"
-            : "border-slate-200 py-2")
+            : "border-slate-200 pt-3")
         }
       >
-        <div className={"flex flex-col " + (isNativeUi ? "gap-1.5" : "gap-1.5")}>
-          {!isNativeUi ? (
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">ブロック設定</h2>
-              <button
-                type="button"
-                onClick={toggleDeleteProtection}
-                aria-pressed={isDeleteProtected}
-                aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
-                title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
-                className={
-                  "inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors " +
-                  (isDeleteProtected
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-slate-300 bg-white text-slate-500 hover:bg-slate-50")
-                }
-              >
-                {isDeleteProtected ? (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                    <rect x="5" y="11" width="14" height="10" rx="2" />
-                    <path d="M8 11V7a4 4 0 1 1 8 0v4" />
-                  </svg>
-                ) : (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                    <rect x="5" y="11" width="14" height="10" rx="2" />
-                    <path d="M8 11V7a4 4 0 0 1 7-2" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          ) : null}
+        {isNativeUi ? (
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-2">
-            <p
-              className={
-                "min-w-0 tracking-tight " +
-                (isNativeUi
-                  ? "app-native-settings-chrome__type flex items-center gap-1.5 text-[var(--app-text)]"
-                  : "text-lg font-extrabold text-slate-950")
-              }
-            >
-              {isNativeUi ? (
-                <svg
-                  className="h-3.5 w-3.5 shrink-0 text-[var(--app-accent)]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                  />
-                </svg>
-              ) : null}
+            <p className="app-native-settings-chrome__type flex min-w-0 items-center gap-1.5 tracking-tight text-[var(--app-text)]">
+              <svg
+                className="h-3.5 w-3.5 shrink-0 text-[var(--app-accent)]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                aria-hidden
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
               {getCardTypeLabel(card.type, libraryAudience)}
             </p>
             {canEditCard || canReorderCard ? (
-              <div className={isNativeUi ? "app-native-settings-toolbar" : "flex items-center gap-1.5"}>
-                {isNativeUi ? (
-                  <button
-                    type="button"
-                    onClick={toggleDeleteProtection}
-                    aria-pressed={isDeleteProtected}
-                    aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
-                    title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
-                    className="app-native-settings-icon-action"
-                  >
-                    {isDeleteProtected ? (
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <rect x="5" y="11" width="14" height="10" rx="2" />
-                        <path d="M8 11V7a4 4 0 1 1 8 0v4" />
-                      </svg>
-                    ) : (
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <rect x="5" y="11" width="14" height="10" rx="2" />
-                        <path d="M8 11V7a4 4 0 0 1 7-2" />
-                      </svg>
-                    )}
-                  </button>
-                ) : null}
+              <div className="app-native-settings-toolbar">
+                <button
+                  type="button"
+                  onClick={toggleDeleteProtection}
+                  aria-pressed={isDeleteProtected}
+                  aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
+                  title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+                  className="app-native-settings-icon-action"
+                >
+                  {isDeleteProtected ? (
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M8 11V7a4 4 0 0 1 7-2" />
+                    </svg>
+                  )}
+                </button>
                 {canReorderCard ? (
                   <>
                     <button
@@ -3667,11 +3664,7 @@ export function CardSettings({
                   type="button"
                   onClick={handleDuplicateCard}
                   disabled={!onDuplicateCard}
-                  className={
-                    isNativeUi
-                      ? "app-native-settings-action"
-                      : "rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                  }
+                  className="app-native-settings-action"
                 >
                   コピー
                 </button>
@@ -3679,100 +3672,149 @@ export function CardSettings({
                   type="button"
                   onClick={handleRemoveCard}
                   disabled={!onRemoveCard || isDeleteProtected}
-                  className={
-                    isNativeUi
-                      ? "app-native-settings-action app-native-settings-action--danger"
-                      : "rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 min-h-[34px]"
-                  }
+                  className="app-native-settings-action app-native-settings-action--danger"
                 >
                   削除
                 </button>
               </div>
             ) : null}
           </div>
-          {isNativeUi ? (
-            isBusinessPlan ? (
-              <p className="app-native-settings-chrome__hint text-[var(--app-text-muted)]">
-                多言語は公開・プレビュー時に自動翻訳されます
-              </p>
-            ) : null
-          ) : (
-            <>
-              <p className="text-xs text-slate-500">
-                {canReorderCard
-                  ? "↑↓でブロックの順序を変更できます · 変更はリアルタイムで反映されます"
-                  : "変更はリアルタイムで反映されます"}
-              </p>
-              {isBusinessPlan ? (
-                <p className="text-[11px] leading-relaxed text-emerald-800/80">
-                  多言語（EN / 中文 / 한국어）は、ゲスト公開オン・公開更新・プレビュー時にまとめて自動翻訳されます。
-                </p>
+          {isBusinessPlan ? (
+            <p className="app-native-settings-chrome__hint text-[var(--app-text-muted)]">
+              多言語は公開・プレビュー時に自動翻訳されます
+            </p>
+          ) : null}
+          <AppSegmentedControl
+            variant="filled"
+            ariaLabel="設定タブ"
+            value={activePalette}
+            onChange={(id) => {
+              if (id === "content") activatePalette("content", contentSectionId);
+              else if (id === "appearance") activatePalette("appearance", appearanceSectionId);
+              else activatePalette("appearance-spacing", appearanceSpacingId);
+            }}
+            options={[
+              { id: "content", label: "内容" },
+              { id: "appearance", label: "見た目" },
+              { id: "appearance-spacing", label: "サイズ" },
+            ]}
+          />
+        </div>
+        ) : (
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between gap-2">
+            <p className="min-w-0 truncate text-sm font-semibold text-slate-800">
+              {getCardTypeLabel(card.type, libraryAudience)}
+            </p>
+            <div className="flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={toggleDeleteProtection}
+                aria-pressed={isDeleteProtected}
+                aria-label={isDeleteProtected ? "削除保護を解除" : "削除保護を有効化"}
+                title={isDeleteProtected ? "削除保護: ロック中" : "削除保護: ロック解除中"}
+                className={webToolBtnClass + (isDeleteProtected ? " text-emerald-700" : "")}
+              >
+                {isDeleteProtected ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 7-2" />
+                  </svg>
+                )}
+              </button>
+              {canReorderCard ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onMoveCardUp}
+                    disabled={!canMoveCardUp}
+                    aria-label="ブロックを上へ移動"
+                    className={webToolBtnClass}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onMoveCardDown}
+                    disabled={!canMoveCardDown}
+                    aria-label="ブロックを下へ移動"
+                    className={webToolBtnClass}
+                  >
+                    ↓
+                  </button>
+                </>
               ) : null}
-            </>
-          )}
-          {isNativeUi ? (
-            <AppSegmentedControl
-              variant="filled"
-              ariaLabel="設定タブ"
-              value={activePalette}
-              onChange={(id) => {
-                if (id === "content") activatePalette("content", contentSectionId);
-                else if (id === "appearance") activatePalette("appearance", appearanceSectionId);
-                else activatePalette("appearance-spacing", appearanceSpacingId);
-              }}
-              options={[
-                { id: "content", label: "内容" },
-                { id: "appearance", label: "見た目" },
-                { id: "appearance-spacing", label: "サイズ" },
-              ]}
-            />
-          ) : (
-            <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
               <button
                 type="button"
-                onClick={() => activatePalette("content", contentSectionId)}
-                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                  activePalette === "content"
-                    ? "bg-slate-900 text-white"
-                    : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
+                onClick={handleDuplicateCard}
+                disabled={!onDuplicateCard}
+                aria-label="コピー"
+                title="コピー"
+                className={webToolBtnClass}
               >
-                コンテンツ
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
               </button>
               <button
                 type="button"
-                onClick={() => activatePalette("appearance", appearanceSectionId)}
-                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                  activePalette === "appearance"
-                    ? "bg-slate-900 text-white"
-                    : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
+                onClick={handleRemoveCard}
+                disabled={!onRemoveCard || isDeleteProtected}
+                aria-label="削除"
+                title="削除"
+                className={webToolDangerBtnClass}
               >
-                見た目
-              </button>
-              <button
-                type="button"
-                onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
-                className={`rounded-md px-1.5 py-0.5 text-center text-xs font-medium transition min-h-[30px]  ${
-                  activePalette === "appearance-spacing"
-                    ? "bg-slate-900 text-white"
-                    : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                サイズ
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
               </button>
             </div>
-          )}
+          </div>
+          {isBusinessPlan ? (
+            <p className="mt-1 text-[11px] leading-snug text-slate-400">
+              多言語は公開・プレビュー時に自動翻訳されます
+            </p>
+          ) : null}
+          <div className="mt-2 flex gap-4">
+            <button
+              type="button"
+              onClick={() => activatePalette("content", contentSectionId)}
+              className={webTabClass(activePalette === "content")}
+            >
+              コンテンツ
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance", appearanceSectionId)}
+              className={webTabClass(activePalette === "appearance")}
+            >
+              見た目
+            </button>
+            <button
+              type="button"
+              onClick={() => activatePalette("appearance-spacing", appearanceSpacingId)}
+              className={webTabClass(activePalette === "appearance-spacing")}
+            >
+              サイズ
+            </button>
+          </div>
         </div>
+        )}
       </div>
       <div
         ref={scrollRef}
         className={
           "min-h-0 flex-1 overflow-y-auto overscroll-contain " +
-          (isNativeUi ? "app-native-settings-scroll" : "px-4 py-4 pb-8 ")
+          (isNativeUi ? "app-native-settings-scroll" : "px-4 py-3 pb-8")
         }
       >
-        <div id={contentSectionId} className="space-y-6">
+        <div id={contentSectionId} className={isNativeUi ? "space-y-6" : "space-y-4"}>
           {card.type === "welcome" && (
             isNativeUi ? (
               <WelcomeNativeSettings
@@ -3820,7 +3862,7 @@ export function CardSettings({
                     className={inputClass + " flex-1"}
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className={hintClass}>
                   左のアクセントラインや見出しの強調色に使われます。
                 </p>
               </div>
@@ -3846,7 +3888,7 @@ export function CardSettings({
                     <option value="inset">余白あり</option>
                     <option value="full">画面いっぱい</option>
                   </select>
-                  <p className="mt-1.5 text-xs text-slate-500">
+                  <p className={hintClass}>
                     画面いっぱいだと、ページ左右の余白を超えて写真が端まで広がります。
                   </p>
                 </div>
@@ -3890,7 +3932,7 @@ export function CardSettings({
                   <option value="inset">余白あり</option>
                   <option value="full">画面いっぱい</option>
                 </select>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className={hintClass}>
                   画面いっぱいだと、ページ左右の余白を超えて写真が端まで広がります。
                 </p>
               </div>
@@ -3930,7 +3972,7 @@ export function CardSettings({
                     className={inputClass + " flex-1"}
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className={hintClass}>
                   「帯付き」レイアウトの色帯などに使われます。
                 </p>
               </div>
@@ -4275,7 +4317,7 @@ export function CardSettings({
               <div className="w-full">
                 <label className={labelClass}>動画ファイル</label>
                 <VideoUpload onUploaded={(url) => update("videoUrl", url)} className="mt-1.5" />
-                <p className="mt-1.5 text-[11px] text-slate-500">ヒーローと同じく Supabase に保存されます。アップロード後は下のURL欄に反映されます。</p>
+                <p className={hintClass}>ヒーローと同じく Supabase に保存されます。アップロード後は下のURL欄に反映されます。</p>
               </div>
               <div className="w-full">
                 <label className={labelClass}>動画のURL（アップロード・埋め込み）</label>
@@ -4286,7 +4328,7 @@ export function CardSettings({
                   rows={2}
                   className={inputClass}
                 />
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">
                   アップロード済みの直リンクの確認・差し替え、または YouTube・Vimeo の埋め込みURLを指定できます。
                 </p>
               </div>
@@ -4592,7 +4634,7 @@ export function CardSettings({
                 onChange={(e) => updateLocalized("title", e.target.value)}
                 placeholder="写真ギャラリー"
               />
-              <p className="text-[11px] leading-relaxed text-slate-500">
+              <p className={hintMutedClass}>
                 写真をタップするとリンク先へ移動できます。各写真のリンクは下の項目で設定してください。
               </p>
               <ImageTilesItemsEditor content={content} onUpdate={update} />
@@ -4651,7 +4693,7 @@ export function CardSettings({
 
           {card.type === "photoSplit" && (
             <SettingsSection title="コンテンツ">
-              <p className="text-[11px] leading-relaxed text-slate-500">
+              <p className={hintMutedClass}>
                 各列は写真とテキストの2カラムです。左右の入れ替え・写真幅・文字位置は列ごとに変えられます。
               </p>
               <div className="w-full">
@@ -4883,7 +4925,7 @@ export function CardSettings({
                     rows={3}
                     className={inputClass}
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[11px] leading-snug text-slate-400">
                     共有URL・「地図を埋め込む」のiframeコードのどちらでもOKです。
                   </p>
                 </div>
@@ -5125,7 +5167,7 @@ export function CardSettings({
                   className={inputClass}
                 />
               </div>
-              <p className="text-xs text-slate-500">
+              <p className={hintMutedClass}>
                 青枠を上下にドラッグすると余白が変わり、ここに現在のpxが表示されます。
               </p>
             </SettingsSection>
@@ -6100,7 +6142,7 @@ export function CardSettings({
                 onChange={(e) => update("csvUrl", e.target.value)}
                 placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0"
               />
-              <p className="text-xs text-slate-500">
+              <p className={hintMutedClass}>
                 公開CSVからメニュー一覧を自動表示します。URLは公開されたCSVリンクを指定してください。
               </p>
               <Input
@@ -6240,7 +6282,7 @@ export function CardSettings({
                     );
                   })}
                 </div>
-                <p className="text-[11px] leading-relaxed text-slate-500">
+                <p className={hintMutedClass}>
                   左のキャンバスで、項目の並び方がすぐに切り替わります。
                 </p>
               </div>
@@ -6449,14 +6491,14 @@ export function CardSettings({
                       <option value="rose">重要（ローズ）</option>
                       <option value="violet">特集（バイオレット）</option>
                     </select>
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[11px] leading-snug text-slate-400">
                       重要度のようにプリセット色を選べます。標準で既定色に戻ります。
                     </p>
                   </div>
                 ) : null}
               </>
             ) : (
-              <p className="text-xs text-slate-500">このブロックは文字スタイル設定の対象外です。</p>
+              <p className={hintMutedClass}>このブロックは文字スタイル設定の対象外です。</p>
             )}
                   </StyleGroup>
                   <StyleGroup summary="細かい調整（サイズ・太さ）" defaultOpen={false}>

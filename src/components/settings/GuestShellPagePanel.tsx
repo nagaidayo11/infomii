@@ -4,9 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   clampGuestShellConfigForPlan,
   createDefaultGuestShellConfig,
-  getGuestShellNavStyle,
-  getGuestShellTabLabel,
-  resolveVisibleGuestShellTabs,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
 import { resolveGuestNavLinkLimit, type PlanLimitTier } from "@/lib/plan-limits";
@@ -116,66 +113,53 @@ export function GuestShellPagePanel({
   }
 
   const inheritBanner = state ? (
-    <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-3 py-2.5 text-sm text-emerald-950">
+    <p className="text-[11px] leading-snug text-slate-400">
       {state.isRootPage ? (
-        <p>
-          このページは<strong>ページ連携セットのルート</strong>です。ここで保存した設定が、連携した子ページのデフォルトになります。
-        </p>
+        "ページ連携のルート。ここでの設定が子ページの初期値になります。"
       ) : state.mode === "inherited" ? (
-        <div className="space-y-2">
-          <p>
-            <strong>{state.rootPageTitle || "ルートページ"}</strong>のゲストナビ設定を継承しています。
-          </p>
+        <>
+          {state.rootPageTitle || "ルートページ"}の設定を継承しています。{" "}
           <button
             type="button"
             onClick={handleStartOverride}
-            className="text-xs font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+            className="font-medium text-slate-600 underline underline-offset-2 hover:text-slate-900"
           >
-            このページだけ別設定にする
+            このページだけ別設定
           </button>
-        </div>
+        </>
       ) : (
-        <div className="space-y-2">
-          <p>ルートとは別のゲストナビ設定を使っています。</p>
+        <>
+          ルートとは別設定です。{" "}
           <button
             type="button"
             onClick={() => void handleClearOverride()}
             disabled={saving}
-            className="text-xs font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950 disabled:opacity-60"
+            className="font-medium text-slate-600 underline underline-offset-2 hover:text-slate-900 disabled:opacity-60"
           >
-            ルートの設定に戻す
+            ルートに戻す
           </button>
-        </div>
+        </>
       )}
-    </div>
+    </p>
   ) : null;
 
   if (loading) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="border-b border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-700">ページ設定</h2>
+        <div className="border-b border-slate-200 bg-white px-4 py-3">
+          <h2 className="text-sm font-semibold text-slate-800">ページ設定</h2>
           <div className="mt-3 h-24 animate-pulse rounded-lg bg-slate-100" aria-label="読み込み中" />
         </div>
       </div>
     );
   }
 
-  const previewTabs = resolveVisibleGuestShellTabs(config, {
-    businessFeaturesEnabled: isBusinessPlan,
-    maxVisibleTabs: resolveGuestNavLinkLimit(resolvedPlan),
-  });
-
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="border-b border-slate-200 bg-white px-4 py-4">
-        <h2 className="text-sm font-semibold text-slate-700">ページ設定</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          ブロック未選択時にゲストナビを編集できます。
-        </p>
+      <div className="border-b border-slate-200 bg-white px-4 pt-3 pb-2">
+        <h2 className="text-sm font-semibold text-slate-800">ページ設定</h2>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">ゲストナビ</h3>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <GuestShellEditorForm
           config={config}
           onChange={setConfig}
@@ -187,11 +171,12 @@ export function GuestShellPagePanel({
           isBusinessPlan={isBusinessPlan}
           planTier={resolvedPlan}
           showTranslationHint
+          compact
           secondaryActions={
             <button
               type="button"
               onClick={() => setConfig(createDefaultGuestShellConfig())}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-[36px] items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             >
               初期値に戻す
             </button>
@@ -204,14 +189,6 @@ export function GuestShellPagePanel({
             }
           >
             {message}
-          </p>
-        ) : null}
-        {getGuestShellNavStyle(config) !== "off" && previewTabs.length > 0 ? (
-          <p className="mt-3 text-xs text-slate-400">
-            表示形式:{" "}
-            {getGuestShellNavStyle(config) === "hamburger" ? "ハンバーガー" : "下タブ"}
-            {" / "}
-            有効リンク: {previewTabs.map((tab) => getGuestShellTabLabel(tab, "ja")).join(" / ")}
           </p>
         ) : null}
       </div>

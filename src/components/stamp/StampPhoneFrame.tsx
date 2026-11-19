@@ -25,6 +25,7 @@ export function StampPhoneFrame({
         className="stamp-phone relative mx-auto overflow-hidden rounded-[2.25rem] bg-slate-900"
         style={{
           width,
+          maxWidth: "100%",
           height,
           boxShadow: "0 24px 48px -24px rgba(15,23,42,0.4), 0 0 0 1px rgba(15,23,42,0.2)",
         }}

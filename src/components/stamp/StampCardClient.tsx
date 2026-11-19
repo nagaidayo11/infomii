@@ -306,7 +306,7 @@ export function StampCardClient() {
               onClick={openCameraScan}
               className="stamp-cta stamp-cta-primary"
             >
-              {cooldownLabel ? "本日分は済み" : "カメラでスキャンして獲得"}
+              {cooldownLabel ? "今日のスタンプは受け取り済み" : "QRを読んでスタンプをためる"}
             </button>
           ) : null
         }
@@ -345,7 +345,7 @@ export function StampCardClient() {
                           if (code) void applyCode(code);
                         }}
                       >
-                        付与
+                        受け取る
                       </button>
                     </div>
                   </div>
