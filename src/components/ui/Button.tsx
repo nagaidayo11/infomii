@@ -1,19 +1,33 @@
 "use client";
 
-import type { ReactNode, ButtonHTMLAttributes } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
 import { useButtonLift } from "@/components/providers/ButtonLiftProvider";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "inverted";
 type ButtonSize = "sm" | "md" | "lg";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type SharedButtonProps = {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
-  /** Use for links styled as buttons (render as <a> when href is set) */
-  href?: string;
 };
+
+type ButtonAsButton = SharedButtonProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof SharedButtonProps | "href"> & {
+    href?: undefined;
+  };
+
+type ButtonAsLink = SharedButtonProps &
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof SharedButtonProps | "href"> & {
+    href: string;
+  };
+
+export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const baseClass =
   "inline-flex items-center justify-center rounded-ds font-semibold " +
@@ -65,15 +79,8 @@ function buildVariantClass(variant: ButtonVariant, lift: boolean): string {
  * Product / LP 共通: ds-primary（青）とトークン上の neutrals。
  * ホバー浮きは ButtonLiftProvider により /lp/*・/editor* ではオフ。
  */
-export function Button({
-  children,
-  variant = "primary",
-  size = "md",
-  className = "",
-  href,
-  type = "button",
-  ...rest
-}: ButtonProps) {
+export function Button(props: ButtonProps) {
+  const { children, variant = "primary", size = "md", className = "" } = props;
   const { liftEnabled } = useButtonLift();
   const combined =
     baseClass +
@@ -84,16 +91,33 @@ export function Button({
     " " +
     className;
 
-  if (href) {
+  if (typeof props.href === "string" && props.href) {
+    const {
+      href,
+      children: _linkChildren,
+      variant: _linkVariant,
+      size: _linkSize,
+      className: _linkClassName,
+      ...anchorRest
+    } = props as ButtonAsLink;
     return (
-      <a href={href} className={combined} {...rest}>
+      <a href={href} className={combined} {...anchorRest}>
         {children}
       </a>
     );
   }
 
+  const {
+    type = "button",
+    children: _buttonChildren,
+    variant: _buttonVariant,
+    size: _buttonSize,
+    className: _buttonClassName,
+    href: _href,
+    ...buttonRest
+  } = props as ButtonAsButton;
   return (
-    <button type={type} className={combined} {...rest}>
+    <button type={type} className={combined} {...buttonRest}>
       {children}
     </button>
   );
