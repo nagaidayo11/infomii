@@ -50,9 +50,19 @@ export function getVisitorLocaleFromHeader(acceptLanguage: string | null): Suppo
   return "en";
 }
 
+function readLocaleRaw(value: LocalizedContent, locale: SupportedLocale): string | undefined {
+  if (!Object.prototype.hasOwnProperty.call(value, locale)) return undefined;
+  const v = value[locale];
+  if (v == null) return undefined;
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return undefined;
+}
+
 /**
- * Get display string for a locale. Fallback order: requested locale → en → ja → zh → ko.
- * - Object: use preferred locale, then English, then others.
+ * Get display string for a locale.
+ * If the requested locale key exists (even empty), use it — do not fill with another language.
+ * Fallback order only when that key is missing: en → ja → zh → ko.
  * - String: return as-is (backward compatible).
  */
 export function getLocalizedContent(
@@ -63,8 +73,13 @@ export function getLocalizedContent(
   if (typeof value === "string") return value;
 
   const preferred = normalizeLocale(locale);
+  if (preferred) {
+    const raw = readLocaleRaw(value, preferred);
+    if (raw !== undefined) return raw;
+  }
+
   const keys = preferred
-    ? [preferred, ...FALLBACK_ORDER.filter((k) => k !== preferred)]
+    ? FALLBACK_ORDER.filter((k) => k !== preferred)
     : [...FALLBACK_ORDER];
 
   for (const key of keys) {
@@ -75,6 +90,10 @@ export function getLocalizedContent(
     /* 誤ってオブジェクトが入った場合は String() せずスキップ（[object Object] を防ぐ） */
   }
   return "";
+}
+
+export function hasDisplayText(value: unknown): boolean {
+  return typeof value === "string" && value.trim() !== "";
 }
 
 /** 編集・移行用: 文字列 / 多言語オブジェクトからプレーン文字列を取り出す（オブジェクトの String() は使わない） */

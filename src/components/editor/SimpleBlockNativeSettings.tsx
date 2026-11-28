@@ -2,6 +2,10 @@
 
 import type { ReactNode } from "react";
 import { BRAND_ACCENT } from "@/lib/brand-accent";
+import { readHeroLayout } from "@/lib/editor/hero-layout";
+import { readWelcomeLayout } from "@/lib/editor/welcome-layout";
+import { NativeItemSectionToolbar } from "@/components/editor/NativeItemSectionToolbar";
+import { moveListItem } from "@/lib/editor/move-list-item";
 import {
   AppFieldInput,
   AppFieldLabel,
@@ -285,15 +289,15 @@ export function MapNativeSettings({
                 key={i}
                 className="space-y-2 rounded-[var(--app-radius-lg)] border border-[var(--app-border)] bg-[var(--app-surface)] p-3"
               >
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setPins(pins.filter((_, idx) => idx !== i))}
-                    className="app-native-settings-action app-native-settings-action--danger"
-                  >
-                    削除
-                  </button>
-                </div>
+                <NativeItemSectionToolbar
+                  index={i}
+                  count={pins.length}
+                  onMove={(dir) => {
+                    const next = moveListItem(pins, i, dir);
+                    if (next) setPins(next);
+                  }}
+                  onRemove={() => setPins(pins.filter((_, idx) => idx !== i))}
+                />
                 <NativeField label="スポット名">
                   <AppFieldInput
                     value={pin.name ?? ""}
@@ -349,11 +353,13 @@ export function WelcomeNativeSettings({
           rows={3}
         />
       </NativeField>
+      {readWelcomeLayout(content?.layout) === "quote" ? (
       <AccentColorNativeField
         content={content}
         onUpdate={onUpdate}
-        hint="左のアクセントラインや見出しの強調色に使われます。"
+        hint="左のアクセントラインに使われます。"
       />
+      ) : null}
     </div>
   );
 }
@@ -617,11 +623,13 @@ export function HeroNativeSettings({
           placeholder="任意"
         />
       </NativeField>
+      {readHeroLayout(content?.layout) === "split" ? (
       <AccentColorNativeField
         content={content}
         onUpdate={onUpdate}
-        hint="「帯付き」レイアウトの色帯などに使われます。"
+        hint="「帯付き」レイアウトの色帯に使われます。"
       />
+      ) : null}
       {children}
     </div>
   );

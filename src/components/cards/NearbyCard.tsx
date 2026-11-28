@@ -115,7 +115,7 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
                     />
                   </p>
                 ) : null}
-                {(editable || item.description) ? (
+                {(item.description ?? "").trim() ? (
                   <p className="mt-0.5 text-[var(--app-text-muted)]" style={getBodyFontSizeStyle()}>
                     <InlineEditable
                       value={item.description ?? ""}
@@ -190,7 +190,7 @@ export function NearbyCard({ card, locale = "ja" }: NearbyCardProps) {
                   />
                 </p>
               ) : null}
-              {(editable || item.description) ? (
+              {(item.description ?? "").trim() ? (
                 <p className="mt-0.5 text-slate-500" style={getBodyFontSizeStyle()}>
                   <InlineEditable
                     value={item.description ?? ""}

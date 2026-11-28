@@ -13,6 +13,8 @@ type InlineEditableProps = {
   editable?: boolean;
   /** Called when user clicks to edit while not yet editable (e.g. to select card). Enables one-click inline edit from canvas. */
   onActivate?: () => void;
+  /** Empty value shows a red required hint instead of falling back to placeholder copy. */
+  required?: boolean;
 };
 
 /**
@@ -27,6 +29,7 @@ export function InlineEditable({
   multiline = false,
   editable = true,
   onActivate,
+  required = false,
 }: InlineEditableProps) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
@@ -84,16 +87,21 @@ export function InlineEditable({
     setEditing(true);
   };
 
+  const requiredHint = (
+    <span className="mt-0.5 block text-[11px] font-medium text-rose-600">必須項目です</span>
+  );
+  const isEmpty = !value.trim();
+
   /** Guest / preview: plain text only — no focus ring, no keyboard focus, no click-to-edit affordance. */
   if (!canInlineEdit) {
-    const text = value || placeholder || "\u00a0";
+    if (isEmpty) return null;
     return (
       <span
         className={
           multiline ? `whitespace-pre-wrap ${className}`.trim() : className
         }
       >
-        {text}
+        {value}
       </span>
     );
   }
@@ -103,30 +111,26 @@ export function InlineEditable({
     const baseClass =
       "editor-inline-field w-full resize-none border-0 bg-transparent p-0 outline-none rounded px-0.5 py-px text-base leading-normal transition-[box-shadow] duration-150 ease-out focus:ring-0 focus:shadow-[0_0_0_2px_rgba(37,99,235,0.2)] " +
       className;
-    if (multiline) {
-      const lineCount = Math.min(12, Math.max(1, local.split("\n").length));
-      return (
-        <textarea
-          ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-          value={local}
-          onChange={(e) => handleChange(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Backspace" || e.key === "Delete") {
-              e.stopPropagation();
-            }
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              commit();
-            }
-          }}
-          className={baseClass}
-          rows={lineCount}
-          placeholder={placeholder}
-        />
-      );
-    }
-    return (
+    const field = multiline ? (
+      <textarea
+        ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+        value={local}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Backspace" || e.key === "Delete") {
+            e.stopPropagation();
+          }
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            commit();
+          }
+        }}
+        className={baseClass}
+        rows={Math.min(12, Math.max(1, local.split("\n").length))}
+        placeholder={placeholder}
+      />
+    ) : (
       <input
         ref={inputRef as React.RefObject<HTMLInputElement>}
         type="text"
@@ -146,6 +150,13 @@ export function InlineEditable({
         placeholder={placeholder}
       />
     );
+    if (!required) return field;
+    return (
+      <span className="block min-w-0">
+        {field}
+        {isEmpty ? requiredHint : null}
+      </span>
+    );
   }
 
   /** multiline は block + align-top だと行ボックス下に余白が乗り「下だけ広い」見え方になりやすいので align は付けない */
@@ -156,9 +167,16 @@ export function InlineEditable({
       : "px-0.5 py-px ") +
     className;
 
-  return (
+  const display = (
     <span role="button" tabIndex={0} className={displayClass} onClick={startEditing} onFocus={handleFocus}>
-      {value || placeholder || "\u00a0"}
+      {value.trim() ? value : required ? "\u00a0" : placeholder || "\u00a0"}
+    </span>
+  );
+  if (!required) return display;
+  return (
+    <span className="block min-w-0">
+      {display}
+      {isEmpty ? requiredHint : null}
     </span>
   );
 }

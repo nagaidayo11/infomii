@@ -44,10 +44,11 @@ export function SectionTitleCard({ card, locale = "ja" }: SectionTitleCardProps)
           onActivate={onActivate}
           className="pres-section-title__heading"
           placeholder={placeholders.title}
+          required={editable}
         />
       </h2>
       {showLine ? <div className="pres-section-title__line" aria-hidden /> : null}
-      {(editable || subtitle) && (
+      {subtitle.trim() ? (
         <p className="pres-section-title__sub">
           <InlineEditable
             value={subtitle}
@@ -58,7 +59,7 @@ export function SectionTitleCard({ card, locale = "ja" }: SectionTitleCardProps)
             placeholder={placeholders.subtitle}
           />
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

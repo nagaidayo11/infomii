@@ -1,7 +1,7 @@
 "use client";
 
 import { BRAND_ACCENT } from "@/lib/brand-accent";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ReactNode } from "react";
 import { EDITOR_FONT_OPTIONS } from "@/lib/editor-font-options";
 import { getLocalizedContent } from "@/lib/localized-content";
 import { listPagesForHotel, type PageRow } from "@/lib/storage";
@@ -19,6 +19,9 @@ import { getCardTypeLabel, type LibraryAudience } from "@/lib/editor/card-librar
 import { HERO_SLIDER_MAX_ITEMS, createDefaultHeroSliderSlide } from "./types";
 import { createPersonalHeroSliderSlide } from "@/lib/editor/card-defaults-personal";
 import { readCardWidthMode } from "@/lib/editor/card-width-mode";
+import { readHeroLayout } from "@/lib/editor/hero-layout";
+import { readWelcomeLayout } from "@/lib/editor/welcome-layout";
+import { moveListItem } from "@/lib/editor/move-list-item";
 import { isFacilityInfoType } from "@/lib/editor/facility-info-presets";
 import {
   PHOTO_SPLIT_MAX_ITEMS,
@@ -109,6 +112,61 @@ const removeButtonClass =
   "rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100 min-h-[34px]";
 const reorderButtonClass =
   "rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 min-h-[34px] min-w-[34px]";
+
+function ItemSectionToolbar<T>({
+  items,
+  index,
+  onChange,
+  removeLabel = "削除",
+  leading,
+}: {
+  items: T[];
+  index: number;
+  onChange: (next: T[]) => void;
+  removeLabel?: string;
+  leading?: ReactNode;
+}) {
+  const count = items.length;
+  return (
+    <div className={`flex items-center gap-2 ${leading ? "justify-between" : "justify-end"}`}>
+      {leading}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            const next = moveListItem(items, index, -1);
+            if (next) onChange(next);
+          }}
+          disabled={index === 0}
+          className={`${reorderButtonClass} disabled:opacity-40`}
+          aria-label="上へ"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const next = moveListItem(items, index, 1);
+            if (next) onChange(next);
+          }}
+          disabled={index === count - 1}
+          className={`${reorderButtonClass} disabled:opacity-40`}
+          aria-label="下へ"
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(items.filter((_, i) => i !== index))}
+          className={removeButtonClass}
+        >
+          {removeLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const webToolBtnClass =
   "inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-35";
 const webToolDangerBtnClass =
@@ -558,7 +616,6 @@ function GalleryItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { src: "", alt: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -586,15 +643,7 @@ function GalleryItemsEditor({
       </div>
       {items.slice(0, 12).map((_, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <ImageUpload
             onUploaded={(url) => updateItem(i, "src", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
@@ -668,7 +717,6 @@ function IconShortcutsItemsEditor({
   const defaultPageSlug = pages[0]?.slug ?? "";
   const addItem = () =>
     setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: defaultPageSlug, link: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -750,11 +798,7 @@ function IconShortcutsItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="ラベル"
             value={readJaText(item.label)}
@@ -861,7 +905,6 @@ function ImageTilesItemsEditor({
       ...items,
       { src: "", label: "新規", linkType: "page", pageSlug: defaultPageSlug, link: "" },
     ]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -893,11 +936,7 @@ function ImageTilesItemsEditor({
       </div>
       {items.slice(0, 12).map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <ImageUpload
             onUploaded={(url) => updateItem(i, "src", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
@@ -997,11 +1036,7 @@ function DayTimelineItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input label="時刻" value={readJaText(item.time)} onChange={(e) => updateItem(i, "time", e.target.value)} placeholder="15:00" />
           <Input label="タイトル" value={readJaText(item.title)} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder="チェックイン" />
           <div className="w-full">
@@ -1011,8 +1046,9 @@ function DayTimelineItemsEditor({
               onChange={(e) => updateItem(i, "description", e.target.value)}
               rows={2}
               className={inputClass}
-              placeholder="短い説明"
+              placeholder="空欄にすると表示しません"
             />
+            <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           </div>
         </div>
       ))}
@@ -1049,16 +1085,12 @@ function PhotoSplitItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-slate-500">{i + 1}列目</span>
-            <button
-              type="button"
-              onClick={() => setItems(items.filter((_, idx) => idx !== i))}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar
+            items={items}
+            index={i}
+            onChange={setItems}
+            leading={<span className="text-xs font-medium text-slate-500">{i + 1}列目</span>}
+          />
           <ImageUpload
             onUploaded={(url) => updateItem(i, { image: url })}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
@@ -1205,11 +1237,7 @@ function ScrollCardsItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <ImageUpload
             onUploaded={(url) => updateItem(i, "src", url)}
             className="!items-start !rounded-lg !border !border-slate-200 !bg-white !p-3"
@@ -1219,8 +1247,9 @@ function ScrollCardsItemsEditor({
             label="説明"
             value={readJaText(item.description)}
             onChange={(e) => updateItem(i, "description", e.target.value)}
-            placeholder="6:30–10:00"
+            placeholder="空欄にすると表示しません"
           />
+          <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           <Input
             label="リンクURL（任意）"
             value={typeof item.link === "string" ? item.link : ""}
@@ -1366,7 +1395,6 @@ function NearbyItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", description: "", link: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -1381,15 +1409,7 @@ function NearbyItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="名前"
             value={readJaText(item.name)}
@@ -1400,8 +1420,9 @@ function NearbyItemsEditor({
             label="説明"
             value={readJaText(item.description)}
             onChange={(e) => updateItem(i, "description", e.target.value)}
-            placeholder="任意"
+            placeholder="空欄にすると表示しません"
           />
+          <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           <Input
             label="リンクURL"
             value={readJaText(item.link)}
@@ -1429,7 +1450,6 @@ function FaqItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { q: "", a: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -1444,30 +1464,24 @@ function FaqItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="質問"
             value={readJaText(item.q)}
             onChange={(e) => updateItem(i, "q", e.target.value)}
             placeholder="Q"
+            error={readJaText(item.q).trim() ? undefined : "必須項目です"}
           />
           <div className="w-full">
             <label className={labelClass}>回答</label>
             <textarea
               value={readJaText(item.a)}
               onChange={(e) => updateItem(i, "a", e.target.value)}
-              placeholder="A"
+              placeholder="空欄にすると表示しません"
               rows={2}
               className={inputClass}
             />
+            <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           </div>
         </div>
       ))}
@@ -1622,13 +1636,24 @@ function AccordionItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
-          </div>
-          <Input label="見出し" value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`項目 ${i + 1}`} />
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
+          <Input
+            label="見出し"
+            value={readJaText(item.title)}
+            onChange={(e) => updateItem(i, "title", e.target.value)}
+            placeholder={`項目 ${i + 1}`}
+            error={readJaText(item.title).trim() ? undefined : "必須項目です"}
+          />
           <div className="w-full">
             <label className={labelClass}>本文</label>
-            <textarea value={item.body ?? ""} onChange={(e) => updateItem(i, "body", e.target.value)} rows={2} className={inputClass} />
+            <textarea
+              value={readJaText(item.body)}
+              onChange={(e) => updateItem(i, "body", e.target.value)}
+              rows={2}
+              className={inputClass}
+              placeholder="空欄にすると折りたたみ内では表示しません"
+            />
+            <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           </div>
         </div>
       ))}
@@ -1674,15 +1699,7 @@ function IconAccordionItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setItems(items.filter((_, idx) => idx !== i))}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <IconTokenSelect
             label="アイコン"
             value={typeof item.icon === "string" ? item.icon : "info"}
@@ -1702,6 +1719,7 @@ function IconAccordionItemsEditor({
             onChange={(e) => updateItem(i, "description", e.target.value)}
             placeholder="短い補足"
           />
+          <p className={hintClass}>空欄にするとカード上では表示しません</p>
           <div className="w-full">
             <label className={labelClass}>開いたときの本文</label>
             <textarea
@@ -1754,15 +1772,7 @@ function MapPinsEditor({
       </div>
       {pins.map((pin, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setPins(pins.filter((_, idx) => idx !== i))}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={pins} index={i} onChange={setPins} />
           <Input
             label="スポット名"
             value={readJaText(pin.name)}
@@ -1861,15 +1871,7 @@ function SocialLinksItemsEditor({
         const platform = resolveSocialPlatform(item);
         return (
           <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => setItems(items.filter((_, idx) => idx !== i))}
-                className={removeButtonClass}
-              >
-                削除
-              </button>
-            </div>
+            <ItemSectionToolbar items={items} index={i} onChange={setItems} />
             <div className="w-full">
               <label className={labelClass}>SNS</label>
               <select
@@ -1929,9 +1931,7 @@ function ProgressItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => setItems(items.filter((_, idx) => idx !== i))} className={removeButtonClass}>削除</button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input label="ラベル" value={readJaText(item.label)} onChange={(e) => {
             const next = [...items];
             next[i] = { ...(next[i] ?? {}), label: writeJaTextPreserving((next[i] as Record<string, unknown> | undefined)?.label, e.target.value) };
@@ -1998,7 +1998,6 @@ function PageLinksItemsEditor({
   const defaultPageSlug = pages[0]?.slug ?? "";
   const addItem = () =>
     setItems([...items, { label: "新規", icon: "info", linkType: "page", pageSlug: defaultPageSlug, link: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const openLinkedPageEditor = (slug: string) => {
     if (typeof window === "undefined") return;
     const target = pages.find((p) => p.slug === slug);
@@ -2116,15 +2115,7 @@ function PageLinksItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => removeItem(i)}
-              className={removeButtonClass}
-            >
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label={(item.linkType ?? "page") === "url" ? "URLラベル" : "ラベル"}
             value={readJaText(item.label)}
@@ -2231,7 +2222,6 @@ function ChecklistItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { text: "", checked: false }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -2243,11 +2233,7 @@ function ChecklistItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="項目"
             value={readJaText(item.text)}
@@ -2287,7 +2273,6 @@ function StepsItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { title: "", description: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -2299,26 +2284,24 @@ function StepsItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label={`Step ${i + 1} タイトル`}
             value={getLocalizedContent(item.title as LocalizedString | undefined, "ja")}
             onChange={(e) => updateItem(i, "title", e.target.value)}
             placeholder="手順名"
+            error={getLocalizedContent(item.title as LocalizedString | undefined, "ja").trim() ? undefined : "必須項目です"}
           />
           <div className="w-full">
             <label className={labelClass}>説明</label>
             <textarea
               value={getLocalizedContent(item.description as LocalizedString | undefined, "ja")}
               onChange={(e) => updateItem(i, "description", e.target.value)}
-              placeholder="手順の説明"
+              placeholder="空欄にすると表示しません"
               rows={2}
               className={inputClass}
             />
+            <p className={hintClass}>空欄にするとページ上では非表示になります</p>
           </div>
         </div>
       ))}
@@ -2341,7 +2324,6 @@ function KpiItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { label: "", value: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -2353,11 +2335,7 @@ function KpiItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="ラベル"
             value={readJaText(item.label)}
@@ -2932,7 +2910,6 @@ function MenuItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -2944,11 +2921,7 @@ function MenuItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input
             label="メニュー名"
             value={item.name ?? ""}
@@ -2996,7 +2969,6 @@ function MenuTagItemsEditor({
     onChange(next);
   };
   const addItem = () => onChange([...items, { name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }]);
-  const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-3">
@@ -3008,11 +2980,7 @@ function MenuTagItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={onChange} />
           <Input label="名前" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
           <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
           <Input label="説明" value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} />
@@ -3067,7 +3035,6 @@ function MenuCategoriesGroupsEditor({
         items: [{ name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }],
       },
     ]);
-  const removeCategory = (ci: number) => setCategories(categories.filter((_, i) => i !== ci));
 
   return (
     <div className="space-y-4">
@@ -3079,11 +3046,12 @@ function MenuCategoriesGroupsEditor({
       </div>
       {categories.map((cat, ci) => (
         <div key={ci} className="rounded-xl border border-slate-200 bg-white p-3">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeCategory(ci)} className={removeButtonClass}>
-              カテゴリを削除
-            </button>
-          </div>
+          <ItemSectionToolbar
+            items={categories}
+            index={ci}
+            onChange={setCategories}
+            removeLabel="カテゴリを削除"
+          />
           <Input
             label="カテゴリ名"
             value={cat.title ?? ""}
@@ -3128,7 +3096,6 @@ function DrinkItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", sizes: "", note: "", imageSrc: "", imageAlt: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -3139,11 +3106,7 @@ function DrinkItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input label="名称" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
           <Input label="サイズ・価格" value={item.sizes ?? ""} onChange={(e) => updateItem(i, "sizes", e.target.value)} placeholder="S 350円 / L 450円" />
           <Input label="備考" value={item.note ?? ""} onChange={(e) => updateItem(i, "note", e.target.value)} placeholder="ICE/HOT" />
@@ -3173,7 +3136,6 @@ function SalonItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", duration: "", price: "", description: "", imageSrc: "", imageAlt: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -3184,11 +3146,7 @@ function SalonItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input label="施術名" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
           <Input label="所要時間" value={item.duration ?? ""} onChange={(e) => updateItem(i, "duration", e.target.value)} placeholder="60分" />
           <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
@@ -3219,7 +3177,6 @@ function ComboItemsEditor({
     setItems(next);
   };
   const addItem = () => setItems([...items, { name: "", includes: "", price: "", imageSrc: "", imageAlt: "" }]);
-  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -3230,11 +3187,7 @@ function ComboItemsEditor({
       </div>
       {items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeItem(i)} className={removeButtonClass}>
-              削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={items} index={i} onChange={setItems} />
           <Input label="セット名" value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} />
           <Input label="内容" value={item.includes ?? ""} onChange={(e) => updateItem(i, "includes", e.target.value)} />
           <Input label="価格" value={item.price ?? ""} onChange={(e) => updateItem(i, "price", e.target.value)} />
@@ -3274,7 +3227,6 @@ function MenuTimeBandSlotsEditor({
         items: [{ name: "", price: "", description: "", tag: "", imageSrc: "", imageAlt: "" }],
       },
     ]);
-  const removeSlot = (si: number) => setSlots(slots.filter((_, i) => i !== si));
 
   return (
     <div className="space-y-4">
@@ -3286,11 +3238,7 @@ function MenuTimeBandSlotsEditor({
       </div>
       {slots.map((slot, si) => (
         <div key={si} className="rounded-xl border border-slate-200 bg-white p-3">
-          <div className="flex justify-end">
-            <button type="button" onClick={() => removeSlot(si)} className={removeButtonClass}>
-              スロット削除
-            </button>
-          </div>
+          <ItemSectionToolbar items={slots} index={si} onChange={setSlots} removeLabel="スロット削除" />
           <Input label="表示名" value={slot.label ?? ""} onChange={(e) => updateSlot(si, { label: e.target.value })} />
           <div className="mt-2 grid grid-cols-2 gap-2">
             <Input label="開始 (HH:MM)" value={slot.start ?? ""} onChange={(e) => updateSlot(si, { start: e.target.value })} />
@@ -3841,6 +3789,7 @@ export function CardSettings({
                   className={inputClass}
                 />
               </div>
+              {readWelcomeLayout(content.layout) === "quote" ? (
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <div className="flex items-center gap-2">
@@ -3863,9 +3812,10 @@ export function CardSettings({
                   />
                 </div>
                 <p className={hintClass}>
-                  左のアクセントラインや見出しの強調色に使われます。
+                  左のアクセントラインに使われます。
                 </p>
               </div>
+              ) : null}
             </SettingsSection>
             )
           )}
@@ -3920,8 +3870,9 @@ export function CardSettings({
                 label="サブタイトル"
                 value={display("subtitle")}
                 onChange={(e) => updateLocalized("subtitle", e.target.value)}
-                placeholder="任意"
+                placeholder="空欄にすると表示しません"
               />
+              <p className={hintClass}>空欄にするとページ上では非表示になります</p>
               <div className="w-full">
                 <label className={labelClass}>幅</label>
                 <select
@@ -3951,31 +3902,6 @@ export function CardSettings({
                   />
                 </div>
               ) : null}
-              <div className="w-full">
-                <label className={labelClass}>アクセント色</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={
-                      typeof content.accentColor === "string" && content.accentColor.trim()
-                        ? content.accentColor.trim()
-                        : BRAND_ACCENT
-                    }
-                    onChange={(e) => update("accentColor", e.target.value)}
-                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                  />
-                  <input
-                    type="text"
-                    value={(content.accentColor as string) ?? ""}
-                    onChange={(e) => update("accentColor", e.target.value || undefined)}
-                    placeholder={BRAND_ACCENT}
-                    className={inputClass + " flex-1"}
-                  />
-                </div>
-                <p className={hintClass}>
-                  「帯付き」レイアウトの色帯などに使われます。
-                </p>
-              </div>
             </SettingsSection>
             )
           )}
@@ -4585,6 +4511,9 @@ export function CardSettings({
                   </div>
                 );
               })()}
+              {(() => {
+                const raw = typeof content.styleVariant === "string" ? content.styleVariant : "";
+                return raw === "circle" ? null : (
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <div className="flex items-center gap-2">
@@ -4607,6 +4536,8 @@ export function CardSettings({
                   />
                 </div>
               </div>
+                );
+              })()}
               <IconAccordionItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
@@ -4675,6 +4606,7 @@ export function CardSettings({
                 />
                 写真の上に文字を重ねる
               </label>
+              {content.overlay === false ? (
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <input
@@ -4687,7 +4619,9 @@ export function CardSettings({
                   onChange={(e) => update("accentColor", e.target.value)}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
                 />
+                <p className={hintClass}>写真の下に置いた見出しの色に使われます。</p>
               </div>
+              ) : null}
             </SettingsSection>
           )}
 
@@ -4696,6 +4630,7 @@ export function CardSettings({
               <p className={hintMutedClass}>
                 各列は写真とテキストの2カラムです。左右の入れ替え・写真幅・文字位置は列ごとに変えられます。
               </p>
+              {normalizePhotoSplitItems(content.items).some((item) => item.mark === "bar") ? (
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <input
@@ -4708,7 +4643,9 @@ export function CardSettings({
                   onChange={(e) => update("accentColor", e.target.value)}
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
                 />
+                <p className={hintClass}>「縦アクセントバー」を選んだ列の線色です。</p>
               </div>
+              ) : null}
               <PhotoSplitItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
@@ -4765,8 +4702,9 @@ export function CardSettings({
                 label="補足（任意）"
                 value={display("subtitle")}
                 onChange={(e) => updateLocalized("subtitle", e.target.value)}
-                placeholder="滞在中に便利な情報をまとめました"
+                placeholder="空欄にすると表示しません"
               />
+              <p className={hintClass}>空欄にするとページ上では非表示になります</p>
               <div className="w-full">
                 <label className={labelClass}>配置</label>
                 <select
@@ -4787,6 +4725,7 @@ export function CardSettings({
                 />
                 アクセントラインを表示
               </label>
+              {content.showLine !== false ? (
               <div className="w-full">
                 <label className={labelClass}>アクセント色</label>
                 <input
@@ -4800,6 +4739,7 @@ export function CardSettings({
                   className="h-9 w-12 cursor-pointer rounded border border-slate-200"
                 />
               </div>
+              ) : null}
             </SettingsSection>
           )}
 
@@ -5577,29 +5517,13 @@ export function CardSettings({
 
           {card.type === "accordion_info" && (
             <SettingsSection title="コンテンツ">
-              <Input label="タイトル" value={display("title")} onChange={(e) => updateLocalized("title", e.target.value)} placeholder="よくあるご案内" />
-              <div className="w-full">
-                <label className={labelClass}>アクセント色</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={
-                      typeof content.accentColor === "string" && content.accentColor.trim()
-                        ? content.accentColor.trim()
-                        : BRAND_ACCENT
-                    }
-                    onChange={(e) => update("accentColor", e.target.value)}
-                    className="h-9 w-12 cursor-pointer rounded border border-slate-200"
-                  />
-                  <input
-                    type="text"
-                    value={(content.accentColor as string) ?? ""}
-                    onChange={(e) => update("accentColor", e.target.value || undefined)}
-                    placeholder={BRAND_ACCENT}
-                    className={inputClass + " flex-1"}
-                  />
-                </div>
-              </div>
+              <Input
+                label="タイトル"
+                value={display("title")}
+                onChange={(e) => updateLocalized("title", e.target.value)}
+                placeholder="よくあるご案内"
+                error={display("title").trim() ? undefined : "必須項目です"}
+              />
               <AccordionItemsEditor content={content} onUpdate={update} />
             </SettingsSection>
           )}
@@ -6327,6 +6251,31 @@ export function CardSettings({
                     );
                   })}
                 </div>
+                {readWelcomeLayout(content.layout) === "quote" ? (
+                  <div className="w-full">
+                    <label className={labelClass}>アクセント色</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={
+                          typeof content.accentColor === "string" && content.accentColor.trim()
+                            ? content.accentColor.trim()
+                            : BRAND_ACCENT
+                        }
+                        onChange={(e) => update("accentColor", e.target.value)}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                      />
+                      <input
+                        type="text"
+                        value={(content.accentColor as string) ?? ""}
+                        onChange={(e) => update("accentColor", e.target.value || undefined)}
+                        placeholder={BRAND_ACCENT}
+                        className={inputClass + " flex-1"}
+                      />
+                    </div>
+                    <p className={hintClass}>左のアクセントラインの色です。</p>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {card.type === "pageLinks" || card.type === "iconAccordion" ? (
@@ -6414,6 +6363,30 @@ export function CardSettings({
                     );
                   })}
                 </div>
+                {readHeroLayout(content.layout) === "split" ? (
+                  <div className="w-full">
+                    <label className={labelClass}>帯の色</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={
+                          typeof content.accentColor === "string" && content.accentColor.trim()
+                            ? content.accentColor.trim()
+                            : BRAND_ACCENT
+                        }
+                        onChange={(e) => update("accentColor", e.target.value)}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-200"
+                      />
+                      <input
+                        type="text"
+                        value={(content.accentColor as string) ?? ""}
+                        onChange={(e) => update("accentColor", e.target.value || undefined)}
+                        placeholder={BRAND_ACCENT}
+                        className={inputClass + " flex-1"}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {demoMode ? (

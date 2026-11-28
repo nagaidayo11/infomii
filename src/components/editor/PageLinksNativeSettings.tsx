@@ -14,6 +14,8 @@ import {
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
 import { LineIcon, normalizeIconToken } from "@/components/cards/LineIcon";
+import { NativeItemSectionToolbar } from "@/components/editor/NativeItemSectionToolbar";
+import { moveListItem } from "@/lib/editor/move-list-item";
 
 type PageLinksItem = {
   label?: string;
@@ -110,6 +112,12 @@ export function PageLinksNativeSettings({
       if (cur > index) return cur - 1;
       return cur;
     });
+  };
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const next = moveListItem(items, index, dir);
+    if (!next) return;
+    setItems(next);
+    setExpandedIndex(index + dir);
   };
 
   useEffect(() => {
@@ -262,15 +270,12 @@ export function PageLinksNativeSettings({
                   />
                   {expanded ? (
                     <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeItem(i)}
-                          className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700"
-                        >
-                          削除
-                        </button>
-                      </div>
+                      <NativeItemSectionToolbar
+                        index={i}
+                        count={items.length}
+                        onMove={(dir) => moveItem(i, dir)}
+                        onRemove={() => removeItem(i)}
+                      />
                       <div>
                         <AppFieldLabel>ラベル</AppFieldLabel>
                         <AppFieldInput

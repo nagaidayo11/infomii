@@ -99,7 +99,7 @@ export function ScrollCardsCard({ card, locale = "ja" }: ScrollCardsCardProps) {
                       placeholder={labels.label}
                     />
                   </p>
-                  {(editable || description) && (
+                  {description.trim() ? (
                     <p className="pres-scroll-cards__desc">
                       <InlineEditable
                         value={description}
@@ -110,7 +110,7 @@ export function ScrollCardsCard({ card, locale = "ja" }: ScrollCardsCardProps) {
                         placeholder={labels.desc}
                       />
                     </p>
-                  )}
+                  ) : null}
                 </div>
               </>
             );

@@ -12,6 +12,10 @@ import {
 } from "@/components/app-shell/primitives";
 import { ImageUpload } from "@/components/editor/ImageUpload";
 import { MenuTagItemsNativeSettings } from "./MenuItemsNativeSettings";
+import {
+  NativeItemSectionToolbar,
+  moveAndKeepExpanded,
+} from "@/components/editor/NativeItemSectionToolbar";
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
@@ -101,18 +105,15 @@ export function MenuCategoriesNativeSettings({
                 />
                 {expanded ? (
                   <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        className="app-native-settings-action app-native-settings-action--danger"
-                        onClick={() => {
-                          setCategories(categories.filter((_, i) => i !== ci));
-                          setExpandedIndex(null);
-                        }}
-                      >
-                        削除
-                      </button>
-                    </div>
+                    <NativeItemSectionToolbar
+                      index={ci}
+                      count={categories.length}
+                      onMove={(dir) => moveAndKeepExpanded(categories, ci, dir, setCategories, setExpandedIndex)}
+                      onRemove={() => {
+                        setCategories(categories.filter((_, i) => i !== ci));
+                        setExpandedIndex(null);
+                      }}
+                    />
                     <div>
                       <AppFieldLabel>カテゴリ名</AppFieldLabel>
                       <AppFieldInput
@@ -257,18 +258,15 @@ export function MenuTimeBandNativeSettings({
                   />
                   {expanded ? (
                     <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          className="app-native-settings-action app-native-settings-action--danger"
-                          onClick={() => {
-                            setSlots(slots.filter((_, i) => i !== si));
-                            setExpandedIndex(null);
-                          }}
-                        >
-                          削除
-                        </button>
-                      </div>
+                      <NativeItemSectionToolbar
+                        index={si}
+                        count={slots.length}
+                        onMove={(dir) => moveAndKeepExpanded(slots, si, dir, setSlots, setExpandedIndex)}
+                        onRemove={() => {
+                          setSlots(slots.filter((_, i) => i !== si));
+                          setExpandedIndex(null);
+                        }}
+                      />
                       <div>
                         <AppFieldLabel>表示名</AppFieldLabel>
                         <AppFieldInput

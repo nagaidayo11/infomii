@@ -16,6 +16,10 @@ import {
   isSocialPlatform,
   resolveSocialPlatform,
 } from "@/components/cards/social-platform-icon";
+import {
+  NativeItemSectionToolbar,
+  moveAndKeepExpanded,
+} from "@/components/editor/NativeItemSectionToolbar";
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
@@ -93,18 +97,15 @@ export function NearbyNativeSettings({
                   />
                   {expanded ? (
                     <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          className="app-native-settings-action app-native-settings-action--danger"
-                          onClick={() => {
-                            setItems(items.filter((_, idx) => idx !== i));
-                            setExpandedIndex(null);
-                          }}
-                        >
-                          削除
-                        </button>
-                      </div>
+                      <NativeItemSectionToolbar
+                        index={i}
+                        count={items.length}
+                        onMove={(dir) => moveAndKeepExpanded(items, i, dir, setItems, setExpandedIndex)}
+                        onRemove={() => {
+                          setItems(items.filter((_, idx) => idx !== i));
+                          setExpandedIndex(null);
+                        }}
+                      />
                       <div>
                         <AppFieldLabel>名前</AppFieldLabel>
                         <AppFieldInput
@@ -244,18 +245,15 @@ export function SocialLinksNativeSettings({
                   />
                   {expanded ? (
                     <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          className="app-native-settings-action app-native-settings-action--danger"
-                          onClick={() => {
-                            setItems(items.filter((_, idx) => idx !== i));
-                            setExpandedIndex(null);
-                          }}
-                        >
-                          削除
-                        </button>
-                      </div>
+                      <NativeItemSectionToolbar
+                        index={i}
+                        count={items.length}
+                        onMove={(dir) => moveAndKeepExpanded(items, i, dir, setItems, setExpandedIndex)}
+                        onRemove={() => {
+                          setItems(items.filter((_, idx) => idx !== i));
+                          setExpandedIndex(null);
+                        }}
+                      />
                       <div>
                         <AppFieldLabel>SNS</AppFieldLabel>
                         <select
@@ -405,18 +403,15 @@ export function InfoNativeSettings({
                   />
                   {expanded ? (
                     <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          className="app-native-settings-action app-native-settings-action--danger"
-                          onClick={() => {
-                            setRows(rows.filter((_, idx) => idx !== i));
-                            setExpandedIndex(null);
-                          }}
-                        >
-                          削除
-                        </button>
-                      </div>
+                      <NativeItemSectionToolbar
+                        index={i}
+                        count={rows.length}
+                        onMove={(dir) => moveAndKeepExpanded(rows, i, dir, setRows, setExpandedIndex)}
+                        onRemove={() => {
+                          setRows(rows.filter((_, idx) => idx !== i));
+                          setExpandedIndex(null);
+                        }}
+                      />
                       <label className="flex min-h-[var(--app-tap-min)] items-center gap-3">
                         <input
                           type="checkbox"

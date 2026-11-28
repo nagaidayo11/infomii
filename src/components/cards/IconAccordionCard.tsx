@@ -173,7 +173,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
 
   const descField = (item: IconAccordionItem, i: number, className?: string) => {
     const description = getLocalizedContent(item.description as LocalizedString | undefined, locale);
-    if (!(editable || description)) return null;
+    if (!description.trim()) return null;
     if (editable) {
       return (
         <InlineEditable
@@ -235,7 +235,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
           </span>
           <span className="pres-link-list__copy">
             <span className="pres-link-list__label">{labelField(item, i)}</span>
-            {editable || description ? (
+            {description.trim() ? (
               <span className="pres-link-list__desc">{descField(item, i)}</span>
             ) : null}
           </span>
@@ -257,7 +257,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
             )}
           </span>
           <span className="pres-link-poster__label">{labelField(item, i)}</span>
-          {editable || description ? (
+          {description.trim() ? (
             <span className="pres-link-poster__desc">{descField(item, i)}</span>
           ) : null}
         </>
@@ -276,7 +276,7 @@ export function IconAccordionCard({ card, locale = "ja" }: IconAccordionCardProp
           )}
         </span>
         <span className="pres-card-grid__label">{labelField(item, i)}</span>
-        {editable || description ? (
+        {description.trim() ? (
           <span className="pres-card-grid__desc">{descField(item, i)}</span>
         ) : null}
       </>

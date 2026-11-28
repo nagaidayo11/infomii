@@ -1,6 +1,7 @@
 import { guestCardColumnMaxWidthPx, GUEST_PAGE_MAIN_PADDING_X_PX } from "@/lib/guest-page-layout";
 import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { usesHeroColumnWidth, type CardType, type EditorCard } from "@/components/editor/types";
+import { contentAwareDefaultHeight } from "@/lib/editor/card-list-height";
 
 /** Matches FreeformCanvas fixed preview width. */
 export const FREEFORM_VIEWPORT_WIDTH_PX = 375;
@@ -87,7 +88,8 @@ const DEFAULT_H_BY_TYPE: Record<CardType, number> = {
 type Position = { x: number; y: number; w?: number; h?: number; manualH?: boolean };
 
 function getCardDefaultHeight(card: EditorCard): number {
-  return DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+  const fallback = DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+  return contentAwareDefaultHeight(card, fallback);
 }
 
 function getStackHeight(card: EditorCard): number {

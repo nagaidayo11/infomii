@@ -83,19 +83,22 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
                       onActivate={onActivate}
                       className="font-bold text-[var(--app-text)]"
                       placeholder="ステップ名"
+                      required={editable}
                     />
                   </p>
-                  <p className="mt-0.5 text-[var(--app-text-muted)]">
-                    <InlineEditable
-                      value={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
-                      onSave={(v) => updateItem(i, "description", v)}
-                      editable={editable}
-                      onActivate={onActivate}
-                      multiline
-                      className="block w-full min-h-[1lh] text-[var(--app-text-muted)]"
-                      placeholder="説明"
-                    />
-                  </p>
+                  {getLocalizedContent(item.description as LocalizedString | undefined, locale).trim() ? (
+                    <p className="mt-0.5 text-[var(--app-text-muted)]">
+                      <InlineEditable
+                        value={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+                        onSave={(v) => updateItem(i, "description", v)}
+                        editable={editable}
+                        onActivate={onActivate}
+                        multiline
+                        className="block w-full min-h-[1lh] text-[var(--app-text-muted)]"
+                        placeholder="説明"
+                      />
+                    </p>
+                  ) : null}
                 </div>
               </li>
             ))
@@ -135,19 +138,22 @@ export function StepsCard({ card, isSelected = false, locale = "ja" }: StepsCard
                     onActivate={onActivate}
                     className={CARD_BLOCK_TITLE_CLASS}
                     placeholder="ステップ名"
+                    required={editable}
                   />
                 </p>
-                <p className="mt-0.5 font-normal text-slate-600">
-                  <InlineEditable
-                    value={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
-                    onSave={(v) => updateItem(i, "description", v)}
-                    editable={editable}
-                    onActivate={onActivate}
-                    multiline
-                    className="block w-full min-h-[1lh] text-slate-600"
-                    placeholder="説明"
-                  />
-                </p>
+                {getLocalizedContent(item.description as LocalizedString | undefined, locale).trim() ? (
+                  <p className="mt-0.5 font-normal text-slate-600">
+                    <InlineEditable
+                      value={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
+                      onSave={(v) => updateItem(i, "description", v)}
+                      editable={editable}
+                      onActivate={onActivate}
+                      multiline
+                      className="block w-full min-h-[1lh] text-slate-600"
+                      placeholder="説明"
+                    />
+                  </p>
+                ) : null}
               </div>
             </li>
           ))

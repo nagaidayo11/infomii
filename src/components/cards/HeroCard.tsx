@@ -109,12 +109,13 @@ export function HeroCard({ card, locale = "ja" }: HeroCardProps) {
           onActivate={onActivate}
           className={className.includes("text-white") ? "text-white" : undefined}
           placeholder={labels.titlePlaceholder}
+          required={editable}
         />
       </h2>
     ) : null;
 
   const subtitleField = (className: string, style?: CSSProperties) =>
-    editable || subtitle ? (
+    subtitle.trim() ? (
       <p className={className} style={style}>
         <InlineEditable
           value={subtitle}

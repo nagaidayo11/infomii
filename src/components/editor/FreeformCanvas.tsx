@@ -18,6 +18,7 @@ import { useClientShell } from "@/components/app-shell/useClientShell";
 import { guestCardColumnMaxWidthPx, GUEST_PAGE_MAIN_PADDING_X_PX } from "@/lib/guest-page-layout";
 import { isCardFullBleed } from "@/lib/editor/card-width-mode";
 import { reorderCardsAtTargetY } from "@/lib/freeform-stack";
+import { cardHeightSignature, contentAwareDefaultHeight } from "@/lib/editor/card-list-height";
 import { GuestBottomTabBar } from "@/components/guest/GuestBottomTabBar";
 import { GuestHamburgerMenu } from "@/components/guest/GuestHamburgerMenu";
 import { GuestLanguageToggle } from "@/components/guest/GuestLanguageToggle";
@@ -53,7 +54,8 @@ const APP_REORDER_SCROLL_MAX_STEP = 18;
 function measureCardContentHeightPx(container: HTMLElement): number {
   const first = container.firstElementChild as HTMLElement | null;
   if (first) {
-    const h = Math.max(first.offsetHeight, first.scrollHeight);
+    const rectH = Math.ceil(first.getBoundingClientRect().height);
+    const h = Math.max(first.offsetHeight, first.scrollHeight, rectH);
     if (Number.isFinite(h) && h > 0) {
       return Math.min(MAX_AUTO_BLOCK_H, Math.ceil(h + 8));
     }
@@ -162,7 +164,8 @@ function getCardDefaultHeight(card: EditorCard): number {
     // title + map frame + address + gaps + pin rows
     return 300 + pinCount * 58;
   }
-  return DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+  const fallback = DEFAULT_H_BY_TYPE[card.type] ?? DEFAULT_H;
+  return contentAwareDefaultHeight(card, fallback);
 }
 
 function getMapMinHeight(card: EditorCard): number {
@@ -184,10 +187,7 @@ function getResolvedCardHeight(card: EditorCard, savedHeight: number | undefined
   }
 
   if (typeof savedHeight !== "number") return initialH;
-
   if (card.type === "tabs_info" && savedHeight < 180) return initialH;
-  if (card.type === "accordion_info" && savedHeight < 170) return initialH;
-
   return savedHeight;
 }
 
@@ -361,6 +361,7 @@ export function FreeformCanvas({
   const canvasRef = useRef<HTMLDivElement>(null);
   const appTrashRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLDivElement>());
+  const firstChildRefs = useRef(new Map<string, Element>());
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [viewportWidth, setViewportWidth] = useState(() => (unframed ? EDITOR_APP_FRAME_WIDTH : EDITOR_WEB_FRAME_WIDTH));
   const contentWidth = guestCardColumnMaxWidthPx(viewportWidth);
@@ -450,45 +451,81 @@ export function FreeformCanvas({
     });
   }, []);
 
+  const observeCardMeasureNode = useCallback((cardId: string, el: HTMLDivElement) => {
+    const observer = resizeObserverRef.current;
+    if (!observer) return;
+    observer.observe(el);
+    const first = el.firstElementChild;
+    const prevFirst = firstChildRefs.current.get(cardId);
+    if (prevFirst && prevFirst !== first) observer.unobserve(prevFirst);
+    if (first instanceof HTMLElement) {
+      observer.observe(first);
+      firstChildRefs.current.set(cardId, first);
+    } else {
+      firstChildRefs.current.delete(cardId);
+    }
+  }, []);
+
   const setContentRef = useCallback(
     (cardId: string) => (el: HTMLDivElement | null) => {
       const map = contentRefs.current;
       const prev = map.get(cardId);
       if (prev && resizeObserverRef.current) {
         resizeObserverRef.current.unobserve(prev);
+        const prevFirst = firstChildRefs.current.get(cardId);
+        if (prevFirst) resizeObserverRef.current.unobserve(prevFirst);
       }
       if (!el) {
         map.delete(cardId);
+        firstChildRefs.current.delete(cardId);
         return;
       }
       map.set(cardId, el);
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.observe(el);
-      }
+      observeCardMeasureNode(cardId, el);
       requestAnimationFrame(() => {
+        observeCardMeasureNode(cardId, el);
         setAutoHeightForCard(cardId, measureCardContentHeightPx(el));
       });
     },
-    [setAutoHeightForCard]
+    [observeCardMeasureNode, setAutoHeightForCard]
   );
 
   useEffect(() => {
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const el = entry.target as HTMLDivElement;
-        const id = el.dataset.cardContentId;
-        if (!id) continue;
-        setAutoHeightForCard(id, measureCardContentHeightPx(el));
+        const target = entry.target as HTMLElement;
+        const container =
+          (target.dataset.cardContentId
+            ? target
+            : target.parentElement?.hasAttribute("data-card-content-id")
+              ? target.parentElement
+              : null) as HTMLDivElement | null;
+        const id = container?.dataset.cardContentId;
+        if (!container || !id) continue;
+        observeCardMeasureNode(id, container);
+        setAutoHeightForCard(id, measureCardContentHeightPx(container));
       }
     });
     resizeObserverRef.current = observer;
-    contentRefs.current.forEach((el) => observer.observe(el));
+    contentRefs.current.forEach((el, id) => observeCardMeasureNode(id, el));
     return () => {
       observer.disconnect();
       resizeObserverRef.current = null;
     };
-  }, [setAutoHeightForCard]);
+  }, [observeCardMeasureNode, setAutoHeightForCard]);
+
+  const layoutSignature = cards.map((card) => cardHeightSignature(card)).join("|");
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      contentRefs.current.forEach((el, id) => {
+        observeCardMeasureNode(id, el);
+        setAutoHeightForCard(id, measureCardContentHeightPx(el));
+      });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [layoutSignature, observeCardMeasureNode, setAutoHeightForCard]);
 
   const getRenderHeight = useCallback(
     (card: EditorCard, index: number) => {
@@ -523,12 +560,7 @@ export function FreeformCanvas({
       if (overflows && typeof needed === "number") {
         return Math.max(MIN_H, needed);
       }
-      if (
-        !saved?.manualH &&
-        !isMediaCardType(card.type) &&
-        typeof needed === "number" &&
-        current > needed + 8
-      ) {
+      if (!saved?.manualH && typeof needed === "number" && current > needed + 8) {
         return Math.max(MIN_H, needed);
       }
       return Math.max(MIN_H, current);
@@ -1420,7 +1452,23 @@ export function FreeformCanvas({
                       data-card-content-id={card.id}
                       className={
                         "flex h-full w-full min-h-0 flex-col items-stretch overflow-x-hidden p-0 [&>*]:shrink-0 " +
-                        (isOverflowing || card.type === "map" || card.type === "tabs_info" || card.type === "accordion_info"
+                        (isOverflowing ||
+                        card.type === "map" ||
+                        card.type === "tabs_info" ||
+                        card.type === "accordion_info" ||
+                        card.type === "faq" ||
+                        card.type === "dayTimeline" ||
+                        card.type === "steps" ||
+                        card.type === "checklist" ||
+                        card.type === "iconAccordion" ||
+                        card.type === "progress_steps" ||
+                        card.type === "hero" ||
+                        card.type === "hero_slider" ||
+                        card.type === "welcome" ||
+                        card.type === "storyBand" ||
+                        card.type === "photoSplit" ||
+                        card.type === "pageLinks" ||
+                        card.type === "editorialCover"
                           ? "justify-start overflow-y-visible"
                           : "justify-center overflow-y-hidden")
                       }

@@ -32,6 +32,7 @@ export function CardTitleInline({
         onActivate={bind.onActivate}
         className={CARD_BLOCK_TITLE_CLASS}
         placeholder={placeholder}
+        required={bind.editable}
       />
     </p>
   );
@@ -164,7 +165,7 @@ export function MenuItemInlineRow({
             />
           </p>
         ) : null}
-        {onSaveDescription ? (
+        {onSaveDescription && (description ?? "").trim() ? (
           <p className="mt-1 leading-relaxed text-slate-500" style={getBodyFontSizeStyle()}>
             <InlineEditable
               value={description ?? ""}
@@ -201,6 +202,7 @@ export function PlainInline({
   className = "",
   placeholder = "",
   multiline = false,
+  required = false,
 }: {
   value: string;
   onSave: (v: string) => void;
@@ -208,6 +210,7 @@ export function PlainInline({
   className?: string;
   placeholder?: string;
   multiline?: boolean;
+  required?: boolean;
 }) {
   return (
     <InlineEditable
@@ -218,6 +221,7 @@ export function PlainInline({
       className={className}
       placeholder={placeholder}
       multiline={multiline}
+      required={required}
     />
   );
 }

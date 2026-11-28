@@ -52,6 +52,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
             onActivate={onActivate}
             placeholder="見出しテキスト"
             className="app-native-heading-title"
+            required={editable}
           />
         </h3>
         {dividerEnabled ? <div className="app-native-heading-divider" /> : null}
@@ -64,6 +65,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
             multiline
             placeholder="本文テキスト"
             className="app-native-heading-body"
+            required={editable}
           />
         </div>
       </div>
@@ -81,6 +83,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
             onActivate={onActivate}
             placeholder="見出しテキスト"
             className={CARD_BLOCK_TITLE_CLASS}
+            required={editable}
           />
         </h3>
         {dividerEnabled ? <div className={`my-2.5 border-t ${dividerClass}`} style={dividerStyleObj} /> : null}
@@ -93,6 +96,7 @@ export function HeadingBodyCard({ card, isSelected = false }: HeadingBodyCardPro
             multiline
             placeholder="本文テキスト"
             className={`${CARD_BLOCK_BODY_CLASS} text-slate-700`}
+            required={editable}
           />
         </div>
       </section>

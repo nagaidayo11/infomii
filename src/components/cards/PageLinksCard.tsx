@@ -291,7 +291,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                           placeholder={labels.labelPlaceholder}
                         />
                       </span>
-                      {editable || description ? (
+                      {description.trim() ? (
                         <span className="pres-link-list__desc">
                           <InlineEditable
                             value={description}
@@ -351,7 +351,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                         placeholder={labels.labelPlaceholder}
                       />
                     </span>
-                    {editable || description ? (
+                    {description.trim() ? (
                       <span className="pres-link-poster__desc">
                         <InlineEditable
                           value={description}
@@ -524,7 +524,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                       placeholder={labels.labelPlaceholder}
                     />
                   </span>
-                  {editable || description ? (
+                  {description.trim() ? (
                     <span className="pres-card-grid__desc">
                       <InlineEditable
                         value={description}
@@ -612,7 +612,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                         placeholder={labels.labelPlaceholder}
                       />
                     </span>
-                    {editable || description ? (
+                    {description.trim() ? (
                       <span className="pres-link-list__desc">
                         <InlineEditable
                           value={description}
@@ -700,7 +700,7 @@ export function PageLinksCard({ card, locale = "ja" }: PageLinksCardProps) {
                       placeholder={labels.labelPlaceholder}
                     />
                   </span>
-                  {editable || description ? (
+                  {description.trim() ? (
                     <span className="pres-link-poster__desc">
                       <InlineEditable
                         value={description}

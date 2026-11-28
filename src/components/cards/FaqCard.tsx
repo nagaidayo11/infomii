@@ -79,8 +79,10 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                     onActivate={onActivate}
                     className="app-native-faq-q"
                     placeholder={labels.q}
+                    required={editable}
                   />
                 </div>
+                {(editable || (item.a ?? "").trim()) ? (
                 <div className="app-native-faq-a">
                   <InlineEditable
                     value={item.a ?? ""}
@@ -92,6 +94,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                     placeholder={labels.a}
                   />
                 </div>
+                ) : null}
               </div>
             ))
           )}
@@ -127,8 +130,10 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                   onActivate={onActivate}
                   className={`${CARD_BLOCK_TITLE_CLASS} text-slate-700`}
                   placeholder={labels.q}
+                  required={editable}
                 />
               </dt>
+              {(editable || (item.a ?? "").trim()) ? (
               <dd className={`mt-1 ${CARD_BLOCK_BODY_CLASS}`}>
                 <InlineEditable
                   value={item.a ?? ""}
@@ -140,6 +145,7 @@ export function FaqCard({ card, isSelected, locale = "ja" }: FaqCardProps) {
                   placeholder={labels.a}
                 />
               </dd>
+              ) : null}
             </div>
           ))
         )}

@@ -9,6 +9,10 @@ import {
   AppSectionHeader,
 } from "@/components/app-shell/primitives";
 import { ImageUpload } from "@/components/editor/ImageUpload";
+import {
+  NativeItemSectionToolbar,
+  moveAndKeepExpanded,
+} from "@/components/editor/NativeItemSectionToolbar";
 
 function readJaText(value: unknown): string {
   return getLocalizedContent(value as LocalizedString | undefined, "ja");
@@ -96,18 +100,15 @@ export function MenuItemsNativeSettings({
                 />
                 {expanded ? (
                   <div className="space-y-3 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)] px-4 py-3">
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        className="app-native-settings-action app-native-settings-action--danger"
-                        onClick={() => {
-                          setItems(items.filter((_, idx) => idx !== i));
-                          setExpandedIndex(null);
-                        }}
-                      >
-                        削除
-                      </button>
-                    </div>
+                    <NativeItemSectionToolbar
+                      index={i}
+                      count={items.length}
+                      onMove={(dir) => moveAndKeepExpanded(items, i, dir, setItems, setExpandedIndex)}
+                      onRemove={() => {
+                        setItems(items.filter((_, idx) => idx !== i));
+                        setExpandedIndex(null);
+                      }}
+                    />
                     {fields.includes("name") ? (
                       <div>
                         <AppFieldLabel>メニュー名</AppFieldLabel>

@@ -78,9 +78,10 @@ export function DayTimelineCard({ card, locale = "ja" }: DayTimelineCardProps) {
                     onActivate={onActivate}
                     className="pres-timeline__title"
                     placeholder={labels.item}
+                    required={editable}
                   />
                 </p>
-                {(editable || item.description) && (
+                {getLocalizedContent(item.description as LocalizedString | undefined, locale).trim() ? (
                   <p className="pres-timeline__desc">
                     <InlineEditable
                       value={getLocalizedContent(item.description as LocalizedString | undefined, locale)}
@@ -92,7 +93,7 @@ export function DayTimelineCard({ card, locale = "ja" }: DayTimelineCardProps) {
                       placeholder={labels.desc}
                     />
                   </p>
-                )}
+                ) : null}
               </div>
             </li>
           ))}

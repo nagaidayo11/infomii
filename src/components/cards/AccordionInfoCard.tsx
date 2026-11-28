@@ -1,7 +1,5 @@
 "use client";
 
-import { BRAND_ACCENT } from "@/lib/brand-accent";
-
 import { useState } from "react";
 import type { EditorCard } from "@/components/editor/types";
 import { InlineEditable } from "@/components/editor/InlineEditable";
@@ -20,19 +18,16 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
   const editor = useCardContentEditor(card);
   const c = editor.content;
   const bind = { editable: editor.editable, onActivate: editor.onActivate };
-  const title = typeof c.title === "string" ? c.title : "ご案内";
-  const accent =
-    typeof c.accentColor === "string" && c.accentColor.trim() ? c.accentColor.trim() : BRAND_ACCENT;
+  const title = typeof c.title === "string" ? c.title : "";
   const items = (Array.isArray(c.items) ? c.items : []) as Array<{ title?: string; body?: string }>;
   const [openIndex, setOpenIndex] = useState<number>(0);
 
   return (
     <section
       className="pres-block"
-      style={{ ["--pres-accent" as string]: accent }}
       onClick={bind.editable ? bind.onActivate : undefined}
     >
-      {(bind.editable || title) ? (
+      {(bind.editable || title.trim()) ? (
         <h3 className="pres-block__title">
           <InlineEditable
             value={title}
@@ -41,6 +36,7 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
             onActivate={bind.onActivate}
             className="pres-block__title"
             placeholder="ご案内"
+            required={bind.editable}
           />
         </h3>
       ) : null}
@@ -65,11 +61,12 @@ export function AccordionInfoCard({ card }: { card: EditorCard; isSelected?: boo
                     bind={bind}
                     className="text-inherit font-bold"
                     placeholder={`項目 ${idx + 1}`}
+                    required={bind.editable}
                   />
                 </span>
                 <ChevronDown className="pres-accordion__chevron h-4 w-4" />
               </button>
-              {open ? (
+              {open && (bind.editable || (item.body ?? "").trim()) ? (
                 <div className="pres-accordion__body">
                   <PlainInline
                     value={item.body ?? ""}
