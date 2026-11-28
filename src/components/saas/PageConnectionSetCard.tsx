@@ -74,17 +74,21 @@ function layoutTreeNodes(
 type PageConnectionSetCardProps = {
   set: PageConnectionSet;
   deletingPageId: string | null;
+  togglingPageId?: string | null;
   onEdit: (page: PageRow) => void;
   onRename: (page: PageRow) => void;
   onDelete: (page: PageRow) => void;
+  onTogglePublish?: (page: PageRow, nextStatus: "draft" | "published") => void;
 };
 
 export function PageConnectionSetCard({
   set,
   deletingPageId,
+  togglingPageId = null,
   onEdit,
   onRename,
   onDelete,
+  onTogglePublish,
 }: PageConnectionSetCardProps) {
   const [showTree, setShowTree] = useState(false);
   const flatRows = useMemo(() => flattenPageConnectionTree(set), [set]);
@@ -222,6 +226,31 @@ export function PageConnectionSetCard({
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
+                {onTogglePublish ? (
+                  <button
+                    type="button"
+                    disabled={togglingPageId != null}
+                    aria-pressed={row.page.publishStatus === "published"}
+                    onClick={() =>
+                      onTogglePublish(
+                        row.page,
+                        row.page.publishStatus === "published" ? "draft" : "published",
+                      )
+                    }
+                    className={
+                      "rounded-md border px-2.5 py-1 text-xs font-medium disabled:opacity-50 " +
+                      (row.page.publishStatus === "published"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                        : "border-[#e6e8eb] bg-white text-slate-700 hover:bg-slate-50")
+                    }
+                  >
+                    {togglingPageId === row.page.id
+                      ? "切替中…"
+                      : row.page.publishStatus === "published"
+                        ? "非公開にする"
+                        : "公開する"}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => onEdit(row.page)}

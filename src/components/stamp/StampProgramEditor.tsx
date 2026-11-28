@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { StampGuestScreen } from "@/components/stamp/StampGuestScreen";
-import { StampSunsetNotice } from "@/components/stamp/StampSunsetNotice";
-import { STAMP_SUNSET_TITLE } from "@/lib/stamp/sunset";
 import { StampMark } from "@/components/stamp/StampMark";
 import { StampPhoneFrame } from "@/components/stamp/StampPhoneFrame";
 import { StampRotatingQr } from "@/components/stamp/StampRotatingQr";
@@ -292,15 +290,11 @@ export function StampProgramEditor({ demo = false }: { demo?: boolean }) {
           デザイン確認用の試作です。保存・公開・実際の押印は行いません。
         </p>
       ) : null}
-      <StampSunsetNotice />
       <header className="sticky top-0 z-30 border-b border-black/[0.06] bg-[#f5f3ef]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3.5">
           <div>
             <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               スタンプカード
-              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold tracking-normal text-amber-800">
-                提供終了予定
-              </span>
             </p>
             <h1 className="text-xl font-bold leading-tight tracking-tight">{program.title || "無題"}</h1>
           </div>
@@ -332,7 +326,6 @@ export function StampProgramEditor({ demo = false }: { demo?: boolean }) {
               type="button"
               onClick={() => void handlePublish(program.status !== "published")}
               disabled
-              title={STAMP_SUNSET_TITLE}
               className="inline-flex min-h-10 items-center rounded-xl bg-[color:var(--stamp-ink)] px-3.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {publishing

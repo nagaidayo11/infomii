@@ -27,7 +27,6 @@ import { AppFabPortal } from "../AppFabPortal";
 import { APP_SCROLL_WITH_FAB_PADDING } from "../app-tab-metrics";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
-import { StampSunsetNotice } from "@/components/stamp/StampSunsetNotice";
 import {
   getPagesListViewCache,
   setPagesListViewCache,
@@ -268,7 +267,6 @@ export function AppPagesListView() {
               >
                 空の作品から作る
               </button>
-              <StampSunsetNotice compact />
             </div>
           }
         />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   clampGuestShellConfigForPlan,
   createDefaultGuestShellConfig,
@@ -18,6 +18,7 @@ import {
   ensureGuestShellLabelsTranslated,
   GuestShellEditorForm,
 } from "./GuestShellEditorForm";
+
 type GuestShellPagePanelProps = {
   pageId: string;
   isBusinessPlan?: boolean;
@@ -39,6 +40,15 @@ export function GuestShellPagePanel({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
+  /** Avoid pushing the default "nav off" draft onto the canvas before the page shell loads. */
+  const hydratedRef = useRef(false);
+  const onConfigChangeRef = useRef(onConfigChange);
+  onConfigChangeRef.current = onConfigChange;
+
+  const publishConfig = useCallback((next: GuestShellConfig) => {
+    onConfigChangeRef.current?.(next);
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setMessage("");
@@ -50,20 +60,23 @@ export function GuestShellPagePanel({
       }
       setState(next);
       const editing = ensureDefaultTabs(next.editing);
+      hydratedRef.current = true;
       setConfig(editing);
-      onConfigChange?.(next.effective);
+      publishConfig(next.effective);
     } finally {
       setLoading(false);
     }
-  }, [onConfigChange, pageId]);
+  }, [pageId, publishConfig]);
 
   useEffect(() => {
+    hydratedRef.current = false;
     void load();
   }, [load]);
 
   useEffect(() => {
-    onConfigChange?.(config);
-  }, [config, onConfigChange]);
+    if (!hydratedRef.current) return;
+    publishConfig(config);
+  }, [config, publishConfig]);
 
   async function handleSave() {
     setSaving(true);

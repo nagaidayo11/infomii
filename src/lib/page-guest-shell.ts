@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   createDefaultGuestShellConfig,
+  getGuestShellNavStyle,
   parseGuestShellConfig,
   type GuestShellConfig,
 } from "@/lib/guest-shell";
@@ -22,9 +23,85 @@ export type PageGuestShellEditorState = {
   columnReady: boolean;
 };
 
-type PageRow = { id: string; title: string; slug: string };
+type PageRow = { id: string; title: string; slug: string; guest_shell?: unknown };
 type CardLinkRow = { page_id: string; content: Record<string, unknown> };
-type PageLinkItem = { linkType?: "page" | "url"; pageSlug?: string };
+
+export type DirectedPageGraph = {
+  undirected: Map<string, Set<string>>;
+  directedOut: Map<string, Set<string>>;
+  directedIn: Map<string, Set<string>>;
+};
+
+function readPageLinkSlug(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  const record = value as Record<string, unknown>;
+  for (const key of ["ja", "en", "zh", "ko"]) {
+    const text = record[key];
+    if (typeof text === "string" && text.trim()) return text.trim();
+  }
+  return "";
+}
+
+/** Publish state is irrelevant: a saved internal link is a connection. */
+export function linkPagesInGraph(graph: DirectedPageGraph, fromId: string, toId: string): void {
+  if (!fromId || !toId || fromId === toId) return;
+  if (!graph.undirected.has(fromId) || !graph.undirected.has(toId)) return;
+  graph.undirected.get(fromId)?.add(toId);
+  graph.undirected.get(toId)?.add(fromId);
+  graph.directedOut.get(fromId)?.add(toId);
+  graph.directedIn.get(toId)?.add(fromId);
+}
+
+function linkSlugInGraph(
+  graph: DirectedPageGraph,
+  fromId: string,
+  slug: string,
+  slugToId: Map<string, string>,
+): void {
+  const targetId = slugToId.get(slug);
+  if (!targetId) return;
+  linkPagesInGraph(graph, fromId, targetId);
+}
+
+/** pageLinks cards. Empty or external links do not connect pages. */
+export function linkPageLinksCard(
+  graph: DirectedPageGraph,
+  pageId: string,
+  content: Record<string, unknown> | null | undefined,
+  slugToId: Map<string, string>,
+): void {
+  const items = Array.isArray(content?.items) ? content.items : [];
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as { linkType?: unknown; pageSlug?: unknown };
+    if ((record.linkType ?? "page") !== "page") continue;
+    const slug = readPageLinkSlug(record.pageSlug);
+    if (!slug) continue;
+    linkSlugInGraph(graph, pageId, slug, slugToId);
+  }
+}
+
+/**
+ * Guest nav on this page (bottom tabs or hamburger).
+ * Inactive nav is ignored so leftover default slugs do not glue unrelated pages.
+ * Draft / unpublished targets still count: the route connection is the link.
+ */
+export function linkActiveGuestShell(
+  graph: DirectedPageGraph,
+  pageId: string,
+  shell: unknown,
+  slugToId: Map<string, string>,
+): void {
+  const config = parseGuestShellConfig(shell);
+  if (getGuestShellNavStyle(config) === "off") return;
+  for (const tab of config.tabs) {
+    if (!tab.enabled || tab.type === "phone" || tab.type === "locale") continue;
+    const slug = tab.pageSlug?.trim() ?? "";
+    if (!slug) continue;
+    linkSlugInGraph(graph, pageId, slug, slugToId);
+  }
+}
 
 function comparePageTitle(a: PageRow | undefined, b: PageRow | undefined): number {
   return (a?.title ?? "").localeCompare(b?.title ?? "", "ja");
@@ -51,13 +128,25 @@ export async function getConnectionRootPageIdForPage(
   hotelId: string,
   pageId: string,
 ): Promise<{ rootPageId: string; rootPageTitle: string }> {
-  const { data: pagesData } = await supabase
+  const withShell = await supabase
     .from("pages")
-    .select("id,title,slug")
+    .select("id,title,slug,guest_shell")
     .eq("hotel_id", hotelId)
     .order("title", { ascending: true });
 
-  const pages = (pagesData ?? []) as PageRow[];
+  let pages = (withShell.data ?? []) as PageRow[];
+  if (withShell.error) {
+    const message = typeof withShell.error.message === "string" ? withShell.error.message : "";
+    if (!message.includes("guest_shell")) {
+      return { rootPageId: pageId, rootPageTitle: "" };
+    }
+    const fallback = await supabase
+      .from("pages")
+      .select("id,title,slug")
+      .eq("hotel_id", hotelId)
+      .order("title", { ascending: true });
+    pages = (fallback.data ?? []) as PageRow[];
+  }
   if (pages.length === 0) {
     return { rootPageId: pageId, rootPageTitle: "" };
   }
@@ -68,6 +157,7 @@ export async function getConnectionRootPageIdForPage(
   const undirected = new Map<string, Set<string>>();
   const directedOut = new Map<string, Set<string>>();
   const directedIn = new Map<string, Set<string>>();
+  const graph: DirectedPageGraph = { undirected, directedOut, directedIn };
 
   for (const p of pages) {
     undirected.set(p.id, new Set<string>());
@@ -81,19 +171,11 @@ export async function getConnectionRootPageIdForPage(
     .eq("type", "pageLinks")
     .in("page_id", pageIds);
 
-  for (const row of ((linkCards ?? []) as CardLinkRow[])) {
-    const items = (Array.isArray(row.content?.items) ? row.content.items : []) as PageLinkItem[];
-    for (const item of items) {
-      if ((item.linkType ?? "page") !== "page") continue;
-      const slug = typeof item.pageSlug === "string" ? item.pageSlug : "";
-      if (!slug) continue;
-      const targetId = slugToId.get(slug);
-      if (!targetId || targetId === row.page_id) continue;
-      undirected.get(row.page_id)?.add(targetId);
-      undirected.get(targetId)?.add(row.page_id);
-      directedOut.get(row.page_id)?.add(targetId);
-      directedIn.get(targetId)?.add(row.page_id);
-    }
+  for (const row of (linkCards ?? []) as CardLinkRow[]) {
+    linkPageLinksCard(graph, row.page_id, row.content, slugToId);
+  }
+  for (const page of pages) {
+    linkActiveGuestShell(graph, page.id, page.guest_shell, slugToId);
   }
 
   const visited = new Set<string>();

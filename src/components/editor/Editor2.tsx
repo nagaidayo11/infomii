@@ -1658,45 +1658,88 @@ export function Editor2({
             </div>
           }
           settings={
-            !selectedCard && pageId && !isDemoMode ? (
-              <GuestShellPagePanel
-                pageId={pageId}
-                isBusinessPlan={isBusinessPlan}
-                planTier={planTier}
-                onConfigChange={setPreviewGuestShell}
-              />
+            pageId && !isDemoMode ? (
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <div
+                  className={
+                    selectedCard
+                      ? "hidden"
+                      : "flex min-h-0 flex-1 flex-col overflow-hidden"
+                  }
+                >
+                  <GuestShellPagePanel
+                    pageId={pageId}
+                    isBusinessPlan={isBusinessPlan}
+                    planTier={planTier}
+                    onConfigChange={setPreviewGuestShell}
+                  />
+                </div>
+                {selectedCard ? (
+                  <CardSettings
+                    card={selectedCard}
+                    onUpdate={updateCard}
+                    onDuplicateCard={duplicateCard}
+                    onRemoveCard={removeCard}
+                    onMoveCardUp={
+                      selectedCardId && sortedCardsForReorder.length > 1
+                        ? () => {
+                            moveCard(selectedCardId, "up");
+                            scrollSelectedCardIntoView();
+                          }
+                        : undefined
+                    }
+                    onMoveCardDown={
+                      selectedCardId && sortedCardsForReorder.length > 1
+                        ? () => {
+                            moveCard(selectedCardId, "down");
+                            scrollSelectedCardIntoView();
+                          }
+                        : undefined
+                    }
+                    canMoveCardUp={canMoveSelectedCardUp}
+                    canMoveCardDown={canMoveSelectedCardDown}
+                    lastAddedCardId={lastAddedCardId}
+                    demoMode={isDemoMode}
+                    onLockedAction={(message) => setDemoLockMessage(message)}
+                    isBusinessEnabled={canUseBusinessBlocks}
+                    isBusinessPlan={isBusinessPlan}
+                    canUseProBlocks={canUseProBlocks}
+                    libraryAudience={libraryAudience}
+                  />
+                ) : null}
+              </div>
             ) : (
-            <CardSettings
-              card={selectedCard}
-              onUpdate={updateCard}
-              onDuplicateCard={duplicateCard}
-              onRemoveCard={removeCard}
-              onMoveCardUp={
-                selectedCardId && sortedCardsForReorder.length > 1
-                  ? () => {
-                      moveCard(selectedCardId, "up");
-                      scrollSelectedCardIntoView();
-                    }
-                  : undefined
-              }
-              onMoveCardDown={
-                selectedCardId && sortedCardsForReorder.length > 1
-                  ? () => {
-                      moveCard(selectedCardId, "down");
-                      scrollSelectedCardIntoView();
-                    }
-                  : undefined
-              }
-              canMoveCardUp={canMoveSelectedCardUp}
-              canMoveCardDown={canMoveSelectedCardDown}
-              lastAddedCardId={lastAddedCardId}
-              demoMode={isDemoMode}
-              onLockedAction={(message) => setDemoLockMessage(message)}
-              isBusinessEnabled={canUseBusinessBlocks}
-              isBusinessPlan={isBusinessPlan}
-              canUseProBlocks={canUseProBlocks}
-              libraryAudience={libraryAudience}
-            />
+              <CardSettings
+                card={selectedCard}
+                onUpdate={updateCard}
+                onDuplicateCard={duplicateCard}
+                onRemoveCard={removeCard}
+                onMoveCardUp={
+                  selectedCardId && sortedCardsForReorder.length > 1
+                    ? () => {
+                        moveCard(selectedCardId, "up");
+                        scrollSelectedCardIntoView();
+                      }
+                    : undefined
+                }
+                onMoveCardDown={
+                  selectedCardId && sortedCardsForReorder.length > 1
+                    ? () => {
+                        moveCard(selectedCardId, "down");
+                        scrollSelectedCardIntoView();
+                      }
+                    : undefined
+                }
+                canMoveCardUp={canMoveSelectedCardUp}
+                canMoveCardDown={canMoveSelectedCardDown}
+                lastAddedCardId={lastAddedCardId}
+                demoMode={isDemoMode}
+                onLockedAction={(message) => setDemoLockMessage(message)}
+                isBusinessEnabled={canUseBusinessBlocks}
+                isBusinessPlan={isBusinessPlan}
+                canUseProBlocks={canUseProBlocks}
+                libraryAudience={libraryAudience}
+              />
             )
           }
         />

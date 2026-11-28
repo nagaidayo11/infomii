@@ -158,29 +158,43 @@ function LiveCardPreview({ card, expandInner = false }: { card: EditorCard; expa
    * Until the first measure, only fix width so natural height matches content immediately.
    */
   const [clipBox, setClipBox] = useState<{ w: number; h: number } | null>(null);
+  // Content changes (same type/id family) must remount the clip measure — stale h clips taller presets.
+  const contentKey = useMemo(() => {
+    try {
+      return `${card.type}:${card.id}:${JSON.stringify(card.content ?? null)}`;
+    } catch {
+      return `${card.type}:${card.id}`;
+    }
+  }, [card.type, card.id, card.content]);
 
   useLayoutEffect(() => {
     if (expandInner) return;
     const scaled = scaledRef.current;
     if (!scaled) return;
 
+    setClipBox(null);
+
     const fit = () => {
       const r = scaled.getBoundingClientRect();
       const w = r.width;
       const h = r.height;
       if (w <= 1 || h <= 1) return;
-      setClipBox({ w, h });
+      // ceil avoids sub-pixel clipping of the scaled card border/shadow
+      setClipBox({ w: Math.ceil(w), h: Math.ceil(h) });
     };
 
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(scaled);
+    // Nested images / fonts can settle after the first layout pass.
+    const raf = window.requestAnimationFrame(fit);
     window.addEventListener("resize", fit);
     return () => {
+      window.cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", fit);
     };
-  }, [card.type, card.id, expandInner]);
+  }, [contentKey, expandInner]);
 
   if (expandInner) {
     return (
@@ -1243,6 +1257,9 @@ function LibraryItemButton({
  * Right-side popover: pick a label-row genre (titles only).
  * Hovering a genre shows a live card preview beside the menu.
  */
+const LABEL_ROW_MENU_WIDTH = 176;
+const LABEL_ROW_PREVIEW_MAX_WIDTH = 340;
+
 function LabelRowPresetPopover({
   open,
   anchor,
@@ -1261,9 +1278,22 @@ function LabelRowPresetPopover({
   onPickBlank: () => void;
 }) {
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const openTimerRef = useRef<number | null>(null);
   const closeTimerRef = useRef<number | null>(null);
-  const [position, setPosition] = useState({ left: 0, top: 0 });
+  const [position, setPosition] = useState<{
+    left: number;
+    top: number;
+    side: "right" | "left";
+    previewAlign: "top" | "bottom";
+    previewMaxHeight: number;
+  }>({
+    left: 0,
+    top: 0,
+    side: "right",
+    previewAlign: "top",
+    previewMaxHeight: 520,
+  });
   const [placed, setPlaced] = useState(false);
   const [hoverKey, setHoverKey] = useState<string | null>(null);
   const expandInner = useLibraryPreviewExpandInner();
@@ -1321,32 +1351,46 @@ function LabelRowPresetPopover({
       cancelAnimationFrame(raf);
       raf = window.requestAnimationFrame(() => {
         const rect = anchor.getBoundingClientRect();
-        const tipEl = popoverRef.current;
-        const tipW = tipEl?.offsetWidth || 176;
-        const tipH = tipEl?.offsetHeight || 280;
+        const menuEl = menuRef.current;
+        const menuW = LABEL_ROW_MENU_WIDTH;
+        const menuH = menuEl?.offsetHeight || 280;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        const preferRight = rect.right + TOOLTIP_GAP + tipW <= vw - TOOLTIP_VIEWPORT_MARGIN;
-        let left = preferRight
-          ? rect.right + TOOLTIP_GAP
-          : rect.left - tipW - TOOLTIP_GAP;
+        // Reserve preview width so the menu side never flips when a hover preview appears.
+        const reservedW = menuW + TOOLTIP_GAP + LABEL_ROW_PREVIEW_MAX_WIDTH;
+        const preferRight =
+          rect.right + TOOLTIP_GAP + reservedW <= vw - TOOLTIP_VIEWPORT_MARGIN;
+        const side: "right" | "left" = preferRight ? "right" : "left";
+        let left =
+          side === "right"
+            ? rect.right + TOOLTIP_GAP
+            : rect.left - menuW - TOOLTIP_GAP;
         left = Math.max(
           TOOLTIP_VIEWPORT_MARGIN,
-          Math.min(left, vw - tipW - TOOLTIP_VIEWPORT_MARGIN),
+          Math.min(left, vw - menuW - TOOLTIP_VIEWPORT_MARGIN),
         );
         const top = Math.max(
           TOOLTIP_VIEWPORT_MARGIN,
-          Math.min(rect.top, vh - tipH - TOOLTIP_VIEWPORT_MARGIN),
+          Math.min(rect.top, vh - menuH - TOOLTIP_VIEWPORT_MARGIN),
         );
-        setPosition({ left, top });
+        const spaceBelow = Math.max(120, vh - top - TOOLTIP_VIEWPORT_MARGIN);
+        const spaceAbove = Math.max(120, top + menuH - TOOLTIP_VIEWPORT_MARGIN);
+        const previewAlign: "top" | "bottom" =
+          spaceBelow < 280 && spaceAbove > spaceBelow ? "bottom" : "top";
+        const previewMaxHeight = Math.min(
+          520,
+          Math.floor(previewAlign === "top" ? spaceBelow : spaceAbove),
+        );
+        setPosition({ left, top, side, previewAlign, previewMaxHeight });
         setPlaced(true);
       });
     };
 
     const attachRo = () => {
       ro?.disconnect();
-      const el = popoverRef.current;
+      const el = menuRef.current;
       if (!el || typeof ResizeObserver === "undefined") return false;
+      // Observe the menu only — preview size must not reflow the menu anchor.
       ro = new ResizeObserver(update);
       ro.observe(el);
       return true;
@@ -1368,7 +1412,7 @@ function LabelRowPresetPopover({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [open, anchor, hoverKey, previewCard]);
+  }, [open, anchor]);
 
   useEffect(() => {
     if (!open) return;
@@ -1396,7 +1440,7 @@ function LabelRowPresetPopover({
     <div
       ref={popoverRef}
       className={
-        "fixed z-[9999] flex items-start gap-2 transition-opacity duration-150 " +
+        "fixed z-[9999] transition-opacity duration-150 " +
         (placed ? "opacity-100" : "opacity-0")
       }
       style={{ left: position.left, top: position.top }}
@@ -1409,9 +1453,10 @@ function LabelRowPresetPopover({
       }}
     >
       <div
+        ref={menuRef}
         role="menu"
         aria-label="項目リストの用途"
-        className="w-[176px] shrink-0 rounded-xl border border-slate-200 bg-white py-1.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
+        className="relative w-[176px] rounded-xl border border-slate-200 bg-white py-1.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
       >
         {LABEL_ROW_LIBRARY_PRESETS.map((preset) => (
           <button
@@ -1443,20 +1488,30 @@ function LabelRowPresetPopover({
         >
           空の項目リスト
         </button>
+        {previewCard ? (
+          <div
+            className={
+              "absolute w-[min(calc(100vw-24px),340px)] overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)] " +
+              (position.previewAlign === "bottom" ? "bottom-0" : "top-0") +
+              " " +
+              (position.side === "right" ? "left-full ml-2" : "right-full mr-2")
+            }
+            style={{ maxHeight: position.previewMaxHeight }}
+            onPointerEnter={clearHoverTimers}
+          >
+            <LiveCardPreview
+              key={previewCard.id}
+              card={previewCard}
+              expandInner={expandInner}
+            />
+            <p className="mt-1.5 text-xs font-semibold text-slate-900">
+              {hoverKey === "blank"
+                ? "空の項目リスト"
+                : LABEL_ROW_LIBRARY_PRESETS.find((p) => p.id === hoverKey)?.label ?? "プレビュー"}
+            </p>
+          </div>
+        ) : null}
       </div>
-      {previewCard ? (
-        <div
-          className="max-h-[min(70vh,520px)] max-w-[min(calc(100vw-24px),340px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
-          onPointerEnter={clearHoverTimers}
-        >
-          <LiveCardPreview card={previewCard} expandInner={expandInner} />
-          <p className="mt-1.5 text-xs font-semibold text-slate-900">
-            {hoverKey === "blank"
-              ? "空の項目リスト"
-              : LABEL_ROW_LIBRARY_PRESETS.find((p) => p.id === hoverKey)?.label ?? "プレビュー"}
-          </p>
-        </div>
-      ) : null}
     </div>,
     document.body,
   );

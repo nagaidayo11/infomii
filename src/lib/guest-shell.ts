@@ -24,7 +24,16 @@ export type GuestShellTabIcon =
   | "locale"
   | "wifi"
   | "map"
-  | "luggage";
+  | "luggage"
+  | "bed"
+  | "key"
+  | "clock"
+  | "coffee"
+  | "ticket"
+  | "camera"
+  | "parking"
+  | "laundry"
+  | "train";
 
 /** Icons users can pick in the guest-nav editor (excludes legacy `locale`). */
 export const GUEST_SHELL_TAB_ICON_CHOICES: Array<{
@@ -40,6 +49,15 @@ export const GUEST_SHELL_TAB_ICON_CHOICES: Array<{
   { value: "search", label: "検索" },
   { value: "heart", label: "ハート" },
   { value: "menu", label: "メニュー" },
+  { value: "bed", label: "客室" },
+  { value: "key", label: "鍵" },
+  { value: "clock", label: "時間" },
+  { value: "coffee", label: "カフェ" },
+  { value: "ticket", label: "チケット" },
+  { value: "camera", label: "カメラ" },
+  { value: "parking", label: "駐車場" },
+  { value: "laundry", label: "ランドリー" },
+  { value: "train", label: "電車" },
 ];
 
 /** Exclusive chrome: off | bottom tabs | hamburger menu. */
@@ -113,22 +131,32 @@ function normalizeTabType(value: unknown): GuestShellTabType | null {
   return null;
 }
 
+const GUEST_SHELL_TAB_ICON_SET = new Set<string>([
+  "home",
+  "search",
+  "heart",
+  "menu",
+  "phone",
+  "page",
+  "locale",
+  "wifi",
+  "map",
+  "luggage",
+  "bed",
+  "key",
+  "clock",
+  "coffee",
+  "ticket",
+  "camera",
+  "parking",
+  "laundry",
+  "train",
+]);
+
 function normalizeTabIcon(value: unknown): GuestShellTabIcon | null {
-  if (
-    value === "home" ||
-    value === "search" ||
-    value === "heart" ||
-    value === "menu" ||
-    value === "phone" ||
-    value === "page" ||
-    value === "locale" ||
-    value === "wifi" ||
-    value === "map" ||
-    value === "luggage"
-  ) {
-    return value;
-  }
-  return null;
+  if (typeof value !== "string") return null;
+  if (!GUEST_SHELL_TAB_ICON_SET.has(value)) return null;
+  return value as GuestShellTabIcon;
 }
 
 function normalizeNavStyle(value: unknown, enabledLegacy: boolean): GuestShellNavStyle {

@@ -36,6 +36,9 @@ import { resolveTemplateGuestShellConfig } from "@/lib/template-guest-shell";
 import {
   buildPageGuestShellEditorState,
   getConnectionRootPageIdForPage,
+  linkActiveGuestShell,
+  linkPageLinksCard,
+  type DirectedPageGraph,
   type PageGuestShellEditorState,
 } from "@/lib/page-guest-shell";
 import { inferSubscriptionBillingInterval } from "@/lib/billing-interval";
@@ -4883,11 +4886,6 @@ type CardLinkRow = {
   order?: number;
 };
 
-type PageLinkItem = {
-  linkType?: "page" | "url";
-  pageSlug?: string;
-};
-
 function comparePageTitle(a: PageRow | undefined, b: PageRow | undefined): number {
   return (a?.title ?? "").localeCompare(b?.title ?? "", "ja");
 }
@@ -4969,25 +4967,46 @@ export function flattenPageConnectionTree(
 }
 
 /**
- * Build connected page sets from pageLinks cards.
+ * Build connected page sets from pageLinks cards and an active guest nav (ルート).
+ * Publish status is not part of the link: a saved route connects draft pages too.
  * - 1 page: single
- * - 2+ pages connected by internal links: linked (UI label: ページ連携)
- * - tree follows directed pageLinks edges from a chosen root
+ * - 2+ pages connected by internal links or guest-nav tabs: linked (UI label: ページ連携)
+ * - tree follows directed edges from a chosen root
  */
 export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSet[]> {
   const supabase = getBrowserSupabaseClient();
   const hotelId = await ensureUserHotelScope();
   if (!supabase || !hotelId) return [];
 
-  const { data: pagesData, error: pagesError } = await supabase
+  type ListedPage = {
+    id: string;
+    title: string | null;
+    slug: string;
+    kind?: string | null;
+    guest_shell?: unknown;
+  };
+  const withShell = await supabase
     .from("pages")
-    .select("id,title,slug,kind")
+    .select("id,title,slug,kind,guest_shell")
     .eq("hotel_id", hotelId)
     .order("title", { ascending: true });
+  let pagesData: ListedPage[] | null = (withShell.data ?? null) as ListedPage[] | null;
+  let pagesError: { message?: string } | null = withShell.error;
+  if (pagesError) {
+    const message = typeof pagesError.message === "string" ? pagesError.message : "";
+    if (!message.includes("guest_shell")) return [];
+    const fallback = await supabase
+      .from("pages")
+      .select("id,title,slug,kind")
+      .eq("hotel_id", hotelId)
+      .order("title", { ascending: true });
+    pagesData = (fallback.data ?? []) as ListedPage[];
+    pagesError = fallback.error;
+  }
   if (pagesError) return [];
   const rawPages = (pagesData ?? []).map((p) => ({
     id: p.id,
-    title: p.title,
+    title: p.title ?? "",
     slug: p.slug,
     kind: (p.kind === "stamp" ? "stamp" : "guide") as "guide" | "stamp",
   }));
@@ -5034,6 +5053,7 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
   const undirected = new Map<string, Set<string>>();
   const directedOut = new Map<string, Set<string>>();
   const directedIn = new Map<string, Set<string>>();
+  const graph: DirectedPageGraph = { undirected, directedOut, directedIn };
   for (const p of pages) {
     undirected.set(p.id, new Set<string>());
     directedOut.set(p.id, new Set<string>());
@@ -5043,19 +5063,11 @@ export async function listPageConnectionSetsForHotel(): Promise<PageConnectionSe
   if (!previewCardsError) {
     const linkCards = ((previewCardRows ?? []) as CardLinkRow[]).filter((row) => row.type === "pageLinks");
     for (const row of linkCards) {
-      const items = (Array.isArray(row.content?.items) ? row.content.items : []) as PageLinkItem[];
-      for (const item of items) {
-        if ((item.linkType ?? "page") !== "page") continue;
-        const slug = typeof item.pageSlug === "string" ? item.pageSlug : "";
-        if (!slug) continue;
-        const targetId = slugToId.get(slug);
-        if (!targetId || targetId === row.page_id) continue;
-        undirected.get(row.page_id)?.add(targetId);
-        undirected.get(targetId)?.add(row.page_id);
-        directedOut.get(row.page_id)?.add(targetId);
-        directedIn.get(targetId)?.add(row.page_id);
-      }
+      linkPageLinksCard(graph, row.page_id, row.content, slugToId);
     }
+  }
+  for (const row of (pagesData ?? []) as Array<{ id: string; guest_shell?: unknown }>) {
+    linkActiveGuestShell(graph, row.id, row.guest_shell, slugToId);
   }
 
   const visited = new Set<string>();

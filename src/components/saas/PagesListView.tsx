@@ -11,6 +11,8 @@ import {
   type PageConnectionSet,
   type PageRow,
   deletePage,
+  publishStampProgram,
+  setInformationStatusBySlug,
   updatePageTitle,
 } from "@/lib/storage";
 import { GeneratePageFromDescription } from "@/components/ai/GeneratePageFromDescription";
@@ -24,7 +26,6 @@ import { AppPagesListView } from "@/components/app-shell/views/AppPagesListView"
 import { PageConnectionSetCard } from "@/components/saas/PageConnectionSetCard";
 import { PageHelp } from "@/components/help/PageHelp";
 import { PAGE_HELP } from "@/lib/page-help-content";
-import { StampSunsetNotice } from "@/components/stamp/StampSunsetNotice";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 
@@ -47,9 +48,11 @@ function PagesListViewWeb() {
   } | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
+  const [togglingPageId, setTogglingPageId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const createBusyRef = useRef(false);
   const deleteBusyRef = useRef(false);
+  const toggleBusyRef = useRef(false);
 
   useRouteProgressLoading(loading);
 
@@ -134,6 +137,44 @@ function PagesListViewWeb() {
     }
   }
 
+  function replacePublishStatus(pageId: string, status: "draft" | "published") {
+    setSets((current) =>
+      current.map((set) => ({
+        ...set,
+        pages: set.pages.map((item) =>
+          item.id === pageId ? { ...item, publishStatus: status } : item,
+        ),
+      })),
+    );
+  }
+
+  async function handleTogglePublish(page: PageRow, nextStatus: "draft" | "published") {
+    const prevStatus = page.publishStatus === "published" ? "published" : "draft";
+    if (prevStatus === nextStatus || toggleBusyRef.current) return;
+    toggleBusyRef.current = true;
+    setTogglingPageId(page.id);
+    replacePublishStatus(page.id, nextStatus);
+    setPublishedCount((count) =>
+      nextStatus === "published" ? count + 1 : Math.max(0, count - 1),
+    );
+    try {
+      if (page.kind === "stamp") {
+        await publishStampProgram(page.id, nextStatus === "published");
+      } else {
+        await setInformationStatusBySlug(page.slug, nextStatus);
+      }
+    } catch (e) {
+      replacePublishStatus(page.id, prevStatus);
+      setPublishedCount((count) =>
+        nextStatus === "published" ? Math.max(0, count - 1) : count + 1,
+      );
+      alert(e instanceof Error ? e.message : "公開状態の変更に失敗しました");
+    } finally {
+      toggleBusyRef.current = false;
+      setTogglingPageId(null);
+    }
+  }
+
   async function handleRenamePage(page: PageRow) {
     const current = page.title ?? "";
     const next = window.prompt("ページ名を入力してください", current);
@@ -184,7 +225,6 @@ function PagesListViewWeb() {
             <span className="text-base leading-none">+</span>
             案内ページを作成
           </button>
-          <StampSunsetNotice compact className="w-full sm:max-w-xs" />
           <PageHelp
             className="shrink-0 self-center"
             title={PAGE_HELP.pages.title}
@@ -314,11 +354,13 @@ function PagesListViewWeb() {
                 key={set.id}
                 set={set}
                 deletingPageId={deletingPageId}
+                togglingPageId={togglingPageId}
                 onEdit={(page) =>
                   router.push(page.kind === "stamp" ? `/editor/stamp/${page.id}` : `/editor/${page.id}`)
                 }
                 onRename={(page) => void handleRenamePage(page)}
                 onDelete={(page) => void handleDeleteCardPage(page)}
+                onTogglePublish={(page, nextStatus) => void handleTogglePublish(page, nextStatus)}
               />
             ))}
           </div>

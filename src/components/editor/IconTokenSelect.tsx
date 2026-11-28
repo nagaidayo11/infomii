@@ -1,6 +1,6 @@
 "use client";
 
-import { normalizeIconToken, type LineIconName } from "@/components/cards/LineIcon";
+import { LineIcon, normalizeIconToken, type LineIconName } from "@/components/cards/LineIcon";
 import { LINE_ICON_EDITOR_OPTIONS } from "@/lib/editor-line-icon-options";
 
 type IconTokenSelectProps = {
@@ -19,7 +19,7 @@ type IconTokenSelectProps = {
 };
 
 /**
- * LineIcon トークンのみ選択可能（テキスト入力なし）
+ * LineIcon トークンをページ設定と同じ視認しやすい格子で選択する。
  */
 export function IconTokenSelect({
   id,
@@ -27,12 +27,18 @@ export function IconTokenSelect({
   hideLabel = false,
   value,
   onChange,
-  className,
+  className: _className,
   labelClassName,
   allowEmpty = false,
 }: IconTokenSelectProps) {
+  void _className;
   const trimmed = typeof value === "string" ? value.trim() : "";
   const normalized = allowEmpty && !trimmed ? "" : normalizeIconToken(value, "info");
+  const selectedLabel =
+    normalized === ""
+      ? "なし"
+      : LINE_ICON_EDITOR_OPTIONS.find((opt) => opt.value === normalized)?.label ?? normalized;
+
   return (
     <div className="w-full">
       {!hideLabel &&
@@ -43,20 +49,56 @@ export function IconTokenSelect({
         ) : (
           <span className={labelClassName}>{label}</span>
         ))}
-      <select
+      <div
         id={id}
-        value={normalized}
-        onChange={(e) => onChange(e.target.value as LineIconName | "")}
-        className={className}
-        aria-label={hideLabel ? label : undefined}
+        role="listbox"
+        aria-label={label}
+        className="mt-1.5 max-h-[9.5rem] overflow-y-auto overscroll-contain rounded-md border border-slate-200 bg-white p-1.5"
       >
-        {allowEmpty ? <option value="">なし</option> : null}
-        {LINE_ICON_EDITOR_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+        <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
+          {allowEmpty ? (
+            <button
+              type="button"
+              role="option"
+              aria-selected={normalized === ""}
+              title="なし"
+              aria-label="なし"
+              onClick={() => onChange("")}
+              className={
+                "inline-flex h-9 w-full items-center justify-center rounded-md border text-[10px] font-medium transition " +
+                (normalized === ""
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50")
+              }
+            >
+              なし
+            </button>
+          ) : null}
+          {LINE_ICON_EDITOR_OPTIONS.map((opt) => {
+            const selected = normalized === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                title={opt.label}
+                aria-label={opt.label}
+                onClick={() => onChange(opt.value)}
+                className={
+                  "inline-flex h-9 w-full items-center justify-center rounded-md border transition " +
+                  (selected
+                    ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")
+                }
+              >
+                <LineIcon name={opt.value} className="h-4 w-4" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <p className="mt-1 truncate text-[11px] text-slate-500">{selectedLabel}</p>
     </div>
   );
 }
